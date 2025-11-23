@@ -43,6 +43,7 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 
 from player_name_utils import normalize_player_name
+from config import PLAYER_TEAM_CACHE_MAX_AGE_HOURS
 
 
 # Constants
@@ -348,9 +349,9 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
     
     Strategy (in order of priority):
         0. Cache Lookup (if enabled):
-           - Check JSON cache file first
+           - Check CSV cache file first
            - Skip API calls for cached players
-           - Refresh cache if older than 24 hours
+           - Refresh cache if older than PLAYER_TEAM_CACHE_MAX_AGE_HOURS (7 days default)
         
         1. NBA API (PRIMARY):
            - Query live roster data from nba_api
@@ -388,7 +389,7 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
     cache_data = load_player_team_cache() if use_cache else {'mapping': {}, 'timestamp': None}
     cached_mapping = cache_data.get('mapping', {})
     cache_timestamp = cache_data.get('timestamp')
-    cache_is_stale = is_cache_stale(cache_timestamp, max_age_hours=24)
+    cache_is_stale = is_cache_stale(cache_timestamp, max_age_hours=PLAYER_TEAM_CACHE_MAX_AGE_HOURS)
     
     # Load historical team mapping once
     historical_mapping = load_historical_team_mapping()
