@@ -1,0 +1,16 @@
+# AWS Lambda Layer Requirements
+# These packages are needed for the daily update script to run in Lambda
+
+# Core dependencies
+pandas==2.1.4
+numpy==1.26.2
+requests==2.31.0
+python-dotenv==1.0.0
+
+# NBA API
+nba_api==1.4.1
+
+# AWS SDK (already included in Lambda runtime, but listing for completeness)
+# boto3==1.34.0
+# botocore==1.34.0
+
