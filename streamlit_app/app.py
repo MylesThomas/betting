@@ -42,6 +42,30 @@ all the pieces fit together and the order they run:
    - Auto-refresh: If team doesn't match game, cache is invalidated and rebuilt
    - Priority: Uses nba_full_roster_cache.csv as baseline, then validates
      against tonight's games, then queries API for recent trades
+   
+   MANUAL REFRESH (For trades, signings, or missing teams):
+   To rebuild the complete cache with all 30 teams and 525+ players:
+   
+     Step 1: Rebuild full roster from NBA API
+     $ python scripts/build_full_roster_cache.py
+     
+     Step 2: Convert to player_team_cache format
+     $ python3 << 'EOF'
+     import pandas as pd
+     from datetime import datetime
+     full_roster = pd.read_csv('data/nba_full_roster_cache.csv')
+     player_team_cache = pd.DataFrame({
+         'player_normalized': full_roster['player_normalized'],
+         'team': full_roster['team'],
+         'timestamp': datetime.now().isoformat()
+     })
+     player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
+     player_team_cache = player_team_cache.sort_values('player_normalized')
+     player_team_cache.to_csv('data/player_team_cache.csv', index=False)
+     print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
+     EOF
+   
+   Alternatively, use the "Invalidate Cache" button in the dashboard sidebar.
 
 5. THIS DASHBOARD: View & Analyze (ALWAYS RUNNING)
    Run: streamlit run streamlit_app/app.py

@@ -54,3 +54,39 @@ Run the arb finder to generate data:
 python scripts/find_arb_opportunities.py --markets player_threes
 ```
 
+## Troubleshooting
+
+### Player Team Cache Issues
+
+If you see missing teams or players (should have 525 players across 30 teams):
+
+**Quick Fix: Rebuild the cache**
+```bash
+# Step 1: Fetch latest rosters from NBA API
+python scripts/build_full_roster_cache.py
+
+# Step 2: Update player_team_cache.csv
+python3 << 'EOF'
+import pandas as pd
+from datetime import datetime
+full_roster = pd.read_csv('data/nba_full_roster_cache.csv')
+player_team_cache = pd.DataFrame({
+    'player_normalized': full_roster['player_normalized'],
+    'team': full_roster['team'],
+    'timestamp': datetime.now().isoformat()
+})
+player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
+player_team_cache = player_team_cache.sort_values('player_normalized')
+player_team_cache.to_csv('data/player_team_cache.csv', index=False)
+print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
+EOF
+```
+
+**When to rebuild:**
+- Missing teams (should have all 30 NBA teams)
+- After major trades
+- At the start of a new season
+- If players are showing up as "Unknown Team"
+
+**Alternative:** Click the "Invalidate Cache" button in the dashboard sidebar to rebuild from the web interface.
+
