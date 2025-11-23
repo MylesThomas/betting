@@ -1,0 +1,12 @@
+1. get dates for nba games in 2024-25 season
+- currently in api_setup/nba_calendar/game_dates_2024_25.csv
+- iterate through all days in the season, check it aligns with the .csv file
+
+2. get event id for each game played
+- for each date an NBA game was played:
+    - get event id for each game played on that date
+    
+3. get odds
+- for each event id:
+    - get odds for game, 3pt props using timestamp before game start ie. 7am (need to figure what timestamp to use)
+        - it appears we get a bunch of odds throughout the day

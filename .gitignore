@@ -1,0 +1,58 @@
+# Environment variables
+.env
+*.env
+!.env.example
+
+# Embedded repos
+api_setup/the-odds-api/samples-python/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files
+*.xlsx
+*.db
+*.sqlite
+*.sqlite3
+
+# CSV files - selective inclusion
+# Ignore all CSVs by default
+*.csv
+
+# But INCLUDE these specific patterns:
+!data/arbs/arb_*.csv
+!data/nba_full_roster_cache.csv
+
+# Ignore raw and archive data
+data/arbs/raw_*.csv
+data/arbs/archive/
+data/player_team_cache.csv
+historical_props/
+
+# Logs
+*.log
+logs/
+api_setup/logs/
+

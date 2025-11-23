@@ -1,0 +1,16 @@
+# NBA Data
+nba_api==1.4.1
+
+# Odds Data
+requests==2.31.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.2
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Date/Time utilities
+python-dateutil==2.8.2
+
