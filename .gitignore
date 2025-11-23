@@ -56,3 +56,5 @@ historical_props/
 logs/
 api_setup/logs/
 
+# Patch files (for git diff)
+*.patch

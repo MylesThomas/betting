@@ -1,5 +1,5 @@
 """
-NBA Arbitrage Opportunity Dashboard
+TQS NBA Props Dashboard
 
 ==============================================================================
 SYSTEM ARCHITECTURE & FILE RELATIONSHIPS
@@ -349,7 +349,7 @@ def get_arb_history():
 # Main app
 def main():
     # Header
-    st.title("🏀 NBA Arbitrage Opportunity Dashboard")
+    st.title("🏀 TQS NBA Props Dashboard")
     st.markdown("---")
     
     # Show loading message
