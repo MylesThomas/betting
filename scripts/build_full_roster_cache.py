@@ -5,45 +5,23 @@ This script creates a complete player-to-team mapping for ALL active NBA players
 not just those in tonight's games. The cache includes:
 - player_name_nba_api: Official name from NBA API
 - team: Current team abbreviation
-- player_name_odds_api: Name variant from odds data (if available)
-- player_normalized: Normalized name for matching
+- player_normalized: Normalized name for matching (used by all scripts)
 
 USAGE - FULL ORDER OF OPERATIONS:
 ==================================
 
-Step 1: Build full roster cache from NBA API
+Step 1: Run the script to rebuild both cache files
     $ python scripts/build_full_roster_cache.py
     
-    This creates: data/02_cache/nba_full_roster_cache.csv
+    This automatically creates BOTH:
+    - data/02_cache/nba_full_roster_cache.csv (full roster with all name formats)
+    - data/02_cache/player_team_cache.csv (simplified for quick lookups)
 
-Step 2: Convert to player_team_cache format (for Streamlit app)
-    $ python3 << 'EOF'
-    import pandas as pd
-    from datetime import datetime
-    
-    # Load the full roster cache
-    full_roster = pd.read_csv('data/02_cache/nba_full_roster_cache.csv')
-    
-    # Convert to player_team_cache format
-    player_team_cache = pd.DataFrame({
-        'player_normalized': full_roster['player_normalized'],
-        'team': full_roster['team'],
-        'timestamp': datetime.now().isoformat()
-    })
-    
-    # Remove duplicates and sort
-    player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
-    player_team_cache = player_team_cache.sort_values('player_normalized')
-    
-    # Save to CSV
-    player_team_cache.to_csv('data/02_cache/player_team_cache.csv', index=False)
-    
-    print(f"✅ Updated data/02_cache/player_team_cache.csv with {len(player_team_cache)} players")
-    EOF
-
-Step 3: Refresh Streamlit dashboard
+Step 2: Refresh Streamlit dashboard
     - Reload the page in your browser
-    - The app will use the updated cache
+    - The app will automatically use the updated cache
+
+That's it! No manual conversion needed.
 
 WHY TWO FILES?
 ==============
@@ -210,50 +188,53 @@ def main():
     print(f"\n✅ Retrieved {len(roster_df)} players across 30 teams")
     print()
     
-    # Find most recent odds data file
-    print("Step 2: Matching player names to odds data...")
-    data_dir = Path(__file__).parent.parent / "data" / "arbs"
-    
-    if data_dir.exists():
-        arb_files = sorted(data_dir.glob("arb_*.csv"))
-        if arb_files:
-            most_recent = arb_files[-1]
-            print(f"  Using: {most_recent.name}")
-            roster_df = add_odds_api_names(roster_df, most_recent)
-        else:
-            print("  No odds data found - skipping name matching")
-    
     # Add normalized name for easier lookups
+    print("Step 2: Normalizing player names for matching...")
     roster_df['player_normalized'] = roster_df['player_name_nba_api'].apply(normalize_player_name)
     
-    # Add empty player_name_odds_api column if it doesn't exist
-    if 'player_name_odds_api' not in roster_df.columns:
-        roster_df['player_name_odds_api'] = ''
-    
-    # Reorder columns
-    roster_df = roster_df[['player_name_nba_api', 'team', 'player_name_odds_api', 'player_normalized']]
+    # Reorder columns (removed player_name_odds_api since it's rarely populated and not used)
+    roster_df = roster_df[['player_name_nba_api', 'team', 'player_normalized']]
     
     # Sort by team, then player name
     roster_df = roster_df.sort_values(['team', 'player_name_nba_api'])
     
-    # Save to CSV
-    print(f"\nStep 3: Saving to {OUTPUT_PATH}")
+    # Save full roster cache to CSV
+    print(f"\nStep 3: Saving full roster cache to {OUTPUT_PATH}")
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     roster_df.to_csv(OUTPUT_PATH, index=False)
+    
+    # Step 4: Automatically create player_team_cache.csv for quick lookups
+    print(f"\nStep 4: Creating player_team_cache.csv for quick lookups...")
+    from datetime import datetime
+    
+    player_team_cache = pd.DataFrame({
+        'player_normalized': roster_df['player_normalized'],
+        'team': roster_df['team'],
+        'timestamp': datetime.now().isoformat()
+    })
+    
+    # Remove duplicates and sort
+    player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
+    player_team_cache = player_team_cache.sort_values('player_normalized')
+    
+    # Save to same directory
+    cache_path = OUTPUT_PATH.parent / 'player_team_cache.csv'
+    player_team_cache.to_csv(cache_path, index=False)
+    print(f"✅ Saved {cache_path}")
     
     print()
     print("=" * 70)
     print("✅ Full Roster Cache Created!")
     print("=" * 70)
-    print(f"File: {OUTPUT_PATH}")
+    print(f"Full roster: {OUTPUT_PATH}")
+    print(f"Quick cache: {cache_path}")
     print(f"Total players: {len(roster_df)}")
     print(f"Teams: {roster_df['team'].nunique()}")
-    print(f"Players with odds names: {roster_df['player_name_odds_api'].notna().sum()}")
     print()
     print("Sample:")
     print(roster_df.head(10).to_string(index=False))
     print()
-    print("You can now use this cache for instant team lookups!")
+    print("Both cache files are ready to use!")
 
 
 if __name__ == '__main__':
