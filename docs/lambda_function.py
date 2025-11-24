@@ -121,6 +121,9 @@ def lambda_handler(event, context):
     print(f"Execution time: {datetime.now().isoformat()}")
     print("")
     
+    # Define work_dir at the top so cleanup can access it
+    work_dir = '/tmp/betting'
+    
     try:
         # Step 1: Get secrets
         print("📊 Step 1: Fetching secrets from AWS Secrets Manager...")
@@ -140,9 +143,6 @@ def lambda_handler(event, context):
             'https://',
             f'https://{github_username}:{github_token}@'
         )
-        
-        # Working directory
-        work_dir = '/tmp/betting'
         
         # Step 3: Clone repository
         print("📦 Step 2: Cloning GitHub repository...")
