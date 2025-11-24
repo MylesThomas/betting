@@ -394,8 +394,16 @@ def main():
         # Count missing teams (unique players)
         missing_rows = df['team'].isna().sum()
         if missing_rows > 0:
-            missing_players = df[df['team'].isna()]['player'].nunique()
-            st.info(f"ℹ️ {missing_players} unique players not in cache ({missing_rows} rows showing as NULL). Run `python scripts/build_full_roster_cache.py` to update.")
+            missing_players_list = sorted(df[df['team'].isna()]['player'].unique())
+            missing_count = len(missing_players_list)
+            
+            # Format the message with player names
+            if missing_count <= 5:
+                players_str = ", ".join(missing_players_list)
+                st.info(f"ℹ️ {missing_count} player(s) not in cache ({missing_rows} rows): **{players_str}**. Run `python scripts/build_full_roster_cache.py` to update.")
+            else:
+                players_str = ", ".join(missing_players_list[:5])
+                st.info(f"ℹ️ {missing_count} players not in cache ({missing_rows} rows): **{players_str}** ... and {missing_count - 5} more. Run `python scripts/build_full_roster_cache.py` to update.")
     
     # Sidebar filters
     with st.sidebar:
