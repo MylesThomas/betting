@@ -233,7 +233,7 @@ def invalidate_player_team_cache():
     """
     Delete the player team cache file to force a refresh.
     """
-    cache_path = Path(__file__).parent.parent / "data" / "player_team_cache.csv"
+    cache_path = Path(__file__).parent.parent / "data" / "02_cache" / "player_team_cache.csv"
     if cache_path.exists():
         cache_path.unlink()
         st.info("✅ Player team cache invalidated. Re-fetching from NBA API...")
