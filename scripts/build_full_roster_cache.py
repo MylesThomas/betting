@@ -14,7 +14,7 @@ USAGE - FULL ORDER OF OPERATIONS:
 Step 1: Build full roster cache from NBA API
     $ python scripts/build_full_roster_cache.py
     
-    This creates: data/nba_full_roster_cache.csv
+    This creates: data/02_cache/nba_full_roster_cache.csv
 
 Step 2: Convert to player_team_cache format (for Streamlit app)
     $ python3 << 'EOF'
@@ -22,7 +22,7 @@ Step 2: Convert to player_team_cache format (for Streamlit app)
     from datetime import datetime
     
     # Load the full roster cache
-    full_roster = pd.read_csv('data/nba_full_roster_cache.csv')
+    full_roster = pd.read_csv('data/02_cache/nba_full_roster_cache.csv')
     
     # Convert to player_team_cache format
     player_team_cache = pd.DataFrame({
@@ -36,9 +36,9 @@ Step 2: Convert to player_team_cache format (for Streamlit app)
     player_team_cache = player_team_cache.sort_values('player_normalized')
     
     # Save to CSV
-    player_team_cache.to_csv('data/player_team_cache.csv', index=False)
+    player_team_cache.to_csv('data/02_cache/player_team_cache.csv', index=False)
     
-    print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
+    print(f"✅ Updated data/02_cache/player_team_cache.csv with {len(player_team_cache)} players")
     EOF
 
 Step 3: Refresh Streamlit dashboard
@@ -47,8 +47,8 @@ Step 3: Refresh Streamlit dashboard
 
 WHY TWO FILES?
 ==============
-- nba_full_roster_cache.csv: Complete roster with multiple name formats
-- player_team_cache.csv: Simplified format optimized for quick lookups
+- data/02_cache/nba_full_roster_cache.csv: Complete roster with multiple name formats
+- data/02_cache/player_team_cache.csv: Simplified format optimized for quick lookups
 
 Run this weekly or after major trades to keep rosters up to date.
 """
