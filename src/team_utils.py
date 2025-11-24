@@ -347,6 +347,13 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
         - Saves updated mapping to cache for future runs
         - This dramatically speeds up subsequent loads (instant vs 60+ seconds)
     
+    Manual Cache Update:
+        If you need to manually rebuild the cache (e.g., after trades):
+        1. Run: python scripts/build_full_roster_cache.py
+        2. Then convert to player_team_cache format (see streamlit_app/app.py docstring)
+        
+        Or use the "Invalidate Cache" button in the Streamlit dashboard sidebar.
+    
     Strategy (in order of priority):
         0. Cache Lookup (if enabled):
            - Check CSV cache file first
@@ -358,6 +365,8 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
            - Most accurate and up-to-date (handles trades immediately)
            - Validates against tonight's game teams
            - Falls back gracefully if API unavailable
+           - NOTE: Currently disabled due to timeout issues. Re-enable by uncommenting
+             the lookup_player_team_from_api() call in this function.
         
         2. Intersection Method:
            - If player appears in multiple games, find common team
@@ -436,6 +445,11 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
         
         # METHOD 1: NBA API (Primary - Most Accurate for Current Rosters)
         # TEMPORARILY DISABLED - API calls timing out
+        # 
+        # To update cache manually instead of using API:
+        #   1. Run: python scripts/build_full_roster_cache.py
+        #   2. Convert to player_team_cache format (see streamlit_app/app.py docstring)
+        # 
         # Try to lookup player's current team via API first
         # This handles trades and is always up-to-date
         api_team = None  # Disabled: lookup_player_team_from_api(player, all_game_teams)
