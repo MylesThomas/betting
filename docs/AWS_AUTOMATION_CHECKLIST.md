@@ -65,7 +65,7 @@ Streamlit Cloud
   
   # Configure with your credentials
   aws configure
-  # Enter: Access Key ID, Secret Access Key, Region (us-east-1), Format (json)
+  # Enter: Access Key ID, Secret Access Key, Region (us-east-2), Format (json)
   ```
 
 ---
@@ -101,7 +101,7 @@ Streamlit Cloud
 
 - [ ] **5.3** Configure function:
   - **Function name:** `betting-dashboard-daily-update`
-  - **Runtime:** Python 3.11
+  - **Runtime:** Python 3.12 (or latest available)
   - **Architecture:** x86_64
   - **Permissions:** Create a new role with basic Lambda permissions
   - Click "Create function"
@@ -114,8 +114,11 @@ Streamlit Cloud
 - [ ] **5.5** Configure Lambda settings:
   - Go to "Configuration" → "General configuration" → "Edit"
   - **Memory:** 512 MB
-  - **Timeout:** 15 minutes (900 seconds)
-  - **Storage:** 2048 MB (need space to clone repo)
+  - **Timeout:** 15 minutes (enter `15` min, `0` sec)
+  - Click "Save"
+  
+  - Then go to "Configuration" → "General configuration" → "Edit" again (scroll down)
+  - **Ephemeral storage:** 2048 MB (need space to clone repo)
   - Click "Save"
 
 - [ ] **5.6** Add environment variables:
@@ -125,7 +128,7 @@ Streamlit Cloud
     - Key: `GITHUB_USERNAME` | Value: `MylesThomas`
     - Key: `GITHUB_EMAIL` | Value: `mylescgthomas@gmail.com`
     - Key: `SECRET_NAME` | Value: `betting-dashboard-secrets`
-    - Key: `AWS_REGION_NAME` | Value: `us-east-1` (or your region)
+    - Key: `AWS_REGION_NAME` | Value: `us-east-2` (or your region)
   - Click "Save"
 
 ---
@@ -168,7 +171,7 @@ Lambda needs additional Python packages (pandas, requests, etc.) that aren't inc
   - Go to Lambda console → "Layers" → "Create layer"
   - **Name:** `betting-dashboard-dependencies`
   - **Upload:** `lambda_layer/layer.zip`
-  - **Compatible runtimes:** Python 3.11
+  - **Compatible runtimes:** Python 3.12 (match your Lambda function runtime)
   - Click "Create"
 
 - [ ] **7.4** Attach layer to function:

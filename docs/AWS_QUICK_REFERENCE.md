@@ -72,7 +72,7 @@ Set these in Lambda Configuration → Environment variables:
 | `GITHUB_USERNAME` | `MylesThomas` |
 | `GITHUB_EMAIL` | `mylescgthomas@gmail.com` |
 | `SECRET_NAME` | `betting-dashboard-secrets` |
-| `AWS_REGION_NAME` | `us-east-1` |
+| `AWS_REGION_NAME` | `us-east-2` |
 
 ---
 

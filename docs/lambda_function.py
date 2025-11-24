@@ -13,7 +13,7 @@ Environment Variables Required:
 - GITHUB_USERNAME: MylesThomas
 - GITHUB_EMAIL: mylescgthomas@gmail.com
 - SECRET_NAME: betting-dashboard-secrets
-- AWS_REGION_NAME: us-east-1
+- AWS_REGION_NAME: us-east-2
 
 Secrets Required (in AWS Secrets Manager):
 - ODDS_API_KEY: Your Odds API key
