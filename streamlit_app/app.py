@@ -390,26 +390,6 @@ def main():
     with st.spinner("🏀 Updating player rosters (checking for trades & new players)..."):
         df = add_team_column_from_props(df, player_col='player', game_col='game')
     
-    # Validate that Team matches Game for each row
-    # If mismatches found, invalidate cache and re-fetch
-    if 'team' in df.columns and 'game' in df.columns:
-        mismatches = validate_team_game_mapping(df)
-        if len(mismatches) > 0:
-            st.warning(f"⚠️ Found {len(mismatches)} team mapping mismatches. Refreshing cache...")
-            # Invalidate cache and rebuild
-            invalidate_player_team_cache()
-            
-            with st.spinner("🔄 Querying NBA API for updated rosters..."):
-                df = add_team_column_from_props(df, player_col='player', game_col='game')
-            
-            # Check again after refresh
-            mismatches_after = validate_team_game_mapping(df)
-            if len(mismatches_after) > 0:
-                st.error(f"⚠️ Still have {len(mismatches_after)} mismatches after cache refresh. These may be new players or data issues.")
-                with st.expander("Show Mismatched Players"):
-                    mismatch_df = df[df['player'].isin(mismatches_after)]
-                    st.dataframe(mismatch_df[['player', 'team', 'game']])
-    
     # Sidebar filters
     with st.sidebar:
         st.header("🎯 Filters")
