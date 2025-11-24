@@ -4,9 +4,14 @@ AWS Lambda Function - Daily Dashboard Update
 This Lambda function:
 1. Fetches secrets from AWS Secrets Manager
 2. Clones the GitHub repository
-3. Runs the daily update script
+3. Runs the daily update script (find_arb_opportunities.py)
 4. Pushes changes back to GitHub
 5. Streamlit Cloud auto-deploys the changes
+
+IMPORTANT: Python dependencies (pandas, requests, nba_api, etc.) are provided via
+a Lambda Layer, NOT installed at runtime. The layer contains all required packages
+pre-built for Linux x86_64. Do NOT add a "pip install" step here - it's unnecessary
+and will fail since there's no requirements.txt in the repo root.
 
 Environment Variables Required:
 - GITHUB_REPO_URL: https://github.com/MylesThomas/betting.git
@@ -23,10 +28,14 @@ IAM Permissions Required:
 - secretsmanager:GetSecretValue
 
 Lambda Configuration:
-- Runtime: Python 3.11
+- Runtime: Python 3.12
 - Memory: 512 MB (minimum)
 - Timeout: 15 minutes (900 seconds)
-- Storage: 2048 MB (need space to clone repo)
+- Ephemeral storage: 2048 MB (need space to clone repo)
+
+Lambda Layers Required:
+- git-lambda2:8 (provides git binaries)
+- betting-dashboard-dependencies:2 (provides Python packages for Linux x86_64)
 """
 
 import json
