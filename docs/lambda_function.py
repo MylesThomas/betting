@@ -187,10 +187,10 @@ def lambda_handler(event, context):
             f.write(env_content)
         
         # Set up environment with PYTHONPATH to include Lambda layer
-        import os
+        # (os is already imported at top of file)
         script_env = os.environ.copy()
         script_env['ODDS_API_KEY'] = odds_api_key
-        script_env['PYTHONPATH'] = '/opt/python'
+        script_env['PYTHONPATH'] = '/opt/python'  # Allows script to access packages in Lambda layer
         
         # Run the script
         stdout, stderr, code = run_command([
