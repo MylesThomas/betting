@@ -11,7 +11,7 @@ Usage:
     python scripts/build_full_roster_cache.py
     
 Output:
-    data/nba_full_roster_cache.csv
+    data/02_cache/nba_full_roster_cache.csv
     
 This is a one-time setup (or run weekly) to keep roster data fresh.
 """
@@ -25,9 +25,10 @@ import time
 sys.path.append(str(Path(__file__).parent.parent))
 from src.player_name_utils import normalize_player_name
 from src.config import CURRENT_NBA_SEASON
+from src.config_loader import get_file_path
 
 # Output file
-OUTPUT_PATH = Path(__file__).parent.parent / "data" / "nba_full_roster_cache.csv"
+OUTPUT_PATH = Path(__file__).parent.parent / get_file_path('nba_full_roster_cache')
 
 
 def get_all_nba_rosters():
@@ -187,6 +188,10 @@ def main():
     
     # Add normalized name for easier lookups
     roster_df['player_normalized'] = roster_df['player_name_nba_api'].apply(normalize_player_name)
+    
+    # Add empty player_name_odds_api column if it doesn't exist
+    if 'player_name_odds_api' not in roster_df.columns:
+        roster_df['player_name_odds_api'] = ''
     
     # Reorder columns
     roster_df = roster_df[['player_name_nba_api', 'team', 'player_name_odds_api', 'player_normalized']]
