@@ -179,18 +179,24 @@ def lambda_handler(event, context):
         
         # Step 4: Run the arbitrage finder
         print("🔍 Step 4: Finding arbitrage opportunities...")
-        print("   (Using packages from Lambda layer)")
+        print("   (Using packages from Lambda layer at /opt/python)")
         
         # Create .env file with API key
         env_content = f"ODDS_API_KEY={odds_api_key}\n"
         with open(f"{work_dir}/.env", 'w') as f:
             f.write(env_content)
         
+        # Set up environment with PYTHONPATH to include Lambda layer
+        import os
+        script_env = os.environ.copy()
+        script_env['ODDS_API_KEY'] = odds_api_key
+        script_env['PYTHONPATH'] = '/opt/python'
+        
         # Run the script
         stdout, stderr, code = run_command([
             'python', 'scripts/find_arb_opportunities.py',
             '--markets', 'player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists'
-        ], cwd=work_dir, env={'ODDS_API_KEY': odds_api_key})
+        ], cwd=work_dir, env=script_env)
         
         if code != 0:
             raise Exception(f"Arbitrage finder failed: {stderr}")
