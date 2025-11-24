@@ -36,6 +36,23 @@ import sys
 from pathlib import Path
 import time
 
+# Fix SSL certificate issues with NBA API (must be done BEFORE importing nba_api)
+import ssl
+import urllib3
+import requests
+
+ssl._create_default_https_context = ssl._create_unverified_context
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Monkey-patch requests Session to disable SSL verification
+original_request = requests.Session.request
+
+def patched_request(self, *args, **kwargs):
+    kwargs['verify'] = False
+    return original_request(self, *args, **kwargs)
+
+requests.Session.request = patched_request
+
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent))
 from src.player_name_utils import normalize_player_name
@@ -55,11 +72,6 @@ def get_all_nba_rosters():
     """
     try:
         from nba_api.stats.static import teams, players
-        import requests
-        import urllib3
-        
-        # Disable SSL warnings
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         
         print("Fetching all NBA teams...")
         all_teams = teams.get_teams()
