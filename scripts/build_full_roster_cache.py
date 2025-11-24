@@ -6,14 +6,51 @@ not just those in tonight's games. The cache includes:
 - player_name_nba_api: Official name from NBA API
 - team: Current team abbreviation
 - player_name_odds_api: Name variant from odds data (if available)
+- player_normalized: Normalized name for matching
 
-Usage:
-    python scripts/build_full_roster_cache.py
+USAGE - FULL ORDER OF OPERATIONS:
+==================================
+
+Step 1: Build full roster cache from NBA API
+    $ python scripts/build_full_roster_cache.py
     
-Output:
-    data/02_cache/nba_full_roster_cache.csv
+    This creates: data/nba_full_roster_cache.csv
+
+Step 2: Convert to player_team_cache format (for Streamlit app)
+    $ python3 << 'EOF'
+    import pandas as pd
+    from datetime import datetime
     
-This is a one-time setup (or run weekly) to keep roster data fresh.
+    # Load the full roster cache
+    full_roster = pd.read_csv('data/nba_full_roster_cache.csv')
+    
+    # Convert to player_team_cache format
+    player_team_cache = pd.DataFrame({
+        'player_normalized': full_roster['player_normalized'],
+        'team': full_roster['team'],
+        'timestamp': datetime.now().isoformat()
+    })
+    
+    # Remove duplicates and sort
+    player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
+    player_team_cache = player_team_cache.sort_values('player_normalized')
+    
+    # Save to CSV
+    player_team_cache.to_csv('data/player_team_cache.csv', index=False)
+    
+    print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
+    EOF
+
+Step 3: Refresh Streamlit dashboard
+    - Reload the page in your browser
+    - The app will use the updated cache
+
+WHY TWO FILES?
+==============
+- nba_full_roster_cache.csv: Complete roster with multiple name formats
+- player_team_cache.csv: Simplified format optimized for quick lookups
+
+Run this weekly or after major trades to keep rosters up to date.
 """
 
 import pandas as pd
