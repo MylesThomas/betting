@@ -480,7 +480,7 @@ def main():
         st.markdown("---")
         st.header("📝 Info")
         st.info("""
-        **Scheduled run:** 7:00 AM ET (daily)
+        **Scheduled run:** 12:00 PM ET (daily)
         
         **Markets monitored:**
         - Points, Rebounds, Assists

@@ -39,10 +39,11 @@ Thumbs.db
 
 # CSV files - selective inclusion
 # Ignore all CSVs by default
-*.csv
+# *.csv
 
 # But INCLUDE these specific patterns:
 !data/arbs/arb_*.csv
+!data/arbs/raw_*.csv
 !data/nba_full_roster_cache.csv
 !data/player_team_cache.csv
 
@@ -58,3 +59,6 @@ api_setup/logs/
 
 # Patch files (for git diff)
 *.patch
+
+# Lambda layer
+lambda_layer/

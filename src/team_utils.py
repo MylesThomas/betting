@@ -435,9 +435,10 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
     for player, normalized_name, all_game_teams, all_teams_sets in players_needing_api_lookup:
         
         # METHOD 1: NBA API (Primary - Most Accurate for Current Rosters)
+        # TEMPORARILY DISABLED - API calls timing out
         # Try to lookup player's current team via API first
         # This handles trades and is always up-to-date
-        api_team = lookup_player_team_from_api(player, all_game_teams)
+        api_team = None  # Disabled: lookup_player_team_from_api(player, all_game_teams)
         if api_team and api_team in all_game_teams:
             # API returned a team that matches tonight's game - use it!
             final_mapping[normalized_name] = api_team
