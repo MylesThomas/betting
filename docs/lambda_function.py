@@ -168,16 +168,9 @@ def lambda_handler(event, context):
         print("✅ Git configured")
         print("")
         
-        # Step 5: Install Python dependencies
-        print("📚 Step 4: Installing Python dependencies...")
-        run_command([
-            'pip', 'install', '-r', 'requirements.txt', '--target', work_dir
-        ], cwd=work_dir)
-        print("✅ Dependencies installed")
-        print("")
-        
-        # Step 6: Run the arbitrage finder
-        print("🔍 Step 5: Finding arbitrage opportunities...")
+        # Step 4: Run the arbitrage finder
+        print("🔍 Step 4: Finding arbitrage opportunities...")
+        print("   (Using packages from Lambda layer)")
         
         # Create .env file with API key
         env_content = f"ODDS_API_KEY={odds_api_key}\n"
@@ -196,8 +189,8 @@ def lambda_handler(event, context):
         print("✅ Arbitrage opportunities found")
         print("")
         
-        # Step 7: Commit and push changes
-        print("📤 Step 6: Committing and pushing to GitHub...")
+        # Step 5: Commit and push changes
+        print("📤 Step 5: Committing and pushing to GitHub...")
         
         # Check if there are changes
         stdout, stderr, code = run_command(['git', 'status', '--porcelain'], cwd=work_dir)
