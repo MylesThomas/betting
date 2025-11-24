@@ -182,7 +182,8 @@ import sys
 
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
-from src.team_utils import add_team_column_from_props, get_all_teams
+from src.team_utils_simple import add_team_column_simple
+from src.team_utils import get_all_teams
 
 
 def validate_team_game_mapping(df: pd.DataFrame) -> list:
@@ -386,16 +387,15 @@ def main():
         st.info("Data will be updated automatically at 7:00 AM ET daily.")
         return
     
-    # Add team column using game data (reflects current rosters incl. trades)
-    # Made non-blocking: If it fails, just show data without teams
-    try:
-        with st.spinner("🏀 Updating player rosters (checking for trades & new players)..."):
-            df = add_team_column_from_props(df, player_col='player', game_col='game')
-    except Exception as e:
-        st.warning(f"⚠️ Could not load team data (will show without teams): {str(e)[:100]}")
-        # Add empty team column so the rest of the app works
-        if 'team' not in df.columns:
-            df['team'] = None
+    # Add team column from cache (simple, read-only)
+    with st.spinner("🏀 Loading player teams from cache..."):
+        df = add_team_column_simple(df, player_col='player')
+        
+        # Count missing teams (unique players)
+        missing_rows = df['team'].isna().sum()
+        if missing_rows > 0:
+            missing_players = df[df['team'].isna()]['player'].nunique()
+            st.info(f"ℹ️ {missing_players} unique players not in cache ({missing_rows} rows showing as NULL). Run `python scripts/build_full_roster_cache.py` to update.")
     
     # Sidebar filters
     with st.sidebar:
@@ -449,7 +449,7 @@ def main():
         
         # Team filter
         if 'team' in df.columns:
-            all_teams = ['All'] + sorted([t for t in df['team'].unique() if t is not None])
+            all_teams = ['All'] + sorted([t for t in df['team'].unique() if pd.notna(t)])
             selected_team = st.selectbox("Team", all_teams,
                                         help="Filter by NBA team")
         else:

@@ -52,6 +52,9 @@ def normalize_player_name(name, keep_case=False):
     # Strip whitespace
     name = name.strip()
     
+    # Remove ALL periods (handles A.J. vs AJ, P.J. vs PJ, Jr. vs Jr, etc.)
+    name = name.replace('.', '')
+    
     # Convert to Title Case unless keep_case is True
     if not keep_case:
         name = name.title()
@@ -59,11 +62,17 @@ def normalize_player_name(name, keep_case=False):
     # Remove accents
     name = remove_accents(name)
     
-    # Standardize suffixes: Jr. -> Jr, Sr. -> Sr
-    name = name.replace('Jr.', 'Jr').replace('Sr.', 'Sr')
-    
-    # Remove generational suffixes (III, II, IV) - these are often inconsistent
-    name = name.replace(' Iii', '').replace(' Ii', '').replace(' Iv', '')
+    # Remove ONLY generational numbers at END of name (III, II, IV, V)
+    # Keep Jr and Sr as they're more stable across sources
+    # Use endswith to avoid removing letters from middle of names (e.g., "Valanciunas")
+    if name.endswith(' Iii'):
+        name = name[:-4]
+    elif name.endswith(' Ii'):
+        name = name[:-3]
+    elif name.endswith(' Iv'):
+        name = name[:-3]
+    elif name.endswith(' V'):
+        name = name[:-2]
     
     # Clean up multiple spaces
     name = ' '.join(name.split())
@@ -75,45 +84,37 @@ def get_name_mappings():
     """
     Get dictionary of known player name variations.
     
-    Maps: {name_in_props: name_in_game_results}
+    MAPPING DIRECTION:
+        Key (left side) = Name from ODDS API (The Odds API, props data)
+        Value (right side) = Name from NBA API (nba_api, cache, game results)
+    
+    Usage: After normalizing both sides, apply this mapping to convert
+           Odds API names to match what's in the NBA API cache.
     
     Returns:
-        Dictionary of name mappings
+        Dictionary {odds_api_name: nba_api_name}
     """
     return {
-        # Initials - common variations
-        'P.J. Washington': 'Pj Washington',
-        'P.J Tucker': 'Pj Tucker',
-        'O.G. Anunoby': 'Og Anunoby',
-        'T.J. McConnell': 'Tj Mcconnell',
-        'T.J. Mcconnell': 'Tj Mcconnell',
-        'K.J. Martin': 'Kj Martin',
-        'A.J. Green': 'Aj Green',
-        'R.J. Barrett': 'Rj Barrett',
-        'J.J. Redick': 'Jj Redick',
-        'G.G. Jackson': 'Gg Jackson',
-        'B.J. Boston Jr': 'Brandon Boston',
-        'C.J. Mccollum': 'Cj Mccollum',
+        # ===================================================================
+        # NICKNAMES: Odds API vs NBA API use different versions  
+        # (Applied AFTER normalization, so use normalized forms)
+        # ===================================================================
+        # Odds API (normalized) → NBA API (normalized)
+        'Herb Jones': 'Herbert Jones',            # Odds uses nickname, NBA uses full
+        'Moe Wagner': 'Moritz Wagner',            # Odds uses nickname, NBA uses full
+        'Nicolas Claxton': 'Nic Claxton',         # Odds uses full, NBA uses nickname
+        'Ron Holland': 'Ronald Holland',          # Odds uses "Ron", NBA uses "Ronald" 
+        'Vincent Williams Jr': 'Vince Williams Jr',  # Odds uses full, NBA uses nickname
         
-        # Nickname vs Full Name
-        'Herb Jones': 'Herbert Jones',
-        'Moe Wagner': 'Moritz Wagner',
-        'Nic Claxton': 'Nic Claxton',
-        'Nicolas Claxton': 'Nic Claxton',
-        
-        # Missing Jr suffix in props
+        # ===================================================================
+        # NAME VARIATIONS
+        # ===================================================================
+        # Odds API (normalized) → NBA API (normalized)
         'Derrick Jones': 'Derrick Jones Jr',
         'Bruce Brown Jr': 'Bruce Brown',
-        'Kenyon Martin Jr': 'Kj Martin',  # Note: Different person
+        'Kenyon Martin Jr': 'Kj Martin',
         'Paul Reed Jr': 'Paul Reed',
-        'Ron Holland': 'Ronald Holland',
-        'Vincent Williams Jr': 'Vince Williams Jr',
-        
-        # Ensure normalized versions match
-        'Pj Washington': 'Pj Washington',
-        
-        # Carlton Carrington rookie name variation
-        'Carlton Carrington': 'Bub Carrington',
+        'Carlton Carrington': 'Bub Carrington',   # Rookie name change
     }
 
 
