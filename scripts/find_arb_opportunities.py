@@ -662,7 +662,9 @@ def main(markets=DEFAULT_MARKETS, limit=None):
         
         if not todays_events:
             print("❌ No NBA games found for today")
-            return
+            print("⚠️  This might indicate an issue - exiting with warning code")
+            import sys
+            sys.exit(1)  # Exit with error so you get notified
         
         # Limit games if requested
         if limit and limit < len(todays_events):
