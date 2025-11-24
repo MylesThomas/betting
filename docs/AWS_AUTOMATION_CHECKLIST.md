@@ -147,24 +147,42 @@ Streamlit Cloud
 
 ---
 
-### **Step 7: Create Lambda Layer for Dependencies**
+### **Step 7: Add Lambda Layers**
 
-Lambda needs additional Python packages (pandas, requests, etc.) that aren't included by default.
+Lambda needs additional packages (Python dependencies + git) that aren't included by default.
 
-**Option A: Use AWS SAM CLI (Recommended)**
+**Part A: Add Git Layer (Required)**
 
-- [ ] **7.1** Install AWS SAM CLI:
-  ```bash
-  brew install aws-sam-cli
-  ```
+- [ ] **7.1** Add public git layer:
+  - Go to your Lambda function
+  - Scroll down to "Layers" → "Add a layer"
+  - Select "Specify an ARN"
+  - **ARN:** `arn:aws:lambda:us-east-2:553035198032:layer:git-lambda2:8`
+  - Click "Add"
 
-- [ ] **7.2** Create layer package:
+**Part B: Add Python Dependencies Layer**
+
+- [ ] **7.2** Create layer package (for Linux x86_64):
   ```bash
   cd /Users/thomasmyles/dev/betting
+  rm -rf lambda_layer
   mkdir -p lambda_layer/python
-  pip install -r streamlit_app/requirements.txt -t lambda_layer/python/
+  
+  # Install packages for Linux x86_64 (Lambda's architecture)
+  pip install --platform manylinux2014_x86_64 \
+    --target=lambda_layer/python \
+    --implementation cp \
+    --python-version 3.12 \
+    --only-binary=:all: \
+    --upgrade \
+    -r lambda_requirements.txt
+  
+  # Zip it up
   cd lambda_layer
   zip -r layer.zip python
+  
+  # Check size (should be ~45 MB, under 50 MB limit)
+  ls -lh layer.zip
   ```
 
 - [ ] **7.3** Upload layer to Lambda:
