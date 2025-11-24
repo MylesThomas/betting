@@ -43,12 +43,12 @@ Thumbs.db
 
 # But INCLUDE these specific patterns:
 !data/arbs/arb_*.csv
+!data/arbs/raw_*.csv
 !data/nba_full_roster_cache.csv
 !data/player_team_cache.csv
 !data/nba_api/historical/*.csv
 
-# Ignore raw and archive data
-data/arbs/raw_*.csv
+# Ignore archive data
 data/arbs/archive/
 historical_props/
 
