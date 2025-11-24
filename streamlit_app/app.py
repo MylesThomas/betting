@@ -387,8 +387,15 @@ def main():
         return
     
     # Add team column using game data (reflects current rosters incl. trades)
-    with st.spinner("🏀 Updating player rosters (checking for trades & new players)..."):
-        df = add_team_column_from_props(df, player_col='player', game_col='game')
+    # Made non-blocking: If it fails, just show data without teams
+    try:
+        with st.spinner("🏀 Updating player rosters (checking for trades & new players)..."):
+            df = add_team_column_from_props(df, player_col='player', game_col='game')
+    except Exception as e:
+        st.warning(f"⚠️ Could not load team data (will show without teams): {str(e)[:100]}")
+        # Add empty team column so the rest of the app works
+        if 'team' not in df.columns:
+            df['team'] = None
     
     # Sidebar filters
     with st.sidebar:
