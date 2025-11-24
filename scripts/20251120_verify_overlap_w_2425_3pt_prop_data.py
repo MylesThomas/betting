@@ -1,7 +1,7 @@
 """
 Using NBA game results for all seasons dating back to 2014-15, verify we have a match with each 3pt prop from 2024-25 season.
 - Inputs: 
-    - NBA game results for all seasons dating back to 2014-15 (filename: data/nba_games_all_seasons.csv)
+    - NBA game results for all seasons dating back to 2014-15 (filename: data/nba_api/historical/nba_games_all_seasons.csv)
     - 3pt props for the 2024-25 season (filename: historical_props/combined_props_player_threes.csv)
 - Output:
     - Verified dataframe with 3pt prop data, as well as box score statistics for the player that the prop pertains to.
