@@ -844,6 +844,8 @@ def main(markets=DEFAULT_MARKETS, limit=None):
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
+        import sys
+        sys.exit(1)  # Exit with error code so Lambda knows it failed
 
 
 if __name__ == "__main__":
