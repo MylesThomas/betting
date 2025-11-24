@@ -57,8 +57,8 @@ OUTPUT EXAMPLE:
           Guaranteed Profit: $1.85
 
 OUTPUT FILES:
-    - data/arbs/arb_3pt_props_YYYYMMDD.csv (main results, overwrites daily)
-    - data/arbs/raw_3pt_props_YYYYMMDD_HHMMSS.csv (raw data with timestamp)
+    - data/04_output/arbs/arb_3pt_props_YYYYMMDD.csv (main results, overwrites daily)
+    - data/04_output/arbs/raw_3pt_props_YYYYMMDD_HHMMSS.csv (raw data with timestamp)
     
 SETUP:
     1. Get API key from https://the-odds-api.com/
@@ -120,8 +120,13 @@ import pandas as pd
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
+import sys
 from dotenv import load_dotenv
 from pathlib import Path
+
+# Add src to path for config_loader
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+from config_loader import get_data_path
 
 # Fix SSL certificate issues on macOS (common with pyenv)
 # See api_setup/fixing_ssl.md for details
@@ -161,7 +166,7 @@ CLOSE_OPPORTUNITY_MAX = 1.00  # 100% probability
 BASE_WAGER_AMOUNT = 100  # Default total stake for bet calculations ($)
 
 # Output Configuration
-OUTPUT_DIR = 'data/arbs'
+OUTPUT_DIR = str(get_data_path('output_arbs'))  # data/04_output/arbs
 DEFAULT_TOTAL_STAKE = 100.0  # Default total amount to wager for bet sizing recommendations
 SAMPLE_NON_ARBS_TO_SHOW = 5
 

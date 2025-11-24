@@ -1,11 +1,11 @@
 """
 Using NBA game results for all seasons dating back to 2014-15, verify we have a match with each 3pt prop from 2024-25 season.
 - Inputs: 
-    - NBA game results for all seasons dating back to 2014-15 (filename: data/nba_api/historical/nba_games_all_seasons.csv)
+    - NBA game results for all seasons dating back to 2014-15 (filename: data/01_input/nba_api/historical/nba_games_all_seasons.csv)
     - 3pt props for the 2024-25 season (filename: historical_props/combined_props_player_threes.csv)
 - Output:
     - Verified dataframe with 3pt prop data, as well as box score statistics for the player that the prop pertains to.
-    - File: data/consensus_props_with_game_results_2024_25.csv
+    - File: data/03_intermediate/consensus_props_with_game_results_2024_25.csv
 
 - Notes:
     - Match rate: ~93.8% (expected and normal)
@@ -43,9 +43,10 @@ except ImportError:
     print("⚠️  Warning: Could not import player_name_utils. Using inline normalization.")
     normalize_player_names_df = None
 
+from config_loader import get_file_path, get_data_path
 
 ROOT = get_project_root()
-OUTPUT_DIR = os.path.join(ROOT, 'data')
+OUTPUT_DIR = str(ROOT / get_data_path('intermediate'))
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
@@ -77,7 +78,7 @@ def load_props_data():
 
 def load_game_results():
     """Load player game results for 2024-25 season."""
-    results_file = os.path.join(OUTPUT_DIR, 'nba_game_results_2024_25.csv')
+    results_file = str(ROOT / get_file_path('nba_game_results_current'))
     print(f"Loading game results from: {results_file}")
     
     df_results = pd.read_csv(results_file)

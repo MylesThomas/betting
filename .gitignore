@@ -42,15 +42,15 @@ Thumbs.db
 *.csv
 
 # But INCLUDE these specific patterns:
-!data/arbs/arb_*.csv
-!data/arbs/raw_*.csv
-!data/nba_full_roster_cache.csv
-!data/player_team_cache.csv
-!data/nba_api/historical/*.csv
+!data/04_output/arbs/arb_*.csv
+!data/04_output/arbs/raw_*.csv
+!data/02_cache/nba_full_roster_cache.csv
+!data/02_cache/player_team_cache.csv
+!data/01_input/nba_api/historical/*.csv
 
 # Ignore archive data
-data/arbs/archive/
-historical_props/
+data/04_output/arbs/archive/
+data/01_input/the-odds-api/historical_props/
 
 # Logs
 *.log

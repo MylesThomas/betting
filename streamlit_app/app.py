@@ -18,7 +18,7 @@ all the pieces fit together and the order they run:
    
    - Queries NBA API for all 525+ players across 30 teams
    - Uses CURRENT_NBA_SEASON from config.py
-   - Creates: data/nba_full_roster_cache.csv
+   - Creates: data/02_cache/nba_full_roster_cache.csv
    - Purpose: Baseline player-to-team mapping for the season
    - When: Run once at season start, then weekly to catch trades
 
@@ -27,12 +27,12 @@ all the pieces fit together and the order they run:
    
    - Queries The Odds API for live prop odds from all bookmakers
    - Finds arbitrage opportunities (combined probability < 100%)
-   - Creates: data/arbs/arb_*_YYYYMMDD.csv (one per day)
+   - Creates: data/04_output/arbs/arb_*_YYYYMMDD.csv (one per day)
    - Uses: ODDS_API_KEY environment variable
    - When: Daily at 7 AM ET (before games start)
 
 4. TEAM MAPPING: Player-to-Team Cache (AUTOMATIC)
-   File: data/player_team_cache.csv
+   File: data/02_cache/player_team_cache.csv
    
    - Auto-generated when dashboard loads
    - First load: Queries NBA API for each unique player (~3 min)
@@ -52,17 +52,17 @@ all the pieces fit together and the order they run:
      Step 2: Convert to player_team_cache format
      $ python3 << 'EOF'
      import pandas as pd
-     from datetime import datetime
-     full_roster = pd.read_csv('data/nba_full_roster_cache.csv')
-     player_team_cache = pd.DataFrame({
+    from datetime import datetime
+    full_roster = pd.read_csv('data/02_cache/nba_full_roster_cache.csv')
+    player_team_cache = pd.DataFrame({
          'player_normalized': full_roster['player_normalized'],
          'team': full_roster['team'],
          'timestamp': datetime.now().isoformat()
      })
      player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
-     player_team_cache = player_team_cache.sort_values('player_normalized')
-     player_team_cache.to_csv('data/player_team_cache.csv', index=False)
-     print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
+    player_team_cache = player_team_cache.sort_values('player_normalized')
+    player_team_cache.to_csv('data/02_cache/player_team_cache.csv', index=False)
+    print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
      EOF
    
    Alternatively, use the "Invalidate Cache" button in the dashboard sidebar.
@@ -70,7 +70,7 @@ all the pieces fit together and the order they run:
 5. THIS DASHBOARD: View & Analyze (ALWAYS RUNNING)
    Run: streamlit run streamlit_app/app.py
    
-   - Loads all historical arb files from data/arbs/
+   - Loads all historical arb files from data/04_output/arbs/
    - Adds team column using cached player-to-team mappings
    - Provides filtering, sorting, and analysis
    - When: Always running on port 8501
@@ -81,15 +81,15 @@ NBA API (rosters)
     ↓
 build_full_roster_cache.py
     ↓
-data/nba_full_roster_cache.csv  ←─┐
-    ↓                               │
-The Odds API (props)                │
-    ↓                               │
-find_arb_opportunities.py           │
-    ↓                               │
-data/arbs/arb_*_YYYYMMDD.csv        │
-    ↓                               │
-Streamlit Dashboard (YOU ARE HERE)  │
+data/02_cache/nba_full_roster_cache.csv  ←─┐
+    ↓                                        │
+The Odds API (props)                         │
+    ↓                                        │
+find_arb_opportunities.py                    │
+    ↓                                        │
+data/04_output/arbs/arb_*_YYYYMMDD.csv      │
+    ↓                                        │
+Streamlit Dashboard (YOU ARE HERE)           │
     ↓                               │
 Needs player teams? ────────────────┘
     ↓
@@ -133,7 +133,7 @@ Architecture:
     │   └── python scripts/find_arb_opportunities.py --markets player_points,player_rebounds,...
     ├── Streamlit app (always running on port 8501)
     │   └── streamlit run streamlit_app/app.py
-    └── Data stored locally at /data/arbs/
+    └── Data stored locally at /data/04_output/arbs/
     
 Deployment Steps:
     1. Launch EC2 instance (Ubuntu)
@@ -246,8 +246,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Constants
-DATA_DIR = Path("data/arbs")
+# Constants  
+DATA_DIR = Path("data/04_output/arbs")
 SCRIPT_PATH = "scripts/find_arb_opportunities.py"
 
 # Helper functions

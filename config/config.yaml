@@ -1,0 +1,36 @@
+data_directories:
+  repo_dir_absolute: /Users/thomasmyles/dev/betting
+  data_dir_relative: data
+  
+  # Organized data folder structure
+  input: data/01_input
+  cache: data/02_cache
+  intermediate: data/03_intermediate
+  output: data/04_output
+  temp: data/99_tmp
+  
+  # Input subdirectories (source/reference data)
+  input_nba_calendar: data/01_input/nba_calendar
+  input_nba_api: data/01_input/nba_api
+  input_nba_api_historical: data/01_input/nba_api/historical
+  input_odds_api: data/01_input/the-odds-api
+  input_odds_api_historical: data/01_input/the-odds-api/historical_props
+  
+  # Output subdirectories (final results)
+  output_arbs: data/04_output/arbs
+
+# Commonly used file paths
+files:
+  # Input files
+  nba_calendar_all_games: data/01_input/nba_calendar/all_games_2024_25.csv
+  nba_calendar_daily_summary: data/01_input/nba_calendar/daily_summary_2024_25.csv
+  nba_calendar_game_dates: data/01_input/nba_calendar/game_dates_2024_25.json
+  
+  # Cache files
+  nba_full_roster_cache: data/02_cache/nba_full_roster_cache.csv
+  player_team_cache: data/02_cache/player_team_cache.csv
+  
+  # Analysis/intermediate files
+  nba_game_results_current: data/03_intermediate/nba_game_results_2024_25.csv
+  consensus_props: data/03_intermediate/consensus_props_with_game_results_2024_25.csv
+  props_with_results: data/03_intermediate/props_with_game_results_2024_25.csv

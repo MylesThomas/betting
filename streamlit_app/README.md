@@ -30,7 +30,7 @@ The dashboard will open in your browser at `http://localhost:8501`
 EC2 instance (t2.small, ~$15/month)
 ├── Cron job → runs arb finder at 7am ET daily
 ├── Streamlit app → always running on port 8501
-└── Data → stored locally at /data/arbs/
+└── Data → stored locally at /data/04_output/arbs/
 ```
 
 **Deployment steps are documented in `app.py` docstring.**
@@ -41,9 +41,9 @@ EC2 instance (t2.small, ~$15/month)
 
 ## Development
 
-The dashboard reads from `data/arbs/` directory. Make sure you have arb data files:
+The dashboard reads from `data/04_output/arbs/` directory. Make sure you have arb data files:
 ```
-data/arbs/
+data/04_output/arbs/
 ├── arb_threes_20251121.csv
 ├── arb_points_20251121.csv
 └── ...
@@ -69,7 +69,7 @@ python scripts/build_full_roster_cache.py
 python3 << 'EOF'
 import pandas as pd
 from datetime import datetime
-full_roster = pd.read_csv('data/nba_full_roster_cache.csv')
+full_roster = pd.read_csv('data/02_cache/nba_full_roster_cache.csv')
 player_team_cache = pd.DataFrame({
     'player_normalized': full_roster['player_normalized'],
     'team': full_roster['team'],
@@ -77,7 +77,7 @@ player_team_cache = pd.DataFrame({
 })
 player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
 player_team_cache = player_team_cache.sort_values('player_normalized')
-player_team_cache.to_csv('data/player_team_cache.csv', index=False)
+player_team_cache.to_csv('data/02_cache/player_team_cache.csv', index=False)
 print(f"✅ Updated player_team_cache.csv with {len(player_team_cache)} players")
 EOF
 ```

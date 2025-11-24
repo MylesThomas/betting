@@ -44,11 +44,12 @@ sys.path.append(str(Path(__file__).parent))
 
 from player_name_utils import normalize_player_name
 from config import PLAYER_TEAM_CACHE_MAX_AGE_HOURS
+from config_loader import get_file_path
 
 
 # Constants
-GAME_RESULTS_PATH = Path(__file__).parent.parent / "data" / "nba_game_results_2024_25.csv"
-PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / "data" / "player_team_cache.csv"
+GAME_RESULTS_PATH = Path(__file__).parent.parent / get_file_path('nba_game_results_current')
+PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / get_file_path('player_team_cache')
 
 
 # Team abbreviation to full name mapping (for NBA teams only)
@@ -351,9 +352,11 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
         If you need to manually rebuild the cache (e.g., after trades):
         1. Run: python scripts/build_full_roster_cache.py
         2. Then convert to player_team_cache format (see streamlit_app/app.py docstring)
+        - run: python scripts/update_player_cache.py
         
         Or use the "Invalidate Cache" button in the Streamlit dashboard sidebar.
     
+
     Strategy (in order of priority):
         0. Cache Lookup (if enabled):
            - Check CSV cache file first
@@ -452,6 +455,7 @@ def build_player_team_mapping(df: pd.DataFrame, player_col: str = 'player', game
         # 
         # Try to lookup player's current team via API first
         # This handles trades and is always up-to-date
+        # api_team = lookup_player_team_from_api(player, all_game_teams)
         api_team = None  # Disabled: lookup_player_team_from_api(player, all_game_teams)
         if api_team and api_team in all_game_teams:
             # API returned a team that matches tonight's game - use it!

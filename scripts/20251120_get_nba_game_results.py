@@ -52,7 +52,7 @@ def get_project_root():
 
 LST_SEASONS = [f"{year}-{str(year+1)[-2:]}" for year in range(2014, 2024 + 1)]
 
-OUTPUT_DIR = os.path.join(get_project_root(), 'data', 'nba_api', 'historical')
+OUTPUT_DIR = os.path.join(get_project_root(), 'data', '01_input', 'nba_api', 'historical')
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 

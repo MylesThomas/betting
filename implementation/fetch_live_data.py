@@ -11,7 +11,7 @@ QUICK START:
 
 MODES:
     --live: Fetch live data from The Odds API (requires ODDS_API_KEY environment variable)
-    --test: Use existing test data from data/arbs/ (no API calls)
+    --test: Use existing test data from data/04_output/arbs/ (no API calls)
 
 OUTPUT FILES (saved to data/live/):
     - props_today_YYYYMMDD.csv          # Tonight's 3pt prop odds
@@ -34,10 +34,10 @@ NEXT STEP:
 
 DATA ORGANIZATION:
     data/
-    ├── live/        # Today's live data (output)
-    ├── results/     # Bet recommendations (from find_todays_plays.py)
-    ├── historical/  # Historical backtest data
-    └── arbs/        # Arbitrage data (used for test mode)
+    ├── live/               # Today's live data (output)
+    ├── 04_output/arbs/     # Arbitrage data (used for test mode)
+    ├── 03_intermediate/    # Analysis results
+    └── 01_input/           # Reference data
 
 Author: Myles Thomas
 Date: 2025-11-21
@@ -186,7 +186,7 @@ def fetch_season_game_results(output_path=None):
     print("LOADING SEASON-TO-DATE GAME RESULTS")
     print("="*80)
     
-    source_path = 'data/nba_game_results_2024_25.csv'
+    source_path = 'data/03_intermediate/nba_game_results_2024_25.csv'
     
     if not os.path.exists(source_path):
         print(f"❌ Error: {source_path} not found")
@@ -232,10 +232,10 @@ def use_test_data(output_dir='data/live'):
     print("="*80)
     print()
     
-    # Use the most recent raw props file from data/arbs/
-    arbs_dir = Path('data/arbs')
+    # Use the most recent raw props file from data/04_output/arbs/
+    arbs_dir = Path('data/04_output/arbs')
     if not arbs_dir.exists():
-        raise FileNotFoundError("No test data found in data/arbs/")
+        raise FileNotFoundError("No test data found in data/04_output/arbs/")
     
     # Find most recent raw props file (just threes, not combined markets)
     raw_files = [f for f in sorted(arbs_dir.glob('raw_threes_*.csv')) 
@@ -246,7 +246,7 @@ def use_test_data(output_dir='data/live'):
         raw_files = sorted(arbs_dir.glob('raw_*.csv'))
     
     if not raw_files:
-        raise FileNotFoundError("No raw props files found in data/arbs/")
+        raise FileNotFoundError("No raw props files found in data/04_output/arbs/")
     
     props_file = raw_files[-1]
     print(f"Using props from: {props_file}")
@@ -255,7 +255,7 @@ def use_test_data(output_dir='data/live'):
     props_df = pd.read_csv(props_file)
     
     # Load game results
-    game_results_file = 'data/nba_game_results_2024_25.csv'
+    game_results_file = 'data/03_intermediate/nba_game_results_2024_25.csv'
     if not os.path.exists(game_results_file):
         raise FileNotFoundError(f"Game results not found: {game_results_file}")
     

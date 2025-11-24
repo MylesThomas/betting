@@ -8,9 +8,14 @@ Uses nba_api package to fetch player game logs.
 """
 
 import pandas as pd
+import sys
 from pathlib import Path
 from datetime import datetime
 import time
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+from config_loader import get_file_path
 
 # ============================================================================
 # SSL FIX - Must be done BEFORE importing nba_api
@@ -163,7 +168,7 @@ def main():
         return
     
     # Save to data directory
-    output_file = Path(__file__).parent.parent / 'data' / 'nba_game_results_2024_25.csv'
+    output_file = Path(__file__).parent.parent / get_file_path('nba_game_results_current')
     save_results(df, output_file)
     
     print("="*70)
