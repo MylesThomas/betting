@@ -19,6 +19,7 @@ Environment Variables Required:
 - GITHUB_EMAIL: mylescgthomas@gmail.com
 - SECRET_NAME: betting-dashboard-secrets
 - AWS_REGION_NAME: us-east-2
+- SNS_TOPIC_ARN: arn:aws:sns:us-east-2:ACCOUNT_ID:betting-dashboard-alerts (optional)
 
 Secrets Required (in AWS Secrets Manager):
 - ODDS_API_KEY: Your Odds API key
@@ -26,6 +27,7 @@ Secrets Required (in AWS Secrets Manager):
 
 IAM Permissions Required:
 - secretsmanager:GetSecretValue
+- sns:Publish (if SNS_TOPIC_ARN is configured)
 
 Lambda Configuration:
 - Runtime: Python 3.12
@@ -44,6 +46,34 @@ import subprocess
 import boto3
 from datetime import datetime
 from botocore.exceptions import ClientError
+
+
+def send_email_notification(subject, message, topic_arn=None):
+    """
+    Send email notification via AWS SNS.
+    
+    Args:
+        subject: Email subject
+        message: Email body
+        topic_arn: SNS topic ARN (optional, defaults to env var)
+    """
+    if topic_arn is None:
+        topic_arn = os.environ.get('SNS_TOPIC_ARN')
+    
+    if not topic_arn:
+        print("⚠️  No SNS_TOPIC_ARN configured - skipping email notification")
+        return
+    
+    try:
+        sns_client = boto3.client('sns', region_name=os.environ.get('AWS_REGION_NAME', 'us-east-2'))
+        response = sns_client.publish(
+            TopicArn=topic_arn,
+            Subject=subject,
+            Message=message
+        )
+        print(f"✅ Email notification sent (MessageId: {response['MessageId']})")
+    except Exception as e:
+        print(f"⚠️  Failed to send email notification: {e}")
 
 
 def get_secrets():
@@ -237,6 +267,20 @@ def lambda_handler(event, context):
         print("")
         print("View dashboard at: https://tqs-nba-props-dashboard.streamlit.app")
         
+        # Send success notification
+        success_message = f"""✅ TQS NBA Props Dashboard - Daily Update Successful
+
+Execution time: {datetime.now().isoformat()}
+
+The arbitrage finder has completed successfully and new data has been pushed to GitHub.
+
+Dashboard: https://tqs-nba-props-dashboard.streamlit.app
+
+Check CloudWatch Logs for details:
+https://us-east-2.console.aws.amazon.com/cloudwatch/home?region=us-east-2#logsV2:log-groups/log-group/$252Faws$252Flambda$252Fbetting-dashboard-daily-update
+"""
+        send_email_notification("✅ Dashboard Update Successful", success_message)
+        
         return {
             'statusCode': 200,
             'body': json.dumps({
@@ -249,6 +293,24 @@ def lambda_handler(event, context):
         error_msg = f"❌ Error: {str(e)}"
         print(error_msg)
         print("")
+        
+        # Send failure notification
+        failure_message = f"""❌ TQS NBA Props Dashboard - Daily Update FAILED
+
+Execution time: {datetime.now().isoformat()}
+
+Error: {str(e)}
+
+Check CloudWatch Logs for full details:
+https://us-east-2.console.aws.amazon.com/cloudwatch/home?region=us-east-2#logsV2:log-groups/log-group/$252Faws$252Flambda$252Fbetting-dashboard-daily-update
+
+Common issues:
+- API key missing or invalid
+- Git authentication failed
+- Package import errors (check Lambda layer)
+- Insufficient permissions
+"""
+        send_email_notification("❌ Dashboard Update FAILED", failure_message)
         
         return {
             'statusCode': 500,

@@ -294,6 +294,7 @@ Lambda needs additional packages (Python dependencies + git) that aren't include
   - **Function:** `betting-dashboard-daily-update`
   - **Threshold:** > 0 errors in 1 minute
   - **Notification:** SNS topic `betting-dashboard-alerts`
+  - name: dashboard-alarm-1
 
 - [ ] **11.3** Test alert:
   - Manually break something in Lambda (e.g., invalid API key)
