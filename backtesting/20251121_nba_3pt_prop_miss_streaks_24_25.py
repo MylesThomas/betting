@@ -200,7 +200,8 @@ def load_clean_data():
     Returns:
         DataFrame with merged props and game results
     """
-    clean_data_file = Path(__file__).parent.parent / 'data' / 'consensus_props_with_game_results_min10_2024_25.csv'
+    # clean_data_file = Path(__file__).parent.parent / 'data' / 'consensus_props_with_game_results_min10_2024_25.csv'
+    clean_data_file = Path(__file__).parent.parent / 'data' / '03_intermediate' / 'consensus_props_with_game_results_min10_2024_25.csv'
     
     if not clean_data_file.exists():
         raise FileNotFoundError(
