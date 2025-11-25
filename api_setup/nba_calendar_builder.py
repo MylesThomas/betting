@@ -1,10 +1,17 @@
 """
-NBA Game Calendar Builder for 2024-25 Season
+NBA Game Calendar Builder
 
 This script:
-1. Fetches all NBA games from 2024-25 season
+1. Fetches all NBA games from any season
 2. Creates a calendar of unique game dates
 3. Saves game dates and event IDs for historical prop fetching
+
+Usage:
+    # Build calendar for current season
+    python nba_calendar_builder.py
+    
+    # Build for specific season
+    python nba_calendar_builder.py --season 2025-26
 
 Note: This calendar only includes Regular Season games from the NBA API.
 Special games like the NBA Cup Championship(e.g., Bucks vs. Thunder on Dec 17, 2024)
@@ -18,46 +25,81 @@ from pathlib import Path
 import ssl
 import urllib3
 import requests
+import argparse
+import sys
 
 # SSL fix for NBA API
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-original_request = requests.Session.request
-def patched_request(self, *args, **kwargs):
+# Patch Session.request
+original_session_request = requests.Session.request
+def patched_session_request(self, *args, **kwargs):
     kwargs['verify'] = False
-    return original_request(self, *args, **kwargs)
-requests.Session.request = patched_request
+    kwargs.setdefault('timeout', 120)  # Increase timeout to 120 seconds
+    return original_session_request(self, *args, **kwargs)
+requests.Session.request = patched_session_request
+
+# Patch requests.get (nba_api uses this directly)
+original_requests_get = requests.get
+def patched_requests_get(*args, **kwargs):
+    kwargs['verify'] = False
+    kwargs.setdefault('timeout', 120)  # Increase timeout to 120 seconds
+    return original_requests_get(*args, **kwargs)
+requests.get = patched_requests_get
 
 from nba_api.stats.endpoints import leaguegamefinder
 from nba_api.stats.static import teams
 import time
 
+# Add parent dir to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.config import CURRENT_NBA_SEASON
 
-def get_all_nba_games_2024_25():
+
+def get_all_nba_games(season='2025-26', max_retries=3):
     """
-    Fetch all NBA games from 2024-25 season
-    Returns DataFrame with game dates and info
+    Fetch all NBA games from specified season
+    
+    Args:
+        season: Season string (e.g., '2025-26')
+        max_retries: Number of times to retry on timeout
+    
+    Returns:
+        DataFrame with game dates and info
     """
-    print("🏀 Fetching all NBA games for 2024-25 season...")
+    print(f"🏀 Fetching all NBA games for {season} season...")
     print("⏳ This may take a moment...\n")
     
-    # Get all games for 2024-25 season
-    gamefinder = leaguegamefinder.LeagueGameFinder(
-        season_nullable='2024-25',
-        season_type_nullable='Regular Season',
-        league_id_nullable='00'
-    )
-    
-    games = gamefinder.get_data_frames()[0]
-    
-    # Each game appears twice (once for each team), so we need to deduplicate
-    # Use GAME_ID to get unique games
-    unique_games = games.drop_duplicates(subset=['GAME_ID'])
-    
-    print(f"✅ Found {len(unique_games)} unique games")
-    
-    return unique_games
+    # Retry logic for flaky NBA API
+    for attempt in range(max_retries):
+        try:
+            # Get all games for specified season
+            gamefinder = leaguegamefinder.LeagueGameFinder(
+                season_nullable=season,
+                season_type_nullable='Regular Season',
+                league_id_nullable='00'
+            )
+            
+            games = gamefinder.get_data_frames()[0]
+            
+            # Each game appears twice (once for each team), so we need to deduplicate
+            # Use GAME_ID to get unique games
+            unique_games = games.drop_duplicates(subset=['GAME_ID']).copy()
+            
+            print(f"✅ Found {len(unique_games)} unique games")
+            
+            return unique_games
+            
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
+                print(f"⚠️  Request timed out (attempt {attempt + 1}/{max_retries})")
+                print(f"   Waiting {wait_time} seconds before retry...\n")
+                time.sleep(wait_time)
+            else:
+                print(f"❌ Failed after {max_retries} attempts")
+                raise
 
 
 def create_game_calendar(games_df):
@@ -105,18 +147,34 @@ def get_games_for_date(games_df, target_date):
     return date_games[['GAME_ID', 'GAME_DATE', 'MATCHUP', 'TEAM_NAME']].sort_values('GAME_DATE')
 
 
-def save_calendar(unique_dates, games_df, output_dir='nba_calendar'):
+def save_calendar(unique_dates, games_df, season='2025-26', output_dir=None):
     """
     Save game calendar and metadata to files
+    
+    Args:
+        unique_dates: List of unique game dates
+        games_df: DataFrame with all games
+        season: Season string (e.g., '2025-26')
+        output_dir: Output directory path (defaults to data/01_input/nba_calendar)
     """
-    output_path = Path(output_dir)
-    output_path.mkdir(exist_ok=True)
+    if output_dir is None:
+        # Save to data/01_input/nba_calendar
+        project_root = Path(__file__).parent.parent
+        output_path = project_root / 'data' / '01_input' / 'nba_calendar'
+    else:
+        output_path = Path(output_dir)
+    
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    # Convert season format for filenames: 2025-26 -> 2025_26
+    season_underscore = season.replace('-', '_')
     
     # Save unique dates as list
     dates_list = [str(d) for d in unique_dates]
-    with open(output_path / 'game_dates_2024_25.json', 'w') as f:
+    json_file = output_path / f'game_dates_{season_underscore}.json'
+    with open(json_file, 'w') as f:
         json.dump({
-            'season': '2024-25',
+            'season': season,
             'total_game_days': len(unique_dates),
             'opening_day': str(unique_dates[0]),
             'last_game': str(unique_dates[-1]),
@@ -125,7 +183,8 @@ def save_calendar(unique_dates, games_df, output_dir='nba_calendar'):
     
     # Save full games dataset
     games_df['DATE_ONLY'] = pd.to_datetime(games_df['GAME_DATE']).dt.date
-    games_df.to_csv(output_path / 'all_games_2024_25.csv', index=False)
+    csv_file = output_path / f'all_games_{season_underscore}.csv'
+    games_df.to_csv(csv_file, index=False)
     
     # Create daily summary
     daily_summary = games_df.groupby('DATE_ONLY').agg({
@@ -133,12 +192,13 @@ def save_calendar(unique_dates, games_df, output_dir='nba_calendar'):
         'MATCHUP': lambda x: ', '.join(x.unique()[:5]) + ('...' if len(x.unique()) > 5 else '')
     }).reset_index()
     daily_summary.columns = ['Date', 'Num_Games', 'Sample_Matchups']
-    daily_summary.to_csv(output_path / 'daily_summary_2024_25.csv', index=False)
+    summary_file = output_path / f'daily_summary_{season_underscore}.csv'
+    daily_summary.to_csv(summary_file, index=False)
     
     print(f"\n💾 Calendar saved to {output_path}/")
-    print(f"   - game_dates_2024_25.json (list of dates)")
-    print(f"   - all_games_2024_25.csv (full game data)")
-    print(f"   - daily_summary_2024_25.csv (games per day)")
+    print(f"   - {json_file.name} (list of dates)")
+    print(f"   - {csv_file.name} (full game data)")
+    print(f"   - {summary_file.name} (games per day)")
     
     return output_path
 
@@ -180,16 +240,22 @@ def estimate_api_costs(num_game_days, avg_games_per_day=12):
     print("="*60 + "\n")
 
 
-def main():
+def main(season=None):
     """
     Main function - builds NBA calendar and prepares for prop fetching
+    
+    Args:
+        season: Season string (e.g., '2025-26'). Defaults to current season.
     """
+    if season is None:
+        season = CURRENT_NBA_SEASON
+    
     print("="*60)
-    print("NBA GAME CALENDAR BUILDER - 2024-25 SEASON")
+    print(f"NBA GAME CALENDAR BUILDER - {season} SEASON")
     print("="*60 + "\n")
     
     # Fetch all games
-    games_df = get_all_nba_games_2024_25()
+    games_df = get_all_nba_games(season)
     
     # Create calendar
     unique_dates, games_per_date, opening_day = create_game_calendar(games_df)
@@ -205,7 +271,7 @@ def main():
         print(f"  {game['MATCHUP']}")
     
     # Save calendar
-    output_path = save_calendar(unique_dates, games_df)
+    output_path = save_calendar(unique_dates, games_df, season)
     
     # Show cost estimates
     avg_games = len(games_df) / len(unique_dates)
@@ -216,25 +282,38 @@ def main():
     print("🎯 NEXT STEPS")
     print("="*60)
     print(f"""
-1. We've identified {len(unique_dates)} game days in 2024-25 season
+1. We've identified {len(unique_dates)} game days in {season} season
 
-2. To test fetching props for opening day:
-   - Date: {opening_day}
-   - Games: {len(opening_games)}
-   - You'll need The Odds API historical endpoint
-
-3. Ready to fetch? Run:
-   python fetch_historical_props.py --date {opening_day} --test
+2. To fetch props for this season:
+   python scripts/fetch_and_build_season_props.py --season {season} --market player_threes
 
 This will:
-- Fetch props for opening day only (~{len(opening_games)} games × 10 credits = ~{len(opening_games) * 10} credits)
-- Validate the data
-- Show you what a full season fetch would look like
+- Check which dates already have props
+- Fetch missing dates from The Odds API
+- Combine all props into consensus dataset
 """)
     
     return unique_dates, games_df, opening_day
 
 
 if __name__ == "__main__":
-    unique_dates, games_df, opening_day = main()
+    parser = argparse.ArgumentParser(
+        description='Build NBA game calendar for historical prop fetching',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Build current season calendar
+  python nba_calendar_builder.py
+  
+  # Build specific season
+  python nba_calendar_builder.py --season 2025-26
+        """
+    )
+    
+    parser.add_argument('--season', type=str, default=None,
+                       help=f'Season to build calendar for (default: {CURRENT_NBA_SEASON})')
+    
+    args = parser.parse_args()
+    
+    unique_dates, games_df, opening_day = main(args.season)
 
