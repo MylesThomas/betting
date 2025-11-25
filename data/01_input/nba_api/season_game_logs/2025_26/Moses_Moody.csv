@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Moses Moody,1630541,2025-11-21,GSW vs. POR,L,28.0,3,6,0.5,2,5,0.4,2,2,1.0,1,1,2,1,0,1,2,5,10,-15,POR,HOME,Moses Moody
+Moses Moody,1630541,2025-11-19,GSW @ MIA,L,36.0,3,12,0.25,1,6,0.167,2,2,1.0,1,5,6,4,1,1,3,3,9,-11,MIA,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-18,GSW @ ORL,L,30.0,2,6,0.333,1,4,0.25,1,2,0.5,1,3,4,2,2,0,3,3,6,-3,ORL,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-16,GSW @ NOP,W,33.0,10,16,0.625,8,12,0.667,4,5,0.8,1,3,4,0,3,1,1,2,32,22,NOP,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-14,GSW @ SAS,W,30.0,2,8,0.25,0,4,0.0,0,0,0.0,1,2,3,1,0,0,2,1,4,-2,SAS,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-12,GSW @ SAS,W,26.0,6,13,0.462,5,10,0.5,2,2,1.0,1,2,3,3,0,0,0,2,19,4,SAS,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-11,GSW @ OKC,L,20.0,3,6,0.5,2,4,0.5,2,2,1.0,0,0,0,0,1,1,1,0,10,-25,OKC,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-09,GSW vs. IND,W,23.0,4,11,0.364,3,9,0.333,2,3,0.667,1,2,3,1,2,1,0,4,13,22,IND,HOME,Moses Moody
+Moses Moody,1630541,2025-11-07,GSW @ DEN,L,19.0,1,9,0.111,0,6,0.0,0,0,0.0,0,3,3,3,0,0,1,1,2,-9,DEN,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-05,GSW @ SAC,L,39.0,9,15,0.6,6,11,0.545,4,4,1.0,1,2,3,3,2,4,3,3,28,5,SAC,AWAY,Moses Moody
+Moses Moody,1630541,2025-11-04,GSW vs. PHX,W,34.0,7,11,0.636,5,8,0.625,5,6,0.833,1,4,5,2,1,0,1,2,24,15,PHX,HOME,Moses Moody
+Moses Moody,1630541,2025-11-01,GSW @ IND,L,16.0,1,3,0.333,1,2,0.5,0,0,0.0,0,2,2,3,0,1,0,2,3,15,IND,AWAY,Moses Moody
+Moses Moody,1630541,2025-10-30,GSW @ MIL,L,10.0,0,3,0.0,0,3,0.0,0,0,0.0,0,3,3,0,0,1,0,1,0,-6,MIL,AWAY,Moses Moody
+Moses Moody,1630541,2025-10-28,GSW vs. LAC,W,22.0,3,9,0.333,3,7,0.429,0,0,0.0,0,3,3,2,1,0,2,2,9,18,LAC,HOME,Moses Moody
+Moses Moody,1630541,2025-10-27,GSW vs. MEM,W,22.0,6,10,0.6,5,7,0.714,3,3,1.0,0,2,2,1,1,2,2,2,20,-3,MEM,HOME,Moses Moody
+Moses Moody,1630541,2025-10-24,GSW @ POR,L,21.0,1,6,0.167,1,3,0.333,4,6,0.667,0,2,2,0,1,0,2,1,7,-12,POR,AWAY,Moses Moody

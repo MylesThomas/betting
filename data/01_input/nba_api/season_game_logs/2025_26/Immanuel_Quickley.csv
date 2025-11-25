@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Immanuel Quickley,1630193,2025-11-23,TOR vs. BKN,W,30.0,4,11,0.364,3,6,0.5,2,2,1.0,0,7,7,4,1,0,1,5,13,3,BKN,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-21,TOR vs. WAS,W,30.0,6,10,0.6,3,6,0.5,2,2,1.0,0,2,2,7,1,1,0,1,17,17,WAS,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-19,TOR @ PHI,W,38.0,7,15,0.467,4,9,0.444,0,0,0.0,0,5,5,6,3,0,1,2,18,8,PHI,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-17,TOR vs. CHA,W,31.0,6,11,0.545,3,8,0.375,0,0,0.0,0,10,10,4,2,0,3,3,15,7,CHA,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-15,TOR @ IND,W,29.0,5,10,0.5,2,6,0.333,0,0,0.0,0,3,3,7,0,0,2,2,12,11,IND,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-13,TOR @ CLE,W,32.0,10,13,0.769,5,7,0.714,0,0,0.0,0,1,1,6,0,0,2,2,25,13,CLE,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-11,TOR @ BKN,W,32.0,10,17,0.588,3,8,0.375,1,2,0.5,2,6,8,5,2,0,1,2,24,20,BKN,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-08,TOR @ PHI,L,36.0,8,16,0.5,5,9,0.556,1,2,0.5,0,6,6,6,0,0,1,2,22,-8,PHI,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-07,TOR @ ATL,W,34.0,5,11,0.455,3,7,0.429,5,6,0.833,0,5,5,6,3,0,2,2,18,5,ATL,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-04,TOR vs. MIL,W,26.0,5,15,0.333,2,7,0.286,3,3,1.0,0,6,6,7,1,0,1,1,15,11,MIL,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-11-02,TOR vs. MEM,W,32.0,2,5,0.4,2,4,0.5,3,3,1.0,1,3,4,3,0,0,2,5,9,6,MEM,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-10-31,TOR @ CLE,W,27.0,2,9,0.222,0,3,0.0,0,0,0.0,0,1,1,6,2,0,2,0,4,1,CLE,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-10-29,TOR vs. HOU,L,31.0,5,11,0.455,4,7,0.571,1,2,0.5,0,3,3,7,0,0,3,2,15,-13,HOU,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-10-27,TOR @ SAS,L,32.0,4,7,0.571,2,4,0.5,5,6,0.833,0,3,3,7,3,0,0,2,15,-9,SAS,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-10-26,TOR @ DAL,L,32.0,5,16,0.313,1,7,0.143,3,3,1.0,2,3,5,5,2,0,1,3,14,-15,DAL,AWAY,Immanuel Quickley
+Immanuel Quickley,1630193,2025-10-24,TOR vs. MIL,L,37.0,6,14,0.429,1,4,0.25,6,10,0.6,3,4,7,8,2,0,2,2,19,-4,MIL,HOME,Immanuel Quickley
+Immanuel Quickley,1630193,2025-10-22,TOR @ ATL,W,29.0,5,12,0.417,0,7,0.0,3,4,0.75,0,4,4,8,1,0,3,3,13,9,ATL,AWAY,Immanuel Quickley

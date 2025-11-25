@@ -1,0 +1,4 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Ron Harper Jr.,1631199,2025-11-12,BOS vs. MEM,W,4.0,2,2,1.0,2,2,1.0,0,0,0.0,0,0,0,0,0,1,0,1,6,-1,MEM,HOME,Ron Harper Jr
+Ron Harper Jr.,1631199,2025-11-01,BOS vs. HOU,L,10.0,1,5,0.2,0,4,0.0,0,0,0.0,1,2,3,3,0,0,0,1,2,1,HOU,HOME,Ron Harper Jr
+Ron Harper Jr.,1631199,2025-10-27,BOS @ NOP,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,4,NOP,AWAY,Ron Harper Jr

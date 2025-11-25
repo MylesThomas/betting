@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Austin Reaves,1630559,2025-11-23,LAL @ UTA,W,40.0,7,17,0.412,1,8,0.125,7,8,0.875,1,9,10,4,1,0,3,2,22,-1,UTA,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-11-18,LAL vs. UTA,W,33.0,7,11,0.636,1,4,0.25,11,12,0.917,1,4,5,1,1,0,4,3,26,10,UTA,HOME,Austin Reaves
+Austin Reaves,1630559,2025-11-15,LAL @ MIL,W,36.0,9,17,0.529,5,9,0.556,2,3,0.667,3,3,6,8,1,0,3,4,25,14,MIL,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-11-14,LAL @ NOP,W,39.0,9,16,0.563,2,6,0.333,11,13,0.846,0,4,4,7,1,1,4,3,31,16,NOP,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-11-12,LAL @ OKC,L,30.0,4,12,0.333,0,5,0.0,5,6,0.833,0,5,5,3,1,0,5,3,13,-24,OKC,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-11-10,LAL @ CHA,W,29.0,7,17,0.412,2,10,0.2,8,11,0.727,0,5,5,7,2,0,1,2,24,18,CHA,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-11-02,LAL vs. MIA,W,38.0,9,22,0.409,4,14,0.286,4,5,0.8,2,2,4,11,0,0,3,3,26,7,MIA,HOME,Austin Reaves
+Austin Reaves,1630559,2025-10-31,LAL @ MEM,W,36.0,5,14,0.357,2,8,0.25,9,9,1.0,0,4,4,4,1,0,2,2,21,15,MEM,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-10-29,LAL @ MIN,W,40.0,9,24,0.375,3,11,0.273,7,7,1.0,0,1,1,16,2,0,3,1,28,-1,MIN,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-10-27,LAL vs. POR,L,39.0,13,22,0.591,3,8,0.375,12,14,0.857,0,4,4,5,3,0,8,2,41,0,POR,HOME,Austin Reaves
+Austin Reaves,1630559,2025-10-26,LAL @ SAC,W,39.0,12,22,0.545,6,10,0.6,21,22,0.955,1,10,11,9,2,0,2,1,51,22,SAC,AWAY,Austin Reaves
+Austin Reaves,1630559,2025-10-24,LAL vs. MIN,W,37.0,9,15,0.6,2,5,0.4,5,5,1.0,0,7,7,11,0,0,1,1,25,17,MIN,HOME,Austin Reaves
+Austin Reaves,1630559,2025-10-21,LAL vs. GSW,L,36.0,9,16,0.563,1,5,0.2,7,10,0.7,1,4,5,9,2,0,5,5,26,-14,GSW,HOME,Austin Reaves

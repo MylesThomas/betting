@@ -1,0 +1,7 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Joel Embiid,203954,2025-11-08,PHI vs. TOR,W,26.0,10,16,0.625,1,4,0.25,8,9,0.889,2,4,6,4,0,1,2,3,29,15,TOR,HOME,Joel Embiid
+Joel Embiid,203954,2025-11-04,PHI @ CHI,L,26.0,7,21,0.333,1,6,0.167,5,6,0.833,2,4,6,2,3,4,3,2,20,1,CHI,AWAY,Joel Embiid
+Joel Embiid,203954,2025-10-31,PHI vs. BOS,L,25.0,6,13,0.462,1,2,0.5,7,7,1.0,1,5,6,3,0,2,4,2,20,2,BOS,HOME,Joel Embiid
+Joel Embiid,203954,2025-10-28,PHI @ WAS,W,23.0,9,17,0.529,3,6,0.5,4,6,0.667,3,4,7,5,0,1,3,4,25,9,WAS,AWAY,Joel Embiid
+Joel Embiid,203954,2025-10-25,PHI vs. CHA,W,20.0,7,11,0.636,3,6,0.5,3,5,0.6,0,2,2,4,2,0,4,0,20,-2,CHA,HOME,Joel Embiid
+Joel Embiid,203954,2025-10-22,PHI @ BOS,W,20.0,1,9,0.111,0,4,0.0,2,2,1.0,1,5,6,2,0,1,0,2,4,-16,BOS,AWAY,Joel Embiid

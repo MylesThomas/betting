@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+CJ McCollum,203468,2025-11-22,WAS @ CHI,L,27.0,7,15,0.467,3,5,0.6,1,1,1.0,1,1,2,3,0,1,1,5,18,-7,CHI,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-21,WAS @ TOR,L,26.0,8,15,0.533,2,7,0.286,2,3,0.667,0,3,3,3,1,0,2,2,20,-11,TOR,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-19,WAS @ MIN,L,31.0,6,15,0.4,2,6,0.333,0,0,0.0,1,4,5,4,0,0,1,1,14,1,MIN,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-16,WAS vs. BKN,L,32.0,6,12,0.5,3,7,0.429,2,2,1.0,1,1,2,3,2,0,1,3,17,0,BKN,HOME,Cj Mccollum
+CJ McCollum,203468,2025-11-12,WAS @ HOU,L,29.0,2,11,0.182,2,5,0.4,4,5,0.8,0,2,2,3,0,1,0,1,10,-8,HOU,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-10,WAS @ DET,L,43.0,14,25,0.56,5,10,0.5,9,11,0.818,1,5,6,4,1,0,4,3,42,9,DET,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-08,WAS vs. DAL,L,33.0,9,19,0.474,2,6,0.333,5,6,0.833,1,5,6,2,2,2,3,3,25,-11,DAL,HOME,Cj Mccollum
+CJ McCollum,203468,2025-11-07,WAS vs. CLE,L,28.0,8,16,0.5,6,13,0.462,3,4,0.75,0,2,2,3,1,0,3,4,25,-28,CLE,HOME,Cj Mccollum
+CJ McCollum,203468,2025-11-05,WAS @ BOS,L,18.0,1,10,0.1,0,4,0.0,1,1,1.0,0,1,1,4,0,0,0,3,3,-9,BOS,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-03,WAS @ NYK,L,22.0,2,9,0.222,1,6,0.167,0,0,0.0,1,0,1,2,0,0,0,0,5,-15,NYK,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-11-01,WAS vs. ORL,L,22.0,5,12,0.417,3,4,0.75,0,0,0.0,1,4,5,1,2,0,3,2,13,-20,ORL,HOME,Cj Mccollum
+CJ McCollum,203468,2025-10-30,WAS @ OKC,L,24.0,6,10,0.6,5,8,0.625,2,2,1.0,0,2,2,1,0,0,1,2,19,-5,OKC,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-10-28,WAS vs. PHI,L,40.0,4,14,0.286,2,6,0.333,4,4,1.0,0,1,1,7,1,0,1,4,14,7,PHI,HOME,Cj Mccollum
+CJ McCollum,203468,2025-10-26,WAS vs. CHA,L,30.0,8,20,0.4,4,11,0.364,4,6,0.667,1,5,6,5,0,0,1,2,24,-5,CHA,HOME,Cj Mccollum
+CJ McCollum,203468,2025-10-24,WAS @ DAL,W,33.0,2,8,0.25,1,4,0.25,1,2,0.5,1,1,2,5,1,0,2,2,6,10,DAL,AWAY,Cj Mccollum
+CJ McCollum,203468,2025-10-22,WAS @ MIL,L,29.0,4,14,0.286,0,6,0.0,1,1,1.0,2,4,6,3,0,0,0,1,9,-19,MIL,AWAY,Cj Mccollum

@@ -1,0 +1,5 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Matisse Thybulle,1629680,2025-10-29,POR @ UTA,W,5.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,1,2,0,0,0,3,-6,UTA,AWAY,Matisse Thybulle
+Matisse Thybulle,1629680,2025-10-26,POR @ LAC,L,15.0,2,4,0.5,1,2,0.5,0,0,0.0,0,0,0,0,3,0,0,4,5,9,LAC,AWAY,Matisse Thybulle
+Matisse Thybulle,1629680,2025-10-24,POR vs. GSW,W,15.0,3,3,1.0,2,2,1.0,2,2,1.0,0,2,2,0,3,0,1,2,10,22,GSW,HOME,Matisse Thybulle
+Matisse Thybulle,1629680,2025-10-22,POR vs. MIN,L,14.0,0,2,0.0,0,1,0.0,2,2,1.0,0,2,2,2,2,0,0,1,2,-2,MIN,HOME,Matisse Thybulle

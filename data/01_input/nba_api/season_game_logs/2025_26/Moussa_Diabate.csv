@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Moussa Diabate,1631217,2025-11-23,CHA @ ATL,L,25.0,4,4,1.0,0,0,0.0,4,4,1.0,5,6,11,1,0,0,1,0,12,-13,ATL,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-11-22,CHA vs. LAC,L,25.0,2,4,0.5,0,0,0.0,2,4,0.5,3,4,7,1,0,0,0,3,6,-12,LAC,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-11-19,CHA @ IND,L,24.0,3,9,0.333,0,0,0.0,2,3,0.667,7,5,12,3,0,0,1,3,8,2,IND,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-11-17,CHA @ TOR,L,20.0,3,3,1.0,0,0,0.0,2,3,0.667,2,5,7,2,0,4,1,1,8,9,TOR,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-11-15,CHA vs. OKC,L,24.0,6,7,0.857,0,0,0.0,1,1,1.0,4,7,11,4,1,1,2,2,13,-2,OKC,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-11-14,CHA @ MIL,L,43.0,5,8,0.625,0,0,0.0,5,6,0.833,6,5,11,1,1,0,1,6,15,-16,MIL,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-11-12,CHA vs. MIL,W,23.0,1,3,0.333,0,0,0.0,5,6,0.833,8,5,13,2,1,1,1,2,7,-8,MIL,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-11-10,CHA vs. LAL,L,29.0,4,4,1.0,0,0,0.0,0,0,0.0,1,2,3,1,2,3,0,2,8,0,LAL,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-11-07,CHA @ MIA,L,22.0,4,6,0.667,0,0,0.0,2,5,0.4,7,4,11,0,0,3,1,2,10,-17,MIA,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-11-04,CHA @ NOP,L,18.0,2,3,0.667,0,0,0.0,2,4,0.5,3,2,5,2,2,1,1,3,6,-12,NOP,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-11-02,CHA vs. UTA,W,22.0,7,9,0.778,0,0,0.0,3,3,1.0,6,6,12,0,0,1,0,3,17,-1,UTA,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-11-01,CHA vs. MIN,L,19.0,3,5,0.6,0,0,0.0,5,6,0.833,5,4,9,1,0,0,0,2,11,5,MIN,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-10-30,CHA vs. ORL,L,20.0,4,8,0.5,0,0,0.0,2,2,1.0,4,2,6,1,0,2,0,2,10,-1,ORL,HOME,Moussa Diabate
+Moussa Diabate,1631217,2025-10-28,CHA @ MIA,L,19.0,3,4,0.75,0,0,0.0,2,2,1.0,1,1,2,0,0,1,1,3,8,-22,MIA,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-10-26,CHA @ WAS,W,23.0,4,9,0.444,0,0,0.0,4,5,0.8,4,6,10,1,0,2,1,1,12,12,WAS,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-10-25,CHA @ PHI,L,17.0,2,2,1.0,0,0,0.0,2,7,0.286,0,2,2,0,1,1,0,2,6,-4,PHI,AWAY,Moussa Diabate
+Moussa Diabate,1631217,2025-10-22,CHA vs. BKN,W,21.0,5,7,0.714,0,0,0.0,3,4,0.75,4,5,9,0,1,1,2,3,13,8,BKN,HOME,Moussa Diabate

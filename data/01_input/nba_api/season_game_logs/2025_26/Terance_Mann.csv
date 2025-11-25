@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Terance Mann,1629611,2025-11-23,BKN @ TOR,L,21.0,1,4,0.25,0,1,0.0,1,2,0.5,2,0,2,5,0,0,2,2,3,-9,TOR,AWAY,Terance Mann
+Terance Mann,1629611,2025-11-21,BKN @ BOS,W,32.0,2,6,0.333,2,4,0.5,0,0,0.0,2,4,6,6,0,0,1,0,6,12,BOS,AWAY,Terance Mann
+Terance Mann,1629611,2025-11-18,BKN vs. BOS,L,27.0,1,4,0.25,0,2,0.0,1,2,0.5,1,3,4,7,0,0,1,3,3,-8,BOS,HOME,Terance Mann
+Terance Mann,1629611,2025-11-16,BKN @ WAS,W,29.0,2,8,0.25,2,5,0.4,4,4,1.0,2,5,7,3,0,0,2,2,10,10,WAS,AWAY,Terance Mann
+Terance Mann,1629611,2025-11-14,BKN @ ORL,L,28.0,5,10,0.5,2,3,0.667,0,0,0.0,0,0,0,0,0,2,0,4,12,-20,ORL,AWAY,Terance Mann
+Terance Mann,1629611,2025-11-11,BKN vs. TOR,L,32.0,3,8,0.375,1,1,1.0,2,2,1.0,1,2,3,4,0,0,1,3,9,1,TOR,HOME,Terance Mann
+Terance Mann,1629611,2025-11-09,BKN @ NYK,L,18.0,0,2,0.0,0,2,0.0,0,0,0.0,1,0,1,4,0,1,1,1,0,-18,NYK,AWAY,Terance Mann
+Terance Mann,1629611,2025-11-07,BKN vs. DET,L,22.0,1,3,0.333,1,2,0.5,0,0,0.0,0,0,0,3,0,0,1,3,3,-12,DET,HOME,Terance Mann
+Terance Mann,1629611,2025-11-05,BKN @ IND,W,35.0,5,12,0.417,1,3,0.333,4,4,1.0,0,1,1,6,2,0,1,3,15,15,IND,AWAY,Terance Mann
+Terance Mann,1629611,2025-11-03,BKN vs. MIN,L,28.0,3,10,0.3,1,4,0.25,0,0,0.0,2,2,4,5,1,0,1,5,7,-10,MIN,HOME,Terance Mann
+Terance Mann,1629611,2025-11-02,BKN vs. PHI,L,34.0,7,9,0.778,0,1,0.0,3,5,0.6,4,1,5,4,3,0,1,4,17,-12,PHI,HOME,Terance Mann
+Terance Mann,1629611,2025-10-29,BKN vs. ATL,L,30.0,5,9,0.556,1,4,0.25,0,0,0.0,2,3,5,6,1,0,2,5,11,7,ATL,HOME,Terance Mann
+Terance Mann,1629611,2025-10-27,BKN @ HOU,L,23.0,8,11,0.727,3,5,0.6,2,3,0.667,3,3,6,0,0,0,0,2,21,-24,HOU,AWAY,Terance Mann
+Terance Mann,1629611,2025-10-26,BKN @ SAS,L,31.0,3,7,0.429,1,3,0.333,0,0,0.0,3,3,6,3,2,0,0,2,7,-11,SAS,AWAY,Terance Mann
+Terance Mann,1629611,2025-10-24,BKN vs. CLE,L,24.0,2,6,0.333,0,4,0.0,0,0,0.0,1,0,1,2,1,0,0,4,4,-12,CLE,HOME,Terance Mann
+Terance Mann,1629611,2025-10-22,BKN @ CHA,L,19.0,4,6,0.667,2,3,0.667,3,3,1.0,1,0,1,1,1,0,1,4,13,4,CHA,AWAY,Terance Mann

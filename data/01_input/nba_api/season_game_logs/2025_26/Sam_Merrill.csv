@@ -1,0 +1,13 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Sam Merrill,1630241,2025-11-17,CLE vs. MIL,W,28.0,7,10,0.7,6,9,0.667,0,0,0.0,1,4,5,0,0,1,1,1,20,4,MIL,HOME,Sam Merrill
+Sam Merrill,1630241,2025-11-15,CLE vs. MEM,W,27.0,5,9,0.556,2,6,0.333,1,2,0.5,1,3,4,1,1,0,2,4,13,-4,MEM,HOME,Sam Merrill
+Sam Merrill,1630241,2025-11-13,CLE vs. TOR,L,27.0,4,11,0.364,3,9,0.333,1,1,1.0,1,1,2,3,0,0,0,1,12,-2,TOR,HOME,Sam Merrill
+Sam Merrill,1630241,2025-11-12,CLE @ MIA,W,21.0,1,10,0.1,1,8,0.125,2,2,1.0,0,0,0,3,1,1,0,3,5,-8,MIA,AWAY,Sam Merrill
+Sam Merrill,1630241,2025-11-10,CLE @ MIA,L,33.0,4,16,0.25,4,16,0.25,0,0,0.0,1,1,2,2,0,0,0,3,12,-7,MIA,AWAY,Sam Merrill
+Sam Merrill,1630241,2025-11-08,CLE vs. CHI,W,28.0,3,8,0.375,2,6,0.333,0,0,0.0,2,0,2,8,0,0,1,3,8,6,CHI,HOME,Sam Merrill
+Sam Merrill,1630241,2025-11-07,CLE @ WAS,W,18.0,5,6,0.833,4,5,0.8,0,0,0.0,0,2,2,2,1,0,0,2,14,10,WAS,AWAY,Sam Merrill
+Sam Merrill,1630241,2025-11-05,CLE vs. PHI,W,27.0,4,6,0.667,4,5,0.8,2,2,1.0,0,0,0,0,0,0,1,4,14,1,PHI,HOME,Sam Merrill
+Sam Merrill,1630241,2025-10-27,CLE @ DET,W,18.0,4,7,0.571,3,6,0.5,0,0,0.0,0,1,1,1,2,0,0,1,11,13,DET,AWAY,Sam Merrill
+Sam Merrill,1630241,2025-10-26,CLE vs. MIL,W,30.0,5,11,0.455,4,9,0.444,3,3,1.0,1,2,3,1,0,0,0,3,17,17,MIL,HOME,Sam Merrill
+Sam Merrill,1630241,2025-10-24,CLE @ BKN,W,26.0,6,11,0.545,6,10,0.6,4,4,1.0,1,0,1,5,1,1,4,4,22,14,BKN,AWAY,Sam Merrill
+Sam Merrill,1630241,2025-10-22,CLE @ NYK,L,28.0,6,11,0.545,5,10,0.5,2,2,1.0,1,2,3,1,0,0,1,6,19,-1,NYK,AWAY,Sam Merrill

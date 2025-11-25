@@ -1,0 +1,19 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Mouhamed Gueye,1631243,2025-11-23,ATL vs. CHA,W,17.0,2,5,0.4,0,1,0.0,0,0,0.0,0,1,1,1,0,2,0,1,4,2,CHA,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-22,ATL @ NOP,W,27.0,1,3,0.333,1,3,0.333,0,0,0.0,3,3,6,0,2,0,0,3,3,14,NOP,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-20,ATL @ SAS,L,4.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,1,0,5,SAS,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-18,ATL vs. DET,L,21.0,5,10,0.5,1,5,0.2,0,0,0.0,7,4,11,1,0,1,1,3,11,17,DET,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-16,ATL @ PHX,W,10.0,0,2,0.0,0,2,0.0,0,0,0.0,1,0,1,0,0,0,1,3,0,-16,PHX,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-13,ATL @ UTA,W,15.0,4,9,0.444,0,2,0.0,0,0,0.0,1,1,2,1,0,0,2,3,8,-10,UTA,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-12,ATL @ SAC,W,20.0,1,4,0.25,0,3,0.0,0,0,0.0,1,2,3,2,2,0,0,0,2,-12,SAC,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-10,ATL @ LAC,W,8.0,1,1,1.0,0,0,0.0,0,0,0.0,0,3,3,2,1,0,1,3,2,2,LAC,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-08,ATL vs. LAL,W,34.0,8,12,0.667,4,5,0.8,1,1,1.0,0,7,7,7,2,1,2,2,21,12,LAL,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-07,ATL vs. TOR,L,19.0,1,6,0.167,0,3,0.0,0,0,0.0,3,4,7,1,0,0,0,0,2,-12,TOR,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-04,ATL vs. ORL,W,18.0,2,4,0.5,1,3,0.333,0,1,0.0,2,1,3,0,0,3,0,2,5,-1,ORL,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-02,ATL @ CLE,L,8.0,1,1,1.0,0,0,0.0,2,2,1.0,0,3,3,0,0,0,1,1,4,5,CLE,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-10-31,ATL @ IND,W,16.0,3,5,0.6,0,2,0.0,0,0,0.0,0,6,6,0,0,0,0,4,6,14,IND,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-10-29,ATL @ BKN,W,14.0,4,6,0.667,1,2,0.5,0,0,0.0,1,3,4,2,1,0,1,3,9,9,BKN,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-10-27,ATL @ CHI,L,10.0,2,3,0.667,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,4,8,CHI,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-10-25,ATL vs. OKC,L,23.0,4,10,0.4,2,6,0.333,1,3,0.333,2,4,6,2,0,2,1,4,11,-16,OKC,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-10-24,ATL @ ORL,W,30.0,5,9,0.556,2,5,0.4,1,3,0.333,4,4,8,3,0,1,3,2,13,21,ORL,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-10-22,ATL vs. TOR,L,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,0,0,5,TOR,HOME,Mouhamed Gueye

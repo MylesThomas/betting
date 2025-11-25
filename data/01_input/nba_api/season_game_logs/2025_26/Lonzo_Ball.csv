@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Lonzo Ball,1628366,2025-11-21,CLE vs. IND,W,25.0,0,2,0.0,0,2,0.0,0,0,0.0,0,7,7,5,0,1,1,4,0,12,IND,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-11-19,CLE vs. HOU,L,25.0,2,8,0.25,2,8,0.25,1,2,0.5,0,2,2,2,1,1,0,1,7,1,HOU,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-11-17,CLE vs. MIL,W,23.0,2,8,0.25,1,6,0.167,1,2,0.5,0,5,5,5,2,0,1,4,6,11,MIL,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-11-15,CLE vs. MEM,W,22.0,3,5,0.6,3,5,0.6,0,0,0.0,2,5,7,5,2,0,5,2,9,16,MEM,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-11-12,CLE @ MIA,W,20.0,4,8,0.5,4,7,0.571,3,3,1.0,2,0,2,8,1,1,3,1,15,-9,MIA,AWAY,Lonzo Ball
+Lonzo Ball,1628366,2025-11-10,CLE @ MIA,L,20.0,3,7,0.429,3,7,0.429,0,0,0.0,2,2,4,2,1,0,0,3,9,4,MIA,AWAY,Lonzo Ball
+Lonzo Ball,1628366,2025-11-08,CLE vs. CHI,W,22.0,1,4,0.25,0,3,0.0,0,0,0.0,0,4,4,4,0,0,0,4,2,-8,CHI,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-11-05,CLE vs. PHI,W,23.0,0,3,0.0,0,3,0.0,0,0,0.0,0,1,1,8,1,1,1,3,0,3,PHI,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-11-02,CLE vs. ATL,W,27.0,3,8,0.375,2,6,0.333,0,0,0.0,3,3,6,3,1,0,4,5,8,6,ATL,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-10-31,CLE vs. TOR,L,26.0,3,7,0.429,2,4,0.5,0,0,0.0,1,4,5,5,1,0,2,0,8,5,TOR,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-10-29,CLE @ BOS,L,24.0,1,5,0.2,1,5,0.2,0,0,0.0,0,3,3,5,1,0,2,1,3,1,BOS,AWAY,Lonzo Ball
+Lonzo Ball,1628366,2025-10-26,CLE vs. MIL,W,23.0,4,7,0.571,2,4,0.5,1,3,0.333,3,3,6,5,1,0,3,1,11,-5,MIL,HOME,Lonzo Ball
+Lonzo Ball,1628366,2025-10-24,CLE @ BKN,W,22.0,0,4,0.0,0,2,0.0,2,2,1.0,0,2,2,8,2,0,2,0,2,0,BKN,AWAY,Lonzo Ball
+Lonzo Ball,1628366,2025-10-22,CLE @ NYK,L,23.0,1,7,0.143,1,7,0.143,0,0,0.0,1,3,4,6,0,0,4,0,3,-3,NYK,AWAY,Lonzo Ball

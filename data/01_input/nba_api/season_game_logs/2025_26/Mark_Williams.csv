@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Mark Williams,1631109,2025-11-23,PHX vs. SAS,W,29.0,6,8,0.75,0,0,0.0,2,3,0.667,4,7,11,2,1,1,0,3,14,2,SAS,HOME,Mark Williams
+Mark Williams,1631109,2025-11-21,PHX vs. MIN,W,26.0,6,9,0.667,0,0,0.0,7,8,0.875,3,5,8,0,1,1,1,4,19,-15,MIN,HOME,Mark Williams
+Mark Williams,1631109,2025-11-18,PHX @ POR,W,21.0,7,9,0.778,0,0,0.0,1,2,0.5,4,2,6,1,2,1,2,3,15,15,POR,AWAY,Mark Williams
+Mark Williams,1631109,2025-11-16,PHX vs. ATL,L,28.0,4,5,0.8,0,0,0.0,0,0,0.0,1,3,4,1,0,0,2,4,8,-15,ATL,HOME,Mark Williams
+Mark Williams,1631109,2025-11-12,PHX @ DAL,W,26.0,5,6,0.833,0,0,0.0,0,0,0.0,3,1,4,2,2,2,1,2,10,-5,DAL,AWAY,Mark Williams
+Mark Williams,1631109,2025-11-10,PHX vs. NOP,W,20.0,0,1,0.0,0,0,0.0,2,2,1.0,1,6,7,1,1,2,0,2,2,8,NOP,HOME,Mark Williams
+Mark Williams,1631109,2025-11-08,PHX @ LAC,W,29.0,7,9,0.778,0,0,0.0,5,5,1.0,1,5,6,0,2,0,2,3,19,18,LAC,AWAY,Mark Williams
+Mark Williams,1631109,2025-11-06,PHX vs. LAC,W,28.0,4,8,0.5,0,0,0.0,5,6,0.833,3,7,10,0,2,0,0,4,13,18,LAC,HOME,Mark Williams
+Mark Williams,1631109,2025-11-04,PHX @ GSW,L,27.0,6,12,0.5,0,0,0.0,4,5,0.8,9,7,16,4,1,0,2,1,16,1,GSW,AWAY,Mark Williams
+Mark Williams,1631109,2025-11-02,PHX vs. SAS,W,25.0,3,5,0.6,0,0,0.0,1,4,0.25,1,6,7,2,1,2,0,3,7,24,SAS,HOME,Mark Williams
+Mark Williams,1631109,2025-10-31,PHX vs. UTA,W,25.0,3,6,0.5,0,0,0.0,3,4,0.75,1,6,7,0,0,2,0,2,9,3,UTA,HOME,Mark Williams
+Mark Williams,1631109,2025-10-29,PHX vs. MEM,L,28.0,9,12,0.75,0,0,0.0,2,2,1.0,4,8,12,1,4,1,2,4,20,6,MEM,HOME,Mark Williams
+Mark Williams,1631109,2025-10-27,PHX @ UTA,L,31.0,9,14,0.643,0,0,0.0,7,9,0.778,5,6,11,0,2,0,0,3,25,13,UTA,AWAY,Mark Williams
+Mark Williams,1631109,2025-10-24,PHX @ LAC,L,14.0,1,5,0.2,0,0,0.0,0,0,0.0,3,3,6,0,0,0,0,4,2,-18,LAC,AWAY,Mark Williams
+Mark Williams,1631109,2025-10-22,PHX vs. SAC,W,24.0,3,5,0.6,0,0,0.0,0,0,0.0,2,9,11,0,0,2,1,2,6,15,SAC,HOME,Mark Williams

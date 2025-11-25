@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Cole Anthony,1630175,2025-11-22,MIL vs. DET,L,14.0,2,5,0.4,0,2,0.0,0,0,0.0,0,3,3,2,1,1,5,0,4,10,DET,HOME,Cole Anthony
+Cole Anthony,1630175,2025-11-20,MIL vs. PHI,L,21.0,2,7,0.286,1,2,0.5,0,0,0.0,0,4,4,7,0,0,4,2,5,-6,PHI,HOME,Cole Anthony
+Cole Anthony,1630175,2025-11-17,MIL @ CLE,L,22.0,2,8,0.25,0,0,0.0,0,0,0.0,0,1,1,8,0,0,2,2,4,-11,CLE,AWAY,Cole Anthony
+Cole Anthony,1630175,2025-11-15,MIL vs. LAL,L,18.0,0,5,0.0,0,1,0.0,0,0,0.0,1,4,5,7,2,0,2,2,0,0,LAL,HOME,Cole Anthony
+Cole Anthony,1630175,2025-11-14,MIL vs. CHA,W,19.0,4,7,0.571,1,3,0.333,1,2,0.5,1,2,3,5,1,0,4,3,10,-13,CHA,HOME,Cole Anthony
+Cole Anthony,1630175,2025-11-12,MIL @ CHA,L,15.0,2,12,0.167,0,2,0.0,0,0,0.0,0,2,2,3,0,0,0,2,4,-18,CHA,AWAY,Cole Anthony
+Cole Anthony,1630175,2025-11-10,MIL @ DAL,W,17.0,2,7,0.286,0,0,0.0,0,0,0.0,1,4,5,3,1,0,4,0,4,-16,DAL,AWAY,Cole Anthony
+Cole Anthony,1630175,2025-11-09,MIL vs. HOU,L,18.0,5,9,0.556,1,2,0.5,1,1,1.0,0,5,5,6,0,1,4,1,12,8,HOU,HOME,Cole Anthony
+Cole Anthony,1630175,2025-11-07,MIL vs. CHI,W,22.0,5,14,0.357,1,5,0.2,0,0,0.0,1,1,2,5,1,0,1,2,11,3,CHI,HOME,Cole Anthony
+Cole Anthony,1630175,2025-11-04,MIL @ TOR,L,24.0,5,9,0.556,0,2,0.0,2,3,0.667,1,3,4,4,1,1,0,3,12,-20,TOR,AWAY,Cole Anthony
+Cole Anthony,1630175,2025-11-03,MIL @ IND,W,23.0,4,8,0.5,3,4,0.75,0,0,0.0,1,3,4,4,1,0,3,3,11,4,IND,AWAY,Cole Anthony
+Cole Anthony,1630175,2025-11-01,MIL vs. SAC,L,13.0,1,4,0.25,0,0,0.0,1,2,0.5,0,2,2,5,0,0,3,3,3,2,SAC,HOME,Cole Anthony
+Cole Anthony,1630175,2025-10-30,MIL vs. GSW,W,21.0,7,15,0.467,2,7,0.286,0,0,0.0,0,3,3,2,1,1,3,6,16,6,GSW,HOME,Cole Anthony
+Cole Anthony,1630175,2025-10-28,MIL vs. NYK,W,24.0,2,7,0.286,0,4,0.0,0,0,0.0,0,4,4,9,0,1,1,4,4,1,NYK,HOME,Cole Anthony
+Cole Anthony,1630175,2025-10-24,MIL @ TOR,W,27.0,9,14,0.643,2,5,0.4,3,7,0.429,2,2,4,7,2,0,1,3,23,5,TOR,AWAY,Cole Anthony
+Cole Anthony,1630175,2025-10-22,MIL vs. WAS,W,12.0,4,5,0.8,1,2,0.5,0,0,0.0,0,2,2,5,0,1,1,5,9,8,WAS,HOME,Cole Anthony

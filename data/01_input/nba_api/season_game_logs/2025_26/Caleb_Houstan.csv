@@ -1,0 +1,8 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Caleb Houstan,1631216,2025-11-22,ATL @ NOP,W,2.0,1,1,1.0,1,1,1.0,0,0,0.0,0,1,1,0,0,0,0,0,3,-3,NOP,AWAY,Caleb Houstan
+Caleb Houstan,1631216,2025-11-18,ATL vs. DET,L,3.0,0,2,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-9,DET,HOME,Caleb Houstan
+Caleb Houstan,1631216,2025-11-12,ATL @ SAC,W,8.0,2,5,0.4,2,4,0.5,0,0,0.0,1,0,1,1,1,0,2,3,6,-8,SAC,AWAY,Caleb Houstan
+Caleb Houstan,1631216,2025-11-08,ATL vs. LAL,W,19.0,2,3,0.667,1,2,0.5,3,3,1.0,2,0,2,1,0,1,1,1,8,2,LAL,HOME,Caleb Houstan
+Caleb Houstan,1631216,2025-11-04,ATL vs. ORL,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,ORL,HOME,Caleb Houstan
+Caleb Houstan,1631216,2025-10-31,ATL @ IND,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,IND,AWAY,Caleb Houstan
+Caleb Houstan,1631216,2025-10-25,ATL vs. OKC,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,1,OKC,HOME,Caleb Houstan

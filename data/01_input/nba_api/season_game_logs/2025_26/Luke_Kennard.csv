@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Luke Kennard,1628379,2025-11-22,ATL @ NOP,W,24.0,2,6,0.333,2,5,0.4,2,2,1.0,0,0,0,3,0,0,0,1,8,13,NOP,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-11-20,ATL @ SAS,L,16.0,4,7,0.571,2,3,0.667,0,0,0.0,1,2,3,3,2,0,0,1,10,-10,SAS,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-11-18,ATL vs. DET,L,17.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,5,1,0,1,3,3,4,DET,HOME,Luke Kennard
+Luke Kennard,1628379,2025-11-16,ATL @ PHX,W,12.0,0,2,0.0,0,2,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,-4,PHX,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-11-13,ATL @ UTA,W,20.0,4,8,0.5,4,7,0.571,0,0,0.0,0,2,2,1,2,0,1,0,12,3,UTA,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-11-12,ATL @ SAC,W,21.0,5,8,0.625,3,6,0.5,0,0,0.0,1,2,3,2,2,0,1,0,13,-6,SAC,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-11-10,ATL @ LAC,W,20.0,3,9,0.333,1,3,0.333,0,0,0.0,3,1,4,2,1,0,1,1,7,-1,LAC,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-11-04,ATL vs. ORL,W,20.0,2,5,0.4,0,3,0.0,2,2,1.0,0,1,1,0,3,0,3,1,6,6,ORL,HOME,Luke Kennard
+Luke Kennard,1628379,2025-11-02,ATL @ CLE,L,32.0,5,6,0.833,3,4,0.75,2,2,1.0,0,2,2,2,1,0,2,3,15,5,CLE,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-10-31,ATL @ IND,W,27.0,2,7,0.286,0,2,0.0,2,2,1.0,1,2,3,2,0,0,0,2,6,18,IND,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-10-29,ATL @ BKN,W,28.0,5,8,0.625,4,5,0.8,3,4,0.75,0,1,1,2,1,1,0,1,17,16,BKN,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-10-27,ATL @ CHI,L,21.0,2,2,1.0,1,1,1.0,2,2,1.0,1,2,3,2,0,0,1,1,7,4,CHI,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-10-25,ATL vs. OKC,L,21.0,2,5,0.4,1,4,0.25,0,0,0.0,0,0,0,3,0,0,1,0,5,-14,OKC,HOME,Luke Kennard
+Luke Kennard,1628379,2025-10-24,ATL @ ORL,W,23.0,3,5,0.6,0,0,0.0,0,0,0.0,2,1,3,2,1,0,2,3,6,11,ORL,AWAY,Luke Kennard
+Luke Kennard,1628379,2025-10-22,ATL vs. TOR,L,30.0,2,7,0.286,1,5,0.2,1,1,1.0,0,4,4,3,1,0,3,3,6,-16,TOR,HOME,Luke Kennard

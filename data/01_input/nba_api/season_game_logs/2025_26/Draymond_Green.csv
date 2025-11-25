@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Draymond Green,203110,2025-11-21,GSW vs. POR,L,34.0,4,11,0.364,2,6,0.333,1,2,0.5,1,4,5,7,3,1,3,4,11,-3,POR,HOME,Draymond Green
+Draymond Green,203110,2025-11-18,GSW @ ORL,L,31.0,5,8,0.625,2,5,0.4,0,0,0.0,0,6,6,6,0,2,3,4,12,9,ORL,AWAY,Draymond Green
+Draymond Green,203110,2025-11-16,GSW @ NOP,W,25.0,3,13,0.231,2,5,0.4,0,0,0.0,4,6,10,6,2,1,5,4,8,23,NOP,AWAY,Draymond Green
+Draymond Green,203110,2025-11-14,GSW @ SAS,W,33.0,3,12,0.25,0,4,0.0,0,0,0.0,4,4,8,8,0,3,4,5,6,-8,SAS,AWAY,Draymond Green
+Draymond Green,203110,2025-11-12,GSW @ SAS,W,27.0,1,10,0.1,0,7,0.0,4,4,1.0,0,5,5,4,1,0,4,6,6,15,SAS,AWAY,Draymond Green
+Draymond Green,203110,2025-11-11,GSW @ OKC,L,22.0,1,4,0.25,1,3,0.333,0,0,0.0,0,2,2,4,1,0,3,4,3,-21,OKC,AWAY,Draymond Green
+Draymond Green,203110,2025-11-09,GSW vs. IND,W,25.0,1,3,0.333,1,2,0.5,0,0,0.0,0,2,2,3,0,0,4,2,3,14,IND,HOME,Draymond Green
+Draymond Green,203110,2025-11-07,GSW @ DEN,L,26.0,6,12,0.5,5,10,0.5,0,0,0.0,1,5,6,4,1,1,3,2,17,-10,DEN,AWAY,Draymond Green
+Draymond Green,203110,2025-11-04,GSW vs. PHX,W,33.0,1,2,0.5,0,1,0.0,0,2,0.0,0,5,5,8,1,1,4,1,2,13,PHX,HOME,Draymond Green
+Draymond Green,203110,2025-11-01,GSW @ IND,L,30.0,2,5,0.4,2,4,0.5,2,2,1.0,1,9,10,1,0,0,3,5,8,-13,IND,AWAY,Draymond Green
+Draymond Green,203110,2025-10-30,GSW @ MIL,L,33.0,3,7,0.429,1,3,0.333,0,0,0.0,0,4,4,6,0,1,1,3,7,4,MIL,AWAY,Draymond Green
+Draymond Green,203110,2025-10-28,GSW vs. LAC,W,31.0,3,7,0.429,1,3,0.333,0,0,0.0,2,5,7,4,3,0,0,3,7,29,LAC,HOME,Draymond Green
+Draymond Green,203110,2025-10-27,GSW vs. MEM,W,28.0,2,6,0.333,2,5,0.4,1,2,0.5,0,4,4,10,1,0,4,6,7,18,MEM,HOME,Draymond Green
+Draymond Green,203110,2025-10-24,GSW @ POR,L,21.0,4,7,0.571,3,4,0.75,1,2,0.5,0,3,3,5,0,0,5,4,12,-13,POR,AWAY,Draymond Green
+Draymond Green,203110,2025-10-23,GSW vs. DEN,W,34.0,5,8,0.625,2,5,0.4,1,2,0.5,0,8,8,8,0,1,1,2,13,11,DEN,HOME,Draymond Green
+Draymond Green,203110,2025-10-21,GSW @ LAL,W,28.0,3,6,0.5,1,3,0.333,1,3,0.333,1,6,7,9,1,2,4,5,8,20,LAL,AWAY,Draymond Green

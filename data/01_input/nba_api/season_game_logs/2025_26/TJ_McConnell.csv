@@ -1,0 +1,7 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+T.J. McConnell,204456,2025-11-21,IND @ CLE,L,17.0,4,6,0.667,2,2,1.0,0,0,0.0,0,3,3,4,1,0,2,1,10,3,CLE,AWAY,Tj Mcconnell
+T.J. McConnell,204456,2025-11-19,IND vs. CHA,W,14.0,6,6,1.0,2,2,1.0,0,0,0.0,0,6,6,8,0,0,1,1,14,18,CHA,HOME,Tj Mcconnell
+T.J. McConnell,204456,2025-11-17,IND @ DET,L,15.0,0,4,0.0,0,0,0.0,0,0,0.0,0,1,1,2,1,0,1,2,0,-8,DET,AWAY,Tj Mcconnell
+T.J. McConnell,204456,2025-11-15,IND vs. TOR,L,16.0,4,11,0.364,0,2,0.0,1,1,1.0,0,1,1,4,0,0,0,0,9,-12,TOR,HOME,Tj Mcconnell
+T.J. McConnell,204456,2025-11-13,IND @ PHX,L,15.0,2,8,0.25,1,2,0.5,0,0,0.0,1,0,1,2,2,0,0,2,5,-30,PHX,AWAY,Tj Mcconnell
+T.J. McConnell,204456,2025-11-11,IND @ UTA,L,11.0,6,12,0.5,0,2,0.0,0,0,0.0,0,1,1,1,0,0,0,1,12,-15,UTA,AWAY,Tj Mcconnell

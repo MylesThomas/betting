@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Larry Nance Jr.,1626204,2025-11-23,CLE vs. LAC,W,13.0,1,3,0.333,1,2,0.5,0,0,0.0,0,1,1,0,0,0,0,2,3,-4,LAC,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-21,CLE vs. IND,W,19.0,2,4,0.5,0,1,0.0,0,0,0.0,1,1,2,1,1,2,0,0,4,-2,IND,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-15,CLE vs. MEM,W,5.0,0,2,0.0,0,2,0.0,0,0,0.0,0,0,0,0,0,0,1,3,0,-7,MEM,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-13,CLE vs. TOR,L,7.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,2,1,0,-13,TOR,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-12,CLE @ MIA,W,19.0,1,3,0.333,1,2,0.5,0,0,0.0,1,4,5,2,2,0,1,4,3,3,MIA,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-07,CLE @ WAS,W,14.0,2,3,0.667,1,2,0.5,0,0,0.0,1,1,2,1,0,1,0,1,5,3,WAS,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-05,CLE vs. PHI,W,15.0,3,6,0.5,1,3,0.333,0,0,0.0,3,2,5,1,1,0,1,5,7,-6,PHI,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-11-02,CLE vs. ATL,W,25.0,1,9,0.111,0,4,0.0,0,0,0.0,1,3,4,4,1,0,1,4,2,5,ATL,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-10-31,CLE vs. TOR,L,19.0,0,6,0.0,0,4,0.0,0,0,0.0,1,1,2,0,0,0,0,3,0,-10,TOR,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-10-29,CLE @ BOS,L,14.0,0,3,0.0,0,3,0.0,0,0,0.0,0,2,2,2,0,0,0,3,0,-7,BOS,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-10-27,CLE @ DET,W,18.0,1,3,0.333,1,2,0.5,0,0,0.0,0,4,4,2,0,1,1,5,3,4,DET,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-10-26,CLE vs. MIL,W,12.0,2,3,0.667,1,1,1.0,0,0,0.0,1,4,5,1,1,0,1,2,5,-1,MIL,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-10-24,CLE @ BKN,W,16.0,4,8,0.5,0,1,0.0,1,3,0.333,1,2,3,1,1,0,0,0,9,-5,BKN,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-10-22,CLE @ NYK,L,17.0,4,7,0.571,2,2,1.0,0,0,0.0,1,5,6,1,0,0,1,3,10,-2,NYK,AWAY,Larry Nance Jr

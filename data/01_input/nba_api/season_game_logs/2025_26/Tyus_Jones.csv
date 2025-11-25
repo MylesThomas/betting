@@ -1,0 +1,19 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Tyus Jones,1626145,2025-11-23,ORL @ BOS,L,25.0,1,6,0.167,1,4,0.25,0,0,0.0,0,1,1,6,0,0,0,1,3,8,BOS,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-11-22,ORL vs. NYK,W,16.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,3,0,0,0,0,0,3,NYK,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-20,ORL vs. LAC,W,5.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,-3,LAC,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-18,ORL vs. GSW,W,15.0,3,3,1.0,2,2,1.0,0,0,0.0,0,0,0,3,1,0,1,0,8,1,GSW,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-16,ORL @ HOU,L,15.0,0,4,0.0,0,2,0.0,0,0,0.0,0,2,2,2,1,0,0,0,0,-8,HOU,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-11-14,ORL vs. BKN,W,13.0,0,2,0.0,0,1,0.0,0,0,0.0,0,1,1,2,3,0,0,0,0,-5,BKN,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-12,ORL @ NYK,W,13.0,0,2,0.0,0,0,0.0,0,0,0.0,0,1,1,3,2,0,0,1,0,-3,NYK,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-11-10,ORL vs. POR,W,6.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,4,POR,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-09,ORL vs. BOS,L,10.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,2,0,0,1,0,0,-14,BOS,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-07,ORL vs. BOS,W,8.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,1,0,-11,BOS,HOME,Tyus Jones
+Tyus Jones,1626145,2025-11-04,ORL @ ATL,L,8.0,0,2,0.0,0,2,0.0,0,0,0.0,0,0,0,1,1,0,0,0,0,-7,ATL,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-11-01,ORL @ WAS,W,15.0,3,4,0.75,0,1,0.0,0,0,0.0,0,2,2,1,0,0,0,2,6,4,WAS,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-10-30,ORL @ CHA,W,14.0,2,4,0.5,1,3,0.333,0,0,0.0,0,0,0,0,1,0,0,0,5,10,CHA,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-10-29,ORL @ DET,L,9.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,1,0,0,0,1,3,-7,DET,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-10-27,ORL @ PHI,L,10.0,1,1,1.0,0,0,0.0,0,0,0.0,2,1,3,2,1,0,0,0,2,5,PHI,AWAY,Tyus Jones
+Tyus Jones,1626145,2025-10-25,ORL vs. CHI,L,14.0,0,5,0.0,0,2,0.0,0,0,0.0,0,0,0,1,1,0,1,3,0,-10,CHI,HOME,Tyus Jones
+Tyus Jones,1626145,2025-10-24,ORL vs. ATL,L,20.0,2,4,0.5,0,2,0.0,0,0,0.0,0,1,1,2,0,1,1,1,4,-9,ATL,HOME,Tyus Jones
+Tyus Jones,1626145,2025-10-22,ORL vs. MIA,W,24.0,0,4,0.0,0,3,0.0,0,0,0.0,1,1,2,3,0,1,2,0,0,-17,MIA,HOME,Tyus Jones

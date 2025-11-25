@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Payton Pritchard,1630202,2025-11-23,BOS vs. ORL,W,34.0,9,16,0.563,1,4,0.25,0,0,0.0,2,3,5,8,2,0,1,1,19,15,ORL,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-21,BOS vs. BKN,L,35.0,5,13,0.385,3,9,0.333,0,0,0.0,1,2,3,4,0,0,1,1,13,-13,BKN,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-18,BOS @ BKN,W,35.0,6,16,0.375,5,12,0.417,5,5,1.0,2,8,10,5,0,0,3,1,22,11,BKN,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-11-16,BOS vs. LAC,W,33.0,10,16,0.625,8,13,0.615,2,2,1.0,1,2,3,2,0,0,0,1,30,-15,LAC,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-12,BOS vs. MEM,W,30.0,8,15,0.533,5,10,0.5,3,4,0.75,0,6,6,9,0,0,0,1,24,42,MEM,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-11,BOS @ PHI,L,31.0,2,9,0.222,1,5,0.2,0,0,0.0,1,2,3,3,1,0,1,2,5,-9,PHI,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-11-09,BOS @ ORL,W,33.0,2,8,0.25,1,6,0.167,0,0,0.0,0,5,5,5,0,0,3,4,5,2,ORL,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-11-07,BOS @ ORL,L,32.0,8,16,0.5,5,8,0.625,6,8,0.75,0,2,2,4,1,0,3,3,27,-11,ORL,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-11-05,BOS vs. WAS,W,24.0,7,12,0.583,2,6,0.333,2,2,1.0,1,1,2,5,0,0,2,2,18,36,WAS,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-03,BOS vs. UTA,L,35.0,7,15,0.467,4,11,0.364,0,0,0.0,1,4,5,3,0,0,1,3,18,2,UTA,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-01,BOS vs. HOU,L,26.0,5,10,0.5,1,4,0.25,3,3,1.0,1,0,1,4,1,0,1,1,14,-19,HOU,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-10-31,BOS @ PHI,W,33.0,7,17,0.412,1,9,0.111,0,0,0.0,1,1,2,5,2,0,1,0,15,-4,PHI,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-10-29,BOS vs. CLE,W,32.0,4,13,0.308,1,8,0.125,1,2,0.5,0,3,3,10,2,0,1,2,10,18,CLE,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-10-27,BOS @ NOP,W,31.0,7,15,0.467,2,7,0.286,2,2,1.0,2,1,3,8,1,0,1,2,18,27,NOP,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-10-26,BOS @ DET,L,34.0,8,16,0.5,2,8,0.25,3,5,0.6,3,7,10,4,0,0,1,1,21,-4,DET,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-10-24,BOS @ NYK,L,36.0,2,10,0.2,1,7,0.143,3,3,1.0,0,5,5,6,1,0,1,3,8,-7,NYK,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-10-22,BOS vs. PHI,L,37.0,6,14,0.429,1,7,0.143,3,4,0.75,2,3,5,2,2,0,2,3,16,6,PHI,HOME,Payton Pritchard

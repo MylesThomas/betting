@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Quentin Grimes,1629656,2025-11-23,PHI vs. MIA,L,35.0,6,14,0.429,2,7,0.286,1,1,1.0,0,0,0,3,0,1,2,5,15,-12,MIA,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-11-20,PHI @ MIL,W,39.0,4,12,0.333,3,9,0.333,3,4,0.75,0,4,4,4,0,0,1,0,14,8,MIL,AWAY,Quentin Grimes
+Quentin Grimes,1629656,2025-11-19,PHI vs. TOR,L,32.0,7,15,0.467,4,8,0.5,3,3,1.0,0,2,2,2,2,0,1,2,21,-5,TOR,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-11-17,PHI vs. LAC,W,36.0,6,10,0.6,3,6,0.5,4,5,0.8,0,2,2,3,1,2,0,2,19,12,LAC,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-11-14,PHI @ DET,L,32.0,3,10,0.3,1,5,0.2,2,2,1.0,0,1,1,5,1,1,2,1,9,6,DET,AWAY,Quentin Grimes
+Quentin Grimes,1629656,2025-11-11,PHI vs. BOS,W,28.0,6,10,0.6,3,6,0.5,3,3,1.0,0,6,6,4,0,1,4,2,18,0,BOS,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-11-09,PHI vs. DET,L,30.0,4,8,0.5,2,5,0.4,3,3,1.0,0,5,5,4,1,0,3,1,13,-7,DET,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-11-08,PHI vs. TOR,W,28.0,4,8,0.5,3,6,0.5,2,2,1.0,0,2,2,2,0,0,3,3,13,2,TOR,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-11-05,PHI @ CLE,L,32.0,9,15,0.6,1,5,0.2,8,9,0.889,1,2,3,3,0,0,4,4,27,4,CLE,AWAY,Quentin Grimes
+Quentin Grimes,1629656,2025-11-04,PHI @ CHI,L,30.0,4,11,0.364,0,5,0.0,2,3,0.667,1,2,3,4,4,1,4,2,10,-13,CHI,AWAY,Quentin Grimes
+Quentin Grimes,1629656,2025-11-02,PHI @ BKN,W,32.0,7,13,0.538,4,8,0.5,4,6,0.667,1,5,6,13,1,1,4,1,22,32,BKN,AWAY,Quentin Grimes
+Quentin Grimes,1629656,2025-10-31,PHI vs. BOS,L,33.0,6,13,0.462,2,7,0.286,2,4,0.5,0,2,2,3,1,0,3,1,16,-15,BOS,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-10-28,PHI @ WAS,W,39.0,7,17,0.412,3,10,0.3,6,6,1.0,1,6,7,3,3,2,2,2,23,19,WAS,AWAY,Quentin Grimes
+Quentin Grimes,1629656,2025-10-27,PHI vs. ORL,W,26.0,3,8,0.375,3,4,0.75,5,6,0.833,0,5,5,3,0,0,2,6,14,4,ORL,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-10-25,PHI vs. CHA,W,30.0,7,14,0.5,5,8,0.625,5,5,1.0,1,2,3,4,0,0,2,4,24,-5,CHA,HOME,Quentin Grimes
+Quentin Grimes,1629656,2025-10-22,PHI @ BOS,W,32.0,3,8,0.375,2,5,0.4,2,4,0.5,0,5,5,5,0,0,5,3,10,18,BOS,AWAY,Quentin Grimes

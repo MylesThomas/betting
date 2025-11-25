@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jimmy Butler,202710,2025-11-21,GSW vs. POR,L,34.0,5,15,0.333,0,0,0.0,10,11,0.909,6,2,8,5,2,1,0,2,20,0,POR,HOME,Jimmy Butler
+Jimmy Butler,202710,2025-11-18,GSW @ ORL,L,38.0,10,16,0.625,0,1,0.0,13,15,0.867,1,6,7,4,3,0,3,0,33,-1,ORL,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-11-16,GSW @ NOP,W,31.0,6,8,0.75,1,1,1.0,5,5,1.0,1,2,3,10,3,0,6,2,18,21,NOP,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-11-14,GSW @ SAS,W,35.0,7,14,0.5,0,1,0.0,7,8,0.875,4,4,8,1,2,0,1,4,21,-3,SAS,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-11-12,GSW @ SAS,W,34.0,7,12,0.583,5,7,0.714,9,12,0.75,3,3,6,8,3,0,0,0,28,6,SAS,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-11-11,GSW @ OKC,L,22.0,2,3,0.667,0,1,0.0,8,8,1.0,1,2,3,2,3,0,1,0,12,-15,OKC,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-11-09,GSW vs. IND,W,30.0,10,15,0.667,0,0,0.0,1,4,0.25,3,6,9,7,2,1,1,1,21,19,IND,HOME,Jimmy Butler
+Jimmy Butler,202710,2025-11-07,GSW @ DEN,L,31.0,5,10,0.5,0,3,0.0,6,7,0.857,1,2,3,3,1,0,0,1,16,-20,DEN,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-11-04,GSW vs. PHX,W,14.0,1,5,0.2,0,1,0.0,0,0,0.0,1,3,4,2,0,0,1,0,2,17,PHX,HOME,Jimmy Butler
+Jimmy Butler,202710,2025-11-01,GSW @ IND,L,34.0,6,14,0.429,0,2,0.0,8,9,0.889,3,3,6,7,3,2,2,2,20,-6,IND,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-10-30,GSW @ MIL,L,37.0,7,18,0.389,1,2,0.5,8,8,1.0,6,4,10,3,1,1,2,2,23,-7,MIL,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-10-28,GSW vs. LAC,W,32.0,9,12,0.75,3,4,0.75,0,0,0.0,2,3,5,5,0,0,1,0,21,20,LAC,HOME,Jimmy Butler
+Jimmy Butler,202710,2025-10-27,GSW vs. MEM,W,31.0,6,8,0.75,2,2,1.0,6,8,0.75,0,5,5,5,0,0,5,0,20,8,MEM,HOME,Jimmy Butler
+Jimmy Butler,202710,2025-10-24,GSW @ POR,L,27.0,3,7,0.429,0,2,0.0,8,10,0.8,1,2,3,4,1,0,1,1,14,-10,POR,AWAY,Jimmy Butler
+Jimmy Butler,202710,2025-10-23,GSW vs. DEN,W,39.0,6,16,0.375,2,4,0.5,7,8,0.875,3,2,5,6,3,0,0,1,21,8,DEN,HOME,Jimmy Butler
+Jimmy Butler,202710,2025-10-21,GSW @ LAL,W,35.0,7,14,0.5,1,2,0.5,16,16,1.0,2,3,5,4,1,0,1,4,31,20,LAL,AWAY,Jimmy Butler

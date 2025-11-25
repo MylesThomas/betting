@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Josh Minott,1631169,2025-11-23,BOS vs. ORL,W,20.0,7,8,0.875,2,3,0.667,0,0,0.0,0,7,7,1,0,1,0,1,16,15,ORL,HOME,Josh Minott
+Josh Minott,1631169,2025-11-21,BOS vs. BKN,L,7.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,1,0,0,1,0,0,-2,BKN,HOME,Josh Minott
+Josh Minott,1631169,2025-11-18,BOS @ BKN,W,19.0,3,4,0.75,3,3,1.0,1,2,0.5,2,2,4,0,0,0,0,1,10,15,BKN,AWAY,Josh Minott
+Josh Minott,1631169,2025-11-16,BOS vs. LAC,W,11.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,1,0,0,0,1,0,-13,LAC,HOME,Josh Minott
+Josh Minott,1631169,2025-11-12,BOS vs. MEM,W,22.0,4,8,0.5,1,4,0.25,0,0,0.0,1,4,5,4,0,1,3,1,9,2,MEM,HOME,Josh Minott
+Josh Minott,1631169,2025-11-11,BOS @ PHI,L,8.0,1,1,1.0,1,1,1.0,0,0,0.0,0,1,1,0,0,0,0,3,3,-10,PHI,AWAY,Josh Minott
+Josh Minott,1631169,2025-11-09,BOS @ ORL,W,16.0,0,2,0.0,0,1,0.0,0,0,0.0,2,0,2,1,1,0,0,0,0,-17,ORL,AWAY,Josh Minott
+Josh Minott,1631169,2025-11-07,BOS @ ORL,L,25.0,4,7,0.571,2,4,0.5,2,2,1.0,3,5,8,1,1,0,2,3,12,-2,ORL,AWAY,Josh Minott
+Josh Minott,1631169,2025-11-05,BOS vs. WAS,W,34.0,8,12,0.667,3,6,0.5,2,2,1.0,1,4,5,0,3,0,1,3,21,18,WAS,HOME,Josh Minott
+Josh Minott,1631169,2025-11-03,BOS vs. UTA,L,15.0,1,5,0.2,0,2,0.0,0,0,0.0,3,3,6,2,0,1,0,4,2,6,UTA,HOME,Josh Minott
+Josh Minott,1631169,2025-11-01,BOS vs. HOU,L,19.0,3,11,0.273,2,6,0.333,2,2,1.0,3,3,6,3,2,0,1,0,10,-20,HOU,HOME,Josh Minott
+Josh Minott,1631169,2025-10-31,BOS @ PHI,W,22.0,0,5,0.0,0,2,0.0,2,4,0.5,3,5,8,1,0,1,0,2,2,-4,PHI,AWAY,Josh Minott
+Josh Minott,1631169,2025-10-29,BOS vs. CLE,W,33.0,4,9,0.444,2,6,0.333,1,2,0.5,5,10,15,2,3,1,2,4,11,8,CLE,HOME,Josh Minott
+Josh Minott,1631169,2025-10-27,BOS @ NOP,W,28.0,6,9,0.667,1,3,0.333,2,2,1.0,2,7,9,1,1,1,0,3,15,42,NOP,AWAY,Josh Minott
+Josh Minott,1631169,2025-10-26,BOS @ DET,L,14.0,3,5,0.6,1,3,0.333,3,3,1.0,0,1,1,1,3,0,0,1,10,-11,DET,AWAY,Josh Minott
+Josh Minott,1631169,2025-10-22,BOS vs. PHI,L,14.0,1,1,1.0,0,0,0.0,0,0,0.0,2,0,2,2,0,0,0,4,2,-6,PHI,HOME,Josh Minott

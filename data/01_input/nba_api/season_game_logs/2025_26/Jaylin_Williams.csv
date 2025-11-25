@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jaylin Williams,1631119,2025-11-23,OKC vs. POR,W,14.0,1,3,0.333,1,2,0.5,2,4,0.5,0,2,2,4,0,0,1,4,5,8,POR,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-11-21,OKC @ UTA,W,24.0,5,9,0.556,5,7,0.714,0,0,0.0,1,5,6,6,2,0,2,2,15,27,UTA,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-11-19,OKC vs. SAC,W,10.0,0,2,0.0,0,2,0.0,2,2,1.0,0,1,1,1,1,0,0,2,2,11,SAC,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-11-17,OKC @ NOP,W,18.0,0,2,0.0,0,1,0.0,0,0,0.0,0,5,5,1,0,0,4,2,0,-1,NOP,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-11-12,OKC vs. LAL,W,20.0,2,6,0.333,2,5,0.4,0,0,0.0,1,6,7,4,0,0,1,0,6,21,LAL,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-11-11,OKC vs. GSW,W,30.0,4,7,0.571,2,5,0.4,2,3,0.667,1,5,6,5,1,0,2,2,12,10,GSW,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-11-09,OKC @ MEM,W,17.0,0,5,0.0,0,5,0.0,0,0,0.0,0,3,3,1,0,0,0,2,0,7,MEM,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-11-07,OKC @ SAC,W,21.0,2,7,0.286,2,7,0.286,0,0,0.0,0,3,3,1,0,2,1,1,6,8,SAC,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-11-05,OKC @ POR,L,21.0,1,5,0.2,1,5,0.2,0,0,0.0,1,8,9,4,0,2,0,1,3,-10,POR,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-11-04,OKC @ LAC,W,14.0,1,3,0.333,1,3,0.333,0,0,0.0,1,4,5,0,0,0,0,1,3,-5,LAC,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-11-02,OKC vs. NOP,W,23.0,4,9,0.444,4,9,0.444,0,0,0.0,0,3,3,4,1,1,0,1,12,15,NOP,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-10-30,OKC vs. WAS,W,22.0,2,6,0.333,2,6,0.333,1,2,0.5,2,7,9,4,2,1,0,4,7,4,WAS,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-10-28,OKC vs. SAC,W,17.0,1,6,0.167,1,6,0.167,0,0,0.0,2,3,5,4,2,1,1,0,3,11,SAC,HOME,Jaylin Williams
+Jaylin Williams,1631119,2025-10-27,OKC @ DAL,W,17.0,1,2,0.5,0,1,0.0,2,2,1.0,0,7,7,1,1,1,1,2,4,7,DAL,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-10-25,OKC @ ATL,W,18.0,3,7,0.429,1,5,0.2,0,0,0.0,0,3,3,0,0,0,2,2,7,3,ATL,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-10-23,OKC @ IND,W,15.0,2,3,0.667,1,2,0.5,0,0,0.0,0,2,2,2,0,0,2,4,5,-9,IND,AWAY,Jaylin Williams
+Jaylin Williams,1631119,2025-10-21,OKC vs. HOU,W,13.0,1,5,0.2,0,4,0.0,0,0,0.0,0,0,0,1,1,0,0,1,2,-3,HOU,HOME,Jaylin Williams

@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Marvin Bagley III,1628963,2025-11-19,WAS @ MIN,L,31.0,6,11,0.545,0,0,0.0,1,2,0.5,3,4,7,3,3,1,2,3,13,10,MIN,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-16,WAS vs. BKN,L,17.0,1,3,0.333,0,0,0.0,2,3,0.667,0,3,3,1,0,0,1,1,4,-6,BKN,HOME,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-12,WAS @ HOU,L,12.0,4,4,1.0,0,0,0.0,1,1,1.0,2,3,5,1,0,0,0,1,9,-4,HOU,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-10,WAS @ DET,L,16.0,4,6,0.667,1,1,1.0,0,0,0.0,1,1,2,1,3,3,3,1,9,3,DET,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-08,WAS vs. DAL,L,17.0,4,7,0.571,0,0,0.0,2,2,1.0,3,2,5,1,0,1,2,1,10,-7,DAL,HOME,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-07,WAS vs. CLE,L,12.0,0,4,0.0,0,0,0.0,2,2,1.0,4,3,7,0,0,0,0,1,2,-5,CLE,HOME,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-05,WAS @ BOS,L,13.0,5,6,0.833,0,0,0.0,1,1,1.0,2,3,5,2,0,1,2,2,11,-1,BOS,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-03,WAS @ NYK,L,14.0,2,3,0.667,0,1,0.0,2,2,1.0,1,6,7,0,0,0,0,3,6,-10,NYK,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-11-01,WAS vs. ORL,L,15.0,4,7,0.571,0,1,0.0,0,0,0.0,3,0,3,3,0,1,0,3,8,-7,ORL,HOME,Marvin Bagley
+Marvin Bagley III,1628963,2025-10-30,WAS @ OKC,L,16.0,3,4,0.75,1,1,1.0,1,2,0.5,2,1,3,2,0,0,1,3,8,-7,OKC,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-10-28,WAS vs. PHI,L,19.0,6,7,0.857,0,0,0.0,2,4,0.5,3,4,7,3,2,1,1,3,14,-4,PHI,HOME,Marvin Bagley
+Marvin Bagley III,1628963,2025-10-26,WAS vs. CHA,L,10.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,1,2,2,-14,CHA,HOME,Marvin Bagley
+Marvin Bagley III,1628963,2025-10-24,WAS @ DAL,W,15.0,4,6,0.667,1,2,0.5,1,2,0.5,2,2,4,1,0,0,0,4,10,-6,DAL,AWAY,Marvin Bagley
+Marvin Bagley III,1628963,2025-10-22,WAS @ MIL,L,15.0,0,0,0.0,0,0,0.0,1,2,0.5,1,2,3,1,1,0,1,2,1,-11,MIL,AWAY,Marvin Bagley

@@ -1,0 +1,6 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Trae Young,1629027,2025-10-29,ATL @ BKN,W,7.0,2,4,0.5,0,0,0.0,2,3,0.667,0,1,1,1,0,1,1,1,6,-1,BKN,AWAY,Trae Young
+Trae Young,1629027,2025-10-27,ATL @ CHI,L,34.0,7,22,0.318,1,10,0.1,6,7,0.857,0,3,3,17,0,0,1,2,21,-5,CHI,AWAY,Trae Young
+Trae Young,1629027,2025-10-25,ATL vs. OKC,L,30.0,5,12,0.417,2,3,0.667,3,4,0.75,0,4,4,10,0,0,5,2,15,-12,OKC,HOME,Trae Young
+Trae Young,1629027,2025-10-24,ATL @ ORL,W,34.0,7,18,0.389,1,6,0.167,10,12,0.833,0,1,1,6,3,0,1,0,25,8,ORL,AWAY,Trae Young
+Trae Young,1629027,2025-10-22,ATL vs. TOR,L,34.0,5,14,0.357,1,7,0.143,11,13,0.846,0,1,1,5,1,0,2,4,22,-14,TOR,HOME,Trae Young

@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Collin Gillespie,1631221,2025-11-23,PHX vs. SAS,W,30.0,6,13,0.462,3,7,0.429,0,0,0.0,1,2,3,6,1,0,0,3,15,-1,SAS,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-11-21,PHX vs. MIN,W,34.0,7,12,0.583,4,7,0.571,2,2,1.0,0,7,7,4,2,0,3,2,20,14,MIN,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-11-18,PHX @ POR,W,28.0,6,11,0.545,4,9,0.444,3,3,1.0,0,3,3,6,1,0,3,3,19,1,POR,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-11-16,PHX vs. ATL,L,32.0,5,13,0.385,1,3,0.333,4,4,1.0,3,5,8,7,2,0,2,2,15,18,ATL,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-11-13,PHX vs. IND,W,23.0,3,7,0.429,2,4,0.5,2,2,1.0,1,3,4,1,0,0,2,3,10,27,IND,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-11-12,PHX @ DAL,W,19.0,1,5,0.2,1,4,0.25,1,2,0.5,1,5,6,5,0,0,0,1,4,17,DAL,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-11-10,PHX vs. NOP,W,13.0,2,5,0.4,2,4,0.5,0,0,0.0,0,1,1,5,1,0,2,1,6,20,NOP,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-11-08,PHX @ LAC,W,27.0,4,13,0.308,4,10,0.4,1,2,0.5,2,4,6,4,0,0,0,2,13,1,LAC,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-11-06,PHX vs. LAC,W,25.0,0,5,0.0,0,5,0.0,1,2,0.5,2,3,5,7,1,0,2,0,1,-1,LAC,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-11-04,PHX @ GSW,L,21.0,3,8,0.375,2,4,0.5,0,0,0.0,0,5,5,4,1,0,2,0,8,-11,GSW,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-11-02,PHX vs. SAS,W,22.0,5,10,0.5,3,7,0.429,2,2,1.0,1,1,2,4,1,1,2,1,15,-1,SAS,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-10-31,PHX vs. UTA,W,27.0,4,8,0.5,4,7,0.571,0,0,0.0,0,3,3,6,1,1,0,4,12,16,UTA,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-10-29,PHX vs. MEM,L,31.0,5,10,0.5,3,7,0.429,1,2,0.5,0,6,6,5,2,1,1,0,14,1,MEM,HOME,Collin Gillespie
+Collin Gillespie,1631221,2025-10-27,PHX @ UTA,L,32.0,5,13,0.385,4,12,0.333,1,1,1.0,0,3,3,13,3,1,3,1,15,19,UTA,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-10-25,PHX @ DEN,L,14.0,2,4,0.5,2,4,0.5,0,0,0.0,2,0,2,1,0,0,1,0,6,-16,DEN,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-10-24,PHX @ LAC,L,28.0,5,12,0.417,3,8,0.375,0,0,0.0,1,4,5,5,1,1,3,1,13,-18,LAC,AWAY,Collin Gillespie
+Collin Gillespie,1631221,2025-10-22,PHX vs. SAC,W,22.0,3,9,0.333,1,4,0.25,0,0,0.0,2,0,2,4,1,1,0,2,7,9,SAC,HOME,Collin Gillespie

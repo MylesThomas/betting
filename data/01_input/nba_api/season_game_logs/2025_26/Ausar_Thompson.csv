@@ -1,0 +1,13 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Ausar Thompson,1641709,2025-11-22,DET @ MIL,W,28.0,3,6,0.5,0,0,0.0,0,0,0.0,0,2,2,1,2,1,0,3,6,11,MIL,AWAY,Ausar Thompson
+Ausar Thompson,1641709,2025-11-18,DET @ ATL,W,24.0,3,5,0.6,0,0,0.0,0,0,0.0,0,2,2,0,1,3,0,3,6,-10,ATL,AWAY,Ausar Thompson
+Ausar Thompson,1641709,2025-11-09,DET @ PHI,W,34.0,6,10,0.6,1,1,1.0,1,3,0.333,2,3,5,4,3,0,2,1,14,-11,PHI,AWAY,Ausar Thompson
+Ausar Thompson,1641709,2025-11-07,DET @ BKN,W,34.0,7,14,0.5,0,0,0.0,0,0,0.0,0,6,6,4,3,1,1,3,14,18,BKN,AWAY,Ausar Thompson
+Ausar Thompson,1641709,2025-11-05,DET vs. UTA,W,31.0,7,12,0.583,0,0,0.0,4,6,0.667,3,4,7,4,1,1,2,3,18,22,UTA,HOME,Ausar Thompson
+Ausar Thompson,1641709,2025-11-03,DET @ MEM,W,27.0,4,7,0.571,0,1,0.0,1,6,0.167,1,3,4,1,4,2,2,3,9,10,MEM,AWAY,Ausar Thompson
+Ausar Thompson,1641709,2025-11-01,DET vs. DAL,W,28.0,6,12,0.5,1,2,0.5,2,6,0.333,3,4,7,1,2,0,2,1,15,8,DAL,HOME,Ausar Thompson
+Ausar Thompson,1641709,2025-10-29,DET vs. ORL,W,29.0,4,14,0.286,1,3,0.333,3,4,0.75,5,6,11,6,1,1,1,4,12,2,ORL,HOME,Ausar Thompson
+Ausar Thompson,1641709,2025-10-27,DET vs. CLE,L,15.0,3,6,0.5,0,1,0.0,0,1,0.0,1,2,3,0,0,0,1,4,6,-16,CLE,HOME,Ausar Thompson
+Ausar Thompson,1641709,2025-10-26,DET vs. BOS,W,36.0,7,16,0.438,0,2,0.0,7,8,0.875,5,7,12,3,2,0,1,4,21,15,BOS,HOME,Ausar Thompson
+Ausar Thompson,1641709,2025-10-24,DET @ HOU,W,24.0,9,16,0.563,1,3,0.333,0,2,0.0,0,2,2,4,1,1,1,3,19,-10,HOU,AWAY,Ausar Thompson
+Ausar Thompson,1641709,2025-10-22,DET @ CHI,L,33.0,5,8,0.625,0,0,0.0,1,3,0.333,0,9,9,7,1,1,1,3,11,6,CHI,AWAY,Ausar Thompson

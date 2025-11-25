@@ -1,0 +1,13 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Sidy Cissoko,1631321,2025-11-23,POR @ OKC,L,27.0,3,7,0.429,1,3,0.333,0,1,0.0,1,1,2,3,0,0,1,1,7,-10,OKC,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-21,POR @ GSW,W,23.0,6,11,0.545,3,7,0.429,0,1,0.0,0,1,1,2,1,0,3,4,15,7,GSW,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-19,POR vs. CHI,L,22.0,2,6,0.333,1,3,0.333,0,1,0.0,1,5,6,0,2,0,2,2,5,-5,CHI,HOME,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-18,POR vs. PHX,L,28.0,2,7,0.286,1,4,0.25,3,3,1.0,1,2,3,5,2,0,2,2,8,2,PHX,HOME,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-16,POR @ DAL,L,12.0,0,2,0.0,0,1,0.0,1,2,0.5,1,1,2,1,0,0,1,3,1,0,DAL,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-14,POR @ HOU,L,10.0,2,3,0.667,0,0,0.0,0,0,0.0,0,2,2,1,0,0,0,1,4,12,HOU,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-12,POR @ NOP,W,17.0,1,2,0.5,0,1,0.0,0,0,0.0,0,0,0,1,0,0,1,2,2,-9,NOP,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-10,POR @ ORL,L,10.0,1,1,1.0,1,1,1.0,1,2,0.5,1,1,2,1,0,0,0,2,4,-7,ORL,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-08,POR @ MIA,L,17.0,1,4,0.25,0,1,0.0,1,1,1.0,1,1,2,0,0,0,0,4,3,2,MIA,AWAY,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-05,POR vs. OKC,W,8.0,0,1,0.0,0,1,0.0,0,0,0.0,1,2,3,0,0,0,0,2,0,4,OKC,HOME,Sidy Cissoko
+Sidy Cissoko,1631321,2025-11-03,POR vs. LAL,L,14.0,2,2,1.0,0,0,0.0,1,2,0.5,2,0,2,2,2,0,0,2,5,-7,LAL,HOME,Sidy Cissoko
+Sidy Cissoko,1631321,2025-10-27,POR @ LAL,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,LAL,AWAY,Sidy Cissoko

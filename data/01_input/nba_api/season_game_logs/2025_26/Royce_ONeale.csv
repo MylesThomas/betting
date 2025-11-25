@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Royce O'Neale,1626220,2025-11-23,PHX vs. SAS,W,34.0,3,8,0.375,3,5,0.6,0,0,0.0,0,5,5,1,1,0,1,5,9,13,SAS,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-11-21,PHX vs. MIN,W,31.0,5,8,0.625,3,6,0.5,3,4,0.75,1,2,3,2,0,0,2,3,16,-4,MIN,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-11-18,PHX @ POR,W,31.0,3,10,0.3,3,10,0.3,0,0,0.0,0,5,5,1,2,0,1,2,9,19,POR,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-11-16,PHX vs. ATL,L,25.0,1,9,0.111,1,6,0.167,0,0,0.0,2,4,6,1,0,0,0,1,3,-18,ATL,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-11-13,PHX vs. IND,W,23.0,2,4,0.5,1,2,0.5,0,0,0.0,1,2,3,3,0,0,1,3,5,11,IND,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-11-12,PHX @ DAL,W,28.0,4,7,0.571,3,4,0.75,2,2,1.0,0,6,6,4,1,0,2,2,13,-9,DAL,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-11-10,PHX vs. NOP,W,23.0,5,9,0.556,4,8,0.5,0,0,0.0,0,5,5,2,1,1,1,3,14,21,NOP,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-11-08,PHX @ LAC,W,29.0,4,8,0.5,4,8,0.5,0,0,0.0,0,7,7,5,2,0,1,2,12,-3,LAC,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-11-06,PHX vs. LAC,W,28.0,6,11,0.545,5,10,0.5,0,0,0.0,1,3,4,2,0,0,1,2,17,8,LAC,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-11-04,PHX @ GSW,L,28.0,3,8,0.375,2,6,0.333,0,0,0.0,2,4,6,3,1,0,3,2,8,-20,GSW,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-11-02,PHX vs. SAS,W,30.0,4,6,0.667,3,5,0.6,0,0,0.0,0,6,6,4,2,0,1,4,11,21,SAS,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-10-31,PHX vs. UTA,W,33.0,5,10,0.5,3,8,0.375,0,0,0.0,0,5,5,2,2,0,1,1,13,13,UTA,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-10-29,PHX vs. MEM,L,35.0,6,12,0.5,6,11,0.545,0,0,0.0,0,3,3,5,0,0,2,2,18,7,MEM,HOME,Royce O'Neale
+Royce O'Neale,1626220,2025-10-27,PHX @ UTA,L,46.0,6,17,0.353,5,12,0.417,0,0,0.0,5,8,13,7,5,0,4,5,17,1,UTA,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-10-25,PHX @ DEN,L,28.0,2,6,0.333,2,6,0.333,1,2,0.5,1,3,4,2,0,0,1,4,7,-23,DEN,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-10-24,PHX @ LAC,L,28.0,4,11,0.364,3,10,0.3,0,0,0.0,1,3,4,1,2,1,2,3,11,-22,LAC,AWAY,Royce O'Neale
+Royce O'Neale,1626220,2025-10-22,PHX vs. SAC,W,29.0,4,8,0.5,3,7,0.429,1,2,0.5,2,3,5,2,1,0,1,2,12,3,SAC,HOME,Royce O'Neale

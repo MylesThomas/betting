@@ -1,0 +1,12 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Isaiah Livers,1630587,2025-11-23,PHX vs. SAS,W,19.0,2,5,0.4,1,3,0.333,0,0,0.0,0,1,1,1,3,1,0,2,5,3,SAS,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-11-21,PHX vs. MIN,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,1,1,0,1,MIN,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-11-18,PHX @ POR,W,13.0,1,3,0.333,1,3,0.333,2,3,0.667,0,2,2,0,0,0,0,3,5,3,POR,AWAY,Isaiah Livers
+Isaiah Livers,1630587,2025-11-16,PHX vs. ATL,L,17.0,2,2,1.0,2,2,1.0,0,0,0.0,0,5,5,0,0,0,0,0,6,20,ATL,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-11-13,PHX vs. IND,W,20.0,1,3,0.333,0,2,0.0,1,1,1.0,2,3,5,0,0,1,0,1,3,22,IND,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-11-10,PHX vs. NOP,W,11.0,1,2,0.5,1,2,0.5,0,0,0.0,0,1,1,2,0,0,0,2,3,14,NOP,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-11-04,PHX @ GSW,L,7.0,1,1,1.0,0,0,0.0,0,0,0.0,2,0,2,1,0,0,1,0,2,5,GSW,AWAY,Isaiah Livers
+Isaiah Livers,1630587,2025-10-31,PHX vs. UTA,W,3.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,12,UTA,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-10-29,PHX vs. MEM,L,8.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-12,MEM,HOME,Isaiah Livers
+Isaiah Livers,1630587,2025-10-27,PHX @ UTA,L,21.0,1,3,0.333,1,3,0.333,2,2,1.0,0,1,1,0,2,2,0,3,5,0,UTA,AWAY,Isaiah Livers
+Isaiah Livers,1630587,2025-10-25,PHX @ DEN,L,5.0,1,3,0.333,1,3,0.333,0,0,0.0,0,0,0,0,0,0,0,0,3,-2,DEN,AWAY,Isaiah Livers

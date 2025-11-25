@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Mikal Bridges,1628969,2025-11-22,NYK @ ORL,L,38.0,7,11,0.636,3,5,0.6,1,2,0.5,1,6,7,2,2,1,1,1,18,1,ORL,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-11-19,NYK @ DAL,W,35.0,7,13,0.538,1,5,0.2,1,2,0.5,1,4,5,6,3,2,2,1,16,-3,DAL,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-11-17,NYK @ MIA,L,39.0,9,14,0.643,2,4,0.5,3,5,0.6,1,2,3,4,2,4,2,0,23,-8,MIA,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-11-14,NYK vs. MIA,W,42.0,6,21,0.286,3,12,0.25,0,0,0.0,1,4,5,5,7,2,2,1,15,7,MIA,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-12,NYK vs. ORL,L,28.0,3,9,0.333,0,3,0.0,0,0,0.0,0,2,2,2,2,0,0,2,6,-19,ORL,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-11,NYK vs. MEM,W,38.0,8,17,0.471,3,9,0.333,3,4,0.75,4,3,7,5,4,0,0,0,22,1,MEM,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-09,NYK vs. BKN,W,28.0,6,8,0.75,4,5,0.8,0,0,0.0,0,1,1,5,0,0,0,2,16,18,BKN,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-05,NYK vs. MIN,W,33.0,5,12,0.417,3,8,0.375,0,0,0.0,0,1,1,5,1,2,1,3,13,13,MIN,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-03,NYK vs. WAS,W,29.0,4,8,0.5,2,3,0.667,0,0,0.0,0,2,2,4,3,3,0,1,10,21,WAS,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-02,NYK vs. CHI,W,35.0,3,7,0.429,2,5,0.4,2,2,1.0,3,2,5,9,1,0,4,1,10,6,CHI,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-10-31,NYK @ CHI,L,38.0,9,14,0.643,4,8,0.5,1,2,0.5,0,4,4,6,0,1,1,4,23,-1,CHI,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-10-28,NYK @ MIL,L,39.0,8,16,0.5,3,7,0.429,5,5,1.0,3,8,11,6,1,0,0,4,24,-10,MIL,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-10-26,NYK @ MIA,L,37.0,7,11,0.636,3,5,0.6,3,4,0.75,1,4,5,4,0,0,1,3,20,-7,MIA,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-10-24,NYK vs. BOS,W,36.0,5,10,0.5,2,4,0.5,0,0,0.0,2,4,6,2,2,1,2,2,12,15,BOS,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-10-22,NYK vs. CLE,W,33.0,6,11,0.545,1,3,0.333,3,3,1.0,1,4,5,6,3,2,0,3,16,1,CLE,HOME,Mikal Bridges

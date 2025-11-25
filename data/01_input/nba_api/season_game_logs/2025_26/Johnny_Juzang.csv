@@ -1,0 +1,8 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Johnny Juzang,1630548,2025-11-17,MIN vs. DAL,W,3.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,0,0,0,0,1,3,5,DAL,HOME,Johnny Juzang
+Johnny Juzang,1630548,2025-11-14,MIN vs. SAC,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,SAC,HOME,Johnny Juzang
+Johnny Juzang,1630548,2025-11-09,MIN @ SAC,W,5.0,1,3,0.333,0,2,0.0,0,0,0.0,0,2,2,1,0,0,0,1,2,2,SAC,AWAY,Johnny Juzang
+Johnny Juzang,1630548,2025-11-07,MIN vs. UTA,W,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,1,0,0,3,UTA,HOME,Johnny Juzang
+Johnny Juzang,1630548,2025-11-01,MIN @ CHA,W,1.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,0,0,0,3,0,CHA,AWAY,Johnny Juzang
+Johnny Juzang,1630548,2025-10-27,MIN vs. DEN,L,3.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,DEN,HOME,Johnny Juzang
+Johnny Juzang,1630548,2025-10-24,MIN @ LAL,L,3.0,0,2,0.0,0,2,0.0,1,2,0.5,1,0,1,0,0,0,0,1,1,5,LAL,AWAY,Johnny Juzang

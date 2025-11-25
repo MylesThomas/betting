@@ -1,0 +1,6 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+JD Davison,1631120,2025-11-14,HOU vs. POR,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-6,POR,HOME,Jd Davison
+JD Davison,1631120,2025-11-12,HOU vs. WAS,W,3.0,1,2,0.5,1,1,1.0,0,0,0.0,0,0,0,0,0,0,0,1,3,1,WAS,HOME,Jd Davison
+JD Davison,1631120,2025-11-05,HOU @ MEM,W,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-3,MEM,AWAY,Jd Davison
+JD Davison,1631120,2025-11-01,HOU @ BOS,W,8.0,2,2,1.0,1,1,1.0,0,2,0.0,0,0,0,1,0,1,0,0,5,-4,BOS,AWAY,Jd Davison
+JD Davison,1631120,2025-10-27,HOU vs. BKN,W,7.0,1,3,0.333,1,3,0.333,0,0,0.0,0,0,0,1,1,0,0,0,3,-1,BKN,HOME,Jd Davison

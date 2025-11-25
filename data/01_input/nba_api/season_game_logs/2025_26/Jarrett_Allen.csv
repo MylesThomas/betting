@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jarrett Allen,1628386,2025-11-19,CLE vs. HOU,L,28.0,4,9,0.444,0,0,0.0,0,0,0.0,2,5,7,3,1,0,1,3,8,-9,HOU,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-11-17,CLE vs. MIL,W,25.0,4,7,0.571,0,0,0.0,4,4,1.0,2,4,6,2,0,1,2,0,12,0,MIL,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-11-15,CLE vs. MEM,W,26.0,5,8,0.625,0,0,0.0,6,8,0.75,1,5,6,2,0,1,2,2,16,1,MEM,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-11-13,CLE vs. TOR,L,21.0,3,6,0.5,0,0,0.0,0,0,0.0,2,6,8,0,1,1,2,2,6,-6,TOR,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-11-12,CLE @ MIA,W,27.0,12,20,0.6,0,1,0.0,6,7,0.857,2,8,10,2,0,0,1,0,30,2,MIA,AWAY,Jarrett Allen
+Jarrett Allen,1628386,2025-11-10,CLE @ MIA,L,21.0,6,9,0.667,0,0,0.0,2,3,0.667,3,4,7,2,0,1,3,0,14,8,MIA,AWAY,Jarrett Allen
+Jarrett Allen,1628386,2025-11-08,CLE vs. CHI,W,25.0,4,8,0.5,0,0,0.0,3,6,0.5,2,1,3,2,1,2,2,2,11,3,CHI,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-11-07,CLE @ WAS,W,26.0,7,13,0.538,0,0,0.0,2,4,0.5,8,6,14,3,2,1,1,2,16,27,WAS,AWAY,Jarrett Allen
+Jarrett Allen,1628386,2025-11-05,CLE vs. PHI,W,30.0,11,17,0.647,0,2,0.0,2,2,1.0,3,7,10,1,3,3,0,2,24,24,PHI,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-10-29,CLE @ BOS,L,25.0,4,7,0.571,0,0,0.0,8,8,1.0,2,4,6,1,1,1,1,1,16,-4,BOS,AWAY,Jarrett Allen
+Jarrett Allen,1628386,2025-10-27,CLE @ DET,W,25.0,7,12,0.583,0,0,0.0,6,7,0.857,2,5,7,2,1,0,3,3,20,18,DET,AWAY,Jarrett Allen
+Jarrett Allen,1628386,2025-10-26,CLE vs. MIL,W,26.0,3,6,0.5,0,0,0.0,2,2,1.0,2,9,11,1,1,0,1,2,8,12,MIL,HOME,Jarrett Allen
+Jarrett Allen,1628386,2025-10-24,CLE @ BKN,W,30.0,8,11,0.727,0,1,0.0,6,9,0.667,2,5,7,4,2,1,2,2,22,24,BKN,AWAY,Jarrett Allen
+Jarrett Allen,1628386,2025-10-22,CLE @ NYK,L,28.0,1,4,0.25,0,0,0.0,2,4,0.5,0,4,4,1,2,0,1,0,4,-4,NYK,AWAY,Jarrett Allen

@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Amir Coffey,1629599,2025-11-22,MIL vs. DET,L,2.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,1,0,0,0,0,3,4,DET,HOME,Amir Coffey
+Amir Coffey,1629599,2025-11-15,MIL vs. LAL,L,3.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,0,0,0,3,-2,LAL,HOME,Amir Coffey
+Amir Coffey,1629599,2025-11-12,MIL @ CHA,L,12.0,1,3,0.333,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,1,2,-7,CHA,AWAY,Amir Coffey
+Amir Coffey,1629599,2025-11-10,MIL @ DAL,W,10.0,0,2,0.0,0,1,0.0,0,0,0.0,0,1,1,0,0,0,0,1,0,-7,DAL,AWAY,Amir Coffey
+Amir Coffey,1629599,2025-11-09,MIL vs. HOU,L,14.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,1,0,3,HOU,HOME,Amir Coffey
+Amir Coffey,1629599,2025-11-07,MIL vs. CHI,W,10.0,1,2,0.5,0,0,0.0,0,0,0.0,0,2,2,1,0,0,0,0,2,1,CHI,HOME,Amir Coffey
+Amir Coffey,1629599,2025-11-04,MIL @ TOR,L,10.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,1,0,0,0,1,0,-7,TOR,AWAY,Amir Coffey
+Amir Coffey,1629599,2025-11-03,MIL @ IND,W,4.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,1,0,-4,IND,AWAY,Amir Coffey
+Amir Coffey,1629599,2025-11-01,MIL vs. SAC,L,15.0,2,3,0.667,0,1,0.0,0,0,0.0,2,1,3,2,0,1,0,0,4,-2,SAC,HOME,Amir Coffey
+Amir Coffey,1629599,2025-10-30,MIL vs. GSW,W,13.0,0,1,0.0,0,1,0.0,0,0,0.0,1,2,3,0,0,0,0,1,0,7,GSW,HOME,Amir Coffey
+Amir Coffey,1629599,2025-10-28,MIL vs. NYK,W,15.0,2,3,0.667,1,2,0.5,3,3,1.0,0,2,2,0,0,0,0,0,8,-5,NYK,HOME,Amir Coffey
+Amir Coffey,1629599,2025-10-26,MIL @ CLE,L,8.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-4,CLE,AWAY,Amir Coffey
+Amir Coffey,1629599,2025-10-24,MIL @ TOR,W,3.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,1,0,0,-1,TOR,AWAY,Amir Coffey
+Amir Coffey,1629599,2025-10-22,MIL vs. WAS,W,13.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,2,0,0,0,0,2,-5,WAS,HOME,Amir Coffey

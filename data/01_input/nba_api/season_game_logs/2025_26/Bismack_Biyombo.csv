@@ -1,0 +1,7 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Bismack Biyombo,202687,2025-11-16,SAS vs. SAC,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,1,0,0,0,-1,SAC,HOME,Bismack Biyombo
+Bismack Biyombo,202687,2025-11-02,SAS @ PHX,L,6.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,1,0,-15,PHX,AWAY,Bismack Biyombo
+Bismack Biyombo,202687,2025-10-30,SAS vs. MIA,W,7.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,1,0,3,MIA,HOME,Bismack Biyombo
+Bismack Biyombo,202687,2025-10-27,SAS vs. TOR,W,14.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,1,1,0,0,3,2,-14,TOR,HOME,Bismack Biyombo
+Bismack Biyombo,202687,2025-10-26,SAS vs. BKN,W,12.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,2,0,-2,BKN,HOME,Bismack Biyombo
+Bismack Biyombo,202687,2025-10-22,SAS @ DAL,W,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,2,0,2,2,0,3,DAL,AWAY,Bismack Biyombo

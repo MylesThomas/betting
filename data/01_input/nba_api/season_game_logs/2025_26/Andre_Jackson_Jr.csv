@@ -1,0 +1,8 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Andre Jackson Jr.,1641748,2025-11-22,MIL vs. DET,L,29.0,2,6,0.333,1,3,0.333,1,2,0.5,2,2,4,5,2,0,2,3,6,-3,DET,HOME,Andre Jackson Jr
+Andre Jackson Jr.,1641748,2025-11-15,MIL vs. LAL,L,4.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,0,2,1,0,-2,LAL,HOME,Andre Jackson Jr
+Andre Jackson Jr.,1641748,2025-11-14,MIL vs. CHA,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,CHA,HOME,Andre Jackson Jr
+Andre Jackson Jr.,1641748,2025-11-12,MIL @ CHA,L,6.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,3,0,1,0,2,0,9,CHA,AWAY,Andre Jackson Jr
+Andre Jackson Jr.,1641748,2025-11-04,MIL @ TOR,L,6.0,0,1,0.0,0,0,0.0,0,0,0.0,1,0,1,2,1,0,0,0,0,-6,TOR,AWAY,Andre Jackson Jr
+Andre Jackson Jr.,1641748,2025-10-26,MIL @ CLE,L,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,1,0,0,0,0,2,CLE,AWAY,Andre Jackson Jr
+Andre Jackson Jr.,1641748,2025-10-22,MIL vs. WAS,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,WAS,HOME,Andre Jackson Jr

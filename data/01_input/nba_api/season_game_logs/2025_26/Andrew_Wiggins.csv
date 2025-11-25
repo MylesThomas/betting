@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Andrew Wiggins,203952,2025-11-19,MIA vs. GSW,W,34.0,7,16,0.438,2,4,0.5,1,2,0.5,1,5,6,1,2,1,1,4,17,25,GSW,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-17,MIA vs. NYK,W,33.0,3,15,0.2,0,4,0.0,0,0,0.0,0,4,4,4,0,1,0,3,6,1,NYK,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-14,MIA @ NYK,L,36.0,6,18,0.333,1,6,0.167,2,2,1.0,5,2,7,3,0,1,3,4,15,-15,NYK,AWAY,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-12,MIA vs. CLE,L,33.0,7,13,0.538,2,5,0.4,1,2,0.5,2,7,9,6,0,2,5,3,17,-9,CLE,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-10,MIA vs. CLE,W,37.0,8,13,0.615,2,5,0.4,5,6,0.833,1,1,2,5,1,0,2,2,23,0,CLE,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-08,MIA vs. POR,W,33.0,5,14,0.357,2,8,0.25,3,4,0.75,0,3,3,1,2,1,1,3,15,-4,POR,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-07,MIA vs. CHA,W,36.0,9,16,0.563,4,6,0.667,0,0,0.0,0,4,4,4,1,1,2,1,22,21,CHA,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-05,MIA @ DEN,L,32.0,9,13,0.692,3,4,0.75,1,2,0.5,0,4,4,5,2,1,0,4,22,-1,DEN,AWAY,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-03,MIA @ LAC,W,32.0,7,12,0.583,3,5,0.6,0,0,0.0,1,1,2,2,1,1,2,3,17,9,LAC,AWAY,Andrew Wiggins
+Andrew Wiggins,203952,2025-11-02,MIA @ LAL,L,37.0,6,16,0.375,1,6,0.167,2,3,0.667,3,6,9,1,1,1,4,3,15,-15,LAL,AWAY,Andrew Wiggins
+Andrew Wiggins,203952,2025-10-30,MIA @ SAS,L,35.0,11,18,0.611,2,5,0.4,0,2,0.0,3,3,6,2,2,0,2,2,24,0,SAS,AWAY,Andrew Wiggins
+Andrew Wiggins,203952,2025-10-28,MIA vs. CHA,W,30.0,8,15,0.533,3,6,0.5,2,2,1.0,1,1,2,2,3,1,2,1,21,13,CHA,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-10-26,MIA vs. NYK,W,31.0,4,9,0.444,1,4,0.25,0,0,0.0,1,4,5,2,0,1,3,1,9,-9,NYK,HOME,Andrew Wiggins
+Andrew Wiggins,203952,2025-10-24,MIA @ MEM,W,24.0,4,8,0.5,0,1,0.0,2,5,0.4,4,3,7,3,1,1,2,3,10,0,MEM,AWAY,Andrew Wiggins
+Andrew Wiggins,203952,2025-10-22,MIA @ ORL,L,32.0,6,12,0.5,1,5,0.2,5,7,0.714,0,4,4,1,1,1,1,4,18,-21,ORL,AWAY,Andrew Wiggins

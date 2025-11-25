@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Goga Bitadze,1629048,2025-11-22,ORL vs. NYK,W,19.0,3,4,0.75,0,0,0.0,0,0,0.0,2,5,7,3,1,1,1,1,6,6,NYK,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-20,ORL vs. LAC,W,16.0,3,3,1.0,0,0,0.0,4,4,1.0,1,5,6,3,2,0,1,2,10,15,LAC,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-18,ORL vs. GSW,W,14.0,3,3,1.0,0,0,0.0,0,0,0.0,1,1,2,3,1,1,1,1,6,8,GSW,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-16,ORL @ HOU,L,16.0,1,2,0.5,0,0,0.0,2,4,0.5,3,1,4,1,1,1,0,3,4,-7,HOU,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-11-14,ORL vs. BKN,W,16.0,3,4,0.75,0,0,0.0,0,0,0.0,3,5,8,0,0,2,2,2,6,-4,BKN,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-12,ORL @ NYK,W,16.0,2,2,1.0,0,0,0.0,6,6,1.0,1,2,3,0,1,0,1,2,10,23,NYK,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-11-10,ORL vs. POR,W,18.0,1,3,0.333,0,1,0.0,5,5,1.0,0,5,5,1,1,2,0,3,7,3,POR,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-09,ORL vs. BOS,L,15.0,1,2,0.5,0,0,0.0,0,0,0.0,1,1,2,1,1,3,0,4,2,-6,BOS,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-07,ORL vs. BOS,W,15.0,0,1,0.0,0,0,0.0,0,2,0.0,2,5,7,1,0,2,1,2,0,2,BOS,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-11-04,ORL @ ATL,L,13.0,1,1,1.0,0,0,0.0,2,2,1.0,0,2,2,2,0,0,0,3,4,0,ATL,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-11-01,ORL @ WAS,W,20.0,7,8,0.875,1,2,0.5,0,0,0.0,1,5,6,0,1,3,0,0,15,5,WAS,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-10-30,ORL @ CHA,W,13.0,2,4,0.5,1,1,1.0,1,1,1.0,1,2,3,0,0,1,0,1,6,7,CHA,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-10-29,ORL @ DET,L,27.0,5,5,1.0,0,0,0.0,0,0,0.0,4,2,6,2,0,1,0,4,10,-12,DET,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-10-27,ORL @ PHI,L,14.0,2,3,0.667,0,0,0.0,1,4,0.25,0,3,3,2,1,0,2,2,5,7,PHI,AWAY,Goga Bitadze
+Goga Bitadze,1629048,2025-10-25,ORL vs. CHI,L,17.0,1,1,1.0,0,0,0.0,1,2,0.5,2,7,9,2,0,0,1,1,3,-18,CHI,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-10-24,ORL vs. ATL,L,17.0,1,3,0.333,0,1,0.0,1,1,1.0,2,3,5,0,0,2,0,2,3,6,ATL,HOME,Goga Bitadze
+Goga Bitadze,1629048,2025-10-22,ORL vs. MIA,W,19.0,3,4,0.75,0,1,0.0,2,2,1.0,3,5,8,4,1,1,0,1,8,11,MIA,HOME,Goga Bitadze

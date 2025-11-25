@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jaxson Hayes,1629637,2025-11-23,LAL @ UTA,W,18.0,2,2,1.0,0,0,0.0,1,1,1.0,1,3,4,1,0,0,1,3,5,2,UTA,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-18,LAL vs. UTA,W,15.0,3,3,1.0,0,0,0.0,2,3,0.667,2,1,3,0,1,0,0,1,8,13,UTA,HOME,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-15,LAL @ MIL,W,17.0,3,4,0.75,0,0,0.0,4,4,1.0,0,6,6,1,2,0,2,1,10,10,MIL,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-14,LAL @ NOP,W,12.0,1,3,0.333,0,0,0.0,0,0,0.0,3,0,3,1,0,0,0,0,2,-21,NOP,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-12,LAL @ OKC,L,14.0,1,1,1.0,0,0,0.0,0,0,0.0,1,1,2,0,0,0,1,1,2,-17,OKC,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-10,LAL @ CHA,W,15.0,1,2,0.5,0,0,0.0,0,0,0.0,1,4,5,0,0,1,0,2,2,4,CHA,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-08,LAL @ ATL,L,17.0,2,4,0.5,0,0,0.0,0,0,0.0,1,2,3,0,0,1,0,0,4,-11,ATL,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-05,LAL vs. SAS,W,15.0,3,4,0.75,0,0,0.0,3,5,0.6,2,2,4,1,0,0,0,1,9,1,SAS,HOME,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-03,LAL @ POR,W,13.0,2,3,0.667,0,0,0.0,0,0,0.0,1,2,3,0,0,0,0,2,4,-2,POR,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-11-02,LAL vs. MIA,W,32.0,7,7,1.0,1,1,1.0,0,0,0.0,1,4,5,1,1,1,1,3,15,17,MIA,HOME,Jaxson Hayes
+Jaxson Hayes,1629637,2025-10-31,LAL @ MEM,W,23.0,1,2,0.5,0,0,0.0,0,2,0.0,1,6,7,5,0,1,0,1,2,15,MEM,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-10-29,LAL @ MIN,W,13.0,1,2,0.5,0,0,0.0,0,0,0.0,0,2,2,3,1,1,1,4,2,1,MIN,AWAY,Jaxson Hayes
+Jaxson Hayes,1629637,2025-10-21,LAL vs. GSW,L,14.0,2,3,0.667,0,0,0.0,0,0,0.0,2,4,6,1,0,0,1,2,4,-6,GSW,HOME,Jaxson Hayes

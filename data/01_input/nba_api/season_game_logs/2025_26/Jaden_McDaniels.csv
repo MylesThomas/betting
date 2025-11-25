@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jaden McDaniels,1630183,2025-11-21,MIN @ PHX,L,40.0,5,12,0.417,0,5,0.0,3,3,1.0,3,2,5,2,4,0,1,4,13,9,PHX,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-17,MIN vs. DAL,W,23.0,4,6,0.667,3,4,0.75,4,5,0.8,0,5,5,3,2,1,3,0,15,15,DAL,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-15,MIN vs. DEN,L,33.0,7,15,0.467,1,3,0.333,0,0,0.0,1,3,4,3,2,2,0,5,15,-18,DEN,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-14,MIN vs. SAC,W,31.0,6,9,0.667,0,2,0.0,1,1,1.0,1,3,4,3,0,0,4,3,13,4,SAC,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-10,MIN @ UTA,W,35.0,6,13,0.462,1,2,0.5,3,3,1.0,0,6,6,3,2,0,1,4,16,8,UTA,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-09,MIN @ SAC,W,26.0,8,10,0.8,2,3,0.667,3,3,1.0,1,4,5,3,0,2,2,4,21,15,SAC,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-07,MIN vs. UTA,W,27.0,9,14,0.643,3,3,1.0,1,2,0.5,3,4,7,1,3,2,2,2,22,35,UTA,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-05,MIN @ NYK,L,32.0,4,10,0.4,3,5,0.6,2,2,1.0,1,3,4,3,0,0,3,4,13,-7,NYK,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-03,MIN @ BKN,W,29.0,9,11,0.818,2,3,0.667,2,3,0.667,0,3,3,3,2,1,2,5,22,23,BKN,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-11-01,MIN @ CHA,W,32.0,6,10,0.6,2,2,1.0,0,0,0.0,0,4,4,6,0,0,3,6,14,5,CHA,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-10-29,MIN vs. LAL,L,41.0,11,19,0.579,3,4,0.75,5,5,1.0,3,4,7,1,1,0,2,1,30,10,LAL,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-10-27,MIN vs. DEN,L,35.0,10,16,0.625,1,3,0.333,4,4,1.0,0,3,3,1,0,4,2,1,25,-13,DEN,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-10-26,MIN vs. IND,W,35.0,3,13,0.231,1,6,0.167,4,6,0.667,3,2,5,1,1,2,0,4,11,-6,IND,HOME,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-10-24,MIN @ LAL,L,27.0,5,12,0.417,0,4,0.0,0,0,0.0,1,1,2,0,0,1,0,5,10,-14,LAL,AWAY,Jaden Mcdaniels
+Jaden McDaniels,1630183,2025-10-22,MIN @ POR,W,29.0,6,12,0.5,3,4,0.75,3,4,0.75,0,5,5,2,1,3,3,4,18,3,POR,AWAY,Jaden Mcdaniels

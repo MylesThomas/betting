@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Sam Hauser,1630573,2025-11-23,BOS vs. ORL,W,27.0,5,8,0.625,4,7,0.571,0,0,0.0,0,1,1,0,0,0,0,3,14,-6,ORL,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-21,BOS vs. BKN,L,14.0,0,3,0.0,0,3,0.0,0,0,0.0,1,3,4,2,0,0,1,2,0,-6,BKN,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-18,BOS @ BKN,W,22.0,3,7,0.429,2,5,0.4,0,0,0.0,1,6,7,3,2,0,0,0,8,22,BKN,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-11-16,BOS vs. LAC,W,7.0,0,3,0.0,0,3,0.0,0,0,0.0,1,1,2,1,0,0,1,1,0,-16,LAC,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-12,BOS vs. MEM,W,23.0,2,8,0.25,1,7,0.143,0,0,0.0,1,1,2,1,1,1,1,1,5,15,MEM,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-11,BOS @ PHI,L,21.0,1,5,0.2,1,4,0.25,0,0,0.0,0,7,7,0,0,0,0,0,3,5,PHI,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-11-09,BOS @ ORL,W,17.0,0,2,0.0,0,1,0.0,0,0,0.0,0,4,4,0,0,0,0,1,0,6,ORL,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-11-07,BOS @ ORL,L,21.0,1,6,0.167,1,5,0.2,0,0,0.0,1,2,3,3,1,0,0,0,3,-15,ORL,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-11-05,BOS vs. WAS,W,22.0,1,8,0.125,1,6,0.167,0,0,0.0,1,1,2,3,0,0,0,1,3,3,WAS,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-03,BOS vs. UTA,L,28.0,1,8,0.125,1,8,0.125,1,2,0.5,0,2,2,1,2,1,1,0,4,-1,UTA,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-01,BOS vs. HOU,L,17.0,2,4,0.5,2,3,0.667,0,0,0.0,1,1,2,2,0,0,1,0,6,-10,HOU,HOME,Sam Hauser
+Sam Hauser,1630573,2025-10-31,BOS @ PHI,W,24.0,1,6,0.167,1,4,0.25,0,0,0.0,3,3,6,3,1,0,0,2,3,3,PHI,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-10-29,BOS vs. CLE,W,21.0,7,13,0.538,7,13,0.538,0,0,0.0,1,2,3,1,0,0,0,2,21,4,CLE,HOME,Sam Hauser
+Sam Hauser,1630573,2025-10-27,BOS @ NOP,W,26.0,3,10,0.3,3,10,0.3,0,0,0.0,0,3,3,2,1,1,1,1,9,16,NOP,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-10-26,BOS @ DET,L,24.0,3,7,0.429,2,5,0.4,0,0,0.0,1,3,4,0,0,0,1,1,8,5,DET,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-10-24,BOS @ NYK,L,28.0,6,10,0.6,6,10,0.6,0,0,0.0,0,3,3,0,1,1,1,1,18,-14,NYK,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-10-22,BOS vs. PHI,L,22.0,2,6,0.333,2,6,0.333,2,2,1.0,0,2,2,1,0,0,3,3,8,8,PHI,HOME,Sam Hauser

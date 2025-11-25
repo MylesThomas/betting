@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Nick Richards,1630208,2025-11-23,PHX vs. SAS,W,5.0,1,4,0.25,0,0,0.0,0,0,0.0,0,2,2,0,0,0,0,1,2,-4,SAS,HOME,Nick Richards
+Nick Richards,1630208,2025-11-21,PHX vs. MIN,W,8.0,1,3,0.333,0,0,0.0,0,0,0.0,3,1,4,0,0,0,3,1,2,3,MIN,HOME,Nick Richards
+Nick Richards,1630208,2025-11-18,PHX @ POR,W,11.0,4,7,0.571,0,0,0.0,0,0,0.0,2,0,2,0,0,1,0,2,8,-5,POR,AWAY,Nick Richards
+Nick Richards,1630208,2025-11-16,PHX vs. ATL,L,14.0,1,2,0.5,0,0,0.0,1,2,0.5,2,3,5,0,0,1,2,2,3,16,ATL,HOME,Nick Richards
+Nick Richards,1630208,2025-11-13,PHX vs. IND,W,15.0,0,0,0.0,0,0,0.0,4,6,0.667,0,1,1,0,0,1,0,3,4,-13,IND,HOME,Nick Richards
+Nick Richards,1630208,2025-11-12,PHX @ DAL,W,10.0,3,5,0.6,0,0,0.0,0,2,0.0,3,4,7,1,0,0,1,1,6,5,DAL,AWAY,Nick Richards
+Nick Richards,1630208,2025-11-10,PHX vs. NOP,W,8.0,0,0,0.0,0,0,0.0,2,3,0.667,1,4,5,1,0,0,0,1,2,7,NOP,HOME,Nick Richards
+Nick Richards,1630208,2025-11-08,PHX @ LAC,W,15.0,2,3,0.667,0,0,0.0,0,0,0.0,2,3,5,0,0,2,1,2,4,-8,LAC,AWAY,Nick Richards
+Nick Richards,1630208,2025-11-06,PHX vs. LAC,W,11.0,1,1,1.0,0,0,0.0,1,2,0.5,1,2,3,0,0,0,2,0,3,3,LAC,HOME,Nick Richards
+Nick Richards,1630208,2025-11-04,PHX @ GSW,L,4.0,1,3,0.333,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,2,-4,GSW,AWAY,Nick Richards
+Nick Richards,1630208,2025-11-02,PHX vs. SAS,W,11.0,4,6,0.667,0,0,0.0,2,2,1.0,0,3,3,2,0,0,1,2,10,1,SAS,HOME,Nick Richards
+Nick Richards,1630208,2025-10-31,PHX vs. UTA,W,7.0,1,2,0.5,0,0,0.0,2,2,1.0,0,0,0,0,0,0,0,1,4,-3,UTA,HOME,Nick Richards
+Nick Richards,1630208,2025-10-29,PHX vs. MEM,L,12.0,0,1,0.0,0,0,0.0,0,0,0.0,0,2,2,0,1,0,2,2,0,3,MEM,HOME,Nick Richards
+Nick Richards,1630208,2025-10-27,PHX @ UTA,L,15.0,2,6,0.333,0,0,0.0,2,2,1.0,5,5,10,0,0,3,1,2,6,5,UTA,AWAY,Nick Richards
+Nick Richards,1630208,2025-10-25,PHX @ DEN,L,10.0,1,1,1.0,0,0,0.0,2,2,1.0,1,3,4,0,0,0,2,4,4,-10,DEN,AWAY,Nick Richards
+Nick Richards,1630208,2025-10-24,PHX @ LAC,L,9.0,1,3,0.333,0,0,0.0,0,0,0.0,1,0,1,0,1,0,1,0,2,-7,LAC,AWAY,Nick Richards
+Nick Richards,1630208,2025-10-22,PHX vs. SAC,W,5.0,3,3,1.0,0,0,0.0,2,2,1.0,2,1,3,0,0,0,0,1,8,-6,SAC,HOME,Nick Richards

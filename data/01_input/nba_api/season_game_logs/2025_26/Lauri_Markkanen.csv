@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Lauri Markkanen,1628374,2025-11-23,UTA vs. LAL,L,36.0,8,19,0.421,2,7,0.286,2,2,1.0,1,6,7,2,1,1,1,2,20,19,LAL,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-21,UTA vs. OKC,L,35.0,4,8,0.5,2,4,0.5,9,9,1.0,2,4,6,3,2,0,1,0,19,-27,OKC,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-18,UTA @ LAL,L,32.0,12,21,0.571,3,9,0.333,4,4,1.0,2,3,5,2,2,0,1,4,31,-6,LAL,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-16,UTA vs. CHI,W,46.0,15,33,0.455,6,17,0.353,11,13,0.846,2,5,7,2,2,2,1,3,47,4,CHI,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-13,UTA vs. ATL,L,36.0,15,25,0.6,6,12,0.5,4,4,1.0,4,3,7,2,1,0,4,3,40,4,ATL,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-11,UTA vs. IND,W,35.0,13,19,0.684,5,7,0.714,4,5,0.8,3,0,3,2,0,1,0,4,35,12,IND,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-10,UTA vs. MIN,L,35.0,6,15,0.4,4,7,0.571,5,6,0.833,4,4,8,3,1,0,1,4,21,-10,MIN,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-07,UTA @ MIN,L,21.0,4,14,0.286,0,4,0.0,4,5,0.8,0,2,2,2,3,0,0,1,12,-28,MIN,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-05,UTA @ DET,L,40.0,8,22,0.364,3,12,0.25,6,6,1.0,0,4,4,0,2,0,2,2,25,-6,DET,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-03,UTA @ BOS,W,37.0,7,17,0.412,2,6,0.333,4,4,1.0,4,5,9,2,0,0,4,2,20,-1,BOS,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-11-02,UTA @ CHA,L,33.0,12,28,0.429,3,10,0.3,2,2,1.0,3,4,7,3,0,0,0,0,29,-19,CHA,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-10-31,UTA @ PHX,L,35.0,10,20,0.5,4,11,0.364,9,12,0.75,1,3,4,0,0,1,2,1,33,-9,PHX,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-10-29,UTA vs. POR,L,38.0,10,19,0.526,2,7,0.286,10,12,0.833,1,4,5,2,3,3,1,2,32,-4,POR,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-10-27,UTA vs. PHX,W,45.0,14,32,0.438,6,13,0.462,17,17,1.0,5,9,14,3,0,0,1,2,51,26,PHX,HOME,Lauri Markkanen
+Lauri Markkanen,1628374,2025-10-24,UTA @ SAC,L,36.0,12,23,0.522,4,13,0.308,5,6,0.833,1,3,4,1,0,0,1,1,33,4,SAC,AWAY,Lauri Markkanen
+Lauri Markkanen,1628374,2025-10-22,UTA vs. LAC,W,33.0,8,13,0.615,4,7,0.571,0,0,0.0,2,4,6,5,0,0,1,0,20,19,LAC,HOME,Lauri Markkanen

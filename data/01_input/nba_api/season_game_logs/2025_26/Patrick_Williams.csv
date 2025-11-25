@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Patrick Williams,1630172,2025-11-21,CHI vs. MIA,L,18.0,3,6,0.5,1,4,0.25,1,2,0.5,0,1,1,2,1,1,1,6,8,-10,MIA,HOME,Patrick Williams
+Patrick Williams,1630172,2025-11-19,CHI @ POR,W,13.0,2,7,0.286,1,2,0.5,0,1,0.0,1,4,5,1,0,0,1,0,5,2,POR,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-11-17,CHI @ DEN,W,17.0,2,7,0.286,1,4,0.25,2,2,1.0,1,1,2,2,1,0,0,2,7,4,DEN,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-11-16,CHI @ UTA,L,14.0,3,5,0.6,2,3,0.667,0,0,0.0,0,1,1,1,1,0,2,1,8,-7,UTA,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-11-12,CHI @ DET,L,24.0,3,8,0.375,0,4,0.0,1,2,0.5,4,1,5,1,1,1,3,2,7,-9,DET,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-11-10,CHI vs. SAS,L,25.0,2,6,0.333,1,3,0.333,0,0,0.0,0,2,2,0,4,0,3,2,5,9,SAS,HOME,Patrick Williams
+Patrick Williams,1630172,2025-11-08,CHI @ CLE,L,23.0,3,5,0.6,3,4,0.75,2,2,1.0,0,1,1,2,0,0,0,1,11,10,CLE,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-11-07,CHI @ MIL,L,23.0,2,6,0.333,2,4,0.5,0,0,0.0,0,6,6,0,1,0,0,1,6,-2,MIL,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-11-04,CHI vs. PHI,W,21.0,1,5,0.2,0,2,0.0,1,2,0.5,2,0,2,2,1,1,0,1,3,-8,PHI,HOME,Patrick Williams
+Patrick Williams,1630172,2025-11-02,CHI @ NYK,L,26.0,3,9,0.333,2,7,0.286,3,4,0.75,1,1,2,3,2,0,0,2,11,-8,NYK,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-10-31,CHI vs. NYK,W,23.0,3,6,0.5,2,4,0.5,1,1,1.0,0,1,1,3,1,1,2,3,9,13,NYK,HOME,Patrick Williams
+Patrick Williams,1630172,2025-10-29,CHI vs. SAC,W,20.0,3,6,0.5,3,3,1.0,0,0,0.0,0,3,3,0,0,0,0,3,9,-15,SAC,HOME,Patrick Williams
+Patrick Williams,1630172,2025-10-27,CHI vs. ATL,W,22.0,4,9,0.444,2,7,0.286,2,3,0.667,1,2,3,2,0,0,0,1,12,1,ATL,HOME,Patrick Williams
+Patrick Williams,1630172,2025-10-25,CHI @ ORL,W,29.0,5,7,0.714,1,2,0.5,1,2,0.5,0,5,5,4,2,0,2,2,12,12,ORL,AWAY,Patrick Williams
+Patrick Williams,1630172,2025-10-22,CHI vs. DET,W,17.0,1,2,0.5,1,2,0.5,1,2,0.5,0,4,4,0,1,2,2,1,4,1,DET,HOME,Patrick Williams

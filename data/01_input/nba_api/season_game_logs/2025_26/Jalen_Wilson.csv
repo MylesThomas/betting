@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jalen Wilson,1630592,2025-11-23,BKN @ TOR,L,6.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,2,-2,TOR,AWAY,Jalen Wilson
+Jalen Wilson,1630592,2025-11-18,BKN vs. BOS,L,12.0,0,3,0.0,0,3,0.0,0,0,0.0,0,1,1,0,0,0,0,1,0,-3,BOS,HOME,Jalen Wilson
+Jalen Wilson,1630592,2025-11-16,BKN @ WAS,W,2.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,0,0,0,3,0,WAS,AWAY,Jalen Wilson
+Jalen Wilson,1630592,2025-11-11,BKN vs. TOR,L,16.0,3,7,0.429,3,5,0.6,0,0,0.0,0,1,1,0,0,0,0,1,9,-11,TOR,HOME,Jalen Wilson
+Jalen Wilson,1630592,2025-11-09,BKN @ NYK,L,20.0,0,8,0.0,0,4,0.0,0,0,0.0,2,1,3,0,1,0,2,3,0,-16,NYK,AWAY,Jalen Wilson
+Jalen Wilson,1630592,2025-11-07,BKN vs. DET,L,11.0,3,5,0.6,3,4,0.75,0,0,0.0,0,1,1,1,0,0,1,0,9,0,DET,HOME,Jalen Wilson
+Jalen Wilson,1630592,2025-11-05,BKN @ IND,W,21.0,2,4,0.5,2,4,0.5,0,0,0.0,0,1,1,0,0,0,0,2,6,1,IND,AWAY,Jalen Wilson
+Jalen Wilson,1630592,2025-11-03,BKN vs. MIN,L,16.0,1,4,0.25,0,2,0.0,5,7,0.714,0,1,1,1,0,0,0,3,7,-9,MIN,HOME,Jalen Wilson
+Jalen Wilson,1630592,2025-11-02,BKN vs. PHI,L,14.0,1,4,0.25,0,2,0.0,0,0,0.0,0,0,0,0,0,0,1,2,2,-24,PHI,HOME,Jalen Wilson
+Jalen Wilson,1630592,2025-10-29,BKN vs. ATL,L,21.0,1,3,0.333,1,2,0.5,3,4,0.75,0,2,2,2,0,0,0,0,6,-4,ATL,HOME,Jalen Wilson
+Jalen Wilson,1630592,2025-10-27,BKN @ HOU,L,23.0,3,8,0.375,1,4,0.25,2,2,1.0,0,1,1,2,1,0,2,1,9,-14,HOU,AWAY,Jalen Wilson
+Jalen Wilson,1630592,2025-10-26,BKN @ SAS,L,15.0,3,4,0.75,3,4,0.75,0,0,0.0,0,1,1,1,0,0,1,2,9,-3,SAS,AWAY,Jalen Wilson
+Jalen Wilson,1630592,2025-10-22,BKN @ CHA,L,15.0,3,5,0.6,2,4,0.5,0,0,0.0,0,0,0,0,0,0,1,1,8,10,CHA,AWAY,Jalen Wilson

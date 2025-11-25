@@ -1,0 +1,12 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Caris LeVert,1627747,2025-11-22,DET @ MIL,W,13.0,2,6,0.333,1,3,0.333,0,1,0.0,0,0,0,1,1,0,1,0,5,-7,MIL,AWAY,Caris Levert
+Caris LeVert,1627747,2025-11-17,DET vs. IND,W,17.0,4,8,0.5,0,3,0.0,0,1,0.0,1,4,5,8,0,0,3,0,8,-1,IND,HOME,Caris Levert
+Caris LeVert,1627747,2025-11-14,DET vs. PHI,W,23.0,5,8,0.625,3,4,0.75,1,2,0.5,0,2,2,6,0,1,1,2,14,5,PHI,HOME,Caris Levert
+Caris LeVert,1627747,2025-11-12,DET vs. CHI,W,22.0,8,11,0.727,0,1,0.0,1,2,0.5,0,1,1,5,1,2,3,2,17,3,CHI,HOME,Caris Levert
+Caris LeVert,1627747,2025-11-09,DET @ PHI,W,20.0,4,6,0.667,4,5,0.8,2,2,1.0,0,0,0,3,0,1,1,0,14,8,PHI,AWAY,Caris Levert
+Caris LeVert,1627747,2025-11-07,DET @ BKN,W,20.0,3,6,0.5,1,4,0.25,3,4,0.75,1,2,3,4,1,0,1,0,10,8,BKN,AWAY,Caris Levert
+Caris LeVert,1627747,2025-11-05,DET vs. UTA,W,19.0,3,8,0.375,2,5,0.4,2,4,0.5,0,2,2,1,1,0,3,2,10,-3,UTA,HOME,Caris Levert
+Caris LeVert,1627747,2025-11-03,DET @ MEM,W,20.0,2,4,0.5,0,2,0.0,0,0,0.0,0,1,1,2,2,0,2,1,4,3,MEM,AWAY,Caris Levert
+Caris LeVert,1627747,2025-11-01,DET vs. DAL,W,18.0,2,6,0.333,1,1,1.0,0,0,0.0,0,1,1,2,0,0,1,3,5,-2,DAL,HOME,Caris Levert
+Caris LeVert,1627747,2025-10-29,DET vs. ORL,W,16.0,1,5,0.2,0,2,0.0,2,3,0.667,0,1,1,2,0,0,1,1,4,6,ORL,HOME,Caris Levert
+Caris LeVert,1627747,2025-10-22,DET @ CHI,L,21.0,3,7,0.429,1,3,0.333,1,2,0.5,0,1,1,2,1,0,1,1,8,-7,CHI,AWAY,Caris Levert

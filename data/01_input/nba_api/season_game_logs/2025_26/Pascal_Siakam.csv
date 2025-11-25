@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Pascal Siakam,1627783,2025-11-21,IND @ CLE,L,37.0,9,15,0.6,3,6,0.5,5,6,0.833,0,9,9,4,1,0,3,3,26,-10,CLE,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-11-19,IND vs. CHA,W,37.0,9,17,0.529,2,8,0.25,2,2,1.0,0,4,4,7,1,1,2,3,22,25,CHA,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-17,IND @ DET,L,34.0,8,17,0.471,3,8,0.375,10,12,0.833,2,5,7,1,1,1,3,2,29,-29,DET,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-11-15,IND vs. TOR,L,36.0,10,19,0.526,5,10,0.5,5,6,0.833,3,1,4,3,2,0,0,4,30,-11,TOR,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-13,IND @ PHX,L,31.0,6,14,0.429,0,1,0.0,7,8,0.875,3,2,5,2,0,0,2,4,19,-25,PHX,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-11-11,IND @ UTA,L,35.0,9,16,0.563,2,4,0.5,7,7,1.0,2,3,5,4,0,1,2,3,27,-10,UTA,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-11-08,IND @ DEN,L,33.0,5,16,0.313,0,2,0.0,4,6,0.667,2,4,6,5,0,0,2,2,14,-16,DEN,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-11-05,IND vs. BKN,L,36.0,10,21,0.476,1,3,0.333,2,6,0.333,0,6,6,10,1,0,7,5,23,-10,BKN,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-03,IND vs. MIL,L,38.0,11,24,0.458,1,6,0.167,9,12,0.75,2,3,5,8,3,1,3,3,32,-8,MIL,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-01,IND vs. GSW,W,38.0,12,23,0.522,1,5,0.2,2,3,0.667,1,4,5,3,2,1,3,5,27,11,GSW,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-10-31,IND vs. ATL,L,30.0,5,15,0.333,2,6,0.333,6,10,0.6,0,5,5,5,0,0,2,2,18,-15,ATL,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-10-29,IND @ DAL,L,37.0,9,23,0.391,2,5,0.4,7,12,0.583,3,10,13,3,2,0,3,4,27,7,DAL,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-10-26,IND @ MIN,L,37.0,11,24,0.458,3,6,0.5,8,12,0.667,1,9,10,8,3,0,2,4,33,3,MIN,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-10-25,IND @ MEM,L,26.0,5,12,0.417,2,7,0.286,1,2,0.5,1,5,6,6,0,1,2,3,13,-8,MEM,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-10-23,IND vs. OKC,L,44.0,12,25,0.48,3,6,0.5,5,12,0.417,3,12,15,4,1,0,1,1,32,-8,OKC,HOME,Pascal Siakam

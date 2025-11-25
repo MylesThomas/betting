@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jordan Walsh,1641775,2025-11-23,BOS vs. ORL,W,24.0,1,3,0.333,0,1,0.0,3,4,0.75,1,2,3,2,0,1,2,2,5,-6,ORL,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-11-21,BOS vs. BKN,L,24.0,4,7,0.571,1,2,0.5,0,0,0.0,2,4,6,0,1,0,1,1,9,8,BKN,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-11-18,BOS @ BKN,W,11.0,2,2,1.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,4,4,-12,BKN,AWAY,Jordan Walsh
+Jordan Walsh,1641775,2025-11-16,BOS vs. LAC,W,33.0,2,5,0.4,0,1,0.0,2,2,1.0,2,6,8,3,3,1,0,5,6,4,LAC,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-11-12,BOS vs. MEM,W,18.0,3,7,0.429,1,3,0.333,0,0,0.0,1,5,6,0,0,2,0,4,7,19,MEM,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-11-11,BOS @ PHI,L,29.0,3,7,0.429,1,3,0.333,1,2,0.5,2,5,7,1,2,2,0,2,8,4,PHI,AWAY,Jordan Walsh
+Jordan Walsh,1641775,2025-11-09,BOS @ ORL,W,26.0,2,3,0.667,2,2,1.0,0,0,0.0,1,5,6,4,2,0,0,3,6,13,ORL,AWAY,Jordan Walsh
+Jordan Walsh,1641775,2025-11-07,BOS @ ORL,L,19.0,1,3,0.333,0,1,0.0,0,0,0.0,2,4,6,0,1,1,2,1,2,7,ORL,AWAY,Jordan Walsh
+Jordan Walsh,1641775,2025-11-05,BOS vs. WAS,W,24.0,3,4,0.75,1,2,0.5,0,0,0.0,2,5,7,1,2,0,0,4,7,27,WAS,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-11-01,BOS vs. HOU,L,19.0,4,10,0.4,2,5,0.4,0,0,0.0,3,1,4,1,0,0,0,3,10,-7,HOU,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-10-29,BOS vs. CLE,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,3,CLE,HOME,Jordan Walsh
+Jordan Walsh,1641775,2025-10-27,BOS @ NOP,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,4,NOP,AWAY,Jordan Walsh
+Jordan Walsh,1641775,2025-10-24,BOS @ NYK,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-8,NYK,AWAY,Jordan Walsh

@@ -1,0 +1,10 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kevon Looney,1626172,2025-11-22,NOP vs. ATL,L,14.0,1,2,0.5,0,1,0.0,0,0,0.0,2,3,5,1,0,1,0,1,2,-4,ATL,HOME,Kevon Looney
+Kevon Looney,1626172,2025-11-19,NOP vs. DEN,L,5.0,0,1,0.0,0,0,0.0,0,0,0.0,1,3,4,1,0,0,0,2,0,-4,DEN,HOME,Kevon Looney
+Kevon Looney,1626172,2025-11-14,NOP vs. LAL,L,11.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,2,0,0,0,0,2,-7,LAL,HOME,Kevon Looney
+Kevon Looney,1626172,2025-11-12,NOP vs. POR,L,8.0,0,1,0.0,0,1,0.0,0,0,0.0,1,1,2,1,1,0,1,3,0,-7,POR,HOME,Kevon Looney
+Kevon Looney,1626172,2025-11-10,NOP @ PHX,L,16.0,1,4,0.25,0,0,0.0,0,0,0.0,5,1,6,2,1,1,0,2,2,-7,PHX,AWAY,Kevon Looney
+Kevon Looney,1626172,2025-11-08,NOP @ SAS,L,17.0,1,3,0.333,1,2,0.5,2,4,0.5,2,4,6,0,0,0,1,3,5,-6,SAS,AWAY,Kevon Looney
+Kevon Looney,1626172,2025-11-05,NOP @ DAL,W,15.0,4,8,0.5,0,1,0.0,0,0,0.0,4,2,6,2,0,1,0,1,8,-1,DAL,AWAY,Kevon Looney
+Kevon Looney,1626172,2025-11-04,NOP vs. CHA,W,15.0,0,3,0.0,0,1,0.0,0,0,0.0,0,4,4,2,0,1,1,2,0,-22,CHA,HOME,Kevon Looney
+Kevon Looney,1626172,2025-11-02,NOP @ OKC,L,16.0,1,3,0.333,0,1,0.0,1,2,0.5,1,2,3,2,0,1,2,3,3,-15,OKC,AWAY,Kevon Looney

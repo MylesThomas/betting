@@ -1,0 +1,4 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Wendell Moore Jr.,1631111,2025-11-17,DET vs. IND,W,15.0,0,2,0.0,0,0,0.0,0,0,0.0,0,2,2,0,1,0,1,0,0,9,IND,HOME,Wendell Moore Jr
+Wendell Moore Jr.,1631111,2025-11-14,DET vs. PHI,W,18.0,2,3,0.667,0,1,0.0,0,0,0.0,1,1,2,2,0,0,0,1,4,23,PHI,HOME,Wendell Moore Jr
+Wendell Moore Jr.,1631111,2025-11-12,DET vs. CHI,W,10.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,1,1,1,0,0,2,0,CHI,HOME,Wendell Moore Jr

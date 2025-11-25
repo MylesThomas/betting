@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Josh Okogie,1629006,2025-11-21,HOU vs. DEN,L,11.0,2,6,0.333,2,6,0.333,0,0,0.0,2,0,2,1,0,0,0,1,6,4,DEN,HOME,Josh Okogie
+Josh Okogie,1629006,2025-11-19,HOU @ CLE,W,8.0,0,2,0.0,0,1,0.0,0,0,0.0,1,0,1,0,0,0,0,0,0,9,CLE,AWAY,Josh Okogie
+Josh Okogie,1629006,2025-11-16,HOU vs. ORL,W,22.0,0,0,0.0,0,0,0.0,1,2,0.5,0,2,2,1,2,0,0,1,1,-18,ORL,HOME,Josh Okogie
+Josh Okogie,1629006,2025-11-14,HOU vs. POR,W,21.0,5,9,0.556,1,3,0.333,0,0,0.0,2,1,3,1,4,0,1,2,11,15,POR,HOME,Josh Okogie
+Josh Okogie,1629006,2025-11-12,HOU vs. WAS,W,26.0,3,8,0.375,1,4,0.25,0,0,0.0,2,3,5,1,1,0,0,1,7,16,WAS,HOME,Josh Okogie
+Josh Okogie,1629006,2025-11-09,HOU @ MIL,W,17.0,0,3,0.0,0,2,0.0,0,0,0.0,0,1,1,1,0,1,0,1,0,6,MIL,AWAY,Josh Okogie
+Josh Okogie,1629006,2025-11-07,HOU @ SAS,L,25.0,4,7,0.571,2,3,0.667,2,2,1.0,2,1,3,0,5,0,3,5,12,-14,SAS,AWAY,Josh Okogie
+Josh Okogie,1629006,2025-11-05,HOU @ MEM,W,24.0,5,9,0.556,3,5,0.6,0,0,0.0,1,2,3,3,2,0,0,3,13,13,MEM,AWAY,Josh Okogie
+Josh Okogie,1629006,2025-11-03,HOU vs. DAL,W,25.0,0,5,0.0,0,3,0.0,2,2,1.0,1,2,3,1,2,0,1,1,2,0,DAL,HOME,Josh Okogie
+Josh Okogie,1629006,2025-11-01,HOU @ BOS,W,21.0,3,5,0.6,3,5,0.6,3,4,0.75,0,0,0,2,1,0,0,1,12,7,BOS,AWAY,Josh Okogie
+Josh Okogie,1629006,2025-10-29,HOU @ TOR,W,23.0,4,5,0.8,2,3,0.667,0,0,0.0,0,1,1,2,0,0,1,3,10,6,TOR,AWAY,Josh Okogie
+Josh Okogie,1629006,2025-10-27,HOU vs. BKN,W,31.0,3,5,0.6,2,2,1.0,2,2,1.0,0,0,0,1,2,0,0,4,10,11,BKN,HOME,Josh Okogie
+Josh Okogie,1629006,2025-10-24,HOU vs. DET,L,17.0,3,4,0.75,1,2,0.5,3,4,0.75,2,2,4,1,0,0,1,1,10,4,DET,HOME,Josh Okogie
+Josh Okogie,1629006,2025-10-21,HOU @ OKC,L,20.0,1,3,0.333,1,3,0.333,5,6,0.833,1,1,2,1,0,1,0,2,8,-8,OKC,AWAY,Josh Okogie

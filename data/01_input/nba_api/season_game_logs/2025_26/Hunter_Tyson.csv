@@ -1,0 +1,7 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Hunter Tyson,1641816,2025-11-22,DEN vs. SAC,L,8.0,0,1,0.0,0,1,0.0,2,2,1.0,0,1,1,2,0,0,0,0,2,-5,SAC,HOME,Hunter Tyson
+Hunter Tyson,1641816,2025-11-12,DEN @ LAC,W,3.0,0,2,0.0,0,1,0.0,0,0,0.0,0,1,1,0,1,0,0,0,0,-4,LAC,AWAY,Hunter Tyson
+Hunter Tyson,1641816,2025-11-08,DEN vs. IND,W,3.0,0,2,0.0,0,0,0.0,0,0,0.0,1,2,3,0,0,0,0,0,0,-3,IND,HOME,Hunter Tyson
+Hunter Tyson,1641816,2025-11-07,DEN vs. GSW,W,4.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,0,0,0,0,1,0,5,GSW,HOME,Hunter Tyson
+Hunter Tyson,1641816,2025-10-29,DEN vs. NOP,W,6.0,0,2,0.0,0,2,0.0,0,0,0.0,0,4,4,0,0,0,0,1,0,-5,NOP,HOME,Hunter Tyson
+Hunter Tyson,1641816,2025-10-27,DEN @ MIN,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,-2,MIN,AWAY,Hunter Tyson

@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jalen Johnson,1630552,2025-11-23,ATL vs. CHA,W,40.0,11,22,0.5,2,4,0.5,4,5,0.8,1,7,8,11,1,0,0,0,28,3,CHA,HOME,Jalen Johnson
+Jalen Johnson,1630552,2025-11-22,ATL @ NOP,W,34.0,6,15,0.4,2,4,0.5,4,6,0.667,1,10,11,9,1,1,4,1,18,20,NOP,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-11-20,ATL @ SAS,L,38.0,10,15,0.667,2,3,0.667,4,6,0.667,0,12,12,7,1,0,4,3,26,-1,SAS,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-11-18,ATL vs. DET,L,39.0,8,18,0.444,3,8,0.375,6,6,1.0,0,8,8,9,3,1,4,2,25,-7,DET,HOME,Jalen Johnson
+Jalen Johnson,1630552,2025-11-16,ATL @ PHX,W,39.0,9,13,0.692,2,3,0.667,5,6,0.833,2,8,10,7,1,0,5,1,25,21,PHX,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-11-13,ATL @ UTA,W,41.0,10,19,0.526,4,5,0.8,7,11,0.636,2,16,18,14,7,0,6,0,31,16,UTA,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-11-12,ATL @ SAC,W,24.0,9,10,0.9,2,3,0.667,4,4,1.0,0,10,10,8,1,0,1,2,24,39,SAC,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-11-10,ATL @ LAC,W,35.0,7,16,0.438,0,3,0.0,2,2,1.0,0,10,10,8,1,1,1,2,16,3,LAC,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-11-07,ATL vs. TOR,L,33.0,8,14,0.571,2,5,0.4,3,3,1.0,1,6,7,4,1,0,6,2,21,-9,TOR,HOME,Jalen Johnson
+Jalen Johnson,1630552,2025-11-04,ATL vs. ORL,W,33.0,6,11,0.545,1,2,0.5,4,5,0.8,0,6,6,5,1,0,3,4,17,-1,ORL,HOME,Jalen Johnson
+Jalen Johnson,1630552,2025-11-02,ATL @ CLE,L,35.0,10,16,0.625,1,2,0.5,2,5,0.4,1,12,13,5,1,0,4,1,23,-12,CLE,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-10-31,ATL @ IND,W,33.0,9,16,0.563,0,3,0.0,4,4,1.0,1,12,13,8,2,1,1,2,22,13,IND,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-10-29,ATL @ BKN,W,29.0,10,16,0.625,1,3,0.333,2,2,1.0,4,3,7,5,1,0,2,4,23,-11,BKN,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-10-27,ATL @ CHI,L,32.0,11,18,0.611,0,3,0.0,3,3,1.0,2,4,6,3,3,0,1,2,25,-14,CHI,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-10-24,ATL @ ORL,W,26.0,5,10,0.5,0,0,0.0,2,2,1.0,2,6,8,1,1,0,3,5,12,-12,ORL,AWAY,Jalen Johnson
+Jalen Johnson,1630552,2025-10-22,ATL vs. TOR,L,35.0,7,13,0.538,0,2,0.0,8,10,0.8,0,7,7,8,1,1,3,1,22,-15,TOR,HOME,Jalen Johnson

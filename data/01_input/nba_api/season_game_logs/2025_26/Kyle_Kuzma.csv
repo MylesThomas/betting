@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kyle Kuzma,1628398,2025-11-22,MIL vs. DET,L,16.0,5,10,0.5,1,2,0.5,2,2,1.0,1,2,3,2,0,0,1,1,13,-12,DET,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-20,MIL vs. PHI,L,38.0,6,14,0.429,0,3,0.0,5,7,0.714,0,3,3,4,2,1,3,4,17,1,PHI,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-17,MIL @ CLE,L,24.0,4,12,0.333,1,3,0.333,1,1,1.0,2,3,5,2,1,0,0,4,10,2,CLE,AWAY,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-15,MIL vs. LAL,L,20.0,0,6,0.0,0,5,0.0,1,2,0.5,0,1,1,0,0,0,1,5,1,-17,LAL,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-14,MIL vs. CHA,W,39.0,11,17,0.647,2,4,0.5,5,7,0.714,0,10,10,5,4,1,3,3,29,25,CHA,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-12,MIL @ CHA,L,30.0,3,12,0.25,0,2,0.0,2,4,0.5,1,2,3,4,1,1,1,2,8,-12,CHA,AWAY,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-10,MIL @ DAL,W,32.0,10,17,0.588,2,6,0.333,4,4,1.0,1,4,5,2,1,0,0,5,26,-5,DAL,AWAY,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-09,MIL vs. HOU,L,30.0,4,7,0.571,3,6,0.5,0,0,0.0,0,1,1,1,0,1,0,3,11,4,HOU,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-07,MIL vs. CHI,W,28.0,4,6,0.667,1,2,0.5,2,2,1.0,2,6,8,1,0,1,0,2,11,14,CHI,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-04,MIL @ TOR,L,27.0,7,14,0.5,2,5,0.4,2,4,0.5,2,1,3,0,0,1,4,1,18,-16,TOR,AWAY,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-03,MIL @ IND,W,16.0,5,10,0.5,1,3,0.333,4,4,1.0,1,4,5,0,0,0,0,1,15,-6,IND,AWAY,Kyle Kuzma
+Kyle Kuzma,1628398,2025-11-01,MIL vs. SAC,L,22.0,9,13,0.692,0,2,0.0,4,4,1.0,0,1,1,1,0,0,0,2,22,2,SAC,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-10-30,MIL vs. GSW,W,36.0,4,10,0.4,1,4,0.25,1,2,0.5,1,7,8,4,1,0,4,2,10,10,GSW,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-10-28,MIL vs. NYK,W,20.0,0,2,0.0,0,1,0.0,5,6,0.833,0,5,5,1,0,0,2,3,5,-1,NYK,HOME,Kyle Kuzma
+Kyle Kuzma,1628398,2025-10-24,MIL @ TOR,W,18.0,4,5,0.8,0,1,0.0,0,0,0.0,0,3,3,0,1,1,1,3,8,-5,TOR,AWAY,Kyle Kuzma
+Kyle Kuzma,1628398,2025-10-22,MIL vs. WAS,W,23.0,5,10,0.5,0,2,0.0,2,2,1.0,0,4,4,3,2,2,1,1,12,7,WAS,HOME,Kyle Kuzma

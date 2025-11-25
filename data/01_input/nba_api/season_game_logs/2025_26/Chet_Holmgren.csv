@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Chet Holmgren,1631096,2025-11-23,OKC vs. POR,W,25.0,2,8,0.25,0,3,0.0,1,2,0.5,2,7,9,4,0,3,3,2,5,5,POR,HOME,Chet Holmgren
+Chet Holmgren,1631096,2025-11-21,OKC @ UTA,W,27.0,5,14,0.357,0,4,0.0,1,2,0.5,0,3,3,2,2,1,0,2,11,12,UTA,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-11-19,OKC vs. SAC,W,31.0,10,15,0.667,1,5,0.2,0,0,0.0,1,6,7,1,1,3,6,2,21,1,SAC,HOME,Chet Holmgren
+Chet Holmgren,1631096,2025-11-17,OKC @ NOP,W,33.0,10,14,0.714,3,6,0.5,3,4,0.75,3,6,9,0,0,1,3,2,26,23,NOP,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-11-15,OKC @ CHA,W,32.0,10,20,0.5,2,4,0.5,3,4,0.75,3,5,8,2,0,1,2,2,25,13,CHA,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-11-12,OKC vs. LAL,W,20.0,4,7,0.571,1,2,0.5,2,2,1.0,0,3,3,1,0,2,0,4,11,16,LAL,HOME,Chet Holmgren
+Chet Holmgren,1631096,2025-11-11,OKC vs. GSW,W,25.0,9,9,1.0,2,2,1.0,3,3,1.0,1,10,11,2,0,1,2,3,23,23,GSW,HOME,Chet Holmgren
+Chet Holmgren,1631096,2025-11-09,OKC @ MEM,W,30.0,8,14,0.571,1,4,0.25,4,4,1.0,0,7,7,2,1,0,0,4,21,14,MEM,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-11-07,OKC @ SAC,W,21.0,4,9,0.444,0,4,0.0,2,2,1.0,2,5,7,1,0,1,2,5,10,19,SAC,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-11-04,OKC @ LAC,W,30.0,4,8,0.5,0,1,0.0,3,4,0.75,0,5,5,3,1,3,3,4,11,22,LAC,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-10-27,OKC @ DAL,W,32.0,6,10,0.6,2,5,0.4,4,6,0.667,1,10,11,2,0,4,3,4,18,15,DAL,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-10-25,OKC @ ATL,W,27.0,8,12,0.667,6,8,0.75,9,10,0.9,3,8,11,1,3,1,3,3,31,16,ATL,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-10-23,OKC @ IND,W,39.0,4,12,0.333,0,6,0.0,7,8,0.875,3,9,12,2,2,0,3,3,15,1,IND,AWAY,Chet Holmgren
+Chet Holmgren,1631096,2025-10-21,OKC vs. HOU,W,38.0,11,17,0.647,2,5,0.4,4,4,1.0,2,5,7,2,0,0,3,6,28,-1,HOU,HOME,Chet Holmgren

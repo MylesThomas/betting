@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Dean Wade,1629731,2025-11-23,CLE vs. LAC,W,23.0,2,6,0.333,1,5,0.2,0,0,0.0,1,4,5,3,3,0,1,3,5,3,LAC,HOME,Dean Wade
+Dean Wade,1629731,2025-11-21,CLE vs. IND,W,20.0,2,4,0.5,0,2,0.0,0,0,0.0,1,2,3,1,0,1,1,3,4,10,IND,HOME,Dean Wade
+Dean Wade,1629731,2025-11-19,CLE vs. HOU,L,27.0,1,5,0.2,1,4,0.25,1,4,0.25,1,6,7,3,0,2,0,3,4,0,HOU,HOME,Dean Wade
+Dean Wade,1629731,2025-11-17,CLE vs. MIL,W,28.0,2,3,0.667,1,2,0.5,0,0,0.0,0,8,8,3,2,1,0,0,5,14,MIL,HOME,Dean Wade
+Dean Wade,1629731,2025-11-15,CLE vs. MEM,W,24.0,2,4,0.5,0,2,0.0,0,0,0.0,0,4,4,2,0,2,1,0,4,22,MEM,HOME,Dean Wade
+Dean Wade,1629731,2025-11-13,CLE vs. TOR,L,21.0,1,5,0.2,0,3,0.0,0,0,0.0,2,1,3,1,0,0,0,1,2,-1,TOR,HOME,Dean Wade
+Dean Wade,1629731,2025-11-12,CLE @ MIA,W,26.0,3,7,0.429,2,4,0.5,0,0,0.0,0,3,3,2,1,0,1,0,8,-7,MIA,AWAY,Dean Wade
+Dean Wade,1629731,2025-11-10,CLE @ MIA,L,22.0,3,5,0.6,3,4,0.75,0,0,0.0,1,2,3,0,0,1,0,3,9,-8,MIA,AWAY,Dean Wade
+Dean Wade,1629731,2025-11-08,CLE vs. CHI,W,19.0,1,5,0.2,0,4,0.0,0,0,0.0,2,1,3,0,2,1,0,4,2,-4,CHI,HOME,Dean Wade
+Dean Wade,1629731,2025-11-05,CLE vs. PHI,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,-3,PHI,HOME,Dean Wade
+Dean Wade,1629731,2025-11-02,CLE vs. ATL,W,25.0,4,9,0.444,2,6,0.333,1,1,1.0,2,4,6,3,0,0,0,2,11,-10,ATL,HOME,Dean Wade
+Dean Wade,1629731,2025-10-31,CLE vs. TOR,L,30.0,1,7,0.143,1,5,0.2,2,2,1.0,1,3,4,4,3,2,0,1,5,4,TOR,HOME,Dean Wade
+Dean Wade,1629731,2025-10-29,CLE @ BOS,L,18.0,2,5,0.4,2,5,0.4,0,0,0.0,0,3,3,0,0,0,0,2,6,-5,BOS,AWAY,Dean Wade
+Dean Wade,1629731,2025-10-27,CLE @ DET,W,20.0,1,3,0.333,1,2,0.5,2,4,0.5,3,3,6,2,2,0,2,1,5,13,DET,AWAY,Dean Wade
+Dean Wade,1629731,2025-10-26,CLE vs. MIL,W,23.0,1,5,0.2,0,4,0.0,2,2,1.0,0,1,1,1,0,0,0,3,4,-10,MIL,HOME,Dean Wade
+Dean Wade,1629731,2025-10-24,CLE @ BKN,W,27.0,2,7,0.286,1,6,0.167,1,1,1.0,1,5,6,1,0,0,0,2,6,-8,BKN,AWAY,Dean Wade
+Dean Wade,1629731,2025-10-22,CLE @ NYK,L,28.0,3,3,1.0,3,3,1.0,1,2,0.5,0,2,2,0,1,1,0,4,10,0,NYK,AWAY,Dean Wade

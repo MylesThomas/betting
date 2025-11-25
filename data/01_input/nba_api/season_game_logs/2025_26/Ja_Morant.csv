@@ -1,0 +1,13 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Ja Morant,1629630,2025-11-15,MEM @ CLE,L,6.0,2,2,1.0,0,0,0.0,3,4,0.75,1,0,1,2,0,0,1,0,7,4,CLE,AWAY,Ja Morant
+Ja Morant,1629630,2025-11-11,MEM @ NYK,L,34.0,4,14,0.286,2,6,0.333,6,6,1.0,0,3,3,10,0,0,8,3,16,-17,NYK,AWAY,Ja Morant
+Ja Morant,1629630,2025-11-09,MEM vs. OKC,L,34.0,3,18,0.167,2,7,0.286,3,4,0.75,0,3,3,8,1,0,3,5,11,-23,OKC,HOME,Ja Morant
+Ja Morant,1629630,2025-11-07,MEM vs. DAL,W,32.0,7,20,0.35,0,4,0.0,7,7,1.0,1,4,5,13,3,0,7,5,21,28,DAL,HOME,Ja Morant
+Ja Morant,1629630,2025-11-05,MEM vs. HOU,L,34.0,6,19,0.316,1,7,0.143,4,4,1.0,2,3,5,8,1,1,6,3,17,-15,HOU,HOME,Ja Morant
+Ja Morant,1629630,2025-11-03,MEM vs. DET,L,35.0,5,16,0.313,0,4,0.0,8,9,0.889,0,5,5,10,1,0,5,2,18,-5,DET,HOME,Ja Morant
+Ja Morant,1629630,2025-10-31,MEM vs. LAL,L,31.0,3,14,0.214,0,6,0.0,2,2,1.0,0,1,1,7,1,0,1,1,8,-4,LAL,HOME,Ja Morant
+Ja Morant,1629630,2025-10-29,MEM @ PHX,W,32.0,10,19,0.526,3,8,0.375,5,5,1.0,1,7,8,7,2,0,6,1,28,13,PHX,AWAY,Ja Morant
+Ja Morant,1629630,2025-10-27,MEM @ GSW,L,31.0,8,23,0.348,0,6,0.0,7,7,1.0,0,3,3,9,1,0,3,0,23,-16,GSW,AWAY,Ja Morant
+Ja Morant,1629630,2025-10-25,MEM vs. IND,W,27.0,5,14,0.357,0,2,0.0,9,9,1.0,0,3,3,8,1,0,0,3,19,7,IND,HOME,Ja Morant
+Ja Morant,1629630,2025-10-24,MEM vs. MIA,L,22.0,4,16,0.25,0,4,0.0,4,4,1.0,1,1,2,6,0,0,3,2,12,-22,MIA,HOME,Ja Morant
+Ja Morant,1629630,2025-10-22,MEM vs. NOP,W,29.0,13,20,0.65,2,6,0.333,7,8,0.875,0,3,3,3,1,0,2,2,35,0,NOP,HOME,Ja Morant

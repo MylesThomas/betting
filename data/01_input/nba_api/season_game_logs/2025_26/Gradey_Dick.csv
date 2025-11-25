@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Gradey Dick,1641711,2025-11-23,TOR vs. BKN,W,20.0,3,6,0.5,2,4,0.5,4,4,1.0,0,1,1,3,2,0,0,2,12,7,BKN,HOME,Gradey Dick
+Gradey Dick,1641711,2025-11-21,TOR vs. WAS,W,19.0,2,6,0.333,0,2,0.0,2,2,1.0,0,1,1,1,2,0,2,1,6,8,WAS,HOME,Gradey Dick
+Gradey Dick,1641711,2025-11-19,TOR @ PHI,W,15.0,2,4,0.5,0,2,0.0,0,0,0.0,0,1,1,0,2,1,0,0,4,4,PHI,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-11-17,TOR vs. CHA,W,19.0,3,5,0.6,2,3,0.667,2,2,1.0,1,0,1,2,0,0,0,2,10,6,CHA,HOME,Gradey Dick
+Gradey Dick,1641711,2025-11-15,TOR @ IND,W,19.0,4,8,0.5,0,4,0.0,0,0,0.0,1,5,6,1,1,0,1,0,8,8,IND,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-11-13,TOR @ CLE,W,21.0,2,3,0.667,2,3,0.667,0,0,0.0,0,0,0,2,1,0,1,2,6,10,CLE,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-11-11,TOR @ BKN,W,20.0,3,7,0.429,0,4,0.0,0,0,0.0,0,3,3,2,0,0,1,1,6,8,BKN,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-11-08,TOR @ PHI,L,12.0,1,6,0.167,1,4,0.25,0,0,0.0,0,1,1,0,1,0,1,0,3,5,PHI,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-11-07,TOR @ ATL,W,13.0,3,7,0.429,3,4,0.75,2,2,1.0,0,1,1,0,1,0,0,2,11,7,ATL,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-11-04,TOR vs. MIL,W,22.0,3,4,0.75,3,4,0.75,5,6,0.833,0,1,1,0,0,0,0,1,14,15,MIL,HOME,Gradey Dick
+Gradey Dick,1641711,2025-11-02,TOR vs. MEM,W,20.0,3,6,0.5,1,4,0.25,1,2,0.5,0,4,4,0,0,0,0,0,8,10,MEM,HOME,Gradey Dick
+Gradey Dick,1641711,2025-10-31,TOR @ CLE,W,5.0,1,2,0.5,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,5,CLE,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-10-29,TOR vs. HOU,L,20.0,1,6,0.167,0,3,0.0,2,3,0.667,1,2,3,0,0,0,0,0,4,2,HOU,HOME,Gradey Dick
+Gradey Dick,1641711,2025-10-27,TOR @ SAS,L,8.0,0,2,0.0,0,2,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,5,SAS,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-10-26,TOR @ DAL,L,13.0,2,6,0.333,2,4,0.5,4,5,0.8,1,1,2,1,1,0,0,1,10,-2,DAL,AWAY,Gradey Dick
+Gradey Dick,1641711,2025-10-24,TOR vs. MIL,L,18.0,2,7,0.286,1,3,0.333,0,0,0.0,1,3,4,1,1,0,1,1,5,1,MIL,HOME,Gradey Dick
+Gradey Dick,1641711,2025-10-22,TOR @ ATL,W,24.0,6,10,0.6,2,4,0.5,7,8,0.875,1,4,5,0,1,0,0,1,21,18,ATL,AWAY,Gradey Dick

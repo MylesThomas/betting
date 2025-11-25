@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Cason Wallace,1641717,2025-11-23,OKC vs. POR,W,27.0,3,9,0.333,1,5,0.2,0,0,0.0,2,0,2,1,2,0,1,1,7,11,POR,HOME,Cason Wallace
+Cason Wallace,1641717,2025-11-21,OKC @ UTA,W,27.0,4,6,0.667,2,4,0.5,0,0,0.0,0,1,1,0,4,0,2,2,10,4,UTA,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-19,OKC vs. SAC,W,26.0,5,9,0.556,2,5,0.4,0,0,0.0,0,2,2,1,1,1,0,2,12,8,SAC,HOME,Cason Wallace
+Cason Wallace,1641717,2025-11-17,OKC @ NOP,W,28.0,3,10,0.3,1,4,0.25,0,0,0.0,0,2,2,4,3,0,3,4,7,14,NOP,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-15,OKC @ CHA,W,30.0,4,7,0.571,2,2,1.0,0,0,0.0,0,2,2,4,3,0,3,2,10,17,CHA,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-12,OKC vs. LAL,W,24.0,2,6,0.333,0,3,0.0,2,2,1.0,0,0,0,1,2,1,0,4,6,24,LAL,HOME,Cason Wallace
+Cason Wallace,1641717,2025-11-11,OKC vs. GSW,W,21.0,1,5,0.2,1,3,0.333,0,0,0.0,1,0,1,2,0,0,1,3,3,25,GSW,HOME,Cason Wallace
+Cason Wallace,1641717,2025-11-09,OKC @ MEM,W,34.0,2,10,0.2,1,7,0.143,1,1,1.0,1,3,4,1,2,0,0,1,6,19,MEM,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-07,OKC @ SAC,W,27.0,6,8,0.75,3,4,0.75,0,0,0.0,1,1,2,2,1,0,0,0,15,17,SAC,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-05,OKC @ POR,L,36.0,2,4,0.5,1,3,0.333,0,0,0.0,4,4,8,5,3,0,3,5,5,5,POR,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-04,OKC @ LAC,W,25.0,5,9,0.556,2,4,0.5,0,0,0.0,0,3,3,1,1,0,1,1,12,-6,LAC,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-02,OKC vs. NOP,W,26.0,4,5,0.8,3,4,0.75,2,2,1.0,0,0,0,1,5,0,0,3,13,18,NOP,HOME,Cason Wallace
+Cason Wallace,1641717,2025-10-30,OKC vs. WAS,W,27.0,3,7,0.429,2,4,0.5,4,4,1.0,1,4,5,3,4,2,0,2,12,14,WAS,HOME,Cason Wallace
+Cason Wallace,1641717,2025-10-28,OKC vs. SAC,W,27.0,3,9,0.333,2,5,0.4,0,0,0.0,0,1,1,3,1,0,2,2,8,-17,SAC,HOME,Cason Wallace
+Cason Wallace,1641717,2025-10-27,OKC @ DAL,W,33.0,2,9,0.222,0,5,0.0,0,0,0.0,1,4,5,5,1,0,1,2,4,4,DAL,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-10-25,OKC @ ATL,W,26.0,1,7,0.143,1,3,0.333,0,0,0.0,1,2,3,3,3,1,1,3,3,21,ATL,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-10-21,OKC vs. HOU,W,42.0,5,10,0.5,3,8,0.375,1,2,0.5,1,6,7,5,4,0,2,3,14,8,HOU,HOME,Cason Wallace

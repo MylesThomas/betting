@@ -1,0 +1,9 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jordan McLaughlin,1629162,2025-11-07,SAS vs. HOU,W,9.0,4,6,0.667,1,1,1.0,0,0,0.0,1,0,1,1,1,0,0,0,9,-12,HOU,HOME,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-11-05,SAS @ LAL,L,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,2,0,0,-2,LAL,AWAY,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-11-02,SAS @ PHX,L,19.0,1,7,0.143,0,6,0.0,1,1,1.0,2,1,3,4,2,0,0,1,3,12,PHX,AWAY,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-10-30,SAS vs. MIA,W,11.0,2,4,0.5,2,3,0.667,0,0,0.0,0,2,2,2,1,0,0,2,6,4,MIA,HOME,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-10-27,SAS vs. TOR,W,10.0,1,2,0.5,1,2,0.5,2,2,1.0,0,0,0,2,2,0,0,2,5,4,TOR,HOME,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-10-26,SAS vs. BKN,W,7.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-7,BKN,HOME,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-10-24,SAS @ NOP,W,6.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,0,0,0,0,0,3,-5,NOP,AWAY,Jordan Mclaughlin
+Jordan McLaughlin,1629162,2025-10-22,SAS @ DAL,W,8.0,1,2,0.5,0,1,0.0,0,0,0.0,0,0,0,1,1,0,0,1,2,3,DAL,AWAY,Jordan Mclaughlin

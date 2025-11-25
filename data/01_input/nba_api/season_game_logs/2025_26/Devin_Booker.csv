@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Devin Booker,1626164,2025-11-23,PHX vs. SAS,W,38.0,7,18,0.389,2,6,0.333,8,11,0.727,0,5,5,7,1,2,2,2,24,6,SAS,HOME,Devin Booker
+Devin Booker,1626164,2025-11-21,PHX vs. MIN,W,35.0,4,18,0.222,1,6,0.167,7,9,0.778,1,2,3,10,1,0,9,6,16,-2,MIN,HOME,Devin Booker
+Devin Booker,1626164,2025-11-18,PHX @ POR,W,29.0,6,13,0.462,1,2,0.5,6,6,1.0,1,5,6,5,3,0,1,2,19,17,POR,AWAY,Devin Booker
+Devin Booker,1626164,2025-11-16,PHX vs. ATL,L,38.0,10,23,0.435,0,6,0.0,7,7,1.0,1,1,2,7,1,1,5,4,27,-17,ATL,HOME,Devin Booker
+Devin Booker,1626164,2025-11-13,PHX vs. IND,W,29.0,12,22,0.545,3,10,0.3,6,6,1.0,0,5,5,7,0,0,1,3,33,13,IND,HOME,Devin Booker
+Devin Booker,1626164,2025-11-12,PHX @ DAL,W,38.0,7,19,0.368,0,3,0.0,12,13,0.923,0,3,3,9,2,0,5,3,26,8,DAL,AWAY,Devin Booker
+Devin Booker,1626164,2025-11-10,PHX vs. NOP,W,27.0,8,13,0.615,0,2,0.0,3,3,1.0,0,0,0,3,1,0,3,0,19,4,NOP,HOME,Devin Booker
+Devin Booker,1626164,2025-11-08,PHX @ LAC,W,38.0,8,19,0.421,0,3,0.0,5,5,1.0,3,7,10,9,0,0,5,4,21,7,LAC,AWAY,Devin Booker
+Devin Booker,1626164,2025-11-06,PHX vs. LAC,W,37.0,10,22,0.455,3,7,0.429,1,1,1.0,0,6,6,7,3,0,3,4,24,11,LAC,HOME,Devin Booker
+Devin Booker,1626164,2025-11-04,PHX @ GSW,L,39.0,13,24,0.542,1,5,0.2,11,11,1.0,1,2,3,4,1,0,5,1,38,8,GSW,AWAY,Devin Booker
+Devin Booker,1626164,2025-11-02,PHX vs. SAS,W,35.0,10,15,0.667,2,2,1.0,6,6,1.0,0,2,2,13,1,0,5,3,28,26,SAS,HOME,Devin Booker
+Devin Booker,1626164,2025-10-31,PHX vs. UTA,W,39.0,13,23,0.565,6,9,0.667,4,5,0.8,2,4,6,9,0,1,1,4,36,19,UTA,HOME,Devin Booker
+Devin Booker,1626164,2025-10-29,PHX vs. MEM,L,36.0,10,26,0.385,4,11,0.364,8,9,0.889,4,0,4,3,1,1,3,2,32,4,MEM,HOME,Devin Booker
+Devin Booker,1626164,2025-10-27,PHX @ UTA,L,44.0,11,26,0.423,5,12,0.417,7,10,0.7,1,4,5,10,0,1,2,4,34,-5,UTA,AWAY,Devin Booker
+Devin Booker,1626164,2025-10-25,PHX @ DEN,L,37.0,10,16,0.625,2,5,0.4,9,9,1.0,1,2,3,7,0,0,9,1,31,-13,DEN,AWAY,Devin Booker
+Devin Booker,1626164,2025-10-24,PHX @ LAC,L,28.0,5,10,0.5,1,4,0.25,7,7,1.0,0,3,3,7,0,0,3,2,18,-22,LAC,AWAY,Devin Booker
+Devin Booker,1626164,2025-10-22,PHX vs. SAC,W,36.0,10,19,0.526,1,3,0.333,10,15,0.667,2,3,5,3,1,0,6,5,31,1,SAC,HOME,Devin Booker

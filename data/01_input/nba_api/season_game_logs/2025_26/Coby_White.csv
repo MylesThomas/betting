@@ -1,0 +1,4 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Coby White,1629632,2025-11-22,CHI vs. WAS,W,31.0,6,16,0.375,3,11,0.273,5,7,0.714,0,3,3,6,0,0,4,2,20,8,WAS,HOME,Coby White
+Coby White,1629632,2025-11-19,CHI @ POR,W,27.0,9,17,0.529,5,9,0.556,2,3,0.667,0,1,1,7,2,0,3,2,25,7,POR,AWAY,Coby White
+Coby White,1629632,2025-11-16,CHI @ UTA,L,30.0,5,14,0.357,3,8,0.375,14,14,1.0,0,4,4,8,1,0,3,3,27,6,UTA,AWAY,Coby White

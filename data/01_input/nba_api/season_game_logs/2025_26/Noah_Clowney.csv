@@ -1,0 +1,17 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Noah Clowney,1641730,2025-11-23,BKN @ TOR,L,37.0,7,15,0.467,1,7,0.143,7,7,1.0,0,1,1,1,2,2,5,5,22,-4,TOR,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-11-21,BKN @ BOS,W,37.0,7,15,0.467,3,11,0.273,2,2,1.0,0,3,3,0,1,3,0,3,19,9,BOS,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-11-18,BKN vs. BOS,L,23.0,4,8,0.5,3,4,0.75,2,4,0.5,0,1,1,0,1,1,0,3,13,-14,BOS,HOME,Noah Clowney
+Noah Clowney,1641730,2025-11-16,BKN @ WAS,W,30.0,4,6,0.667,4,6,0.667,0,4,0.0,0,4,4,1,1,1,1,2,12,16,WAS,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-11-14,BKN @ ORL,L,27.0,2,8,0.25,2,7,0.286,6,6,1.0,0,4,4,3,1,0,2,6,12,-4,ORL,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-11-11,BKN vs. TOR,L,35.0,4,9,0.444,2,7,0.286,8,9,0.889,0,8,8,3,2,2,4,3,18,-8,TOR,HOME,Noah Clowney
+Noah Clowney,1641730,2025-11-09,BKN @ NYK,L,22.0,1,9,0.111,0,7,0.0,2,4,0.5,0,1,1,2,0,2,0,2,4,-22,NYK,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-11-07,BKN vs. DET,L,31.0,5,13,0.385,4,8,0.5,5,6,0.833,1,0,1,2,1,0,1,2,19,-4,DET,HOME,Noah Clowney
+Noah Clowney,1641730,2025-11-05,BKN @ IND,W,30.0,6,9,0.667,2,5,0.4,3,4,0.75,0,4,4,1,0,0,3,3,17,8,IND,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-11-03,BKN vs. MIN,L,32.0,5,14,0.357,4,12,0.333,1,2,0.5,2,4,6,1,2,0,2,2,15,-1,MIN,HOME,Noah Clowney
+Noah Clowney,1641730,2025-11-02,BKN vs. PHI,L,15.0,0,2,0.0,0,2,0.0,0,0,0.0,2,3,5,2,0,0,2,1,0,-6,PHI,HOME,Noah Clowney
+Noah Clowney,1641730,2025-10-29,BKN vs. ATL,L,25.0,1,4,0.25,0,3,0.0,5,6,0.833,0,4,4,0,0,0,1,0,7,-10,ATL,HOME,Noah Clowney
+Noah Clowney,1641730,2025-10-27,BKN @ HOU,L,16.0,1,6,0.167,0,4,0.0,0,0,0.0,1,1,2,1,0,0,0,0,2,-21,HOU,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-10-26,BKN @ SAS,L,24.0,2,8,0.25,2,7,0.286,1,1,1.0,0,3,3,2,0,0,0,3,7,-5,SAS,AWAY,Noah Clowney
+Noah Clowney,1641730,2025-10-24,BKN vs. CLE,L,20.0,2,4,0.5,1,3,0.333,0,0,0.0,2,3,5,3,1,0,4,0,5,4,CLE,HOME,Noah Clowney
+Noah Clowney,1641730,2025-10-22,BKN @ CHA,L,20.0,1,6,0.167,1,3,0.333,2,2,1.0,2,2,4,2,0,0,1,2,5,-7,CHA,AWAY,Noah Clowney

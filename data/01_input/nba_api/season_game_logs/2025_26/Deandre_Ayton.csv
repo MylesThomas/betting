@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Deandre Ayton,1629028,2025-11-23,LAL @ UTA,W,13.0,1,2,0.5,0,0,0.0,0,0,0.0,1,2,3,0,1,0,0,1,2,-4,UTA,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-11-18,LAL vs. UTA,W,30.0,10,13,0.769,0,0,0.0,0,2,0.0,4,10,14,1,1,1,1,2,20,10,UTA,HOME,Deandre Ayton
+Deandre Ayton,1629028,2025-11-15,LAL @ MIL,W,28.0,9,13,0.692,0,0,0.0,2,2,1.0,2,8,10,0,2,1,3,5,20,12,MIL,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-11-14,LAL @ NOP,W,36.0,10,11,0.909,0,0,0.0,0,0,0.0,3,13,16,2,2,1,4,5,20,35,NOP,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-11-12,LAL @ OKC,L,26.0,3,5,0.6,0,0,0.0,0,1,0.0,3,2,5,1,1,0,4,4,6,-18,OKC,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-11-10,LAL @ CHA,W,33.0,7,10,0.7,0,0,0.0,0,0,0.0,3,3,6,0,0,0,3,3,14,2,CHA,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-11-08,LAL @ ATL,L,20.0,5,5,1.0,0,0,0.0,1,1,1.0,2,3,5,0,0,0,3,0,11,-15,ATL,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-11-05,LAL vs. SAS,W,33.0,9,13,0.692,0,0,0.0,4,4,1.0,4,6,10,0,1,2,0,3,22,1,SAS,HOME,Deandre Ayton
+Deandre Ayton,1629028,2025-11-03,LAL @ POR,W,31.0,14,19,0.737,0,0,0.0,1,2,0.5,4,6,10,2,0,3,3,5,29,8,POR,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-10-31,LAL @ MEM,W,17.0,4,6,0.667,0,0,0.0,1,1,1.0,0,0,0,0,0,0,1,0,9,-17,MEM,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-10-29,LAL @ MIN,W,35.0,8,11,0.727,0,0,0.0,1,2,0.5,1,9,10,3,0,1,2,3,17,0,MIN,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-10-27,LAL vs. POR,L,36.0,8,15,0.533,0,0,0.0,0,0,0.0,5,3,8,2,2,1,3,4,16,-10,POR,HOME,Deandre Ayton
+Deandre Ayton,1629028,2025-10-26,LAL @ SAC,W,36.0,10,17,0.588,0,0,0.0,2,4,0.5,5,10,15,2,1,1,3,4,22,-6,SAC,AWAY,Deandre Ayton
+Deandre Ayton,1629028,2025-10-24,LAL vs. MIN,W,31.0,7,11,0.636,0,0,0.0,1,2,0.5,3,5,8,0,0,1,2,3,15,9,MIN,HOME,Deandre Ayton
+Deandre Ayton,1629028,2025-10-21,LAL vs. GSW,L,34.0,5,7,0.714,0,0,0.0,0,2,0.0,2,4,6,0,0,1,4,3,10,-4,GSW,HOME,Deandre Ayton

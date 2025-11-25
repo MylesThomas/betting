@@ -1,0 +1,7 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Bradley Beal,203078,2025-11-08,LAC vs. PHX,L,20.0,4,9,0.444,2,4,0.5,2,2,1.0,0,0,0,3,1,0,1,1,12,4,PHX,HOME,Bradley Beal
+Bradley Beal,203078,2025-11-06,LAC @ PHX,L,20.0,2,14,0.143,1,5,0.2,0,0,0.0,0,1,1,1,0,0,2,3,5,-23,PHX,AWAY,Bradley Beal
+Bradley Beal,203078,2025-11-03,LAC vs. MIA,L,20.0,5,8,0.625,2,4,0.5,0,2,0.0,1,0,1,2,1,0,3,3,12,-2,MIA,HOME,Bradley Beal
+Bradley Beal,203078,2025-10-31,LAC vs. NOP,W,21.0,3,8,0.375,1,2,0.5,2,2,1.0,0,1,1,2,0,0,1,2,9,5,NOP,HOME,Bradley Beal
+Bradley Beal,203078,2025-10-24,LAC vs. PHX,W,20.0,2,4,0.5,0,0,0.0,2,2,1.0,1,0,1,2,0,0,1,1,6,2,PHX,HOME,Bradley Beal
+Bradley Beal,203078,2025-10-22,LAC @ UTA,L,20.0,2,5,0.4,1,4,0.25,0,0,0.0,0,1,1,0,1,0,1,4,5,-9,UTA,AWAY,Bradley Beal

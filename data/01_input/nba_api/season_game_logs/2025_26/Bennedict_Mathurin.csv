@@ -1,0 +1,6 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Bennedict Mathurin,1631097,2025-11-21,IND @ CLE,L,37.0,7,15,0.467,2,7,0.286,5,5,1.0,3,4,7,2,1,1,3,3,21,-8,CLE,AWAY,Bennedict Mathurin
+Bennedict Mathurin,1631097,2025-11-19,IND vs. CHA,W,34.0,7,13,0.538,2,5,0.4,8,9,0.889,3,9,12,2,1,0,1,2,24,-2,CHA,HOME,Bennedict Mathurin
+Bennedict Mathurin,1631097,2025-11-17,IND @ DET,L,25.0,7,16,0.438,3,9,0.333,8,14,0.571,0,3,3,2,1,0,4,5,25,-16,DET,AWAY,Bennedict Mathurin
+Bennedict Mathurin,1631097,2025-10-25,IND @ MEM,L,28.0,8,12,0.667,2,2,1.0,8,9,0.889,0,3,3,4,0,0,1,0,26,-18,MEM,AWAY,Bennedict Mathurin
+Bennedict Mathurin,1631097,2025-10-23,IND vs. OKC,L,45.0,9,19,0.474,3,8,0.375,15,17,0.882,3,8,11,1,0,0,4,6,36,9,OKC,HOME,Bennedict Mathurin

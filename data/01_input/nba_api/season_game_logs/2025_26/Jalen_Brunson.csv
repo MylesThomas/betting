@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jalen Brunson,1628973,2025-11-22,NYK @ ORL,L,37.0,12,21,0.571,3,9,0.333,6,6,1.0,0,3,3,11,0,0,2,2,33,-13,ORL,AWAY,Jalen Brunson
+Jalen Brunson,1628973,2025-11-19,NYK @ DAL,W,35.0,11,23,0.478,2,7,0.286,4,6,0.667,0,3,3,5,1,1,1,4,28,13,DAL,AWAY,Jalen Brunson
+Jalen Brunson,1628973,2025-11-12,NYK vs. ORL,L,37.0,10,23,0.435,1,4,0.25,10,13,0.769,1,2,3,6,0,0,2,6,31,-20,ORL,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-11-11,NYK vs. MEM,W,36.0,11,19,0.579,6,9,0.667,4,4,1.0,0,5,5,10,0,0,6,1,32,22,MEM,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-11-09,NYK vs. BKN,W,29.0,6,14,0.429,3,8,0.375,4,4,1.0,0,0,0,7,0,0,4,1,19,36,BKN,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-11-05,NYK vs. MIN,W,33.0,9,20,0.45,3,7,0.429,2,2,1.0,1,6,7,10,1,0,4,4,23,16,MIN,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-11-03,NYK vs. WAS,W,32.0,6,17,0.353,1,5,0.2,3,3,1.0,0,1,1,9,1,0,2,1,16,21,WAS,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-11-02,NYK vs. CHI,W,32.0,10,22,0.455,4,11,0.364,7,7,1.0,0,5,5,3,2,0,2,2,31,5,CHI,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-10-31,NYK @ CHI,L,35.0,12,25,0.48,3,8,0.375,2,5,0.4,1,1,2,7,0,0,2,4,29,-6,CHI,AWAY,Jalen Brunson
+Jalen Brunson,1628973,2025-10-28,NYK @ MIL,L,35.0,14,25,0.56,1,5,0.2,7,9,0.778,0,4,4,3,2,0,2,3,36,-11,MIL,AWAY,Jalen Brunson
+Jalen Brunson,1628973,2025-10-26,NYK @ MIA,L,35.0,14,26,0.538,5,11,0.455,4,4,1.0,2,3,5,7,3,0,3,3,37,6,MIA,AWAY,Jalen Brunson
+Jalen Brunson,1628973,2025-10-24,NYK vs. BOS,W,35.0,10,20,0.5,3,7,0.429,8,9,0.889,0,3,3,5,0,0,1,1,31,7,BOS,HOME,Jalen Brunson
+Jalen Brunson,1628973,2025-10-22,NYK vs. CLE,W,34.0,5,18,0.278,1,9,0.111,12,13,0.923,0,4,4,5,0,0,2,3,23,6,CLE,HOME,Jalen Brunson

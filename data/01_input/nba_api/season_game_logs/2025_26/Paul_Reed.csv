@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Paul Reed,1630194,2025-11-22,DET @ MIL,W,5.0,0,1,0.0,0,0,0.0,2,2,1.0,0,1,1,0,0,0,0,0,2,-9,MIL,AWAY,Paul Reed
+Paul Reed,1630194,2025-11-18,DET @ ATL,W,9.0,2,2,1.0,0,0,0.0,0,0,0.0,0,2,2,0,1,0,0,0,4,0,ATL,AWAY,Paul Reed
+Paul Reed,1630194,2025-11-17,DET vs. IND,W,13.0,2,3,0.667,0,1,0.0,3,4,0.75,1,1,2,3,1,1,1,4,7,-3,IND,HOME,Paul Reed
+Paul Reed,1630194,2025-11-14,DET vs. PHI,W,25.0,5,9,0.556,0,1,0.0,0,0,0.0,2,6,8,3,2,3,3,1,10,6,PHI,HOME,Paul Reed
+Paul Reed,1630194,2025-11-12,DET vs. CHI,W,31.0,11,13,0.846,2,2,1.0,4,4,1.0,6,7,13,6,4,1,4,3,28,26,CHI,HOME,Paul Reed
+Paul Reed,1630194,2025-11-10,DET vs. WAS,W,13.0,4,5,0.8,0,0,0.0,0,2,0.0,4,5,9,0,1,1,0,3,8,8,WAS,HOME,Paul Reed
+Paul Reed,1630194,2025-11-09,DET @ PHI,W,11.0,2,3,0.667,0,1,0.0,0,0,0.0,2,3,5,0,0,2,0,1,4,-3,PHI,AWAY,Paul Reed
+Paul Reed,1630194,2025-11-07,DET @ BKN,W,15.0,3,3,1.0,0,0,0.0,0,2,0.0,4,2,6,2,2,0,0,2,6,8,BKN,AWAY,Paul Reed
+Paul Reed,1630194,2025-11-05,DET vs. UTA,W,7.0,1,2,0.5,0,0,0.0,0,0,0.0,0,0,0,0,0,0,1,3,2,-6,UTA,HOME,Paul Reed
+Paul Reed,1630194,2025-11-03,DET @ MEM,W,5.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,0,2,0,0,1,0,-3,MEM,AWAY,Paul Reed
+Paul Reed,1630194,2025-10-29,DET vs. ORL,W,3.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,-3,ORL,HOME,Paul Reed
+Paul Reed,1630194,2025-10-27,DET vs. CLE,L,8.0,2,3,0.667,0,1,0.0,0,0,0.0,1,1,2,0,1,0,2,0,4,5,CLE,HOME,Paul Reed
+Paul Reed,1630194,2025-10-24,DET @ HOU,W,19.0,6,10,0.6,1,1,1.0,0,0,0.0,5,4,9,1,0,2,2,4,13,6,HOU,AWAY,Paul Reed
+Paul Reed,1630194,2025-10-22,DET @ CHI,L,3.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,1,1,2,3,-3,CHI,AWAY,Paul Reed

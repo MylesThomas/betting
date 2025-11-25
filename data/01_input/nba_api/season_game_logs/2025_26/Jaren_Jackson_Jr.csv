@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jaren Jackson Jr.,1628991,2025-11-18,MEM @ SAS,L,33.0,8,20,0.4,2,7,0.286,0,0,0.0,2,4,6,3,0,0,3,2,18,-4,SAS,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-15,MEM @ CLE,L,33.0,6,23,0.261,2,8,0.25,12,14,0.857,1,4,5,2,0,1,2,5,26,-2,CLE,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-12,MEM @ BOS,L,23.0,7,15,0.467,1,3,0.333,3,3,1.0,2,0,2,0,1,1,3,5,18,-28,BOS,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-11,MEM @ NYK,L,30.0,7,14,0.5,2,4,0.5,3,4,0.75,1,5,6,3,0,0,5,6,19,7,NYK,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-09,MEM vs. OKC,L,29.0,6,16,0.375,3,7,0.429,2,5,0.4,2,5,7,2,0,2,1,3,17,-2,OKC,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-07,MEM vs. DAL,W,29.0,6,9,0.667,2,5,0.4,3,3,1.0,0,4,4,0,0,0,1,1,17,-2,DAL,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-05,MEM vs. HOU,L,29.0,2,6,0.333,0,1,0.0,5,6,0.833,1,5,6,1,1,5,0,4,9,-20,HOU,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-03,MEM vs. DET,L,31.0,8,14,0.571,4,7,0.571,1,1,1.0,1,3,4,1,0,2,1,5,21,-9,DET,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-11-02,MEM @ TOR,L,32.0,8,15,0.533,1,4,0.25,3,4,0.75,2,7,9,3,0,0,2,5,20,-7,TOR,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-10-31,MEM vs. LAL,L,31.0,6,8,0.75,2,2,1.0,1,2,0.5,0,4,4,1,0,0,2,6,15,-4,LAL,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-10-29,MEM @ PHX,W,32.0,7,14,0.5,2,6,0.333,2,4,0.5,1,5,6,3,3,1,3,3,18,-2,PHX,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-10-27,MEM @ GSW,L,29.0,4,9,0.444,2,3,0.667,6,6,1.0,0,7,7,0,1,0,0,4,16,-6,GSW,AWAY,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-10-25,MEM vs. IND,W,25.0,6,11,0.545,1,3,0.333,4,6,0.667,0,2,2,1,0,0,1,3,17,6,IND,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-10-24,MEM vs. MIA,L,21.0,7,14,0.5,1,4,0.25,4,4,1.0,0,3,3,1,1,1,3,4,19,-18,MIA,HOME,Jaren Jackson Jr
+Jaren Jackson Jr.,1628991,2025-10-22,MEM vs. NOP,W,27.0,7,14,0.5,0,4,0.0,4,4,1.0,2,6,8,1,0,6,5,6,18,5,NOP,HOME,Jaren Jackson Jr

@@ -1,0 +1,3 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+LeBron James,2544,2025-11-23,LAL @ UTA,W,34.0,8,18,0.444,0,4,0.0,1,2,0.5,0,6,6,8,1,0,2,2,17,-14,UTA,AWAY,Lebron James
+LeBron James,2544,2025-11-18,LAL vs. UTA,W,30.0,4,7,0.571,2,3,0.667,1,4,0.25,1,2,3,12,1,0,1,0,11,1,UTA,HOME,Lebron James

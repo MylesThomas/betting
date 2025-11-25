@@ -1,0 +1,9 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Chris Boucher,1628449,2025-11-23,BOS vs. ORL,W,14.0,0,0,0.0,0,0,0.0,1,2,0.5,0,1,1,1,1,2,0,1,1,9,ORL,HOME,Chris Boucher
+Chris Boucher,1628449,2025-11-12,BOS vs. MEM,W,13.0,1,3,0.333,0,2,0.0,0,0,0.0,1,6,7,0,0,0,0,3,2,14,MEM,HOME,Chris Boucher
+Chris Boucher,1628449,2025-11-03,BOS vs. UTA,L,7.0,2,3,0.667,1,2,0.5,0,0,0.0,0,1,1,0,1,0,0,3,5,2,UTA,HOME,Chris Boucher
+Chris Boucher,1628449,2025-11-01,BOS vs. HOU,L,13.0,2,6,0.333,0,2,0.0,0,0,0.0,0,0,0,0,1,0,0,4,4,-7,HOU,HOME,Chris Boucher
+Chris Boucher,1628449,2025-10-27,BOS @ NOP,W,3.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,1,1,0,-6,NOP,AWAY,Chris Boucher
+Chris Boucher,1628449,2025-10-26,BOS @ DET,L,9.0,0,2,0.0,0,1,0.0,0,0,0.0,0,1,1,1,0,1,0,2,0,-6,DET,AWAY,Chris Boucher
+Chris Boucher,1628449,2025-10-24,BOS @ NYK,L,15.0,0,3,0.0,0,2,0.0,0,0,0.0,1,3,4,0,1,4,0,2,0,5,NYK,AWAY,Chris Boucher
+Chris Boucher,1628449,2025-10-22,BOS vs. PHI,L,16.0,2,4,0.5,0,2,0.0,2,2,1.0,0,4,4,1,1,0,0,0,6,-4,PHI,HOME,Chris Boucher

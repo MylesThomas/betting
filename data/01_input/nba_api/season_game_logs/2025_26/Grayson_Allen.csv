@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Grayson Allen,1628960,2025-11-13,PHX vs. IND,W,12.0,5,6,0.833,1,2,0.5,1,2,0.5,0,1,1,2,1,0,0,0,12,8,IND,HOME,Grayson Allen
+Grayson Allen,1628960,2025-11-12,PHX @ DAL,W,33.0,8,17,0.471,4,9,0.444,3,4,0.75,1,4,5,3,3,1,2,1,23,2,DAL,AWAY,Grayson Allen
+Grayson Allen,1628960,2025-11-10,PHX vs. NOP,W,28.0,12,17,0.706,10,15,0.667,8,10,0.8,1,1,2,4,3,0,1,0,42,22,NOP,HOME,Grayson Allen
+Grayson Allen,1628960,2025-11-08,PHX @ LAC,W,31.0,5,12,0.417,4,7,0.571,0,0,0.0,0,0,0,3,1,0,2,0,14,13,LAC,AWAY,Grayson Allen
+Grayson Allen,1628960,2025-11-06,PHX vs. LAC,W,36.0,7,13,0.538,4,9,0.444,0,0,0.0,0,3,3,4,3,1,2,4,18,22,LAC,HOME,Grayson Allen
+Grayson Allen,1628960,2025-11-04,PHX @ GSW,L,35.0,6,15,0.4,4,9,0.444,0,0,0.0,0,4,4,5,3,0,1,4,16,-20,GSW,AWAY,Grayson Allen
+Grayson Allen,1628960,2025-11-02,PHX vs. SAS,W,34.0,6,13,0.462,5,9,0.556,0,0,0.0,0,3,3,3,0,0,2,3,17,17,SAS,HOME,Grayson Allen
+Grayson Allen,1628960,2025-10-31,PHX vs. UTA,W,32.0,5,15,0.333,2,9,0.222,2,3,0.667,1,6,7,6,3,1,1,3,14,17,UTA,HOME,Grayson Allen
+Grayson Allen,1628960,2025-10-29,PHX vs. MEM,L,36.0,4,10,0.4,2,6,0.333,4,4,1.0,0,3,3,4,0,0,5,2,14,-2,MEM,HOME,Grayson Allen
+Grayson Allen,1628960,2025-10-27,PHX @ UTA,L,42.0,7,19,0.368,4,13,0.308,5,7,0.714,1,1,2,5,1,0,3,5,23,-8,UTA,AWAY,Grayson Allen
+Grayson Allen,1628960,2025-10-25,PHX @ DEN,L,33.0,6,12,0.5,5,10,0.5,0,0,0.0,0,4,4,5,1,0,0,3,17,-10,DEN,AWAY,Grayson Allen
+Grayson Allen,1628960,2025-10-24,PHX @ LAC,L,29.0,4,12,0.333,3,9,0.333,1,1,1.0,1,0,1,5,1,1,0,2,12,-11,LAC,AWAY,Grayson Allen
+Grayson Allen,1628960,2025-10-22,PHX vs. SAC,W,36.0,6,12,0.5,3,7,0.429,3,3,1.0,1,4,5,7,1,0,4,3,18,1,SAC,HOME,Grayson Allen
