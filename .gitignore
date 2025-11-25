@@ -39,7 +39,7 @@ Thumbs.db
 
 # CSV files - selective inclusion
 # Ignore all CSVs by default
-*.csv
+# *.csv
 
 # But INCLUDE these specific patterns:
 !data/04_output/arbs/arb_*.csv
