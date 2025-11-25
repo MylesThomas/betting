@@ -78,6 +78,14 @@ def setup_logging(log_prefix=GLOBAL_LOG_PREFIX):
     log_format = '%(asctime)s | %(levelname)-8s | %(message)s'
     date_format = '%Y-%m-%d %H:%M:%S'
     
+    # Get root logger
+    logger = logging.getLogger()
+    
+    # Clear any existing handlers to avoid duplicates
+    logger.handlers.clear()
+    
+    logger.setLevel(logging.DEBUG)
+    
     # Create handlers
     file_handler = logging.FileHandler(log_filepath)
     file_handler.setLevel(logging.DEBUG)
@@ -87,9 +95,7 @@ def setup_logging(log_prefix=GLOBAL_LOG_PREFIX):
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(logging.Formatter(log_format, date_format))
     
-    # Configure root logger
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    # Add handlers
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
@@ -109,7 +115,9 @@ DEFAULT_REGION = 'us'
 DEFAULT_MARKET = 'player_threes'
 ODDS_FORMAT = 'american'
 DATE_FORMAT = 'iso'
-OUTPUT_DIR = 'historical_props'
+# Use absolute path to save to correct location
+PROJECT_ROOT = Path(__file__).parent.parent
+OUTPUT_DIR = PROJECT_ROOT / 'data' / '01_input' / 'the-odds-api' / 'historical_props'
 RATE_LIMIT_DELAY = 0.5  # seconds between API calls
 
 # Event timestamp offsets (for capturing the right snapshot)
@@ -391,18 +399,23 @@ def fetch_date_props(date_str, markets=DEFAULT_MARKET, save=True):
     date_obj_confirm = datetime.strptime(date_str, '%Y-%m-%d')
     day_of_week_confirm = date_obj_confirm.strftime('%A')
     
-    # Ask for confirmation
-    print(f"\n⚠️  Proceed with fetching {len(events)} games for {date_str} ({day_of_week_confirm})?")
-    print(f"   Markets: {markets}")
-    print(f"   Estimated cost: ~{estimated_cost} credits")
-    response = input(f"   Continue? (y/n): ")
-    
-    if response.lower() != 'y':
-        logging.warning("User cancelled fetch operation")
-        return pd.DataFrame()
-    
-    logging.info("User confirmed - starting fetch operation")
-    logging.info("-"*60)
+    # Auto-approve if cost is under 150 credits
+    if estimated_cost < 150:
+        logging.info(f"✅ Auto-approved (cost {estimated_cost} < 150 credits)")
+        logging.info("-"*60)
+    else:
+        # Ask for confirmation for larger fetches
+        print(f"\n⚠️  Proceed with fetching {len(events)} games for {date_str} ({day_of_week_confirm})?")
+        print(f"   Markets: {markets}")
+        print(f"   Estimated cost: ~{estimated_cost} credits")
+        response = input(f"   Continue? (y/n): ")
+        
+        if response.lower() != 'y':
+            logging.warning("User cancelled fetch operation")
+            return pd.DataFrame()
+        
+        logging.info("User confirmed - starting fetch operation")
+        logging.info("-"*60)
     
     # Fetch odds for each event
     all_props = []
@@ -432,8 +445,8 @@ def fetch_date_props(date_str, markets=DEFAULT_MARKET, save=True):
         return df
     
     if save:
-        output_dir = Path(OUTPUT_DIR)
-        output_dir.mkdir(exist_ok=True)
+        output_dir = OUTPUT_DIR
+        output_dir.mkdir(parents=True, exist_ok=True)
         
         filename = f"props_{date_str}_{markets.replace(',', '_')}.csv"
         filepath = output_dir / filename
@@ -523,8 +536,8 @@ def fetch_full_season(markets=DEFAULT_MARKET):
         'credits_start_remaining': None  # Track starting remaining credits
     }
     
-    output_dir = Path(OUTPUT_DIR)
-    output_dir.mkdir(exist_ok=True)
+    output_dir = OUTPUT_DIR
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     logging.info("\n" + "="*60)
     logging.info("STARTING FULL SEASON FETCH")
