@@ -698,9 +698,39 @@ def main():
         if sort_column in display_df.columns:
             display_df = display_df.sort_values(sort_column, ascending=sort_ascending)
         
+        # Apply color gradient to Profit % column
+        def color_profit_gradient(val):
+            """
+            Color code profit percentages:
+            - 10% or higher: very green
+            - 0%: white
+            - -10% or lower: very red
+            - Gradient in between
+            """
+            if pd.isna(val):
+                return ''
+            
+            # Clamp values between -10 and 10 for color mapping
+            clamped = max(-10, min(10, val))
+            
+            if clamped >= 0:
+                # Green gradient from white (0%) to green (10%)
+                intensity = int((clamped / 10) * 255)
+                return f'background-color: rgb({255 - intensity}, 255, {255 - intensity})'
+            else:
+                # Red gradient from white (0%) to red (-10%)
+                intensity = int((abs(clamped) / 10) * 255)
+                return f'background-color: rgb(255, {255 - intensity}, {255 - intensity})'
+        
+        # Style the dataframe
+        styled_df = display_df.style.applymap(
+            color_profit_gradient,
+            subset=['expected_profit_pct'] if 'expected_profit_pct' in display_df.columns else []
+        )
+        
         # Display with highlighting
         st.dataframe(
-            display_df,
+            styled_df,
             use_container_width=True,
             hide_index=True,
             column_config={
@@ -800,8 +830,32 @@ def main():
         column_order = ['date', 'prop_markets', 'arbs_found', 'total_wagered', 'total_profit', 'avg_profit', 'file']
         display_history = history_df[column_order].head(10)
         
+        # Apply color gradient to avg_profit column in history
+        def color_profit_gradient_history(val):
+            """Color code profit percentages with gradient."""
+            if pd.isna(val):
+                return ''
+            
+            # Clamp values between -10 and 10 for color mapping
+            clamped = max(-10, min(10, val))
+            
+            if clamped >= 0:
+                # Green gradient from white (0%) to green (10%)
+                intensity = int((clamped / 10) * 255)
+                return f'background-color: rgb({255 - intensity}, 255, {255 - intensity})'
+            else:
+                # Red gradient from white (0%) to red (-10%)
+                intensity = int((abs(clamped) / 10) * 255)
+                return f'background-color: rgb(255, {255 - intensity}, {255 - intensity})'
+        
+        # Style the history dataframe
+        styled_history = display_history.style.applymap(
+            color_profit_gradient_history,
+            subset=['avg_profit'] if 'avg_profit' in display_history.columns else []
+        )
+        
         st.dataframe(
-            display_history,
+            styled_history,
             use_container_width=True,
             hide_index=True,
             column_config={
