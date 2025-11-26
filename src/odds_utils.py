@@ -81,3 +81,51 @@ def odds_to_implied_probability(odds):
         # Positive odds: 100 / (odds + 100)
         return 100 / (odds + 100)
 
+
+def american_odds_to_percentage_probability(odds):
+    """
+    Convert American odds to implied probability percentage.
+    
+    Args:
+        odds: American odds (e.g., -110, +130)
+    
+    Returns:
+        Implied probability as percentage (e.g., 54.55 for 54.55%)
+    
+    Examples:
+        >>> american_odds_to_probability(-110)  # 52.38%
+        52.38095238095238
+        >>> american_odds_to_probability(+150)  # 40%
+        40.0
+    """
+    if odds < 0:
+        return abs(odds) / (abs(odds) + 100) * 100
+    else:
+        return 100 / (odds + 100) * 100
+
+
+def probability_to_american_odds(prob_pct):
+    """
+    Convert implied probability percentage to American odds.
+    
+    Args:
+        prob_pct: Probability as percentage (e.g., 54.55 for 54.55%)
+    
+    Returns:
+        American odds (negative for favorites, positive for underdogs)
+    
+    Examples:
+        >>> probability_to_american_odds(52.38)  # ~-110 odds
+        -110.0
+        >>> probability_to_american_odds(40.0)  # +150 odds
+        150.0
+        >>> probability_to_american_odds(50.0)  # Even odds
+        -100.0
+    """
+    if prob_pct >= 50:
+        # Negative odds (favorite)
+        return -prob_pct / (100 - prob_pct) * 100
+    else:
+        # Positive odds (underdog)
+        return (100 - prob_pct) / prob_pct * 100
+

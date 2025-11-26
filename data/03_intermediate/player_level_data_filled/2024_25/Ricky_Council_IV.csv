@@ -1,0 +1,83 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized,dnp
+Ricky Council IV,1641741,2024-10-23,PHI vs. MIL,L,9.0,1,2,0.5,1,1,1.0,4,4,1.0,0,1,1,0,0,0,1,1,7,1,MIL,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-10-25,PHI @ TOR,L,4.0,0,2,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-1,TOR,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-10-27,PHI @ IND,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,IND,AWAY,Ricky Council IV,True
+Ricky Council IV,1641741,2024-10-30,PHI vs. DET,L,7.0,1,2,0.5,0,1,0.0,0,0,0.0,0,1,1,0,0,0,0,0,2,1,DET,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-02,PHI vs. MEM,L,8.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,3,0,0,0,0,0,1,MEM,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-04,PHI @ PHO,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,PHO,AWAY,Ricky Council IV,True
+Ricky Council IV,1641741,2024-11-06,PHI @ LAC,L,10.0,3,4,0.75,1,2,0.5,0,0,0.0,0,1,1,0,0,0,1,1,7,7,LAC,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-11-08,PHI @ LAL,L,15.0,0,4,0.0,0,1,0.0,2,2,1.0,1,2,3,2,0,0,0,0,2,3,LAL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-11-10,PHI vs. CHO,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,CHO,HOME,Ricky Council IV,True
+Ricky Council IV,1641741,2024-11-12,PHI vs. NYK,L,1.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,0,NYK,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-13,PHI vs. CLE,L,11.0,0,4,0.0,0,2,0.0,0,0,0.0,1,0,1,0,0,0,0,0,0,0,CLE,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-15,PHI @ ORL,L,1.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,0,0,1,ORL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-11-18,PHI @ MIA,L,9.0,2,3,0.667,0,1,0.0,0,0,0.0,0,1,1,0,0,0,1,0,4,-3,MIA,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-11-20,PHI @ MEM,L,13.0,2,4,0.5,0,0,0.0,0,0,0.0,1,0,1,1,1,0,0,2,4,-12,MEM,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-11-22,PHI vs. BKN,W,12.0,0,2,0.0,0,2,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-9,BKN,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-24,PHI vs. LAC,L,19.0,3,10,0.3,1,6,0.167,2,2,1.0,0,0,0,1,0,0,0,1,9,13,LAC,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-27,PHI vs. HOU,L,27.0,5,7,0.714,2,3,0.667,0,0,0.0,1,9,10,1,1,1,1,2,12,9,HOU,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-11-30,PHI @ DET,W,27.0,5,7,0.714,1,3,0.333,6,7,0.857,1,4,5,1,1,1,0,3,17,-17,DET,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-12-03,PHI @ CHA,W,10.0,1,2,0.5,0,1,0.0,0,0,0.0,0,1,1,2,0,0,0,1,2,-5,CHA,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-12-04,PHI vs. ORL,L,18.0,2,6,0.333,1,2,0.5,4,6,0.667,0,0,0,1,0,1,0,0,9,-14,ORL,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-12-06,PHI vs. ORL,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,ORL,HOME,Ricky Council IV,True
+Ricky Council IV,1641741,2024-12-08,PHI @ CHI,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,CHI,AWAY,Ricky Council IV,True
+Ricky Council IV,1641741,2024-12-13,PHI vs. IND,L,22.0,4,12,0.333,0,1,0.0,6,9,0.667,4,5,9,2,1,1,1,1,14,10,IND,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-12-16,PHI @ CHA,W,9.0,1,4,0.25,0,2,0.0,4,4,1.0,1,0,1,0,1,0,1,1,6,5,CHA,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-12-20,PHI vs. CHA,W,13.0,4,5,0.8,1,1,1.0,2,2,1.0,1,1,2,0,1,0,1,3,11,-7,CHA,HOME,Ricky Council,False
+Ricky Council IV,1641741,2024-12-21,PHI @ CLE,L,21.0,2,7,0.286,1,3,0.333,6,6,1.0,2,3,5,0,1,0,1,0,11,-10,CLE,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-12-23,PHI vs. SAS,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,SAS,HOME,Ricky Council IV,True
+Ricky Council IV,1641741,2024-12-25,PHI @ BOS,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,BOS,AWAY,Ricky Council IV,True
+Ricky Council IV,1641741,2024-12-28,PHI @ UTA,W,11.0,1,3,0.333,0,1,0.0,1,2,0.5,0,2,2,0,0,1,0,1,3,0,UTA,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2024-12-30,PHI @ POR,W,14.0,2,2,1.0,1,1,1.0,2,2,1.0,0,1,1,0,0,0,1,3,7,-11,POR,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-01,PHI @ SAC,L,10.0,1,3,0.333,0,1,0.0,1,1,1.0,1,3,4,0,0,0,2,0,3,11,SAC,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-02,PHI @ GSW,L,27.0,4,8,0.5,1,4,0.25,3,4,0.75,1,1,2,1,0,0,0,0,12,-10,GSW,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-04,PHI @ BKN,W,9.0,2,3,0.667,0,1,0.0,0,0,0.0,0,4,4,2,0,0,0,0,4,6,BKN,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-06,PHI vs. PHX,L,3.0,0,2,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-8,PHX,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-08,PHI vs. WAS,W,19.0,3,7,0.429,1,3,0.333,1,1,1.0,2,3,5,1,0,0,0,0,8,-10,WAS,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-10,PHI vs. NOP,L,17.0,5,7,0.714,1,3,0.333,2,2,1.0,1,0,1,0,0,0,0,2,13,-13,NOP,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-12,PHI @ ORL,L,6.0,0,2,0.0,0,2,0.0,0,0,0.0,0,1,1,1,0,1,0,0,0,2,ORL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-14,PHI vs. OKC,L,35.0,5,15,0.333,1,8,0.125,2,3,0.667,2,2,4,4,0,0,6,2,13,-15,OKC,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-15,PHI vs. NYK,L,7.0,1,2,0.5,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,2,-6,NYK,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-18,PHI @ IND,L,36.0,6,18,0.333,3,9,0.333,3,4,0.75,3,6,9,2,3,0,2,1,18,-2,IND,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-19,PHI @ MIL,L,29.0,4,9,0.444,3,5,0.6,2,2,1.0,0,4,4,3,2,0,1,3,13,-6,MIL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-21,PHI @ DEN,L,18.0,2,11,0.182,1,6,0.167,0,0,0.0,0,0,0,3,0,0,0,1,5,-17,DEN,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-24,PHI vs. CLE,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,CLE,HOME,Ricky Council IV,True
+Ricky Council IV,1641741,2025-01-25,PHI @ CHI,W,11.0,2,3,0.667,0,0,0.0,3,4,0.75,1,2,3,1,0,0,0,0,7,2,CHI,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-01-28,PHI vs. LAL,W,20.0,6,10,0.6,3,6,0.5,1,2,0.5,2,5,7,2,2,0,0,1,16,-1,LAL,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-29,PHI vs. SAC,W,29.0,3,6,0.5,1,2,0.5,6,6,1.0,0,1,1,0,1,0,0,2,13,28,SAC,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-01-31,PHI vs. DEN,L,15.0,4,10,0.4,2,5,0.4,0,1,0.0,1,1,2,1,2,0,1,1,10,-1,DEN,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-02,PHI vs. BOS,L,35.0,5,11,0.455,1,3,0.333,0,2,0.0,1,6,7,8,2,0,3,3,11,-6,BOS,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-04,PHI vs. DAL,W,20.0,3,6,0.5,2,3,0.667,0,0,0.0,1,1,2,3,0,1,1,2,8,-1,DAL,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-05,PHI vs. MIA,L,5.0,0,2,0.0,0,2,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,4,MIA,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-07,PHI @ DET,L,2.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,1,1,0,0,0,3,6,DET,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-02-09,PHI @ MIL,L,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,1,MIL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-02-11,PHI vs. TOR,L,4.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-3,TOR,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-12,PHI @ BKN,L,4.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-6,BKN,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-02-20,PHI vs. BOS,L,22.0,4,10,0.4,2,5,0.4,0,0,0.0,1,0,1,2,0,0,1,0,10,-4,BOS,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-22,PHI vs. BKN,L,9.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,2,0,0,0,0,0,7,BKN,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-24,PHI vs. CHI,L,23.0,4,9,0.444,0,3,0.0,4,4,1.0,3,1,4,2,3,0,2,0,12,-4,CHI,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-02-26,PHI @ NYK,L,6.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,1,1,0,0,0,0,2,NYK,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-01,PHI vs. GSW,,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,GSW,HOME,Ricky Council IV,True
+Ricky Council IV,1641741,2025-03-03,PHI vs. POR,L,18.0,1,6,0.167,1,4,0.25,0,0,0.0,1,1,2,2,0,0,0,0,3,-13,POR,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-03-04,PHI @ MIN,L,7.0,1,4,0.25,1,2,0.5,0,0,0.0,0,0,0,1,0,0,0,0,3,-1,MIN,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-06,PHI @ BOS,L,8.0,2,7,0.286,0,4,0.0,0,0,0.0,1,1,2,2,0,0,0,0,4,10,BOS,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-09,PHI vs. UTA,W,21.0,3,7,0.429,2,5,0.4,0,0,0.0,0,3,3,2,1,0,1,3,8,21,UTA,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-03-10,PHI @ ATL,L,29.0,7,13,0.538,1,5,0.2,4,4,1.0,0,4,4,3,1,0,0,1,19,9,ATL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-12,PHI @ TOR,L,33.0,3,14,0.214,1,7,0.143,4,4,1.0,1,2,3,1,1,0,0,2,11,7,TOR,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-14,PHI vs. IND,L,37.0,5,14,0.357,2,8,0.25,2,3,0.667,1,3,4,0,0,3,2,3,14,-12,IND,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-03-16,PHI @ DAL,W,28.0,4,8,0.5,1,3,0.333,4,4,1.0,1,9,10,0,1,1,2,1,13,-7,DAL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-17,PHI @ HOU,L,25.0,3,6,0.5,3,5,0.6,1,1,1.0,0,1,1,2,0,0,1,1,10,5,HOU,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-19,PHI @ OKC,L,24.0,1,11,0.091,0,8,0.0,2,4,0.5,0,4,4,3,0,0,2,1,4,-21,OKC,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-21,PHI @ SAS,L,24.0,6,9,0.667,3,5,0.6,5,6,0.833,0,8,8,1,1,0,1,1,20,-8,SAS,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-23,PHI @ ATL,L,19.0,5,11,0.455,0,3,0.0,4,5,0.8,0,3,3,1,1,0,1,6,14,4,ATL,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-24,PHI @ NOP,L,32.0,2,11,0.182,1,5,0.2,3,4,0.75,1,5,6,4,0,0,2,1,8,0,NOP,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-03-26,PHI vs. WAS,L,34.0,4,14,0.286,1,8,0.125,4,7,0.571,1,5,6,3,0,1,0,4,13,2,WAS,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-03-29,PHI vs. MIA,L,27.0,5,12,0.417,0,4,0.0,3,4,0.75,0,6,6,4,0,0,2,0,13,-17,MIA,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-03-30,PHI vs. TOR,L,36.0,6,15,0.4,1,4,0.25,4,6,0.667,2,9,11,3,0,0,1,0,17,-24,TOR,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-04-01,PHI @ NYK,L,23.0,6,13,0.462,1,4,0.25,2,2,1.0,1,4,5,2,1,0,0,1,15,-18,NYK,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-04-03,PHI vs. MIL,L,16.0,1,5,0.2,0,1,0.0,2,2,1.0,2,3,5,0,0,0,1,1,4,-11,MIL,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-04-05,PHI vs. MIN,L,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,MIN,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-04-07,PHI @ MIA,L,19.0,1,6,0.167,0,2,0.0,3,5,0.6,3,2,5,2,0,0,3,0,5,-9,MIA,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-04-09,PHI @ WAS,W,25.0,3,6,0.5,1,3,0.333,4,5,0.8,1,4,5,1,1,0,2,1,11,20,WAS,AWAY,Ricky Council,False
+Ricky Council IV,1641741,2025-04-11,PHI vs. ATL,L,32.0,3,13,0.231,1,8,0.125,3,3,1.0,1,6,7,4,0,0,2,0,10,-5,ATL,HOME,Ricky Council,False
+Ricky Council IV,1641741,2025-04-13,PHI vs. CHI,L,22.0,1,6,0.167,1,4,0.25,2,2,1.0,1,3,4,0,0,1,1,0,5,-7,CHI,HOME,Ricky Council,False
