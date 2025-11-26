@@ -345,6 +345,7 @@ def get_arb_history():
             total_wagered = 0
             total_profit = 0
             avg_profit_pct = 0
+            max_profit_pct = 0
             
             if len(arbs_df) > 0:
                 if 'over_stake' in arbs_df.columns and 'under_stake' in arbs_df.columns:
@@ -353,15 +354,21 @@ def get_arb_history():
                     total_profit = arbs_df['guaranteed_profit'].sum()
                 if 'expected_profit_pct' in arbs_df.columns:
                     avg_profit_pct = arbs_df['expected_profit_pct'].mean()
+                    max_profit_pct = arbs_df['expected_profit_pct'].max()
+            
+            # Count unique games
+            num_games = df['game'].nunique() if 'game' in df.columns else 0
             
             history.append({
                 'date': file_date,
+                'num_games': num_games,
                 'file': file.name,
                 'prop_markets': total_props,
                 'arbs_found': arbs_count,
+                'avg_profit': avg_profit_pct,
+                'max_profit': max_profit_pct,
                 'total_wagered': total_wagered,
-                'total_profit': total_profit,
-                'avg_profit': avg_profit_pct
+                'total_profit': total_profit
             })
         except:
             continue
@@ -826,8 +833,8 @@ def main():
         
         st.markdown("**Recent Runs:**")
         
-        # Reorder columns to put file at the end
-        column_order = ['date', 'prop_markets', 'arbs_found', 'total_wagered', 'total_profit', 'avg_profit', 'file']
+        # Reorder columns to match Daily Summary order (+ remove file)
+        column_order = ['date', 'num_games', 'prop_markets', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
         display_history = history_df[column_order].head(10)
         
         # Apply color gradient to avg_profit column in history
@@ -849,9 +856,15 @@ def main():
                 return f'background-color: rgb(255, {255 - intensity}, {255 - intensity})'
         
         # Style the history dataframe
+        profit_cols = []
+        if 'avg_profit' in display_history.columns:
+            profit_cols.append('avg_profit')
+        if 'max_profit' in display_history.columns:
+            profit_cols.append('max_profit')
+        
         styled_history = display_history.style.applymap(
             color_profit_gradient_history,
-            subset=['avg_profit'] if 'avg_profit' in display_history.columns else []
+            subset=profit_cols if profit_cols else []
         )
         
         st.dataframe(
@@ -860,12 +873,13 @@ def main():
             hide_index=True,
             column_config={
                 "date": st.column_config.TextColumn("Date"),
+                "num_games": st.column_config.NumberColumn("# Games", format="%d"),
                 "prop_markets": st.column_config.NumberColumn("Prop Markets", format="%d"),
                 "arbs_found": st.column_config.NumberColumn("Arbs Found", format="%d"),
-                "total_wagered": st.column_config.NumberColumn("Total Wagered", format="$%.2f"),
-                "total_profit": st.column_config.NumberColumn("Total Profit", format="$%.2f"),
                 "avg_profit": st.column_config.NumberColumn("Avg Profit %", format="%.2f%%"),
-                "file": st.column_config.TextColumn("File")
+                "max_profit": st.column_config.NumberColumn("Best Arb", format="%.2f%%"),
+                "total_wagered": st.column_config.NumberColumn("Total Wagered", format="$%.2f"),
+                "total_profit": st.column_config.NumberColumn("Total Profit", format="$%.2f")
             }
         )
     else:
