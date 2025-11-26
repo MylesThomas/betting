@@ -1,0 +1,2 @@
+game_id,week,game_time,away_team,away_abbr,home_team,home_abbr,consensus_spread,num_books,away_luck_prev_week,away_luck_flag,away_spread,away_spread_abs,away_spread_cat,away_is_fav,home_luck_prev_week,home_luck_flag,home_spread,home_spread_abs,home_spread_cat,home_is_fav,away_strat_primary,home_strat_primary,away_strat_secondary,home_strat_secondary
+438868ff90501a1fe9a0fbecbee9dc12,10,2025-11-11 01:15:00+00:00,Philadelphia Eagles,PHI,Green Bay Packers,GB,1.0,11,0.0,neutral,1.0,1.0,0-3,False,-7.800000000000001,-7.0,-1.0,1.0,0-3,True,False,True,False,False

@@ -1,0 +1,3 @@
+team,opponent,location,game_id,game_time,last_week,last_week_luck,last_week_exp_diff,last_week_actual_diff,this_week,this_week_spread,spread_abs,spread_category,is_favorite,num_books,strat_primary,strat_secondary
+LAC,PIT,home,349d53a4f89591312ea528e81b786474,2025-11-10 01:20:00+00:00,9,-8.700000000000001,15.7,7.0,10,-2.5,2.5,0-3,True,11,True,False
+IND,ATL,home,42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,9,-9.0,2.0,-7.0,10,-2.5,2.5,0-3,True,8,True,False

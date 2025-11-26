@@ -1,0 +1,4 @@
+team,opponent,location,game_id,game_time,last_week,last_week_luck,last_week_exp_diff,last_week_actual_diff,this_week,this_week_spread,spread_abs,spread_category,is_favorite,num_books,strat_primary_back_unlucky_fav_small_spread,strat_secondary_back_lucky_dog_large_spread
+LV,TEN,home,4963bff460a5f26cab46a8e5ea6db148,2025-10-12 20:06:00+00:00,5,-23.3,-10.7,-34.0,6,-3.5,3.5,3-7,True,11,True,False
+KC,DET,home,82e432d5d8bc0b5a6cbe0c324de90de3,2025-10-13 00:20:00+00:00,5,-13.099999999999998,10.099999999999998,-3.0,6,-2.5,2.5,0-3,True,11,True,False
+LAR,BAL,away,b235bc78609644cb28492cc1d6ad69fd,2025-10-12 17:01:00+00:00,5,-8.100000000000001,5.100000000000001,-3.0,6,-7.0,7.0,3-7,True,11,True,False

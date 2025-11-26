@@ -1,0 +1,2 @@
+team,opponent,location,game_id,game_time,game_time_et,last_week,last_week_luck,last_week_exp_diff,last_week_actual_diff,this_week,this_week_spread,spread_abs,spread_category,is_favorite,num_books,strat_primary_back_unlucky_fav_small_spread,strat_secondary_back_lucky_dog_large_spread
+TB,ARI,home,c0d324e29ce58b36bdc77564f7aae56f,2025-11-30 18:00:00+00:00,2025-11-30 13:00 ET,12,-8.100000000000001,-18.9,-27.0,13,-3.0,3.0,0-3,True,10,True,False

@@ -1,0 +1,4 @@
+team,opponent,location,game_id,game_time,last_week,last_week_luck,last_week_exp_diff,last_week_actual_diff,this_week,this_week_spread,spread_abs,spread_category,is_favorite,num_books,strat_primary_back_unlucky_fav_small_spread,strat_secondary_back_lucky_dog_large_spread
+NO,NYG,home,1fe136913ef0e77717c0f0668163637f,2025-10-05 17:01:00+00:00,4,-10.3,-1.6999999999999993,-12,5,-2.5,2.5,0-3,True,11,True,False
+NE,BUF,away,ba826e757d625a676452b8d3d6971bb0,2025-10-06 00:21:00+00:00,4,27.5,1.5,29,5,8.0,8.0,7+,False,11,False,True
+NYJ,DAL,home,df7e32f3c6cfaaa66de560906faabe32,2025-10-05 17:01:00+00:00,4,-12.9,6.899999999999999,-6,5,-1.5,1.5,0-3,True,11,True,False
