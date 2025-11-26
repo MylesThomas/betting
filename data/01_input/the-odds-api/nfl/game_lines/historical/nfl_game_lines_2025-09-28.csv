@@ -1,0 +1,135 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+4dd631102a977fd398f7ea594ed208f2,2025-09-28 13:33:00+00:00,Minnesota Vikings,Pittsburgh Steelers,BetRivers,betrivers,2025-09-28T16:44:27Z,spread,2.5,480,-2.5,-1115
+4dd631102a977fd398f7ea594ed208f2,2025-09-28 13:33:00+00:00,Minnesota Vikings,Pittsburgh Steelers,Caesars,williamhill_us,2025-09-28T16:48:21Z,spread,3.0,900,-3.0,-2000
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,2.5,-102,-2.5,-118
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,14.5,-110,-14.5,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,7.0,-105,-7.0,-115
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,-3.5,-110,3.5,-110
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,3.0,-120,-3.0,100
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,14.5,-115,-14.5,-105
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,7.0,-105,-7.0,-115
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,-3.5,-105,3.5,-115
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,2.5,-113,-2.5,-113
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,14.5,-113,-14.5,-113
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,7.5,-117,-7.5,-108
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,-3.5,-114,3.5,-112
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,BetUS,betus,2025-09-28T16:54:25Z,spread,2.5,100,-2.5,-120
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,BetUS,betus,2025-09-28T16:54:25Z,spread,14.0,-110,-14.0,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,BetUS,betus,2025-09-28T16:54:25Z,spread,7.0,-105,-7.0,-115
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,BetUS,betus,2025-09-28T16:54:25Z,spread,-3.5,-105,3.5,-115
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,Bovada,bovada,2025-09-28T16:49:42Z,spread,3.0,-115,-3.0,-105
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,Bovada,bovada,2025-09-28T16:49:42Z,spread,14.0,-110,-14.0,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,Bovada,bovada,2025-09-28T16:49:42Z,spread,7.5,-115,-7.5,-105
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,Bovada,bovada,2025-09-28T16:49:42Z,spread,-3.5,-110,3.5,-110
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,2.5,-103,-2.5,-118
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,14.5,-110,-14.5,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,7.5,-115,-7.5,-105
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,-3.5,-105,3.5,-115
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,2.5,-110,-2.5,-110
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,15.5,-115,-15.5,-105
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,7.5,-115,-7.5,-105
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,-3.5,-102,3.5,-118
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,2.5,-102,-2.5,-120
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,14.5,-110,-14.5,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,7.5,-120,-7.5,-102
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,-3.5,-105,3.5,-115
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,2.5,-105,-2.5,-115
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,14.5,-110,-14.5,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,7.5,-120,-7.5,100
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,-3.5,-105,3.5,-115
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,3.0,-114,-3.0,103
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,13.5,112,-13.5,-124
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,7.5,-107,-7.5,-103
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,-3.5,-102,3.5,-108
+b7934d72587b62de0f563ac9acbaa770,2025-09-28 17:01:00+00:00,Washington Commanders,Atlanta Falcons,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,2.5,100,-2.5,-120
+d16a43752aaac66e9ff8768d8590b662,2025-09-28 17:01:00+00:00,New Orleans Saints,Buffalo Bills,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,14.5,-110,-14.5,-110
+85c9b76cd6bd575b611cb4e8feb7a0b0,2025-09-28 17:01:00+00:00,Tennessee Titans,Houston Texans,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,7.0,-105,-7.0,-115
+894976986c24d52cf1d45f0e6bb0e90c,2025-09-28 17:01:00+00:00,Philadelphia Eagles,Tampa Bay Buccaneers,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,-3.5,-110,3.5,-110
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,5.5,-110,-5.5,-110
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,10.0,-115,-10.0,-105
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,-6.0,-110,6.0,-110
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,5.5,-113,-5.5,-107
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,10.0,-104,-10.0,-116
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,-5.5,-108,5.5,-112
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,5.5,-110,-5.5,-115
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,10.0,-118,-10.0,-108
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,-6.0,-113,6.0,-113
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,BetUS,betus,2025-09-28T16:54:25Z,spread,5.5,-110,-5.5,-110
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,BetUS,betus,2025-09-28T16:54:25Z,spread,10.0,-105,-10.0,-115
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,BetUS,betus,2025-09-28T16:54:25Z,spread,-6.0,100,6.0,-120
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,Bovada,bovada,2025-09-28T16:49:42Z,spread,5.5,-110,-5.5,-110
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,Bovada,bovada,2025-09-28T16:49:42Z,spread,10.0,-105,-10.0,-115
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,Bovada,bovada,2025-09-28T16:49:42Z,spread,-6.0,-105,6.0,-115
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,5.5,-110,-5.5,-109
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,10.0,-107,-10.0,-112
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,-6.0,-110,6.0,-110
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,5.5,-108,-5.5,-112
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,10.0,-108,-10.0,-112
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,-6.0,-112,6.0,-108
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,5.5,-110,-5.5,-110
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,9.5,-102,-9.5,-120
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,-6.5,-102,6.5,-120
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,5.5,-110,-5.5,-110
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,10.5,-115,-10.5,-105
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,-6.0,-110,6.0,-110
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,5.5,-113,-5.5,102
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,10.0,-102,-10.0,-108
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,-5.5,-103,5.5,-107
+f8fe40924827231233dc10f6999d8ff7,2025-09-28 17:03:00+00:00,Carolina Panthers,New England Patriots,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,5.5,-110,-5.5,-110
+bcb1f89cf378a586097c50585e53acce,2025-09-28 17:03:00+00:00,Cleveland Browns,Detroit Lions,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,10.0,-110,-10.0,-110
+d921b1e86b0a30ad91000ffc360d302d,2025-09-28 17:03:00+00:00,Los Angeles Chargers,New York Giants,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,-6.0,-110,6.0,-110
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,3.5,-115,-3.5,-105
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,3.0,-110,-3.0,-110
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,3.5,-115,-3.5,-105
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,3.0,-108,-3.0,-112
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,3.5,-118,-3.5,-108
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,3.5,-120,-3.5,-107
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,BetUS,betus,2025-09-28T16:54:25Z,spread,3.5,-115,-3.5,-105
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,BetUS,betus,2025-09-28T16:54:25Z,spread,3.0,-110,-3.0,-110
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,Bovada,bovada,2025-09-28T16:49:42Z,spread,3.5,-110,-3.5,-110
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,Bovada,bovada,2025-09-28T16:49:42Z,spread,3.0,100,-3.0,-120
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,3.5,-115,-3.5,-105
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,3.5,-122,-3.5,102
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,3.5,-105,-3.5,-115
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,3.5,-120,-3.5,100
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,3.5,-115,-3.5,-105
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,3.5,-118,-3.5,-104
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,3.5,-115,-3.5,-105
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,3.0,-105,-3.0,-115
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,3.5,-113,-3.5,102
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,3.0,-101,-3.0,-109
+d90e0de2d5fa2d57e8812f31775ad0ba,2025-09-28 20:06:00+00:00,Indianapolis Colts,Los Angeles Rams,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,3.5,-110,-3.5,-110
+09f55b4a19a83eb951a9400a11123477,2025-09-28 20:06:00+00:00,Jacksonville Jaguars,San Francisco 49ers,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,3.0,-105,-3.0,-115
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,-2.5,-115,2.5,-105
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,-2.5,-120,2.5,100
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,-3.0,-109,3.0,-115
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,BetUS,betus,2025-09-28T16:54:25Z,spread,-2.5,-120,2.5,100
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,Bovada,bovada,2025-09-28T16:49:42Z,spread,-2.5,-120,2.5,100
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,-2.5,-120,2.5,100
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,-2.5,-120,2.5,100
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,-2.5,-120,2.5,-102
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,-3.0,-105,3.0,-115
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,-2.5,-113,2.5,102
+051233db287b02fd3e7574955879ece2,2025-09-28 20:25:00+00:00,Baltimore Ravens,Kansas City Chiefs,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,-3.0,100,3.0,-120
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,1.5,-110,-1.5,-110
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,1.0,100,-1.0,-120
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,2.0,-115,-2.0,-110
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,BetUS,betus,2025-09-28T16:54:25Z,spread,1.0,100,-1.0,-120
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,Bovada,bovada,2025-09-28T16:49:42Z,spread,2.0,-115,-2.0,-105
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,1.5,-108,-1.5,-112
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,1.5,-110,-1.5,-110
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,1.5,-105,-1.5,-115
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,2.0,-110,-2.0,-110
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,1.0,107,-1.0,-118
+af6fbb0a2e996613bc393115276c60e2,2025-09-28 20:26:00+00:00,Chicago Bears,Las Vegas Raiders,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,2.0,-110,-2.0,-110
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,BetMGM,betmgm,2025-09-28T16:54:54Z,spread,-6.5,-110,6.5,-110
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,BetOnline.ag,betonlineag,2025-09-28T16:55:14Z,spread,-6.5,-115,6.5,-105
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,BetRivers,betrivers,2025-09-28T16:54:55Z,spread,-6.5,-113,6.5,-112
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,BetUS,betus,2025-09-28T16:54:25Z,spread,-6.5,-115,6.5,-105
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,Bovada,bovada,2025-09-28T16:49:42Z,spread,-6.5,-115,6.5,-105
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,Caesars,williamhill_us,2025-09-28T16:54:06Z,spread,-6.5,-110,6.5,-110
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,DraftKings,draftkings,2025-09-28T16:54:54Z,spread,-7.0,-105,7.0,-115
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,FanDuel,fanduel,2025-09-28T16:55:33Z,spread,-6.5,-115,6.5,-105
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,Fanatics,fanatics,2025-09-28T16:54:55Z,spread,-6.5,-115,6.5,-105
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,LowVig.ag,lowvig,2025-09-28T16:55:30Z,spread,-6.5,-103,6.5,-107
+de432abcc3bd8d42a582ae9f71388dcd,2025-09-29 00:21:00+00:00,Green Bay Packers,Dallas Cowboys,MyBookie.ag,mybookieag,2025-09-28T16:54:02Z,spread,-7.0,100,7.0,-120

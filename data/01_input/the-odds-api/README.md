@@ -1,0 +1,1 @@
+if you see 'historical' in a path, we used the historical API and these are lines that have closed.

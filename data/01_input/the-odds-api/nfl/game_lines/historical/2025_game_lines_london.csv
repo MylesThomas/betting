@@ -1,0 +1,34 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,BetMGM,betmgm,2025-10-05T09:55:01Z,spread,-3.5,-110,3.5,-110
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,BetOnline.ag,betonlineag,2025-10-05T09:55:20Z,spread,-3.5,102,3.5,-122
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,BetRivers,betrivers,2025-10-05T09:54:46Z,spread,-3.5,-107,3.5,-120
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,BetUS,betus,2025-10-05T09:55:10Z,spread,-3.0,-120,3.0,100
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,Bovada,bovada,2025-10-05T09:55:13Z,spread,-3.0,-125,3.0,105
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,Caesars,williamhill_us,2025-10-05T09:54:00Z,spread,-3.5,-102,3.5,-120
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,DraftKings,draftkings,2025-10-05T09:54:45Z,spread,-3.5,-108,3.5,-112
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,FanDuel,fanduel,2025-10-05T09:55:30Z,spread,-3.5,-104,3.5,-118
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,Fanatics,fanatics,2025-10-05T09:55:19Z,spread,-3.5,-105,3.5,-115
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,LowVig.ag,lowvig,2025-10-05T09:55:20Z,spread,-3.5,104,3.5,-115
+6e206c7bc9379b07d27298a393305384,2025-10-05 13:31:00+00:00,Minnesota Vikings,Cleveland Browns,MyBookie.ag,mybookieag,2025-10-05T09:53:47Z,spread,-3.5,-105,3.5,-115
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,BetMGM,betmgm,2025-10-12T09:54:55Z,spread,-7.0,-110,7.0,-110
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,BetOnline.ag,betonlineag,2025-10-12T09:54:55Z,spread,-7.0,-108,7.0,-112
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,BetRivers,betrivers,2025-10-12T09:54:46Z,spread,-7.0,-108,7.0,-118
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,BetUS,betus,2025-10-12T09:54:56Z,spread,-7.0,-105,7.0,-115
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,Bovada,bovada,2025-10-12T09:55:11Z,spread,-7.0,-115,7.0,-105
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,Caesars,williamhill_us,2025-10-12T09:55:11Z,spread,-7.0,-110,7.0,-110
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,DraftKings,draftkings,2025-10-12T09:55:24Z,spread,-7.5,100,7.5,-120
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,FanDuel,fanduel,2025-10-12T09:55:34Z,spread,-7.0,-108,7.0,-112
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,Fanatics,fanatics,2025-10-12T09:54:55Z,spread,-7.0,-115,7.0,-105
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,LowVig.ag,lowvig,2025-10-12T09:55:14Z,spread,-7.0,-103,7.0,-107
+e34812ee7fbf13bd75e4298bccfbdd10,2025-10-12 13:30:00+00:00,Denver Broncos,New York Jets,MyBookie.ag,mybookieag,2025-10-12T09:53:41Z,spread,-7.0,-110,7.0,-110
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,BetMGM,betmgm,2025-10-19T09:54:40Z,spread,-3.0,-115,3.0,-105
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,BetOnline.ag,betonlineag,2025-10-19T09:55:02Z,spread,-3.0,-122,3.0,102
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,BetRivers,betrivers,2025-10-19T09:55:03Z,spread,-3.0,-115,3.0,-110
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,BetUS,betus,2025-10-19T09:55:06Z,spread,-3.0,-120,3.0,100
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,Bovada,bovada,2025-10-19T09:55:30Z,spread,-3.0,-110,3.0,-110
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,Caesars,williamhill_us,2025-10-19T09:54:06Z,spread,-3.0,-114,3.0,-107
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,DraftKings,draftkings,2025-10-19T09:54:50Z,spread,-3.0,-115,3.0,-105
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,FanDuel,fanduel,2025-10-19T09:55:14Z,spread,-3.0,-114,3.0,-106
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,Fanatics,fanatics,2025-10-19T09:55:14Z,spread,-3.0,-115,3.0,-105
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,LowVig.ag,lowvig,2025-10-19T09:55:02Z,spread,-3.0,-112,3.0,101
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:30:00+00:00,Los Angeles Rams,Jacksonville Jaguars,MyBookie.ag,mybookieag,2025-10-19T09:54:18Z,spread,-3.0,-115,3.0,-105

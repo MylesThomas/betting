@@ -1,0 +1,133 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,5.0,-105,-5.0,-105
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,13.0,-115,-13.0,-105
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-2.5,-120,2.5,100
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,2.0,-110,-2.0,-110
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,9.5,-105,-9.5,-105
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-3.0,-115,3.0,-105
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-9.5,-115,9.5,-105
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-2.5,-115,2.5,-105
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,5.0,-109,-5.0,-111
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,13.0,-116,-13.0,-104
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-3.0,-105,3.0,-115
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,2.5,-116,-2.5,-104
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,9.5,-107,-9.5,-113
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-3.0,-117,3.0,-103
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-9.5,-115,9.5,-105
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-2.5,-113,2.5,-107
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,5.5,-115,-5.5,-110
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,13.0,-112,-13.0,-114
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-3.0,-107,3.0,-120
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,2.0,-112,-2.0,-114
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,9.0,-112,-9.0,-114
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-3.5,-109,3.5,-115
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-10.0,-113,10.0,-112
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-3.0,-108,3.0,-118
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,BetUS,betus,2025-11-02T16:55:22Z,spread,5.0,-110,-5.0,-110
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,BetUS,betus,2025-11-02T16:55:22Z,spread,13.0,-115,-13.0,-105
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,BetUS,betus,2025-11-02T16:55:22Z,spread,-3.0,-105,3.0,-115
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,BetUS,betus,2025-11-02T16:55:22Z,spread,1.5,-105,-1.5,-115
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,BetUS,betus,2025-11-02T16:55:22Z,spread,9.5,-110,-9.5,-110
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetUS,betus,2025-11-02T16:55:22Z,spread,-3.0,-115,3.0,-105
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,BetUS,betus,2025-11-02T16:55:22Z,spread,-9.5,-115,9.5,-105
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,BetUS,betus,2025-11-02T16:55:22Z,spread,-2.0,-120,2.0,100
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,Bovada,bovada,2025-11-02T16:54:45Z,spread,5.5,-110,-5.5,-110
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,Bovada,bovada,2025-11-02T16:54:45Z,spread,12.5,-105,-12.5,-115
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,Bovada,bovada,2025-11-02T16:54:45Z,spread,-3.0,-110,3.0,-110
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,Bovada,bovada,2025-11-02T16:54:45Z,spread,2.0,-110,-2.0,-110
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,Bovada,bovada,2025-11-02T16:54:45Z,spread,8.5,-105,-8.5,-115
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,Bovada,bovada,2025-11-02T16:54:45Z,spread,-3.0,-110,3.0,-110
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,Bovada,bovada,2025-11-02T16:54:45Z,spread,-10.0,-110,10.0,-110
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,Bovada,bovada,2025-11-02T16:54:45Z,spread,-2.5,-110,2.5,-110
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,5.0,-110,-5.0,-110
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,13.0,-112,-13.0,-109
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-3.0,-108,3.0,-113
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,2.0,-110,-2.0,-110
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,9.5,-110,-9.5,-109
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-3.0,-115,3.0,-106
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-10.0,-112,10.0,-110
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-2.5,-115,2.5,-106
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,4.5,-102,-4.5,-118
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,12.5,-102,-12.5,-118
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-3.0,-105,3.0,-115
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,1.5,-110,-1.5,-110
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,9.5,-110,-9.5,-110
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-3.5,100,3.5,-120
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-10.0,-112,10.0,-108
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-2.5,-120,2.5,100
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,4.5,-102,-4.5,-120
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,13.5,-112,-13.5,-108
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-3.0,-112,3.0,-108
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,2.5,-115,-2.5,-105
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,9.5,-110,-9.5,-110
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-3.0,-115,3.0,-105
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-10.5,-104,10.5,-118
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-2.5,-112,2.5,-108
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,5.5,-110,-5.5,-110
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,12.5,-105,-12.5,-115
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-3.0,-105,3.0,-115
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,2.0,-110,-2.0,-110
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,9.0,-110,-9.0,-110
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-3.0,-115,3.0,-105
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-10.0,-110,10.0,-110
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-2.5,-115,2.5,-105
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,5.0,-104,-5.0,-106
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,13.0,-112,-13.0,101
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-2.5,-124,2.5,112
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,2.5,-112,-2.5,101
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,9.5,-108,-9.5,-102
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-3.0,-110,3.0,100
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-9.5,-112,9.5,101
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-2.5,-107,2.5,-103
+6dd3b8a705ed0db85d59fa19b9062cc8,2025-11-02 18:00:00+00:00,Atlanta Falcons,New England Patriots,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,5.5,-110,-5.5,-110
+6031b513e188fc19a2311499566c9258,2025-11-02 18:00:00+00:00,Carolina Panthers,Green Bay Packers,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,13.0,-115,-13.0,-105
+016f76d8237e8d4eb62b9c2ef68381bb,2025-11-02 18:00:00+00:00,Chicago Bears,Cincinnati Bengals,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-3.0,-110,3.0,-110
+72e2ce6652bbb3901f60b38bec05bf5f,2025-11-02 18:00:00+00:00,Denver Broncos,Houston Texans,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,2.0,-110,-2.0,-110
+cf95657d78ab3e515203df1d19c3b0c2,2025-11-02 18:00:00+00:00,Minnesota Vikings,Detroit Lions,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,10.0,-120,-10.0,100
+2340a6e0794d5688996dcf8aaf634742,2025-11-02 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-3.0,-110,3.0,-110
+b60025aea576e2e89ef7bc7303f847ec,2025-11-02 18:00:00+00:00,Los Angeles Chargers,Tennessee Titans,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-10.0,-110,10.0,-110
+a788e7cebff4b5fe10034710090e4529,2025-11-02 18:00:00+00:00,San Francisco 49ers,New York Giants,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-2.5,-115,2.5,-105
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-2.5,-110,2.5,-110
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,14.0,-105,-14.0,-115
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-2.5,-107,2.5,-113
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,14.0,-110,-14.0,-110
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-2.5,-110,2.5,-115
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,14.5,-117,-14.5,-109
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,BetUS,betus,2025-11-02T16:55:22Z,spread,-1.5,-120,1.5,100
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,BetUS,betus,2025-11-02T16:55:22Z,spread,14.0,-110,-14.0,-110
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,Bovada,bovada,2025-11-02T16:54:45Z,spread,-2.5,-105,2.5,-115
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,Bovada,bovada,2025-11-02T16:54:45Z,spread,14.0,-110,-14.0,-110
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-2.5,-110,2.5,-109
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,14.0,-109,-14.0,-112
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-2.5,-120,2.5,100
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,14.0,-105,-14.0,-115
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-2.5,-115,2.5,-105
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,13.5,-105,-13.5,-115
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-2.5,-110,2.5,-110
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,14.0,-105,-14.0,-115
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-2.5,-102,2.5,-108
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,14.0,-102,-14.0,-108
+d0bf341e7959d69b55f1a8ff09065234,2025-11-02 21:05:00+00:00,Jacksonville Jaguars,Las Vegas Raiders,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-2.5,-105,2.5,-115
+b08df670a95f1809707b335dc75081c6,2025-11-02 21:05:00+00:00,New Orleans Saints,Los Angeles Rams,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,14.0,-110,-14.0,-110
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-2.0,-110,2.0,-110
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-1.0,-123,1.0,103
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-2.0,-113,2.0,-113
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetUS,betus,2025-11-02T16:55:22Z,spread,-1.0,-120,1.0,100
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,Bovada,bovada,2025-11-02T16:54:45Z,spread,-2.0,-110,2.0,-110
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-2.0,-112,2.0,-108
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-2.5,-105,2.5,-115
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-2.5,-114,2.5,-106
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-2.0,-110,2.0,-110
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-1.0,-119,1.0,108
+61531628516decd1ee8116da5f6f9056,2025-11-02 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-2.0,-110,2.0,-110
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,BetMGM,betmgm,2025-11-02T16:55:20Z,spread,-3.0,-102,3.0,-118
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,BetOnline.ag,betonlineag,2025-11-02T16:54:57Z,spread,-3.0,-103,3.0,-117
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,BetRivers,betrivers,2025-11-02T16:55:22Z,spread,-3.0,-112,3.0,-114
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,BetUS,betus,2025-11-02T16:55:22Z,spread,-3.0,100,3.0,-120
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,Bovada,bovada,2025-11-02T16:54:45Z,spread,-3.0,-105,3.0,-115
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,Caesars,williamhill_us,2025-11-02T16:52:34Z,spread,-3.0,-107,3.0,-114
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,DraftKings,draftkings,2025-11-02T16:55:24Z,spread,-3.0,-105,3.0,-115
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,FanDuel,fanduel,2025-11-02T16:55:22Z,spread,-3.0,-105,3.0,-115
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,Fanatics,fanatics,2025-11-02T16:55:21Z,spread,-3.0,-105,3.0,-115
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,LowVig.ag,lowvig,2025-11-02T16:54:43Z,spread,-3.0,102,3.0,-113
+c2fd8a23091a954fb21ff6d3537db826,2025-11-03 01:20:00+00:00,Seattle Seahawks,Washington Commanders,MyBookie.ag,mybookieag,2025-11-02T16:53:42Z,spread,-3.0,-105,3.0,-115

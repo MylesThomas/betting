@@ -1,0 +1,24 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+4dd631102a977fd398f7ea594ed208f2,2025-09-28 13:33:00+00:00,Minnesota Vikings,Pittsburgh Steelers,BetRivers,betrivers,2025-09-28T16:44:27Z,spread,2.5,480,-2.5,-1115
+4dd631102a977fd398f7ea594ed208f2,2025-09-28 13:33:00+00:00,Minnesota Vikings,Pittsburgh Steelers,Caesars,williamhill_us,2025-09-28T16:48:21Z,spread,3.0,900,-3.0,-2000
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,BetMGM,betmgm,2025-10-19T16:48:07Z,spread,-28.5,1000,28.5,-3000
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,BetRivers,betrivers,2025-10-19T16:47:32Z,spread,-27.5,-1667,27.5,600
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,Bovada,bovada,2025-10-19T16:43:30Z,spread,-21.5,-105,21.5,-125
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,Caesars,williamhill_us,2025-10-19T16:47:53Z,spread,-27.5,-280,27.5,215
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,DraftKings,draftkings,2025-10-19T16:49:32Z,spread,-25.5,-1850,25.5,900
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,FanDuel,fanduel,2025-10-19T16:47:57Z,spread,-27.5,-390,27.5,265
+79de65f1b97c9145ebdcb019eb486500,2025-10-19 13:32:42+00:00,Los Angeles Rams,Jacksonville Jaguars,Fanatics,fanatics,2025-10-19T16:46:56Z,spread,-27.5,-280,27.5,190
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,BetMGM,betmgm,2025-11-09T16:54:59Z,spread,2.5,-105,-2.5,-125
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,BetRivers,betrivers,2025-11-09T16:54:48Z,spread,2.5,-106,-2.5,-136
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,Bovada,bovada,2025-11-09T16:54:17Z,spread,2.5,110,-2.5,-145
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,Caesars,williamhill_us,2025-11-09T16:53:31Z,spread,2.5,100,-2.5,-130
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,DraftKings,draftkings,2025-11-09T16:55:23Z,spread,2.5,114,-2.5,-145
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,FanDuel,fanduel,2025-11-09T16:55:24Z,spread,2.5,110,-2.5,-146
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,Fanatics,fanatics,2025-11-09T16:55:35Z,spread,2.5,105,-2.5,-140
+42473c1ddf8f424069ff3f264dd8dca4,2025-11-09 14:35:08+00:00,Atlanta Falcons,Indianapolis Colts,MyBookie.ag,mybookieag,2025-11-09T16:53:39Z,spread,-2.5,-118,2.5,-105
+265f0188945bb81ec64751571eb724cb,2025-11-16 14:34:50+00:00,Washington Commanders,Miami Dolphins,BetRivers,betrivers,2025-11-16T16:54:52Z,spread,-3.0,-132,3.0,-108
+265f0188945bb81ec64751571eb724cb,2025-11-16 14:34:50+00:00,Washington Commanders,Miami Dolphins,Caesars,williamhill_us,2025-11-16T16:54:39Z,spread,-1.5,105,1.5,-136
+265f0188945bb81ec64751571eb724cb,2025-11-16 14:34:50+00:00,Washington Commanders,Miami Dolphins,DraftKings,draftkings,2025-11-16T16:54:51Z,spread,-3.5,135,3.5,-175
+265f0188945bb81ec64751571eb724cb,2025-11-16 14:34:50+00:00,Washington Commanders,Miami Dolphins,FanDuel,fanduel,2025-11-16T16:55:06Z,spread,-1.5,-102,1.5,-130
+265f0188945bb81ec64751571eb724cb,2025-11-16 14:34:50+00:00,Washington Commanders,Miami Dolphins,Fanatics,fanatics,2025-11-16T16:55:31Z,spread,-3.5,110,3.5,-150
+265f0188945bb81ec64751571eb724cb,2025-11-16 14:34:50+00:00,Washington Commanders,Miami Dolphins,MyBookie.ag,mybookieag,2025-11-16T16:54:25Z,spread,-0.5,-111,0.5,-118
