@@ -1,16 +1,23 @@
 # AWS Lambda Layer Requirements
 # These packages are needed for the daily update script to run in Lambda
+#
+# IMPORTANT: This is the CANONICAL requirements file for Lambda.
+# Use this file to rebuild the Lambda layer.
 
 # Core dependencies
-pandas==2.1.4
-numpy==1.26.2
-requests==2.31.0
+pandas==2.2.3
+numpy==2.1.3
+requests==2.32.3
 python-dotenv==1.0.0
+PyYAML==6.0.2
+python-dateutil==2.9.0.post0
+pytz==2024.2
 
 # NBA API
-nba_api==1.4.1
+# nba_api==1.4.1  ← NOT needed for Lambda! Only used by local scripts that fetch NBA data.
+#                    Lambda just runs find_arb_opportunities.py which uses The Odds API.
 
 # AWS SDK (already included in Lambda runtime, but listing for completeness)
-# boto3==1.34.0
-# botocore==1.34.0
+# boto3==1.35.72
+# botocore==1.35.72
 

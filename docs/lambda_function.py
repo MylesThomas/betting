@@ -243,8 +243,8 @@ def lambda_handler(event, context):
         if not stdout.strip():
             print("ℹ️  No changes to commit")
         else:
-            # Add arb files
-            run_command(['git', 'add', 'data/04_output/arbs/arb_*.csv'], cwd=work_dir)
+            # Add all arb files (both arb_*.csv and raw_*.csv)
+            run_command(['git', 'add', 'data/04_output/arbs/*.csv'], cwd=work_dir)
             
             # Commit
             today = datetime.now().strftime('%Y-%m-%d')

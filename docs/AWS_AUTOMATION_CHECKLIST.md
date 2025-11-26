@@ -175,7 +175,7 @@ Lambda needs additional packages (Python dependencies + git) that aren't include
     --python-version 3.12 \
     --only-binary=:all: \
     --upgrade \
-    -r lambda_requirements.txt
+    -r docs/lambda_requirements.txt
   
   # Zip it up
   cd lambda_layer
