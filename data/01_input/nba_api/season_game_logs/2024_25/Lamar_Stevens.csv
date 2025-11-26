@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Lamar Stevens,1630205,2025-04-13,MEM vs. DAL,W,36.0,14,25,0.56,2,8,0.25,1,2,0.5,1,5,6,3,0,0,3,3,31,34,DAL,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-04-11,MEM @ DEN,L,0.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,DEN,AWAY,Lamar Stevens
+Lamar Stevens,1630205,2025-04-10,MEM vs. MIN,L,4.0,0,0,0.0,0,0,0.0,0,0,0.0,0,3,3,0,0,0,0,0,0,-7,MIN,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-04-08,MEM @ CHA,W,5.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,0,0,0,0,1,3,3,CHA,AWAY,Lamar Stevens
+Lamar Stevens,1630205,2025-04-03,MEM @ MIA,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,1,0,0,0,0,1,MIA,AWAY,Lamar Stevens
+Lamar Stevens,1630205,2025-03-31,MEM vs. BOS,L,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,BOS,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-29,MEM vs. LAL,L,8.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,1,1,0,-8,LAL,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-27,MEM @ OKC,L,2.0,1,2,0.5,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,-1,OKC,AWAY,Lamar Stevens
+Lamar Stevens,1630205,2025-03-17,MEM @ SAC,L,3.0,0,2,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,3,2,0,-7,SAC,AWAY,Lamar Stevens
+Lamar Stevens,1630205,2025-03-15,MEM vs. MIA,W,19.0,3,6,0.5,0,2,0.0,1,1,1.0,1,4,5,1,1,1,0,0,7,21,MIA,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-14,MEM vs. CLE,L,15.0,3,4,0.75,1,2,0.5,0,0,0.0,0,5,5,1,0,0,0,1,7,8,CLE,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-12,MEM vs. UTA,W,12.0,0,3,0.0,0,2,0.0,2,2,1.0,1,5,6,0,1,1,1,2,2,9,UTA,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-10,MEM vs. PHX,W,22.0,4,7,0.571,4,6,0.667,1,2,0.5,0,5,5,3,1,1,1,4,13,6,PHX,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-09,MEM @ NOP,W,4.0,0,1,0.0,0,1,0.0,1,2,0.5,0,2,2,0,0,0,0,0,1,3,NOP,AWAY,Lamar Stevens
+Lamar Stevens,1630205,2025-03-05,MEM vs. OKC,L,2.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,2,OKC,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-03,MEM vs. ATL,L,3.0,0,2,0.0,0,0,0.0,0,0,0.0,0,1,1,0,1,0,1,0,0,-1,ATL,HOME,Lamar Stevens
+Lamar Stevens,1630205,2025-03-01,MEM vs. SAS,L,16.0,2,6,0.333,0,2,0.0,2,2,1.0,1,3,4,0,0,0,0,1,6,6,SAS,HOME,Lamar Stevens

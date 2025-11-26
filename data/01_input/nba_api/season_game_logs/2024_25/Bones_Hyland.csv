@@ -1,0 +1,25 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Bones Hyland,1630538,2025-04-03,MIN @ BKN,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,0,BKN,AWAY,Bones Hyland
+Bones Hyland,1630538,2025-03-24,MIN @ IND,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,3,IND,AWAY,Bones Hyland
+Bones Hyland,1630538,2025-03-21,MIN vs. NOP,W,7.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,2,0,0,1,2,3,5,NOP,HOME,Bones Hyland
+Bones Hyland,1630538,2025-03-16,MIN vs. UTA,W,7.0,1,2,0.5,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,1,2,-5,UTA,HOME,Bones Hyland
+Bones Hyland,1630538,2025-02-04,LAC vs. LAL,L,7.0,4,5,0.8,2,3,0.667,2,2,1.0,0,0,0,0,1,0,1,3,12,0,LAL,HOME,Bones Hyland
+Bones Hyland,1630538,2025-01-22,LAC vs. BOS,L,17.0,3,7,0.429,2,5,0.4,0,0,0.0,0,2,2,2,1,0,4,4,8,-5,BOS,HOME,Bones Hyland
+Bones Hyland,1630538,2025-01-16,LAC @ POR,W,8.0,1,4,0.25,1,3,0.333,0,0,0.0,0,1,1,1,2,0,0,0,3,-1,POR,AWAY,Bones Hyland
+Bones Hyland,1630538,2025-01-15,LAC vs. BKN,W,14.0,3,6,0.5,1,4,0.25,2,2,1.0,0,3,3,5,2,0,2,2,9,10,BKN,HOME,Bones Hyland
+Bones Hyland,1630538,2025-01-08,LAC @ DEN,L,9.0,1,4,0.25,1,4,0.25,2,2,1.0,1,1,2,2,0,0,0,0,5,4,DEN,AWAY,Bones Hyland
+Bones Hyland,1630538,2025-01-04,LAC vs. ATL,W,5.0,0,2,0.0,0,1,0.0,0,0,0.0,1,0,1,0,0,0,1,0,0,4,ATL,HOME,Bones Hyland
+Bones Hyland,1630538,2025-01-02,LAC @ OKC,L,7.0,1,4,0.25,0,2,0.0,0,0,0.0,0,1,1,2,1,0,0,1,2,10,OKC,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-12-31,LAC @ SAS,L,17.0,2,10,0.2,1,6,0.167,2,2,1.0,0,1,1,2,0,0,1,1,7,-9,SAS,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-12-16,LAC vs. UTA,W,12.0,3,6,0.5,2,5,0.4,0,0,0.0,0,0,0,3,3,0,1,0,8,2,UTA,HOME,Bones Hyland
+Bones Hyland,1630538,2024-12-13,LAC @ DEN,L,21.0,4,8,0.5,3,6,0.5,2,3,0.667,0,0,0,1,1,2,3,2,13,-14,DEN,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-12-08,LAC vs. HOU,L,28.0,7,13,0.538,5,10,0.5,3,3,1.0,1,2,3,4,1,0,1,4,22,-9,HOU,HOME,Bones Hyland
+Bones Hyland,1630538,2024-12-04,LAC vs. MIN,L,23.0,5,12,0.417,5,10,0.5,3,4,0.75,0,4,4,2,0,0,5,2,18,1,MIN,HOME,Bones Hyland
+Bones Hyland,1630538,2024-12-03,LAC vs. POR,W,7.0,1,5,0.2,1,3,0.333,0,0,0.0,0,1,1,2,1,0,0,0,3,-2,POR,HOME,Bones Hyland
+Bones Hyland,1630538,2024-11-27,LAC @ WAS,W,8.0,3,6,0.5,3,6,0.5,1,2,0.5,0,1,1,2,2,0,0,2,10,-8,WAS,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-11-25,LAC @ BOS,L,12.0,0,5,0.0,0,2,0.0,2,2,1.0,1,0,1,0,0,0,1,2,2,-11,BOS,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-11-24,LAC @ PHI,W,6.0,2,4,0.5,1,3,0.333,0,0,0.0,0,0,0,0,1,0,3,1,5,-3,PHI,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-11-15,LAC @ HOU,L,8.0,2,5,0.4,1,3,0.333,2,2,1.0,0,1,1,0,1,1,0,1,7,-2,HOU,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-11-13,LAC @ HOU,L,5.0,1,4,0.25,1,2,0.5,2,2,1.0,1,0,1,0,0,0,0,0,5,3,HOU,AWAY,Bones Hyland
+Bones Hyland,1630538,2024-11-06,LAC vs. PHI,W,3.0,1,2,0.5,0,0,0.0,0,0,0.0,0,1,1,0,1,0,1,1,2,-7,PHI,HOME,Bones Hyland
+Bones Hyland,1630538,2024-11-02,LAC vs. OKC,L,4.0,1,3,0.333,1,2,0.5,0,0,0.0,0,0,0,0,0,1,0,0,3,3,OKC,HOME,Bones Hyland

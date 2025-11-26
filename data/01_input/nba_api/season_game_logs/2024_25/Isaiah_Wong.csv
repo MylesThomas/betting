@@ -1,0 +1,21 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Isaiah Wong,1631209,2025-02-12,CHA @ ORL,L,16.0,3,7,0.429,1,1,1.0,0,0,0.0,0,0,0,1,0,0,1,1,7,-10,ORL,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2025-02-09,CHA @ DET,L,24.0,6,9,0.667,3,3,1.0,2,2,1.0,0,2,2,1,1,0,2,1,17,-5,DET,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2025-02-05,CHA vs. MIL,L,16.0,3,6,0.5,0,2,0.0,0,0,0.0,0,0,0,2,1,0,0,1,6,19,MIL,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-02-03,CHA vs. WAS,L,5.0,1,2,0.5,1,1,1.0,0,0,0.0,0,0,0,1,0,0,2,1,3,-9,WAS,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-02-01,CHA vs. DEN,L,11.0,0,6,0.0,0,1,0.0,0,0,0.0,0,3,3,3,0,0,0,3,0,-5,DEN,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-01-29,CHA vs. BKN,L,19.0,2,6,0.333,2,3,0.667,2,2,1.0,1,1,2,0,1,0,1,0,8,-2,BKN,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-01-27,CHA vs. LAL,L,6.0,2,3,0.667,1,1,1.0,0,0,0.0,0,0,0,1,1,0,0,0,5,7,LAL,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-01-25,CHA vs. NOP,W,3.0,1,2,0.5,1,2,0.5,0,0,0.0,0,1,1,0,1,0,0,0,3,7,NOP,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-01-24,CHA vs. POR,L,16.0,1,4,0.25,0,0,0.0,2,2,1.0,1,0,1,0,0,0,1,3,4,-1,POR,HOME,Isaiah Wong
+Isaiah Wong,1631209,2025-01-22,CHA @ MEM,L,6.0,2,4,0.5,0,2,0.0,2,2,1.0,0,1,1,1,0,0,1,0,6,3,MEM,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2024-12-30,CHA vs. CHI,L,17.0,1,7,0.143,0,2,0.0,0,2,0.0,2,1,3,1,1,0,1,0,2,-6,CHI,HOME,Isaiah Wong
+Isaiah Wong,1631209,2024-12-28,CHA vs. OKC,L,19.0,2,8,0.25,0,3,0.0,6,6,1.0,0,0,0,1,1,0,1,1,10,1,OKC,HOME,Isaiah Wong
+Isaiah Wong,1631209,2024-12-26,CHA @ WAS,L,5.0,0,2,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,3,WAS,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2024-12-23,CHA vs. HOU,L,8.0,1,4,0.25,0,1,0.0,0,0,0.0,2,0,2,2,1,0,0,0,2,-1,HOU,HOME,Isaiah Wong
+Isaiah Wong,1631209,2024-12-20,CHA @ PHI,L,16.0,4,7,0.571,1,2,0.5,2,4,0.5,1,0,1,4,0,0,2,1,11,2,PHI,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2024-12-19,CHA @ WAS,L,13.0,1,4,0.25,0,1,0.0,0,2,0.0,0,3,3,2,0,0,1,0,2,-7,WAS,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2024-12-16,CHA vs. PHI,L,14.0,3,4,0.75,1,1,1.0,0,0,0.0,2,0,2,0,0,0,1,2,7,2,PHI,HOME,Isaiah Wong
+Isaiah Wong,1631209,2024-12-13,CHA @ CHI,L,22.0,3,9,0.333,1,4,0.25,2,4,0.5,2,4,6,4,1,0,1,1,9,-4,CHI,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2024-12-08,CHA @ IND,W,18.0,3,6,0.5,1,1,1.0,2,3,0.667,1,2,3,4,1,0,2,3,9,3,IND,AWAY,Isaiah Wong
+Isaiah Wong,1631209,2024-12-07,CHA vs. CLE,L,11.0,2,5,0.4,0,1,0.0,5,5,1.0,2,0,2,0,1,0,1,2,9,-3,CLE,HOME,Isaiah Wong

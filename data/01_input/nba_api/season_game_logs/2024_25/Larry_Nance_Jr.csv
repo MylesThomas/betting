@@ -1,0 +1,25 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Larry Nance Jr.,1626204,2025-02-10,ATL @ ORL,W,19.0,4,6,0.667,0,1,0.0,0,0,0.0,2,1,3,1,0,0,1,3,8,2,ORL,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-02-08,ATL @ WAS,W,22.0,6,11,0.545,2,6,0.333,0,1,0.0,1,5,6,1,0,1,1,1,14,-1,WAS,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-02-07,ATL vs. MIL,W,20.0,4,8,0.5,3,4,0.75,0,0,0.0,0,1,1,4,1,0,1,3,11,23,MIL,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-02-05,ATL vs. SAS,L,17.0,0,1,0.0,0,1,0.0,1,2,0.5,0,3,3,1,0,0,0,1,1,-13,SAS,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-02-03,ATL @ DET,W,20.0,5,8,0.625,2,4,0.5,0,0,0.0,2,8,10,2,1,0,0,2,12,12,DET,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-02-01,ATL @ IND,L,19.0,2,5,0.4,0,0,0.0,0,0,0.0,0,5,5,1,0,0,1,1,4,-10,IND,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-01-30,ATL @ CLE,L,15.0,0,5,0.0,0,2,0.0,0,0,0.0,1,4,5,2,0,0,0,0,0,-16,CLE,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-01-28,ATL vs. HOU,L,20.0,2,7,0.286,1,4,0.25,1,2,0.5,0,2,2,1,2,1,0,2,6,-15,HOU,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2025-01-25,ATL vs. TOR,L,20.0,2,10,0.2,0,4,0.0,0,0,0.0,1,3,4,1,0,0,1,1,4,-11,TOR,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-12-28,ATL vs. MIA,W,27.0,4,6,0.667,0,1,0.0,2,2,1.0,2,8,10,1,2,0,4,0,10,13,MIA,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-12-26,ATL vs. CHI,W,23.0,5,9,0.556,2,4,0.5,0,0,0.0,0,1,1,1,1,1,0,2,12,-15,CHI,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-12-23,ATL vs. MIN,W,21.0,2,4,0.5,2,4,0.5,0,0,0.0,0,4,4,2,2,3,0,1,6,8,MIN,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-12-21,ATL vs. MEM,L,24.0,2,8,0.25,1,6,0.167,2,2,1.0,1,9,10,4,1,3,3,3,7,-21,MEM,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-12-19,ATL @ SAS,L,31.0,8,13,0.615,5,6,0.833,0,0,0.0,3,10,13,2,1,1,0,4,21,2,SAS,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-12-08,ATL vs. DEN,L,24.0,6,11,0.545,2,7,0.286,2,2,1.0,0,4,4,3,2,0,0,2,16,-26,DEN,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-17,ATL @ POR,L,11.0,0,1,0.0,0,1,0.0,0,0,0.0,1,2,3,0,1,1,0,0,0,-18,POR,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-15,ATL vs. WAS,W,13.0,0,2,0.0,0,2,0.0,0,0,0.0,0,2,2,1,1,0,0,0,0,5,WAS,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-12,ATL @ BOS,W,27.0,7,10,0.7,5,6,0.833,0,0,0.0,2,0,2,2,1,1,0,1,19,2,BOS,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-09,ATL vs. CHI,L,14.0,2,3,0.667,1,1,1.0,1,2,0.5,0,2,2,2,0,0,0,4,6,-1,CHI,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-08,ATL @ DET,L,13.0,5,5,1.0,3,3,1.0,0,0,0.0,0,1,1,2,1,0,0,2,13,0,DET,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-03,ATL @ NOP,W,25.0,6,8,0.75,2,3,0.667,0,0,0.0,2,4,6,0,1,0,1,0,14,-4,NOP,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-11-01,ATL vs. SAC,L,8.0,1,4,0.25,0,1,0.0,0,0,0.0,2,1,3,0,0,0,2,0,2,-2,SAC,HOME,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-10-30,ATL @ WAS,L,7.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,-1,WAS,AWAY,Larry Nance Jr
+Larry Nance Jr.,1626204,2024-10-28,ATL vs. WAS,L,23.0,6,9,0.667,3,5,0.6,0,0,0.0,3,0,3,4,2,1,1,4,15,-8,WAS,HOME,Larry Nance Jr

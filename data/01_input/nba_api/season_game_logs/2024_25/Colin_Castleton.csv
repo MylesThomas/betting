@@ -1,0 +1,27 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Colin Castleton,1630658,2025-04-13,TOR @ SAS,L,29.0,5,7,0.714,0,0,0.0,0,1,0.0,1,1,2,0,0,0,0,6,10,-4,SAS,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-04-11,PHI vs. ATL,L,25.0,6,7,0.857,0,0,0.0,4,5,0.8,5,3,8,0,1,0,1,3,16,-13,ATL,HOME,Colin Castleton
+Colin Castleton,1630658,2025-04-09,PHI @ WAS,W,28.0,1,4,0.25,0,1,0.0,0,0,0.0,6,8,14,2,0,1,0,4,2,28,WAS,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-04-07,PHI @ MIA,L,13.0,1,3,0.333,0,0,0.0,2,2,1.0,3,3,6,3,0,0,0,0,4,-4,MIA,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-04-05,PHI vs. MIN,L,15.0,3,6,0.5,0,1,0.0,0,2,0.0,2,4,6,2,0,0,0,2,6,-9,MIN,HOME,Colin Castleton
+Colin Castleton,1630658,2025-04-03,PHI vs. MIL,L,16.0,1,4,0.25,0,2,0.0,0,0,0.0,0,3,3,3,0,0,0,4,2,-8,MIL,HOME,Colin Castleton
+Colin Castleton,1630658,2025-03-24,TOR @ WAS,W,18.0,2,6,0.333,1,3,0.333,0,0,0.0,1,5,6,1,0,0,2,1,5,9,WAS,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-03-23,TOR vs. SAS,L,24.0,2,6,0.333,0,1,0.0,0,0,0.0,3,1,4,1,2,1,2,3,4,-5,SAS,HOME,Colin Castleton
+Colin Castleton,1630658,2025-03-20,TOR @ GSW,L,19.0,2,4,0.5,0,0,0.0,3,4,0.75,1,2,3,2,2,0,1,1,7,-8,GSW,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-03-17,TOR @ PHX,L,30.0,3,4,0.75,0,0,0.0,4,6,0.667,4,2,6,0,0,2,2,1,10,-28,PHX,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-03-16,TOR @ POR,L,27.0,3,10,0.3,0,2,0.0,2,2,1.0,9,3,12,2,0,0,5,3,8,-15,POR,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-03-14,TOR @ UTA,W,24.0,5,5,1.0,1,1,1.0,2,2,1.0,2,5,7,2,0,0,4,4,13,1,UTA,AWAY,Colin Castleton
+Colin Castleton,1630658,2025-03-12,TOR vs. PHI,W,40.0,3,8,0.375,0,0,0.0,1,1,1.0,4,10,14,2,0,3,2,2,7,14,PHI,HOME,Colin Castleton
+Colin Castleton,1630658,2025-03-10,TOR vs. WAS,W,27.0,3,5,0.6,0,0,0.0,1,2,0.5,3,6,9,3,0,0,2,3,7,-1,WAS,HOME,Colin Castleton
+Colin Castleton,1630658,2025-03-08,TOR vs. WAS,L,26.0,3,6,0.5,0,1,0.0,0,0,0.0,4,2,6,0,0,2,0,2,6,7,WAS,HOME,Colin Castleton
+Colin Castleton,1630658,2025-03-07,TOR vs. UTA,W,23.0,1,3,0.333,0,0,0.0,0,0,0.0,2,5,7,5,2,0,1,6,2,1,UTA,HOME,Colin Castleton
+Colin Castleton,1630658,2024-12-31,MEM @ PHX,W,13.0,0,2,0.0,0,0,0.0,1,2,0.5,1,0,1,0,1,0,1,2,1,-1,PHX,AWAY,Colin Castleton
+Colin Castleton,1630658,2024-12-29,MEM @ OKC,L,11.0,1,4,0.25,0,2,0.0,1,1,1.0,0,1,1,0,0,0,0,1,3,5,OKC,AWAY,Colin Castleton
+Colin Castleton,1630658,2024-12-13,MEM vs. BKN,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-3,BKN,HOME,Colin Castleton
+Colin Castleton,1630658,2024-12-08,MEM @ WAS,W,7.0,1,3,0.333,0,1,0.0,4,4,1.0,2,0,2,0,0,0,0,1,6,0,WAS,AWAY,Colin Castleton
+Colin Castleton,1630658,2024-11-17,MEM vs. DEN,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,DEN,HOME,Colin Castleton
+Colin Castleton,1630658,2024-11-10,MEM @ POR,W,7.0,0,1,0.0,0,1,0.0,4,4,1.0,0,4,4,0,0,0,0,0,4,6,POR,AWAY,Colin Castleton
+Colin Castleton,1630658,2024-11-08,MEM vs. WAS,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,2,WAS,HOME,Colin Castleton
+Colin Castleton,1630658,2024-11-06,MEM vs. LAL,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,2,0,-1,LAL,HOME,Colin Castleton
+Colin Castleton,1630658,2024-11-02,MEM @ PHI,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,PHI,AWAY,Colin Castleton
+Colin Castleton,1630658,2024-10-31,MEM vs. MIL,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,0,0,-1,MIL,HOME,Colin Castleton

@@ -1,0 +1,11 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kobe Bufkin,1641723,2024-12-08,ATL vs. DEN,L,4.0,2,3,0.667,0,1,0.0,0,0,0.0,0,2,2,0,0,0,1,1,4,-9,DEN,HOME,Kobe Bufkin
+Kobe Bufkin,1641723,2024-12-04,ATL @ MIL,W,13.0,1,5,0.2,0,0,0.0,0,0,0.0,1,0,1,2,0,0,0,1,2,7,MIL,AWAY,Kobe Bufkin
+Kobe Bufkin,1641723,2024-12-02,ATL vs. NOP,W,12.0,4,4,1.0,0,0,0.0,2,3,0.667,1,1,2,1,0,0,2,0,10,-8,NOP,HOME,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-30,ATL @ CHA,W,17.0,3,9,0.333,0,3,0.0,3,4,0.75,0,2,2,4,1,0,0,0,9,7,CHA,AWAY,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-29,ATL vs. CLE,W,13.0,0,3,0.0,0,2,0.0,2,2,1.0,0,0,0,3,1,0,1,1,2,6,CLE,HOME,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-27,ATL @ CLE,W,11.0,2,4,0.5,2,2,1.0,3,4,0.75,1,3,4,1,1,0,0,1,9,6,CLE,AWAY,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-25,ATL vs. DAL,L,13.0,2,3,0.667,0,1,0.0,0,0,0.0,0,4,4,4,0,0,0,2,4,-9,DAL,HOME,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-22,ATL @ CHI,L,10.0,1,4,0.25,0,1,0.0,0,0,0.0,2,0,2,1,0,0,2,0,2,-5,CHI,AWAY,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-20,ATL @ GSW,L,18.0,2,5,0.4,1,4,0.25,1,3,0.333,0,3,3,1,0,2,2,0,6,-4,GSW,AWAY,Kobe Bufkin
+Kobe Bufkin,1641723,2024-11-18,ATL @ SAC,W,12.0,1,7,0.143,1,5,0.2,2,2,1.0,0,1,1,0,0,0,0,3,5,-14,SAC,AWAY,Kobe Bufkin

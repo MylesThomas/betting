@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Josh Christopher,1630528,2025-04-13,MIA vs. WAS,L,28.0,7,16,0.438,1,5,0.2,2,2,1.0,0,3,3,3,4,2,1,0,17,-2,WAS,HOME,Josh Christopher
+Josh Christopher,1630528,2025-04-11,MIA @ NOP,W,7.0,1,4,0.25,0,1,0.0,0,0,0.0,0,1,1,1,1,0,0,0,2,5,NOP,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-04-07,MIA vs. PHI,W,1.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-4,PHI,HOME,Josh Christopher
+Josh Christopher,1630528,2025-04-02,MIA @ BOS,W,2.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,0,1,1,3,3,BOS,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-03-31,MIA @ WAS,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,-1,WAS,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-03-29,MIA @ PHI,W,2.0,0,2,0.0,0,2,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,2,PHI,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-01-29,MIA vs. CLE,L,1.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,CLE,HOME,Josh Christopher
+Josh Christopher,1630528,2025-01-23,MIA @ MIL,L,4.0,0,1,0.0,0,0,0.0,1,2,0.5,0,1,1,0,0,0,0,0,1,-3,MIL,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-01-19,MIA vs. SAS,W,2.0,0,2,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,SAS,HOME,Josh Christopher
+Josh Christopher,1630528,2025-01-11,MIA @ POR,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,3,POR,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-01-07,MIA @ GSW,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,GSW,AWAY,Josh Christopher
+Josh Christopher,1630528,2025-01-04,MIA vs. UTA,L,14.0,2,2,1.0,0,0,0.0,1,2,0.5,0,0,0,3,0,1,2,1,5,-3,UTA,HOME,Josh Christopher
+Josh Christopher,1630528,2025-01-02,MIA vs. IND,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,2,2,0,0,0,1,0,0,4,IND,HOME,Josh Christopher
+Josh Christopher,1630528,2024-12-23,MIA vs. BKN,W,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,1,0,0,-5,BKN,HOME,Josh Christopher

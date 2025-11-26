@@ -1,0 +1,4 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Terry Taylor,1630678,2025-03-27,SAC vs. POR,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,1,0,0,0,0,0,0,POR,HOME,Terry Taylor
+Terry Taylor,1630678,2025-03-25,SAC vs. OKC,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,9,OKC,HOME,Terry Taylor
+Terry Taylor,1630678,2025-03-24,SAC vs. BOS,L,3.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,BOS,HOME,Terry Taylor

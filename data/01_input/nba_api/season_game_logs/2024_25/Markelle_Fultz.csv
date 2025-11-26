@@ -1,0 +1,22 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Markelle Fultz,1628365,2025-04-13,SAC vs. PHX,W,12.0,2,3,0.667,0,0,0.0,0,0,0.0,0,2,2,4,0,1,1,1,4,0,PHX,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-04-04,SAC @ CHA,W,11.0,1,3,0.333,0,0,0.0,0,0,0.0,0,0,0,2,0,0,0,0,2,-1,CHA,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-04-02,SAC @ WAS,L,8.0,0,3,0.0,0,0,0.0,0,0,0.0,1,1,2,1,0,0,0,0,0,-5,WAS,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-31,SAC @ IND,L,5.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,0,1,0,0,0,2,0,IND,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-29,SAC @ ORL,L,14.0,3,9,0.333,0,1,0.0,0,0,0.0,2,1,3,4,3,0,1,0,6,2,ORL,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-27,SAC vs. POR,W,16.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,2,4,2,3,POR,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-25,SAC vs. OKC,L,11.0,3,6,0.5,0,0,0.0,0,0,0.0,0,2,2,2,0,0,0,1,6,-6,OKC,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-24,SAC vs. BOS,L,11.0,3,4,0.75,2,2,1.0,0,0,0.0,0,1,1,2,0,0,1,1,8,1,BOS,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-22,SAC vs. MIL,L,8.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,1,0,0,0,0,0,-4,MIL,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-19,SAC vs. CLE,W,7.0,2,6,0.333,1,1,1.0,0,0,0.0,0,0,0,1,1,0,0,0,5,6,CLE,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-14,SAC @ PHX,L,1.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,2,PHX,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-13,SAC @ GSW,L,3.0,0,2,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-6,GSW,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-10,SAC vs. NYK,L,8.0,1,4,0.25,0,1,0.0,0,0,0.0,0,0,0,2,1,0,0,0,2,-5,NYK,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-09,SAC @ LAC,L,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,4,LAC,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-07,SAC vs. SAS,W,4.0,0,2,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,0,0,-6,SAS,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-03-05,SAC @ DEN,L,10.0,0,2,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,1,1,0,0,-1,DEN,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-03,SAC @ DAL,W,16.0,3,5,0.6,0,0,0.0,0,0,0.0,0,1,1,4,1,0,3,1,6,1,DAL,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-03-01,SAC @ HOU,W,4.0,2,2,1.0,0,0,0.0,1,1,1.0,0,0,0,1,0,0,0,0,5,5,HOU,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-02-26,SAC @ UTA,W,4.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,5,UTA,AWAY,Markelle Fultz
+Markelle Fultz,1628365,2025-02-24,SAC vs. CHA,W,18.0,2,7,0.286,1,2,0.5,0,0,0.0,1,2,3,1,3,0,3,3,5,12,CHA,HOME,Markelle Fultz
+Markelle Fultz,1628365,2025-02-21,SAC vs. GSW,L,10.0,4,5,0.8,0,0,0.0,0,0,0.0,0,0,0,1,0,0,3,0,8,-2,GSW,HOME,Markelle Fultz

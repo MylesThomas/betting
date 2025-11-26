@@ -1,0 +1,23 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Stanley Umude,1630649,2025-04-13,MIL vs. DET,W,16.0,0,2,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,2,0,1,0,-5,DET,HOME,Stanley Umude
+Stanley Umude,1630649,2025-04-10,MIL vs. NOP,W,5.0,1,1,1.0,1,1,1.0,0,0,0.0,0,2,2,0,0,1,1,1,3,4,NOP,HOME,Stanley Umude
+Stanley Umude,1630649,2025-03-05,MIL vs. DAL,W,5.0,0,3,0.0,0,2,0.0,0,0,0.0,0,1,1,1,0,1,0,0,0,-1,DAL,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-31,MIL @ SAS,L,4.0,1,2,0.5,0,1,0.0,0,0,0.0,1,0,1,0,0,0,0,0,2,-7,SAS,AWAY,Stanley Umude
+Stanley Umude,1630649,2025-01-28,MIL @ POR,L,3.0,0,2,0.0,0,2,0.0,2,2,1.0,0,0,0,0,1,0,1,0,2,2,POR,AWAY,Stanley Umude
+Stanley Umude,1630649,2025-01-25,MIL @ LAC,L,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,2,LAC,AWAY,Stanley Umude
+Stanley Umude,1630649,2025-01-23,MIL vs. MIA,W,4.0,1,3,0.333,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,2,3,MIA,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-19,MIL vs. PHI,W,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-1,PHI,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-17,MIL vs. TOR,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,1,TOR,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-15,MIL vs. ORL,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,0,0,-1,ORL,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-14,MIL vs. SAC,W,3.0,0,3,0.0,0,2,0.0,0,0,0.0,2,0,2,0,0,0,0,0,0,-6,SAC,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-12,MIL @ NYK,L,6.0,0,3,0.0,0,0,0.0,0,0,0.0,0,2,2,0,0,0,1,1,0,-6,NYK,AWAY,Stanley Umude
+Stanley Umude,1630649,2025-01-08,MIL vs. SAS,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,1,0,0,1,0,-4,SAS,HOME,Stanley Umude
+Stanley Umude,1630649,2025-01-06,MIL @ TOR,W,5.0,1,1,1.0,1,1,1.0,0,0,0.0,1,1,2,0,0,0,0,1,3,-4,TOR,AWAY,Stanley Umude
+Stanley Umude,1630649,2024-12-23,MIL @ CHI,W,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-4,CHI,AWAY,Stanley Umude
+Stanley Umude,1630649,2024-12-20,MIL @ CLE,L,7.0,0,1,0.0,0,0,0.0,0,0,0.0,0,3,3,1,1,0,0,0,0,7,CLE,AWAY,Stanley Umude
+Stanley Umude,1630649,2024-12-04,MIL vs. ATL,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-1,ATL,HOME,Stanley Umude
+Stanley Umude,1630649,2024-11-22,MIL vs. IND,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,2,IND,HOME,Stanley Umude
+Stanley Umude,1630649,2024-11-20,MIL vs. CHI,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,0,CHI,HOME,Stanley Umude
+Stanley Umude,1630649,2024-11-12,MIL vs. TOR,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,0,0,-1,TOR,HOME,Stanley Umude
+Stanley Umude,1630649,2024-11-08,MIL @ NYK,L,8.0,0,2,0.0,0,2,0.0,0,2,0.0,0,2,2,1,0,0,0,0,0,6,NYK,AWAY,Stanley Umude
+Stanley Umude,1630649,2024-11-07,MIL vs. UTA,W,3.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,0,0,0,3,-1,UTA,HOME,Stanley Umude

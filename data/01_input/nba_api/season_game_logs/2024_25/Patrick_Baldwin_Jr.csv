@@ -1,0 +1,25 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Patrick Baldwin Jr.,1631116,2025-04-04,LAC vs. DAL,W,3.0,2,2,1.0,2,2,1.0,0,0,0.0,0,2,2,0,0,0,0,2,6,-3,DAL,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-04-02,LAC vs. NOP,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,0,0,-2,NOP,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-30,WAS vs. LAL,L,7.0,1,2,0.5,1,2,0.5,0,0,0.0,0,2,2,0,0,0,0,0,3,2,LAL,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-29,WAS vs. TOR,L,6.0,0,1,0.0,0,1,0.0,0,0,0.0,0,3,3,1,1,0,2,0,0,5,TOR,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-27,WAS @ DAL,L,9.0,1,3,0.333,1,1,1.0,0,0,0.0,1,1,2,0,0,0,0,0,3,6,DAL,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-13,WAS vs. MIN,L,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,3,MIN,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-12,WAS vs. OKC,L,5.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,0,0,0,0,0,3,-2,OKC,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-10,WAS @ CHI,L,6.0,1,2,0.5,1,2,0.5,0,0,0.0,0,1,1,0,0,0,0,1,3,-4,CHI,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-07,WAS vs. HOU,L,4.0,2,2,1.0,1,1,1.0,0,0,0.0,1,0,1,0,0,0,1,0,5,-2,HOU,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2025-01-03,WAS @ NOP,L,1.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,0,0,0,3,3,NOP,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-12-30,WAS vs. NYK,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-4,NYK,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-12-23,WAS @ OKC,L,2.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,1,OKC,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-12-15,WAS vs. BOS,L,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-1,BOS,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-27,WAS vs. LAC,L,8.0,1,1,1.0,1,1,1.0,0,0,0.0,1,3,4,0,0,0,1,0,3,8,LAC,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-26,WAS vs. CHI,L,3.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,0,0,1,0,0,3,5,CHI,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-18,WAS @ NYK,L,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-1,NYK,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-17,WAS vs. DET,L,4.0,0,0,0.0,0,0,0.0,1,2,0.5,0,1,1,0,0,0,0,1,1,5,DET,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-11,WAS @ HOU,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,3,HOU,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-10,WAS @ ORL,L,11.0,0,3,0.0,0,2,0.0,1,2,0.5,1,2,3,0,1,0,1,1,1,-3,ORL,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-08,WAS @ MEM,L,5.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,MEM,AWAY,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-11-02,WAS vs. MIA,L,3.0,2,3,0.667,2,3,0.667,0,0,0.0,0,0,0,0,1,0,0,0,6,0,MIA,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-10-30,WAS vs. ATL,W,3.0,1,2,0.5,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,-3,ATL,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-10-26,WAS vs. CLE,L,5.0,1,2,0.5,0,0,0.0,0,0,0.0,0,2,2,0,0,1,0,0,2,3,CLE,HOME,Patrick Baldwin Jr
+Patrick Baldwin Jr.,1631116,2024-10-24,WAS vs. BOS,L,8.0,3,6,0.5,1,3,0.333,0,0,0.0,1,1,2,1,0,0,0,2,7,10,BOS,HOME,Patrick Baldwin Jr

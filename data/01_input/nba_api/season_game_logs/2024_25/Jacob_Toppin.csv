@@ -1,0 +1,18 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jacob Toppin,1631210,2025-04-13,ATL vs. ORL,W,27.0,6,12,0.5,5,8,0.625,0,0,0.0,1,3,4,2,0,0,1,0,17,-7,ORL,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-02-01,NYK vs. LAL,L,2.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,0,LAL,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-01-27,NYK vs. MEM,W,4.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,1,0,3,MEM,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-01-25,NYK vs. SAC,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,1,0,0,0,0,2,SAC,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-01-12,NYK vs. MIL,W,5.0,1,2,0.5,0,0,0.0,0,0,0.0,0,1,1,0,1,0,1,1,2,4,MIL,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-01-10,NYK vs. OKC,L,6.0,1,2,0.5,0,0,0.0,0,0,0.0,1,2,3,0,0,0,0,0,2,-3,OKC,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-01-08,NYK vs. TOR,W,2.0,0,2,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,0,0,-12,TOR,HOME,Jacob Toppin
+Jacob Toppin,1631210,2025-01-04,NYK @ CHI,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,CHI,AWAY,Jacob Toppin
+Jacob Toppin,1631210,2024-12-30,NYK @ WAS,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,2,0,0,0,0,0,4,WAS,AWAY,Jacob Toppin
+Jacob Toppin,1631210,2024-12-23,NYK vs. TOR,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-1,TOR,HOME,Jacob Toppin
+Jacob Toppin,1631210,2024-12-05,NYK vs. CHA,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,CHA,HOME,Jacob Toppin
+Jacob Toppin,1631210,2024-12-01,NYK vs. NOP,W,5.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,0,0,0,1,0,0,-5,NOP,HOME,Jacob Toppin
+Jacob Toppin,1631210,2024-11-20,NYK @ PHX,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-3,PHX,AWAY,Jacob Toppin
+Jacob Toppin,1631210,2024-11-18,NYK vs. WAS,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,0,0,-5,WAS,HOME,Jacob Toppin
+Jacob Toppin,1631210,2024-11-01,NYK @ DET,W,5.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,0,2,0,DET,AWAY,Jacob Toppin
+Jacob Toppin,1631210,2024-10-25,NYK vs. IND,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,IND,HOME,Jacob Toppin
+Jacob Toppin,1631210,2024-10-22,NYK @ BOS,L,3.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,BOS,AWAY,Jacob Toppin

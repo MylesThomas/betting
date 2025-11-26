@@ -1,0 +1,16 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Markieff Morris,202693,2025-04-13,LAL @ POR,L,33.0,5,10,0.5,1,3,0.333,0,0,0.0,0,4,4,6,1,1,2,4,11,-17,POR,AWAY,Markieff Morris
+Markieff Morris,202693,2025-03-22,LAL vs. CHI,L,7.0,1,2,0.5,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,2,-8,CHI,HOME,Markieff Morris
+Markieff Morris,202693,2025-03-20,LAL vs. MIL,L,28.0,3,11,0.273,1,7,0.143,2,2,1.0,1,3,4,2,0,1,0,2,9,7,MIL,HOME,Markieff Morris
+Markieff Morris,202693,2025-03-14,LAL @ DEN,L,24.0,3,11,0.273,1,4,0.25,0,0,0.0,2,3,5,3,0,0,0,2,7,-5,DEN,AWAY,Markieff Morris
+Markieff Morris,202693,2025-03-13,LAL @ MIL,L,12.0,1,4,0.25,1,2,0.5,1,2,0.5,0,1,1,2,0,0,0,3,4,0,MIL,AWAY,Markieff Morris
+Markieff Morris,202693,2025-02-12,LAL @ UTA,L,8.0,1,5,0.2,1,3,0.333,2,2,1.0,0,0,0,1,0,0,0,1,5,10,UTA,AWAY,Markieff Morris
+Markieff Morris,202693,2025-02-10,LAL vs. UTA,W,6.0,1,1,1.0,1,1,1.0,0,0,0.0,0,0,0,2,0,0,0,1,3,-8,UTA,HOME,Markieff Morris
+Markieff Morris,202693,2025-02-08,LAL vs. IND,W,6.0,1,4,0.25,1,3,0.333,0,0,0.0,0,1,1,0,0,0,1,1,3,3,IND,HOME,Markieff Morris
+Markieff Morris,202693,2025-01-27,DAL vs. WAS,W,12.0,1,6,0.167,0,4,0.0,0,0,0.0,0,1,1,0,0,0,0,1,2,-8,WAS,HOME,Markieff Morris
+Markieff Morris,202693,2025-01-23,DAL @ OKC,W,4.0,0,2,0.0,0,2,0.0,0,0,0.0,0,1,1,1,1,0,0,0,0,5,OKC,AWAY,Markieff Morris
+Markieff Morris,202693,2025-01-03,DAL vs. CLE,L,4.0,2,5,0.4,1,4,0.25,0,0,0.0,0,1,1,1,0,0,0,1,5,7,CLE,HOME,Markieff Morris
+Markieff Morris,202693,2024-12-19,DAL vs. LAC,L,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-6,LAC,HOME,Markieff Morris
+Markieff Morris,202693,2024-12-05,DAL @ WAS,W,8.0,1,3,0.333,1,1,1.0,0,0,0.0,0,1,1,0,0,1,2,0,3,1,WAS,AWAY,Markieff Morris
+Markieff Morris,202693,2024-11-16,DAL vs. SAS,W,5.0,1,5,0.2,0,2,0.0,0,0,0.0,0,2,2,0,0,0,0,0,2,-1,SAS,HOME,Markieff Morris
+Markieff Morris,202693,2024-11-06,DAL vs. CHI,W,5.0,0,1,0.0,0,0,0.0,0,0,0.0,0,2,2,2,0,0,0,0,0,-8,CHI,HOME,Markieff Morris

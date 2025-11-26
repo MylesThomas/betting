@@ -1,0 +1,21 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Dariq Whitehead,1641727,2025-04-13,BKN vs. NYK,L,10.0,1,3,0.333,1,2,0.5,0,0,0.0,1,0,1,0,0,0,0,2,3,-4,NYK,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-04-11,BKN @ MIN,L,21.0,2,5,0.4,2,4,0.5,0,0,0.0,0,2,2,1,0,0,0,3,6,-10,MIN,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2025-04-10,BKN vs. ATL,L,10.0,0,2,0.0,0,1,0.0,0,0,0.0,0,2,2,0,0,0,1,1,0,-2,ATL,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-04-08,BKN vs. NOP,W,25.0,5,9,0.556,4,7,0.571,0,0,0.0,0,2,2,2,2,0,1,3,14,8,NOP,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-04-06,BKN vs. TOR,L,28.0,5,12,0.417,3,8,0.375,0,0,0.0,0,4,4,3,0,0,5,2,13,-13,TOR,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-04-03,BKN vs. MIN,L,26.0,5,13,0.385,5,9,0.556,2,2,1.0,1,2,3,1,0,0,0,2,17,-4,MIN,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-03-31,BKN @ DAL,W,16.0,3,7,0.429,2,6,0.333,0,0,0.0,0,2,2,2,0,0,1,3,8,-10,DAL,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2025-03-29,BKN @ WAS,W,17.0,0,3,0.0,0,1,0.0,0,0,0.0,1,3,4,1,0,0,0,1,0,-2,WAS,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2025-03-28,BKN vs. LAC,L,10.0,2,5,0.4,1,4,0.25,0,0,0.0,0,1,1,0,0,0,0,1,5,-12,LAC,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-03-26,BKN vs. TOR,L,25.0,3,10,0.3,3,9,0.333,0,0,0.0,0,2,2,1,1,0,1,2,9,-7,TOR,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-03-04,BKN @ SAS,L,2.0,1,2,0.5,1,2,0.5,0,0,0.0,0,0,0,0,0,0,0,0,3,3,SAS,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2025-02-12,BKN vs. PHI,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,3,0,0,-6,PHI,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-01-22,BKN vs. PHX,L,15.0,4,7,0.571,3,5,0.6,1,3,0.333,1,1,2,0,0,0,0,0,12,-4,PHX,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2025-01-15,BKN @ LAC,L,9.0,1,4,0.25,1,3,0.333,0,0,0.0,0,0,0,0,0,0,0,0,3,-4,LAC,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2025-01-14,BKN @ POR,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,3,POR,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2025-01-06,BKN vs. IND,L,3.0,1,3,0.333,1,3,0.333,0,0,0.0,0,0,0,0,0,0,0,1,3,2,IND,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2024-12-23,BKN @ MIA,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,1,0,0,0,0,5,MIA,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2024-12-02,BKN @ CHI,L,24.0,6,11,0.545,6,10,0.6,0,0,0.0,0,2,2,1,2,1,1,1,18,-3,CHI,AWAY,Dariq Whitehead
+Dariq Whitehead,1641727,2024-12-01,BKN vs. ORL,L,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,ORL,HOME,Dariq Whitehead
+Dariq Whitehead,1641727,2024-10-27,BKN vs. MIL,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,2,0,0,-4,MIL,HOME,Dariq Whitehead

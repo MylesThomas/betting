@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Leonard Miller,1631159,2025-04-10,MIN @ MEM,W,1.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,2,2,MEM,AWAY,Leonard Miller
+Leonard Miller,1631159,2025-04-03,MIN @ BKN,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,BKN,AWAY,Leonard Miller
+Leonard Miller,1631159,2025-03-30,MIN vs. DET,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-1,DET,HOME,Leonard Miller
+Leonard Miller,1631159,2025-03-04,MIN vs. PHI,W,3.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,2,-8,PHI,HOME,Leonard Miller
+Leonard Miller,1631159,2025-03-02,MIN @ PHX,W,2.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,1,0,0,0,2,-3,PHX,AWAY,Leonard Miller
+Leonard Miller,1631159,2025-02-13,MIN vs. OKC,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-4,OKC,HOME,Leonard Miller
+Leonard Miller,1631159,2025-02-10,MIN @ CLE,L,5.0,1,4,0.25,0,2,0.0,2,2,1.0,0,1,1,0,0,1,0,0,4,5,CLE,AWAY,Leonard Miller
+Leonard Miller,1631159,2025-02-05,MIN vs. CHI,W,1.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,2,2,CHI,HOME,Leonard Miller
+Leonard Miller,1631159,2025-01-30,MIN @ UTA,W,4.0,1,3,0.333,0,0,0.0,4,4,1.0,2,1,3,0,0,0,1,1,6,-2,UTA,AWAY,Leonard Miller
+Leonard Miller,1631159,2025-01-25,MIN vs. DEN,W,4.0,0,2,0.0,0,2,0.0,0,0,0.0,0,2,2,0,0,0,0,0,0,1,DEN,HOME,Leonard Miller
+Leonard Miller,1631159,2025-01-13,MIN @ WAS,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,1,0,0,-3,WAS,AWAY,Leonard Miller
+Leonard Miller,1631159,2025-01-09,MIN @ ORL,W,3.0,0,2,0.0,0,1,0.0,0,0,0.0,1,1,2,0,0,0,0,1,0,-5,ORL,AWAY,Leonard Miller
+Leonard Miller,1631159,2024-12-23,MIN @ ATL,L,2.0,0,0,0.0,0,0,0.0,2,2,1.0,0,0,0,0,1,0,0,0,2,4,ATL,AWAY,Leonard Miller

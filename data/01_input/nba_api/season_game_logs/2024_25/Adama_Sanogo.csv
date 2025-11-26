@@ -1,0 +1,5 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Adama Sanogo,1641766,2024-12-13,CHI vs. CHA,W,8.0,1,2,0.5,0,0,0.0,0,0,0.0,3,1,4,0,0,0,0,0,2,2,CHA,HOME,Adama Sanogo
+Adama Sanogo,1641766,2024-11-11,CHI vs. CLE,L,5.0,1,1,1.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,1,0,2,-1,CLE,HOME,Adama Sanogo
+Adama Sanogo,1641766,2024-11-01,CHI @ BKN,L,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,BKN,AWAY,Adama Sanogo
+Adama Sanogo,1641766,2024-10-30,CHI vs. ORL,W,9.0,2,4,0.5,0,0,0.0,0,0,0.0,1,0,1,1,0,0,0,1,4,-6,ORL,HOME,Adama Sanogo

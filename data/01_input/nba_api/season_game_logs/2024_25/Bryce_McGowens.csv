@@ -1,0 +1,14 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Bryce McGowens,1631121,2025-03-21,POR vs. DEN,W,2.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,1,0,-4,DEN,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-03-19,POR vs. MEM,W,2.0,0,1,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,1,0,0,-5,MEM,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-03-17,POR vs. WAS,W,5.0,0,4,0.0,0,1,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,3,WAS,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-03-07,POR @ OKC,L,1.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,OKC,AWAY,Bryce Mcgowens
+Bryce McGowens,1631121,2025-03-03,POR @ PHI,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,1,PHI,AWAY,Bryce Mcgowens
+Bryce McGowens,1631121,2025-02-01,POR vs. PHX,W,3.0,1,2,0.5,0,0,0.0,2,2,1.0,0,0,0,0,1,0,1,1,4,-6,PHX,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-01-30,POR vs. ORL,W,3.0,0,0,0.0,0,0,0.0,1,1,1.0,0,0,0,0,0,0,0,0,1,2,ORL,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-01-28,POR vs. MIL,W,1.0,0,0,0.0,0,0,0.0,2,2,1.0,0,0,0,0,0,0,0,0,2,0,MIL,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-01-23,POR @ ORL,W,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,1,1,0,2,ORL,AWAY,Bryce Mcgowens
+Bryce McGowens,1631121,2025-01-18,POR vs. HOU,L,2.0,2,2,1.0,0,0,0.0,0,1,0.0,0,0,0,0,0,0,1,0,4,-4,HOU,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2025-01-11,POR vs. MIA,L,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-3,MIA,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2024-12-30,POR vs. PHI,L,4.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,0,0,3,PHI,HOME,Bryce Mcgowens
+Bryce McGowens,1631121,2024-12-08,POR @ LAL,L,3.0,1,2,0.5,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,0,2,9,LAL,AWAY,Bryce Mcgowens

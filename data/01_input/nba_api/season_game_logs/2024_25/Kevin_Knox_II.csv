@@ -1,0 +1,15 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kevin Knox II,1628995,2025-04-11,GSW @ POR,W,3.0,1,2,0.5,0,1,0.0,0,0,0.0,0,0,0,0,0,0,2,0,2,-10,POR,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-04-08,GSW @ PHX,W,9.0,3,6,0.5,1,3,0.333,3,4,0.75,1,1,2,1,0,0,0,1,10,9,PHX,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-04-06,GSW vs. HOU,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,3,HOU,HOME,Kevin Knox
+Kevin Knox II,1628995,2025-04-04,GSW vs. DEN,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,1,0,0,0,DEN,HOME,Kevin Knox
+Kevin Knox II,1628995,2025-03-30,GSW @ SAS,W,13.0,3,4,0.75,0,0,0.0,0,0,0.0,0,2,2,0,1,0,0,0,6,3,SAS,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-03-28,GSW @ NOP,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,2,NOP,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-03-25,GSW @ MIA,L,4.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,-1,MIA,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-03-04,GSW @ NYK,W,12.0,1,3,0.333,0,1,0.0,0,0,0.0,1,0,1,1,0,2,0,1,2,-5,NYK,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-03-03,GSW @ CHA,W,2.0,1,2,0.5,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,0,2,0,CHA,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-03-01,GSW @ PHI,L,7.0,0,2,0.0,0,1,0.0,1,2,0.5,1,0,1,0,0,0,0,0,1,-14,PHI,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-02-27,GSW @ ORL,W,5.0,1,3,0.333,0,2,0.0,0,0,0.0,1,0,1,0,0,0,1,2,2,4,ORL,AWAY,Kevin Knox
+Kevin Knox II,1628995,2025-02-25,GSW vs. CHA,W,15.0,4,7,0.571,2,4,0.5,2,2,1.0,2,3,5,3,1,2,0,1,12,5,CHA,HOME,Kevin Knox
+Kevin Knox II,1628995,2025-02-23,GSW vs. DAL,W,7.0,2,4,0.5,0,2,0.0,0,0,0.0,0,1,1,0,0,0,0,1,4,-1,DAL,HOME,Kevin Knox
+Kevin Knox II,1628995,2025-02-21,GSW @ SAC,W,3.0,2,3,0.667,1,1,1.0,0,0,0.0,1,0,1,0,0,0,0,0,5,2,SAC,AWAY,Kevin Knox

@@ -1,0 +1,20 @@
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Joe Ingles,204060,2025-03-21,MIN vs. NOP,W,6.0,0,3,0.0,0,2,0.0,0,0,0.0,0,0,0,1,0,0,1,2,0,1,NOP,HOME,Joe Ingles
+Joe Ingles,204060,2025-03-07,MIN @ MIA,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,1,MIA,AWAY,Joe Ingles
+Joe Ingles,204060,2025-02-24,MIN @ OKC,W,5.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,2,0,0,1,0,0,1,OKC,AWAY,Joe Ingles
+Joe Ingles,204060,2025-02-13,MIN vs. OKC,W,2.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-1,OKC,HOME,Joe Ingles
+Joe Ingles,204060,2025-02-12,MIN vs. MIL,L,14.0,1,4,0.25,1,4,0.25,0,0,0.0,0,4,4,4,0,0,0,0,3,8,MIL,HOME,Joe Ingles
+Joe Ingles,204060,2025-02-10,MIN @ CLE,L,15.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,2,1,0,1,0,0,2,CLE,AWAY,Joe Ingles
+Joe Ingles,204060,2025-02-08,MIN vs. POR,W,13.0,1,4,0.25,0,1,0.0,0,0,0.0,0,2,2,1,0,0,1,2,2,-1,POR,HOME,Joe Ingles
+Joe Ingles,204060,2025-02-03,MIN vs. SAC,L,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,SAC,HOME,Joe Ingles
+Joe Ingles,204060,2025-02-01,MIN vs. WAS,L,19.0,4,6,0.667,2,3,0.667,0,0,0.0,0,1,1,3,1,0,4,1,10,11,WAS,HOME,Joe Ingles
+Joe Ingles,204060,2025-01-30,MIN @ UTA,W,4.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,1,0,-2,UTA,AWAY,Joe Ingles
+Joe Ingles,204060,2025-01-18,MIN vs. CLE,L,9.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-16,CLE,HOME,Joe Ingles
+Joe Ingles,204060,2025-01-06,MIN vs. LAC,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,1,LAC,HOME,Joe Ingles
+Joe Ingles,204060,2024-11-17,MIN vs. PHX,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,3,PHX,HOME,Joe Ingles
+Joe Ingles,204060,2024-11-15,MIN @ SAC,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,SAC,AWAY,Joe Ingles
+Joe Ingles,204060,2024-11-01,MIN vs. DEN,W,5.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,1,0,0,1,0,0,0,DEN,HOME,Joe Ingles
+Joe Ingles,204060,2024-10-29,MIN vs. DAL,L,4.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,-7,DAL,HOME,Joe Ingles
+Joe Ingles,204060,2024-10-26,MIN vs. TOR,W,6.0,0,0,0.0,0,0,0.0,0,0,0.0,1,0,1,4,0,0,0,3,0,1,TOR,HOME,Joe Ingles
+Joe Ingles,204060,2024-10-24,MIN @ SAC,W,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,1,0,-1,SAC,AWAY,Joe Ingles
+Joe Ingles,204060,2024-10-22,MIN @ LAL,L,7.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,1,0,0,0,1,0,1,LAL,AWAY,Joe Ingles
