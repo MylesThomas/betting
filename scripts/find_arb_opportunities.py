@@ -667,9 +667,44 @@ def main(markets=DEFAULT_MARKETS, limit=None):
         
         if not todays_events:
             print("❌ No NBA games found for today")
-            print("⚠️  This might indicate an issue - exiting with warning code")
-            import sys
-            sys.exit(1)  # Exit with error so you get notified
+            print("📝 Creating empty results files for dashboard...")
+            
+            # Create empty dataframe for arb results
+            empty_arb_df = pd.DataFrame(columns=[
+                'player', 'market', 'line', 'best_over_odds', 'best_over_book', 
+                'best_over_implied', 'best_under_odds', 'best_under_book', 
+                'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
+                'over_stake', 'under_stake', 'over_return', 'under_return',
+                'guaranteed_profit', 'total_wager', 'recommendation', 'game',
+                'game_time', 'num_bookmakers'
+            ])
+            
+            # Create empty dataframe for raw props
+            empty_raw_df = pd.DataFrame(columns=[
+                'event_id', 'player', 'market', 'line', 'bookmaker', 'game',
+                'game_time', 'over_odds', 'under_odds'
+            ])
+            
+            # Save empty results files
+            today = datetime.now().strftime('%Y%m%d')
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            markets_str = markets.replace(',', '_').replace('player_', '')
+            output_dir = Path(__file__).parent.parent / OUTPUT_DIR
+            output_dir.mkdir(exist_ok=True, parents=True)
+            
+            # Save arb file (main results with just date)
+            output_file = output_dir / f'arb_{markets_str}_{today}.csv'
+            empty_arb_df.to_csv(output_file, index=False)
+            print(f"💾 Empty arb results saved to: {output_file}")
+            
+            # Save raw file (raw props with full timestamp)
+            raw_output_file = output_dir / f'raw_{markets_str}_{timestamp}.csv'
+            empty_raw_df.to_csv(raw_output_file, index=False)
+            print(f"💾 Empty raw props saved to: {raw_output_file}")
+            
+            print("✅ Dashboard will show 0 opportunities for today")
+            
+            return  # Exit gracefully without error
         
         # Limit games if requested
         if limit and limit < len(todays_events):

@@ -389,9 +389,47 @@ def main():
         # Load ALL data (not just latest)
         df = load_all_arbs()
     
-    if df is None or len(df) == 0:
-        st.warning("⚠️ No arbitrage opportunities found yet.")
-        st.info("Data will be updated automatically at 7:00 AM ET daily.")
+    if df is None:
+        st.warning("⚠️ No data files found yet.")
+        st.info("Data will be updated automatically at 12:00 PM ET daily.")
+        return
+    
+    # Handle case where files exist but are empty (no games today)
+    if len(df) == 0:
+        st.info("ℹ️ No NBA games scheduled for the selected date(s).")
+        st.markdown("---")
+        
+        # Show zero metrics
+        st.subheader("📈 Overall Summary (All Time)")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("🎯 Total Prop Markets", "0")
+        with col2:
+            st.metric("✅ Total Arb Opportunities", "0")
+        with col3:
+            st.metric("💰 Total Wagered", "$0.00")
+        with col4:
+            st.metric("💵 Total Profit", "$0.00")
+        
+        st.markdown("---")
+        
+        st.subheader("📊 Daily Summary")
+        col1, col2, col3, col4, col5, col6, col7 = st.columns([.75, 1.1, 1.15, 1, 1, 1.25, 1.5])
+        with col1:
+            st.metric("🏀 Games", "0")
+        with col2:
+            st.metric("🎯 Prop Markets", "0")
+        with col3:
+            st.metric("✅ Arb Opportunities", "0")
+        with col4:
+            st.metric("📈 Avg Edge", "N/A")
+        with col5:
+            st.metric("🔥 Best Arb", "N/A")
+        with col6:
+            st.metric("💰 Total Wagered", "$0.00")
+        with col7:
+            st.metric("💵 Total Profit", "$0.00")
+        
         return
     
     # Add team column from cache (simple, read-only)
@@ -627,14 +665,22 @@ def main():
     
     with col4:
         # Calculate avg profit for selected date's arbs
-        daily_avg_edge = daily_arbs_df['expected_profit_pct'].mean() if 'expected_profit_pct' in daily_arbs_df.columns and len(daily_arbs_df) > 0 else 0
-        st.metric("📈 Avg Edge", f"{daily_avg_edge:.2f}%",
-                 help="Average edge (profit %) for arbs")
+        if len(daily_arbs_df) > 0 and 'expected_profit_pct' in daily_arbs_df.columns:
+            daily_avg_edge = daily_arbs_df['expected_profit_pct'].mean()
+            st.metric("📈 Avg Edge", f"{daily_avg_edge:.2f}%",
+                     help="Average edge (profit %) for arbs")
+        else:
+            st.metric("📈 Avg Edge", "N/A",
+                     help="Average edge (profit %) for arbs")
     
     with col5:
-        daily_max_profit = daily_arbs_df['expected_profit_pct'].max() if 'expected_profit_pct' in daily_arbs_df.columns and len(daily_arbs_df) > 0 else 0
-        st.metric("🔥 Best Arb", f"{daily_max_profit:.2f}%",
-                 help="Highest profit opportunity")
+        if len(daily_arbs_df) > 0 and 'expected_profit_pct' in daily_arbs_df.columns:
+            daily_max_profit = daily_arbs_df['expected_profit_pct'].max()
+            st.metric("🔥 Best Arb", f"{daily_max_profit:.2f}%",
+                     help="Highest profit opportunity")
+        else:
+            st.metric("🔥 Best Arb", "N/A",
+                     help="Highest profit opportunity")
     
     with col6:
         # Calculate total wagered (only for arbs)
