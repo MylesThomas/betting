@@ -640,6 +640,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Fetch NFL betting lines')
     parser.add_argument('--london', action='store_true', 
                        help='Fetch only London games (games before 1pm ET)')
+    parser.add_argument('--prod-run', action='store_true',
+                       help='Production mode: fetch full season non-interactively (for automation)')
     args = parser.parse_args()
     
     print("="*80)
@@ -655,6 +657,23 @@ if __name__ == "__main__":
     # London mode - fetch all London games
     if args.london:
         fetch_london_games()
+        exit(0)
+    
+    # Production mode - fetch full season non-interactively
+    if args.prod_run:
+        print(f"\n🏈 PRODUCTION MODE")
+        print(f"Fetching all dates from {SEASON_START} to {TODAY}")
+        print(f"Skipping dates with existing files")
+        
+        stats = fetch_full_season()
+        
+        if stats and stats['successful'] > 0:
+            print(f"\n✅ Fetch completed - {stats['successful']} dates with games")
+        elif stats and stats['skipped_existing'] > 0:
+            print(f"\n✅ All dates already fetched!")
+        else:
+            print(f"\n⚠️  No new data fetched")
+        
         exit(0)
     
     # Interactive mode for regular fetching
