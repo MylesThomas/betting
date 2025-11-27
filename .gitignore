@@ -62,3 +62,9 @@ api_setup/logs/
 
 # Lambda layer
 lambda_layer/
+
+# Google API credentials
+service_account.json
+credentials.json
+token.pickle
+.betting/

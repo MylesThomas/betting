@@ -140,7 +140,11 @@ cd /Users/thomasmyles/dev/betting && python backtesting/20251124_nba_3pt_prop_mo
 
 ## NFL Workflows
 
-> **⚠️ Note:** NFL workflows are currently **manual** (not automated via Lambda yet). Future plan: automate with Lambda to send weekly email alerts with play recommendations and reasoning.
+> **⚠️ Note:** NFL workflows are currently **manual** (not automated via Lambda yet). 
+> 
+> **Future automation:** Lambda function created ([`docs/lambda_function_nfl.py`](docs/lambda_function_nfl.py)) to send weekly email alerts with play recommendations. Setup guide: [`docs/AWS_NFL_LAMBDA_SETUP.md`](docs/AWS_NFL_LAMBDA_SETUP.md)
+> 
+> **Planned schedule:** Every Monday at 12:00 PM ET (may need re-run after Monday Night Football)
 
 ### 1. NFL Regression-to-Mean Betting Strategy
 
@@ -286,15 +290,20 @@ Streamlit Cloud
 ### Planned NFL Architecture
 ```
 AWS EventBridge (Scheduler)
-    ↓ triggers weekly (Wednesday/Thursday)
+    ↓ triggers every Monday at 12 PM ET
 AWS Lambda (Python function)
     ↓ runs find_nfl_regression_plays.py
     ↓ analyzes all 32 teams
     ↓ identifies betting opportunities
-AWS SES (Simple Email Service)
+AWS SNS (Simple Notification Service)
     ↓ sends formatted email
-    ✉️ "Week X Plays: TB -3.0 vs ARI (unlucky favorite, -8.1 last week)"
+    ✉️ TL;DR: "Week X: 1 Play - TB -3.0 vs ARI"
+    ✉️ Warning: Re-run after MNF if needed
+    ✉️ Full logs + reasoning
+    ✉️ Summary repeated at end
 ```
+
+**Setup Guide:** See [`docs/AWS_NFL_LAMBDA_SETUP.md`](docs/AWS_NFL_LAMBDA_SETUP.md)
 
 ### Rebuilding Lambda Layer
 
