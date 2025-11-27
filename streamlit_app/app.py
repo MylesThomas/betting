@@ -459,7 +459,7 @@ def main():
                                       help="Show only rows where is_arb=True")
         
         # Date filter (game date) - MOVED TO TOP
-        if 'game_time' in df.columns:
+        if 'game_time' in df.columns and len(df) > 0:
             # Parse dates from game_time and convert to ET timezone
             try:
                 # Parse game_time as UTC and convert to ET
@@ -467,23 +467,28 @@ def main():
                 df['game_date_et'] = df['game_time_et'].dt.date
                 
                 all_dates = sorted(df['game_date_et'].unique().tolist(), reverse=True)
-                
-                # Default to most recent date (latest date in data)
-                most_recent_date = all_dates[0] if all_dates else None
-                
-                # Find index of most recent date (it's at position 1 since 'All' is at position 0)
-                default_index = 1 if most_recent_date else 0
-                
-                selected_date = st.selectbox(
-                    "Game Date (ET)",
-                    ['All'] + all_dates,
-                    index=default_index,  # Default to most recent date, not 'All'
-                    help="Filter by game date in Eastern Time (defaults to most recent)"
-                )
             except:
-                selected_date = 'All'
+                all_dates = []
         else:
-            selected_date = 'All'
+            all_dates = []
+        
+        # Always add today's date to the list (in ET timezone)
+        today_et = datetime.now(ZoneInfo('America/New_York')).date()
+        if today_et not in all_dates:
+            all_dates.insert(0, today_et)  # Add at the beginning (most recent)
+        
+        # Default to today's date
+        try:
+            default_index = all_dates.index(today_et) + 1  # +1 because 'All' is at position 0
+        except ValueError:
+            default_index = 1 if all_dates else 0
+        
+        selected_date = st.selectbox(
+            "Game Date (ET)",
+            ['All'] + all_dates,
+            index=default_index,  # Default to today's date
+            help="Filter by game date in Eastern Time (defaults to today)"
+        )
         
         # Market filter
         if 'market' in df.columns:
@@ -554,6 +559,14 @@ def main():
     # Apply filters
     filtered_df = df.copy()
     
+    # Ensure game_date_et column exists for filtering
+    if 'game_time' in filtered_df.columns and len(filtered_df) > 0 and 'game_date_et' not in filtered_df.columns:
+        try:
+            filtered_df['game_time_et'] = pd.to_datetime(filtered_df['game_time'], utc=True).dt.tz_convert('America/New_York')
+            filtered_df['game_date_et'] = filtered_df['game_time_et'].dt.date
+        except:
+            pass
+    
     # Filter by profitable arbs only
     if show_only_arbs and 'is_arb' in filtered_df.columns:
         filtered_df = filtered_df[filtered_df['is_arb'] == True]
@@ -571,8 +584,12 @@ def main():
         filtered_df = filtered_df[filtered_df['team'] == selected_team]
     
     # Filter by date
-    if selected_date != 'All' and 'game_date_et' in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['game_date_et'] == selected_date]
+    if selected_date != 'All':
+        if 'game_date_et' in filtered_df.columns and len(filtered_df) > 0:
+            filtered_df = filtered_df[filtered_df['game_date_et'] == selected_date]
+        else:
+            # If no game_date_et column or empty df, and user selected a specific date, return empty df
+            filtered_df = filtered_df.iloc[0:0]  # Empty dataframe with same columns
     
     # Filter by min profit
     if min_profit > 0 and 'expected_profit_pct' in filtered_df.columns:
@@ -630,10 +647,14 @@ def main():
     else:
         st.subheader(f"📊 Daily Summary ({selected_date})")
         # Filter to selected date
-        daily_df = df[df['game_date_et'] == selected_date] if 'game_date_et' in df.columns else df
+        if 'game_date_et' in df.columns and len(df) > 0:
+            daily_df = df[df['game_date_et'] == selected_date]
+        else:
+            # No data for this date - create empty dataframe
+            daily_df = pd.DataFrame()
     
     # Count daily arbs (is_arb=True)
-    daily_arbs_df = daily_df[daily_df['is_arb'] == True] if 'is_arb' in daily_df.columns else pd.DataFrame()
+    daily_arbs_df = daily_df[daily_df['is_arb'] == True] if 'is_arb' in daily_df.columns and len(daily_df) > 0 else pd.DataFrame()
     
     col1, col2, col3, col4, col5, col6, col7 = st.columns([
         .75,  # Games
@@ -705,7 +726,10 @@ def main():
     # Opportunities table
     st.subheader("🎰 Current Arbitrage Opportunities")
     
-    if len(filtered_df) > 0:
+    # Check if we filtered to a specific date with no games
+    if selected_date != 'All' and len(daily_df) == 0:
+        st.info(f"ℹ️ No NBA games scheduled for {selected_date}")
+    elif len(filtered_df) > 0:
         # Format the dataframe for display
         display_df = filtered_df.copy()
         
