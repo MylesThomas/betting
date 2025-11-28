@@ -272,20 +272,30 @@ def fetch_date_lines(date_str, save=True):
     day_of_week = date_obj.strftime('%A')
     
     print(f"\n{'='*80}")
-    print(f"FETCHING LINES FOR {date_str} ({day_of_week})")
+    print(f"🌐 FETCHING LINES FOR {date_str} ({day_of_week}) - API CALL")
     print(f"{'='*80}")
     
     # Get events for that date
+    print(f"  📡 API CALL 1: Checking for events on {date_str}... (1 credit)", end=" ")
     result = get_historical_nfl_events(date_str)
     
     if result is None:
-        print(f"❌ API Error for {date_str}")
+        print(f"❌ API Error")
         return pd.DataFrame()
     
+    print(f"✓ (Remaining: {result['remaining']:,})")
     all_events = result['events']
     
     if not all_events:
-        print(f"  No games found")
+        print(f"  ℹ️  No games found on this date")
+        # Save empty file so we don't check this date again
+        if save:
+            filename = f"nfl_game_lines_{date_str}.csv"
+            filepath = os.path.join(OUTPUT_DIR, filename)
+            pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 'bookmaker', 
+                                 'bookmaker_key', 'last_update', 'market', 'away_spread', 
+                                 'away_odds', 'home_spread', 'home_odds']).to_csv(filepath, index=False)
+            print(f"  💾 Saved empty file → next run will SKIP this date (0 credits)")
         return pd.DataFrame()
     
     # Filter to only games that START on this specific date (in ET timezone)
@@ -308,10 +318,18 @@ def fetch_date_lines(date_str, save=True):
     
     if not events:
         filtered_count = len(all_events)
-        print(f"  Found {filtered_count} events in API, but none start on {date_str} (all future games)")
+        print(f"  ℹ️  Found {filtered_count} events in API, but none start on {date_str} (all future games)")
+        # Save empty file so we don't check this date again
+        if save:
+            filename = f"nfl_game_lines_{date_str}.csv"
+            filepath = os.path.join(OUTPUT_DIR, filename)
+            pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 'bookmaker', 
+                                 'bookmaker_key', 'last_update', 'market', 'away_spread', 
+                                 'away_odds', 'home_spread', 'home_odds']).to_csv(filepath, index=False)
+            print(f"  💾 Saved empty file → next run will SKIP this date (0 credits)")
         return pd.DataFrame()
     
-    print(f"  Found {len(events)} games starting on {date_str}:")
+    print(f"  ✓ Found {len(events)} games starting on {date_str}:")
     for event in events:
         commence_time_utc = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
         commence_time_et = commence_time_utc.astimezone(et_tz)
@@ -319,14 +337,14 @@ def fetch_date_lines(date_str, save=True):
         print(f"    • {event['away_team']} @ {event['home_team']} ({time_et})")
     
     estimated_cost = 1 + (len(events) * 10)
-    print(f"  Estimated cost: 1 + ({len(events)} × 10) = {estimated_cost} credits")
+    print(f"  💰 Total cost for this date: 1 (events) + {len(events)}×10 (odds) = {estimated_cost} credits")
     
     # Fetch odds for each event
     games_with_odds = []
     
     for i, event in enumerate(events, 1):
         game_desc = f"{event['away_team']} @ {event['home_team']}"
-        print(f"  [{i}/{len(events)}] {game_desc}...", end=" ")
+        print(f"  📡 API CALL {i+1}: [{i}/{len(events)}] {game_desc}... (10 credits)", end=" ")
         
         odds_result = get_historical_event_odds(event['id'], date_str)
         
@@ -409,6 +427,10 @@ def fetch_full_season():
     print(f"\n{'='*80}")
     print("STARTING FETCH")
     print(f"{'='*80}")
+    print(f"📋 Strategy: Check filesystem first, only call API if file missing")
+    print(f"   • File exists → Skip (0 credits)")
+    print(f"   • File missing → API call (1 + 10*games credits)")
+    print(f"{'='*80}")
     
     first_fetch = True
     
@@ -419,20 +441,28 @@ def fetch_full_season():
         print(f"\n[{i}/{total_dates}] {date_str} ({day_of_week})", end=" ")
         print(f"| Progress: {(i/total_dates)*100:.1f}% | ✓ {stats['successful']} | ⏭ {stats['skipped_existing']} | ∅ {stats['skipped_no_games']}")
         
-        # Check if file already exists
+        # ===== CHECK FILE SYSTEM FIRST (NO API CALL) =====
         filename = f"nfl_game_lines_{date_str}.csv"
         filepath = os.path.join(OUTPUT_DIR, filename)
+        
+        print(f"  🔍 Checking if {filename} exists...", end=" ")
         
         if os.path.exists(filepath):
             try:
                 existing_df = pd.read_csv(filepath)
                 num_games = existing_df['game_id'].nunique() if 'game_id' in existing_df.columns else 0
-                print(f"  ⏭️  Already exists ({num_games} games) - skipping")
+                if num_games > 0:
+                    print(f"✓ Found ({num_games} games) - SKIPPING API CALL")
+                else:
+                    print(f"✓ Found (empty file - no games this date) - SKIPPING API CALL")
             except:
-                print(f"  ⏭️  Already exists - skipping")
+                print(f"✓ Found - SKIPPING API CALL")
             
             stats['skipped_existing'] += 1
             continue
+        
+        # File doesn't exist - need to fetch from API
+        print(f"✗ Not found - WILL CALL API")
         
         # Track credits before fetch
         credits_before = credits_remaining
