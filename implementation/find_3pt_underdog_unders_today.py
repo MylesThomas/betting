@@ -37,7 +37,7 @@ QUICK START:
 
 3. Fetch today's live props:
    $ python scripts/fetch_historical_props.py
-   (Creates: data/01_input/the-odds-api/historical_props/props_YYYY-MM-DD_player_threes.csv)
+   (Creates: data/01_input/the-odds-api/nba/historical_props/props_YYYY-MM-DD_player_threes.csv)
 
 4. Find today's opportunities:
    $ python implementation/find_underdog_unders_today.py
