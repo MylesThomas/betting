@@ -353,11 +353,11 @@ echo '📍 Layer location: /Users/thomasmyles/dev/betting/lambda_layer/layer.zip
 
 ### Running Locally
 
-The dashboard reads from `data/04_output/arbs/` directory. Make sure you have arb data files:
+The dashboard reads from `data/04_output/nba/arbs/` directory. Make sure you have arb data files:
 ```
-data/04_output/arbs/
-├── arb_threes_20251121.csv
-├── arb_points_20251121.csv
+data/04_output/nba/arbs/
+├── arb_output_20251121_111928.csv
+├── arb_output_20251122_103023.csv
 └── ...
 ```
 

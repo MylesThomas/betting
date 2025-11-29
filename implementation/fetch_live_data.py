@@ -11,7 +11,7 @@ QUICK START:
 
 MODES:
     --live: Fetch live data from The Odds API (requires ODDS_API_KEY environment variable)
-    --test: Use existing test data from data/04_output/arbs/ (no API calls)
+    --test: Use existing test data from data/01_input/the-odds-api/nba/all_markets/ (no API calls)
 
 OUTPUT FILES (saved to data/live/):
     - props_today_YYYYMMDD.csv          # Tonight's 3pt prop odds
@@ -35,7 +35,8 @@ NEXT STEP:
 DATA ORGANIZATION:
     data/
     ├── live/               # Today's live data (output)
-    ├── 04_output/arbs/     # Arbitrage data (used for test mode)
+    ├── 04_output/nba/arbs/     # Arbitrage data output
+    ├── 01_input/the-odds-api/nba/all_markets/  # Raw props (used for test mode)
     ├── 03_intermediate/    # Analysis results
     └── 01_input/           # Reference data
 
@@ -232,21 +233,16 @@ def use_test_data(output_dir='data/live'):
     print("="*80)
     print()
     
-    # Use the most recent raw props file from data/04_output/arbs/
-    arbs_dir = Path('data/04_output/arbs')
-    if not arbs_dir.exists():
-        raise FileNotFoundError("No test data found in data/04_output/arbs/")
+    # Use the most recent raw props file from data/01_input/the-odds-api/nba/all_markets/
+    raw_props_dir = Path('data/01_input/the-odds-api/nba/all_markets')
+    if not raw_props_dir.exists():
+        raise FileNotFoundError("No test data found in data/01_input/the-odds-api/nba/all_markets/")
     
-    # Find most recent raw props file (just threes, not combined markets)
-    raw_files = [f for f in sorted(arbs_dir.glob('raw_threes_*.csv')) 
-                 if 'points' not in f.name and 'rebounds' not in f.name]
-    
-    if not raw_files:
-        # Fall back to any raw file
-        raw_files = sorted(arbs_dir.glob('raw_*.csv'))
+    # Find most recent raw props file
+    raw_files = sorted(raw_props_dir.glob('raw_*.csv'))
     
     if not raw_files:
-        raise FileNotFoundError("No raw props files found in data/04_output/arbs/")
+        raise FileNotFoundError("No raw props files found in data/01_input/the-odds-api/nba/all_markets/")
     
     props_file = raw_files[-1]
     print(f"Using props from: {props_file}")

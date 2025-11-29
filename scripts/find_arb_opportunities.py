@@ -40,6 +40,15 @@ USAGE:
     # Combine markets
     python scripts/find_arb_opportunities.py --markets player_threes,player_points,player_rebounds
     
+    # Historical backfill (get odds from past dates at 5pm UTC = noon ET)
+    python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20
+    
+    # Historical with custom time (e.g., 10am UTC = 5am ET)
+    python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 --time 10:00:00
+    
+    # Historical with specific markets
+    python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 --markets player_points,player_rebounds,player_assists,player_threes
+    
 OUTPUT EXAMPLE:
     🎯 ARBITRAGE OPPORTUNITIES FOUND: 1
     
@@ -57,8 +66,25 @@ OUTPUT EXAMPLE:
           Guaranteed Profit: $1.85
 
 OUTPUT FILES:
-    - data/04_output/arbs/arb_3pt_props_YYYYMMDD.csv (main results, overwrites daily)
-    - data/04_output/arbs/raw_3pt_props_YYYYMMDD_HHMMSS.csv (raw data with timestamp)
+    - data/01_input/the-odds-api/nba/all_markets/raw_YYYYMMDD_HHMMSS.csv (raw props with timestamp)
+    - data/04_output/nba/arbs/arb_output_YYYYMMDD_HHMMSS.csv (arb results with timestamp)
+    
+HISTORICAL MODE:
+    The Odds API provides historical odds through the 'date' parameter. When running in 
+    --historical mode, the script will:
+    1. Loop through each day in the date range
+    2. Fetch odds as they were at the specified time (default 17:00:00 UTC = noon ET)
+    3. Save files with historical timestamps (not current time)
+    4. Wait 2 seconds between days to avoid rate limiting
+    
+    IMPORTANT: The --time parameter expects UTC time (not ET).
+               Default 17:00:00 UTC = 12:00:00 noon ET (when lines are typically posted)
+    
+    Example for 2024-25 NBA season backfill (Oct 21 - Nov 20, 2025 at noon ET):
+        python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 \
+          --markets player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists
+    
+    Note: Historical odds require an appropriate API plan. Check the-odds-api.com for pricing.
     
 SETUP:
     1. Get API key from https://the-odds-api.com/
@@ -153,7 +179,7 @@ TIMEZONE = 'America/New_York'  # ET timezone for "today's games"
 
 # Default Markets
 DEFAULT_MARKETS = 'player_threes'
-# All available prop markets (verified 2024-11-21 via scripts/test_available_markets.py)
+# All available prop markets (verified 2025-11-21 via scripts/test_available_markets.py)
 ALL_PROP_MARKETS = 'player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists'
 COMMON_PROP_MARKETS = 'player_threes,player_points,player_rebounds,player_assists'  # Most common markets
 
@@ -166,7 +192,8 @@ CLOSE_OPPORTUNITY_MAX = 1.00  # 100% probability
 BASE_WAGER_AMOUNT = 100  # Default total stake for bet calculations ($)
 
 # Output Configuration
-OUTPUT_DIR = str(get_data_path('output_arbs'))  # data/04_output/arbs
+OUTPUT_ARB_DIR = 'data/04_output/nba/arbs'  # Arb results
+OUTPUT_RAW_DIR = 'data/01_input/the-odds-api/nba/all_markets'  # Raw props
 DEFAULT_TOTAL_STAKE = 100.0  # Default total amount to wager for bet sizing recommendations
 SAMPLE_NON_ARBS_TO_SHOW = 5
 
@@ -282,19 +309,26 @@ def get_todays_nba_events(api_key):
     return todays_events, usage
 
 
-def get_event_odds(api_key, event_id, markets=DEFAULT_MARKETS):
-    """Get odds for a specific event
+def get_nba_events_for_date(api_key, target_date):
+    """Get all NBA events happening on a specific date (in configured timezone)
     
+    Uses HISTORICAL endpoint for past dates
+    
+    Args:
+        api_key: API key
+        target_date: datetime.date object for the target date
+        
     Returns:
-        tuple: (odds_data, usage_dict with 'remaining' and 'used')
+        tuple: (events_list, usage_dict with 'remaining' and 'used')
     """
-    url = f"{API_BASE_URL}/sports/{SPORT}/events/{event_id}/odds"
+    # Use historical endpoint for past dates
+    timestamp = datetime.combine(target_date, datetime.min.time()).replace(hour=12).isoformat() + 'Z'
+    
+    url = f"{API_BASE_URL}/historical/sports/{SPORT}/events"
     
     params = {
-        'apiKey': api_key,
-        'regions': REGIONS,
-        'markets': markets,
-        'oddsFormat': ODDS_FORMAT,
+        'api_key': api_key,  # Note: underscore, not camelCase!
+        'date': timestamp,
         'dateFormat': DATE_FORMAT
     }
     
@@ -303,14 +337,91 @@ def get_event_odds(api_key, event_id, markets=DEFAULT_MARKETS):
     
     remaining = response.headers.get('x-requests-remaining', 'unknown')
     used = response.headers.get('x-requests-used', 'unknown')
+    
     usage = {'remaining': remaining, 'used': used}
     
-    return response.json(), usage
+    data = response.json()
+    
+    # Historical endpoint returns {'data': [...]}
+    if 'data' in data:
+        events = data['data']
+    else:
+        events = data if isinstance(data, list) else []
+    
+    # Filter for target date's games in configured timezone
+    tz = ZoneInfo(TIMEZONE)
+    
+    target_events = []
+    for event in events:
+        event_time_utc = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
+        event_time_local = event_time_utc.astimezone(tz)
+        
+        if event_time_local.date() == target_date:
+            target_events.append(event)
+    
+    return target_events, usage
+
+
+def get_event_odds(api_key, event_id, markets=DEFAULT_MARKETS, historical_date=None):
+    """Get odds for a specific event
+    
+    Args:
+        api_key: API key
+        event_id: Event ID
+        markets: Markets to fetch
+        historical_date: Optional ISO datetime string for historical odds (e.g., "2025-10-21T17:00:00Z")
+                        When provided, uses HISTORICAL endpoint
+    
+    Returns:
+        tuple: (odds_data, usage_dict with 'remaining' and 'used')
+    """
+    # Use historical endpoint if historical_date provided
+    if historical_date:
+        url = f"{API_BASE_URL}/historical/sports/{SPORT}/events/{event_id}/odds"
+        params = {
+            'api_key': api_key,  # Note: underscore for historical endpoint!
+            'date': historical_date,
+            'regions': REGIONS,
+            'markets': markets,
+            'oddsFormat': ODDS_FORMAT,
+            'dateFormat': DATE_FORMAT
+        }
+    else:
+        url = f"{API_BASE_URL}/sports/{SPORT}/events/{event_id}/odds"
+        params = {
+            'apiKey': api_key,  # CamelCase for regular endpoint
+            'regions': REGIONS,
+            'markets': markets,
+            'oddsFormat': ODDS_FORMAT,
+            'dateFormat': DATE_FORMAT
+        }
+    
+    response = requests.get(url, params=params, verify=False)
+    response.raise_for_status()
+    
+    remaining = response.headers.get('x-requests-remaining', 'unknown')
+    used = response.headers.get('x-requests-used', 'unknown')
+    usage = {'remaining': remaining, 'used': used}
+    
+    data = response.json()
+    
+    # Historical endpoint returns {'data': {...}}
+    if historical_date and 'data' in data:
+        return data, usage
+    
+    return data, usage
 
 
 def parse_event_props_to_df(event_data):
-    """Parse event odds data into DataFrame"""
+    """Parse event odds data into DataFrame
+    
+    Handles both regular and historical API response formats
+    """
     props_list = []
+    
+    # Historical endpoint wraps data in 'data' key
+    if 'data' in event_data:
+        event_data = event_data['data']
     
     game_info = f"{event_data['away_team']} @ {event_data['home_team']}"
     game_time = event_data.get('commence_time')
@@ -634,11 +745,40 @@ def run_demo():
     print("="*80 + "\n")
 
 
-def main(markets=DEFAULT_MARKETS, limit=None):
-    """Main execution function"""
+def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_time="17:00:00"):
+    """Main execution function
+    
+    Args:
+        markets: Markets to fetch
+        limit: Limit number of games (for testing)
+        historical_date: Date object for historical mode (None for live)
+        historical_time: Time string for historical snapshot in UTC (default 17:00:00 = noon ET)
+    """
+    # Determine if we're in historical mode
+    is_historical = historical_date is not None
+    
+    if is_historical:
+        # Use the historical date for display and file naming
+        display_date = historical_date
+        # Parse the time string and create UTC datetime
+        from datetime import timezone
+        time_obj = datetime.strptime(historical_time, "%H:%M:%S").time()
+        target_datetime = datetime.combine(historical_date, time_obj, tzinfo=timezone.utc)
+    else:
+        # Use current time
+        tz = ZoneInfo(TIMEZONE)
+        target_datetime = datetime.now(tz)
+        display_date = target_datetime.date()
+    
     print("="*80)
     print("🏀 NBA PROPS ARBITRAGE FINDER")
-    print(f"📅 {datetime.now(ZoneInfo(TIMEZONE)).strftime('%Y-%m-%d %H:%M:%S ET')}")
+    if is_historical:
+        # Show both UTC and ET
+        et_tz = ZoneInfo(TIMEZONE)
+        et_time = target_datetime.astimezone(et_tz)
+        print(f"📅 HISTORICAL MODE: {display_date.strftime('%Y-%m-%d')} @ {historical_time} UTC ({et_time.strftime('%H:%M:%S %Z')})")
+    else:
+        print(f"📅 {target_datetime.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print("="*80 + "\n")
     
     try:
@@ -652,9 +792,13 @@ def main(markets=DEFAULT_MARKETS, limit=None):
         # Track API usage for each call
         api_calls = []
         
-        # Step 1: Get today's events
-        print("🔍 Step 1: Fetching today's NBA events...\n")
-        todays_events, initial_usage = get_todays_nba_events(api_key)
+        # Step 1: Get events for target date
+        if is_historical:
+            print(f"🔍 Step 1: Fetching NBA events for {display_date.strftime('%Y-%m-%d')}...\n")
+            todays_events, initial_usage = get_nba_events_for_date(api_key, display_date)
+        else:
+            print("🔍 Step 1: Fetching today's NBA events...\n")
+            todays_events, initial_usage = get_todays_nba_events(api_key)
         
         api_calls.append({
             'call': 'events_list',
@@ -685,20 +829,26 @@ def main(markets=DEFAULT_MARKETS, limit=None):
                 'game_time', 'over_odds', 'under_odds'
             ])
             
-            # Save empty results files
-            today = datetime.now().strftime('%Y%m%d')
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            markets_str = markets.replace(',', '_').replace('player_', '')
-            output_dir = Path(__file__).parent.parent / OUTPUT_DIR
-            output_dir.mkdir(exist_ok=True, parents=True)
+            # Save empty results files with timestamps (use historical if applicable)
+            if is_historical:
+                timestamp = target_datetime.strftime('%Y%m%d_%H%M%S')
+            else:
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             
-            # Save arb file (main results with just date)
-            output_file = output_dir / f'arb_{markets_str}_{today}.csv'
+            # Create output directories
+            arb_output_dir = Path(__file__).parent.parent / OUTPUT_ARB_DIR
+            arb_output_dir.mkdir(exist_ok=True, parents=True)
+            
+            raw_output_dir = Path(__file__).parent.parent / OUTPUT_RAW_DIR
+            raw_output_dir.mkdir(exist_ok=True, parents=True)
+            
+            # Save arb file with timestamp
+            output_file = arb_output_dir / f'arb_output_{timestamp}.csv'
             empty_arb_df.to_csv(output_file, index=False)
             print(f"💾 Empty arb results saved to: {output_file}")
             
-            # Save raw file (raw props with full timestamp)
-            raw_output_file = output_dir / f'raw_{markets_str}_{timestamp}.csv'
+            # Save raw file with timestamp
+            raw_output_file = raw_output_dir / f'raw_{timestamp}.csv'
             empty_raw_df.to_csv(raw_output_file, index=False)
             print(f"💾 Empty raw props saved to: {raw_output_file}")
             
@@ -731,7 +881,12 @@ def main(markets=DEFAULT_MARKETS, limit=None):
             print(f"📥 Game {i}/{len(todays_events)}: {event['away_team']} @ {event['home_team']}")
             
             try:
-                event_odds, usage = get_event_odds(api_key, event['id'], markets=markets)
+                # For historical mode, pass the target datetime in ISO format
+                historical_iso = None
+                if is_historical:
+                    historical_iso = target_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+                
+                event_odds, usage = get_event_odds(api_key, event['id'], markets=markets, historical_date=historical_iso)
                 event_props_df = parse_event_props_to_df(event_odds)
                 
                 api_calls.append({
@@ -805,22 +960,27 @@ def main(markets=DEFAULT_MARKETS, limit=None):
             if max_profit > 0:
                 print(f"Best arb found: {max_profit:.2f}% profit")
         
-        # Save results
-        today = datetime.now().strftime('%Y%m%d')
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_dir = Path(__file__).parent.parent / OUTPUT_DIR
-        output_dir.mkdir(exist_ok=True, parents=True)
+        # Save results with timestamps
+        # Use historical datetime if in historical mode, otherwise current time
+        if is_historical:
+            timestamp = target_datetime.strftime('%Y%m%d_%H%M%S')
+        else:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        # Determine filename based on markets
-        markets_str = markets.replace(',', '_').replace('player_', '')
+        # Create output directories
+        arb_output_dir = Path(__file__).parent.parent / OUTPUT_ARB_DIR
+        arb_output_dir.mkdir(exist_ok=True, parents=True)
         
-        # Main results file with just date
-        output_file = output_dir / f'arb_{markets_str}_{today}.csv'
+        raw_output_dir = Path(__file__).parent.parent / OUTPUT_RAW_DIR
+        raw_output_dir.mkdir(exist_ok=True, parents=True)
+        
+        # Save arb results with timestamp
+        output_file = arb_output_dir / f'arb_output_{timestamp}.csv'
         best_odds_df.to_csv(output_file, index=False)
-        print(f"\n💾 Results saved to: {output_file}")
+        print(f"\n💾 Arb results saved to: {output_file}")
         
-        # Raw props with full timestamp
-        raw_output_file = output_dir / f'raw_{markets_str}_{timestamp}.csv'
+        # Save raw props with timestamp
+        raw_output_file = raw_output_dir / f'raw_{timestamp}.csv'
         props_df.to_csv(raw_output_file, index=False)
         print(f"💾 Raw props saved to: {raw_output_file}")
         
@@ -890,6 +1050,83 @@ def main(markets=DEFAULT_MARKETS, limit=None):
         sys.exit(1)  # Exit with error code so Lambda knows it failed
 
 
+def valid_date(date_str):
+    """Validate and parse date string in YYYY-MM-DD format"""
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid date: '{date_str}'. Expected format: YYYY-MM-DD.")
+
+
+def run_historical_backfill(start_date, end_date, markets, limit=None, historical_time="17:00:00"):
+    """Run the arb finder for a historical date range
+    
+    Args:
+        start_date: Start date (datetime.date)
+        end_date: End date (datetime.date)
+        markets: Markets to fetch
+        limit: Limit number of games per day (for testing)
+        historical_time: Time for snapshot in UTC (default 17:00:00 UTC = noon ET)
+    """
+    from datetime import timedelta
+    
+    print("="*80)
+    print("🏀 NBA PROPS ARBITRAGE FINDER - HISTORICAL BACKFILL")
+    print("="*80)
+    print(f"📅 Date Range: {start_date} to {end_date}")
+    print(f"🕐 Snapshot Time: {historical_time} UTC (noon ET if 17:00:00)")
+    print(f"📊 Markets: {markets}")
+    print("="*80 + "\n")
+    
+    if start_date > end_date:
+        print("❌ Error: Start date must be before or equal to end date")
+        return
+    
+    # Calculate total days
+    total_days = (end_date - start_date).days + 1
+    print(f"Processing {total_days} days...\n")
+    
+    current_date = start_date
+    day_count = 0
+    success_count = 0
+    error_count = 0
+    
+    while current_date <= end_date:
+        day_count += 1
+        print("\n" + "="*80)
+        print(f"📅 DAY {day_count}/{total_days}: {current_date.strftime('%Y-%m-%d (%A)')}")
+        print("="*80 + "\n")
+        
+        try:
+            # Run the main function for this date
+            main(markets=markets, limit=limit, historical_date=current_date, historical_time=historical_time)
+            success_count += 1
+            print(f"\n✅ Day {day_count} complete\n")
+        except Exception as e:
+            error_count += 1
+            print(f"\n❌ Error processing {current_date}: {e}\n")
+            import traceback
+            traceback.print_exc()
+        
+        # Move to next day
+        current_date += timedelta(days=1)
+        
+        # Small delay between days to avoid rate limiting
+        if current_date <= end_date:
+            print("⏳ Waiting 2 seconds before next day...")
+            import time
+            time.sleep(2)
+    
+    # Final summary
+    print("\n" + "="*80)
+    print("🏁 HISTORICAL BACKFILL COMPLETE")
+    print("="*80)
+    print(f"Total days processed: {day_count}")
+    print(f"✅ Successful: {success_count}")
+    print(f"❌ Errors: {error_count}")
+    print("="*80 + "\n")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='NBA Props Arbitrage Finder')
     parser.add_argument('--test', action='store_true', help='Run unit tests')
@@ -899,11 +1136,36 @@ if __name__ == "__main__":
                              f'Available: {ALL_PROP_MARKETS}')
     parser.add_argument('--limit', type=int, help='Limit to first N games (for testing)')
     
+    # Historical backfill arguments
+    parser.add_argument('--historical', action='store_true', 
+                        help='Run in historical mode (requires --start and --end)')
+    parser.add_argument('--start', type=valid_date, 
+                        help='Start date for historical mode (YYYY-MM-DD)')
+    parser.add_argument('--end', type=valid_date, 
+                        help='End date for historical mode (YYYY-MM-DD)')
+    parser.add_argument('--time', default="17:00:00",
+                        help='Time for historical snapshot in UTC (HH:MM:SS, default 17:00:00 = noon ET)')
+    
     args = parser.parse_args()
     
     if args.test:
         run_tests()
     elif args.demo:
         run_demo()
+    elif args.historical:
+        # Historical mode - requires start and end dates
+        if not args.start or not args.end:
+            print("❌ Error: --historical mode requires both --start and --end dates")
+            print("\nExample usage:")
+            print("  python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20")
+            sys.exit(1)
+        
+        run_historical_backfill(
+            start_date=args.start,
+            end_date=args.end,
+            markets=args.markets,
+            limit=args.limit,
+            historical_time=args.time
+        )
     else:
         main(markets=args.markets, limit=args.limit)

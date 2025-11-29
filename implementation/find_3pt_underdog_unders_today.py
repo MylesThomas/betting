@@ -357,7 +357,7 @@ def load_todays_props():
     """
     Load today's props from the most recent arb analysis.
     
-    Loads from: data/04_output/arbs/arb_*_YYYYMMDD.csv
+    Loads from: data/04_output/nba/arbs/arb_output_YYYYMMDD_HHMMSS.csv
     
     Filters for: market == 'player_threes'
     

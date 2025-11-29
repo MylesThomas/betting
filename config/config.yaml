@@ -17,7 +17,8 @@ data_directories:
   input_odds_api_historical: data/01_input/the-odds-api/historical_props
   
   # Output subdirectories (final results)
-  output_arbs: data/04_output/arbs
+  output_nba_arbs: data/04_output/nba/arbs
+  input_nba_all_markets: data/01_input/the-odds-api/nba/all_markets
 
 # Commonly used file paths
 files:
