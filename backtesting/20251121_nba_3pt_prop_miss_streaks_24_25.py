@@ -184,7 +184,7 @@ def load_clean_data():
     
     This dataset was created by scripts/20251120_verify_overlap_w_2425_3pt_prop_data.py
     and contains:
-    - Consensus prop lines (from historical_props/consensus_props_player_threes.csv)
+    - Consensus prop lines (from the-odds-api/nba/historical_props/consensus_props_player_threes.csv)
     - Actual game results (3PM, 3PA, minutes from NBA API)
     - Pre-filtered: Only games where player played >= 10 minutes
     - Player names normalized for accurate matching

@@ -192,7 +192,7 @@ DATA STRUCTURE
 ==============
 
 Props Data (The Odds API - Historical Props):
-  Source: data/01_input/the-odds-api/historical_props/props_YYYY-MM-DD_player_threes.csv
+  Source: data/01_input/the-odds-api/nba/historical_props/props_YYYY-MM-DD_player_threes.csv
   
   Columns:
     - player: Player name (e.g., "Tyrese Maxey")
