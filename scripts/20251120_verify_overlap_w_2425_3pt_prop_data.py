@@ -63,7 +63,7 @@ print()
 
 def load_props_data():
     """Load 3PT props data for 2024-25 season (consensus version - one row per player per game)."""
-    props_file = os.path.join(ROOT, 'historical_props', 'consensus_props_player_threes.csv')
+    props_file = os.path.join(ROOT, 'data', '01_input', 'the-odds-api', 'nba', 'historical_props', 'consensus_props_player_threes.csv')
     print(f"Loading props data from: {props_file}")
     
     df_props = pd.read_csv(props_file)

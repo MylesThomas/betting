@@ -162,7 +162,7 @@ def analyze_opening_day():
     """Analyze opening day Celtics vs Knicks game for duplicate player props"""
     
     # Load opening day data
-    props_file = Path(__file__).parent.parent / 'historical_props' / 'props_2024-10-22_player_threes.csv'
+    props_file = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props' / 'props_2024-10-22_player_threes.csv'
     
     if not props_file.exists():
         print("Opening day file not found!")

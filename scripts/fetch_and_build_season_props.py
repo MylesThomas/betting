@@ -75,7 +75,7 @@ from fetch_historical_props import (
 
 # Data paths
 PROJECT_ROOT = Path(__file__).parent.parent
-HISTORICAL_PROPS_DIR = PROJECT_ROOT / 'data' / '01_input' / 'the-odds-api' / 'historical_props'
+HISTORICAL_PROPS_DIR = PROJECT_ROOT / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props'
 INTERMEDIATE_DIR = PROJECT_ROOT / 'data' / '03_intermediate'
 NBA_CALENDAR_DIR = PROJECT_ROOT / 'data' / '01_input' / 'nba_calendar'
 

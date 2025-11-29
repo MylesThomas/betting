@@ -203,7 +203,7 @@ def process_all_props():
     """
     
     # Find all props files
-    props_dir = Path(__file__).parent.parent / 'historical_props'
+    props_dir = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props'
     csv_files = sorted(glob.glob(str(props_dir / 'props_*_player_threes.csv')))
     
     if not csv_files:
@@ -361,7 +361,7 @@ def build_combined_props():
     Build combined props dataset by appending all individual CSV files.
     Just adds a 'date' column and concatenates everything.
     """
-    props_dir = Path(__file__).parent.parent / 'historical_props'
+    props_dir = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props'
     csv_files = sorted(glob.glob(str(props_dir / 'props_*_player_threes.csv')))
     
     if not csv_files:
@@ -404,7 +404,7 @@ def main():
     combined_df = build_combined_props()
     
     if combined_df is not None:
-        combined_output = Path(__file__).parent.parent / 'historical_props' / 'combined_props_player_threes.csv'
+        combined_output = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props' / 'combined_props_player_threes.csv'
         combined_df.to_csv(combined_output, index=False)
         print(f"   💾 Saved: {combined_output}")
     
@@ -415,7 +415,7 @@ def main():
         return
     
     # Save to CSV
-    output_file = Path(__file__).parent.parent / 'historical_props' / 'consensus_props_player_threes.csv'
+    output_file = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props' / 'consensus_props_player_threes.csv'
     consensus_df.to_csv(output_file, index=False)
     print(f"\n💾 Saved consensus dataset: {output_file}")
     

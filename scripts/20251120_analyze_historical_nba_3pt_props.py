@@ -12,11 +12,11 @@ def load_all_props():
     """Load all player_threes CSV files into one DataFrame"""
     
     # Find all CSV files
-    props_dir = Path(__file__).parent.parent / 'historical_props'
+    props_dir = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props'
     csv_files = glob.glob(str(props_dir / 'props_*_player_threes.csv'))
     
     if not csv_files:
-        print("No CSV files found in historical_props/")
+        print("No CSV files found in the-odds-api/nba/historical_props/")
         return None
     
     print(f"Found {len(csv_files)} CSV files")
@@ -124,7 +124,7 @@ def main():
     df = analyze_props(df)
     
     # Save combined file for further analysis
-    output_file = Path(__file__).parent.parent / 'historical_props' / 'combined_props_player_threes.csv'
+    output_file = Path(__file__).parent.parent / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props' / 'combined_props_player_threes.csv'
     df.to_csv(output_file, index=False)
     print(f"\n💾 Saved combined data to: {output_file}")
 

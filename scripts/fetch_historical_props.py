@@ -117,7 +117,7 @@ ODDS_FORMAT = 'american'
 DATE_FORMAT = 'iso'
 # Use absolute path to save to correct location
 PROJECT_ROOT = Path(__file__).parent.parent
-OUTPUT_DIR = PROJECT_ROOT / 'data' / '01_input' / 'the-odds-api' / 'historical_props'
+OUTPUT_DIR = PROJECT_ROOT / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props'
 RATE_LIMIT_DELAY = 0.5  # seconds between API calls
 
 # Event timestamp offsets (for capturing the right snapshot)

@@ -156,7 +156,7 @@ def main():
     ROOT = get_project_root()
     
     # File paths
-    props_file = ROOT / 'historical_props' / 'combined_props_player_threes.csv'
+    props_file = ROOT / 'data' / '01_input' / 'the-odds-api' / 'nba' / 'historical_props' / 'combined_props_player_threes.csv'
     results_file = ROOT / 'data' / 'nba_game_results_2024_25.csv'
     
     if not props_file.exists():
