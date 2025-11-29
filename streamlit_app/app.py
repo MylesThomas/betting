@@ -27,7 +27,7 @@ all the pieces fit together and the order they run:
    
    - Queries The Odds API for live prop odds from all bookmakers
    - Finds arbitrage opportunities (combined probability < 100%)
-   - Creates: data/04_output/arbs/arb_*_YYYYMMDD.csv (one per day)
+   - Creates: data/04_output/nba/arbs/arb_output_YYYYMMDD_HHMMSS.csv
    - Uses: ODDS_API_KEY environment variable
    - When: Daily at 7 AM ET (before games start)
 
@@ -70,7 +70,7 @@ all the pieces fit together and the order they run:
 5. THIS DASHBOARD: View & Analyze (ALWAYS RUNNING)
    Run: streamlit run streamlit_app/app.py
    
-   - Loads all historical arb files from data/04_output/arbs/
+   - Loads all historical arb files from data/04_output/nba/arbs/
    - Adds team column using cached player-to-team mappings
    - Provides filtering, sorting, and analysis
    - When: Always running on port 8501
@@ -87,7 +87,7 @@ The Odds API (props)                         │
     ↓                                        │
 find_arb_opportunities.py                    │
     ↓                                        │
-data/04_output/arbs/arb_*_YYYYMMDD.csv      │
+data/04_output/nba/arbs/arb_output_*.csv     │
     ↓                                        │
 Streamlit Dashboard (YOU ARE HERE)           │
     ↓                               │
@@ -133,7 +133,7 @@ Architecture:
     │   └── python scripts/find_arb_opportunities.py --markets player_points,player_rebounds,...
     ├── Streamlit app (always running on port 8501)
     │   └── streamlit run streamlit_app/app.py
-    └── Data stored locally at /data/04_output/arbs/
+    └── Data stored locally at /data/04_output/nba/arbs/
     
 Deployment Steps:
     1. Launch EC2 instance (Ubuntu)
@@ -246,6 +246,68 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Add mobile-optimized CSS
+st.markdown("""
+<style>
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        /* Make metrics stack vertically on mobile */
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+        }
+        
+        /* Better spacing for metrics on mobile */
+        [data-testid="metric-container"] {
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Make tables horizontally scrollable */
+        [data-testid="stDataFrame"] {
+            overflow-x: auto !important;
+        }
+        
+        /* Larger touch targets for checkboxes */
+        [data-testid="stCheckbox"] {
+            min-height: 44px !important;
+        }
+        
+        /* Better button sizing */
+        .stButton > button {
+            width: 100% !important;
+            padding: 0.75rem !important;
+        }
+        
+        /* Collapsible sections default to collapsed on mobile */
+        details {
+            margin-bottom: 1rem;
+        }
+        
+        /* Better font sizes for readability */
+        h1 {
+            font-size: 1.75rem !important;
+        }
+        h2 {
+            font-size: 1.5rem !important;
+        }
+        h3 {
+            font-size: 1.25rem !important;
+        }
+        
+        /* Hide sidebar by default on mobile */
+        section[data-testid="stSidebar"] {
+            display: none;
+        }
+    }
+    
+    /* Desktop: Keep normal layout */
+    @media (min-width: 769px) {
+        /* Normal desktop styles */
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Mobile-responsive CSS
 st.markdown("""
@@ -383,7 +445,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Constants  
-DATA_DIR = Path("data/04_output/arbs")
+DATA_DIR = Path("data/04_output/nba/arbs")
 SCRIPT_PATH = "scripts/find_arb_opportunities.py"
 
 # Helper functions
@@ -393,8 +455,8 @@ def load_all_arbs():
     if not DATA_DIR.exists():
         return None
     
-    # Find all arb files
-    arb_files = sorted(DATA_DIR.glob("arb_*.csv"))
+    # Find all arb files (new format: arb_output_YYYYMMDD_HHMMSS.csv)
+    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"))
     
     if not arb_files:
         return None
@@ -405,12 +467,18 @@ def load_all_arbs():
         try:
             df = pd.read_csv(arb_file)
             
-            # Extract date from filename (e.g., arb_threes_20251121.csv)
-            date_str = arb_file.stem.split('_')[-1]
-            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+            # Extract date and time from filename (e.g., arb_output_20251121_111928.csv)
+            parts = arb_file.stem.split('_')
+            date_str = parts[-2]  # YYYYMMDD
+            time_str = parts[-1]  # HHMMSS
             
-            # Add file_date column for tracking
+            # Parse date and datetime
+            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+            file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
+            
+            # Add file_date and file_datetime columns for tracking
             df['file_date'] = file_date
+            df['file_datetime'] = file_datetime
             df['source_file'] = arb_file.name
             
             all_dfs.append(df)
@@ -433,8 +501,8 @@ def load_latest_arbs():
     if not DATA_DIR.exists():
         return None, None
     
-    # Find most recent arb file
-    arb_files = sorted(DATA_DIR.glob("arb_*.csv"))
+    # Find most recent arb file (new format: arb_output_YYYYMMDD_HHMMSS.csv)
+    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"))
     
     if not arb_files:
         return None, None
@@ -444,9 +512,13 @@ def load_latest_arbs():
     try:
         df = pd.read_csv(latest_file)
         
-        # Extract date from filename (e.g., arb_threes_20251121.csv)
-        date_str = latest_file.stem.split('_')[-1]
+        # Extract date and time from filename (e.g., arb_output_20251121_111928.csv)
+        parts = latest_file.stem.split('_')
+        date_str = parts[-2]  # YYYYMMDD
+        time_str = parts[-1]  # HHMMSS
+        
         file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+        file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
         
         return df, file_date
     except Exception as e:
@@ -460,14 +532,20 @@ def get_arb_history():
     if not DATA_DIR.exists():
         return []
     
-    arb_files = sorted(DATA_DIR.glob("arb_*.csv"), reverse=True)
+    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"), reverse=True)
     
     history = []
     for file in arb_files:
         try:
             df = pd.read_csv(file)
-            date_str = file.stem.split('_')[-1]
+            
+            # Extract date and time from filename (e.g., arb_output_20251121_111928.csv)
+            parts = file.stem.split('_')
+            date_str = parts[-2]  # YYYYMMDD
+            time_str = parts[-1]  # HHMMSS
+            
             file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+            file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
             
             # Count total prop markets and actual arbs
             total_props = len(df)
@@ -496,6 +574,7 @@ def get_arb_history():
             
             history.append({
                 'date': file_date,
+                'datetime': file_datetime,
                 'num_games': num_games,
                 'file': file.name,
                 'prop_markets': total_props,
@@ -791,70 +870,54 @@ def main():
     # Count daily arbs (is_arb=True)
     daily_arbs_df = daily_df[daily_df['is_arb'] == True] if 'is_arb' in daily_df.columns and len(daily_df) > 0 else pd.DataFrame()
     
-    col1, col2, col3, col4, col5, col6, col7 = st.columns([
-        .75,  # Games
-        1.1,  # Prop Markets
-        1.15,  # Arb Opportunities
-        1,  # Avg Edge
-        1,  # Best Arb
-        1.25,  # Total Wagered
-        1.5,  # Total Profit
-    ])
+    # Calculate metrics
+    unique_games = daily_df['game'].nunique() if 'game' in daily_df.columns else 0
+    daily_total_props = len(daily_df)
+    daily_arbs_count = len(daily_arbs_df)
     
+    # Calculate avg profit for selected date's arbs
+    if len(daily_arbs_df) > 0 and 'expected_profit_pct' in daily_arbs_df.columns:
+        daily_avg_edge = daily_arbs_df['expected_profit_pct'].mean()
+        daily_avg_edge_str = f"{daily_avg_edge:.2f}%"
+        daily_max_profit = daily_arbs_df['expected_profit_pct'].max()
+        daily_max_profit_str = f"{daily_max_profit:.2f}%"
+    else:
+        daily_avg_edge_str = "N/A"
+        daily_max_profit_str = "N/A"
+    
+    # Calculate total wagered (only for arbs)
+    daily_wagered = 0
+    if len(daily_arbs_df) > 0 and 'over_stake' in daily_arbs_df.columns and 'under_stake' in daily_arbs_df.columns:
+        daily_wagered = (daily_arbs_df['over_stake'].sum() + daily_arbs_df['under_stake'].sum())
+    
+    # Calculate total profit (only for arbs)
+    daily_profit = 0
+    if len(daily_arbs_df) > 0 and 'guaranteed_profit' in daily_arbs_df.columns:
+        daily_profit = daily_arbs_df['guaranteed_profit'].sum()
+    
+    # Display all metrics in a single row
+    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
     with col1:
-        # Count unique games from selected date(s)
-        unique_games = daily_df['game'].nunique() if 'game' in daily_df.columns else 0
         st.metric("🏀 Games", unique_games,
                  help="Number of NBA games for selected date(s)")
-    
     with col2:
-        # Total props from selected date(s)
-        daily_total_props = len(daily_df)
         st.metric("🎯 Prop Markets", daily_total_props,
                  help=f"Total prop markets for selected date(s)")
-    
     with col3:
-        # Count ONLY arbs from selected date(s)
-        daily_arbs_count = len(daily_arbs_df)
         st.metric("✅ Arb Opportunities", daily_arbs_count, 
                  help=f"Profitable arbitrage opportunities (is_arb=True)")
-    
     with col4:
-        # Calculate avg profit for selected date's arbs
-        if len(daily_arbs_df) > 0 and 'expected_profit_pct' in daily_arbs_df.columns:
-            daily_avg_edge = daily_arbs_df['expected_profit_pct'].mean()
-            st.metric("📈 Avg Edge", f"{daily_avg_edge:.2f}%",
-                     help="Average edge (profit %) for arbs")
-        else:
-            st.metric("📈 Avg Edge", "N/A",
-                     help="Average edge (profit %) for arbs")
-    
-    with col5:
-        if len(daily_arbs_df) > 0 and 'expected_profit_pct' in daily_arbs_df.columns:
-            daily_max_profit = daily_arbs_df['expected_profit_pct'].max()
-            st.metric("🔥 Best Arb", f"{daily_max_profit:.2f}%",
-                     help="Highest profit opportunity")
-        else:
-            st.metric("🔥 Best Arb", "N/A",
-                     help="Highest profit opportunity")
-    
-    with col6:
-        # Calculate total wagered (only for arbs)
-        daily_wagered = 0
-        if len(daily_arbs_df) > 0 and 'over_stake' in daily_arbs_df.columns and 'under_stake' in daily_arbs_df.columns:
-            daily_wagered = (daily_arbs_df['over_stake'].sum() + daily_arbs_df['under_stake'].sum())
-        
         st.metric("💰 Total Wagered", f"${daily_wagered:,.2f}",
                  help="Total amount wagered on arbs (assuming $100 stake)")
-    
-    with col7:
-        # Calculate total profit (only for arbs)
-        daily_profit = 0
-        if len(daily_arbs_df) > 0 and 'guaranteed_profit' in daily_arbs_df.columns:
-            daily_profit = daily_arbs_df['guaranteed_profit'].sum()
-        
+    with col5:
         st.metric("💵 Total Profit", f"${daily_profit:,.2f}",
                  help="Total guaranteed profit from arbs")
+    with col6:
+        st.metric("📈 Avg Edge", daily_avg_edge_str,
+                 help="Average edge (profit %) for arbs")
+    with col7:
+        st.metric("🔥 Best Arb", daily_max_profit_str,
+                 help="Highest profit opportunity")
     
     st.markdown("---")
     
@@ -865,6 +928,9 @@ def main():
     if selected_date != 'All' and len(daily_df) == 0:
         st.info(f"ℹ️ No NBA games scheduled for {selected_date}")
     elif len(filtered_df) > 0:
+        # Check if mobile view (this is a simple heuristic - we'll use CSS too)
+        mobile_view = st.checkbox("📱 Mobile View (fewer columns)", value=False, help="Show simplified view with key columns only")
+        
         # Format the dataframe for display
         display_df = filtered_df.copy()
         
@@ -878,37 +944,130 @@ def main():
             if col in display_df.columns:
                 display_df = display_df.drop(col, axis=1)
         
-        # Reorder columns to put Team right after Player
-        # Get all columns and reorder
-        cols = display_df.columns.tolist()
-        if 'team' in cols and 'player' in cols:
-            # Remove team from wherever it is
-            cols.remove('team')
-            # Insert it right after player
-            player_idx = cols.index('player')
-            cols.insert(player_idx + 1, 'team')
-            # Reorder the dataframe
-            display_df = display_df[cols]
-        
-        # Convert implied probability decimals to percentages (0.55 -> 55.0)
-        implied_cols = ['best_over_implied', 'best_under_implied']
-        for col in implied_cols:
-            if col in display_df.columns:
-                display_df[col] = display_df[col] * 100
-        
-        # Convert combined probability to percentage (0.9662 -> 96.62)
-        if 'total_prob' in display_df.columns:
-            display_df['total_prob'] = display_df['total_prob'] * 100
-        
-        # Round numeric columns
-        numeric_cols = ['expected_profit_pct', 'guaranteed_profit', 'total_wager', 'over_stake', 'under_stake']
-        for col in numeric_cols:
-            if col in display_df.columns:
-                display_df[col] = display_df[col].round(2)
-        
-        # Apply sorting
-        if sort_column in display_df.columns:
-            display_df = display_df.sort_values(sort_column, ascending=sort_ascending)
+        # MOBILE VIEW: Show only essential columns
+        if mobile_view:
+            # Sort by profit % first (before selecting columns)
+            display_df = display_df.sort_values('expected_profit_pct', ascending=False)
+            
+            # Super minimal for mobile - just the essentials
+            essential_cols = [
+                'player', 'recommendation', 'market', 'line',
+                'expected_profit_pct', 
+                'best_over_odds', 'best_under_odds',
+            ]
+            # Keep only columns that exist
+            mobile_cols = [col for col in essential_cols if col in display_df.columns]
+            mobile_df = display_df[mobile_cols].copy()
+            
+            # Rename columns for mobile (shorter names)
+            mobile_df = mobile_df.rename(columns={
+                'expected_profit_pct': 'Profit %',
+                'best_over_odds': 'Over',
+                'best_under_odds': 'Under',
+                'player': 'Player',
+                'recommendation': 'Rec',
+                'market': 'Market',
+                'line': 'Line'
+            })
+            
+            # Apply color gradient to Profit % column
+            def color_profit_gradient(val):
+                """Color code profit percentages with gradient."""
+                if pd.isna(val):
+                    return ''
+                
+                # Clamp values between -10 and 10 for color mapping
+                clamped = max(-10, min(10, val))
+                
+                if clamped >= 0:
+                    # Green gradient from white (0%) to green (10%)
+                    intensity = int((clamped / 10) * 255)
+                    return f'background-color: rgb({255 - intensity}, 255, {255 - intensity})'
+                else:
+                    # Red gradient from white (0%) to red (-10%)
+                    intensity = int((abs(clamped) / 10) * 255)
+                    return f'background-color: rgb(255, {255 - intensity}, {255 - intensity})'
+            
+            # Style the mobile dataframe
+            styled_mobile_df = mobile_df.style.applymap(
+                color_profit_gradient,
+                subset=['Profit %'] if 'Profit %' in mobile_df.columns else []
+            )
+            
+            # Show the table with styling
+            st.dataframe(
+                styled_mobile_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Line": st.column_config.NumberColumn(
+                        "Line",
+                        help="Prop line value",
+                        format="%.1f"
+                    ),
+                    "Profit %": st.column_config.NumberColumn(
+                        "Profit %",
+                        help="Expected profit percentage",
+                        format="%.2f%%"
+                    ),
+                    "Over": st.column_config.NumberColumn(
+                        "Over",
+                        help="Best over odds",
+                        format="%d"
+                    ),
+                    "Under": st.column_config.NumberColumn(
+                        "Under", 
+                        help="Best under odds",
+                        format="%d"
+                    ),
+                }
+            )
+            
+            # Add expandable section for betting details
+            with st.expander("💡 How to bet these arbs"):
+                st.markdown("""
+                **For each opportunity:**
+                1. Bet the **Over** at the listed odds on the best bookmaker
+                2. Bet the **Under** at the listed odds on the best bookmaker
+                3. Profit is guaranteed regardless of outcome!
+                
+                **Stake sizes** (for $100 total):
+                - Calculate based on implied probabilities
+                - Use an [arb calculator](https://www.arbitrage-calculator.com/) for exact amounts
+                """)
+        else:
+            # DESKTOP VIEW: Full details
+            # Reorder columns to put Team right after Player
+            # Get all columns and reorder
+            cols = display_df.columns.tolist()
+            if 'team' in cols and 'player' in cols:
+                # Remove team from wherever it is
+                cols.remove('team')
+                # Insert it right after player
+                player_idx = cols.index('player')
+                cols.insert(player_idx + 1, 'team')
+                # Reorder the dataframe
+                display_df = display_df[cols]
+            
+            # Convert implied probability decimals to percentages (0.55 -> 55.0)
+            implied_cols = ['best_over_implied', 'best_under_implied']
+            for col in implied_cols:
+                if col in display_df.columns:
+                    display_df[col] = display_df[col] * 100
+            
+            # Convert combined probability to percentage (0.9662 -> 96.62)
+            if 'total_prob' in display_df.columns:
+                display_df['total_prob'] = display_df['total_prob'] * 100
+            
+            # Round numeric columns
+            numeric_cols = ['expected_profit_pct', 'guaranteed_profit', 'total_wager', 'over_stake', 'under_stake']
+            for col in numeric_cols:
+                if col in display_df.columns:
+                    display_df[col] = display_df[col].round(2)
+            
+            # Apply sorting
+            if sort_column in display_df.columns:
+                display_df = display_df.sort_values(sort_column, ascending=sort_ascending)
         
         # Apply color gradient to Profit % column
         def color_profit_gradient(val):
@@ -1040,7 +1199,7 @@ def main():
         
         # Reorder columns to match Daily Summary order (+ remove file)
         column_order = ['date', 'num_games', 'prop_markets', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
-        display_history = history_df[column_order].head(10)
+        display_history = history_df[column_order]
         
         # Apply color gradient to avg_profit column in history
         def color_profit_gradient_history(val):
