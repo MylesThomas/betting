@@ -247,6 +247,141 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Mobile-responsive CSS
+st.markdown("""
+<style>
+    /* Mobile-first responsive design */
+    @media (max-width: 768px) {
+        /* Reduce padding on mobile - AGGRESSIVE */
+        .block-container {
+            padding: 0.5rem !important;
+            max-width: 100% !important;
+        }
+        
+        /* Make metrics stack vertically on mobile with minimal spacing */
+        div[data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+            gap: 0.25rem !important;
+        }
+        
+        div[data-testid="stMetric"] {
+            width: 100% !important;
+            margin-bottom: 0.25rem !important;
+            padding: 0.25rem !important;
+        }
+        
+        /* AGGRESSIVE font size reduction */
+        h1 {
+            font-size: 1.25rem !important;
+            margin-bottom: 0.5rem !important;
+            line-height: 1.3 !important;
+        }
+        
+        h2 {
+            font-size: 1rem !important;
+            margin-bottom: 0.4rem !important;
+            margin-top: 0.4rem !important;
+            line-height: 1.3 !important;
+        }
+        
+        h3 {
+            font-size: 0.9rem !important;
+            margin-bottom: 0.3rem !important;
+            line-height: 1.3 !important;
+        }
+        
+        /* Reduce metric label and value sizes significantly */
+        div[data-testid="stMetric"] label {
+            font-size: 0.7rem !important;
+            line-height: 1.2 !important;
+        }
+        
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+            font-size: 1.1rem !important;
+            line-height: 1.2 !important;
+        }
+        
+        /* Reduce spacing between sections */
+        hr {
+            margin: 0.5rem 0 !important;
+        }
+        
+        /* Make tables scrollable horizontally on mobile */
+        div[data-testid="stDataFrame"] {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        
+        /* Reduce table font size on mobile */
+        div[data-testid="stDataFrame"] table {
+            font-size: 0.7rem !important;
+        }
+        
+        /* Make buttons more compact */
+        .stButton > button {
+            width: 100% !important;
+            padding: 0.5rem !important;
+            font-size: 0.85rem !important;
+        }
+        
+        .stDownloadButton > button {
+            width: 100% !important;
+            padding: 0.5rem !important;
+            font-size: 0.85rem !important;
+        }
+        
+        /* Reduce select box font size and padding */
+        div[data-baseweb="select"] {
+            font-size: 0.8rem !important;
+        }
+        
+        /* Compact info boxes */
+        .stInfo, .stWarning {
+            font-size: 0.8rem !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* Reduce markdown text size */
+        .stMarkdown {
+            font-size: 0.85rem !important;
+        }
+        
+        /* Compact the Overall Summary title */
+        .element-container {
+            margin-bottom: 0.25rem !important;
+        }
+    }
+    
+    /* Tablet view */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .block-container {
+            padding: 2rem !important;
+        }
+        
+        /* Adjust metric columns for tablet */
+        div[data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap !important;
+        }
+        
+        div[data-testid="stMetric"] {
+            min-width: 45% !important;
+        }
+    }
+    
+    /* Desktop view - no changes needed */
+    @media (min-width: 1025px) {
+        /* Default Streamlit styling works well */
+    }
+    
+    /* Make all touch targets at least 44px for mobile accessibility */
+    @media (max-width: 768px) {
+        button, input, select, a {
+            min-height: 44px !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Constants  
 DATA_DIR = Path("data/04_output/arbs")
 SCRIPT_PATH = "scripts/find_arb_opportunities.py"
