@@ -995,13 +995,13 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
             
             # Calculate credits used for each call
             for i, call in enumerate(api_calls):
-                remaining = int(call['remaining'])
+                remaining = int(float(call['remaining']))
                 
                 if i == 0:
                     # First call - we don't know what we started with, so show as first call
                     credits_used = "N/A (first)"
                 else:
-                    prev_remaining = int(api_calls[i-1]['remaining'])
+                    prev_remaining = int(float(api_calls[i-1]['remaining']))
                     credits_used = prev_remaining - remaining
                     credits_used = f"{credits_used:,}" if credits_used > 0 else "0 (free!)"
                 
@@ -1012,8 +1012,8 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
             print("-" * 90)
             
             # Summary
-            first_remaining = int(api_calls[0]['remaining'])
-            last_remaining = int(api_calls[-1]['remaining'])
+            first_remaining = int(float(api_calls[0]['remaining']))
+            last_remaining = int(float(api_calls[-1]['remaining']))
             total_used = first_remaining - last_remaining
             
             print(f"\n📊 Summary:")
