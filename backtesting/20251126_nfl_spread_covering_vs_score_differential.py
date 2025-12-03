@@ -42,7 +42,7 @@ parser.add_argument('--team', type=str, default='all',
 parser.add_argument('--threshold', type=float, default=7.0,
                    help='Luck threshold for extreme performance tracking (default: 7.0)')
 parser.add_argument('--group-by-spread', action='store_true',
-                   help='Break down results by spread ranges (0-3, 3-7, 7+)')
+                   help='Break down results by spread ranges (≤3, 3.5-7, 7.5+)')
 parser.add_argument('--include-fav-dog', action='store_true',
                    help='Further break down by favorite/underdog (requires --group-by-spread)')
 args = parser.parse_args()
@@ -666,11 +666,11 @@ if args.observe_trends:
             # Categorize spread
             abs_spread = abs(team_spread)
             if abs_spread <= 3:
-                spread_category = '0-3 (close)'
+                spread_category = '≤3 (close)'
             elif abs_spread <= 7:
-                spread_category = '3-7 (moderate)'
+                spread_category = '3.5-7 (moderate)'
             else:
-                spread_category = '7+ (large)'
+                spread_category = '7.5+ (large)'
             
             # Determine if favorite or underdog
             is_favorite = team_spread < 0
@@ -882,7 +882,7 @@ if args.observe_trends:
                     print("-" * 90)
                     
                     # Show by spread range, then split by fav/dog
-                    for spread_range in ['0-3 (close)', '3-7 (moderate)', '7+ (large)']:
+                    for spread_range in ['≤3 (close)', '3.5-7 (moderate)', '7.5+ (large)']:
                         for fav_dog in ['Favorite', 'Underdog']:
                             category = f"{spread_range} {fav_dog}"
                             df_cat = df_plus[df_plus['spread_fav_category'] == category]
@@ -903,7 +903,7 @@ if args.observe_trends:
                     print(f"{'Spread Range':<20s} {'Sample':<10s} {'ATS Record':<15s} {'ATS%':<10s} {'ROI':<10s} {'Avg Spread':<12s}")
                     print("-" * 80)
                     
-                    for category in ['0-3 (close)', '3-7 (moderate)', '7+ (large)']:
+                    for category in ['≤3 (close)', '3.5-7 (moderate)', '7.5+ (large)']:
                         df_cat = df_plus[df_plus['spread_category'] == category]
                         if len(df_cat) > 0:
                             ats_wins = df_cat['covered'].sum()
@@ -926,7 +926,7 @@ if args.observe_trends:
                     print("-" * 90)
                     
                     # Show by spread range, then split by fav/dog
-                    for spread_range in ['0-3 (close)', '3-7 (moderate)', '7+ (large)']:
+                    for spread_range in ['≤3 (close)', '3.5-7 (moderate)', '7.5+ (large)']:
                         for fav_dog in ['Favorite', 'Underdog']:
                             category = f"{spread_range} {fav_dog}"
                             df_cat = df_minus[df_minus['spread_fav_category'] == category]
@@ -947,7 +947,7 @@ if args.observe_trends:
                     print(f"{'Spread Range':<20s} {'Sample':<10s} {'ATS Record':<15s} {'ATS%':<10s} {'ROI':<10s} {'Avg Spread':<12s}")
                     print("-" * 80)
                     
-                    for category in ['0-3 (close)', '3-7 (moderate)', '7+ (large)']:
+                    for category in ['≤3 (close)', '3.5-7 (moderate)', '7.5+ (large)']:
                         df_cat = df_minus[df_minus['spread_category'] == category]
                         if len(df_cat) > 0:
                             ats_wins = df_cat['covered'].sum()
@@ -969,8 +969,8 @@ if args.observe_trends:
                 print("  ✓ Key insight: Separate 'bad team on a bad day' from 'good team got unlucky'")
             else:
                 print("HYPOTHESIS TEST:")
-                print("  ✓ If close games (0-3) have best ROI → Only bet when near pick'em")
-                print("  ✓ If large spreads (7+) have negative ROI → Avoid huge underdogs")
+                print("  ✓ If close games (≤3) have best ROI → Only bet when near pick'em")
+                print("  ✓ If large spreads (7.5+) have negative ROI → Avoid huge underdogs")
                 print("  ✓ Compare to validate: unlucky teams bounce back ONLY when not massive dogs")
                 print(f"\n💡 Add --include-fav-dog to split by favorite/underdog for deeper insights")
     

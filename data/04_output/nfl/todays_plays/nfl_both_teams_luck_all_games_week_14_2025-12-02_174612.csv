@@ -1,0 +1,2 @@
+game_id,game_time,game_time_et,away_abbr,home_abbr,consensus_spread,abs_spread,spread_cat,num_books,away_prior_luck,home_prior_luck,away_luck_cat,home_luck_cat,matchup_type,is_lucky_vs_unlucky,bet_team,bet_spread,bet_reason
+test_dal_det_tnf,2025-12-05 01:15:00+00:00,Thu 2025-12-04 20:15 ET,DAL,DET,3.0,3.0,0-3,1,5.899999999999999,6.300000000000001,Lucky,Lucky,Lucky vs Lucky,False,,,

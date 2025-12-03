@@ -5,8 +5,8 @@ Based on analysis from 20251126_nfl_spread_covering_vs_score_differential.py
 
 Two proven strategies (thru Week 12, 2025):
 1. PRIMARY: Back unlucky favorites (after -7 luck, favorites with spread ≤7)
-   - 3-7 favorites: 72.7% ATS, +38.8% ROI (11 games)
-   - 0-3 favorites: 66.7% ATS, +27.3% ROI (15 games)
+   - 3.5-7 favorites: 72.7% ATS, +38.8% ROI (11 games)
+   - ≤3 favorites: 66.7% ATS, +27.3% ROI (15 games)
 
 2. SECONDARY: Back lucky big underdogs (after +7 luck, underdogs with spread ≥7)
    - 71.4% ATS, +36.4% ROI (7 games)
@@ -555,11 +555,11 @@ for _, game in week_games.iterrows():
     
     # Get spread category
     if away_spread_abs <= 3:
-        away_spread_cat = '0-3'
+        away_spread_cat = '≤3'
     elif away_spread_abs <= 7:
-        away_spread_cat = '3-7'
+        away_spread_cat = '3.5-7'
     else:
-        away_spread_cat = '7+'
+        away_spread_cat = '7.5+'
     
     # Get luck from previous week
     away_luck_data = team_luck_map.get(away_team, {})
@@ -607,11 +607,11 @@ for _, game in week_games.iterrows():
     
     # Get spread category
     if home_spread_abs <= 3:
-        home_spread_cat = '0-3'
+        home_spread_cat = '≤3'
     elif home_spread_abs <= 7:
-        home_spread_cat = '3-7'
+        home_spread_cat = '3.5-7'
     else:
-        home_spread_cat = '7+'
+        home_spread_cat = '7.5+'
     
     # Get luck from previous week
     home_luck_data = team_luck_map.get(home_team, {})

@@ -7,8 +7,9 @@ Captures CLOSING lines by fetching on game day, not early opening lines.
 Similar approach to fetch_historical_props.py for NBA
 
 Usage:
-    python fetch_nfl_season_lines.py               # Interactive mode
-    python fetch_nfl_season_lines.py --london      # Fetch only London games
+    python fetch_historical_nfl_season_lines.py               # Interactive mode
+    python fetch_historical_nfl_season_lines.py --london      # Fetch only London games
+    python fetch_historical_nfl_season_lines.py --prod-run    # Non-interactive full season fetch
 """
 
 import requests
@@ -107,10 +108,10 @@ def get_historical_nfl_events(date_str):
         
         data = response.json()
         
-        # Get API usage
-        credits_remaining = int(response.headers.get('x-requests-remaining', 0))
-        credits_used = int(response.headers.get('x-requests-used', 0))
-        cost = int(response.headers.get('x-requests-last', 0))
+        # Get API usage (use float() first since API sometimes returns '99567.0' format)
+        credits_remaining = int(float(response.headers.get('x-requests-remaining', 0)))
+        credits_used = int(float(response.headers.get('x-requests-used', 0)))
+        cost = int(float(response.headers.get('x-requests-last', 0)))
         
         events = data.get('data', [])
         
@@ -168,10 +169,10 @@ def get_historical_event_odds(event_id, date_str, snapshot_hour=None):
         
         data = response.json()
         
-        # Get API usage
-        credits_remaining = int(response.headers.get('x-requests-remaining', 0))
-        credits_used = int(response.headers.get('x-requests-used', 0))
-        cost = int(response.headers.get('x-requests-last', 0))
+        # Get API usage (use float() first since API sometimes returns '99567.0' format)
+        credits_remaining = int(float(response.headers.get('x-requests-remaining', 0)))
+        credits_used = int(float(response.headers.get('x-requests-used', 0)))
+        cost = int(float(response.headers.get('x-requests-last', 0)))
         
         event_data = data.get('data', {})
         

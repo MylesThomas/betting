@@ -1,0 +1,5 @@
+game_id,game_time,game_time_et,away_abbr,home_abbr,consensus_spread,abs_spread,spread_cat,num_books,away_prior_luck,home_prior_luck,away_luck_cat,home_luck_cat,matchup_type,is_lucky_vs_unlucky,bet_team,bet_spread,bet_reason
+58b16c4033587f5662ff365bce2dbb92,2025-12-07 18:00:00+00:00,Sun 2025-12-07 13:00 ET,WAS,MIN,1.5,1.5,0-3,11,4.600000000000001,-6.4,Lucky,Unlucky,Lucky vs Unlucky,True,MIN,-1.5,"MIN was unlucky (-6.4), WAS was lucky (+4.6)"
+5d7b12c34454df4ff2c59a15ca58e63f,2025-12-09 01:15:00+00:00,Mon 2025-12-08 20:15 ET,PHI,LAC,-3.0,3.0,0-3,11,-5.800000000000001,12.7,Unlucky,Lucky,Unlucky vs Lucky,True,PHI,-3.0,"PHI was unlucky (-5.8), LAC was lucky (+12.7)"
+d5fd126cbfea2ccd79962a17f0ef4463,2025-12-07 21:05:00+00:00,Sun 2025-12-07 16:05 ET,DEN,LV,-7.5,7.5,7.5+,11,3.0,-5.5,Lucky,Unlucky,Lucky vs Unlucky,True,LV,7.5,"LV was unlucky (-5.5), DEN was lucky (+3.0)"
+f0bdd27bbed46dfc3d0657500c95a96c,2025-12-07 18:00:00+00:00,Sun 2025-12-07 13:00 ET,SEA,ATL,-7.0,7.0,3.5-7,11,5.300000000000001,-6.5,Lucky,Unlucky,Lucky vs Unlucky,True,ATL,7.0,"ATL was unlucky (-6.5), SEA was lucky (+5.3)"
