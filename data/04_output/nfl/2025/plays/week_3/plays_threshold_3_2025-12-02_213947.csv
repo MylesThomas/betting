@@ -1,0 +1,2 @@
+game_id,game_time,week,away_abbr,home_abbr,consensus_spread,abs_spread,spread_cat,away_is_favorite,home_is_favorite,away_score,home_score,actual_margin,away_covered,home_covered,away_luck,home_luck,away_prior_luck,home_prior_luck,away_luck_cat,home_luck_cat,matchup_type,game_time_et,is_lu,bet_team,bet_spread,bet_reason
+eefb7f130c8fc2c129e296fe5c6ba3e3,2025-09-21 17:03:00+00:00,3,CIN,MIN,3.0,3.0,0-3,False,True,10,48,-38,False,True,2.4000000000000004,17.3,8.0,-7.9,Lucky,Unlucky,Lucky vs Unlucky,Sun 2025-09-21 13:03 ET,True,MIN,-3.0,"MIN unlucky (-7.9), CIN lucky (+8.0)"

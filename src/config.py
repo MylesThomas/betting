@@ -106,6 +106,42 @@ NFL_2025_BYE_WEEKS = {
 
 
 # =============================================================================
+# EMOJI MAP
+# =============================================================================
+
+EMOJI = {
+    # Status
+    'success': '✅',
+    'error': '❌',
+    'warning': '⚠️',
+    'info': 'ℹ️',
+    'refresh': '🔄',
+    'save': '💾',
+    
+    # Analysis
+    'chart': '📊',
+    'target': '🎯',
+    'calendar': '📅',
+    'star': '⭐',
+    'money': '💰',
+    'up': '📈',
+    'down': '📉',
+    
+    # Luck categories
+    'lucky': '🍀',
+    'unlucky': '💔',
+    'neutral': '😐',
+    
+    # Sports
+    'nba': '🏀',
+    'nfl': '🏈',
+    
+    # Test/Debug
+    'test': '🧪',
+}
+
+
+# =============================================================================
 # CLI
 # =============================================================================
 
@@ -114,12 +150,12 @@ if __name__ == '__main__':
     print("BETTING CONFIG")
     print("=" * 50)
     
-    print("\n📗 NBA:")
+    print(f"\n{EMOJI['nba']} NBA:")
     print(f"   Season: {CURRENT_NBA_SEASON}")
     print(f"   Teams: {len(NBA_TEAMS)}")
     print(f"   Cache: {PLAYER_TEAM_CACHE_MAX_AGE_HOURS}h")
     
-    print("\n🏈 NFL:")
+    print(f"\n{EMOJI['nfl']} NFL:")
     print(f"   Season: {NFL_CURRENT_SEASON}")
     print(f"   Luck Threshold: ±{NFL_LUCK_THRESHOLD_DEFAULT}")
     print(f"   Bye Weeks: {len(NFL_2025_BYE_WEEKS)} teams configured")

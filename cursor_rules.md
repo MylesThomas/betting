@@ -54,7 +54,71 @@ else:
 - good: all in 1 python file
 
 7. if you are going to use emojis, have an emoji map in the config or something similar
-- good: {...}
+- good:
+
+```py
+
+# =============================================================================
+# EMOJI MAP
+# =============================================================================
+
+EMOJI = {
+    # Status
+    'success': '✅',
+    'error': '❌',
+    'warning': '⚠️',
+    'info': 'ℹ️',
+    'refresh': '🔄',
+    'save': '💾',
+    
+    # Analysis
+    'chart': '📊',
+    'target': '🎯',
+    'calendar': '📅',
+    'star': '⭐',
+    'money': '💰',
+    'up': '📈',
+    'down': '📉',
+    
+    # Luck categories
+    'lucky': '🍀',
+    'unlucky': '💔',
+    'neutral': '😐',
+    
+    # Sports
+    'nba': '🏀',
+    'nfl': '🏈',
+    
+    # Test/Debug
+    'test': '🧪',
+}
+
+```
 
 - bad: hard-coding
+
+8. do not do a git commit / push until you know we have fixed the issue / iterated on the task successfully
+
+9. if you are going to do git commits, ask me for permission first, and use the methodology from this link: 
+- Jiawei's article on submitting Git Patches / commit messages
+- link: https://git.kernel.org/pub/scm/git/git.git/tree/Documentation/SubmittingPatches
+
+advice on how to make the message:
+- Keep it ~50 chars, no period at the end.
+- Start with a scope (cli, docs, parser, build, a file/dir).
+- Use imperative mood: “add”, “fix”, “refactor”, “revert”, “docs”.
+- Say what changed and hint at why/impact (crash avoided, speed up, UX).
+- Avoid fluff: no “This commit…”, no emojis, no trailing punctuation.
+- Prefer specific nouns over vague ones (“nil ptr on empty input” > “issue”).
+- If reverting, start with revert: …. If following up, consider follow-up:.
+- Reference an issue only if your team’s convention requires it (short form).
+- If it’s a sweeping change, split commits instead; one logical change per commit.
+
+Examples you can copy and tweak:
+- git commit --message "parser: fix nil ptr on empty input"
+- git commit --message "cli: add --dry-run flag for safety"
+- git commit --message "docs: clarify DCO vs PGP signing"
+- git commit --message "build: cache deps to cut CI time"
+
+10. 
 

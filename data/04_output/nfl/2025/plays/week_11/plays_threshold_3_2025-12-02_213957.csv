@@ -1,0 +1,2 @@
+game_id,game_time,week,away_abbr,home_abbr,consensus_spread,abs_spread,spread_cat,away_is_favorite,home_is_favorite,away_score,home_score,actual_margin,away_covered,home_covered,away_luck,home_luck,away_prior_luck,home_prior_luck,away_luck_cat,home_luck_cat,matchup_type,game_time_et,is_lu,bet_team,bet_spread,bet_reason
+7147476b5d96c0ee874b838de3910ee3,2025-11-16 18:00:00+00:00,11,CIN,PIT,5.5,5.5,3.5-7,False,True,12,34,-22,False,True,0.0999999999999996,11.1,14.2,-4.1,Lucky,Unlucky,Lucky vs Unlucky,Sun 2025-11-16 13:00 ET,True,PIT,-5.5,"PIT unlucky (-4.1), CIN lucky (+14.2)"

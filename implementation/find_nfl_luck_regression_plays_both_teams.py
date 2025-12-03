@@ -54,23 +54,27 @@ load_dotenv()
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+# Add src to path by finding project root (look for .gitignore)
+def find_project_root() -> Path:
+    """Find project root by looking for .gitignore file."""
+    current = Path(__file__).resolve().parent
+    for parent in [current] + list(current.parents):
+        if (parent / '.gitignore').exists():
+            return parent
+    raise FileNotFoundError("Could not find project root (.gitignore not found)")
+
+PROJECT_ROOT = find_project_root()
+sys.path.insert(0, str(PROJECT_ROOT / 'src'))
 from nfl_team_utils import add_team_abbr_columns
 from nfl_luck_utils import (
     categorize_luck,
     categorize_spread,
-    get_nfl_week,
-    load_nfl_betting_lines,
-    calculate_consensus_lines,
     load_unexpected_points_data,
     build_prior_luck_lookup,
     get_prior_week_luck,
-    calculate_roi,
-    NFL_2025_BYE_WEEKS,
     NFL_LINES_UPCOMING_DIR,
 )
-from config import NFL_LUCK_THRESHOLD_DEFAULT
+from config import NFL_LUCK_THRESHOLD_DEFAULT, EMOJI
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Find NFL regression betting plays using both teams luck')
@@ -109,7 +113,7 @@ if args.week is not None:
     backtest_file = DATA_ROOT / f"03_intermediate/nfl_both_teams_luck_analysis_threshold_{int(args.threshold)}.csv"
     
     if not backtest_file.exists():
-        print(f"\n❌ File not found: {backtest_file}")
+        print(f"\n{EMOJI['error']} File not found: {backtest_file}")
         print(f"   Run: python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold {int(args.threshold)}")
         sys.exit(1)
     
@@ -122,11 +126,11 @@ if args.week is not None:
     df_week['game_time_et'] = df_week['game_time'].dt.tz_convert('America/New_York').dt.strftime('%a %Y-%m-%d %H:%M ET')
     
     if len(df_week) == 0:
-        print(f"\n❌ No games for Week {args.week}")
+        print(f"\n{EMOJI['error']} No games for Week {args.week}")
         print(f"   Available weeks: {sorted(df['week'].unique())}")
         sys.exit(1)
     
-    print(f"\n✅ {len(df_week)} games | Threshold ±{args.threshold}")
+    print(f"\n{EMOJI['success']} {len(df_week)} games | Threshold ±{args.threshold}")
     
     # Find Lucky vs Unlucky matchups
     df_week['is_lu'] = (
@@ -150,13 +154,13 @@ if args.week is not None:
                 df_week.at[idx, 'bet_spread'] = -row['consensus_spread']
                 df_week.at[idx, 'bet_reason'] = f"{row['home_abbr']} unlucky ({row['home_prior_luck']:+.1f}), {row['away_abbr']} lucky ({row['away_prior_luck']:+.1f})"
     
-    print(f"\n📊 Games:")
+    print(f"\n{EMOJI['chart']} Games:")
     for _, g in df_week.iterrows():
-        lu = "⭐" if g['is_lu'] else "  "
+        lu = EMOJI['star'] if g['is_lu'] else "  "
         print(f"  {lu} {g['away_abbr']:>4} ({g['away_prior_luck']:+.1f}) @ {g['home_abbr']:<4} ({g['home_prior_luck']:+.1f}) | {g['matchup_type']}")
     
     df_plays = df_week[df_week['is_lu']]
-    print(f"\n🎯 Lucky vs Unlucky: {len(df_plays)}")
+    print(f"\n{EMOJI['target']} Lucky vs Unlucky: {len(df_plays)}")
     
     if len(df_plays) > 0:
         print("\nBET UNLUCKY TEAM:")
@@ -167,7 +171,7 @@ if args.week is not None:
             else:
                 bet, spread, covered = p['home_abbr'], -p['consensus_spread'], p['home_covered']
             
-            result = "✅" if covered else "❌"
+            result = EMOJI['success'] if covered else EMOJI['error']
             if covered:
                 wins += 1
             print(f"  {result} {bet} {spread:+.1f}")
@@ -183,13 +187,13 @@ if args.week is not None:
     # Save all games
     all_games_path = output_dir / f"all_games_{threshold_str}_{timestamp}.csv"
     df_week.to_csv(all_games_path, index=False)
-    print(f"\n💾 Saved all {len(df_week)} games to: {all_games_path}")
+    print(f"\n{EMOJI['save']} Saved all {len(df_week)} games to: {all_games_path}")
     
     # Save plays only
     if len(df_plays) > 0:
         plays_path = output_dir / f"plays_{threshold_str}_{timestamp}.csv"
         df_plays.to_csv(plays_path, index=False)
-        print(f"💾 Saved {len(df_plays)} plays to: {plays_path}")
+        print(f"{EMOJI['save']} Saved {len(df_plays)} plays to: {plays_path}")
     
     sys.exit(0)
 
@@ -209,7 +213,7 @@ print(f"  Lucky: luck >= +{threshold}")
 print(f"  Unlucky: luck <= -{threshold}")
 print(f"  Neutral: between")
 if TEST_MODE:
-    print(f"\n🧪 TEST MODE: Simulating 2025-12-04 (1 TNF game to save API credits)")
+    print(f"\n{EMOJI['test']} TEST MODE: Simulating 2025-12-04 (1 TNF game to save API credits)")
 print(f"\nSafe Mode: {'ON (will ask before API calls)' if args.safe_mode else 'OFF (production mode)'}")
 
 # =============================================================================
@@ -221,11 +225,11 @@ print("=" * 100)
 
 try:
     df_up = load_unexpected_points_data()
-    print(f"✅ Loaded Unexpected Points data: {len(df_up)} rows")
+    print(f"{EMOJI['success']} Loaded Unexpected Points data: {len(df_up)} rows")
     print(f"   Weeks: {df_up['week'].min()} to {df_up['week'].max()}")
     max_week = df_up['week'].max()
 except FileNotFoundError as e:
-    print(f"\n❌ ERROR: {e}")
+    print(f"\n{EMOJI['error']} ERROR: {e}")
     print("   Download the latest Unexpected Points data from:")
     print("   https://docs.google.com/spreadsheets/d/1ktlf_ekms7aI6r0tF_HeX0zaxps-bHWYsgglUReC558/edit")
     sys.exit(1)
@@ -248,7 +252,7 @@ import os
 # Use test date if in test mode
 if TEST_MODE:
     today = TEST_DATE
-    print(f"\n🧪 Using simulated date: {today.strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"\n{EMOJI['test']} Using simulated date: {today.strftime('%Y-%m-%d %H:%M UTC')}")
 else:
     today = datetime.now(timezone.utc)
 next_week_7d = today + timedelta(days=7)
@@ -295,7 +299,7 @@ if upcoming_files:
         unique_games = upcoming_games['game_id'].nunique()
         
         # Show what games we have
-        print(f"✅ Found {unique_games} game(s) in next 7 days from existing data")
+        print(f"{EMOJI['success']} Found {unique_games} game(s) in next 7 days from existing data")
         for game_id in upcoming_games['game_id'].unique()[:5]:
             game = upcoming_games[upcoming_games['game_id'] == game_id].iloc[0]
             game_time_et = pd.to_datetime(game['game_time']).astimezone(ZoneInfo('America/New_York'))
@@ -305,19 +309,19 @@ if upcoming_files:
         
         # Ask if we want to use existing or fetch fresh
         if args.safe_mode:
-            print(f"\n⚠️  Use existing data or fetch fresh lines?")
+            print(f"\n{EMOJI['warning']}  Use existing data or fetch fresh lines?")
             choice = input("   Use existing? [Y/n]: ").strip().lower()
             
             if choice in ['', 'y', 'yes', '1']:
-                print("   ✅ Using existing data")
+                print(f"   {EMOJI['success']} Using existing data")
                 df_current_week_lines = upcoming_games
                 fetch_fresh = False
             else:
-                print("   🔄 Will fetch fresh lines from API...")
+                print(f"   {EMOJI['refresh']} Will fetch fresh lines from API...")
                 fetch_fresh = True
         else:
             # In non-safe mode, use existing data if available
-            print("   ℹ️  Using existing data (safe-mode off)")
+            print(f"   {EMOJI['info']}  Using existing data (safe-mode off)")
             df_current_week_lines = upcoming_games
             fetch_fresh = False
     else:
@@ -336,7 +340,7 @@ if fetch_fresh or df_current_week_lines is None:
     # Check for API key
     api_key = os.getenv('ODDS_API_KEY')
     if not api_key:
-        print("\n❌ ERROR: ODDS_API_KEY environment variable not set")
+        print(f"\n{EMOJI['error']} ERROR: ODDS_API_KEY environment variable not set")
         print("   Set it with: export ODDS_API_KEY='your_key_here'")
         sys.exit(1)
     
@@ -344,9 +348,9 @@ if fetch_fresh or df_current_week_lines is None:
     
     # Final confirmation in safe mode
     if args.safe_mode:
-        confirm = input("\n⚠️  This will use API credits. Continue? [y/N]: ").strip().lower()
+        confirm = input(f"\n{EMOJI['warning']}  This will use API credits. Continue? [y/N]: ").strip().lower()
         if confirm not in ['y', 'yes']:
-            print("   ❌ Aborted by user")
+            print(f"   {EMOJI['error']} Aborted by user")
             sys.exit(0)
     
     # Monkey-patch requests to disable SSL verification
@@ -372,7 +376,7 @@ if fetch_fresh or df_current_week_lines is None:
         'commenceTimeTo': commence_to,
     }
     
-    print(f"\n🔄 Fetching NFL spreads from The Odds API (next 7 days)...")
+    print(f"\n{EMOJI['refresh']} Fetching NFL spreads from The Odds API (next 7 days)...")
     print(f"   Date range: {commence_from} to {commence_to}")
     
     fetched_at = datetime.now(timezone.utc).isoformat()
@@ -380,12 +384,12 @@ if fetch_fresh or df_current_week_lines is None:
     response = requests.get(url, params=params, verify=False)
     
     if response.status_code != 200:
-        print(f"\n❌ ERROR: API request failed with status {response.status_code}")
+        print(f"\n{EMOJI['error']} ERROR: API request failed with status {response.status_code}")
         print(f"   Response: {response.text}")
         sys.exit(1)
     
     data = response.json()
-    print(f"✅ Received {len(data)} games from API")
+    print(f"{EMOJI['success']} Received {len(data)} games from API")
     
     # Filter to games in our 7-day window
     games_in_range = []
@@ -397,7 +401,7 @@ if fetch_fresh or df_current_week_lines is None:
         if today <= game_time_utc <= next_week_7d:
             games_in_range.append(game)
     
-    print(f"\n📅 Games in 7-day window: {len(games_in_range)}")
+    print(f"\n{EMOJI['calendar']} Games in 7-day window: {len(games_in_range)}")
     
     # Parse and save the data
     lines_to_save = []
@@ -407,11 +411,11 @@ if fetch_fresh or df_current_week_lines is None:
         away_team = game['away_team']
         home_team = game['home_team']
         
-        for bookmaker in game.get('bookmakers', []):
+        for bookmaker in game['bookmakers']:
             bookmaker_key = bookmaker['key']
-            bookmaker_last_update = bookmaker.get('last_update')
+            bookmaker_last_update = bookmaker['last_update']
             
-            for market in bookmaker.get('markets', []):
+            for market in bookmaker['markets']:
                 if market['key'] == 'spreads':
                     for outcome in market['outcomes']:
                         if outcome['name'] == away_team:
@@ -435,7 +439,7 @@ if fetch_fresh or df_current_week_lines is None:
         output_path = upcoming_dir / f"nfl_game_lines_{today_str}.csv"
         df_new_lines.to_csv(output_path, index=False)
         
-        print(f"💾 Saved {len(df_new_lines)} line records to {output_path}")
+        print(f"{EMOJI['save']} Saved {len(df_new_lines)} line records to {output_path}")
         
         # Use fresh data
         df_new_lines['game_time'] = pd.to_datetime(df_new_lines['game_time'])
@@ -444,11 +448,11 @@ if fetch_fresh or df_current_week_lines is None:
         
         df_current_week_lines = df_new_lines
     else:
-        print("\n❌ ERROR: No games returned from API")
+        print(f"\n{EMOJI['error']} ERROR: No games returned from API")
         sys.exit(1)
 
 print(f"\n{'='*100}")
-print(f"✅ Using {len(df_current_week_lines)} line records for {df_current_week_lines['game_id'].nunique()} upcoming game(s)")
+print(f"{EMOJI['success']} Using {len(df_current_week_lines)} line records for {df_current_week_lines['game_id'].nunique()} upcoming game(s)")
 print(f"{'='*100}")
 
 # =============================================================================
@@ -482,7 +486,7 @@ for game_id, game_group in df_lines.groupby('game_id'):
     })
 
 df_consensus = pd.DataFrame(consensus_lines)
-print(f"✅ Calculated consensus spreads for {len(df_consensus)} games")
+print(f"{EMOJI['success']} Calculated consensus spreads for {len(df_consensus)} games")
 
 # Determine target week
 target_week = max_week + 1
@@ -570,11 +574,11 @@ for _, game in df_consensus.iterrows():
 
 df_games = pd.DataFrame(games_with_luck)
 
-print(f"\n📊 Prior Week Luck Summary (Week {max_week}):")
+print(f"\n{EMOJI['chart']} Prior Week Luck Summary (Week {max_week}):")
 for _, g in df_games.iterrows():
     away_luck_str = f"{g['away_prior_luck']:+.1f}" if g['away_prior_luck'] is not None else "N/A"
     home_luck_str = f"{g['home_prior_luck']:+.1f}" if g['home_prior_luck'] is not None else "N/A"
-    matchup = f"⭐ {g['matchup_type']}" if g['is_lu'] else g['matchup_type']
+    matchup = f"{EMOJI['star']} {g['matchup_type']}" if g['is_lu'] else g['matchup_type']
     
     print(f"  {g['away_abbr']:>4s} ({away_luck_str:>6s}) @ {g['home_abbr']:<4s} ({home_luck_str:>6s}) | {matchup}")
 
@@ -593,17 +597,17 @@ if args.verbose_mode:
         print(f"Spread: {game['away_abbr']} {game['consensus_spread']:+.1f}")
         print(f"{'='*100}")
         
-        print(f"\n📊 Prior Week (Week {max_week}) Luck:")
+        print(f"\n{EMOJI['chart']} Prior Week (Week {max_week}) Luck:")
         
         # Away team
         if game['away_prior_luck'] is not None:
             away_status = ""
             if game['away_luck_cat'] == 'Lucky':
-                away_status = f"🍀 LUCKY (>= +{threshold})"
+                away_status = f"{EMOJI['lucky']} LUCKY (>= +{threshold})"
             elif game['away_luck_cat'] == 'Unlucky':
-                away_status = f"💔 UNLUCKY (<= -{threshold})"
+                away_status = f"{EMOJI['unlucky']} UNLUCKY (<= -{threshold})"
             else:
-                away_status = f"😐 NEUTRAL"
+                away_status = f"{EMOJI['neutral']} NEUTRAL"
             print(f"   {game['away_abbr']}: {game['away_prior_luck']:+.1f} → {away_status}")
         else:
             print(f"   {game['away_abbr']}: No prior data (Week 1 or missing)")
@@ -612,25 +616,25 @@ if args.verbose_mode:
         if game['home_prior_luck'] is not None:
             home_status = ""
             if game['home_luck_cat'] == 'Lucky':
-                home_status = f"🍀 LUCKY (>= +{threshold})"
+                home_status = f"{EMOJI['lucky']} LUCKY (>= +{threshold})"
             elif game['home_luck_cat'] == 'Unlucky':
-                home_status = f"💔 UNLUCKY (<= -{threshold})"
+                home_status = f"{EMOJI['unlucky']} UNLUCKY (<= -{threshold})"
             else:
-                home_status = f"😐 NEUTRAL"
+                home_status = f"{EMOJI['neutral']} NEUTRAL"
             print(f"   {game['home_abbr']}: {game['home_prior_luck']:+.1f} → {home_status}")
         else:
             print(f"   {game['home_abbr']}: No prior data (Week 1 or missing)")
         
-        print(f"\n🎯 Matchup Analysis:")
+        print(f"\n{EMOJI['target']} Matchup Analysis:")
         print(f"   Type: {game['matchup_type']}")
         
         if game['is_lu']:
-            print(f"\n   ✅ LUCKY vs UNLUCKY MATCHUP DETECTED!")
-            print(f"   📈 Regression Strategy: Bet the UNLUCKY team")
+            print(f"\n   {EMOJI['success']} LUCKY vs UNLUCKY MATCHUP DETECTED!")
+            print(f"   {EMOJI['up']} Regression Strategy: Bet the UNLUCKY team")
             print(f"   Reason: {game['bet_reason']}")
-            print(f"\n   💰 BET: {game['bet_team']} {game['bet_spread']:+.1f}")
+            print(f"\n   {EMOJI['money']} BET: {game['bet_team']} {game['bet_spread']:+.1f}")
         else:
-            print(f"\n   ❌ Not a Lucky vs Unlucky matchup - NO BET")
+            print(f"\n   {EMOJI['error']} Not a Lucky vs Unlucky matchup - NO BET")
 
 # =============================================================================
 # STEP 6: Display betting recommendations
@@ -643,7 +647,7 @@ print("=" * 100)
 df_plays = df_games[df_games['is_lu']].copy()
 
 if len(df_plays) == 0:
-    print("\n❌ No Lucky vs Unlucky matchups found for this week")
+    print(f"\n{EMOJI['error']} No Lucky vs Unlucky matchups found for this week")
     print(f"\nBreakdown of {len(df_games)} games:")
     
     # Count matchup types
@@ -651,12 +655,12 @@ if len(df_plays) == 0:
     for matchup, count in matchup_counts.items():
         print(f"   {matchup}: {count}")
 else:
-    print(f"\n✅ Found {len(df_plays)} Lucky vs Unlucky matchup(s)\n")
-    print("🎯 STRATEGY: Bet the UNLUCKY team (regression to mean)")
+    print(f"\n{EMOJI['success']} Found {len(df_plays)} Lucky vs Unlucky matchup(s)\n")
+    print(f"{EMOJI['target']} STRATEGY: Bet the UNLUCKY team (regression to mean)")
     print("-" * 100)
     
     for _, play in df_plays.iterrows():
-        print(f"\n  ✅ BET: {play['bet_team']} {play['bet_spread']:+.1f}")
+        print(f"\n  {EMOJI['success']} BET: {play['bet_team']} {play['bet_spread']:+.1f}")
         print(f"     Game: {play['away_abbr']} @ {play['home_abbr']}")
         print(f"     Time: {play['game_time_et']}")
         print(f"     Spread Category: {play['spread_cat']}")
@@ -681,29 +685,29 @@ all_games_path = output_dir / f"all_games_{threshold_str}_{timestamp}.csv"
 df_games.to_csv(all_games_path, index=False)
 
 print(f"\n{'=' * 100}")
-print(f"✅ Saved all {len(df_games)} games to: {all_games_path}")
+print(f"{EMOJI['success']} Saved all {len(df_games)} games to: {all_games_path}")
 
 # Save plays only
 if len(df_plays) > 0:
     plays_path = output_dir / f"plays_{threshold_str}_{timestamp}.csv"
     df_plays.to_csv(plays_path, index=False)
-    print(f"💾 Saved {len(df_plays)} plays to: {plays_path}")
+    print(f"{EMOJI['save']} Saved {len(df_plays)} plays to: {plays_path}")
 
 print("=" * 100)
 
 # =============================================================================
 # SUMMARY
 # =============================================================================
-print(f"\n📊 Summary:")
+print(f"\n{EMOJI['chart']} Summary:")
 print(f"   Games analyzed: {len(df_games)}")
 print(f"   Lucky vs Unlucky matchups: {len(df_plays)}")
 print(f"   Threshold used: ±{threshold}")
 print(f"   Data through: Week {max_week}")
 
 if len(df_plays) > 0:
-    print(f"\n🎯 Plays Found:")
+    print(f"\n{EMOJI['target']} Plays Found:")
     for _, play in df_plays.iterrows():
         print(f"   • {play['bet_team']} {play['bet_spread']:+.1f} vs {play['away_abbr'] if play['bet_team'] == play['home_abbr'] else play['home_abbr']}")
 
-print("\n✅ COMPLETE")
+print(f"\n{EMOJI['success']} COMPLETE")
 print("=" * 100)
