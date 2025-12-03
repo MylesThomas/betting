@@ -177,10 +177,10 @@ DATE_FORMAT = 'iso'
 # Timezone Configuration
 TIMEZONE = 'America/New_York'  # ET timezone for "today's games"
 
-# Default Markets
-DEFAULT_MARKETS = 'player_threes'
 # All available prop markets (verified 2025-11-21 via scripts/test_available_markets.py)
 ALL_PROP_MARKETS = 'player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists'
+# Default Markets - use all markets by default
+DEFAULT_MARKETS = ALL_PROP_MARKETS
 COMMON_PROP_MARKETS = 'player_threes,player_points,player_rebounds,player_assists'  # Most common markets
 
 # Arbitrage Thresholds
