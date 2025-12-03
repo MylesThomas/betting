@@ -417,19 +417,28 @@ if fetch_fresh or df_current_week_lines is None:
             
             for market in bookmaker['markets']:
                 if market['key'] == 'spreads':
+                    # Collect both away and home outcomes
+                    away_data = None
+                    home_data = None
                     for outcome in market['outcomes']:
                         if outcome['name'] == away_team:
-                            lines_to_save.append({
-                                'game_id': game_id,
-                                'game_time': game_time,
-                                'away_team': away_team,
-                                'home_team': home_team,
-                                'bookmaker': bookmaker_key,
-                                'fetched_at': fetched_at,
-                                'last_update': bookmaker_last_update,
-                                'away_spread': outcome['point'],
-                                'away_price': outcome['price'],
-                            })
+                            away_data = outcome
+                        elif outcome['name'] == home_team:
+                            home_data = outcome
+                    
+                    if away_data:
+                        lines_to_save.append({
+                            'game_id': game_id,
+                            'game_time': game_time,
+                            'away_team': away_team,
+                            'home_team': home_team,
+                            'bookmaker': bookmaker_key,
+                            'fetched_at': fetched_at,
+                            'last_update': bookmaker_last_update,
+                            'away_spread': away_data['point'],
+                            'away_price': away_data['price'],
+                            'home_price': home_data['price'] if home_data else None,
+                        })
     
     if lines_to_save:
         df_new_lines = pd.DataFrame(lines_to_save)
@@ -465,6 +474,10 @@ print("=" * 100)
 # Add team abbreviations
 df_lines = add_team_abbr_columns(df_current_week_lines)
 
+# Store bookmaker-level data for later use (best lines feature)
+# home_spread = -away_spread
+df_lines['home_spread'] = -df_lines['away_spread']
+
 # Calculate consensus spread for each game
 consensus_lines = []
 
@@ -486,6 +499,56 @@ for game_id, game_group in df_lines.groupby('game_id'):
     })
 
 df_consensus = pd.DataFrame(consensus_lines)
+
+
+def get_best_books_for_bet(df_lines: pd.DataFrame, game_id: str, bet_team_abbr: str, away_abbr: str) -> dict:
+    """
+    Find the best sportsbooks for a specific bet.
+    
+    For spread bets, higher spread is ALWAYS better (more points if underdog, 
+    less to cover if favorite).
+    
+    Returns dict with:
+    - best_spread: the best spread available
+    - best_books: list of books with the best spread
+    - ranked_books: all books sorted best to worst [(book, spread, price), ...]
+    """
+    game_lines = df_lines[df_lines['game_id'] == game_id].copy()
+    
+    if len(game_lines) == 0:
+        return {'best_spread': None, 'best_books': [], 'ranked_books': []}
+    
+    # Determine which spread/price columns to use based on bet team
+    is_betting_away = (bet_team_abbr == away_abbr)
+    spread_col = 'away_spread' if is_betting_away else 'home_spread'
+    
+    # Determine price column - use away_price for away bets, home_price for home bets
+    # Fall back to away_price if home_price doesn't exist (older data)
+    if is_betting_away:
+        price_col = 'away_price'
+    else:
+        price_col = 'home_price' if 'home_price' in game_lines.columns else 'away_price'
+    
+    # Get spreads and prices by bookmaker
+    cols_to_get = ['bookmaker', spread_col, price_col]
+    book_spreads = game_lines[cols_to_get].drop_duplicates()
+    book_spreads = book_spreads.dropna(subset=[spread_col])
+    
+    if len(book_spreads) == 0:
+        return {'best_spread': None, 'best_books': [], 'ranked_books': []}
+    
+    # Sort by spread descending (higher is better), then by price descending (less negative = better)
+    book_spreads = book_spreads.sort_values([spread_col, price_col], ascending=[False, False])
+    
+    best_spread = book_spreads[spread_col].iloc[0]
+    best_books = book_spreads[book_spreads[spread_col] == best_spread]['bookmaker'].tolist()
+    ranked_books = list(zip(book_spreads['bookmaker'], book_spreads[spread_col], book_spreads[price_col]))
+    
+    return {
+        'best_spread': best_spread,
+        'best_books': best_books,
+        'ranked_books': ranked_books,
+    }
 print(f"{EMOJI['success']} Calculated consensus spreads for {len(df_consensus)} games")
 
 # Determine target week
@@ -542,6 +605,23 @@ for _, game in df_consensus.iterrows():
     
     game_time_et = game['game_time'].astimezone(ZoneInfo('America/New_York'))
     
+    # Get best books info if this is a play
+    best_spread = None
+    best_books_str = None
+    ranked_books_str = None
+    
+    if bet_team is not None:
+        best_info = get_best_books_for_bet(df_lines, game['game_id'], bet_team, away)
+        if best_info['best_spread'] is not None:
+            best_spread = best_info['best_spread']
+            best_books_str = ', '.join(best_info['best_books'])
+            # Format ranked list: "book1 +3.5 @ -110, book2 +3.0 @ -105, ..."
+            def format_price(p):
+                if pd.isna(p):
+                    return ""
+                return f" @ {int(p):+d}" if p != 0 else " @ EVEN"
+            ranked_books_str = ', '.join([f"{b} {s:+.1f}{format_price(p)}" for b, s, p in best_info['ranked_books']])
+    
     games_with_luck.append({
         'game_id': game['game_id'],
         'game_time': game['game_time'],
@@ -569,6 +649,9 @@ for _, game in df_consensus.iterrows():
         'is_lu': is_lucky_vs_unlucky,
         'bet_team': bet_team,
         'bet_spread': bet_spread,
+        'best_spread': best_spread,
+        'best_books': best_books_str,
+        'ranked_books': ranked_books_str,
         'bet_reason': bet_reason,
     })
 
@@ -633,6 +716,13 @@ if args.verbose_mode:
             print(f"   {EMOJI['up']} Regression Strategy: Bet the UNLUCKY team")
             print(f"   Reason: {game['bet_reason']}")
             print(f"\n   {EMOJI['money']} BET: {game['bet_team']} {game['bet_spread']:+.1f}")
+            
+            # Show best books in verbose mode
+            if game['best_spread'] is not None:
+                print(f"\n   {EMOJI['star']} BEST LINES:")
+                print(f"      Best spread available: {game['best_spread']:+.1f}")
+                print(f"      Best at: {game['best_books']}")
+                print(f"      All books ranked: {game['ranked_books']}")
         else:
             print(f"\n   {EMOJI['error']} Not a Lucky vs Unlucky matchup - NO BET")
 
@@ -670,6 +760,14 @@ else:
         unlucky_is_fav = (play['bet_spread'] < 0)
         role = "FAVORITE" if unlucky_is_fav else "UNDERDOG"
         print(f"     Unlucky team is: {role}")
+        
+        # Show best books for this bet
+        if play['best_spread'] is not None:
+            edge_vs_consensus = play['best_spread'] - play['bet_spread']
+            print(f"\n     {EMOJI['money']} BEST LINES:")
+            print(f"        Best spread: {play['best_spread']:+.1f} (vs consensus {play['bet_spread']:+.1f}, +{edge_vs_consensus:.1f} pts)")
+            print(f"        Best at: {play['best_books']}")
+            print(f"        All books: {play['ranked_books']}")
 
 # =============================================================================
 # STEP 7: Save outputs
@@ -707,7 +805,9 @@ print(f"   Data through: Week {max_week}")
 if len(df_plays) > 0:
     print(f"\n{EMOJI['target']} Plays Found:")
     for _, play in df_plays.iterrows():
-        print(f"   • {play['bet_team']} {play['bet_spread']:+.1f} vs {play['away_abbr'] if play['bet_team'] == play['home_abbr'] else play['home_abbr']}")
+        opponent = play['away_abbr'] if play['bet_team'] == play['home_abbr'] else play['home_abbr']
+        best_info = f" (best: {play['best_spread']:+.1f} @ {play['best_books']})" if play['best_spread'] is not None else ""
+        print(f"   • {play['bet_team']} {play['bet_spread']:+.1f} vs {opponent}{best_info}")
 
 print(f"\n{EMOJI['success']} COMPLETE")
 print("=" * 100)
