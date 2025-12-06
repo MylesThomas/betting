@@ -4,7 +4,7 @@ Global configuration for betting analysis.
 This file contains shared constants and settings used across the project.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # =============================================================================
@@ -87,9 +87,76 @@ FULL_ROSTER_CACHE_MAX_AGE_DAYS = 7
 
 NFL_CURRENT_SEASON = 2025
 
+# NFL Season Start - Week 1 Thursday was Sep 4, 2025
+# Week starts on Tuesday (after MNF), so Week 1 started Tuesday Sep 2, 2025
+NFL_SEASON_START_DATE = datetime(2025, 9, 2)  # Tuesday of Week 1
+
 # Luck threshold for categorizing teams as Lucky/Neutral/Unlucky
 # Lucky: luck >= +threshold, Unlucky: luck <= -threshold
 NFL_LUCK_THRESHOLD_DEFAULT = 3
+
+
+def get_current_nfl_week() -> int:
+    """
+    Get the current NFL week number based on today's date.
+    
+    NFL weeks run Tuesday → Monday:
+    - Week starts Tuesday morning (after MNF settles)
+    - Week ends Monday night (after MNF)
+    
+    Returns:
+        Week number (1-18 for regular season, higher for playoffs)
+    """
+    today = datetime.now()
+    days_since_start = (today - NFL_SEASON_START_DATE).days
+    
+    if days_since_start < 0:
+        return 0  # Before season
+    
+    week = (days_since_start // 7) + 1
+    return week
+
+
+def get_nfl_week_range(week_number: int = None) -> tuple:
+    """
+    Get the start and end dates for a given NFL week.
+    
+    Args:
+        week_number: NFL week number (1-18+). If None, uses current week.
+        
+    Returns:
+        Tuple of (week_start_date, week_end_date) as datetime.date objects
+    """
+    if week_number is None:
+        week_number = get_current_nfl_week()
+    
+    week_start = NFL_SEASON_START_DATE + timedelta(days=(week_number - 1) * 7)
+    week_end = week_start + timedelta(days=6)  # Monday
+    
+    return week_start.date(), week_end.date()
+
+
+def get_nfl_week_for_date(date) -> int:
+    """
+    Get the NFL week number for a specific date.
+    
+    Args:
+        date: datetime or date object
+        
+    Returns:
+        Week number
+    """
+    if hasattr(date, 'date'):
+        date = date.date()
+    
+    date_as_datetime = datetime.combine(date, datetime.min.time())
+    days_since_start = (date_as_datetime - NFL_SEASON_START_DATE).days
+    
+    if days_since_start < 0:
+        return 0
+    
+    return (days_since_start // 7) + 1
+
 
 # 2025 bye weeks (verified from nfl_luck_utils.py)
 NFL_2025_BYE_WEEKS = {
@@ -157,5 +224,8 @@ if __name__ == '__main__':
     
     print(f"\n{EMOJI['nfl']} NFL:")
     print(f"   Season: {NFL_CURRENT_SEASON}")
+    print(f"   Current Week: {get_current_nfl_week()}")
+    week_start, week_end = get_nfl_week_range()
+    print(f"   Week Range: {week_start.strftime('%a %b %d')} → {week_end.strftime('%a %b %d')}")
     print(f"   Luck Threshold: ±{NFL_LUCK_THRESHOLD_DEFAULT}")
     print(f"   Bye Weeks: {len(NFL_2025_BYE_WEEKS)} teams configured")
