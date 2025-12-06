@@ -373,7 +373,7 @@ def load_todays_props():
     if not arb_files:
         raise FileNotFoundError(
             f"No arb files found in {TODAYS_PROPS_DIR}\n"
-            f"These are created by the daily Lambda run (scripts/find_arb_opportunities.py)"
+            f"These are created by the daily Lambda run (scripts/find_nba_arb_opportunities.py)"
         )
     
     latest_file = arb_files[-1]

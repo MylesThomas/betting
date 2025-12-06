@@ -23,31 +23,31 @@ HOW IT WORKS (3 steps):
     
 USAGE:
     # Run tests (no API calls)
-    python scripts/find_arb_opportunities.py --test
+    python scripts/find_nba_arb_opportunities.py --test
     
     # See demo flow (no API calls)
-    python scripts/find_arb_opportunities.py --demo
+    python scripts/find_nba_arb_opportunities.py --demo
     
     # Test with 1 game (uses ~15 credits)
-    python scripts/find_arb_opportunities.py --limit 1
+    python scripts/find_nba_arb_opportunities.py --limit 1
     
     # Find real arbs - all games (uses ~150 credits for 10 games)
-    python scripts/find_arb_opportunities.py
+    python scripts/find_nba_arb_opportunities.py
     
     # Check other markets
-    python scripts/find_arb_opportunities.py --markets player_points
+    python scripts/find_nba_arb_opportunities.py --markets player_points
     
     # Combine markets
-    python scripts/find_arb_opportunities.py --markets player_threes,player_points,player_rebounds
+    python scripts/find_nba_arb_opportunities.py --markets player_threes,player_points,player_rebounds
     
     # Historical backfill (get odds from past dates at 5pm UTC = noon ET)
-    python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20
+    python scripts/find_nba_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20
     
     # Historical with custom time (e.g., 10am UTC = 5am ET)
-    python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 --time 10:00:00
+    python scripts/find_nba_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 --time 10:00:00
     
     # Historical with specific markets
-    python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 --markets player_points,player_rebounds,player_assists,player_threes
+    python scripts/find_nba_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 --markets player_points,player_rebounds,player_assists,player_threes
     
 OUTPUT EXAMPLE:
     🎯 ARBITRAGE OPPORTUNITIES FOUND: 1
@@ -81,7 +81,7 @@ HISTORICAL MODE:
                Default 17:00:00 UTC = 12:00:00 noon ET (when lines are typically posted)
     
     Example for 2024-25 NBA season backfill (Oct 21 - Nov 20, 2025 at noon ET):
-        python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 \
+        python scripts/find_nba_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20 \
           --markets player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists
     
     Note: Historical odds require an appropriate API plan. Check the-odds-api.com for pricing.
@@ -122,7 +122,7 @@ OTHER MARKETS:
     - player_points_rebounds_assists
     
     Use --markets flag to change or combine multiple markets:
-    python scripts/find_arb_opportunities.py --markets player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists
+    python scripts/find_nba_arb_opportunities.py --markets player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists
 
 SSL CERTIFICATE FIX:
     SSL verification is disabled by default (common issue with pyenv on macOS).
@@ -1157,7 +1157,7 @@ if __name__ == "__main__":
         if not args.start or not args.end:
             print("❌ Error: --historical mode requires both --start and --end dates")
             print("\nExample usage:")
-            print("  python scripts/find_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20")
+            print("  python scripts/find_nba_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20")
             sys.exit(1)
         
         run_historical_backfill(

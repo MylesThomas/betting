@@ -4,7 +4,7 @@ AWS Lambda Function - Daily Dashboard Update
 This Lambda function:
 1. Fetches secrets from AWS Secrets Manager
 2. Clones the GitHub repository
-3. Runs the daily update script (find_arb_opportunities.py)
+3. Runs the daily update script (find_nba_arb_opportunities.py)
 4. Pushes changes back to GitHub
 5. Streamlit Cloud auto-deploys the changes
 
@@ -224,7 +224,7 @@ def lambda_handler(event, context):
         
         # Run the script
         stdout, stderr, code = run_command([
-            'python', 'scripts/find_arb_opportunities.py',
+            'python', 'scripts/find_nba_arb_opportunities.py',
             '--markets', 'player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists'
         ], cwd=work_dir, env=script_env)
         

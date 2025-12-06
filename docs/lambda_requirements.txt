@@ -15,7 +15,7 @@ pytz==2024.2
 
 # NBA API
 # nba_api==1.4.1  ← NOT needed for Lambda! Only used by local scripts that fetch NBA data.
-#                    Lambda just runs find_arb_opportunities.py which uses The Odds API.
+#                    Lambda just runs find_nba_arb_opportunities.py which uses The Odds API.
 
 # AWS SDK (already included in Lambda runtime, but listing for completeness)
 # boto3==1.35.72

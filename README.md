@@ -363,7 +363,7 @@ data/04_output/nba/arbs/
 
 Generate test data:
 ```bash
-python scripts/find_arb_opportunities.py --markets player_threes
+python scripts/find_nba_arb_opportunities.py --markets player_threes
 ```
 
 ### Data Pipeline Overview
@@ -457,7 +457,7 @@ betting/
 ├── scripts/                      # Data fetching & processing
 │   ├── build_season_game_logs.py
 │   ├── fetch_nfl_season_lines.py
-│   ├── find_arb_opportunities.py
+│   ├── find_nba_arb_opportunities.py
 │   └── ...
 ├── src/                          # Utility modules
 │   ├── nfl_team_utils.py
