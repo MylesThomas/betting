@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Payton Pritchard,1630202,2025-12-04,BOS @ WAS,W,32.0,8,21,0.381,3,9,0.333,1,1,1.0,5,1,6,8,1,0,1,1,20,27,WAS,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-12-02,BOS vs. NYK,W,30.0,4,13,0.308,1,7,0.143,1,1,1.0,0,4,4,3,1,0,1,3,10,0,NYK,HOME,Payton Pritchard
+Payton Pritchard,1630202,2025-11-30,BOS @ CLE,W,31.0,15,22,0.682,6,11,0.545,6,6,1.0,0,3,3,3,0,0,2,3,42,10,CLE,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-11-29,BOS @ MIN,L,31.0,4,14,0.286,1,8,0.125,0,0,0.0,1,4,5,4,1,1,0,0,9,-12,MIN,AWAY,Payton Pritchard
+Payton Pritchard,1630202,2025-11-26,BOS vs. DET,W,34.0,5,10,0.5,4,7,0.571,2,2,1.0,1,4,5,2,0,1,1,1,16,1,DET,HOME,Payton Pritchard
 Payton Pritchard,1630202,2025-11-23,BOS vs. ORL,W,34.0,9,16,0.563,1,4,0.25,0,0,0.0,2,3,5,8,2,0,1,1,19,15,ORL,HOME,Payton Pritchard
 Payton Pritchard,1630202,2025-11-21,BOS vs. BKN,L,35.0,5,13,0.385,3,9,0.333,0,0,0.0,1,2,3,4,0,0,1,1,13,-13,BKN,HOME,Payton Pritchard
 Payton Pritchard,1630202,2025-11-18,BOS @ BKN,W,35.0,6,16,0.375,5,12,0.417,5,5,1.0,2,8,10,5,0,0,3,1,22,11,BKN,AWAY,Payton Pritchard

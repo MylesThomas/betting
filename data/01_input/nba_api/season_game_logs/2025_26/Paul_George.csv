@@ -1,4 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Paul George,202331,2025-12-02,PHI vs. WAS,W,18.0,4,10,0.4,3,5,0.6,0,0,0.0,0,5,5,0,1,0,2,1,11,6,WAS,HOME,Paul George
+Paul George,202331,2025-11-30,PHI vs. ATL,L,28.0,6,17,0.353,2,8,0.25,2,2,1.0,2,5,7,4,5,0,1,4,16,1,ATL,HOME,Paul George
+Paul George,202331,2025-11-28,PHI @ BKN,W,21.0,6,10,0.6,2,5,0.4,0,0,0.0,0,3,3,2,2,0,1,0,14,9,BKN,AWAY,Paul George
 Paul George,202331,2025-11-23,PHI vs. MIA,L,20.0,3,10,0.3,0,5,0.0,4,5,0.8,1,1,2,5,1,1,2,2,10,3,MIA,HOME,Paul George
 Paul George,202331,2025-11-20,PHI @ MIL,W,25.0,7,12,0.583,4,7,0.571,3,4,0.75,0,5,5,3,2,0,3,0,21,3,MIL,AWAY,Paul George
 Paul George,202331,2025-11-17,PHI vs. LAC,W,21.0,2,9,0.222,1,4,0.25,4,7,0.571,0,7,7,3,0,2,1,0,9,-9,LAC,HOME,Paul George

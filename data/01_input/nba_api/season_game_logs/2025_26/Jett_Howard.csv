@@ -1,4 +1,6 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jett Howard,1641724,2025-12-01,ORL vs. CHI,W,3.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,1,0,0,-5,CHI,HOME,Jett Howard
+Jett Howard,1641724,2025-11-25,ORL @ PHI,W,18.0,5,10,0.5,1,5,0.2,2,2,1.0,1,1,2,1,0,0,0,1,13,14,PHI,AWAY,Jett Howard
 Jett Howard,1641724,2025-11-23,ORL @ BOS,L,29.0,11,23,0.478,5,13,0.385,3,3,1.0,2,5,7,3,0,0,0,3,30,0,BOS,AWAY,Jett Howard
 Jett Howard,1641724,2025-11-22,ORL vs. NYK,W,8.0,2,3,0.667,1,2,0.5,0,0,0.0,0,0,0,0,0,0,0,1,5,-8,NYK,HOME,Jett Howard
 Jett Howard,1641724,2025-11-20,ORL vs. LAC,W,15.0,3,3,1.0,2,2,1.0,0,0,0.0,0,1,1,0,1,0,0,1,8,16,LAC,HOME,Jett Howard

@@ -1,4 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Tobias Harris,202699,2025-12-03,DET @ MIL,L,29.0,7,14,0.5,5,8,0.625,1,2,0.5,1,4,5,0,0,0,0,0,20,-5,MIL,AWAY,Tobias Harris
+Tobias Harris,202699,2025-12-01,DET vs. ATL,W,26.0,2,14,0.143,1,5,0.2,4,4,1.0,2,5,7,1,0,0,3,1,9,-16,ATL,HOME,Tobias Harris
+Tobias Harris,202699,2025-11-29,DET @ MIA,W,31.0,10,12,0.833,4,6,0.667,2,4,0.5,1,3,4,2,0,0,3,3,26,-14,MIA,AWAY,Tobias Harris
+Tobias Harris,202699,2025-11-28,DET vs. ORL,L,30.0,8,15,0.533,1,4,0.25,1,1,1.0,2,3,5,1,0,0,0,4,18,15,ORL,HOME,Tobias Harris
+Tobias Harris,202699,2025-11-26,DET @ BOS,L,27.0,4,8,0.5,1,5,0.2,3,3,1.0,0,4,4,3,0,2,0,2,12,0,BOS,AWAY,Tobias Harris
+Tobias Harris,202699,2025-11-24,DET @ IND,W,26.0,4,8,0.5,1,2,0.5,3,3,1.0,0,1,1,2,1,0,1,4,12,2,IND,AWAY,Tobias Harris
 Tobias Harris,202699,2025-11-22,DET @ MIL,W,23.0,7,9,0.778,3,5,0.6,1,3,0.333,0,5,5,4,0,1,0,0,18,25,MIL,AWAY,Tobias Harris
 Tobias Harris,202699,2025-11-01,DET vs. DAL,W,36.0,3,12,0.25,1,5,0.2,4,5,0.8,0,6,6,1,0,0,1,3,11,8,DAL,HOME,Tobias Harris
 Tobias Harris,202699,2025-10-29,DET vs. ORL,W,30.0,8,13,0.615,1,4,0.25,6,6,1.0,0,2,2,3,2,0,3,2,23,8,ORL,HOME,Tobias Harris

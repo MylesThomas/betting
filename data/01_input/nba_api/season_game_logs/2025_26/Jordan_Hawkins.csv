@@ -1,4 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jordan Hawkins,1641722,2025-12-04,NOP vs. MIN,L,16.0,2,6,0.333,2,4,0.5,1,2,0.5,1,2,3,1,0,1,1,2,7,-10,MIN,HOME,Jordan Hawkins
+Jordan Hawkins,1641722,2025-12-02,NOP vs. MIN,L,22.0,3,7,0.429,2,3,0.667,2,3,0.667,0,0,0,0,0,0,1,1,10,2,MIN,HOME,Jordan Hawkins
+Jordan Hawkins,1641722,2025-11-26,NOP vs. MEM,L,15.0,5,9,0.556,4,8,0.5,0,0,0.0,0,1,1,1,1,1,1,0,14,7,MEM,HOME,Jordan Hawkins
 Jordan Hawkins,1641722,2025-11-22,NOP vs. ATL,L,19.0,2,7,0.286,1,2,0.5,0,0,0.0,0,2,2,0,0,0,0,1,5,-12,ATL,HOME,Jordan Hawkins
 Jordan Hawkins,1641722,2025-11-21,NOP @ DAL,L,12.0,1,5,0.2,1,2,0.5,0,0,0.0,0,2,2,1,0,0,1,0,3,11,DAL,AWAY,Jordan Hawkins
 Jordan Hawkins,1641722,2025-11-19,NOP vs. DEN,L,18.0,3,7,0.429,0,2,0.0,0,0,0.0,0,1,1,1,0,0,1,1,6,-9,DEN,HOME,Jordan Hawkins

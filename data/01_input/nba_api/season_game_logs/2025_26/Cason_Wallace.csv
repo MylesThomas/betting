@@ -1,4 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Cason Wallace,1641717,2025-12-02,OKC @ GSW,W,28.0,2,7,0.286,0,3,0.0,0,2,0.0,1,5,6,1,2,1,1,1,4,17,GSW,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-30,OKC @ POR,W,21.0,1,5,0.2,1,3,0.333,0,0,0.0,1,2,3,4,1,0,2,3,3,-2,POR,AWAY,Cason Wallace
+Cason Wallace,1641717,2025-11-28,OKC vs. PHX,W,32.0,6,9,0.667,2,3,0.667,0,0,0.0,0,4,4,3,1,0,0,0,14,5,PHX,HOME,Cason Wallace
+Cason Wallace,1641717,2025-11-26,OKC vs. MIN,W,32.0,4,7,0.571,1,4,0.25,0,0,0.0,1,2,3,2,2,0,1,5,9,-1,MIN,HOME,Cason Wallace
 Cason Wallace,1641717,2025-11-23,OKC vs. POR,W,27.0,3,9,0.333,1,5,0.2,0,0,0.0,2,0,2,1,2,0,1,1,7,11,POR,HOME,Cason Wallace
 Cason Wallace,1641717,2025-11-21,OKC @ UTA,W,27.0,4,6,0.667,2,4,0.5,0,0,0.0,0,1,1,0,4,0,2,2,10,4,UTA,AWAY,Cason Wallace
 Cason Wallace,1641717,2025-11-19,OKC vs. SAC,W,26.0,5,9,0.556,2,5,0.4,0,0,0.0,0,2,2,1,1,1,0,2,12,8,SAC,HOME,Cason Wallace

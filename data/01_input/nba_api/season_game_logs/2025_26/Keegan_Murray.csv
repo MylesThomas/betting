@@ -1,3 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Keegan Murray,1631099,2025-12-03,SAC @ HOU,L,37.0,2,11,0.182,1,5,0.2,0,0,0.0,4,7,11,1,1,2,3,3,5,-15,HOU,AWAY,Keegan Murray
+Keegan Murray,1631099,2025-11-30,SAC vs. MEM,L,36.0,5,12,0.417,0,4,0.0,2,4,0.5,1,1,2,1,5,3,0,1,12,-20,MEM,HOME,Keegan Murray
+Keegan Murray,1631099,2025-11-28,SAC @ UTA,L,45.0,9,18,0.5,1,6,0.167,4,4,1.0,3,7,10,3,3,1,0,2,23,-7,UTA,AWAY,Keegan Murray
+Keegan Murray,1631099,2025-11-26,SAC vs. PHX,L,38.0,7,16,0.438,2,9,0.222,3,4,0.75,2,6,8,3,2,2,0,3,19,5,PHX,HOME,Keegan Murray
+Keegan Murray,1631099,2025-11-24,SAC vs. MIN,W,44.0,10,19,0.526,3,5,0.6,3,3,1.0,2,12,14,2,1,1,0,3,26,6,MIN,HOME,Keegan Murray
 Keegan Murray,1631099,2025-11-22,SAC @ DEN,W,37.0,7,14,0.5,3,8,0.375,2,2,1.0,1,4,5,1,2,1,0,0,19,1,DEN,AWAY,Keegan Murray
 Keegan Murray,1631099,2025-11-20,SAC @ MEM,L,33.0,5,13,0.385,1,6,0.167,0,0,0.0,0,3,3,1,0,0,1,1,11,-18,MEM,AWAY,Keegan Murray

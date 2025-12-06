@@ -1,4 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kevin Durant,201142,2025-12-03,HOU vs. SAC,W,32.0,9,16,0.563,1,4,0.25,5,5,1.0,0,3,3,8,0,1,0,1,24,12,SAC,HOME,Kevin Durant
+Kevin Durant,201142,2025-12-01,HOU @ UTA,L,40.0,10,25,0.4,2,7,0.286,10,12,0.833,0,9,9,5,0,0,5,3,32,-8,UTA,AWAY,Kevin Durant
+Kevin Durant,201142,2025-11-30,HOU @ UTA,W,30.0,10,14,0.714,3,4,0.75,2,2,1.0,1,6,7,4,3,1,1,2,25,28,UTA,AWAY,Kevin Durant
 Kevin Durant,201142,2025-11-21,HOU vs. DEN,L,35.0,5,15,0.333,1,5,0.2,2,3,0.667,1,7,8,2,2,1,2,3,13,-7,DEN,HOME,Kevin Durant
 Kevin Durant,201142,2025-11-19,HOU @ CLE,W,37.0,6,18,0.333,1,6,0.167,7,8,0.875,0,3,3,3,0,0,4,2,20,6,CLE,AWAY,Kevin Durant
 Kevin Durant,201142,2025-11-16,HOU vs. ORL,W,45.0,13,24,0.542,2,8,0.25,7,7,1.0,0,5,5,6,0,1,5,2,35,4,ORL,HOME,Kevin Durant

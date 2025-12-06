@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Mouhamed Gueye,1631243,2025-12-03,ATL vs. LAC,L,23.0,0,2,0.0,0,0,0.0,0,0,0.0,0,6,6,0,1,0,1,5,0,-23,LAC,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-12-01,ATL @ DET,L,23.0,0,3,0.0,0,0,0.0,1,2,0.5,0,1,1,0,3,1,0,0,1,-2,DET,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-30,ATL @ PHI,W,23.0,6,8,0.75,1,2,0.5,0,2,0.0,1,3,4,0,2,1,1,3,13,12,PHI,AWAY,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-28,ATL vs. CLE,W,24.0,5,7,0.714,0,2,0.0,2,2,1.0,0,3,3,2,1,2,0,2,12,-15,CLE,HOME,Mouhamed Gueye
+Mouhamed Gueye,1631243,2025-11-25,ATL @ WAS,L,18.0,3,6,0.5,0,1,0.0,1,2,0.5,3,2,5,1,0,0,1,0,7,1,WAS,AWAY,Mouhamed Gueye
 Mouhamed Gueye,1631243,2025-11-23,ATL vs. CHA,W,17.0,2,5,0.4,0,1,0.0,0,0,0.0,0,1,1,1,0,2,0,1,4,2,CHA,HOME,Mouhamed Gueye
 Mouhamed Gueye,1631243,2025-11-22,ATL @ NOP,W,27.0,1,3,0.333,1,3,0.333,0,0,0.0,3,3,6,0,2,0,0,3,3,14,NOP,AWAY,Mouhamed Gueye
 Mouhamed Gueye,1631243,2025-11-20,ATL @ SAS,L,4.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,1,0,5,SAS,AWAY,Mouhamed Gueye

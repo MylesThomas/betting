@@ -1,4 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Isaiah Joe,1630198,2025-12-02,OKC @ GSW,W,18.0,3,4,0.75,3,4,0.75,0,0,0.0,0,3,3,3,0,0,2,3,9,4,GSW,AWAY,Isaiah Joe
+Isaiah Joe,1630198,2025-11-30,OKC @ POR,W,15.0,4,8,0.5,3,6,0.5,4,4,1.0,1,3,4,0,0,0,0,0,15,-2,POR,AWAY,Isaiah Joe
+Isaiah Joe,1630198,2025-11-28,OKC vs. PHX,W,24.0,4,9,0.444,2,5,0.4,0,0,0.0,1,3,4,2,0,0,0,2,10,2,PHX,HOME,Isaiah Joe
+Isaiah Joe,1630198,2025-11-26,OKC vs. MIN,W,12.0,2,4,0.5,0,2,0.0,1,1,1.0,0,0,0,0,0,0,1,2,5,-4,MIN,HOME,Isaiah Joe
 Isaiah Joe,1630198,2025-11-23,OKC vs. POR,W,24.0,3,7,0.429,2,6,0.333,2,2,1.0,0,2,2,1,1,1,2,1,10,15,POR,HOME,Isaiah Joe
 Isaiah Joe,1630198,2025-11-21,OKC @ UTA,W,25.0,5,6,0.833,4,5,0.8,2,2,1.0,0,0,0,3,2,0,0,2,16,22,UTA,AWAY,Isaiah Joe
 Isaiah Joe,1630198,2025-11-19,OKC vs. SAC,W,20.0,1,5,0.2,1,5,0.2,4,4,1.0,0,2,2,1,0,1,0,2,7,4,SAC,HOME,Isaiah Joe

@@ -1,3 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+LeBron James,2544,2025-12-04,LAL @ TOR,W,36.0,4,17,0.235,0,5,0.0,0,0,0.0,1,5,6,11,0,0,0,1,8,-1,TOR,AWAY,Lebron James
+LeBron James,2544,2025-12-01,LAL vs. PHX,L,31.0,3,10,0.3,1,4,0.25,3,4,0.75,0,0,0,3,0,0,3,2,10,-6,PHX,HOME,Lebron James
+LeBron James,2544,2025-11-28,LAL vs. DAL,W,34.0,5,13,0.385,2,6,0.333,1,4,0.25,1,4,5,7,1,0,2,1,13,13,DAL,HOME,Lebron James
+LeBron James,2544,2025-11-25,LAL vs. LAC,W,32.0,9,15,0.6,2,5,0.4,5,6,0.833,1,5,6,6,1,1,3,3,25,18,LAC,HOME,Lebron James
 LeBron James,2544,2025-11-23,LAL @ UTA,W,34.0,8,18,0.444,0,4,0.0,1,2,0.5,0,6,6,8,1,0,2,2,17,-14,UTA,AWAY,Lebron James
 LeBron James,2544,2025-11-18,LAL vs. UTA,W,30.0,4,7,0.571,2,3,0.667,1,4,0.25,1,2,3,12,1,0,1,0,11,1,UTA,HOME,Lebron James

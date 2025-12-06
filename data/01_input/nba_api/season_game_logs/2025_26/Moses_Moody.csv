@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Moses Moody,1630541,2025-12-04,GSW @ PHI,L,23.0,5,10,0.5,2,5,0.4,2,2,1.0,1,1,2,2,1,0,1,2,14,-1,PHI,AWAY,Moses Moody
+Moses Moody,1630541,2025-12-02,GSW vs. OKC,L,15.0,1,5,0.2,1,5,0.2,0,0,0.0,2,0,2,1,0,0,2,0,3,2,OKC,HOME,Moses Moody
+Moses Moody,1630541,2025-11-29,GSW vs. NOP,W,27.0,4,12,0.333,2,7,0.286,1,1,1.0,1,2,3,0,2,2,1,1,11,8,NOP,HOME,Moses Moody
+Moses Moody,1630541,2025-11-26,GSW vs. HOU,L,30.0,2,8,0.25,1,5,0.2,4,4,1.0,3,4,7,1,0,0,0,4,9,7,HOU,HOME,Moses Moody
+Moses Moody,1630541,2025-11-24,GSW vs. UTA,W,29.0,6,17,0.353,3,12,0.25,0,0,0.0,1,5,6,0,2,0,0,2,15,20,UTA,HOME,Moses Moody
 Moses Moody,1630541,2025-11-21,GSW vs. POR,L,28.0,3,6,0.5,2,5,0.4,2,2,1.0,1,1,2,1,0,1,2,5,10,-15,POR,HOME,Moses Moody
 Moses Moody,1630541,2025-11-19,GSW @ MIA,L,36.0,3,12,0.25,1,6,0.167,2,2,1.0,1,5,6,4,1,1,3,3,9,-11,MIA,AWAY,Moses Moody
 Moses Moody,1630541,2025-11-18,GSW @ ORL,L,30.0,2,6,0.333,1,4,0.25,1,2,0.5,1,3,4,2,2,0,3,3,6,-3,ORL,AWAY,Moses Moody

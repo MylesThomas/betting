@@ -1,4 +1,5 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Dennis Schroder,203471,2025-11-24,SAC vs. MIN,W,24.0,2,8,0.25,0,1,0.0,2,2,1.0,1,4,5,9,0,0,1,1,6,2,MIN,HOME,Dennis Schroder
 Dennis Schroder,203471,2025-11-22,SAC @ DEN,W,18.0,6,8,0.75,3,3,1.0,6,6,1.0,0,3,3,7,0,0,0,1,21,20,DEN,AWAY,Dennis Schroder
 Dennis Schroder,203471,2025-11-20,SAC @ MEM,L,25.0,0,8,0.0,0,4,0.0,3,4,0.75,1,1,2,6,0,1,3,2,3,-16,MEM,AWAY,Dennis Schroder
 Dennis Schroder,203471,2025-11-19,SAC @ OKC,L,32.0,9,21,0.429,2,9,0.222,1,3,0.333,2,3,5,3,0,0,4,3,21,-7,OKC,AWAY,Dennis Schroder

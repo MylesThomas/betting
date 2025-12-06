@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Aaron Holiday,1628988,2025-12-03,HOU vs. SAC,W,17.0,3,5,0.6,1,2,0.5,0,0,0.0,0,2,2,1,0,0,1,1,7,4,SAC,HOME,Aaron Holiday
+Aaron Holiday,1628988,2025-12-01,HOU @ UTA,L,33.0,3,10,0.3,3,7,0.429,1,2,0.5,0,2,2,2,0,0,0,3,10,1,UTA,AWAY,Aaron Holiday
+Aaron Holiday,1628988,2025-11-30,HOU @ UTA,W,20.0,3,10,0.3,3,10,0.3,2,2,1.0,0,1,1,2,1,0,1,2,11,14,UTA,AWAY,Aaron Holiday
+Aaron Holiday,1628988,2025-11-26,HOU @ GSW,W,29.0,4,16,0.25,3,11,0.273,3,4,0.75,2,1,3,3,0,0,2,4,14,21,GSW,AWAY,Aaron Holiday
+Aaron Holiday,1628988,2025-11-24,HOU @ PHX,W,27.0,8,17,0.471,6,10,0.6,0,0,0.0,0,1,1,2,2,0,2,1,22,16,PHX,AWAY,Aaron Holiday
 Aaron Holiday,1628988,2025-11-21,HOU vs. DEN,L,13.0,0,3,0.0,0,3,0.0,1,1,1.0,0,0,0,0,0,0,0,1,1,3,DEN,HOME,Aaron Holiday
 Aaron Holiday,1628988,2025-11-19,HOU @ CLE,W,19.0,5,7,0.714,3,5,0.6,5,5,1.0,0,0,0,0,1,0,0,2,18,6,CLE,AWAY,Aaron Holiday
 Aaron Holiday,1628988,2025-11-16,HOU vs. ORL,W,16.0,3,4,0.75,2,2,1.0,2,2,1.0,0,1,1,0,0,0,0,0,10,9,ORL,HOME,Aaron Holiday

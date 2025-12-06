@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jeremy Sochan,1631110,2025-12-03,SAS @ ORL,W,20.0,2,7,0.286,0,0,0.0,0,2,0.0,4,3,7,1,1,0,1,2,4,-15,ORL,AWAY,Jeremy Sochan
+Jeremy Sochan,1631110,2025-12-02,SAS vs. MEM,W,18.0,5,6,0.833,0,1,0.0,1,1,1.0,2,4,6,1,2,0,0,1,11,-2,MEM,HOME,Jeremy Sochan
+Jeremy Sochan,1631110,2025-11-30,SAS @ MIN,L,12.0,1,2,0.5,0,0,0.0,0,0,0.0,1,0,1,0,0,0,0,0,2,-4,MIN,AWAY,Jeremy Sochan
+Jeremy Sochan,1631110,2025-11-28,SAS @ DEN,W,16.0,2,4,0.5,0,1,0.0,0,0,0.0,1,0,1,2,1,0,0,5,4,6,DEN,AWAY,Jeremy Sochan
+Jeremy Sochan,1631110,2025-11-26,SAS @ POR,W,8.0,1,7,0.143,0,2,0.0,0,0,0.0,2,1,3,0,0,0,1,2,2,-7,POR,AWAY,Jeremy Sochan
 Jeremy Sochan,1631110,2025-11-23,SAS @ PHX,L,21.0,3,5,0.6,0,1,0.0,1,2,0.5,3,2,5,1,0,0,1,3,7,-17,PHX,AWAY,Jeremy Sochan
 Jeremy Sochan,1631110,2025-11-20,SAS vs. ATL,W,22.0,3,10,0.3,0,5,0.0,2,2,1.0,0,5,5,5,1,1,0,1,8,0,ATL,HOME,Jeremy Sochan
 Jeremy Sochan,1631110,2025-11-18,SAS vs. MEM,W,22.0,3,6,0.5,2,3,0.667,0,0,0.0,0,6,6,2,0,0,2,3,8,10,MEM,HOME,Jeremy Sochan

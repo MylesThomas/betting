@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Collin Sexton,1629012,2025-12-03,CHA @ NYK,L,9.0,2,4,0.5,0,1,0.0,0,0,0.0,0,1,1,2,0,1,1,0,4,-10,NYK,AWAY,Collin Sexton
+Collin Sexton,1629012,2025-12-01,CHA @ BKN,L,19.0,5,10,0.5,1,1,1.0,4,4,1.0,2,4,6,2,1,0,3,0,15,-10,BKN,AWAY,Collin Sexton
+Collin Sexton,1629012,2025-11-29,CHA vs. TOR,W,33.0,6,11,0.545,2,5,0.4,4,4,1.0,0,1,1,5,3,1,3,0,18,23,TOR,HOME,Collin Sexton
+Collin Sexton,1629012,2025-11-28,CHA vs. CHI,W,26.0,8,15,0.533,1,4,0.25,4,4,1.0,2,2,4,3,1,2,1,3,21,-6,CHI,HOME,Collin Sexton
+Collin Sexton,1629012,2025-11-26,CHA vs. NYK,L,17.0,5,6,0.833,0,1,0.0,5,6,0.833,0,1,1,2,0,0,0,0,15,-4,NYK,HOME,Collin Sexton
 Collin Sexton,1629012,2025-11-23,CHA @ ATL,L,36.0,8,16,0.5,1,6,0.167,5,6,0.833,0,0,0,4,0,0,3,3,22,-3,ATL,AWAY,Collin Sexton
 Collin Sexton,1629012,2025-11-22,CHA vs. LAC,L,23.0,7,13,0.538,0,0,0.0,4,4,1.0,1,2,3,4,0,0,2,1,18,-18,LAC,HOME,Collin Sexton
 Collin Sexton,1629012,2025-11-19,CHA @ IND,L,25.0,4,13,0.308,0,3,0.0,3,3,1.0,0,0,0,5,1,0,2,2,11,-6,IND,AWAY,Collin Sexton

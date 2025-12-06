@@ -1,4 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Thomas Bryant,1628418,2025-12-03,CLE vs. POR,L,13.0,4,6,0.667,3,4,0.75,3,4,0.75,0,6,6,0,0,2,0,3,14,-14,POR,HOME,Thomas Bryant
+Thomas Bryant,1628418,2025-12-01,CLE @ IND,W,12.0,3,6,0.5,0,2,0.0,0,0,0.0,0,2,2,0,1,0,0,0,6,-4,IND,AWAY,Thomas Bryant
+Thomas Bryant,1628418,2025-11-30,CLE vs. BOS,L,6.0,0,1,0.0,0,0,0.0,2,2,1.0,1,1,2,0,0,0,0,1,2,-3,BOS,HOME,Thomas Bryant
+Thomas Bryant,1628418,2025-11-24,CLE @ TOR,L,13.0,2,4,0.5,1,2,0.5,0,0,0.0,1,1,2,1,1,1,0,2,5,4,TOR,AWAY,Thomas Bryant
 Thomas Bryant,1628418,2025-11-23,CLE vs. LAC,W,3.0,1,2,0.5,1,2,0.5,0,0,0.0,0,1,1,0,0,0,1,0,3,-2,LAC,HOME,Thomas Bryant
 Thomas Bryant,1628418,2025-11-21,CLE vs. IND,W,1.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-4,IND,HOME,Thomas Bryant
 Thomas Bryant,1628418,2025-11-19,CLE vs. HOU,L,4.0,0,1,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,1,0,-1,HOU,HOME,Thomas Bryant

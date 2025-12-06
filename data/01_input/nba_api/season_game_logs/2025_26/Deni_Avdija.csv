@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Deni Avdija,1630166,2025-12-03,POR @ CLE,W,36.0,5,10,0.5,1,5,0.2,16,17,0.941,0,8,8,7,1,0,4,4,27,12,CLE,AWAY,Deni Avdija
+Deni Avdija,1630166,2025-12-02,POR @ TOR,L,37.0,6,15,0.4,3,7,0.429,10,15,0.667,0,8,8,14,0,0,4,2,25,11,TOR,AWAY,Deni Avdija
+Deni Avdija,1630166,2025-11-30,POR vs. OKC,L,37.0,6,14,0.429,0,4,0.0,19,23,0.826,3,16,19,10,1,0,1,1,31,4,OKC,HOME,Deni Avdija
+Deni Avdija,1630166,2025-11-26,POR vs. SAS,L,40.0,12,19,0.632,5,8,0.625,8,14,0.571,2,4,6,8,0,1,6,4,37,-7,SAS,HOME,Deni Avdija
+Deni Avdija,1630166,2025-11-24,POR @ MIL,W,31.0,6,13,0.462,5,7,0.714,5,8,0.625,0,4,4,5,0,1,4,3,22,-1,MIL,AWAY,Deni Avdija
 Deni Avdija,1630166,2025-11-23,POR @ OKC,L,24.0,4,16,0.25,1,8,0.125,2,3,0.667,1,4,5,1,1,0,2,2,11,-4,OKC,AWAY,Deni Avdija
 Deni Avdija,1630166,2025-11-21,POR @ GSW,W,40.0,6,14,0.429,2,7,0.286,12,13,0.923,2,4,6,13,0,0,6,1,26,2,GSW,AWAY,Deni Avdija
 Deni Avdija,1630166,2025-11-19,POR vs. CHI,L,38.0,11,22,0.5,3,7,0.429,7,12,0.583,1,10,11,11,2,1,3,2,32,6,CHI,HOME,Deni Avdija

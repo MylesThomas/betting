@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Julian Champagnie,1630577,2025-12-03,SAS @ ORL,W,28.0,5,8,0.625,4,7,0.571,0,0,0.0,0,5,5,0,0,0,1,2,14,4,ORL,AWAY,Julian Champagnie
+Julian Champagnie,1630577,2025-12-02,SAS vs. MEM,W,35.0,3,10,0.3,1,6,0.167,0,0,0.0,0,6,6,2,0,1,1,5,7,5,MEM,HOME,Julian Champagnie
+Julian Champagnie,1630577,2025-11-30,SAS @ MIN,L,25.0,1,6,0.167,1,6,0.167,2,2,1.0,0,4,4,1,1,0,1,1,5,-19,MIN,AWAY,Julian Champagnie
+Julian Champagnie,1630577,2025-11-28,SAS @ DEN,W,36.0,6,15,0.4,3,9,0.333,10,10,1.0,3,7,10,2,1,2,0,3,25,-1,DEN,AWAY,Julian Champagnie
+Julian Champagnie,1630577,2025-11-26,SAS @ POR,W,32.0,5,10,0.5,2,5,0.4,0,0,0.0,2,9,11,2,0,2,1,1,12,10,POR,AWAY,Julian Champagnie
 Julian Champagnie,1630577,2025-11-23,SAS @ PHX,L,30.0,3,14,0.214,2,9,0.222,2,3,0.667,3,9,12,1,1,0,1,0,10,3,PHX,AWAY,Julian Champagnie
 Julian Champagnie,1630577,2025-11-20,SAS vs. ATL,W,31.0,7,13,0.538,5,10,0.5,1,1,1.0,0,4,4,5,0,1,1,4,20,15,ATL,HOME,Julian Champagnie
 Julian Champagnie,1630577,2025-11-18,SAS vs. MEM,W,24.0,3,6,0.5,2,5,0.4,1,1,1.0,1,0,1,0,0,0,1,0,9,-7,MEM,HOME,Julian Champagnie

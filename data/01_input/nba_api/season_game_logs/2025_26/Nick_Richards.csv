@@ -1,4 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Nick Richards,1630208,2025-11-29,PHX vs. DEN,L,7.0,0,2,0.0,0,0,0.0,0,0,0.0,2,1,3,0,0,0,1,3,0,-11,DEN,HOME,Nick Richards
+Nick Richards,1630208,2025-11-28,PHX @ OKC,L,4.0,1,1,1.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,0,2,-1,OKC,AWAY,Nick Richards
+Nick Richards,1630208,2025-11-26,PHX @ SAC,W,6.0,1,1,1.0,0,0,0.0,1,1,1.0,0,0,0,0,0,2,0,1,3,0,SAC,AWAY,Nick Richards
+Nick Richards,1630208,2025-11-24,PHX vs. HOU,L,22.0,2,4,0.5,0,0,0.0,0,2,0.0,4,7,11,0,0,1,3,1,4,-17,HOU,HOME,Nick Richards
 Nick Richards,1630208,2025-11-23,PHX vs. SAS,W,5.0,1,4,0.25,0,0,0.0,0,0,0.0,0,2,2,0,0,0,0,1,2,-4,SAS,HOME,Nick Richards
 Nick Richards,1630208,2025-11-21,PHX vs. MIN,W,8.0,1,3,0.333,0,0,0.0,0,0,0.0,3,1,4,0,0,0,3,1,2,3,MIN,HOME,Nick Richards
 Nick Richards,1630208,2025-11-18,PHX @ POR,W,11.0,4,7,0.571,0,0,0.0,0,0,0.0,2,0,2,0,0,1,0,2,8,-5,POR,AWAY,Nick Richards

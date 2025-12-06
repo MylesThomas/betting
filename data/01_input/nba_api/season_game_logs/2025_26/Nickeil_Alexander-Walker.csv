@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Nickeil Alexander-Walker,1629638,2025-12-03,ATL vs. LAC,L,31.0,7,18,0.389,2,7,0.286,5,7,0.714,1,4,5,3,1,0,1,2,21,-17,LAC,HOME,Nickeil Alexander-Walker
+Nickeil Alexander-Walker,1629638,2025-12-01,ATL @ DET,L,35.0,10,19,0.526,6,10,0.6,0,0,0.0,0,3,3,1,2,0,2,1,26,4,DET,AWAY,Nickeil Alexander-Walker
+Nickeil Alexander-Walker,1629638,2025-11-30,ATL @ PHI,W,44.0,11,22,0.5,6,11,0.545,6,6,1.0,2,6,8,7,1,1,4,5,34,19,PHI,AWAY,Nickeil Alexander-Walker
+Nickeil Alexander-Walker,1629638,2025-11-28,ATL vs. CLE,W,35.0,10,22,0.455,5,13,0.385,5,5,1.0,0,3,3,1,1,1,1,2,30,18,CLE,HOME,Nickeil Alexander-Walker
+Nickeil Alexander-Walker,1629638,2025-11-25,ATL @ WAS,L,32.0,3,9,0.333,2,6,0.333,0,0,0.0,0,2,2,4,0,0,3,1,8,-20,WAS,AWAY,Nickeil Alexander-Walker
 Nickeil Alexander-Walker,1629638,2025-11-23,ATL vs. CHA,W,39.0,8,17,0.471,3,7,0.429,4,6,0.667,2,3,5,4,1,1,1,4,23,-7,CHA,HOME,Nickeil Alexander-Walker
 Nickeil Alexander-Walker,1629638,2025-11-22,ATL @ NOP,W,36.0,4,11,0.364,2,6,0.333,0,0,0.0,1,4,5,3,1,0,1,2,10,11,NOP,AWAY,Nickeil Alexander-Walker
 Nickeil Alexander-Walker,1629638,2025-11-20,ATL @ SAS,L,34.0,13,17,0.765,8,10,0.8,4,4,1.0,1,3,4,5,0,3,2,3,38,-7,SAS,AWAY,Nickeil Alexander-Walker

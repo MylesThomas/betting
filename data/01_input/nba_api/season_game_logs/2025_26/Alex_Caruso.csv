@@ -1,4 +1,6 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Alex Caruso,1627936,2025-11-28,OKC vs. PHX,W,24.0,2,3,0.667,0,0,0.0,0,0,0.0,1,6,7,3,2,1,4,4,4,-5,PHX,HOME,Alex Caruso
+Alex Caruso,1627936,2025-11-26,OKC vs. MIN,W,22.0,1,5,0.2,1,4,0.25,2,2,1.0,0,2,2,0,0,0,1,2,5,15,MIN,HOME,Alex Caruso
 Alex Caruso,1627936,2025-11-23,OKC vs. POR,W,14.0,2,3,0.667,1,1,1.0,0,0,0.0,1,1,2,3,1,0,0,3,5,25,POR,HOME,Alex Caruso
 Alex Caruso,1627936,2025-11-21,OKC @ UTA,W,18.0,4,5,0.8,2,3,0.667,1,2,0.5,0,0,0,3,1,0,1,0,11,29,UTA,AWAY,Alex Caruso
 Alex Caruso,1627936,2025-11-19,OKC vs. SAC,W,21.0,1,7,0.143,0,5,0.0,0,0,0.0,1,3,4,5,1,1,0,1,2,4,SAC,HOME,Alex Caruso

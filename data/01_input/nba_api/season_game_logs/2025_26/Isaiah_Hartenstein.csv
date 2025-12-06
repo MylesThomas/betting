@@ -1,4 +1,5 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Isaiah Hartenstein,1628392,2025-11-26,OKC vs. MIN,W,28.0,6,10,0.6,0,0,0.0,3,6,0.5,2,5,7,2,1,1,0,1,15,-1,MIN,HOME,Isaiah Hartenstein
 Isaiah Hartenstein,1628392,2025-11-23,OKC vs. POR,W,22.0,3,9,0.333,0,0,0.0,1,2,0.5,2,12,14,3,0,3,2,2,7,18,POR,HOME,Isaiah Hartenstein
 Isaiah Hartenstein,1628392,2025-11-21,OKC @ UTA,W,24.0,5,5,1.0,0,0,0.0,2,4,0.5,1,5,6,7,1,0,4,2,12,5,UTA,AWAY,Isaiah Hartenstein
 Isaiah Hartenstein,1628392,2025-11-19,OKC vs. SAC,W,27.0,1,2,0.5,0,0,0.0,2,2,1.0,4,8,12,3,0,2,1,5,4,8,SAC,HOME,Isaiah Hartenstein

@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Dominick Barlow,1631230,2025-12-04,PHI vs. GSW,W,35.0,3,6,0.5,0,1,0.0,0,0,0.0,5,9,14,3,1,3,1,1,6,1,GSW,HOME,Dominick Barlow
+Dominick Barlow,1631230,2025-12-02,PHI vs. WAS,W,20.0,4,6,0.667,0,0,0.0,4,5,0.8,1,0,1,0,2,0,0,3,12,5,WAS,HOME,Dominick Barlow
+Dominick Barlow,1631230,2025-11-30,PHI vs. ATL,L,45.0,5,9,0.556,0,3,0.0,0,1,0.0,2,4,6,3,3,2,1,2,10,3,ATL,HOME,Dominick Barlow
+Dominick Barlow,1631230,2025-11-28,PHI @ BKN,W,25.0,4,7,0.571,0,1,0.0,2,2,1.0,1,9,10,4,0,1,1,4,10,15,BKN,AWAY,Dominick Barlow
+Dominick Barlow,1631230,2025-11-25,PHI vs. ORL,L,31.0,4,8,0.5,1,2,0.5,2,2,1.0,0,6,6,2,0,1,2,2,11,-26,ORL,HOME,Dominick Barlow
 Dominick Barlow,1631230,2025-11-23,PHI vs. MIA,L,20.0,4,8,0.5,1,4,0.25,0,0,0.0,1,2,3,0,0,2,0,2,9,-13,MIA,HOME,Dominick Barlow
 Dominick Barlow,1631230,2025-11-20,PHI @ MIL,W,29.0,1,1,1.0,0,0,0.0,0,0,0.0,3,3,6,3,0,2,0,0,2,16,MIL,AWAY,Dominick Barlow
 Dominick Barlow,1631230,2025-11-19,PHI vs. TOR,L,17.0,2,5,0.4,1,2,0.5,0,0,0.0,2,1,3,3,0,1,3,2,5,-2,TOR,HOME,Dominick Barlow

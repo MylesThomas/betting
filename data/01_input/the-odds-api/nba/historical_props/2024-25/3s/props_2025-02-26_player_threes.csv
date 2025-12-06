@@ -1,0 +1,505 @@
+player,game,game_time,market,line,bookmaker,over_odds,under_odds
+Jayson Tatum,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,betonlineag,-128,-101
+Cade Cunningham,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,120,-156
+Tobias Harris,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,178,-238
+Derrick White,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,betonlineag,109,-141
+Kristaps Porzingis,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,102,-132
+Jrue Holiday,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-115,-112
+Tim Hardaway Jr,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,155,-204
+Derrick White,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,fanduel,104,-138
+Tim Hardaway Jr,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-182,134
+Cade Cunningham,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,132,-178
+Tobias Harris,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,164,-225
+Jrue Holiday,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-125,-106
+Jayson Tatum,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,fanduel,-132,100
+Jayson Tatum,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,draftkings,-115,-115
+Derrick White,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,draftkings,105,-135
+Kristaps Porzingis,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,100,-130
+Cade Cunningham,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,114,-145
+Tim Hardaway Jr,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-160,124
+Jrue Holiday,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-110,-120
+Jayson Tatum,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,williamhill_us,-133,-103
+Kristaps Porzingis,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,-103,-133
+Derrick White,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,williamhill_us,104,-142
+Cade Cunningham,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,116,-160
+Tim Hardaway Jr,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-174,126
+Jrue Holiday,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-117,-117
+Tobias Harris,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,172,-244
+Tim Hardaway Jr,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,175,-235
+Cade Cunningham,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,115,-155
+Derrick White,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,betmgm,105,-145
+Jayson Tatum,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,3.5,betmgm,-135,100
+Kristaps Porzingis,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,100,-135
+Jrue Holiday,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-120,-110
+Tobias Harris,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,180,-250
+Tobias Harris,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,150,-205
+Tim Hardaway Jr,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-165,123
+Cade Cunningham,Boston Celtics @ Detroit Pistons,2025-02-27T00:10:00Z,player_threes,2.5,betrivers,133,-180
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,132,-172
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,3.5,betonlineag,120,-156
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-102,-127
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-147,114
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,167,-222
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,120,-156
+Andrew Nembhard,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,171,-227
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,110,-143
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-192,147
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,3.5,draftkings,130,-166
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,114,-145
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-180,140
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-145,114
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,100,-130
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,120,-154
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,130,-166
+Andrew Nembhard,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,154,-200
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,170,-220
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-106,-129
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,159,-224
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-194,139
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-160,116
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,108,-148
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,126,-174
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,3.5,williamhill_us,116,-160
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,116,-160
+Andrew Nembhard,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,165,-234
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,102,-136
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,118,-158
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,-182,136
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-128,-104
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-192,142
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,158,-215
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,140,-188
+Andrew Nembhard,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,178,-245
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,110,-146
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,3.5,betmgm,115,-155
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,120,-160
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,165,-225
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-160,120
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-105,-125
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,125,-165
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,110,-150
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-200,150
+Andrew Nembhard,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,0.5,betmgm,-200,145
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,bovada,105,-135
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-160,120
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,bovada,125,-165
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-210,155
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,bovada,155,-210
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-105,-125
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,bovada,130,-170
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,3.5,bovada,120,-160
+Immanuel Quickley,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,betrivers,118,-157
+R.J. Barrett,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,107,-143
+Gradey Dick,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-143,107
+Scottie Barnes,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,140,-190
+Tyrese Haliburton,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,2.5,betrivers,-182,135
+Pascal Siakam,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,155,-215
+Myles Turner,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-186,138
+Andrew Nembhard,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,185,-250
+Aaron Nesmith,Toronto Raptors @ Indiana Pacers,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,135,-182
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,116,-154
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-154,116
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-188,140
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,140,-188
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-154,116
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-166,124
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,3.5,fanduel,122,-162
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,-175,135
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,114,-145
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,124,-160
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-188,145
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-175,135
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-166,130
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-160,124
+Miles McBride,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-115,-115
+Kelly Oubre Jr,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,draftkings,-238,180
+Josh Hart,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,draftkings,-215,165
+Miles McBride,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-113,-121
+Kelly Oubre Jr,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,178,-254
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,104,-142
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-194,139
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,3.5,williamhill_us,126,-174
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-166,120
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-154,112
+Josh Hart,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,williamhill_us,-194,139
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-154,112
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,116,-160
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,120,-156
+Josh Hart,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,betonlineag,-196,149
+Kelly Oubre Jr,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,betonlineag,-238,177
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-161,124
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-152,117
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,107,-139
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-152,117
+Miles McBride,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-110,-118
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,149,-196
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,-175,134
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-160,120
+Josh Hart,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,betmgm,-190,140
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,100,-135
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,-175,130
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-150,110
+Miles McBride,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-110,-120
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-150,110
+Kelly Oubre Jr,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,0.5,betmgm,-235,175
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,120,-160
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,145,-200
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,bovada,125,-165
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-150,115
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-150,115
+Miles McBride,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-110,-120
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-165,125
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,bovada,105,-135
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,bovada,150,-200
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,bovada,-180,135
+Paul George,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betrivers,123,-162
+Tyrese Maxey,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,3.5,betrivers,120,-162
+Quentin Grimes,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-182,135
+Jalen Brunson,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,2.5,betrivers,140,-190
+OG Anunoby,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-152,114
+Karl-Anthony Towns,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-165,123
+Mikal Bridges,Philadelphia 76ers @ New York Knicks,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-175,128
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,betonlineag,-105,-123
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,144,-189
+Shaedon Sharpe,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-179,136
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,betonlineag,-169,130
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,155,-204
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-120,-108
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,124,-161
+Alex Sarr,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,117,-152
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,-152,116
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betonlineag,117,-152
+Donovan Clingan,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,0.5,betonlineag,239,-333
+Shaedon Sharpe,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-180,134
+Deni Avdija,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-108,-122
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-114,-114
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,124,-166
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,126,-168
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,fanduel,104,-138
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,-138,104
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,fanduel,178,-245
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,-162,122
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,fanduel,138,-186
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,draftkings,105,-135
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,draftkings,-160,124
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-195,150
+Shaedon Sharpe,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-180,140
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-135,105
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-120,-110
+Deni Avdija,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,-115,-115
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,114,-145
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,124,-160
+Alex Sarr,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,130,-166
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,draftkings,160,-210
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,williamhill_us,-106,-129
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,-174,126
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,williamhill_us,139,-194
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-129,-106
+Deni Avdija,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-113,-121
+Shaedon Sharpe,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-184,133
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,152,-214
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,112,-154
+Alex Sarr,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,112,-154
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,120,-166
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,williamhill_us,-148,108
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,145,-190
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,-175,130
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,betmgm,140,-190
+Deni Avdija,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-110,-120
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-160,120
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,-130,-105
+Alex Sarr,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,115,-150
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,betmgm,-110,-120
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,115,-150
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betmgm,120,-160
+Alex Sarr,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,115,-150
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,bovada,-115,-115
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,150,-200
+Deni Avdija,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-110,-120
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,bovada,145,-190
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,bovada,-180,135
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,115,-150
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-165,125
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-125,-105
+Shaedon Sharpe,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,-185,140
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,bovada,125,-165
+Kyshawn George,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-143,108
+Toumani Camara,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,128,-175
+Alex Sarr,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,112,-150
+Khris Middleton,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,123,-162
+Anfernee Simons,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,3.5,betrivers,100,-132
+Bilal Coulibaly,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,165,-230
+Deni Avdija,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,104,-139
+Jordan Poole,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,2.5,betrivers,-152,114
+Shaedon Sharpe,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-177,130
+Scoot Henderson,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-103,-130
+Jerami Grant,Portland Trail Blazers @ Washington Wizards,2025-02-27T00:10:00Z,player_threes,1.5,betrivers,-210,155
+Tyler Herro,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,betonlineag,-143,110
+Davion Mitchell,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,178,-238
+Andrew Wiggins,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,2.5,betonlineag,118,-154
+Bam Adebayo,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betonlineag,-135,104
+Dyson Daniels,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betonlineag,-172,131
+Trae Young,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,betonlineag,112,-145
+Zaccharie Risacher,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,107,-139
+Kel'el Ware,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betonlineag,-169,130
+Mouhamed Gueye,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betonlineag,-143,110
+Onyeka Okongwu,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betonlineag,130,-169
+Tyler Herro,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,draftkings,-145,114
+Trae Young,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,draftkings,105,-135
+Andrew Wiggins,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,2.5,draftkings,114,-145
+Zaccharie Risacher,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,110,-140
+Davion Mitchell,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,185,-245
+Dyson Daniels,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,draftkings,-180,140
+Bam Adebayo,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,draftkings,-130,100
+Andrew Wiggins,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,2.5,betmgm,120,-155
+Dyson Daniels,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betmgm,-165,130
+Zaccharie Risacher,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,betmgm,105,-140
+Onyeka Okongwu,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betmgm,135,-185
+Bam Adebayo,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betmgm,-145,105
+Tyler Herro,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,betmgm,-150,110
+Trae Young,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,betmgm,110,-145
+Mouhamed Gueye,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betmgm,-145,105
+Davion Mitchell,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,betmgm,175,-235
+Kel'el Ware,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,betmgm,-175,130
+Onyeka Okongwu,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,williamhill_us,126,-174
+Davion Mitchell,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,172,-244
+Tyler Herro,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,williamhill_us,-148,108
+Bam Adebayo,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,williamhill_us,-137,100
+Zaccharie Risacher,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,104,-142
+Kel'el Ware,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,williamhill_us,-174,126
+Dyson Daniels,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,williamhill_us,-174,126
+Mouhamed Gueye,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,0.5,williamhill_us,-148,108
+Andrew Wiggins,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,2.5,williamhill_us,116,-160
+Trae Young,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,williamhill_us,108,-148
+Zaccharie Risacher,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,fanduel,110,-146
+Trae Young,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,fanduel,124,-166
+Andrew Wiggins,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,2.5,fanduel,138,-186
+Tyler Herro,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,fanduel,-128,-104
+Zaccharie Risacher,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,1.5,betrivers,110,-148
+Trae Young,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,betrivers,108,-143
+Tyler Herro,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,3.5,betrivers,-120,-112
+Andrew Wiggins,Atlanta Hawks @ Miami Heat,2025-02-27T00:40:00Z,player_threes,2.5,betrivers,140,-190
+Cameron Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,3.5,betonlineag,130,-169
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,-122,-106
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,126,-164
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,-161,123
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,-161,123
+Keon Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betonlineag,-159,122
+Ziaire Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,2.5,betonlineag,141,-185
+Day'Ron Sharpe,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,0.5,betonlineag,309,-455
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,fanduel,-166,124
+Keon Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,fanduel,-166,124
+Cameron Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,3.5,fanduel,134,-180
+Ziaire Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,2.5,fanduel,158,-215
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,fanduel,-146,110
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,fanduel,136,-182
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,fanduel,-132,100
+Cameron Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,3.5,draftkings,130,-166
+Ziaire Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,2.5,draftkings,140,-180
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,-166,130
+Keon Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,-145,114
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,-140,110
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,-130,100
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,draftkings,130,-166
+Cameron Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,3.5,williamhill_us,126,-174
+Day'Ron Sharpe,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,0.5,williamhill_us,311,-504
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,-166,120
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,-129,-106
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,120,-166
+Keon Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,-166,120
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,williamhill_us,-166,120
+Ziaire Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,2.5,williamhill_us,133,-184
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betmgm,-120,-110
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betmgm,-165,125
+Ziaire Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,2.5,betmgm,135,-185
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betmgm,-160,120
+Day'Ron Sharpe,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,0.5,betmgm,333,-525
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betmgm,120,-160
+Cameron Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,3.5,bovada,135,-180
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,bovada,120,-160
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,bovada,-120,-110
+Keon Johnson,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,bovada,-165,125
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,bovada,-165,125
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,bovada,-170,130
+Ziaire Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,2.5,bovada,145,-190
+Chet Holmgren,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betrivers,132,-177
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betrivers,-150,112
+Jalen Williams,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betrivers,-137,104
+Luguentz Dort,Oklahoma City Thunder @ Brooklyn Nets,2025-02-27T00:40:00Z,player_threes,1.5,betrivers,-177,132
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,fanduel,-122,-108
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,fanduel,-125,-106
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,fanduel,-110,-120
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,fanduel,162,-220
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,fanduel,-166,124
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,fanduel,-158,118
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,fanduel,-200,148
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,draftkings,105,-135
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,draftkings,-154,120
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,draftkings,-120,-110
+Bogdan Bogdanovic,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,draftkings,-110,-120
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,draftkings,160,-210
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,draftkings,-140,110
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,draftkings,-110,-120
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,draftkings,175,-230
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,williamhill_us,-166,120
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,williamhill_us,-154,112
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,williamhill_us,139,-194
+Bogdan Bogdanovic,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,williamhill_us,-125,-109
+Kris Dunn,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,williamhill_us,165,-234
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,williamhill_us,-113,-121
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,williamhill_us,-117,-117
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,williamhill_us,-125,-109
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,williamhill_us,159,-224
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betonlineag,-164,126
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betonlineag,-118,-110
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,betonlineag,-102,-127
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betonlineag,-152,117
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betonlineag,-114,-114
+Kris Dunn,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betonlineag,167,-222
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betonlineag,171,-227
+Bogdan Bogdanovic,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betonlineag,-120,-108
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betonlineag,144,-189
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betmgm,-135,100
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,betmgm,-110,-120
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betmgm,-118,-110
+Kris Dunn,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betmgm,170,-225
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betmgm,-175,130
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betmgm,160,-220
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betmgm,-150,115
+Bogdan Bogdanovic,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betmgm,-135,100
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betmgm,140,-190
+Bogdan Bogdanovic,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,bovada,-120,-110
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,bovada,-170,130
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,bovada,105,-135
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,bovada,-120,-110
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,bovada,145,-190
+Kris Dunn,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,bovada,180,-245
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,bovada,-115,-115
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,bovada,-150,115
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,bovada,180,-245
+Kawhi Leonard,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betrivers,-200,148
+James Harden,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,3.5,betrivers,-120,-112
+Coby White,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betrivers,-162,120
+Matas Buzelis,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betrivers,-159,118
+Josh Giddey,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betrivers,-117,-114
+Lonzo Ball,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,2.5,betrivers,-132,100
+Zach Collins,Los Angeles Clippers @ Chicago Bulls,2025-02-27T01:10:00Z,player_threes,1.5,betrivers,155,-210
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,fanduel,146,-198
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,fanduel,142,-192
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,fanduel,-136,102
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,fanduel,120,-160
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,fanduel,-140,106
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,fanduel,-132,100
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,draftkings,-166,130
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,draftkings,-145,114
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,draftkings,-135,105
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,draftkings,105,-135
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,draftkings,140,-180
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,draftkings,160,-210
+Isaiah Collier,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,draftkings,-238,180
+Domantas Sabonis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,draftkings,-166,130
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,williamhill_us,108,-148
+Isaiah Collier,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,williamhill_us,-234,165
+Keon Ellis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,williamhill_us,100,-137
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,williamhill_us,-142,104
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,williamhill_us,-154,112
+Domantas Sabonis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,williamhill_us,-148,108
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,williamhill_us,146,-204
+K.J. Martin,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,williamhill_us,-125,-109
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,williamhill_us,146,-204
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,williamhill_us,-142,104
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betonlineag,-141,109
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betonlineag,149,-196
+Domantas Sabonis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,betonlineag,-152,116
+Isaiah Collier,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,betonlineag,-217,164
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betonlineag,112,-145
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betonlineag,-156,120
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,betonlineag,149,-196
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betonlineag,-139,107
+K.J. Martin,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,betonlineag,-125,-103
+Keon Ellis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,betonlineag,-101,-128
+Keon Ellis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,betmgm,105,-140
+Isaiah Collier,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,betmgm,-210,155
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betmgm,-140,105
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betmgm,-145,110
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betmgm,-140,105
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betmgm,110,-145
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,betmgm,155,-210
+K.J. Martin,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,betmgm,-120,-110
+Domantas Sabonis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,0.5,betmgm,-145,110
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betmgm,150,-200
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,bovada,140,-185
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,bovada,-145,110
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,bovada,155,-210
+Keon Ellis,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,bovada,-110,-120
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,bovada,-135,105
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,bovada,110,-145
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,bovada,-170,130
+Malik Monk,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betrivers,120,-162
+Keyonte George,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betrivers,-124,-108
+Jordan Clarkson,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betrivers,-125,-106
+Keegan Murray,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betrivers,150,-205
+Zach LaVine,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,2.5,betrivers,-136,102
+DeMar DeRozan,Sacramento Kings @ Utah Jazz,2025-02-27T02:10:00Z,player_threes,1.5,betrivers,132,-177
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,fanduel,-130,-102
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,fanduel,-114,-114
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,fanduel,-200,148
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,fanduel,140,-188
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,fanduel,-188,140
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,fanduel,132,-178
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,fanduel,-158,116
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,draftkings,105,-135
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,draftkings,135,-175
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,draftkings,-195,150
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,draftkings,-175,135
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,draftkings,-166,130
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,draftkings,-140,110
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,draftkings,-120,-110
+Keldon Johnson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,draftkings,150,-195
+Amen Thompson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,williamhill_us,202,-294
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,williamhill_us,-137,100
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,williamhill_us,-160,116
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,williamhill_us,108,-148
+Alperen Sengun,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,williamhill_us,159,-224
+Keldon Johnson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,williamhill_us,152,-214
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,williamhill_us,139,-194
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,williamhill_us,-199,143
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,williamhill_us,-194,139
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,williamhill_us,-113,-121
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,betonlineag,139,-182
+Alperen Sengun,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,betonlineag,167,-222
+Keldon Johnson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betonlineag,158,-208
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betonlineag,-114,-114
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,betonlineag,113,-147
+Jeremy Sochan,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,betonlineag,155,-204
+Amen Thompson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,betonlineag,209,-286
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betonlineag,-189,143
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betonlineag,-130,100
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betonlineag,-164,126
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betonlineag,-189,144
+Amen Thompson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,betmgm,220,-300
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betmgm,-115,-118
+Alperen Sengun,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,betmgm,165,-220
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,betmgm,110,-145
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betmgm,-190,140
+Jeremy Sochan,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,0.5,betmgm,145,-200
+Keldon Johnson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betmgm,155,-210
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betmgm,-190,140
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betmgm,-155,115
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betmgm,-135,100
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,betmgm,150,-200
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,bovada,-170,130
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,bovada,-190,145
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,bovada,140,-185
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,bovada,-200,150
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,bovada,-130,100
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,bovada,-115,-115
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,bovada,115,-150
+Keldon Johnson,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,bovada,160,-215
+De'Aaron Fox,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betrivers,-182,135
+Devin Vassell,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,betrivers,150,-205
+Harrison Barnes,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betrivers,-130,-103
+Chris Paul,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betrivers,-150,112
+Jabari Smith Jr,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,1.5,betrivers,-122,-108
+Jalen Green,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,3.5,betrivers,125,-167
+Dillon Brooks,San Antonio Spurs @ Houston Rockets,2025-02-27T02:40:00Z,player_threes,2.5,betrivers,150,-205

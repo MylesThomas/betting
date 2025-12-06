@@ -1,4 +1,6 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kevin Love,201567,2025-12-01,UTA vs. HOU,W,15.0,4,7,0.571,1,4,0.25,2,2,1.0,2,3,5,1,1,0,0,2,11,4,HOU,HOME,Kevin Love
+Kevin Love,201567,2025-11-28,UTA vs. SAC,W,17.0,3,5,0.6,2,3,0.667,1,2,0.5,4,3,7,1,1,1,0,1,9,8,SAC,HOME,Kevin Love
 Kevin Love,201567,2025-11-23,UTA vs. LAL,L,13.0,2,5,0.4,0,2,0.0,0,0,0.0,3,6,9,2,1,0,2,2,4,-7,LAL,HOME,Kevin Love
 Kevin Love,201567,2025-11-21,UTA vs. OKC,L,13.0,4,6,0.667,4,5,0.8,0,0,0.0,1,0,1,0,0,1,1,5,12,-9,OKC,HOME,Kevin Love
 Kevin Love,201567,2025-11-18,UTA @ LAL,L,14.0,0,2,0.0,0,2,0.0,0,0,0.0,1,3,4,0,0,1,0,2,0,-8,LAL,AWAY,Kevin Love

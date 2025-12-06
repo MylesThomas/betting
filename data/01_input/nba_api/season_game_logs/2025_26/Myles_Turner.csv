@@ -1,4 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Myles Turner,1626167,2025-12-03,MIL vs. DET,W,20.0,2,5,0.4,1,4,0.25,4,4,1.0,0,3,3,1,0,2,0,4,9,-13,DET,HOME,Myles Turner
+Myles Turner,1626167,2025-12-01,MIL @ WAS,L,26.0,3,10,0.3,3,8,0.375,0,0,0.0,1,2,3,3,1,1,2,0,9,10,WAS,AWAY,Myles Turner
+Myles Turner,1626167,2025-11-29,MIL vs. BKN,W,22.0,4,7,0.571,1,4,0.25,1,1,1.0,0,3,3,2,0,1,0,2,10,25,BKN,HOME,Myles Turner
+Myles Turner,1626167,2025-11-28,MIL @ NYK,L,30.0,3,10,0.3,2,7,0.286,2,2,1.0,2,1,3,1,1,2,0,5,10,-12,NYK,AWAY,Myles Turner
+Myles Turner,1626167,2025-11-26,MIL @ MIA,L,31.0,9,15,0.6,1,5,0.2,5,8,0.625,1,7,8,2,0,1,1,2,24,11,MIA,AWAY,Myles Turner
+Myles Turner,1626167,2025-11-24,MIL vs. POR,L,32.0,4,12,0.333,3,8,0.375,2,2,1.0,3,8,11,1,0,4,1,4,13,-12,POR,HOME,Myles Turner
 Myles Turner,1626167,2025-11-22,MIL vs. DET,L,30.0,4,8,0.5,2,6,0.333,1,1,1.0,0,4,4,2,1,2,1,3,11,-23,DET,HOME,Myles Turner
 Myles Turner,1626167,2025-11-20,MIL vs. PHI,L,28.0,5,13,0.385,3,9,0.333,1,2,0.5,1,9,10,1,0,0,0,2,14,1,PHI,HOME,Myles Turner
 Myles Turner,1626167,2025-11-17,MIL @ CLE,L,37.0,4,9,0.444,4,5,0.8,3,4,0.75,1,6,7,2,3,1,2,1,15,1,CLE,AWAY,Myles Turner

@@ -1,4 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jakob Poeltl,1627751,2025-12-02,TOR vs. POR,W,26.0,5,7,0.714,0,0,0.0,1,1,1.0,1,6,7,4,0,0,2,5,11,7,POR,HOME,Jakob Poeltl
+Jakob Poeltl,1627751,2025-11-29,TOR @ CHA,L,33.0,4,6,0.667,0,0,0.0,0,0,0.0,5,6,11,9,2,1,3,4,8,-5,CHA,AWAY,Jakob Poeltl
+Jakob Poeltl,1627751,2025-11-26,TOR vs. IND,W,32.0,4,6,0.667,0,0,0.0,0,0,0.0,3,6,9,3,1,1,2,4,8,12,IND,HOME,Jakob Poeltl
+Jakob Poeltl,1627751,2025-11-24,TOR vs. CLE,W,27.0,3,4,0.75,0,0,0.0,1,1,1.0,3,10,13,1,2,0,2,2,7,4,CLE,HOME,Jakob Poeltl
 Jakob Poeltl,1627751,2025-11-21,TOR vs. WAS,W,19.0,1,1,1.0,0,0,0.0,1,2,0.5,4,5,9,1,0,1,1,3,3,9,WAS,HOME,Jakob Poeltl
 Jakob Poeltl,1627751,2025-11-19,TOR @ PHI,W,33.0,8,10,0.8,0,0,0.0,3,4,0.75,3,5,8,4,1,0,1,3,19,4,PHI,AWAY,Jakob Poeltl
 Jakob Poeltl,1627751,2025-11-17,TOR vs. CHA,W,32.0,6,7,0.857,0,0,0.0,1,2,0.5,1,8,9,1,0,0,1,3,13,6,CHA,HOME,Jakob Poeltl

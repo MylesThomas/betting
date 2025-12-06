@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kentavious Caldwell-Pope,203484,2025-12-02,MEM @ SAS,L,13.0,1,5,0.2,0,2,0.0,0,0,0.0,0,3,3,2,0,1,4,1,2,-9,SAS,AWAY,Kentavious Caldwell-Pope
+Kentavious Caldwell-Pope,203484,2025-11-30,MEM @ SAC,W,20.0,4,6,0.667,2,3,0.667,3,3,1.0,1,2,3,3,0,0,5,0,13,-1,SAC,AWAY,Kentavious Caldwell-Pope
+Kentavious Caldwell-Pope,203484,2025-11-28,MEM @ LAC,W,21.0,4,10,0.4,4,7,0.571,0,0,0.0,1,3,4,1,1,0,1,0,12,19,LAC,AWAY,Kentavious Caldwell-Pope
+Kentavious Caldwell-Pope,203484,2025-11-26,MEM @ NOP,W,17.0,0,3,0.0,0,3,0.0,0,0,0.0,1,0,1,2,0,0,0,1,0,-22,NOP,AWAY,Kentavious Caldwell-Pope
+Kentavious Caldwell-Pope,203484,2025-11-24,MEM vs. DEN,L,21.0,2,3,0.667,2,2,1.0,2,2,1.0,0,0,0,3,0,0,3,2,8,-8,DEN,HOME,Kentavious Caldwell-Pope
 Kentavious Caldwell-Pope,203484,2025-11-22,MEM @ DAL,W,25.0,4,8,0.5,2,4,0.5,0,0,0.0,0,0,0,1,0,0,0,0,10,-6,DAL,AWAY,Kentavious Caldwell-Pope
 Kentavious Caldwell-Pope,203484,2025-11-20,MEM vs. SAC,W,18.0,1,6,0.167,0,4,0.0,0,0,0.0,0,3,3,7,1,0,0,0,2,23,SAC,HOME,Kentavious Caldwell-Pope
 Kentavious Caldwell-Pope,203484,2025-11-18,MEM @ SAS,L,19.0,2,6,0.333,0,3,0.0,0,0,0.0,1,2,3,3,1,0,0,1,4,-16,SAS,AWAY,Kentavious Caldwell-Pope

@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Zeke Nnaji,1630192,2025-12-03,DEN @ IND,W,12.0,1,1,1.0,0,0,0.0,0,0,0.0,0,2,2,1,1,0,1,1,2,-7,IND,AWAY,Zeke Nnaji
+Zeke Nnaji,1630192,2025-12-01,DEN vs. DAL,L,6.0,0,0,0.0,0,0,0.0,1,2,0.5,0,0,0,0,0,0,0,2,1,-1,DAL,HOME,Zeke Nnaji
+Zeke Nnaji,1630192,2025-11-29,DEN @ PHX,W,8.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,0,0,1,0,0,2,-1,PHX,AWAY,Zeke Nnaji
+Zeke Nnaji,1630192,2025-11-28,DEN vs. SAS,L,14.0,2,4,0.5,0,2,0.0,0,0,0.0,3,1,4,0,0,0,2,2,4,-13,SAS,HOME,Zeke Nnaji
+Zeke Nnaji,1630192,2025-11-24,DEN @ MEM,W,15.0,2,3,0.667,2,3,0.667,0,0,0.0,0,6,6,0,0,1,2,2,6,5,MEM,AWAY,Zeke Nnaji
 Zeke Nnaji,1630192,2025-11-19,DEN @ NOP,W,27.0,0,3,0.0,0,2,0.0,2,2,1.0,0,4,4,0,2,1,0,2,2,-18,NOP,AWAY,Zeke Nnaji
 Zeke Nnaji,1630192,2025-11-12,DEN @ LAC,W,3.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,0,0,0,0,0,-4,LAC,AWAY,Zeke Nnaji
 Zeke Nnaji,1630192,2025-11-08,DEN vs. IND,W,3.0,0,1,0.0,0,1,0.0,0,0,0.0,0,1,1,0,0,0,1,2,0,-3,IND,HOME,Zeke Nnaji

@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Donovan Mitchell,1628378,2025-12-03,CLE vs. POR,L,34.0,12,26,0.462,3,13,0.231,6,6,1.0,1,4,5,5,1,0,4,4,33,-15,POR,HOME,Donovan Mitchell
+Donovan Mitchell,1628378,2025-12-01,CLE @ IND,W,34.0,16,27,0.593,4,10,0.4,7,9,0.778,3,6,9,6,0,0,3,2,43,22,IND,AWAY,Donovan Mitchell
+Donovan Mitchell,1628378,2025-11-30,CLE vs. BOS,L,39.0,7,16,0.438,3,7,0.429,1,2,0.5,1,6,7,8,3,0,5,5,18,8,BOS,HOME,Donovan Mitchell
+Donovan Mitchell,1628378,2025-11-28,CLE @ ATL,L,35.0,15,28,0.536,7,15,0.467,5,5,1.0,0,3,3,3,1,0,4,3,42,0,ATL,AWAY,Donovan Mitchell
+Donovan Mitchell,1628378,2025-11-24,CLE @ TOR,L,34.0,6,20,0.3,3,12,0.25,2,2,1.0,0,1,1,8,1,0,2,0,17,-22,TOR,AWAY,Donovan Mitchell
 Donovan Mitchell,1628378,2025-11-23,CLE vs. LAC,W,33.0,14,22,0.636,5,9,0.556,4,4,1.0,2,6,8,6,1,0,2,2,37,26,LAC,HOME,Donovan Mitchell
 Donovan Mitchell,1628378,2025-11-21,CLE vs. IND,W,34.0,11,22,0.5,4,11,0.364,6,8,0.75,2,7,9,5,1,0,5,4,32,13,IND,HOME,Donovan Mitchell
 Donovan Mitchell,1628378,2025-11-19,CLE vs. HOU,L,34.0,8,17,0.471,3,9,0.333,2,2,1.0,1,2,3,2,2,0,4,2,21,-18,HOU,HOME,Donovan Mitchell

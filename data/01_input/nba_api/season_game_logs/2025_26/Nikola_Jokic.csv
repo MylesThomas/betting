@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Nikola Jokic,203999,2025-12-03,DEN @ IND,W,35.0,9,17,0.529,1,4,0.25,5,5,1.0,1,7,8,13,0,1,4,2,24,26,IND,AWAY,Nikola Jokic
+Nikola Jokic,203999,2025-12-01,DEN vs. DAL,L,37.0,10,24,0.417,3,10,0.3,6,7,0.857,4,16,20,13,1,2,2,2,29,-1,DAL,HOME,Nikola Jokic
+Nikola Jokic,203999,2025-11-29,DEN @ PHX,W,31.0,7,7,1.0,2,2,1.0,10,11,0.909,3,6,9,10,0,0,5,1,26,16,PHX,AWAY,Nikola Jokic
+Nikola Jokic,203999,2025-11-28,DEN vs. SAS,L,36.0,7,10,0.7,1,1,1.0,6,8,0.75,2,7,9,10,1,1,4,5,21,-6,SAS,HOME,Nikola Jokic
+Nikola Jokic,203999,2025-11-24,DEN @ MEM,W,34.0,5,9,0.556,3,4,0.75,4,5,0.8,1,9,10,16,2,0,3,1,17,1,MEM,AWAY,Nikola Jokic
 Nikola Jokic,203999,2025-11-22,DEN vs. SAC,L,37.0,16,28,0.571,3,6,0.5,9,10,0.9,7,6,13,7,0,0,2,4,44,2,SAC,HOME,Nikola Jokic
 Nikola Jokic,203999,2025-11-21,DEN @ HOU,W,39.0,11,20,0.55,4,8,0.5,8,10,0.8,4,6,10,9,2,2,4,5,34,4,HOU,AWAY,Nikola Jokic
 Nikola Jokic,203999,2025-11-19,DEN @ NOP,W,34.0,10,18,0.556,2,4,0.5,6,7,0.857,4,7,11,12,0,0,9,6,28,9,NOP,AWAY,Nikola Jokic

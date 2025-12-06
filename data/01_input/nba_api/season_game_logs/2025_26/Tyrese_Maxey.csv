@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Tyrese Maxey,1630178,2025-12-04,PHI vs. GSW,W,40.0,13,27,0.481,4,10,0.4,5,5,1.0,0,3,3,2,2,1,3,2,35,7,GSW,HOME,Tyrese Maxey
+Tyrese Maxey,1630178,2025-12-02,PHI vs. WAS,W,29.0,13,26,0.5,4,9,0.444,5,5,1.0,0,4,4,6,4,1,0,2,35,23,WAS,HOME,Tyrese Maxey
+Tyrese Maxey,1630178,2025-11-30,PHI vs. ATL,L,52.0,14,31,0.452,2,13,0.154,14,17,0.824,0,7,7,9,0,1,6,2,44,-8,ATL,HOME,Tyrese Maxey
+Tyrese Maxey,1630178,2025-11-28,PHI @ BKN,W,42.0,7,16,0.438,2,8,0.25,6,6,1.0,0,9,9,7,1,1,1,2,22,8,BKN,AWAY,Tyrese Maxey
+Tyrese Maxey,1630178,2025-11-25,PHI vs. ORL,L,32.0,7,15,0.467,1,5,0.2,5,6,0.833,0,1,1,4,1,0,1,2,20,-30,ORL,HOME,Tyrese Maxey
 Tyrese Maxey,1630178,2025-11-23,PHI vs. MIA,L,36.0,10,23,0.435,5,14,0.357,2,2,1.0,0,3,3,6,2,0,3,2,27,-14,MIA,HOME,Tyrese Maxey
 Tyrese Maxey,1630178,2025-11-20,PHI @ MIL,W,47.0,18,30,0.6,6,15,0.4,12,14,0.857,0,5,5,9,3,3,5,3,54,18,MIL,AWAY,Tyrese Maxey
 Tyrese Maxey,1630178,2025-11-19,PHI vs. TOR,L,39.0,8,14,0.571,5,9,0.556,3,4,0.75,1,1,2,9,3,1,3,1,24,-2,TOR,HOME,Tyrese Maxey

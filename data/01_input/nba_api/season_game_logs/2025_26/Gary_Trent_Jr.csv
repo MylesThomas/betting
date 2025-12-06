@@ -1,4 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Gary Trent Jr.,1629018,2025-12-03,MIL vs. DET,W,22.0,1,4,0.25,1,4,0.25,0,0,0.0,0,1,1,2,0,0,1,0,3,9,DET,HOME,Gary Trent Jr
+Gary Trent Jr.,1629018,2025-12-01,MIL @ WAS,L,31.0,4,7,0.571,3,5,0.6,3,3,1.0,0,1,1,0,0,1,1,1,14,-12,WAS,AWAY,Gary Trent Jr
+Gary Trent Jr.,1629018,2025-11-29,MIL vs. BKN,W,25.0,2,9,0.222,1,8,0.125,0,0,0.0,1,1,2,1,0,0,1,0,5,-6,BKN,HOME,Gary Trent Jr
+Gary Trent Jr.,1629018,2025-11-28,MIL @ NYK,L,25.0,1,4,0.25,1,4,0.25,0,0,0.0,0,0,0,1,0,0,0,3,3,-6,NYK,AWAY,Gary Trent Jr
+Gary Trent Jr.,1629018,2025-11-26,MIL @ MIA,L,35.0,5,14,0.357,5,12,0.417,0,0,0.0,0,1,1,2,2,0,1,0,15,10,MIA,AWAY,Gary Trent Jr
+Gary Trent Jr.,1629018,2025-11-24,MIL vs. POR,L,32.0,3,7,0.429,2,4,0.5,4,5,0.8,0,2,2,3,1,0,2,3,12,9,POR,HOME,Gary Trent Jr
 Gary Trent Jr.,1629018,2025-11-22,MIL vs. DET,L,19.0,3,5,0.6,2,4,0.5,0,0,0.0,0,0,0,0,0,0,1,1,8,-3,DET,HOME,Gary Trent Jr
 Gary Trent Jr.,1629018,2025-11-20,MIL vs. PHI,L,38.0,4,10,0.4,3,7,0.429,0,0,0.0,0,0,0,2,1,0,2,1,11,5,PHI,HOME,Gary Trent Jr
 Gary Trent Jr.,1629018,2025-11-17,MIL @ CLE,L,31.0,5,10,0.5,2,5,0.4,0,0,0.0,0,2,2,0,1,0,2,1,12,-18,CLE,AWAY,Gary Trent Jr

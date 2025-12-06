@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Caleb Martin,1628997,2025-12-03,DAL vs. MIA,W,3.0,0,1,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,0,2,0,-2,MIA,HOME,Caleb Martin
+Caleb Martin,1628997,2025-12-01,DAL @ DEN,W,7.0,0,2,0.0,0,0,0.0,0,0,0.0,1,1,2,1,1,1,0,2,0,3,DEN,AWAY,Caleb Martin
+Caleb Martin,1628997,2025-11-29,DAL @ LAC,W,21.0,0,5,0.0,0,2,0.0,0,0,0.0,1,6,7,2,3,0,1,1,0,-3,LAC,AWAY,Caleb Martin
+Caleb Martin,1628997,2025-11-28,DAL @ LAL,L,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,2,LAL,AWAY,Caleb Martin
+Caleb Martin,1628997,2025-11-24,DAL @ MIA,L,5.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,0,0,0,0,2,0,-11,MIA,AWAY,Caleb Martin
 Caleb Martin,1628997,2025-11-22,DAL vs. MEM,L,12.0,1,4,0.25,0,2,0.0,0,0,0.0,0,0,0,0,0,0,0,1,2,5,MEM,HOME,Caleb Martin
 Caleb Martin,1628997,2025-11-21,DAL vs. NOP,W,8.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,1,1,0,0,3,0,-7,NOP,HOME,Caleb Martin
 Caleb Martin,1628997,2025-11-17,DAL @ MIN,L,18.0,2,4,0.5,0,1,0.0,2,2,1.0,0,3,3,1,1,1,2,1,6,-10,MIN,AWAY,Caleb Martin

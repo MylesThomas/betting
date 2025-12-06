@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Ochai Agbaji,1630534,2025-12-02,TOR vs. POR,W,12.0,1,5,0.2,0,2,0.0,0,0,0.0,1,1,2,2,1,0,0,1,2,-6,POR,HOME,Ochai Agbaji
+Ochai Agbaji,1630534,2025-11-30,TOR @ NYK,L,17.0,3,4,0.75,0,0,0.0,0,0,0.0,2,3,5,1,1,0,1,2,6,3,NYK,AWAY,Ochai Agbaji
+Ochai Agbaji,1630534,2025-11-29,TOR @ CHA,L,16.0,1,5,0.2,0,1,0.0,0,0,0.0,0,1,1,1,0,1,0,2,2,4,CHA,AWAY,Ochai Agbaji
+Ochai Agbaji,1630534,2025-11-26,TOR vs. IND,W,5.0,0,2,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,1,2,0,-4,IND,HOME,Ochai Agbaji
+Ochai Agbaji,1630534,2025-11-24,TOR vs. CLE,W,11.0,2,3,0.667,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,4,-7,CLE,HOME,Ochai Agbaji
 Ochai Agbaji,1630534,2025-11-23,TOR vs. BKN,W,14.0,3,7,0.429,0,1,0.0,0,0,0.0,1,1,2,2,0,0,0,3,6,-3,BKN,HOME,Ochai Agbaji
 Ochai Agbaji,1630534,2025-11-21,TOR vs. WAS,W,16.0,1,3,0.333,0,1,0.0,2,2,1.0,0,1,1,0,0,0,0,1,4,7,WAS,HOME,Ochai Agbaji
 Ochai Agbaji,1630534,2025-11-08,TOR @ PHI,L,15.0,0,1,0.0,0,1,0.0,0,0,0.0,0,2,2,0,0,0,0,2,0,-3,PHI,AWAY,Ochai Agbaji

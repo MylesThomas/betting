@@ -1,2 +1,8 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Garrison Mathews,1629726,2025-12-03,IND vs. DEN,L,20.0,3,4,0.75,1,2,0.5,2,2,1.0,0,0,0,1,0,0,0,1,9,10,DEN,HOME,Garrison Mathews
+Garrison Mathews,1629726,2025-12-01,IND vs. CLE,L,25.0,3,3,1.0,3,3,1.0,6,9,0.667,1,0,1,1,1,0,0,2,15,-11,CLE,HOME,Garrison Mathews
+Garrison Mathews,1629726,2025-11-29,IND vs. CHI,W,8.0,0,3,0.0,0,3,0.0,0,0,0.0,0,0,0,1,0,0,0,1,0,1,CHI,HOME,Garrison Mathews
+Garrison Mathews,1629726,2025-11-28,IND vs. WAS,W,22.0,2,7,0.286,2,7,0.286,3,3,1.0,0,1,1,0,1,1,1,1,9,9,WAS,HOME,Garrison Mathews
+Garrison Mathews,1629726,2025-11-26,IND @ TOR,L,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,TOR,AWAY,Garrison Mathews
+Garrison Mathews,1629726,2025-11-24,IND vs. DET,L,6.0,0,0,0.0,0,0,0.0,0,0,0.0,0,1,1,1,0,0,1,1,0,1,DET,HOME,Garrison Mathews
 Garrison Mathews,1629726,2025-11-21,IND @ CLE,L,10.0,0,3,0.0,0,3,0.0,0,0,0.0,0,1,1,0,0,0,0,0,0,-4,CLE,AWAY,Garrison Mathews

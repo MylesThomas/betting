@@ -1,4 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kevon Looney,1626172,2025-12-02,NOP vs. MIN,L,12.0,0,1,0.0,0,0,0.0,0,0,0.0,0,3,3,1,0,0,1,4,0,11,MIN,HOME,Kevon Looney
+Kevon Looney,1626172,2025-11-30,NOP @ LAL,L,15.0,3,3,1.0,0,0,0.0,0,0,0.0,2,1,3,2,1,0,0,4,6,-4,LAL,AWAY,Kevon Looney
+Kevon Looney,1626172,2025-11-29,NOP @ GSW,L,10.0,2,3,0.667,0,0,0.0,0,0,0.0,2,3,5,1,1,0,0,0,4,8,GSW,AWAY,Kevon Looney
 Kevon Looney,1626172,2025-11-22,NOP vs. ATL,L,14.0,1,2,0.5,0,1,0.0,0,0,0.0,2,3,5,1,0,1,0,1,2,-4,ATL,HOME,Kevon Looney
 Kevon Looney,1626172,2025-11-19,NOP vs. DEN,L,5.0,0,1,0.0,0,0,0.0,0,0,0.0,1,3,4,1,0,0,0,2,0,-4,DEN,HOME,Kevon Looney
 Kevon Looney,1626172,2025-11-14,NOP vs. LAL,L,11.0,1,1,1.0,0,0,0.0,0,0,0.0,0,0,0,2,0,0,0,0,2,-7,LAL,HOME,Kevon Looney

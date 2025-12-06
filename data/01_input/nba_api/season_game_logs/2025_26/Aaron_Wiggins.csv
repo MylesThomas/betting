@@ -1,4 +1,6 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Aaron Wiggins,1630598,2025-12-02,OKC @ GSW,W,22.0,4,8,0.5,1,5,0.2,2,2,1.0,0,3,3,0,2,1,3,1,11,-8,GSW,AWAY,Aaron Wiggins
+Aaron Wiggins,1630598,2025-11-30,OKC @ POR,W,20.0,2,4,0.5,1,3,0.333,0,0,0.0,1,0,1,4,1,0,1,4,5,9,POR,AWAY,Aaron Wiggins
 Aaron Wiggins,1630598,2025-11-05,OKC @ POR,L,27.0,10,19,0.526,7,10,0.7,0,0,0.0,0,2,2,2,3,0,0,5,27,12,POR,AWAY,Aaron Wiggins
 Aaron Wiggins,1630598,2025-11-04,OKC @ LAC,W,26.0,5,10,0.5,2,4,0.5,0,1,0.0,1,1,2,2,0,0,0,2,12,26,LAC,AWAY,Aaron Wiggins
 Aaron Wiggins,1630598,2025-11-02,OKC vs. NOP,W,26.0,6,11,0.545,3,6,0.5,0,0,0.0,0,1,1,1,0,1,0,2,15,19,NOP,HOME,Aaron Wiggins

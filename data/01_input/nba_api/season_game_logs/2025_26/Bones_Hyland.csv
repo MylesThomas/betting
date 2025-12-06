@@ -1,4 +1,5 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Bones Hyland,1630538,2025-11-30,MIN vs. SAS,W,1.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,1,1,0,-1,SAS,HOME,Bones Hyland
 Bones Hyland,1630538,2025-11-19,MIN vs. WAS,W,10.0,1,4,0.25,0,2,0.0,0,0,0.0,1,2,3,2,0,0,0,1,2,16,WAS,HOME,Bones Hyland
 Bones Hyland,1630538,2025-11-17,MIN vs. DAL,W,8.0,1,2,0.5,0,1,0.0,0,0,0.0,0,2,2,1,1,0,0,0,2,-5,DAL,HOME,Bones Hyland
 Bones Hyland,1630538,2025-11-14,MIN vs. SAC,W,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,0,SAC,HOME,Bones Hyland

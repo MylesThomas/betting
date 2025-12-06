@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Sam Hauser,1630573,2025-12-04,BOS @ WAS,W,21.0,2,6,0.333,2,6,0.333,0,0,0.0,0,2,2,3,1,0,0,0,6,4,WAS,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-12-02,BOS vs. NYK,W,19.0,2,4,0.5,2,3,0.667,0,0,0.0,1,3,4,1,1,0,0,1,6,-2,NYK,HOME,Sam Hauser
+Sam Hauser,1630573,2025-11-30,BOS @ CLE,W,35.0,3,6,0.5,1,4,0.25,0,0,0.0,1,4,5,2,1,0,0,1,7,19,CLE,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-11-29,BOS @ MIN,L,30.0,5,12,0.417,4,10,0.4,0,0,0.0,0,6,6,4,1,1,0,4,14,10,MIN,AWAY,Sam Hauser
+Sam Hauser,1630573,2025-11-26,BOS vs. DET,W,17.0,2,4,0.5,1,3,0.333,0,0,0.0,1,0,1,1,0,0,0,2,5,3,DET,HOME,Sam Hauser
 Sam Hauser,1630573,2025-11-23,BOS vs. ORL,W,27.0,5,8,0.625,4,7,0.571,0,0,0.0,0,1,1,0,0,0,0,3,14,-6,ORL,HOME,Sam Hauser
 Sam Hauser,1630573,2025-11-21,BOS vs. BKN,L,14.0,0,3,0.0,0,3,0.0,0,0,0.0,1,3,4,2,0,0,1,2,0,-6,BKN,HOME,Sam Hauser
 Sam Hauser,1630573,2025-11-18,BOS @ BKN,W,22.0,3,7,0.429,2,5,0.4,0,0,0.0,1,6,7,3,2,0,0,0,8,22,BKN,AWAY,Sam Hauser

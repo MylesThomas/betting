@@ -1,4 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Daniel Gafford,1629655,2025-12-03,DAL vs. MIA,W,14.0,0,1,0.0,0,0,0.0,2,2,1.0,1,4,5,0,1,0,2,0,2,8,MIA,HOME,Daniel Gafford
+Daniel Gafford,1629655,2025-11-28,DAL @ LAL,L,17.0,2,3,0.667,0,0,0.0,1,2,0.5,2,2,4,0,1,0,2,1,5,-4,LAL,AWAY,Daniel Gafford
+Daniel Gafford,1629655,2025-11-24,DAL @ MIA,L,28.0,4,8,0.5,0,0,0.0,3,3,1.0,4,7,11,0,1,2,1,3,11,20,MIA,AWAY,Daniel Gafford
 Daniel Gafford,1629655,2025-11-22,DAL vs. MEM,L,27.0,2,6,0.333,0,0,0.0,1,1,1.0,3,5,8,4,0,2,2,5,5,-13,MEM,HOME,Daniel Gafford
 Daniel Gafford,1629655,2025-11-21,DAL vs. NOP,W,25.0,3,5,0.6,0,0,0.0,2,4,0.5,2,5,7,3,3,1,3,2,8,-6,NOP,HOME,Daniel Gafford
 Daniel Gafford,1629655,2025-11-19,DAL vs. NYK,L,25.0,2,3,0.667,0,0,0.0,3,4,0.75,2,6,8,2,0,1,1,5,7,-11,NYK,HOME,Daniel Gafford

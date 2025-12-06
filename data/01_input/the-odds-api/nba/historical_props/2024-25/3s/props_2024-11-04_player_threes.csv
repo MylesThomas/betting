@@ -1,0 +1,733 @@
+player,game,game_time,market,line,bookmaker,over_odds,under_odds
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,draftkings,-142,110
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,draftkings,-110,-120
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,draftkings,-175,135
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,fanduel,-138,108
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,fanduel,-104,-122
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,fanduel,-162,126
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,betonlineag,-135,105
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,betonlineag,-106,-122
+Evan Mobley,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,0.5,betonlineag,104,-135
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,betonlineag,-169,129
+Giannis Antetokounmpo,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,0.5,betonlineag,254,-357
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,williamhill_us,-113,-121
+Evan Mobley,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,0.5,williamhill_us,110,-151
+Giannis Antetokounmpo,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,0.5,williamhill_us,236,-354
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,williamhill_us,-137,100
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,williamhill_us,-160,116
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,betrivers,-113,-118
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,3.5,betrivers,-165,123
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,betrivers,175,-245
+Giannis Antetokounmpo,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,0.5,betmgm,250,-350
+Evan Mobley,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,0.5,betmgm,105,-145
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,betmgm,-135,100
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,betmgm,-110,-120
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,betmgm,-165,125
+Darius Garland,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,bovada,-135,105
+Dean Wade,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,1.5,bovada,-105,-125
+Donovan Mitchell,Milwaukee Bucks @ Cleveland Cavaliers,2024-11-05T00:00:00Z,player_threes,2.5,bovada,-170,130
+Alex Sarr,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,draftkings,126,-162
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,draftkings,-115,-115
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,draftkings,126,-162
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,draftkings,115,-148
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,fanduel,-113,-113
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,fanduel,130,-166
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,fanduel,118,-150
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,williamhill_us,-117,-117
+Alex Sarr,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,williamhill_us,123,-169
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,williamhill_us,114,-157
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,williamhill_us,116,-160
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,betrivers,-235,170
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betrivers,148,-200
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betrivers,-110,-121
+Alex Sarr,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betrivers,133,-180
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,betmgm,115,-155
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betmgm,125,-165
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betmgm,-115,-115
+Alex Sarr,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betmgm,125,-165
+Alex Sarr,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,bovada,130,-170
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,bovada,-105,-125
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,bovada,130,-170
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,bovada,125,-165
+Jordan Poole,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,3.5,betonlineag,120,-156
+Bilal Coulibaly,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betonlineag,-110,-118
+Carlton Carrington,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betonlineag,122,-159
+Alex Sarr,Golden State Warriors @ Washington Wizards,2024-11-05T00:15:00Z,player_threes,1.5,betonlineag,126,-164
+Anthony Davis,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,0.5,draftkings,155,-204
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,draftkings,150,-198
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,draftkings,-175,135
+D'Angelo Russell,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,draftkings,110,-142
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,draftkings,-130,100
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,draftkings,-154,120
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,draftkings,145,-188
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,draftkings,120,-154
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,draftkings,145,-188
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,fanduel,-148,116
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,fanduel,-186,144
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,fanduel,120,-154
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,fanduel,-130,102
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,fanduel,-166,130
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,fanduel,150,-194
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,fanduel,136,-174
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,-154,118
+D'Angelo Russell,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betonlineag,115,-149
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,149,-196
+Anthony Davis,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,0.5,betonlineag,152,-200
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,-185,142
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,-172,131
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,144,-189
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,-127,-102
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betonlineag,118,-154
+Simone Fontecchio,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betonlineag,118,-154
+Malik Beasley,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betonlineag,112,-145
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,-166,120
+Simone Fontecchio,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,120,-166
+Isaiah Stewart II,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,0.5,williamhill_us,184,-264
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,williamhill_us,116,-160
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,143,-199
+Anthony Davis,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,0.5,williamhill_us,146,-204
+D'Angelo Russell,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,williamhill_us,108,-148
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,-135,-101
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,143,-199
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,-184,133
+Malik Beasley,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,williamhill_us,106,-145
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,williamhill_us,-154,112
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betrivers,148,-200
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betrivers,-136,102
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betrivers,-175,128
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betrivers,120,-162
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betrivers,130,-177
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betrivers,-157,118
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betrivers,-205,150
+Anthony Davis,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,0.5,betmgm,150,-210
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betmgm,115,-155
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,-185,135
+D'Angelo Russell,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betmgm,115,-155
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,140,-190
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,-125,-105
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,150,-200
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,-165,125
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,-155,115
+Simone Fontecchio,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,betmgm,115,-155
+Malik Beasley,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,betmgm,110,-150
+Isaiah Stewart II,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,0.5,betmgm,190,-275
+Austin Reaves,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,-185,140
+Cade Cunningham,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,-170,130
+D'Angelo Russell,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,bovada,120,-160
+Jaden Ivey,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,-130,100
+LeBron James,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,-160,120
+Malik Beasley,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,bovada,115,-150
+Rui Hachimura,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,145,-190
+Simone Fontecchio,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,120,-160
+Tim Hardaway Jr,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,2.5,bovada,120,-160
+Tobias Harris,Los Angeles Lakers @ Detroit Pistons,2024-11-05T00:30:00Z,player_threes,1.5,bovada,155,-210
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,draftkings,-115,-115
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,draftkings,115,-148
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,draftkings,105,-135
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,draftkings,-115,-115
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,draftkings,-175,135
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,draftkings,-120,-110
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,draftkings,100,-130
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,draftkings,110,-142
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,fanduel,-115,-111
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,fanduel,-170,132
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,fanduel,-106,-120
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,fanduel,-118,-108
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,fanduel,120,-154
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,fanduel,106,-136
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,fanduel,110,-140
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,fanduel,110,-140
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,williamhill_us,110,-151
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,williamhill_us,-129,-106
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,williamhill_us,-125,-109
+Al Horford,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,williamhill_us,-137,100
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,williamhill_us,112,-154
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,williamhill_us,102,-139
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,williamhill_us,-189,136
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,williamhill_us,-113,-121
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,williamhill_us,102,-139
+Al Horford,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betonlineag,-130,101
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betonlineag,-114,-114
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betonlineag,104,-135
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betonlineag,-116,-111
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betonlineag,109,-141
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betonlineag,-120,-108
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betonlineag,-179,137
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betonlineag,107,-139
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betonlineag,115,-149
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betmgm,105,-140
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betmgm,115,-155
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betmgm,105,-140
+Al Horford,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betmgm,-135,100
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betmgm,-135,100
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betmgm,-115,-115
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betmgm,105,-145
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betmgm,-130,-105
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betmgm,-185,135
+Al Horford,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,bovada,-135,105
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,bovada,-125,-105
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,bovada,120,-160
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,bovada,105,-135
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,bovada,-115,-115
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,bovada,-185,140
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,bovada,-125,-105
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,bovada,110,-145
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,bovada,105,-135
+Jrue Holiday,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betrivers,180,-245
+Derrick White,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betrivers,205,-286
+Payton Pritchard,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,2.5,betrivers,195,-275
+Jayson Tatum,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,4.5,betrivers,-130,-103
+Zaccharie Risacher,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betrivers,106,-141
+Jalen Johnson,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betrivers,112,-150
+Trae Young,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,3.5,betrivers,-225,163
+Dyson Daniels,Boston Celtics @ Atlanta Hawks,2024-11-05T00:45:00Z,player_threes,1.5,betrivers,108,-143
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,3.5,draftkings,120,-154
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,draftkings,-148,115
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,draftkings,126,-162
+Dorian Finney-Smith,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,draftkings,-135,105
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,draftkings,130,-162
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,draftkings,-105,-125
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,draftkings,-182,140
+Santi Aldama,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,draftkings,-115,-115
+Santi Aldama,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,fanduel,-118,-108
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,fanduel,126,-162
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,fanduel,100,-128
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,fanduel,140,-180
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,fanduel,-138,108
+Jake LaRavia,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,fanduel,116,-148
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,fanduel,-178,138
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,fanduel,-166,130
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,-102,-127
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betonlineag,-149,115
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,130,-169
+Jake LaRavia,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,109,-141
+Santi Aldama,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,-111,-116
+Dorian Finney-Smith,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,-143,110
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,3.5,betonlineag,124,-161
+Scotty Pippen Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,174,-233
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betonlineag,-182,138
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betonlineag,132,-172
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,3.5,williamhill_us,114,-157
+Santi Aldama,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,-117,-117
+Scotty Pippen Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,165,-234
+Dorian Finney-Smith,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,-151,110
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,williamhill_us,-154,112
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,-169,123
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,-111,-123
+Jake LaRavia,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,102,-139
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,williamhill_us,129,-179
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,williamhill_us,120,-166
+Jake LaRavia,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betrivers,110,-148
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betrivers,123,-165
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betrivers,185,-250
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betrivers,-230,170
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betrivers,-103,-130
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betrivers,143,-195
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betrivers,-186,138
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,bovada,-160,120
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,3.5,bovada,120,-160
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,bovada,135,-180
+Dorian Finney-Smith,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,-150,115
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,135,-180
+Jake LaRavia,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,110,-145
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,100,-130
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,-190,145
+Santi Aldama,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,-110,-120
+Scotty Pippen Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,bovada,175,-240
+Ja Morant,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betmgm,130,-175
+Santi Aldama,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betmgm,-110,-120
+Jaren Jackson Jr,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betmgm,100,-130
+Jaylen Wells,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betmgm,-185,135
+Cameron Johnson,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,3.5,betmgm,120,-155
+Dennis Schroder,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betmgm,130,-175
+Dorian Finney-Smith,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betmgm,-150,110
+Jake LaRavia,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,1.5,betmgm,105,-140
+Cam Thomas,Memphis Grizzlies @ Brooklyn Nets,2024-11-05T01:00:00Z,player_threes,2.5,betmgm,-155,115
+Bam Adebayo,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,draftkings,105,-135
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,draftkings,-110,-120
+DeMar DeRozan,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,draftkings,-168,130
+Domantas Sabonis,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,draftkings,126,-162
+Jimmy Butler,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,draftkings,-120,-110
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,draftkings,145,-188
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,draftkings,145,-188
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,draftkings,-110,-120
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,draftkings,-175,135
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,fanduel,-184,142
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,fanduel,-104,-122
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,fanduel,-174,136
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,fanduel,100,-128
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,fanduel,144,-186
+Bam Adebayo,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betonlineag,109,-141
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betonlineag,-175,134
+Jimmy Butler,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betonlineag,-115,-112
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betonlineag,-108,-120
+Domantas Sabonis,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betonlineag,130,-169
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betonlineag,-109,-119
+Kevin Huerter,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,betonlineag,-154,119
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,betonlineag,139,-182
+DeMar DeRozan,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betonlineag,-167,127
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betonlineag,141,-185
+Jaime Jaquez Jr,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betonlineag,-112,-115
+DeMar DeRozan,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,williamhill_us,-163,118
+Jaime Jaquez Jr,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,williamhill_us,-119,-115
+Bam Adebayo,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,williamhill_us,112,-154
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,williamhill_us,-179,129
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,williamhill_us,139,-194
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,williamhill_us,-115,-119
+Trey Lyles,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,williamhill_us,-169,123
+Kevin Huerter,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,williamhill_us,-154,112
+Domantas Sabonis,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,williamhill_us,133,-184
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,williamhill_us,-109,-125
+Jimmy Butler,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,williamhill_us,-125,-109
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,williamhill_us,126,-174
+Jimmy Butler,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betmgm,-120,-110
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,betmgm,135,-185
+Kevin Huerter,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,betmgm,-155,115
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betmgm,-110,-120
+Bam Adebayo,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betmgm,115,-150
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betmgm,-165,125
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betmgm,-110,-120
+DeMar DeRozan,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betmgm,-160,120
+Domantas Sabonis,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betmgm,135,-185
+Trey Lyles,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betmgm,-165,125
+Jaime Jaquez Jr,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,0.5,betmgm,-120,-110
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betmgm,135,-185
+Kevin Huerter,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,bovada,-160,120
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,bovada,-110,-120
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,bovada,140,-185
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,bovada,140,-185
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,bovada,-110,-120
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,bovada,-170,130
+Terry Rozier,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betrivers,-109,-122
+Nikola Jovic,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,1.5,betrivers,130,-175
+Tyler Herro,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betrivers,150,-205
+Keegan Murray,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betrivers,-190,140
+De'Aaron Fox,Sacramento Kings @ Miami Heat,2024-11-05T01:15:00Z,player_threes,2.5,betrivers,-106,-125
+Lauri Markkanen,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,draftkings,110,-142
+Zach LaVine,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,williamhill_us,-160,116
+Lauri Markkanen,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,williamhill_us,108,-148
+Lauri Markkanen,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,betonlineag,109,-141
+Lauri Markkanen,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,betmgm,110,-150
+Zach LaVine,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,betmgm,-155,115
+Lauri Markkanen,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,bovada,105,-135
+Zach LaVine,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,bovada,-160,120
+Lauri Markkanen,Utah Jazz @ Chicago Bulls,2024-11-05T01:30:00Z,player_threes,2.5,betrivers,110,-148
+Dillon Brooks,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,draftkings,110,-142
+Fred VanVleet,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,draftkings,-148,115
+Jabari Smith Jr,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,draftkings,-130,100
+Jalen Brunson,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,draftkings,145,-188
+Jalen Green,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,draftkings,-130,100
+Josh Hart,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,draftkings,165,-218
+Karl-Anthony Towns,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,draftkings,-130,100
+Mikal Bridges,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,draftkings,126,-162
+OG Anunoby,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,draftkings,-115,-115
+Karl-Anthony Towns,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,fanduel,-130,102
+OG Anunoby,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,fanduel,-115,-111
+Jalen Green,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,fanduel,-138,108
+Jalen Brunson,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,fanduel,134,-172
+Mikal Bridges,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,fanduel,130,-166
+Dillon Brooks,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,fanduel,110,-140
+Fred VanVleet,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,fanduel,-146,114
+Jalen Green,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betonlineag,-141,109
+Jabari Smith Jr,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betonlineag,-141,109
+Jalen Brunson,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betonlineag,132,-172
+Fred VanVleet,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betonlineag,-152,117
+Josh Hart,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betonlineag,171,-227
+OG Anunoby,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betonlineag,-118,-110
+Dillon Brooks,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betonlineag,103,-133
+Mikal Bridges,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betonlineag,117,-152
+Karl-Anthony Towns,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betonlineag,-133,103
+Alperen Sengun,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,0.5,betonlineag,199,-270
+Dillon Brooks,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,williamhill_us,-103,-133
+OG Anunoby,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,williamhill_us,-127,-108
+Mikal Bridges,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,williamhill_us,102,-139
+Alperen Sengun,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,0.5,williamhill_us,184,-264
+Fred VanVleet,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,williamhill_us,-151,110
+Josh Hart,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,williamhill_us,165,-234
+Jabari Smith Jr,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,williamhill_us,-142,104
+Karl-Anthony Towns,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,williamhill_us,-145,106
+Jalen Brunson,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,williamhill_us,120,-166
+Jalen Green,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,williamhill_us,-148,108
+OG Anunoby,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betmgm,-125,-105
+Josh Hart,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betmgm,165,-225
+Karl-Anthony Towns,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betmgm,-140,105
+Mikal Bridges,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betmgm,105,-145
+Jalen Brunson,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betmgm,120,-160
+Jabari Smith Jr,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betmgm,-120,-110
+Alperen Sengun,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,0.5,betmgm,195,-275
+Jalen Green,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betmgm,-150,110
+Dillon Brooks,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,betmgm,100,-130
+Fred VanVleet,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,betmgm,-155,115
+Dillon Brooks,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,bovada,-105,-125
+Fred VanVleet,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,bovada,-160,120
+Jabari Smith Jr,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,bovada,-150,115
+Jalen Brunson,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,bovada,125,-165
+Jalen Green,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,bovada,-150,115
+Josh Hart,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,bovada,170,-230
+Karl-Anthony Towns,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,bovada,-135,105
+Mikal Bridges,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,2.5,bovada,110,-145
+OG Anunoby,New York Knicks @ Houston Rockets,2024-11-05T01:45:00Z,player_threes,1.5,bovada,-125,-105
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,draftkings,-135,105
+Brandon Miller,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,draftkings,100,-130
+Donte DiVincenzo,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,draftkings,-105,-125
+Grant Williams,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,100,-135
+Jaden McDaniels,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,155,-212
+Josh Green,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,160,-212
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,140,-182
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,4.5,draftkings,115,-148
+Mike Conley,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,-120,-110
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,-162,126
+Nickeil Alexander-Walker,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,draftkings,-120,-110
+Jaden McDaniels,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,fanduel,150,-194
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,fanduel,-142,112
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,fanduel,-146,114
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,fanduel,122,-156
+Grant Williams,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,fanduel,114,-146
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,4.5,fanduel,112,-142
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,-161,124
+Jaden McDaniels,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,146,-192
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,4.5,betonlineag,115,-149
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,betonlineag,-154,118
+Mike Conley,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,-130,100
+Nickeil Alexander-Walker,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,-115,-112
+Grant Williams,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,109,-141
+Brandon Miller,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,betonlineag,107,-139
+Josh Green,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,171,-227
+Donte DiVincenzo,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,betonlineag,-105,-123
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betonlineag,126,-164
+Donte DiVincenzo,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,williamhill_us,-108,-127
+Grant Williams,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,106,-145
+Josh Green,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,165,-234
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,-166,120
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,114,-157
+Mike Conley,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,-139,102
+Nickeil Alexander-Walker,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,-121,-113
+Jaden McDaniels,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,williamhill_us,126,-174
+Brandon Miller,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,williamhill_us,108,-148
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,4.5,williamhill_us,106,-145
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,williamhill_us,-145,106
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,4.5,betmgm,115,-155
+Mike Conley,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betmgm,-140,105
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betmgm,120,-160
+Brandon Miller,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,betmgm,110,-145
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,betmgm,-150,110
+Donte DiVincenzo,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,betmgm,-105,-125
+Nickeil Alexander-Walker,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betmgm,-120,-110
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betmgm,-165,125
+Jaden McDaniels,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betmgm,135,-185
+Josh Green,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betmgm,170,-250
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,bovada,-145,110
+Brandon Miller,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,bovada,115,-150
+Donte DiVincenzo,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,bovada,-105,-125
+Grant Williams,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,115,-150
+Jaden McDaniels,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,145,-190
+Josh Green,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,180,-245
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,120,-160
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,4.5,bovada,125,-165
+Mike Conley,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,-135,105
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,-165,125
+Nickeil Alexander-Walker,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,bovada,-120,-110
+Grant Williams,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betrivers,104,-137
+Josh Green,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betrivers,150,-210
+Miles Bridges,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betrivers,210,-295
+LaMelo Ball,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,betrivers,220,-305
+Brandon Miller,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betrivers,102,-136
+Anthony Edwards,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,3.5,betrivers,165,-230
+Mike Conley,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betrivers,-113,-118
+Donte DiVincenzo,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,2.5,betrivers,-110,-121
+Julius Randle,Charlotte Hornets @ Minnesota Timberwolves,2024-11-05T02:00:00Z,player_threes,1.5,betrivers,128,-175
+Chet Holmgren,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,draftkings,120,-154
+Franz Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,draftkings,160,-212
+Jalen Suggs,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,2.5,draftkings,130,-168
+Jalen Williams,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,draftkings,115,-148
+Kentavious Caldwell-Pope,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,draftkings,105,-142
+Luguentz Dort,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,draftkings,-142,110
+Shai Gilgeous-Alexander,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,draftkings,-135,105
+Luguentz Dort,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betonlineag,-145,112
+Moe Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,0.5,betonlineag,-135,105
+Alex Caruso,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,0.5,betonlineag,-182,138
+Franz Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betonlineag,171,-227
+Shai Gilgeous-Alexander,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betonlineag,-139,107
+Jalen Suggs,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,2.5,betonlineag,134,-175
+Jalen Williams,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betonlineag,117,-152
+Chet Holmgren,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betonlineag,113,-147
+Kentavious Caldwell-Pope,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betonlineag,104,-135
+Jalen Suggs,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,2.5,williamhill_us,129,-179
+Jalen Williams,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,williamhill_us,112,-154
+Luguentz Dort,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,williamhill_us,-148,108
+Franz Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,williamhill_us,159,-224
+Shai Gilgeous-Alexander,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,williamhill_us,-142,104
+Alex Caruso,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,0.5,williamhill_us,-184,133
+Chet Holmgren,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,williamhill_us,104,-142
+Kentavious Caldwell-Pope,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,williamhill_us,-101,-135
+Jalen Williams,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betmgm,115,-155
+Shai Gilgeous-Alexander,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betmgm,-140,105
+Kentavious Caldwell-Pope,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betmgm,105,-145
+Luguentz Dort,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betmgm,-150,110
+Chet Holmgren,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betmgm,110,-145
+Franz Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betmgm,170,-250
+Alex Caruso,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,0.5,betmgm,-185,135
+Jalen Suggs,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,2.5,betmgm,135,-185
+Chet Holmgren,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,bovada,110,-145
+Franz Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,bovada,175,-240
+Jalen Suggs,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,2.5,bovada,140,-185
+Jalen Williams,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,bovada,120,-160
+Kentavious Caldwell-Pope,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,bovada,100,-130
+Luguentz Dort,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,bovada,-150,115
+Shai Gilgeous-Alexander,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betrivers,-141,106
+Jalen Williams,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betrivers,114,-152
+Luguentz Dort,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betrivers,220,-315
+Kentavious Caldwell-Pope,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betrivers,110,-148
+Franz Wagner,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betrivers,-305,215
+Chet Holmgren,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,1.5,betrivers,110,-148
+Jalen Suggs,Orlando Magic @ Oklahoma City Thunder,2024-11-05T02:15:00Z,player_threes,2.5,betrivers,-230,170
+Anfernee Simons,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,3.5,draftkings,100,-130
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,draftkings,120,-154
+Deni Avdija,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,draftkings,155,-204
+Jerami Grant,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,draftkings,-105,-125
+Jose Alvarado,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,draftkings,-142,110
+Toumani Camara,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,draftkings,-198,150
+Zion Williamson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,draftkings,210,-285
+Anfernee Simons,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,3.5,williamhill_us,-103,-133
+Jose Alvarado,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,williamhill_us,-151,110
+Jerami Grant,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,williamhill_us,-111,-123
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,williamhill_us,120,-166
+Zion Williamson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,williamhill_us,213,-314
+Toumani Camara,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,williamhill_us,-204,146
+Deni Avdija,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,williamhill_us,152,-214
+Scoot Henderson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,williamhill_us,126,-174
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,fanduel,116,-148
+Jose Alvarado,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,fanduel,-156,122
+Jerami Grant,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,betmgm,-110,-120
+Deni Avdija,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betmgm,160,-225
+Scoot Henderson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betmgm,135,-185
+Anfernee Simons,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,3.5,betmgm,100,-135
+Toumani Camara,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,betmgm,-210,155
+Zion Williamson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,betmgm,220,-300
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,betmgm,125,-160
+Jose Alvarado,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,bovada,-160,120
+Anfernee Simons,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,3.5,bovada,105,-135
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,bovada,125,-165
+Deni Avdija,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,bovada,170,-230
+Jerami Grant,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,bovada,-110,-120
+Scoot Henderson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,bovada,140,-185
+Jose Alvarado,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betrivers,205,-286
+Deni Avdija,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betrivers,-335,225
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betrivers,117,-157
+Anfernee Simons,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,3.5,betrivers,-275,195
+Jerami Grant,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,betrivers,230,-335
+Anfernee Simons,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,3.5,betonlineag,102,-132
+Zion Williamson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,betonlineag,215,-294
+Brandon Ingram,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,betonlineag,120,-156
+Jose Alvarado,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betonlineag,-156,120
+Jerami Grant,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,2.5,betonlineag,-108,-120
+Scoot Henderson,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betonlineag,136,-179
+Toumani Camara,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,0.5,betonlineag,-208,158
+Deni Avdija,Portland Trail Blazers @ New Orleans Pelicans,2024-11-05T02:30:00Z,player_threes,1.5,betonlineag,161,-213
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,draftkings,130,-168
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,draftkings,110,-142
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,draftkings,-148,115
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,draftkings,-115,-115
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,draftkings,-110,-120
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,draftkings,100,-130
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,draftkings,126,-162
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betonlineag,-114,-114
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,betonlineag,-149,115
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,betonlineag,130,-169
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,betonlineag,110,-143
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betonlineag,107,-139
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,betonlineag,134,-175
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betonlineag,-105,-123
+Andrew Nembhard,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,0.5,betonlineag,-256,190
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,williamhill_us,-117,-117
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,williamhill_us,108,-148
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,williamhill_us,102,-139
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,williamhill_us,129,-179
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,williamhill_us,-109,-125
+Andrew Nembhard,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,0.5,williamhill_us,-244,172
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,williamhill_us,-151,110
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,williamhill_us,123,-169
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,betmgm,-150,110
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,betmgm,135,-185
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,betmgm,105,-140
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betmgm,-105,-125
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,betmgm,130,-175
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betmgm,105,-140
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betmgm,-120,-115
+Andrew Nembhard,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,0.5,betmgm,-250,175
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,bovada,140,-185
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,bovada,105,-135
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,bovada,-150,115
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,bovada,-115,-115
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,bovada,-105,-125
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,bovada,105,-135
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,bovada,135,-180
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,fanduel,124,-160
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,fanduel,142,-184
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,fanduel,-146,114
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,fanduel,102,-130
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,fanduel,120,-154
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,fanduel,130,-166
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,fanduel,-113,-113
+Kyrie Irving,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,betrivers,114,-152
+Klay Thompson,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,betrivers,128,-175
+P.J. Washington,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betrivers,100,-132
+Luka Doncic,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,2.5,betrivers,-157,117
+Myles Turner,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betrivers,-110,-121
+Pascal Siakam,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,1.5,betrivers,-107,-125
+Tyrese Haliburton,Indiana Pacers @ Dallas Mavericks,2024-11-05T02:45:00Z,player_threes,3.5,betrivers,118,-159
+Christian Braun,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,draftkings,160,-212
+Davion Mitchell,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,draftkings,105,-135
+Gradey Dick,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,draftkings,-135,105
+Michael Porter Jr,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,draftkings,-148,115
+Nikola Jokic,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,draftkings,115,-148
+Ochai Agbaji,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,draftkings,145,-188
+R.J. Barrett,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,draftkings,-148,115
+Nikola Jokic,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,williamhill_us,108,-148
+Davion Mitchell,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,williamhill_us,104,-142
+Gradey Dick,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,williamhill_us,-142,104
+Aaron Gordon,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,0.5,williamhill_us,-224,159
+Michael Porter Jr,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,williamhill_us,-145,106
+Christian Braun,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,williamhill_us,159,-224
+R.J. Barrett,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,williamhill_us,-145,106
+Ochai Agbaji,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,williamhill_us,143,-199
+Christian Braun,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,fanduel,164,-215
+Gradey Dick,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,fanduel,-128,100
+Davion Mitchell,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,fanduel,116,-148
+R.J. Barrett,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,fanduel,-130,102
+Nikola Jokic,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,fanduel,122,-154
+Michael Porter Jr,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,fanduel,-154,120
+Michael Porter Jr,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,betmgm,-145,105
+Aaron Gordon,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,0.5,betmgm,-225,165
+Christian Braun,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betmgm,165,-225
+Nikola Jokic,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betmgm,110,-145
+Gradey Dick,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,betmgm,-140,105
+Davion Mitchell,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betmgm,110,-150
+R.J. Barrett,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betmgm,-145,110
+Ochai Agbaji,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betmgm,150,-200
+Christian Braun,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,bovada,170,-230
+Davion Mitchell,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,bovada,115,-150
+Gradey Dick,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,bovada,-135,105
+Michael Porter Jr,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,bovada,-145,110
+Nikola Jokic,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,bovada,110,-145
+Ochai Agbaji,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,bovada,155,-210
+R.J. Barrett,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,bovada,-145,110
+Nikola Jokic,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betonlineag,113,-147
+Christian Braun,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betonlineag,167,-222
+Michael Porter Jr,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,betonlineag,-149,115
+Gradey Dick,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,2.5,betonlineag,-135,104
+R.J. Barrett,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betonlineag,-141,109
+Davion Mitchell,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betonlineag,110,-143
+Ochai Agbaji,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,1.5,betonlineag,149,-196
+Aaron Gordon,Toronto Raptors @ Denver Nuggets,2024-11-05T03:00:00Z,player_threes,0.5,betonlineag,-227,170
+Bradley Beal,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,draftkings,130,-168
+Caleb Martin,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,0.5,draftkings,-188,145
+Devin Booker,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,draftkings,126,-162
+Kelly Oubre Jr,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,draftkings,-110,-120
+Kevin Durant,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,draftkings,130,-168
+Paul George,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,draftkings,-105,-125
+Tyrese Maxey,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,draftkings,100,-130
+Tyus Jones,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,draftkings,-115,-115
+Tyrese Maxey,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,williamhill_us,-101,-135
+Paul George,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,williamhill_us,-101,-135
+Kelly Oubre Jr,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,williamhill_us,-104,-131
+Jusuf Nurkic,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,0.5,williamhill_us,172,-244
+Kevin Durant,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,williamhill_us,129,-179
+Bradley Beal,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,williamhill_us,126,-174
+Caleb Martin,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,0.5,williamhill_us,-199,143
+Devin Booker,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,williamhill_us,-174,126
+Tyus Jones,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,williamhill_us,-106,-129
+Tyus Jones,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,fanduel,102,-130
+Tyrese Maxey,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,fanduel,102,-130
+Devin Booker,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,fanduel,-158,124
+Kevin Durant,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,fanduel,136,-174
+Paul George,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,fanduel,110,-140
+Kelly Oubre Jr,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,fanduel,110,-140
+Paul George,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betmgm,100,-130
+Bradley Beal,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betmgm,130,-175
+Tyrese Maxey,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,betmgm,100,-135
+Kevin Durant,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betmgm,130,-175
+Kelly Oubre Jr,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,betmgm,100,-135
+Devin Booker,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betmgm,-175,130
+Tyus Jones,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,betmgm,-105,-130
+Jusuf Nurkic,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,0.5,betmgm,175,-250
+Bradley Beal,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,bovada,130,-170
+Devin Booker,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,bovada,-180,135
+Kelly Oubre Jr,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,bovada,100,-130
+Kevin Durant,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,bovada,135,-180
+Paul George,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,bovada,-105,-125
+Tyrese Maxey,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,bovada,105,-135
+Tyus Jones,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,bovada,-105,-125
+Devin Booker,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betonlineag,-172,132
+Tyrese Maxey,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,3.5,betonlineag,102,-132
+Kevin Durant,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betonlineag,134,-175
+Bradley Beal,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betonlineag,130,-169
+Kelly Oubre Jr,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,betonlineag,100,-130
+Paul George,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,2.5,betonlineag,-101,-128
+Caleb Martin,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,0.5,betonlineag,-196,148
+Tyus Jones,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,1.5,betonlineag,-103,-125
+Jusuf Nurkic,Philadelphia 76ers @ Phoenix Suns,2024-11-05T03:15:00Z,player_threes,0.5,betonlineag,174,-233
+Chris Paul,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,draftkings,100,-130
+Derrick Jones,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,draftkings,180,-240
+Harrison Barnes,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,draftkings,160,-212
+James Harden,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,3.5,draftkings,120,-154
+Jeremy Sochan,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,draftkings,110,-142
+Julian Champagnie,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,draftkings,115,-148
+Keldon Johnson,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,draftkings,120,-154
+Norman Powell,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,2.5,draftkings,-154,110
+Terance Mann,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,draftkings,-125,-105
+Victor Wembanyama,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,draftkings,-168,130
+Norman Powell,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,2.5,betonlineag,-164,125
+Terance Mann,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betonlineag,-127,-102
+Jeremy Sochan,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betonlineag,106,-137
+Keldon Johnson,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betonlineag,109,-141
+Julian Champagnie,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betonlineag,113,-147
+Victor Wembanyama,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betonlineag,-161,123
+Derrick Jones,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betonlineag,171,-227
+James Harden,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,3.5,betonlineag,112,-145
+Chris Paul,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betonlineag,104,-135
+Harrison Barnes,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betonlineag,152,-200
+Stephon Castle,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betonlineag,122,-159
+Malaki Branham,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betonlineag,-200,153
+Zach Collins,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betonlineag,152,-200
+Derrick Jones,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,williamhill_us,159,-224
+Julian Champagnie,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,williamhill_us,102,-139
+Terance Mann,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,williamhill_us,-137,100
+Keldon Johnson,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,williamhill_us,100,-137
+Harrison Barnes,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,williamhill_us,146,-204
+Stephon Castle,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,williamhill_us,123,-169
+Chris Paul,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,williamhill_us,-103,-133
+James Harden,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,3.5,williamhill_us,112,-154
+Malaki Branham,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,williamhill_us,-204,146
+Victor Wembanyama,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,williamhill_us,-174,126
+Norman Powell,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,2.5,williamhill_us,-166,120
+Zach Collins,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,williamhill_us,143,-199
+Jeremy Sochan,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,williamhill_us,104,-142
+James Harden,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,3.5,betmgm,105,-140
+Derrick Jones,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betmgm,160,-225
+Victor Wembanyama,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betmgm,-160,125
+Norman Powell,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,2.5,betmgm,-160,120
+Terance Mann,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betmgm,-135,100
+Jeremy Sochan,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betmgm,105,-140
+Julian Champagnie,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betmgm,110,-150
+Harrison Barnes,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betmgm,145,-200
+Chris Paul,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betmgm,100,-135
+Keldon Johnson,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,betmgm,105,-140
+Malaki Branham,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betmgm,-200,150
+Stephon Castle,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betmgm,125,-165
+Zach Collins,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,0.5,betmgm,150,-200
+Derrick Jones,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,fanduel,162,-210
+Chris Paul,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,fanduel,118,-150
+Norman Powell,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,2.5,fanduel,-170,132
+Keldon Johnson,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,fanduel,108,-138
+Victor Wembanyama,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,fanduel,-146,114
+Harrison Barnes,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,fanduel,146,-188
+James Harden,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,3.5,fanduel,118,-150
+Victor Wembanyama,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,bovada,-165,125
+Chris Paul,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,bovada,105,-135
+Derrick Jones,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,bovada,175,-240
+Harrison Barnes,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,bovada,150,-200
+James Harden,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,3.5,bovada,110,-145
+Julian Champagnie,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,bovada,115,-150
+Keldon Johnson,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,1.5,bovada,105,-135
+Norman Powell,San Antonio Spurs @ Los Angeles Clippers,2024-11-05T03:30:00Z,player_threes,2.5,bovada,-165,125

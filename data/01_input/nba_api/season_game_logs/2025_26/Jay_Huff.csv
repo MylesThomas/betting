@@ -1,4 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Jay Huff,1630643,2025-12-03,IND vs. DEN,L,18.0,1,6,0.167,1,6,0.167,0,0,0.0,0,1,1,2,0,2,0,3,3,-2,DEN,HOME,Jay Huff
+Jay Huff,1630643,2025-12-01,IND vs. CLE,L,26.0,6,10,0.6,3,6,0.5,0,0,0.0,3,0,3,1,0,3,1,3,15,-5,CLE,HOME,Jay Huff
+Jay Huff,1630643,2025-11-29,IND vs. CHI,W,25.0,5,9,0.556,4,8,0.5,0,0,0.0,1,7,8,2,0,4,0,0,14,2,CHI,HOME,Jay Huff
+Jay Huff,1630643,2025-11-28,IND vs. WAS,W,22.0,5,6,0.833,2,3,0.667,0,0,0.0,4,2,6,2,0,4,2,3,12,6,WAS,HOME,Jay Huff
+Jay Huff,1630643,2025-11-26,IND @ TOR,L,28.0,3,6,0.5,0,3,0.0,4,5,0.8,0,6,6,0,0,3,0,3,10,0,TOR,AWAY,Jay Huff
+Jay Huff,1630643,2025-11-24,IND vs. DET,L,18.0,3,8,0.375,3,5,0.6,2,3,0.667,1,2,3,3,1,2,2,5,11,1,DET,HOME,Jay Huff
 Jay Huff,1630643,2025-11-21,IND @ CLE,L,26.0,2,9,0.222,1,7,0.143,0,0,0.0,2,3,5,0,1,4,2,4,5,0,CLE,AWAY,Jay Huff
 Jay Huff,1630643,2025-11-19,IND vs. CHA,W,27.0,7,13,0.538,4,9,0.444,2,3,0.667,0,5,5,4,0,3,1,3,20,17,CHA,HOME,Jay Huff
 Jay Huff,1630643,2025-11-17,IND @ DET,L,8.0,2,4,0.5,1,3,0.333,0,0,0.0,0,0,0,0,0,1,0,1,5,-4,DET,AWAY,Jay Huff

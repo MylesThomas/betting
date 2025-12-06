@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Miles Bridges,1628970,2025-12-03,CHA @ NYK,L,29.0,3,12,0.25,0,5,0.0,2,2,1.0,1,5,6,0,0,0,1,2,8,-28,NYK,AWAY,Miles Bridges
+Miles Bridges,1628970,2025-12-01,CHA @ BKN,L,30.0,4,15,0.267,0,3,0.0,0,0,0.0,0,2,2,1,0,1,2,2,8,-30,BKN,AWAY,Miles Bridges
+Miles Bridges,1628970,2025-11-29,CHA vs. TOR,W,41.0,13,23,0.565,2,8,0.25,7,9,0.778,1,2,3,0,1,0,0,3,35,7,TOR,HOME,Miles Bridges
+Miles Bridges,1628970,2025-11-28,CHA vs. CHI,W,36.0,8,17,0.471,1,5,0.2,5,6,0.833,1,7,8,7,0,2,2,2,22,-2,CHI,HOME,Miles Bridges
+Miles Bridges,1628970,2025-11-26,CHA vs. NYK,L,34.0,6,14,0.429,3,6,0.5,2,5,0.4,1,3,4,1,0,0,3,1,17,-25,NYK,HOME,Miles Bridges
 Miles Bridges,1628970,2025-11-23,CHA @ ATL,L,35.0,8,21,0.381,1,9,0.111,4,4,1.0,0,5,5,5,1,1,2,3,21,-2,ATL,AWAY,Miles Bridges
 Miles Bridges,1628970,2025-11-22,CHA vs. LAC,L,30.0,5,12,0.417,0,2,0.0,9,10,0.9,0,3,3,2,0,1,0,0,19,-15,LAC,HOME,Miles Bridges
 Miles Bridges,1628970,2025-11-19,CHA @ IND,L,35.0,9,20,0.45,3,8,0.375,4,4,1.0,3,2,5,2,1,2,0,5,25,-2,IND,AWAY,Miles Bridges

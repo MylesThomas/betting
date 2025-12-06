@@ -1,6 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Julian Phillips,1641763,2025-12-03,CHI vs. BKN,L,28.0,2,6,0.333,1,3,0.333,0,0,0.0,1,0,1,1,3,0,0,3,5,-8,BKN,HOME,Julian Phillips
+Julian Phillips,1641763,2025-12-01,CHI @ ORL,L,21.0,4,7,0.571,1,4,0.25,1,2,0.5,2,1,3,0,0,0,0,3,10,9,ORL,AWAY,Julian Phillips
+Julian Phillips,1641763,2025-11-28,CHI @ CHA,L,2.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,0,0,0,0,2,0,-4,CHA,AWAY,Julian Phillips
+Julian Phillips,1641763,2025-11-24,CHI @ NOP,L,15.0,3,3,1.0,1,1,1.0,0,0,0.0,1,1,2,1,1,1,1,1,7,-1,NOP,AWAY,Julian Phillips
 Julian Phillips,1641763,2025-11-22,CHI vs. WAS,W,10.0,2,2,1.0,0,0,0.0,0,0,0.0,2,1,3,0,0,0,0,2,4,3,WAS,HOME,Julian Phillips
-Julian Phillips,1641763,2025-11-21,CHI vs. MIA,L,18.0,1,5,0.2,1,4,0.25,0,0,0.0,0,2,2,1,1,1,0,4,3,-14,MIA,HOME,Julian Phillips
+Julian Phillips,1641763,2025-11-21,CHI vs. MIA,L,18.0,1,5,0.2,1,4,0.25,0,0,0.0,0,2,2,1,0,1,0,4,3,-14,MIA,HOME,Julian Phillips
 Julian Phillips,1641763,2025-11-19,CHI @ POR,W,5.0,0,1,0.0,0,1,0.0,2,2,1.0,1,1,2,0,0,0,0,0,2,12,POR,AWAY,Julian Phillips
 Julian Phillips,1641763,2025-11-17,CHI @ DEN,W,11.0,1,4,0.25,0,2,0.0,0,0,0.0,2,1,3,1,1,1,0,0,2,8,DEN,AWAY,Julian Phillips
 Julian Phillips,1641763,2025-11-16,CHI @ UTA,L,13.0,4,5,0.8,2,3,0.667,0,0,0.0,0,1,1,0,0,0,0,2,10,-1,UTA,AWAY,Julian Phillips

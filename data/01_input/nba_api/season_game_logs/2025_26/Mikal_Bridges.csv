@@ -1,4 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Mikal Bridges,1628969,2025-12-03,NYK vs. CHA,W,36.0,7,14,0.5,2,7,0.286,0,0,0.0,1,3,4,2,2,1,0,2,16,14,CHA,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-12-02,NYK @ BOS,L,34.0,12,17,0.706,8,12,0.667,3,3,1.0,2,4,6,3,2,0,0,3,35,6,BOS,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-11-30,NYK vs. TOR,W,33.0,6,10,0.6,2,4,0.5,0,0,0.0,2,1,3,3,2,2,1,5,14,17,TOR,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-28,NYK vs. MIL,W,35.0,6,12,0.5,2,5,0.4,0,0,0.0,1,3,4,2,2,1,0,3,14,3,MIL,HOME,Mikal Bridges
+Mikal Bridges,1628969,2025-11-26,NYK @ CHA,W,36.0,8,11,0.727,0,1,0.0,2,2,1.0,1,4,5,3,3,2,2,2,18,23,CHA,AWAY,Mikal Bridges
+Mikal Bridges,1628969,2025-11-24,NYK @ BKN,W,34.0,6,11,0.545,2,5,0.4,2,2,1.0,1,3,4,4,2,1,1,3,16,19,BKN,AWAY,Mikal Bridges
 Mikal Bridges,1628969,2025-11-22,NYK @ ORL,L,38.0,7,11,0.636,3,5,0.6,1,2,0.5,1,6,7,2,2,1,1,1,18,1,ORL,AWAY,Mikal Bridges
 Mikal Bridges,1628969,2025-11-19,NYK @ DAL,W,35.0,7,13,0.538,1,5,0.2,1,2,0.5,1,4,5,6,3,2,2,1,16,-3,DAL,AWAY,Mikal Bridges
 Mikal Bridges,1628969,2025-11-17,NYK @ MIA,L,39.0,9,14,0.643,2,4,0.5,3,5,0.6,1,2,3,4,2,4,2,0,23,-8,MIA,AWAY,Mikal Bridges

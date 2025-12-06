@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+LaMelo Ball,1630163,2025-12-03,CHA @ NYK,L,37.0,12,27,0.444,5,13,0.385,5,6,0.833,2,6,8,9,1,0,4,2,34,-8,NYK,AWAY,Lamelo Ball
+LaMelo Ball,1630163,2025-12-01,CHA @ BKN,L,29.0,3,9,0.333,2,6,0.333,4,4,1.0,0,5,5,14,0,2,3,3,12,-3,BKN,AWAY,Lamelo Ball
+LaMelo Ball,1630163,2025-11-29,CHA vs. TOR,W,22.0,6,16,0.375,1,6,0.167,1,1,1.0,0,2,2,5,0,0,2,4,14,-10,TOR,HOME,Lamelo Ball
+LaMelo Ball,1630163,2025-11-28,CHA vs. CHI,W,29.0,6,19,0.316,3,10,0.3,1,2,0.5,1,6,7,8,2,0,2,2,16,11,CHI,HOME,Lamelo Ball
+LaMelo Ball,1630163,2025-11-26,CHA vs. NYK,L,27.0,4,14,0.286,2,7,0.286,1,1,1.0,2,4,6,4,1,0,4,5,11,-22,NYK,HOME,Lamelo Ball
 LaMelo Ball,1630163,2025-11-22,CHA vs. LAC,L,25.0,7,14,0.5,1,7,0.143,3,3,1.0,0,4,4,7,0,0,3,5,18,4,LAC,HOME,Lamelo Ball
 LaMelo Ball,1630163,2025-11-19,CHA @ IND,L,27.0,5,21,0.238,2,11,0.182,6,6,1.0,3,4,7,9,2,0,6,2,18,-5,IND,AWAY,Lamelo Ball
 LaMelo Ball,1630163,2025-11-17,CHA @ TOR,L,28.0,6,19,0.316,1,7,0.143,7,7,1.0,1,4,5,8,1,0,3,2,20,6,TOR,AWAY,Lamelo Ball

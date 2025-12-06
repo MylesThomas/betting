@@ -1,1 +1,5 @@
-player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,game_id,opponent,home_away,player_normalized
+player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kenrich Williams,1629026,2025-12-02,OKC @ GSW,W,17.0,2,3,0.667,1,2,0.5,0,0,0.0,0,2,2,2,0,0,1,1,5,-9,GSW,AWAY,Kenrich Williams
+Kenrich Williams,1629026,2025-11-30,OKC @ POR,W,13.0,3,4,0.75,2,2,1.0,0,0,0.0,0,3,3,0,0,0,1,2,8,5,POR,AWAY,Kenrich Williams
+Kenrich Williams,1629026,2025-11-28,OKC vs. PHX,W,7.0,1,3,0.333,1,2,0.5,0,0,0.0,0,1,1,1,0,0,0,1,3,-3,PHX,HOME,Kenrich Williams
+Kenrich Williams,1629026,2025-11-26,OKC vs. MIN,W,13.0,0,1,0.0,0,0,0.0,0,0,0.0,0,4,4,1,0,0,0,2,0,11,MIN,HOME,Kenrich Williams

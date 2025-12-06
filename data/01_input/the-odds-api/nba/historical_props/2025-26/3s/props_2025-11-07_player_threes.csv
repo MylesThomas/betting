@@ -1,0 +1,972 @@
+player,game,game_time,market,line,bookmaker,bookmaker_last_update,market_last_update,over_odds,under_odds
+Franz Wagner,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,-114,-114
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,-140,106
+Sam Hauser,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,140,-188
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,-138,104
+Paolo Banchero,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,-130,-102
+Jalen Suggs,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,102,-136
+Jaylen Brown,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,-174,130
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,116,-154
+Desmond Bane,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:23Z,140,-188
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,-139,105
+Jaylen Brown,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,-177,130
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,-137,104
+Sam Hauser,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,138,-186
+Paolo Banchero,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,-129,-104
+Desmond Bane,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,143,-195
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,105,-139
+Jalen Suggs,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,100,-134
+Franz Wagner,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:34Z,-132,-103
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,-148,113
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,-137,104
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,117,-154
+Desmond Bane,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,129,-171
+Sam Hauser,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,148,-196
+Jaylen Brown,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,-192,145
+Paolo Banchero,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,-123,-107
+Franz Wagner,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,-118,-111
+Jalen Suggs,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:19Z,103,-136
+Jaylen Brown,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,165,-220
+Anthony Black,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-235,170
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-140,105
+Desmond Bane,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-155,115
+Sam Hauser,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,130,-175
+Wendell Carter Jr,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-185,135
+Franz Wagner,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,100,-135
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,110,-145
+Jalen Suggs,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,100,-135
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-140,105
+Paolo Banchero,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-110,-118
+Tristan da Silva,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,115,-155
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:06Z,-139,100
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:06Z,-10000,-10000
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:06Z,-143,105
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,-137,106
+Jaylen Brown,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,-172,133
+Franz Wagner,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,-115,-112
+Sam Hauser,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,146,-192
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,-143,110
+Jalen Suggs,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,104,-135
+Paolo Banchero,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,-125,-103
+Anthony Black,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,195,-263
+Desmond Bane,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,141,-185
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,117,-152
+Josh Minott,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,164,-217
+Wendell Carter Jr,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:36Z,-169,130
+Desmond Bane,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,130,-190
+Paolo Banchero,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,-125,-105
+Derrick White,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,-145,110
+Jaylen Brown,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,-190,130
+Payton Pritchard,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,-140,105
+Franz Wagner,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,-120,-110
+Jalen Suggs,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,105,-140
+Anfernee Simons,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,115,-150
+Sam Hauser,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,130,-190
+Anthony Black,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,160,-275
+Wendell Carter Jr,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,-190,130
+Tristan da Silva,Boston Celtics @ Orlando Magic,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:38Z,115,-150
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,-120,-110
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,-174,130
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,146,-198
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,178,-245
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,152,-205
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,-114,-114
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,118,-158
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,106,-140
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:06Z,134,-180
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,-134,100
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,138,-186
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,-129,-105
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,118,-157
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,195,-275
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,130,-177
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,102,-136
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,200,-278
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:55Z,-175,130
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-132,100
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,103,-136
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,118,-156
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,124,-165
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-168,127
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,103,-135
+Carlton Carrington,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,136,-181
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,157,-210
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,169,-226
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,115,-155
+Carlton Carrington,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,180,-250
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-160,120
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,155,-210
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-110,-120
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,100,-135
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,110,-150
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,160,-220
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-145,105
+Tre Johnson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-160,120
+Corey Kispert,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-110,-118
+Marvin Bagley III,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,320,-500
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-110,-125
+Larry Nance Jr.,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-140,105
+Jaylon Tyson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,125,-160
+Craig Porter Jr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:39Z,-115,-115
+Jaylon Tyson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,120,-162
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-102,-134
+Carlton Carrington,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,170,-245
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,120,-164
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,155,-218
+Tre Johnson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-159,115
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-129,-105
+Larry Nance Jr.,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-141,105
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-112,-121
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,155,-218
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,100,-139
+Marvin Bagley III,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,300,-480
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-170,125
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,120,-170
+Corey Kispert,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:10Z,-114,-120
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,100,-130
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,124,-161
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,-123,-104
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,-123,-104
+Carlton Carrington,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,164,-217
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,-164,126
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,171,-227
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,167,-222
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,126,-164
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,109,-141
+Corey Kispert,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,-112,-115
+Tre Johnson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:10Z,-156,120
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,100,-130
+Carlton Carrington,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,135,-210
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,120,-165
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,155,-250
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,120,-165
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,140,-225
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-175,125
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,110,-145
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-125,-105
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-115,-115
+Tre Johnson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-165,120
+Corey Kispert,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-105,-125
+Marvin Bagley III,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,270,-475
+Craig Porter Jr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-105,-125
+Jaylon Tyson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,120,-165
+Larry Nance Jr.,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:56Z,-145,110
+Alex Sarr,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,165,-220
+Carlton Carrington,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,190,-260
+C.J. McCollum,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,115,-150
+Corey Kispert,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,-110,-120
+Darius Garland,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,115,-150
+De'Andre Hunter,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,100,-130
+Donovan Mitchell,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,3.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,160,-215
+Evan Mobley,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,-110,-120
+Jaylon Tyson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,125,-165
+Khris Middleton,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,165,-220
+Kyshawn George,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,185,-250
+Sam Merrill,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,-105,-125
+Tre Johnson,Cleveland Cavaliers @ Washington Wizards,2025-11-08T00:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:01Z,185,-250
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,120,-160
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,-138,104
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,124,-166
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,188,-260
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,-215,158
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,100,-132
+Sandro Mamukelashvili,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,188,-260
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,-178,132
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,-152,114
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,100,-132
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:38Z,-125,-106
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,127,-167
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-187,141
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-163,123
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-132,100
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-125,-105
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-101,-130
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-101,-130
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,134,-177
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,173,-232
+Sandro Mamukelashvili,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-231,173
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:24Z,-172,130
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,-105,-129
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,-141,106
+Jalen Johnson,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,112,-150
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,123,-162
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,-150,112
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,188,-265
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,123,-162
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,-175,128
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,-122,-109
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:49Z,107,-143
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:16Z,-190,135
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:16Z,155,-218
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:16Z,-134,100
+Jalen Johnson,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-165,125
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,100,-130
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-115,-115
+Dyson Daniels,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,150,-210
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,120,-160
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,125,-165
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,155,-210
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,145,-200
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-175,130
+Onyeka Okongwu,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-160,120
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-110,-118
+Sandro Mamukelashvili,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-185,135
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,-118,-110
+Collin Murray-Boyles,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,105,-140
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:06Z,175,-235
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-179,136
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-102,-127
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,126,-164
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-154,118
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,132,-172
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-185,140
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-118,-110
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-130,101
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,103,-133
+Dyson Daniels,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,124,-161
+Jalen Johnson,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-164,125
+Onyeka Okongwu,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-156,121
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,182,-244
+Sandro Mamukelashvili,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:05Z,-222,168
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,105,-140
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-130,100
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,120,-165
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-125,-105
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,125,-175
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,135,-210
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,155,-250
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,100,-130
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-165,120
+Sandro Mamukelashvili,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-250,155
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-210,135
+Jalen Johnson,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-190,130
+Dyson Daniels,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,130,-190
+Onyeka Okongwu,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,-165,120
+Collin Murray-Boyles,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:42Z,100,-130
+Brandon Ingram,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,210,-290
+Gradey Dick,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,190,-260
+Immanuel Quickley,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,120,-160
+Jamal Shead,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,210,-290
+Kristaps Porzingis,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,-135,105
+Luke Kennard,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,105,-135
+Nickeil Alexander-Walker,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,175,-240
+R.J. Barrett,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,185,-250
+Sandro Mamukelashvili,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,190,-260
+Scottie Barnes,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,105,-135
+Zaccharie Risacher,Toronto Raptors @ Atlanta Hawks,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:12Z,130,-170
+Ron Holland,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,-192,142
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,-118,-112
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,152,-205
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,118,-158
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,116,-154
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,-174,130
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,108,-144
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,-160,120
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:07Z,-158,118
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,-121,-110
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,-159,118
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,118,-159
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,150,-205
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,123,-165
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,-159,120
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,-175,128
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:31Z,-104,-129
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,3.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,127,-168
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,-139,106
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,101,-133
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,104,-137
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,-194,146
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,-118,-111
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,128,-169
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,132,-175
+Ron Holland,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:40Z,-211,158
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,145,-190
+Jalen Wilson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,125,-165
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,105,-140
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,-130,-105
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,115,-155
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,135,-185
+Ausar Thompson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,125,-165
+Caris LeVert,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,115,-155
+Ron Holland,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,-235,170
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,130,-175
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,3.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,125,-165
+Egor Demin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,120,-160
+Day'Ron Sharpe,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,250,-375
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:53:22Z,-145,110
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,110,-148
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,-148,105
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,100,-139
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,3.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,130,-182
+Egor Demin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,120,-164
+Jalen Wilson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,125,-170
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,-173,125
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,130,-179
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,-124,-109
+Ausar Thompson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,125,-173
+Caris LeVert,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,110,-154
+Ron Holland,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,-205,145
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:49Z,120,-170
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,118,-154
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,113,-147
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,-143,110
+Ron Holland,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,-189,144
+Ausar Thompson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,113,-147
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,144,-189
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,107,-139
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,-172,132
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,-120,-108
+Caris LeVert,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,104,-135
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,3.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:33Z,134,-175
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,3.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,125,-175
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,115,-150
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,-140,105
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,120,-165
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,100,-130
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,-120,-110
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,-175,125
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,130,-190
+Jalen Wilson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,120,-165
+Ausar Thompson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,130,-190
+Caris LeVert,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,105,-140
+Egor Demin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,120,-165
+Day'Ron Sharpe,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:46Z,225,-375
+Cade Cunningham,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,110,-145
+Duncan Robinson,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,155,-210
+Isaiah Stewart II,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,110,-145
+Michael Porter Jr,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,155,-210
+Noah Clowney,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,120,-160
+Ron Holland,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,-185,140
+Terance Mann,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,150,-200
+Tyrese Martin,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,175,-240
+Ziaire Williams,Detroit Pistons @ Brooklyn Nets,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:17Z,-115,-115
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-125,-105
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,107,-141
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-176,133
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-174,132
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-164,124
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-139,106
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-115,-114
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,-105,-126
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:39Z,112,-148
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,-160,120
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,110,-146
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,-110,-120
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,-144,108
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,-138,104
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,-114,-114
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,-180,134
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,126,-168
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:30Z,100,-132
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,-114,-117
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,-167,125
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,110,-148
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,104,-137
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,123,-165
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,-152,114
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,-109,-122
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,-136,102
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:20Z,-159,120
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,120,-162
+Josh Okogie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,125,-170
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,110,-154
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-117,-115
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-143,105
+Alperen Sengun,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-137,100
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-120,-113
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-164,120
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-173,125
+Jeremy Sochan,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,115,-157
+Keldon Johnson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-218,155
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-102,-134
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-164,120
+Amen Thompson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:12Z,-105,-129
+Alperen Sengun,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-135,100
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,110,-145
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,150,-210
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-165,125
+Amen Thompson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,100,-135
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-140,105
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-135,100
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,100,-135
+Josh Okogie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,125,-165
+Jeremy Sochan,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,120,-160
+Keldon Johnson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-220,160
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-190,140
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,-110,-118
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:29Z,110,-150
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-112,-115
+Alperen Sengun,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-147,113
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-154,119
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-172,133
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-139,107
+Amen Thompson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-119,-109
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,103,-133
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,115,-149
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-111,-116
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-154,118
+Josh Okogie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,128,-167
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,126,-164
+Keldon Johnson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,-196,150
+Jeremy Sochan,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:03Z,117,-152
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-115,-115
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,125,-175
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-165,120
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,100,-130
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-115,-115
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-165,120
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-190,130
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-140,105
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,125,-165
+Alperen Sengun,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-140,105
+Amen Thompson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,100,-130
+Josh Okogie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,125,-175
+Jeremy Sochan,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,120,-165
+Keldon Johnson,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:19Z,-240,150
+Victor Wembanyama,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,-115,-115
+Devin Vassell,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,-110,-120
+Harrison Barnes,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,210,-290
+Jabari Smith Jr,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,190,-260
+Julian Champagnie,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,165,-220
+Kevin Durant,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,130,-170
+Reed Sheppard,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,110,-145
+Stephon Castle,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,105,-135
+Tari Eason,Houston Rockets @ San Antonio Spurs,2025-11-08T00:40:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:23Z,210,-290
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-128,-104
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,142,-192
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-132,100
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,104,-138
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-130,-102
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-136,104
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-128,-104
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-128,-104
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:35Z,-144,108
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-134,101
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-146,110
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-145,110
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-137,104
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-156,118
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-119,-111
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-117,-113
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,111,-147
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,147,-196
+Davion Mitchell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:35Z,-231,172
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-185,135
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-175,130
+Jaime Jaquez Jr,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-110,-118
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-110,-120
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-155,115
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-150,115
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,125,-165
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-115,-115
+Dru Smith,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-190,140
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-150,115
+Kel'el Ware,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-250,180
+Davion Mitchell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,160,-220
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-145,110
+Tre Mann,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-165,125
+Sion James,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:34Z,-250,180
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-127,-107
+Tre Mann,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-170,125
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-143,105
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-175,122
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-141,105
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,140,-193
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-120,-113
+Davion Mitchell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,160,-225
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-137,100
+Jaime Jaquez Jr,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-118,-114
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-150,110
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:56:20Z,-105,-129
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:39Z,-134,100
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:39Z,-137,104
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:39Z,102,-136
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:39Z,-130,-103
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:39Z,155,-210
+Jaime Jaquez Jr,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-110,-118
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-133,103
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,102,-132
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-137,106
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-175,134
+Davion Mitchell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,178,-238
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,146,-192
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-135,104
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-122,-106
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-128,-101
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-145,112
+Kel'el Ware,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,182,-244
+Dru Smith,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:56:19Z,-172,131
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-130,100
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-125,-105
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-140,105
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-125,-105
+Davion Mitchell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,155,-250
+Kel'el Ware,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-275,160
+Jaime Jaquez Jr,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-115,-115
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-165,120
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-140,105
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,135,-210
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-125,-105
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-105,-125
+Dru Smith,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-175,125
+Tre Mann,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-165,120
+Sion James,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:35Z,-250,155
+Andrew Wiggins,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,210,-290
+Collin Sexton,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,-135,105
+Kon Knueppel,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,180,-245
+LaMelo Ball,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,3.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,160,-215
+Miles Bridges,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,180,-245
+Nikola Jovic,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,110,-145
+Norman Powell,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,170,-230
+Pelle Larsson,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,140,-185
+Simone Fontecchio,Charlotte Hornets @ Miami Heat,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:09Z,-135,105
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,-122,-108
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,-188,140
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,-114,-114
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,116,-154
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,152,-205
+Bobby Portis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,140,-188
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,-138,104
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,100,-132
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,-146,110
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,-114,-114
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:56:15Z,132,-178
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-105,-125
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,133,-176
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-186,140
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-145,110
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-140,106
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-135,103
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-107,-123
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-102,-129
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,127,-168
+Bobby Portis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,137,-182
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,163,-217
+Isaac Okoro,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-224,167
+Tre Jones,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:56Z,-102,-129
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,-122,-109
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,160,-220
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,-180,133
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,116,-155
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,104,-137
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,-136,102
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,-141,107
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,-112,-120
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,-110,-121
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:55:29Z,133,-180
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-115,-115
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,105,-140
+Bobby Portis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,110,-145
+Jalen Smith,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,165,-220
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-115,-115
+Taurean Prince,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,175,-235
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-155,115
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,120,-160
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,130,-175
+Patrick Williams,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,140,-190
+Giannis Antetokounmpo,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,125,-165
+Tre Jones,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,110,-145
+Kyle Kuzma,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-220,160
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-155,115
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-118,-110
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,175,-235
+Isaac Okoro,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-225,165
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,155,-210
+Giannis Antetokounmpo,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,126,-164
+Bobby Portis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,144,-189
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-123,-105
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,124,-161
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-110,-118
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,134,-175
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,100,-130
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-137,106
+Tre Jones,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,100,-130
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-110,-118
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,164,-217
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-145,112
+Isaac Okoro,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,199,-270
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-179,137
+Jalen Smith,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,178,-238
+Kyle Kuzma,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,-196,150
+Patrick Williams,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,139,-182
+Taurean Prince,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:46Z,178,-238
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-105,-125
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-125,-105
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,125,-175
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-115,-115
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-115,-115
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-140,105
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-140,105
+Tre Jones,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,100,-130
+Isaac Okoro,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,160,-275
+Bobby Portis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,130,-190
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,120,-165
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,140,-225
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-190,130
+Jalen Smith,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,155,-250
+Taurean Prince,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,160,-275
+Giannis Antetokounmpo,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,125,-175
+Patrick Williams,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,130,-190
+Kyle Kuzma,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:51Z,-240,150
+Kevin Huerter,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,165,-220
+A.J. Green,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,130,-170
+Ayo Dosunmu,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,120,-160
+Bobby Portis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,140,-185
+Cole Anthony,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,150,-200
+Gary Trent Jr,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,-115,-115
+Josh Giddey,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,105,-135
+Matas Buzelis,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,210,-290
+Myles Turner,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,210,-290
+Nikola Vucevic,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,-120,-110
+Ryan Rollins,Chicago Bulls @ Milwaukee Bucks,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:13Z,-115,-115
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,146,-198
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,-128,-104
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,-118,-112
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,106,-140
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,106,-140
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,-108,-122
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,108,-144
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,124,-166
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:37Z,148,-200
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,104,-136
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,148,-197
+P.J. Washington,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-115,-115
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-114,-115
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-101,-130
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,104,-137
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,114,-150
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,114,-151
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,123,-162
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,142,-188
+Jock Landale,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-139,106
+P.J. Washington,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-114,-120
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-113,-121
+Cam Spencer,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-114,-120
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,110,-152
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-115,-117
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,140,-197
+Naji Marshall,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-113,-120
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-107,-127
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,105,-143
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,110,-150
+Jock Landale,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,-129,-105
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,140,-197
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:32Z,110,-152
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,100,-135
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,125,-165
+Jock Landale,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-115,-118
+Naji Marshall,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-110,-120
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-105,-125
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,120,-160
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,125,-160
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,135,-185
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,105,-140
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,110,-145
+P.J. Washington,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-110,-120
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-115,-115
+Vincent Williams Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-220,160
+Cam Spencer,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-110,-118
+Klay Thompson,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:00Z,-200,145
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,112,-145
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,-102,-127
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,-112,-115
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,149,-196
+P.J. Washington,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,-112,-115
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,-118,-110
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,117,-152
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,152,-200
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,112,-145
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,115,-149
+Jock Landale,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,-127,-102
+Naji Marshall,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:31Z,-112,-115
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,110,-145
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,130,-190
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,130,-190
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-115,-115
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,105,-140
+Jock Landale,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-130,100
+P.J. Washington,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-110,-120
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,115,-150
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,100,-130
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-115,-115
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,110,-145
+Naji Marshall,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-105,-125
+Vincent Williams Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-240,150
+Cam Spencer,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-105,-125
+Klay Thompson,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:56:19Z,-210,135
+Cedric Coward,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,110,-145
+Cooper Flagg,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,110,-145
+D'Angelo Russell,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,130,-170
+Ja Morant,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-110,-120
+Jaren Jackson Jr,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,110,-145
+Jaylen Wells,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-135,105
+Kentavious Caldwell-Pope,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,150,-200
+Max Christie,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,150,-200
+Santi Aldama,Dallas Mavericks @ Memphis Grizzlies,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-115,-115
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,136,-182
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,-130,-102
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,-154,116
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,122,-162
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,-162,122
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,-158,118
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,-146,110
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,108,-144
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:54:27Z,106,-140
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,-105,-126
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,117,-154
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,-173,131
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,-166,125
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,-151,115
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,-149,113
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,-144,109
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,110,-146
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:07Z,128,-169
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-135,100
+Kyle Filipowski,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-165,130
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-160,120
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-190,140
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,120,-155
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,110,-150
+Jusuf Nurkic,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,100,-135
+Walter Clayton Jr.,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-150,115
+Taylor Hendricks,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-120,-110
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,130,-175
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,150,-210
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-190,140
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-140,105
+Ace Bailey,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:24Z,-130,-105
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,100,-139
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-143,105
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-164,120
+Jusuf Nurkic,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-103,-132
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-164,120
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,105,-148
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,130,-182
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-164,120
+Walter Clayton Jr.,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-152,110
+Kyle Filipowski,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-173,125
+Kevin Love,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-176,125
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-141,105
+Ace Bailey,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-127,-107
+Taylor Hendricks,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,-120,-113
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:54Z,115,-162
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-141,108
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,117,-152
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-161,123
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,106,-137
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,136,-179
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-156,121
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-135,105
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-164,126
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,122,-159
+Taylor Hendricks,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-132,102
+Ace Bailey,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-132,102
+Jusuf Nurkic,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-109,-119
+Kyle Filipowski,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-175,135
+Walter Clayton Jr.,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:59Z,-154,119
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,125,-175
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-165,120
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-145,105
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-175,125
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,3.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,105,-140
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-150,115
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,115,-150
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,130,-190
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-140,105
+Kyle Filipowski,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-175,125
+Jusuf Nurkic,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,100,-130
+Taylor Hendricks,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-125,-105
+Walter Clayton Jr.,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-150,115
+Kevin Love,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-175,125
+Ace Bailey,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:31Z,-125,-105
+Anthony Edwards,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,110,-145
+Donte DiVincenzo,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,120,-160
+Jaden McDaniels,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,110,-145
+Julius Randle,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,190,-260
+Keyonte George,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,190,-260
+Lauri Markkanen,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,155,-210
+Mike Conley,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,130,-170
+Naz Reid,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,210,-290
+Svi Mykhailiuk,Utah Jazz @ Minnesota Timberwolves,2025-11-08T01:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:13Z,-135,105
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,132,-175
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,137,-181
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-168,127
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-162,123
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-138,105
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-133,101
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,-119,-110
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,108,-142
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,137,-181
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:56:17Z,164,-219
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,104,-138
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,-205,152
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,-168,126
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,-132,100
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,-172,128
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,118,-158
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,-125,-106
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,136,-182
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,-132,100
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:17Z,162,-220
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,-127,-105
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,175,-240
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,-186,138
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,155,-210
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,123,-165
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,-177,130
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,102,-134
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,-175,128
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,-143,108
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betrivers,2025-11-07T14:55:29Z,2025-11-07T14:56:06Z,-124,-107
+Quinten Post,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,120,-170
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,155,-218
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-127,-107
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-197,145
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,100,-136
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,115,-159
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,125,-176
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-127,-106
+Jimmy Butler,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-157,115
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-190,135
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-164,120
+Bruce Brown,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-127,-107
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:33Z,-143,105
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-185,135
+Jimmy Butler,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-155,115
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,135,-185
+Christian Braun,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-235,175
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-105,-130
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,120,-160
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-125,-105
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,145,-200
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-118,-115
+Quinten Post,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,125,-165
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-145,110
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,-120,-110
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:55:30Z,110,-150
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,164,-217
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-128,-101
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,124,-161
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,132,-172
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-135,104
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-167,127
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-118,-110
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-154,119
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,109,-141
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,149,-196
+Bruce Brown,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-135,105
+Jimmy Butler,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-164,125
+Christian Braun,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,-208,158
+Quinten Post,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:53:17Z,115,-149
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,150,-240
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-115,-115
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-130,100
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-130,100
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,120,-165
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,125,-175
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-210,135
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,110,-145
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-175,125
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-165,115
+Jimmy Butler,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-150,115
+Christian Braun,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-250,155
+Bruce Brown,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,-130,100
+Quinten Post,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:45Z,125,-175
+Aaron Gordon,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,-135,105
+Al Horford,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,110,-145
+Brandin Podziemski,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,150,-200
+Buddy Hield,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,175,-240
+Cameron Johnson,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,-135,105
+Draymond Green,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,165,-220
+Jamal Murray,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,120,-160
+Jonathan Kuminga,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,130,-170
+Nikola Jokic,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,-135,105
+Tim Hardaway Jr,Golden State Warriors @ Denver Nuggets,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:55:18Z,175,-240
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,118,-158
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,154,-210
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,124,-166
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,164,-225
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,-146,110
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,118,-158
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,3.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,142,-192
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,-108,-122
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,-122,-108
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanduel,2025-11-07T14:55:01Z,2025-11-07T14:55:56Z,-114,-114
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-169,128
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,140,-186
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-147,112
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-127,-104
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-116,-113
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-109,-121
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-104,-126
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,112,-148
+Ajay Mitchell,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,133,-176
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,138,-183
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,141,-187
+DeMar DeRozan,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,draftkings,2025-11-07T14:54:35Z,2025-11-07T14:55:46Z,-145,110
+Domantas Sabonis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-122,-110
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,100,-134
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,130,-182
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-121,-112
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-179,130
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-130,-105
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-200,145
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-148,105
+DeMar DeRozan,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-134,100
+Ajay Mitchell,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,135,-190
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,135,-190
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,105,-143
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-107,-127
+Isaiah Joe,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,williamhill_us,2025-11-07T14:54:02Z,2025-11-07T14:55:42Z,-157,115
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-190,140
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-125,-105
+DeMar DeRozan,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-120,-110
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-110,-125
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,125,-165
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,3.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,125,-165
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-105,-130
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-105,-130
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-145,105
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-120,-110
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,150,-200
+Domantas Sabonis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-120,-110
+Ajay Mitchell,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,140,-190
+Isaiah Joe,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,betmgm,2025-11-07T14:53:35Z,2025-11-07T14:56:11Z,-155,115
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,141,-185
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,-119,-109
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,152,-200
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,-105,-123
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,-123,-105
+Ajay Mitchell,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,141,-185
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,115,-149
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,109,-141
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,-143,110
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,149,-196
+DeMar DeRozan,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,-143,110
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,-167,128
+Domantas Sabonis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,186,-250
+Jaylin Williams,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,betonlineag,2025-11-07T14:55:12Z,2025-11-07T14:55:13Z,118,-154
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,135,-210
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-175,125
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-120,-110
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-130,100
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,130,-190
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-105,-125
+Ajay Mitchell,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,130,-190
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,110,-145
+DeMar DeRozan,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-145,110
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,100,-130
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-145,110
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,125,-175
+Domantas Sabonis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-125,-105
+Isaiah Joe,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,fanatics,2025-11-07T14:55:04Z,2025-11-07T14:55:27Z,-165,120
+Alex Caruso,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,130,-170
+Cason Wallace,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,-110,-120
+Chet Holmgren,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,-115,-115
+Dennis Schroder,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,120,-160
+Keon Ellis,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,0.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,165,-220
+Luguentz Dort,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,-120,-110
+Malik Monk,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,210,-290
+Russell Westbrook,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,120,-160
+Shai Gilgeous-Alexander,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,1.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,150,-200
+Zach LaVine,Oklahoma City Thunder @ Sacramento Kings,2025-11-08T03:10:00Z,player_threes,2.5,bovada,2025-11-07T14:55:04Z,2025-11-07T14:56:06Z,140,-185

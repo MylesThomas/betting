@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Amen Thompson,1641708,2025-12-03,HOU vs. SAC,W,37.0,8,16,0.5,0,1,0.0,4,4,1.0,4,8,12,7,2,1,5,2,20,10,SAC,HOME,Amen Thompson
+Amen Thompson,1641708,2025-12-01,HOU @ UTA,L,37.0,8,16,0.5,0,3,0.0,7,9,0.778,3,5,8,3,0,2,2,4,23,-8,UTA,AWAY,Amen Thompson
+Amen Thompson,1641708,2025-11-30,HOU @ UTA,W,31.0,2,8,0.25,0,0,0.0,1,3,0.333,2,6,8,9,1,0,3,2,5,18,UTA,AWAY,Amen Thompson
+Amen Thompson,1641708,2025-11-26,HOU @ GSW,W,38.0,4,12,0.333,0,3,0.0,2,2,1.0,4,10,14,3,1,0,2,4,10,2,GSW,AWAY,Amen Thompson
+Amen Thompson,1641708,2025-11-24,HOU @ PHX,W,37.0,10,16,0.625,1,1,1.0,7,7,1.0,2,5,7,8,0,1,4,4,28,25,PHX,AWAY,Amen Thompson
 Amen Thompson,1641708,2025-11-21,HOU vs. DEN,L,43.0,10,18,0.556,1,2,0.5,1,1,1.0,4,3,7,2,2,0,3,3,22,-10,DEN,HOME,Amen Thompson
 Amen Thompson,1641708,2025-11-19,HOU @ CLE,W,40.0,6,14,0.429,0,1,0.0,0,0,0.0,3,6,9,6,5,0,1,4,12,8,CLE,AWAY,Amen Thompson
 Amen Thompson,1641708,2025-11-16,HOU vs. ORL,W,39.0,4,13,0.308,0,1,0.0,4,4,1.0,2,8,10,2,0,0,1,2,12,7,ORL,HOME,Amen Thompson

@@ -1,4 +1,7 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Nikola Jovic,1631107,2025-12-03,MIA @ DAL,L,6.0,0,2,0.0,0,1,0.0,0,0,0.0,0,2,2,0,0,1,0,0,0,-8,DAL,AWAY,Nikola Jovic
+Nikola Jovic,1631107,2025-12-01,MIA vs. LAC,W,1.0,0,1,0.0,0,1,0.0,0,0,0.0,0,0,0,0,0,0,0,0,0,-2,LAC,HOME,Nikola Jovic
+Nikola Jovic,1631107,2025-11-29,MIA vs. DET,L,10.0,1,3,0.333,0,0,0.0,0,1,0.0,1,1,2,1,0,0,5,1,2,-15,DET,HOME,Nikola Jovic
 Nikola Jovic,1631107,2025-11-17,MIA vs. NYK,W,15.0,2,7,0.286,1,4,0.25,0,0,0.0,0,1,1,2,0,0,0,3,5,-3,NYK,HOME,Nikola Jovic
 Nikola Jovic,1631107,2025-11-14,MIA @ NYK,L,13.0,1,4,0.25,0,2,0.0,1,2,0.5,1,3,4,4,0,0,1,5,3,1,NYK,AWAY,Nikola Jovic
 Nikola Jovic,1631107,2025-11-12,MIA vs. CLE,L,22.0,1,6,0.167,0,3,0.0,0,1,0.0,0,4,4,3,2,2,4,1,2,-16,CLE,HOME,Nikola Jovic

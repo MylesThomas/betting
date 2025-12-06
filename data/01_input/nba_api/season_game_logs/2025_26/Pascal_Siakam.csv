@@ -1,4 +1,10 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Pascal Siakam,1627783,2025-12-03,IND vs. DEN,L,34.0,7,16,0.438,3,5,0.6,6,8,0.75,0,3,3,4,0,0,1,5,23,-3,DEN,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-12-01,IND vs. CLE,L,31.0,11,21,0.524,0,3,0.0,4,6,0.667,5,2,7,2,0,0,0,2,26,-21,CLE,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-29,IND vs. CHI,W,36.0,11,23,0.478,1,4,0.25,1,2,0.5,1,8,9,4,2,2,1,0,24,22,CHI,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-28,IND vs. WAS,W,26.0,11,20,0.55,1,4,0.25,1,2,0.5,1,10,11,1,2,1,0,1,24,32,WAS,HOME,Pascal Siakam
+Pascal Siakam,1627783,2025-11-26,IND @ TOR,L,31.0,5,10,0.5,0,0,0.0,1,4,0.25,1,3,4,2,2,0,3,5,11,-8,TOR,AWAY,Pascal Siakam
+Pascal Siakam,1627783,2025-11-24,IND vs. DET,L,35.0,7,12,0.583,0,2,0.0,10,14,0.714,2,6,8,3,2,2,3,2,24,1,DET,HOME,Pascal Siakam
 Pascal Siakam,1627783,2025-11-21,IND @ CLE,L,37.0,9,15,0.6,3,6,0.5,5,6,0.833,0,9,9,4,1,0,3,3,26,-10,CLE,AWAY,Pascal Siakam
 Pascal Siakam,1627783,2025-11-19,IND vs. CHA,W,37.0,9,17,0.529,2,8,0.25,2,2,1.0,0,4,4,7,1,1,2,3,22,25,CHA,HOME,Pascal Siakam
 Pascal Siakam,1627783,2025-11-17,IND @ DET,L,34.0,8,17,0.471,3,8,0.375,10,12,0.833,2,5,7,1,1,1,3,2,29,-29,DET,AWAY,Pascal Siakam

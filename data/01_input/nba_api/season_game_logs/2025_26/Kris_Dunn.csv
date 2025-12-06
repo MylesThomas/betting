@@ -1,4 +1,9 @@
 player,player_id,date,matchup,result,minutes,fgm,fga,fg_pct,threes_made,threes_attempted,three_pct,ftm,fta,ft_pct,oreb,dreb,reb,ast,stl,blk,tov,pf,pts,plus_minus,opponent,home_away,player_normalized
+Kris Dunn,1627739,2025-12-03,LAC @ ATL,W,21.0,4,6,0.667,0,1,0.0,0,0,0.0,0,0,0,2,2,0,0,4,8,-3,ATL,AWAY,Kris Dunn
+Kris Dunn,1627739,2025-12-01,LAC @ MIA,L,26.0,4,7,0.571,1,2,0.5,3,3,1.0,2,2,4,5,1,0,0,0,12,-14,MIA,AWAY,Kris Dunn
+Kris Dunn,1627739,2025-11-29,LAC vs. DAL,L,33.0,3,7,0.429,0,4,0.0,0,0,0.0,0,3,3,2,2,0,1,2,6,8,DAL,HOME,Kris Dunn
+Kris Dunn,1627739,2025-11-28,LAC vs. MEM,L,30.0,4,9,0.444,2,5,0.4,1,2,0.5,2,5,7,1,5,0,2,1,11,-7,MEM,HOME,Kris Dunn
+Kris Dunn,1627739,2025-11-25,LAC @ LAL,L,30.0,8,13,0.615,3,6,0.5,0,0,0.0,0,0,0,3,1,0,2,2,19,-12,LAL,AWAY,Kris Dunn
 Kris Dunn,1627739,2025-11-23,LAC @ CLE,L,24.0,3,5,0.6,1,1,1.0,2,2,1.0,2,2,4,2,1,0,1,2,9,4,CLE,AWAY,Kris Dunn
 Kris Dunn,1627739,2025-11-22,LAC @ CHA,W,27.0,3,5,0.6,0,0,0.0,0,0,0.0,1,1,2,6,1,0,0,1,6,8,CHA,AWAY,Kris Dunn
 Kris Dunn,1627739,2025-11-20,LAC @ ORL,L,25.0,2,5,0.4,0,1,0.0,0,0,0.0,0,3,3,3,1,0,1,1,4,-16,ORL,AWAY,Kris Dunn
