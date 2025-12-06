@@ -974,8 +974,9 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
         raw_output_dir = Path(__file__).parent.parent / OUTPUT_RAW_DIR
         raw_output_dir.mkdir(exist_ok=True, parents=True)
         
-        # Save arb results with timestamp
+        # Sort by expected_profit_pct descending and save arb results
         output_file = arb_output_dir / f'arb_output_{timestamp}.csv'
+        best_odds_df = best_odds_df.sort_values('expected_profit_pct', ascending=False)
         best_odds_df.to_csv(output_file, index=False)
         print(f"\n💾 Arb results saved to: {output_file}")
         

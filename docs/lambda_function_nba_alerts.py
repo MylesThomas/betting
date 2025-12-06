@@ -1,31 +1,60 @@
 """
 AWS Lambda Function - NBA Arb Alert (15-minute interval)
 
-This lightweight Lambda function:
-1. Fetches live NBA props from The Odds API
-2. Finds arbitrage opportunities
-3. Sends email alert via SNS if any arb has 5%+ edge
+This Lambda function runs every 15 minutes and:
+1. Clones the GitHub repo
+2. Fetches live NBA props from The Odds API (today's games only, ET timezone)
+3. Finds ALL arbitrage opportunities (any profit > 0)
+4. Saves output to repo with timestamp (arb_output_YYYYMMDD_HHMMSS.csv)
+5. Commits and pushes to GitHub
+6. Sends email alert via SNS if any arb has 5%+ edge
 
-NO git cloning - just fetch, analyze, and alert.
+OUTPUT FILES:
+    - Saved every 15 minutes to data/04_output/nba/arbs/arb_output_YYYYMMDD_HHMMSS.csv
+    - Timestamp is in ET timezone (matches game dates)
+    - Each file contains best arb per player/market/line at that snapshot
+    - Dashboard reads all files for the day and dedupes by player/market/line,
+      keeping the BEST expected_profit seen across all snapshots
+
+DEDUPLICATION STRATEGY:
+    - Lambda: Saves snapshot with best odds at that moment
+    - Dashboard: Reads all day's files, groups by (player, market, line),
+      keeps row with highest expected_profit_pct
+    - This captures the best opportunity even if lines move
+
+LIVE PROP MARKET BEHAVIOR:
+    - Lines change frequently throughout the day
+    - Same player/market/line may have different odds each 15-min snapshot
+    - By saving all snapshots, we capture when arbs appear/disappear
+    - Dashboard shows the BEST historical opportunity for each player/market/line
+    - Late in day (after games start/end), fewer arbs expected
 
 Environment Variables Required:
-- ODDS_API_KEY: Your Odds API key (can also use Secrets Manager)
-- SECRET_NAME: betting-dashboard-secrets (optional - for secrets manager)
+- GITHUB_REPO_URL: https://github.com/MylesThomas/betting.git
+- GITHUB_USERNAME: MylesThomas
+- GITHUB_EMAIL: mylescgthomas@gmail.com
+- SECRET_NAME: betting-dashboard-secrets
 - AWS_REGION_NAME: us-east-2
-- SNS_TOPIC_ARN: arn:aws:sns:us-east-2:ACCOUNT_ID:betting-arb-alerts
+- SNS_TOPIC_ARN: arn:aws:sns:us-east-2:ACCOUNT_ID:betting-arb-alerts (optional)
 - MIN_PROFIT_PCT: 5.0 (optional, default 5.0)
+
+Secrets Required (in AWS Secrets Manager):
+- ODDS_API_KEY: Your Odds API key
+- GITHUB_TOKEN: Your GitHub Personal Access Token
 
 Lambda Configuration:
 - Runtime: Python 3.12
-- Memory: 256 MB (lightweight)
-- Timeout: 60 seconds (arb finder is fast ~15s)
+- Memory: 512 MB (needs space for git clone)
+- Timeout: 120 seconds (git operations take time)
+- Ephemeral storage: 1024 MB
 
 Lambda Layers Required:
+- git-lambda2 (provides git binaries)
 - betting-dashboard-dependencies (provides pandas, requests)
 
 Schedule (EventBridge):
 - Rate: rate(15 minutes)
-- Or cron for specific hours: cron(0/15 10-23 * * ? *)  # Every 15 min, 10am-11pm UTC
+- Or cron for game hours only: cron(0/15 15-3 * * ? *)  # 10am-10pm ET
 
 Author: Myles Thomas
 Date: 2025-12-06
@@ -33,9 +62,11 @@ Date: 2025-12-06
 
 import json
 import os
+import subprocess
 import boto3
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from botocore.exceptions import ClientError
 
 # These come from Lambda layer
 import requests
@@ -74,23 +105,70 @@ MARKET_DISPLAY_NAMES = {
 # HELPER FUNCTIONS
 # ============================================================================
 
-def get_api_key():
-    """Get ODDS_API_KEY from environment or Secrets Manager."""
-    # First check environment variable
-    api_key = os.environ.get('ODDS_API_KEY')
-    if api_key:
-        return api_key
+def get_secrets():
+    """
+    Fetch secrets from AWS Secrets Manager.
     
-    # Fall back to Secrets Manager
-    secret_name = os.environ.get('SECRET_NAME')
-    if secret_name:
-        region_name = os.environ.get('AWS_REGION_NAME', 'us-east-2')
-        client = boto3.client('secretsmanager', region_name=region_name)
+    Returns:
+        dict: Contains ODDS_API_KEY and GITHUB_TOKEN
+    """
+    # For local testing, check environment variables first
+    odds_key = os.environ.get('ODDS_API_KEY')
+    github_token = os.environ.get('GITHUB_TOKEN')
+    
+    if odds_key:
+        return {'ODDS_API_KEY': odds_key, 'GITHUB_TOKEN': github_token}
+    
+    # Fetch from Secrets Manager
+    secret_name = os.environ.get('SECRET_NAME', 'betting-dashboard-secrets')
+    region_name = os.environ.get('AWS_REGION_NAME', 'us-east-2')
+    
+    client = boto3.client('secretsmanager', region_name=region_name)
+    
+    try:
         response = client.get_secret_value(SecretId=secret_name)
-        secrets = json.loads(response['SecretString'])
-        return secrets.get('ODDS_API_KEY')
+    except ClientError as e:
+        raise Exception(f"Failed to retrieve secret: {e}")
     
-    raise ValueError("No ODDS_API_KEY found in environment or Secrets Manager")
+    return json.loads(response['SecretString'])
+
+
+def run_command(cmd, cwd=None, env=None):
+    """
+    Run a shell command and return output.
+    
+    Args:
+        cmd: Command string or list
+        cwd: Working directory
+        env: Environment variables dict
+        
+    Returns:
+        tuple: (stdout, stderr, return_code)
+    """
+    if isinstance(cmd, str):
+        cmd = cmd.split()
+    
+    # Merge environment variables
+    command_env = os.environ.copy()
+    if env:
+        command_env.update(env)
+    
+    print(f"Running: {' '.join(cmd)}")
+    
+    result = subprocess.run(
+        cmd,
+        cwd=cwd,
+        env=command_env,
+        capture_output=True,
+        text=True
+    )
+    
+    if result.stdout:
+        print(f"STDOUT: {result.stdout[:500]}")  # Truncate long output
+    if result.stderr:
+        print(f"STDERR: {result.stderr[:500]}")
+    
+    return result.stdout, result.stderr, result.returncode
 
 
 def send_email(subject, message):
@@ -228,8 +306,12 @@ def parse_props(event_data):
     return props
 
 
-def find_arbs(all_props, min_profit_pct=0.0):
-    """Find all arbs with profit >= min_profit_pct (default 0 = all arbs)."""
+def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0):
+    """
+    Find all arbs with profit >= min_profit_pct (default 0 = all arbs).
+    
+    Returns list of dicts with full arb info compatible with dashboard schema.
+    """
     if not all_props:
         return []
     
@@ -255,25 +337,81 @@ def find_arbs(all_props, min_profit_pct=0.0):
         if arb['is_arb'] and arb['profit_pct'] >= min_profit_pct:
             over_stake, under_stake = calculate_stakes(
                 best_over['over_odds'], 
-                best_under['under_odds']
+                best_under['under_odds'],
+                total=total_stake
             )
+            
+            # Calculate returns
+            over_odds = best_over['over_odds']
+            under_odds = best_under['under_odds']
+            
+            if over_odds > 0:
+                over_return = over_stake * (1 + over_odds / 100)
+            else:
+                over_return = over_stake * (1 + 100 / abs(over_odds))
+            
+            if under_odds > 0:
+                under_return = under_stake * (1 + under_odds / 100)
+            else:
+                under_return = under_stake * (1 + 100 / abs(under_odds))
+            
+            guaranteed_profit = min(over_return, under_return) - total_stake
+            
+            # Build recommendation string
+            recommendation = f"Bet ${over_stake:.2f} Over @ {best_over['bookmaker']}, ${under_stake:.2f} Under @ {best_under['bookmaker']}"
             
             arbs.append({
                 'player': player,
                 'market': market,
                 'line': line,
+                'best_over_odds': int(over_odds),
+                'best_over_book': best_over['bookmaker'],
+                'best_over_implied': arb['total_prob'] - american_to_probability(under_odds),  # over prob
+                'best_under_odds': int(under_odds),
+                'best_under_book': best_under['bookmaker'],
+                'best_under_implied': american_to_probability(under_odds),
+                'total_prob': arb['total_prob'],
+                'expected_profit_pct': arb['profit_pct'],
+                'is_arb': arb['is_arb'],
+                'over_stake': over_stake,
+                'under_stake': under_stake,
+                'over_return': round(over_return, 2),
+                'under_return': round(under_return, 2),
+                'guaranteed_profit': round(guaranteed_profit, 2),
+                'total_wager': total_stake,
+                'recommendation': recommendation,
                 'game': group['game'].iloc[0],
                 'game_time': group['game_time'].iloc[0],
-                'profit_pct': arb['profit_pct'],
-                'over_odds': int(best_over['over_odds']),
-                'over_book': best_over['bookmaker'],
-                'under_odds': int(best_under['under_odds']),
-                'under_book': best_under['bookmaker'],
-                'over_stake': over_stake,
-                'under_stake': under_stake
+                'num_bookmakers': len(group['bookmaker'].unique())
             })
     
-    return sorted(arbs, key=lambda x: x['profit_pct'], reverse=True)
+    return sorted(arbs, key=lambda x: x['expected_profit_pct'], reverse=True)
+
+
+def save_arb_output(arbs_df, work_dir, timestamp=None):
+    """
+    Save arb output to the cloned repo directory.
+    
+    Args:
+        arbs_df: DataFrame with arb data
+        work_dir: Path to cloned repo (e.g., /tmp/betting)
+        timestamp: Optional datetime for filename (defaults to now in ET)
+    
+    Returns:
+        str: Path where file was saved
+    """
+    if timestamp is None:
+        timestamp = datetime.now(ZoneInfo(TIMEZONE))
+    
+    filename = f"arb_output_{timestamp.strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    output_dir = os.path.join(work_dir, 'data/04_output/nba/arbs')
+    os.makedirs(output_dir, exist_ok=True)
+    
+    output_path = os.path.join(output_dir, filename)
+    arbs_df.to_csv(output_path, index=False)
+    print(f"💾 Saved to {output_path}")
+    return output_path
 
 
 # ============================================================================
@@ -298,18 +436,18 @@ def format_arb_email(arbs):
         market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
         
         lines.extend([
-            f"#{i} - {arb['profit_pct']:.2f}% PROFIT",
+            f"#{i} - {arb['expected_profit_pct']:.2f}% PROFIT",
             f"   Player: {arb['player']}",
             f"   Market: {market_display} {arb['line']}",
             f"   Game: {arb['game']}",
             "",
-            f"   📈 OVER {arb['line']}: {arb['over_odds']:+d} @ {arb['over_book']}",
-            f"   📉 UNDER {arb['line']}: {arb['under_odds']:+d} @ {arb['under_book']}",
+            f"   📈 OVER {arb['line']}: {arb['best_over_odds']:+d} @ {arb['best_over_book']}",
+            f"   📉 UNDER {arb['line']}: {arb['best_under_odds']:+d} @ {arb['best_under_book']}",
             "",
             f"   💰 Stake $100 total:",
-            f"      → ${arb['over_stake']:.2f} on OVER @ {arb['over_book']}",
-            f"      → ${arb['under_stake']:.2f} on UNDER @ {arb['under_book']}",
-            f"      → Guaranteed profit: ${arb['profit_pct']:.2f}",
+            f"      → ${arb['over_stake']:.2f} on OVER @ {arb['best_over_book']}",
+            f"      → ${arb['under_stake']:.2f} on UNDER @ {arb['best_under_book']}",
+            f"      → Guaranteed profit: ${arb['guaranteed_profit']:.2f}",
             "",
             "-" * 50,
             ""
@@ -330,32 +468,78 @@ def format_arb_email(arbs):
 # ============================================================================
 
 def lambda_handler(event, context):
-    """Main Lambda handler."""
+    """Main Lambda handler - fetches arbs, saves to git, sends alerts."""
+    now = datetime.now(ZoneInfo(TIMEZONE))
+    work_dir = '/tmp/betting'
+    
     print("=" * 60)
-    print("🏀 NBA Arb Alert Check")
-    print(f"Time: {datetime.now(ZoneInfo(TIMEZONE)).strftime('%Y-%m-%d %I:%M %p ET')}")
+    print("🏀 NBA Arb Alert Check (15-min)")
+    print(f"Time: {now.strftime('%Y-%m-%d %I:%M %p ET')}")
     print("=" * 60)
     
     min_profit = float(os.environ.get('MIN_PROFIT_PCT', '5.0'))
     print(f"Looking for arbs with {min_profit}%+ edge...")
     
     try:
-        # Get API key
-        api_key = get_api_key()
+        # Step 1: Get secrets
+        print("\n📊 Step 1: Fetching secrets...")
+        secrets = get_secrets()
+        odds_api_key = secrets['ODDS_API_KEY']
+        github_token = secrets.get('GITHUB_TOKEN')
+        print("✅ Secrets retrieved")
         
-        # Get today's events
-        events = get_todays_events(api_key)
-        print(f"Found {len(events)} games today")
+        # Step 2: Clone repo (only in Lambda, skip locally)
+        is_lambda = os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
+        
+        if is_lambda and github_token:
+            print("\n📦 Step 2: Cloning GitHub repository...")
+            github_repo_url = os.environ.get('GITHUB_REPO_URL', 'https://github.com/MylesThomas/betting.git')
+            github_username = os.environ.get('GITHUB_USERNAME', 'MylesThomas')
+            github_email = os.environ.get('GITHUB_EMAIL', 'mylescgthomas@gmail.com')
+            
+            repo_url_with_token = github_repo_url.replace(
+                'https://',
+                f'https://{github_username}:{github_token}@'
+            )
+            
+            run_command(['rm', '-rf', work_dir])
+            stdout, stderr, code = run_command(['git', 'clone', '--depth', '1', repo_url_with_token, work_dir])
+            
+            if code != 0:
+                raise Exception(f"Git clone failed: {stderr}")
+            
+            run_command(['git', 'config', 'user.name', github_username], cwd=work_dir)
+            run_command(['git', 'config', 'user.email', github_email], cwd=work_dir)
+            print("✅ Repository cloned")
+        else:
+            # Local testing - use project root
+            work_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            print(f"📂 Using local directory: {work_dir}")
+        
+        # Step 3: Fetch today's events (ET timezone)
+        print("\n🔍 Step 3: Fetching today's NBA events...")
+        events = get_todays_events(odds_api_key)
+        print(f"Found {len(events)} games today (ET)")
         
         if not events:
-            print("No games today - exiting")
+            print("No games today - saving empty file")
+            empty_df = pd.DataFrame(columns=[
+                'player', 'market', 'line', 'best_over_odds', 'best_over_book',
+                'best_over_implied', 'best_under_odds', 'best_under_book',
+                'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
+                'over_stake', 'under_stake', 'over_return', 'under_return',
+                'guaranteed_profit', 'total_wager', 'recommendation', 'game',
+                'game_time', 'num_bookmakers'
+            ])
+            save_arb_output(empty_df, work_dir, timestamp=now)
             return {'statusCode': 200, 'body': 'No games today'}
         
-        # Fetch props for all games
+        # Step 4: Fetch props for all games
+        print("\n📥 Step 4: Fetching props for each game...")
         all_props = []
         for event in events:
             try:
-                props_data = get_event_props(api_key, event['id'])
+                props_data = get_event_props(odds_api_key, event['id'])
                 props = parse_props(props_data)
                 all_props.extend(props)
                 print(f"  ✓ {event['away_team']} @ {event['home_team']}: {len(props)} props")
@@ -364,7 +548,8 @@ def lambda_handler(event, context):
         
         print(f"\nTotal props: {len(all_props)}")
         
-        # Find ALL arbs (any profit > 0)
+        # Step 5: Find arbs
+        print("\n🔍 Step 5: Finding arbitrage opportunities...")
         all_arbs = find_arbs(all_props, min_profit_pct=0.0)
         
         print(f"\n{'='*60}")
@@ -374,22 +559,59 @@ def lambda_handler(event, context):
         if all_arbs:
             for i, arb in enumerate(all_arbs, 1):
                 market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
-                alert_flag = "🚨" if arb['profit_pct'] >= min_profit else "  "
-                print(f"{alert_flag} {i:2d}. {arb['profit_pct']:5.2f}% | {arb['player']:<25s} | {market_display} {arb['line']}")
-                print(f"        Over {arb['over_odds']:+4d} @ {arb['over_book']:<12s} | Under {arb['under_odds']:+4d} @ {arb['under_book']}")
+                alert_flag = "🚨" if arb['expected_profit_pct'] >= min_profit else "  "
+                print(f"{alert_flag} {i:2d}. {arb['expected_profit_pct']:5.2f}% | {arb['player']:<25s} | {market_display} {arb['line']}")
+                print(f"        Over {arb['best_over_odds']:+4d} @ {arb['best_over_book']:<12s} | Under {arb['best_under_odds']:+4d} @ {arb['best_under_book']}")
         else:
             print("   No arbs found at all.")
         
         print(f"{'='*60}\n")
         
-        # Filter for high-value arbs (email threshold)
-        high_value_arbs = [a for a in all_arbs if a['profit_pct'] >= min_profit]
+        # Step 6: Save output file (sorted by expected_profit_pct descending)
+        print("💾 Step 6: Saving output file...")
+        if all_arbs:
+            arbs_df = pd.DataFrame(all_arbs)
+            arbs_df = arbs_df.sort_values('expected_profit_pct', ascending=False)
+        else:
+            arbs_df = pd.DataFrame(columns=[
+                'player', 'market', 'line', 'best_over_odds', 'best_over_book',
+                'best_over_implied', 'best_under_odds', 'best_under_book',
+                'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
+                'over_stake', 'under_stake', 'over_return', 'under_return',
+                'guaranteed_profit', 'total_wager', 'recommendation', 'game',
+                'game_time', 'num_bookmakers'
+            ])
         
-        print(f"Found {len(high_value_arbs)} arbs with {min_profit}%+ edge (email threshold)")
+        output_path = save_arb_output(arbs_df, work_dir, timestamp=now)
+        
+        # Step 7: Commit and push (only in Lambda)
+        if is_lambda and github_token:
+            print("\n📤 Step 7: Committing and pushing to GitHub...")
+            
+            run_command(['git', 'add', 'data/04_output/nba/arbs/*.csv'], cwd=work_dir)
+            
+            stdout, stderr, code = run_command(['git', 'status', '--porcelain'], cwd=work_dir)
+            
+            if stdout.strip():
+                commit_msg = f"arb-alert: {now.strftime('%Y-%m-%d %H:%M')} ET - {len(all_arbs)} arbs"
+                run_command(['git', 'commit', '-m', commit_msg], cwd=work_dir)
+                
+                stdout, stderr, code = run_command(['git', 'push'], cwd=work_dir)
+                
+                if code != 0:
+                    print(f"⚠️  Git push failed (non-fatal): {stderr}")
+                else:
+                    print("✅ Pushed to GitHub")
+            else:
+                print("ℹ️  No changes to commit")
+        
+        # Step 8: Send email alert if high-value arbs found
+        high_value_arbs = [a for a in all_arbs if a['expected_profit_pct'] >= min_profit]
+        
+        print(f"\nFound {len(high_value_arbs)} arbs with {min_profit}%+ edge (email threshold)")
         
         if high_value_arbs:
-            # Send alert!
-            subject = f"🚨 {len(high_value_arbs)} NBA Arb(s) Found! Best: {high_value_arbs[0]['profit_pct']:.1f}%"
+            subject = f"🚨 {len(high_value_arbs)} NBA Arb(s) Found! Best: {high_value_arbs[0]['expected_profit_pct']:.1f}%"
             message = format_arb_email(high_value_arbs)
             
             print("\n" + "=" * 60)
@@ -403,8 +625,9 @@ def lambda_handler(event, context):
                 'body': json.dumps({
                     'total_arbs': len(all_arbs),
                     'high_value_arbs': len(high_value_arbs),
-                    'best_profit': high_value_arbs[0]['profit_pct'],
-                    'alert_sent': True
+                    'best_profit': high_value_arbs[0]['expected_profit_pct'],
+                    'alert_sent': True,
+                    'output_file': output_path
                 })
             }
         else:
@@ -414,17 +637,19 @@ def lambda_handler(event, context):
                 'body': json.dumps({
                     'total_arbs': len(all_arbs),
                     'high_value_arbs': 0,
-                    'alert_sent': False
+                    'alert_sent': False,
+                    'output_file': output_path
                 })
             }
     
     except Exception as e:
         print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         
-        # Send error notification
         error_msg = f"""❌ NBA Arb Alert Check FAILED
 
-Time: {datetime.now(ZoneInfo(TIMEZONE)).isoformat()}
+Time: {now.isoformat()}
 Error: {str(e)}
 
 Check CloudWatch logs for details.
@@ -435,6 +660,12 @@ Check CloudWatch logs for details.
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
+    
+    finally:
+        # Clean up in Lambda
+        if os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+            print("\n🧹 Cleaning up...")
+            run_command(['rm', '-rf', '/tmp/betting'])
 
 
 # ============================================================================
