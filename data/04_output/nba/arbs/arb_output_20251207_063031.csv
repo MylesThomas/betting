@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Kenrich Williams,player_rebounds,3.5,-143,betonlineag,0.5884773662551441,155,bovada,0.39215686274509803,0.9806342290002421,1.9748210318439874,True,60.01,39.99,101.98,101.97,1.97,100.0,"Bet $60.01 Over @ betonlineag, $39.99 Under @ bovada",Oklahoma City Thunder @ Utah Jazz,2025-12-08T01:10:00Z,2
