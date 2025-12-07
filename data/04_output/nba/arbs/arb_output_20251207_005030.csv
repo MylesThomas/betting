@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Vincent Williams Jr,player_rebounds,4.5,134,fanduel,0.4273504273504274,-125,fanatics,0.5555555555555556,0.982905982905983,1.7391304347825987,True,43.48,56.52,101.74,101.74,1.74,100.0,"Bet $43.48 Over @ fanduel, $56.52 Under @ fanatics",Portland Trail Blazers @ Memphis Grizzlies,2025-12-07T23:10:00Z,4
