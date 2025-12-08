@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Naz Reid,player_points,14.5,105,bovada,0.4878048780487805,-103,betonlineag,0.5073891625615764,0.9951940406103569,0.48291681757817173,True,49.02,50.98,100.49,100.48,0.48,100.0,"Bet $49.02 Over @ bovada, $50.98 Under @ betonlineag",Phoenix Suns @ Minnesota Timberwolves,2025-12-09T00:40:00Z,6
