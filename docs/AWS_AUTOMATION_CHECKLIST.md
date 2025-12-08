@@ -114,11 +114,8 @@ Streamlit Cloud
 - [ ] **5.5** Configure Lambda settings:
   - Go to "Configuration" → "General configuration" → "Edit"
   - **Memory:** 512 MB
-  - **Timeout:** 15 minutes (enter `15` min, `0` sec)
-  - Click "Save"
-  
-  - Then go to "Configuration" → "General configuration" → "Edit" again (scroll down)
   - **Ephemeral storage:** 2048 MB (need space to clone repo)
+  - **Timeout:** 15 minutes (enter `15` min, `0` sec)
   - Click "Save"
 
 - [ ] **5.6** Add environment variables:
@@ -142,6 +139,8 @@ Streamlit Cloud
 - [ ] **6.3** In IAM, click "Add permissions" → "Attach policies"
 
 - [ ] **6.4** Search for and attach: `SecretsManagerReadWrite`
+
+- Note: Also, add AmazonSNSFullAccess (to be able to send emails)
 
 - [ ] **6.5** Verify the policy is attached
 
@@ -233,15 +232,15 @@ Lambda needs additional packages (Python dependencies + git) that aren't include
 
 - [ ] **9.1** Go to Amazon EventBridge: https://console.aws.amazon.com/events/
 
-- [ ] **9.2** Click "Rules" → "Create rule"
+- [ ] **9.2** Click "Rules" → "Create scheduled rule"
 
-- [ ] **9.3** Configure rule:
+- [ ] **9.3** Configure rule detail:
   - **Name:** `betting-dashboard-daily-7am-et`
   - **Description:** `Triggers daily dashboard update at 7 AM ET`
   - **Rule type:** Schedule
   - Click "Next"
 
-- [ ] **9.4** Define schedule:
+- [ ] **9.4** Define schedule / event pattern:
   - **Schedule pattern:** Cron-based schedule
   - **Cron expression:** `0 12 * * ? *`
     - This is 12:00 PM UTC = 7:00 AM EST / 6:00 AM CST
@@ -249,6 +248,10 @@ Lambda needs additional packages (Python dependencies + git) that aren't include
     - For year-round 7 AM ET, you may need two rules (one DST, one standard)
   - **Timezone:** UTC (adjust cron as needed)
   - Click "Next"
+
+Note: You can do something like this, which is easier: rate(10 minutes)
+- What I settled on for 10 min: 0/10 * * * ? *
+  - 0/10 minutes meaning: every 10min
 
 - [ ] **9.5** Select target:
   - **Target type:** AWS service

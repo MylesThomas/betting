@@ -129,3 +129,104 @@ def probability_to_american_odds(prob_pct):
         # Positive odds (underdog)
         return (100 - prob_pct) / prob_pct * 100
 
+
+def calculate_vig(implied_over, implied_under):
+    """
+    Calculate vig (overround/juice) from implied probabilities.
+    
+    Vig = implied_over + implied_under - 1
+    
+    Args:
+        implied_over: Implied probability for over (as decimal, e.g., 0.5238)
+        implied_under: Implied probability for under (as decimal, e.g., 0.5238)
+    
+    Returns:
+        Vig as decimal (e.g., 0.0476 for 4.76% vig)
+    
+    Examples:
+        >>> calculate_vig(0.5238, 0.5238)  # -110/-110 → 4.76% vig
+        0.0476
+        >>> calculate_vig(0.5, 0.5)  # Fair odds → 0% vig
+        0.0
+    """
+    import numpy as np
+    import pandas as pd
+    
+    if pd.isna(implied_over) or pd.isna(implied_under):
+        return np.nan
+    return implied_over + implied_under - 1
+
+
+def calculate_vig_attribution(implied_over, implied_under):
+    """
+    Calculate total vig and attribute it to each side (over/under).
+    
+    Uses proportional attribution: each side's vig is the difference between
+    its implied probability and its "fair" probability (normalized to sum to 1).
+    
+    Fair probabilities:
+        fair_over = implied_over / (implied_over + implied_under)
+        fair_under = implied_under / (implied_over + implied_under)
+    
+    Vig attribution:
+        over_vig = implied_over - fair_over
+        under_vig = implied_under - fair_under
+    
+    Args:
+        implied_over: Implied probability for over (as decimal, e.g., 0.5238)
+        implied_under: Implied probability for under (as decimal, e.g., 0.5238)
+    
+    Returns:
+        dict with keys:
+            - 'total_vig': Total vig (over_vig + under_vig)
+            - 'over_vig': Vig attributed to the over side
+            - 'under_vig': Vig attributed to the under side
+            - 'fair_over': Fair probability for over (no vig)
+            - 'fair_under': Fair probability for under (no vig)
+    
+    Examples:
+        >>> calculate_vig_attribution(0.5238, 0.5238)  # -110/-110 (symmetric)
+        {'total_vig': 0.0476, 'over_vig': 0.0238, 'under_vig': 0.0238, 
+         'fair_over': 0.5, 'fair_under': 0.5}
+        
+        >>> calculate_vig_attribution(0.60, 0.4348)  # -150/+130 (asymmetric)
+        {'total_vig': 0.0348, 'over_vig': 0.0201, 'under_vig': 0.0147,
+         'fair_over': 0.5799, 'fair_under': 0.4201}
+    """
+    import numpy as np
+    import pandas as pd
+    
+    if pd.isna(implied_over) or pd.isna(implied_under):
+        return {
+            'total_vig': np.nan,
+            'over_vig': np.nan,
+            'under_vig': np.nan,
+            'fair_over': np.nan,
+            'fair_under': np.nan
+        }
+    
+    # Sum of implied probabilities (will be > 1 due to vig)
+    implied_sum = implied_over + implied_under
+    
+    # Fair probabilities: normalize to sum to 1
+    fair_over = implied_over / implied_sum
+    fair_under = implied_under / implied_sum
+    
+    # Sanity check: fair probabilities must sum to 1
+    assert abs((fair_over + fair_under) - 1) < 0.001, \
+        f"Fair probabilities should sum to 1, got {fair_over + fair_under}"
+    
+    # Vig on each side: how much "extra" probability is baked in
+    over_vig = implied_over - fair_over
+    under_vig = implied_under - fair_under
+    
+    # Total vig (should equal implied_sum - 1)
+    total_vig = over_vig + under_vig
+    
+    return {
+        'total_vig': total_vig,
+        'over_vig': over_vig,
+        'under_vig': under_vig,
+        'fair_over': fair_over,
+        'fair_under': fair_under
+    }

@@ -1,0 +1,926 @@
+event_id,player,market,line,bookmaker,game,game_time,over_odds,under_odds
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,No Touchdown,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_1st_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_anytime_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_field_goals,1.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-192.0,149.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zane Gonzalez,player_field_goals,1.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-104.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_kicking_points,8.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-106.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zane Gonzalez,player_kicking_points,6.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-116.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,No Touchdown,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_last_td,,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,33.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-104.0,-123.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,28.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-101.0,-126.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,21.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,101.0,-128.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_interceptions,0.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_interceptions,0.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-107.0,-119.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,1.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,200.0,-260.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,232.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-111.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,200.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_longest,28.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_longest,18.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_longest,17.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_longest,16.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_longest,14.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_longest,14.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_longest,13.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_longest,11.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_longest,9.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_longest,9.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_longest,7.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,93.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,55.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,43.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,37.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-113.0,-111.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,29.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,28.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,21.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,19.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,14.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-111.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,13.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-111.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_yds,7.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-111.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,6.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-113.0,-111.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,101.0,-129.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-108.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-140.0,110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,110.0,-140.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,113.0,-144.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-133.0,105.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,113.0,-144.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,133.0,-170.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-129.0,101.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_receptions,1.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,162.0,-209.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,15.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-103.0,-123.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,14.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_attempts,9.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-131.0,102.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_longest,14.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_longest,13.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_longest,10.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_longest,8.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,63.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,63.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,36.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-109.0,-116.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,21.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_rush_yds,0.5,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,106.0,-134.0
+f0bdd27bbed46dfc3d0657500c95a96c,DeMarcus Lawrence,player_sacks,0.25,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,161.0,-207.0
+f0bdd27bbed46dfc3d0657500c95a96c,Leonard Floyd,player_sacks,0.25,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,162.0,-208.0
+f0bdd27bbed46dfc3d0657500c95a96c,Leonard Williams,player_sacks,0.25,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,169.0,-217.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jalon Walker,player_sacks,0.25,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,171.0,-221.0
+f0bdd27bbed46dfc3d0657500c95a96c,Byron Murphy II,player_sacks,0.25,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,272.0,-359.0
+f0bdd27bbed46dfc3d0657500c95a96c,Ruke Orhorhoro,player_sacks,0.25,draftkings,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,280.0,-369.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_anytime_td,,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-122.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,0.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-240.0,177.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,199.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-117.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,231.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-117.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,37.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-127.0,-107.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,42.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-121.0,-111.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,28.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_yds,7.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-121.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,13.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,21.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-108.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,29.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-102.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,92.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,54.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,19.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-108.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,13.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-121.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,6.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-107.0,-124.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_receptions,1.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,160.0,-218.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-134.0,101.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,102.0,-137.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-102.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,123.0,-164.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-136.0,101.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-124.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-121.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,120.0,-170.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-137.0,104.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,64.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-107.0,-127.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,62.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,35.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-127.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,21.5,williamhill_us,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-113.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks Defense,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons Defense,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks Defense,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons Defense,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks Defense,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons Defense,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_last_td,,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,33.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,28.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,108.0,-140.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,21.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-122.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_interceptions,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_interceptions,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,1.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,225.0,-320.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,231.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,199.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_longest,13.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-128.0,-104.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_longest,20.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_longest,9.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-122.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_longest,18.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-106.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_longest,28.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_longest,6.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_longest,13.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-106.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_longest,15.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_longest,15.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-122.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_longest,14.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,91.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,42.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,21.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,14.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,28.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,54.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,28.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,13.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,38.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,20.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,5.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_yds,7.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_receptions,1.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,168.0,-230.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,116.0,-154.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,122.0,-162.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,116.0,-154.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-138.0,104.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-132.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,-102.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,112.0,-148.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,15.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,14.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-102.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_longest,10.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-108.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_longest,14.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_longest,14.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-122.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_longest,8.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-108.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,61.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,63.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_rush_yds,1.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,-102.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,22.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_rush_yds,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,118.0,-158.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,36.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Leonard Floyd,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,168.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Leonard Williams,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,172.0,
+f0bdd27bbed46dfc3d0657500c95a96c,DeMarcus Lawrence,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,188.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Jalon Walker,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,198.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Uchenna Nwosu,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,230.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Byron Murphy II,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,290.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Ruke Orhorhoro,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,310.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Derick Hall,player_sacks,0.5,fanduel,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,360.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_anytime_td,,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,33.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,28.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,21.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_interceptions,0.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-103.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_interceptions,0.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-109.0,-119.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,1.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,204.0,-278.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,232.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,204.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-123.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,20.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,13.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,31.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,95.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-123.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,30.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-108.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,37.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_yds,7.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,42.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,54.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,6.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,13.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,21.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-137.0,106.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-132.0,102.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,125.0,-164.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,126.0,-164.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_receptions,1.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,161.0,-213.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,115.0,-149.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,15.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,14.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-102.0,-127.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,61.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,63.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,21.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-109.0,-119.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,37.5,betonlineag,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zane Gonzalez,player_kicking_points,6.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,102.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_kicking_points,8.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,105.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_last_td,,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,27.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-121.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,32.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-106.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-106.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,20.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-124.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_interceptions,0.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-117.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_interceptions,0.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,1.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,190.0,-265.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,201.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-117.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,230.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_longest,19.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_longest,12.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_longest,27.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-143.0,108.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_longest,14.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-112.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_longest,9.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_longest,15.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_longest,14.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_longest,13.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_longest,17.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-107.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_longest,10.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_longest,7.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,42.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-117.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,96.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-113.0,-117.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,31.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-117.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,19.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,16.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-121.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,11.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,28.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,52.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-114.0,-117.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,36.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-117.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,20.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-143.0,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,120.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-143.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-113.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,108.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,125.0,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,2.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-175.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,14.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-107.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,14.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-134.0,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_longest,13.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-107.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_longest,8.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_longest,10.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-107.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_longest,14.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-122.0,-109.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,63.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-113.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,65.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-117.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,22.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-112.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,33.5,betrivers,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-117.0,-114.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,No Touchdown,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Drake London,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Myles Gaskin,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Velus Jones Jr.,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,No Touchdown,player_anytime_td,,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_field_goals,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-200.0,145.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zane Gonzalez,player_field_goals,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_kicking_points,8.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zane Gonzalez,player_kicking_points,6.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,28.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,34.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,115.0,-150.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,21.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_interceptions,0.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_interceptions,0.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,0.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-220.0,165.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,227.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,199.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_longest,9.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_longest,28.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_longest,7.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_longest,16.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_longest,14.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_longest,18.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_longest,14.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_longest,17.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_longest,5.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_longest,13.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_longest,11.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_longest,9.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_yds,8.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,91.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,12.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,21.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,32.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,53.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,36.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,36.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,6.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,27.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,14.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,19.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-145.0,110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_receptions,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,155.0,-210.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,105.0,-140.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-165.0,125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_receptions,0.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-145.0,105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_receptions,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,130.0,-175.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,5.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,145.0,-190.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,110.0,-145.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_receptions,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-175.0,130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,15.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,110.0,-145.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,16.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_attempts,9.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_rush_attempts,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-165.0,125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_attempts,6.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_rush_attempts,1.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,135.0,-185.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_longest,14.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_longest,10.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-118.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_longest,13.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_longest,8.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,63.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,22.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,34.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_rush_yds,3.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_rush_yds,0.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-118.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_rush_yds,0.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,65.5,betmgm,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,No Scorer,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_1st_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_anytime_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_field_goals,1.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-190.0,145.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_kicking_points,8.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cam Akers,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Casey Washington,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_last_td,,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,33.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,27.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,21.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,0.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-240.0,175.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,230.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,195.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,30.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,20.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,15.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,35.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,95.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,55.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_reception_yds,10.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,115.0,-155.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,40.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,20.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,10.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,160.0,-230.0
+f0bdd27bbed46dfc3d0657500c95a96c,Dylan Drummond,player_reception_yds,15.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,105.0,-140.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,25.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,120.0,-165.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,120.0,-165.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,3.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,180.0,-265.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,115.0,-155.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,110.0,-150.0
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_receptions,1.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,160.0,-230.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,15.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_attempts,9.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,14.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-135.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_attempts,6.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,60.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,35.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,65.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,20.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_rush_yds,5.5,fanatics,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,135.0,-185.0
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,No Touchdown,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_1st_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nathan Carter,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,KhaDarel Hodge,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Feleipe Franks,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Elijah Arroyo,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Brady Russell,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Robbie Ouzts,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Nick Kallerup,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Cody White,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Teagan Quitoriano,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Charlie Woerner,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jake Bobo,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Seattle Seahawks D/ST,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Atlanta Falcons D/ST,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jamal Agnew,player_anytime_td,,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,,
+f0bdd27bbed46dfc3d0657500c95a96c,Jason Myers,player_kicking_points,8.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zane Gonzalez,player_kicking_points,6.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_attempts,33.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_attempts,28.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_completions,21.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_completions,18.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_interceptions,0.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_interceptions,0.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_tds,1.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,190.0,-260.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_tds,1.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kirk Cousins,player_pass_yds,200.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Sam Darnold,player_pass_yds,233.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_reception_yds,31.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_reception_yds,35.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-145.0,110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_reception_yds,30.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_reception_yds,42.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_reception_yds,19.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_reception_yds,91.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-145.0,110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_reception_yds,13.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_reception_yds,54.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_reception_yds,20.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_reception_yds,6.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,AJ Barner,player_receptions,3.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,125.0,-165.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_receptions,4.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Cooper Kupp,player_receptions,2.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-135.0,105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Darnell Mooney,player_receptions,3.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,David Sills V,player_receptions,2.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Jaxon Smith-Njigba,player_receptions,6.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-115.0,-115.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_receptions,2.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,125.0,-165.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kyle Pitts,player_receptions,5.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Rashid Shaheed,player_receptions,1.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-130.0,100.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_attempts,15.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_attempts,14.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,100.0,-130.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_longest,14.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_longest,14.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-120.0,-110.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_longest,8.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_longest,10.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0
+f0bdd27bbed46dfc3d0657500c95a96c,Bijan Robinson,player_rush_yds,67.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Kenneth Walker III,player_rush_yds,61.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-110.0,-120.0
+f0bdd27bbed46dfc3d0657500c95a96c,Tyler Allgeier,player_rush_yds,21.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-105.0,-125.0
+f0bdd27bbed46dfc3d0657500c95a96c,Zach Charbonnet,player_rush_yds,35.5,bovada,Seattle Seahawks @ Atlanta Falcons,2025-12-07T18:00:00Z,-125.0,-105.0

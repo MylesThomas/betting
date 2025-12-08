@@ -129,7 +129,16 @@ def calculate_consensus_lines(df_lines: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_unexpected_points_data(file_path: Optional[Path] = None) -> pd.DataFrame:
-    """Load Unexpected Points data with luck calculated."""
+    """
+    Load Unexpected Points data with luck calculated.
+    
+    Luck Components:
+    - offensive_luck: your_score - your_adj_score (you scored more/less than expected)
+    - defensive_luck: opp_adj_score - opp_score (opponent scored less/more than expected)
+    - luck (total): offensive_luck + defensive_luck (full game luck)
+    
+    Note: Total luck is zero-sum per game (one team's luck = -1 × opponent's luck)
+    """
     if file_path is None:
         xlsx_files = sorted(UNEXPECTED_POINTS_DIR.glob("Unexpected Points*.xlsx"))
         if not xlsx_files:
@@ -138,14 +147,44 @@ def load_unexpected_points_data(file_path: Optional[Path] = None) -> pd.DataFram
     
     df = pd.read_excel(file_path, sheet_name="2025 Adjusted Scores")
     df['team_canonical'] = df['team'].apply(normalize_unexpected_points_abbr)
-    df['luck'] = df['score'] - df['adj_score']
+    
+    # Calculate offensive luck (old method - kept for reference)
+    df['offensive_luck'] = df['score'] - df['adj_score']
+    
+    # Calculate defensive luck by looking up opponent's data in same game
+    df['defensive_luck'] = 0.0
+    
+    for game_id in df['game_id'].unique():
+        game_mask = df['game_id'] == game_id
+        game_rows = df[game_mask]
+        
+        if len(game_rows) != 2:
+            continue
+        
+        # Get both teams' data
+        team1_idx = game_rows.index[0]
+        team2_idx = game_rows.index[1]
+        
+        team1_score = df.loc[team1_idx, 'score']
+        team1_adj = df.loc[team1_idx, 'adj_score']
+        team2_score = df.loc[team2_idx, 'score']
+        team2_adj = df.loc[team2_idx, 'adj_score']
+        
+        # Defensive luck = opponent's adj_score - opponent's actual score
+        # (if opponent scored less than expected, you got lucky defensively)
+        df.loc[team1_idx, 'defensive_luck'] = team2_adj - team2_score
+        df.loc[team2_idx, 'defensive_luck'] = team1_adj - team1_score
+    
+    # Total luck = offensive + defensive
+    df['luck'] = df['offensive_luck'] + df['defensive_luck']
+    
     return df
 
 
 def build_prior_luck_lookup(df_up: pd.DataFrame) -> Dict:
     """
     Build lookup for prior week luck. Returns dict with:
-    - 'by_team_week': {(team, week): luck}
+    - 'by_team_week': {(team, week): {'luck': total, 'offensive_luck': off, 'defensive_luck': def}}
     - 'weeks_played': {team: [week1, week2, ...]}
     """
     by_team_week = {}
@@ -154,9 +193,12 @@ def build_prior_luck_lookup(df_up: pd.DataFrame) -> Dict:
     for _, row in df_up.iterrows():
         team = row['team_canonical']
         week = row['week']
-        luck = row['luck']
         
-        by_team_week[(team, week)] = luck
+        by_team_week[(team, week)] = {
+            'luck': row['luck'],
+            'offensive_luck': row.get('offensive_luck', row['luck']),  # fallback for old data
+            'defensive_luck': row.get('defensive_luck', 0.0),
+        }
         
         if team not in weeks_played:
             weeks_played[team] = []
@@ -169,7 +211,24 @@ def build_prior_luck_lookup(df_up: pd.DataFrame) -> Dict:
 
 
 def get_prior_week_luck(lookup: Dict, team: str, current_week: int) -> Optional[float]:
-    """Get luck from team's last played game before current_week (handles byes)."""
+    """Get total luck from team's last played game before current_week (handles byes)."""
+    luck_data = get_prior_week_luck_detailed(lookup, team, current_week)
+    if luck_data is None:
+        return None
+    return luck_data['luck']
+
+
+def get_prior_week_luck_detailed(lookup: Dict, team: str, current_week: int) -> Optional[Dict]:
+    """
+    Get detailed luck breakdown from team's last played game before current_week.
+    
+    Returns dict with:
+    - 'luck': total luck (offensive + defensive)
+    - 'offensive_luck': how much team over/under performed scoring
+    - 'defensive_luck': how much opponent over/under performed scoring
+    
+    Returns None if no prior game found.
+    """
     weeks_played = lookup['weeks_played']
     by_team_week = lookup['by_team_week']
     

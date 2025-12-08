@@ -206,36 +206,30 @@ def save_calendar(unique_dates, games_df, season='2025-26', output_dir=None):
 def estimate_api_costs(num_game_days, avg_games_per_day=12):
     """
     Estimate Odds API costs for fetching historical props
+    
+    Current default markets (9 total):
+    - player_points, player_rebounds, player_assists, player_threes
+    - player_blocks, player_steals, player_double_double
+    - player_triple_double, player_points_rebounds_assists
+    
+    Cost: ~10 credits per market per game = ~90 credits per game for all 9 markets
     """
     print("\n" + "="*60)
     print("💰 ESTIMATED ODDS API COSTS")
     print("="*60)
     
-    # Cost per game for historical event odds with player props
-    # 1 market (player_threes) × 1 region × 10 credits = 10 credits per game
-    
-    cost_per_game_1_market = 10
-    cost_per_game_4_markets = 40  # player_points, player_rebounds, player_assists, player_threes
-    
     total_games = num_game_days * avg_games_per_day
     
-    print(f"\nScenario 1: Fetch player_threes only")
-    print(f"  {num_game_days} days × {avg_games_per_day} games/day = {total_games:.0f} total games")
-    print(f"  Cost: {total_games:.0f} games × 10 credits = {total_games * cost_per_game_1_market:.0f} credits")
-    print(f"  Your budget: 20,000 credits")
-    print(f"  ✅ Feasible!" if total_games * cost_per_game_1_market <= 20000 else "  ⚠️  Over budget!")
+    # Cost estimates based on actual API usage (~90 credits per game for 9 markets)
+    cost_per_game_all_markets = 90
     
-    print(f"\nScenario 2: Fetch 4 markets (points, rebounds, assists, 3s)")
-    print(f"  Cost: {total_games:.0f} games × 40 credits = {total_games * cost_per_game_4_markets:.0f} credits")
-    print(f"  Your budget: 20,000 credits")
-    print(f"  ✅ Feasible!" if total_games * cost_per_game_4_markets <= 20000 else "  ⚠️  Over budget!")
+    total_cost = total_games * cost_per_game_all_markets
     
-    print(f"\nScenario 3: Strategic approach (recommended)")
-    print(f"  - Fetch all games, 1 market: ~{total_games * cost_per_game_1_market:.0f} credits")
-    print(f"  - Leaves {20000 - (total_games * cost_per_game_1_market):.0f} credits for:")
-    print(f"    • Additional markets for interesting games")
-    print(f"    • Re-fetching specific dates")
-    print(f"    • Future analysis")
+    print(f"\n📊 All 9 Markets (default):")
+    print(f"   Markets: points, rebounds, assists, threes, blocks, steals,")
+    print(f"            double_double, triple_double, pts+reb+ast")
+    print(f"   {num_game_days} game days × {avg_games_per_day:.1f} avg games/day = {total_games:.0f} total games")
+    print(f"   Cost: {total_games:.0f} games × ~90 credits = ~{total_cost:,.0f} credits")
     
     print("="*60 + "\n")
 
@@ -282,15 +276,16 @@ def main(season=None):
     print("🎯 NEXT STEPS")
     print("="*60)
     print(f"""
-1. We've identified {len(unique_dates)} game days in {season} season
+1. Calendar built: {len(unique_dates)} game days for {season} ({unique_dates[0]} to {unique_dates[-1]})
 
-2. To fetch props for this season:
-   python scripts/fetch_and_build_season_props.py --season {season} --market player_threes
+2. To fetch historical props:
+   python scripts/fetch_historical_nba_prop_markets.py --season {season} --mode 1  # Test (opening day)
+   python scripts/fetch_historical_nba_prop_markets.py --season {season} --mode 2  # Full season
 
 This will:
-- Check which dates already have props
-- Fetch missing dates from The Odds API
-- Combine all props into consensus dataset
+- Skip dates that already have props saved
+- Skip future dates (historical API only)
+- Save props to data/01_input/the-odds-api/nba/historical_props/{season}/
 """)
     
     return unique_dates, games_df, opening_day

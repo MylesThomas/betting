@@ -4,7 +4,7 @@ AWS Lambda Function - Daily Dashboard Update
 This Lambda function:
 1. Fetches secrets from AWS Secrets Manager
 2. Clones the GitHub repository
-3. Runs the daily update script (find_nba_arb_opportunities.py)
+3. Runs the arbitrage finders (NBA and NFL)
 4. Pushes changes back to GitHub
 5. Streamlit Cloud auto-deploys the changes
 
@@ -155,7 +155,7 @@ def lambda_handler(event, context):
         dict: Response with statusCode and body
     """
     print("=" * 80)
-    print("🏀 TQS NBA Props Dashboard - Daily Update (AWS Lambda)")
+    print("🏀🏈 TQS Props Dashboard - Daily Update (AWS Lambda)")
     print("=" * 80)
     print(f"Execution time: {datetime.now().isoformat()}")
     print("")
@@ -207,7 +207,7 @@ def lambda_handler(event, context):
         print("✅ Git configured")
         print("")
         
-        # Step 4: Run the arbitrage finder
+        # Step 4: Run the arbitrage finders (NBA and NFL)
         print("🔍 Step 4: Finding arbitrage opportunities...")
         print("   (Using packages from Lambda layer at /opt/python)")
         
@@ -217,21 +217,36 @@ def lambda_handler(event, context):
             f.write(env_content)
         
         # Set up environment with PYTHONPATH to include Lambda layer
-        # (os is already imported at top of file)
         script_env = os.environ.copy()
         script_env['ODDS_API_KEY'] = odds_api_key
         script_env['PYTHONPATH'] = '/opt/python'  # Allows script to access packages in Lambda layer
         
-        # Run the script
+        # Run NBA arbitrage finder
+        print("\n🏀 Running NBA arbitrage finder...")
         stdout, stderr, code = run_command([
             'python', 'scripts/find_nba_arb_opportunities.py',
             '--markets', 'player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists'
         ], cwd=work_dir, env=script_env)
         
         if code != 0:
-            raise Exception(f"Arbitrage finder failed: {stderr}")
+            print(f"⚠️  NBA arbitrage finder failed: {stderr}")
+            # Continue to NFL even if NBA fails
+        else:
+            print("✅ NBA arbitrage opportunities found")
         
-        print("✅ Arbitrage opportunities found")
+        # Run NFL arbitrage finder (all markets for the week)
+        print("\n🏈 Running NFL arbitrage finder...")
+        stdout, stderr, code = run_command([
+            'python', 'scripts/find_nfl_arb_opportunities.py',
+            '--week', '--all-markets'
+        ], cwd=work_dir, env=script_env)
+        
+        if code != 0:
+            print(f"⚠️  NFL arbitrage finder failed: {stderr}")
+            # Continue even if NFL fails
+        else:
+            print("✅ NFL arbitrage opportunities found")
+        
         print("")
         
         # Step 5: Commit and push changes
@@ -243,13 +258,15 @@ def lambda_handler(event, context):
         if not stdout.strip():
             print("ℹ️  No changes to commit")
         else:
-            # Add all arb output files and raw prop files
+            # Add all arb output files and raw prop files (NBA and NFL)
             run_command(['git', 'add', 'data/04_output/nba/arbs/*.csv'], cwd=work_dir)
+            run_command(['git', 'add', 'data/04_output/nfl/arbs/*.csv'], cwd=work_dir)
             run_command(['git', 'add', 'data/01_input/the-odds-api/nba/all_markets/*.csv'], cwd=work_dir)
+            run_command(['git', 'add', 'data/01_input/the-odds-api/nfl/all_markets/*.csv'], cwd=work_dir)
             
             # Commit
             today = datetime.now().strftime('%Y-%m-%d')
-            commit_msg = f"Daily update: arbs for {today} (automated via AWS Lambda)"
+            commit_msg = f"Daily update: NBA & NFL arbs for {today} (automated via AWS Lambda)"
             run_command(['git', 'commit', '-m', commit_msg], cwd=work_dir)
             
             # Push
@@ -269,11 +286,11 @@ def lambda_handler(event, context):
         print("View dashboard at: https://tqs-nba-props-dashboard.streamlit.app")
         
         # Send success notification
-        success_message = f"""✅ TQS NBA Props Dashboard - Daily Update Successful
+        success_message = f"""✅ TQS Props Dashboard - Daily Update Successful
 
 Execution time: {datetime.now().isoformat()}
 
-The arbitrage finder has completed successfully and new data has been pushed to GitHub.
+The NBA and NFL arbitrage finders have completed successfully and new data has been pushed to GitHub.
 
 Dashboard: https://tqs-nba-props-dashboard.streamlit.app
 
@@ -296,7 +313,7 @@ https://us-east-2.console.aws.amazon.com/cloudwatch/home?region=us-east-2#logsV2
         print("")
         
         # Send failure notification
-        failure_message = f"""❌ TQS NBA Props Dashboard - Daily Update FAILED
+        failure_message = f"""❌ TQS Props Dashboard - Daily Update FAILED
 
 Execution time: {datetime.now().isoformat()}
 

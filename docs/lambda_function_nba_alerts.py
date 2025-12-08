@@ -418,44 +418,75 @@ def save_arb_output(arbs_df, work_dir, timestamp=None):
 # EMAIL FORMATTING
 # ============================================================================
 
-def format_arb_email(arbs):
-    """Format arbs into email body."""
+def format_arb_email(high_value_arbs, other_arbs):
+    """Format arbs into email body with high-value at top, others below."""
     now = datetime.now(ZoneInfo(TIMEZONE))
+    total_arbs = len(high_value_arbs) + len(other_arbs)
+    
+    # Header depends on whether we have high-value arbs
+    if high_value_arbs:
+        header = "🚨 high-value nba arbs found! 🚨"
+        arb_summary = f"arbs found: {total_arbs} ({len(high_value_arbs)} high-value)"
+    else:
+        header = "📊 nba arb scan complete"
+        arb_summary = f"arbs found: {total_arbs} (none above threshold)"
     
     lines = [
-        "🚨 HIGH-VALUE NBA ARBS FOUND! 🚨",
+        header,
         "",
-        f"Time: {now.strftime('%Y-%m-%d %I:%M %p ET')}",
-        f"Arbs found: {len(arbs)}",
+        f"time: {now.strftime('%Y-%m-%d %I:%M %p ET')}",
+        arb_summary,
         "",
         "=" * 50,
         ""
     ]
     
-    for i, arb in enumerate(arbs, 1):
-        market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
+    # High-value arbs (detailed format)
+    if high_value_arbs:
+        for i, arb in enumerate(high_value_arbs, 1):
+            market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
+            
+            lines.extend([
+                f"#{i} - {arb['expected_profit_pct']:.2f}% PROFIT",
+                f"   Player: {arb['player']}",
+                f"   Market: {market_display} {arb['line']}",
+                f"   Game: {arb['game']}",
+                "",
+                f"   📈 OVER {arb['line']}: {arb['best_over_odds']:+d} @ {arb['best_over_book']}",
+                f"   📉 UNDER {arb['line']}: {arb['best_under_odds']:+d} @ {arb['best_under_book']}",
+                "",
+                f"   💰 Stake $100 total:",
+                f"      → ${arb['over_stake']:.2f} on OVER @ {arb['best_over_book']}",
+                f"      → ${arb['under_stake']:.2f} on UNDER @ {arb['best_under_book']}",
+                f"      → Guaranteed profit: ${arb['guaranteed_profit']:.2f}",
+                "",
+                "-" * 50,
+                ""
+            ])
+    
+    # Other arbs (compact format)
+    if other_arbs:
+        if high_value_arbs:
+            lines.extend([
+                "",
+                "=" * 50,
+                "📋 other arbs (below threshold):",
+                "=" * 50,
+                ""
+            ])
         
-        lines.extend([
-            f"#{i} - {arb['expected_profit_pct']:.2f}% PROFIT",
-            f"   Player: {arb['player']}",
-            f"   Market: {market_display} {arb['line']}",
-            f"   Game: {arb['game']}",
-            "",
-            f"   📈 OVER {arb['line']}: {arb['best_over_odds']:+d} @ {arb['best_over_book']}",
-            f"   📉 UNDER {arb['line']}: {arb['best_under_odds']:+d} @ {arb['best_under_book']}",
-            "",
-            f"   💰 Stake $100 total:",
-            f"      → ${arb['over_stake']:.2f} on OVER @ {arb['best_over_book']}",
-            f"      → ${arb['under_stake']:.2f} on UNDER @ {arb['best_under_book']}",
-            f"      → Guaranteed profit: ${arb['guaranteed_profit']:.2f}",
-            "",
-            "-" * 50,
-            ""
-        ])
+        for i, arb in enumerate(other_arbs, len(high_value_arbs) + 1):
+            market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
+            lines.extend([
+                f"#{i} - {arb['expected_profit_pct']:.2f}% | {arb['player']} | {market_display} {arb['line']}",
+                f"     Game: {arb['game']}",
+                f"     Over {arb['best_over_odds']:+d} @ {arb['best_over_book']} | Under {arb['best_under_odds']:+d} @ {arb['best_under_book']}",
+                ""
+            ])
     
     lines.extend([
         "",
-        "⚡ ACT FAST - Lines move quickly!",
+        "⚡ act fast - lines move quickly!",
         "",
         "Dashboard: https://tqs-props-dashboard.streamlit.app"
     ])
@@ -605,14 +636,22 @@ def lambda_handler(event, context):
             else:
                 print("ℹ️  No changes to commit")
         
-        # Step 8: Send email alert if high-value arbs found
+        # Step 8: Send email alert if any arbs found
         high_value_arbs = [a for a in all_arbs if a['expected_profit_pct'] >= min_profit]
+        other_arbs = [a for a in all_arbs if a['expected_profit_pct'] < min_profit]
         
         print(f"\nFound {len(high_value_arbs)} arbs with {min_profit}%+ edge (email threshold)")
         
-        if high_value_arbs:
-            subject = f"🚨 {len(high_value_arbs)} NBA Arb(s) Found! Best: {high_value_arbs[0]['expected_profit_pct']:.1f}%"
-            message = format_arb_email(high_value_arbs)
+        if all_arbs:
+            # Subject depends on whether we have high-value arbs
+            if high_value_arbs:
+                best_profit = high_value_arbs[0]['expected_profit_pct']
+                subject = f"🚨 {len(high_value_arbs)} NBA ARB(S) FOUND! BEST: {best_profit:.1f}%"
+            else:
+                best_profit = all_arbs[0]['expected_profit_pct']
+                subject = f"📊 nba arb scan: {len(all_arbs)} arbs found (best: {best_profit:.1f}%)"
+            
+            message = format_arb_email(high_value_arbs, other_arbs)
             
             print("\n" + "=" * 60)
             print("📧 SENDING ALERT EMAIL")
@@ -625,17 +664,17 @@ def lambda_handler(event, context):
                 'body': json.dumps({
                     'total_arbs': len(all_arbs),
                     'high_value_arbs': len(high_value_arbs),
-                    'best_profit': high_value_arbs[0]['expected_profit_pct'],
+                    'best_profit': best_profit,
                     'alert_sent': True,
                     'output_file': output_path
                 })
             }
         else:
-            print(f"No arbs with {min_profit}%+ edge - no alert sent")
+            print("No arbs found - no alert sent")
             return {
                 'statusCode': 200,
                 'body': json.dumps({
-                    'total_arbs': len(all_arbs),
+                    'total_arbs': 0,
                     'high_value_arbs': 0,
                     'alert_sent': False,
                     'output_file': output_path

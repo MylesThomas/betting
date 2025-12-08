@@ -12,9 +12,11 @@ Why it works:
 - Unlucky teams are due to regress UP (their bad luck won't continue)
 - The spread doesn't account for this regression
 
-Luck = score - adj_score (from Unexpected Points data)
-- Positive luck = overperformed (scored more than expected)
-- Negative luck = underperformed (scored less than expected)
+Luck = (score - adj_score) + (opp_adj_score - opp_score)
+      = offensive_luck + defensive_luck
+- Positive luck = overperformed (scored more AND/OR opponent scored less than expected)
+- Negative luck = underperformed (scored less AND/OR opponent scored more than expected)
+- Total luck is zero-sum per game (one team's luck = -1 × opponent's luck)
 
 Luck Categories (based on --threshold, default from config.py):
 - Lucky: luck >= +threshold
@@ -72,6 +74,7 @@ from nfl_luck_utils import (
     load_unexpected_points_data,
     build_prior_luck_lookup,
     get_prior_week_luck,
+    get_prior_week_luck_detailed,
     NFL_LINES_UPCOMING_DIR,
 )
 from config import NFL_LUCK_THRESHOLD_DEFAULT, EMOJI
@@ -568,9 +571,17 @@ for _, game in df_consensus.iterrows():
     away = game['away_abbr']
     home = game['home_abbr']
     
-    # Get prior luck for both teams (week before target_week = max_week)
-    away_prior_luck = get_prior_week_luck(luck_lookup, away, target_week)
-    home_prior_luck = get_prior_week_luck(luck_lookup, home, target_week)
+    # Get detailed prior luck for both teams (week before target_week = max_week)
+    away_luck_detail = get_prior_week_luck_detailed(luck_lookup, away, target_week)
+    home_luck_detail = get_prior_week_luck_detailed(luck_lookup, home, target_week)
+    
+    # Extract luck values
+    away_prior_luck = away_luck_detail['luck'] if away_luck_detail else None
+    home_prior_luck = home_luck_detail['luck'] if home_luck_detail else None
+    away_prior_off_luck = away_luck_detail['offensive_luck'] if away_luck_detail else None
+    away_prior_def_luck = away_luck_detail['defensive_luck'] if away_luck_detail else None
+    home_prior_off_luck = home_luck_detail['offensive_luck'] if home_luck_detail else None
+    home_prior_def_luck = home_luck_detail['defensive_luck'] if home_luck_detail else None
     
     # Categorize luck
     away_luck_cat = categorize_luck(away_prior_luck, threshold) if away_prior_luck is not None else 'Unknown'
@@ -597,11 +608,13 @@ for _, game in df_consensus.iterrows():
         if away_luck_cat == 'Unlucky':
             bet_team = away
             bet_spread = game['consensus_spread']
-            bet_reason = f"{away} was unlucky ({away_prior_luck:+.1f}), {home} was lucky ({home_prior_luck:+.1f})"
+            bet_reason = (f"{away} unlucky ({away_prior_luck:+.1f}: off {away_prior_off_luck:+.1f}, def {away_prior_def_luck:+.1f}), "
+                         f"{home} lucky ({home_prior_luck:+.1f}: off {home_prior_off_luck:+.1f}, def {home_prior_def_luck:+.1f})")
         else:
             bet_team = home
             bet_spread = -game['consensus_spread']
-            bet_reason = f"{home} was unlucky ({home_prior_luck:+.1f}), {away} was lucky ({away_prior_luck:+.1f})"
+            bet_reason = (f"{home} unlucky ({home_prior_luck:+.1f}: off {home_prior_off_luck:+.1f}, def {home_prior_def_luck:+.1f}), "
+                         f"{away} lucky ({away_prior_luck:+.1f}: off {away_prior_off_luck:+.1f}, def {away_prior_def_luck:+.1f})")
     
     game_time_et = game['game_time'].astimezone(ZoneInfo('America/New_York'))
     
@@ -641,8 +654,13 @@ for _, game in df_consensus.iterrows():
         'home_covered': 'n/a',
         'away_luck': 'n/a',
         'home_luck': 'n/a',
+        # Prior week luck (total = offensive + defensive)
         'away_prior_luck': away_prior_luck,
+        'away_prior_off_luck': away_prior_off_luck,
+        'away_prior_def_luck': away_prior_def_luck,
         'home_prior_luck': home_prior_luck,
+        'home_prior_off_luck': home_prior_off_luck,
+        'home_prior_def_luck': home_prior_def_luck,
         'away_luck_cat': away_luck_cat,
         'home_luck_cat': home_luck_cat,
         'matchup_type': f"{away_luck_cat} vs {home_luck_cat}",

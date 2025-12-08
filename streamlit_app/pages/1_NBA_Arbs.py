@@ -2,6 +2,25 @@
 TQS NBA Props Dashboard
 
 NBA Player Props Arbitrage Dashboard - find and track arb opportunities.
+
+DATA HANDLING:
+    - Lambda runs every 15 minutes, saving snapshots to data/04_output/nba/arbs/
+    - Each file contains arbs found at that moment (lines change frequently)
+    - Dashboard loads ALL files for a date and DEDUPES by (player, market, line)
+    - For duplicate combos, keeps the row with HIGHEST expected_profit_pct
+    - This captures the BEST opportunity that appeared during the day
+
+DEDUPLICATION:
+    - Same player/market/line may appear in multiple 15-min snapshots
+    - Odds fluctuate, so arb may be 3% at 10am but 5% at 2pm
+    - We keep the 5% version (best opportunity)
+    - Metrics (total arbs, profit, etc.) calculated on deduped data
+
+LIVE PROP BEHAVIOR (observed):
+    - Lines move frequently, especially close to game time
+    - Arb opportunities appear and disappear within minutes
+    - 15-min snapshots capture most opportunities
+    - Best arbs often last < 30 minutes before books adjust
 """
 
 import streamlit as st
@@ -232,7 +251,19 @@ DATA_DIR = Path(__file__).parent.parent.parent / "data/04_output/nba/arbs"
 # Helper functions
 @st.cache_data(ttl=60)
 def load_all_arbs():
-    """Load all arbitrage opportunities from all files."""
+    """
+    Load all arbitrage opportunities from all files.
+    
+    DEDUPLICATION STRATEGY:
+    - Multiple files may exist per day (Lambda runs every 15 min)
+    - Same player/market/line may appear in multiple files with different odds
+    - We keep the BEST opportunity (highest expected_profit_pct) for each:
+      - (file_date, player, market, line) combination
+    - This captures the best historical opportunity even as lines move
+    
+    Returns:
+        DataFrame with deduped arbs, keeping best expected_profit_pct per player/market/line/day
+    """
     if not DATA_DIR.exists():
         return None
     
@@ -246,6 +277,10 @@ def load_all_arbs():
     for arb_file in arb_files:
         try:
             df = pd.read_csv(arb_file)
+            
+            # Skip empty files
+            if len(df) == 0:
+                continue
             
             parts = arb_file.stem.split('_')
             date_str = parts[-2]
@@ -267,33 +302,86 @@ def load_all_arbs():
     
     combined_df = pd.concat(all_dfs, ignore_index=True)
     
+    # Deduplicate: for each (file_date, player, market, line), keep the row with best expected_profit_pct
+    if len(combined_df) > 0 and 'expected_profit_pct' in combined_df.columns:
+        # Sort by expected_profit_pct descending, then take first per group
+        combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
+        combined_df = combined_df.drop_duplicates(
+            subset=['file_date', 'player', 'market', 'line'],
+            keep='first'
+        )
+        # Re-sort by file_date (desc) then expected_profit_pct (desc)
+        combined_df = combined_df.sort_values(
+            ['file_date', 'expected_profit_pct'], 
+            ascending=[False, False]
+        )
+    
     return combined_df
 
 
 @st.cache_data(ttl=60)
 def get_arb_history():
-    """Get list of all historical arb files."""
+    """
+    Get historical summary by DATE (not by file).
+    
+    Multiple files may exist per day (Lambda runs every 15 min).
+    This function groups by date and shows deduped metrics.
+    """
     if not DATA_DIR.exists():
         return []
     
     arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"), reverse=True)
     
-    history = []
+    if not arb_files:
+        return []
+    
+    # Group files by date
+    files_by_date = {}
     for file in arb_files:
         try:
-            df = pd.read_csv(file)
-            
             parts = file.stem.split('_')
             date_str = parts[-2]
-            time_str = parts[-1]
-            
             file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-            file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
             
-            total_props = len(df)
+            if file_date not in files_by_date:
+                files_by_date[file_date] = []
+            files_by_date[file_date].append(file)
+        except:
+            continue
+    
+    history = []
+    for file_date, files in sorted(files_by_date.items(), reverse=True):
+        try:
+            # Load all files for this date
+            day_dfs = []
+            for file in files:
+                try:
+                    df = pd.read_csv(file)
+                    if len(df) > 0:
+                        day_dfs.append(df)
+                except:
+                    continue
             
-            arbs_df = df[df['is_arb'] == True] if 'is_arb' in df.columns else pd.DataFrame()
-            arbs_count = len(arbs_df)
+            if not day_dfs:
+                continue
+            
+            combined = pd.concat(day_dfs, ignore_index=True)
+            
+            # Dedupe by player/market/line, keep best expected_profit_pct
+            if 'expected_profit_pct' in combined.columns:
+                combined = combined.sort_values('expected_profit_pct', ascending=False)
+                deduped = combined.drop_duplicates(
+                    subset=['player', 'market', 'line'],
+                    keep='first'
+                )
+            else:
+                deduped = combined.drop_duplicates(
+                    subset=['player', 'market', 'line'],
+                    keep='first'
+                )
+            
+            # Calculate metrics on deduped data
+            arbs_df = deduped[deduped['is_arb'] == True] if 'is_arb' in deduped.columns else pd.DataFrame()
             
             total_wagered = 0
             total_profit = 0
@@ -309,15 +397,14 @@ def get_arb_history():
                     avg_profit_pct = arbs_df['expected_profit_pct'].mean()
                     max_profit_pct = arbs_df['expected_profit_pct'].max()
             
-            num_games = df['game'].nunique() if 'game' in df.columns else 0
+            num_games = deduped['game'].nunique() if 'game' in deduped.columns else 0
             
             history.append({
                 'date': file_date,
-                'datetime': file_datetime,
                 'num_games': num_games,
-                'file': file.name,
-                'prop_markets': total_props,
-                'arbs_found': arbs_count,
+                'num_snapshots': len(files),  # How many 15-min snapshots
+                'prop_markets': len(deduped),  # Unique player/market/line combos
+                'arbs_found': len(arbs_df),
                 'avg_profit': avg_profit_pct,
                 'max_profit': max_profit_pct,
                 'total_wagered': total_wagered,
@@ -772,9 +859,9 @@ def main():
     if history:
         history_df = pd.DataFrame(history)
         
-        st.markdown("**Recent Runs:**")
+        st.markdown("**Daily Summary (deduped by player/market/line, best profit kept):**")
         
-        column_order = ['date', 'num_games', 'prop_markets', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
+        column_order = ['date', 'num_games', 'num_snapshots', 'prop_markets', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
         display_history = history_df[column_order]
         
         def color_profit_gradient_history(val):
@@ -806,7 +893,8 @@ def main():
             column_config={
                 "date": st.column_config.TextColumn("Date"),
                 "num_games": st.column_config.NumberColumn("# Games", format="%d"),
-                "prop_markets": st.column_config.NumberColumn("Prop Markets", format="%d"),
+                "num_snapshots": st.column_config.NumberColumn("Snapshots", format="%d", help="Number of 15-min data snapshots"),
+                "prop_markets": st.column_config.NumberColumn("Unique Props", format="%d", help="Unique player/market/line combos"),
                 "arbs_found": st.column_config.NumberColumn("Arbs Found", format="%d"),
                 "avg_profit": st.column_config.NumberColumn("Avg Profit %", format="%.2f%%"),
                 "max_profit": st.column_config.NumberColumn("Best Arb", format="%.2f%%"),
