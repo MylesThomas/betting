@@ -287,10 +287,13 @@ def load_all_arbs():
             time_str = parts[-1]
             
             file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-            file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
+            file_datetime_utc = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
+            # Convert UTC to ET for display
+            file_datetime_utc = file_datetime_utc.replace(tzinfo=ZoneInfo('UTC'))
+            file_datetime_et = file_datetime_utc.astimezone(ZoneInfo('America/New_York'))
             
             df['file_date'] = file_date
-            df['file_datetime'] = file_datetime
+            df['file_datetime'] = file_datetime_et
             df['source_file'] = arb_file.name
             
             all_dfs.append(df)
@@ -700,6 +703,10 @@ def main():
         
         if 'game_time_et' in display_df.columns:
             display_df['game_time'] = display_df['game_time_et'].dt.strftime('%I:%M %p ET')
+        
+        # Format file_datetime to ET string
+        if 'file_datetime' in display_df.columns:
+            display_df['file_datetime'] = pd.to_datetime(display_df['file_datetime']).dt.strftime('%Y-%m-%d %I:%M:%S %p ET')
         
         cols_to_drop = ['game_time_et', 'game_date_et', 'file_date', 'source_file']
         for col in cols_to_drop:
