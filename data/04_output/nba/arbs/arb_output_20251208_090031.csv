@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Royce O'Neale,player_points,10.5,125,bovada,0.4444444444444444,-120,betmgm,0.5454545454545454,0.9898989898989898,1.0204081632653184,True,44.9,55.1,101.02,101.02,1.02,100.0,"Bet $44.90 Over @ bovada, $55.10 Under @ betmgm",Phoenix Suns @ Minnesota Timberwolves,2025-12-09T00:40:00Z,3
