@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Dru Smith,player_threes,0.5,100,betmgm,0.49999999999999994,107,betonlineag,0.4830917874396135,0.9830917874396135,1.7199017199017286,True,50.86,49.14,101.72,101.72,1.72,100.0,"Bet $50.86 Over @ betmgm, $49.14 Under @ betonlineag",Miami Heat @ Orlando Magic,2025-12-09T23:10:00Z,3
