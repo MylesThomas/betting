@@ -70,6 +70,7 @@ from nfl_luck_utils import (
     load_unexpected_points_data,
     build_prior_luck_lookup,
     get_prior_week_luck,
+    get_prior_week_luck_detailed,
     get_luck_matchup_ats_results,
     calculate_roi,
     LUCK_CATEGORIES,
@@ -78,6 +79,8 @@ from nfl_luck_utils import (
 )
 from nfl_team_utils import normalize_unexpected_points_abbr
 from config import NFL_LUCK_THRESHOLD_DEFAULT
+
+INPUT_DATA_PATH = Path("/Users/thomasmyles/dev/betting/data/01_input/unexpected_points/Unexpected Points Subscriber Data (before week 15).xlsx")
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Analyze NFL spread covering with both teams luck')
@@ -135,7 +138,7 @@ print("STEP 3: Loading Unexpected Points data")
 print("=" * 100)
 
 # Use the latest file
-up_path = Path("/Users/thomasmyles/dev/betting/data/01_input/unexpected_points/Unexpected Points Subscriber Data (tuesday before week 14).xlsx")
+up_path = Path(INPUT_DATA_PATH)
 df_up = load_unexpected_points_data(file_path=up_path)
 
 print(f"Unexpected Points data loaded: {len(df_up)} rows")
@@ -160,7 +163,7 @@ print("\n" + "=" * 100)
 print("STEP 5: Joining data and computing prior week luck for both teams")
 print("=" * 100)
 
-# Restructure UP data by game
+# Restructure UP data by game (include off/def luck breakdown)
 up_games = []
 for game_id, game_group in df_up.groupby('game_id'):
     if len(game_group) != 2:
@@ -177,10 +180,14 @@ for game_id, game_group in df_up.groupby('game_id'):
         'team1_score': team1['score'],
         'team1_adj_score': team1['adj_score'],
         'team1_luck': team1['luck'],
+        'team1_off_luck': team1['offensive_luck'],
+        'team1_def_luck': team1['defensive_luck'],
         'team2_abbr': team2['team_canonical'],
         'team2_score': team2['score'],
         'team2_adj_score': team2['adj_score'],
         'team2_luck': team2['luck'],
+        'team2_off_luck': team2['offensive_luck'],
+        'team2_def_luck': team2['defensive_luck'],
     })
 
 df_up_games = pd.DataFrame(up_games)
@@ -216,33 +223,49 @@ for idx, bet_game in df_consensus.iterrows():
     up_game = match.iloc[0]
     week = up_game['week']
     
-    # Determine which team is away/home in UP data
+    # Determine which team is away/home in UP data and extract THIS game's luck
     if up_game['team1_abbr'] == away:
         away_score = up_game['team1_score']
-        away_luck = up_game['team1_luck']
+        away_current_luck = up_game['team1_luck']
+        away_current_off_luck = up_game['team1_off_luck']
+        away_current_def_luck = up_game['team1_def_luck']
         home_score = up_game['team2_score']
-        home_luck = up_game['team2_luck']
+        home_current_luck = up_game['team2_luck']
+        home_current_off_luck = up_game['team2_off_luck']
+        home_current_def_luck = up_game['team2_def_luck']
     else:
         away_score = up_game['team2_score']
-        away_luck = up_game['team2_luck']
+        away_current_luck = up_game['team2_luck']
+        away_current_off_luck = up_game['team2_off_luck']
+        away_current_def_luck = up_game['team2_def_luck']
         home_score = up_game['team1_score']
-        home_luck = up_game['team1_luck']
+        home_current_luck = up_game['team1_luck']
+        home_current_off_luck = up_game['team1_off_luck']
+        home_current_def_luck = up_game['team1_def_luck']
     
-    # Get PRIOR WEEK luck for both teams (handles bye weeks - looks at last played game)
-    away_prior_luck = get_prior_week_luck(luck_lookup, away, week)
-    home_prior_luck = get_prior_week_luck(luck_lookup, home, week)
+    # Get PRIOR WEEK detailed luck for both teams (handles bye weeks - looks at last played game)
+    away_prior_detail = get_prior_week_luck_detailed(luck_lookup, away, week)
+    home_prior_detail = get_prior_week_luck_detailed(luck_lookup, home, week)
     
     # Skip week 1 games (no prior week) or games where we don't have prior data
-    if away_prior_luck is None or home_prior_luck is None:
+    if away_prior_detail is None or home_prior_detail is None:
         continue
+    
+    # Extract prior week luck values (total = offensive + defensive)
+    away_prior_luck = away_prior_detail['luck']
+    away_prior_off_luck = away_prior_detail['offensive_luck']
+    away_prior_def_luck = away_prior_detail['defensive_luck']
+    home_prior_luck = home_prior_detail['luck']
+    home_prior_off_luck = home_prior_detail['offensive_luck']
+    home_prior_def_luck = home_prior_detail['defensive_luck']
     
     # Calculate actual game outcome vs spread
     actual_margin = away_score - home_score  # From away perspective
     away_covered = (actual_margin + bet_game['consensus_spread']) > 0
     
     # Categorize prior week luck for both teams
-    away_luck_cat = categorize_luck(away_prior_luck, threshold)
-    home_luck_cat = categorize_luck(home_prior_luck, threshold)
+    away_prior_luck_cat = categorize_luck(away_prior_luck, threshold)
+    home_prior_luck_cat = categorize_luck(home_prior_luck, threshold)
     
     # Categorize spread size
     abs_spread = abs(bet_game['consensus_spread'])
@@ -268,16 +291,25 @@ for idx, bet_game in df_consensus.iterrows():
         'actual_margin': actual_margin,
         'away_covered': away_covered,
         'home_covered': not away_covered,
-        # This game's luck
-        'away_luck': away_luck,
-        'home_luck': home_luck,
-        # PRIOR week's luck (the key feature!)
+        # THIS game's luck (for verification)
+        'away_current_luck': away_current_luck,
+        'away_current_off_luck': away_current_off_luck,
+        'away_current_def_luck': away_current_def_luck,
+        'home_current_luck': home_current_luck,
+        'home_current_off_luck': home_current_off_luck,
+        'home_current_def_luck': home_current_def_luck,
+        # PRIOR week's luck breakdown (used for betting strategy!)
         'away_prior_luck': away_prior_luck,
+        'away_prior_off_luck': away_prior_off_luck,
+        'away_prior_def_luck': away_prior_def_luck,
         'home_prior_luck': home_prior_luck,
-        'away_luck_cat': away_luck_cat,
-        'home_luck_cat': home_luck_cat,
-        # Matchup type (away's luck vs home's luck)
-        'matchup_type': f"{away_luck_cat} vs {home_luck_cat}",
+        'home_prior_off_luck': home_prior_off_luck,
+        'home_prior_def_luck': home_prior_def_luck,
+        # Luck categories based on PRIOR week's total luck
+        'away_prior_luck_cat': away_prior_luck_cat,
+        'home_prior_luck_cat': home_prior_luck_cat,
+        # Matchup type (based on PRIOR week's luck)
+        'matchup_type': f"{away_prior_luck_cat} vs {home_prior_luck_cat}",
     })
 
 df_matched = pd.DataFrame(matched_games)
@@ -286,12 +318,12 @@ print(f"\n✅ Successfully matched {len(df_matched)} games with prior week luck!
 print(f"   (Week 1 games excluded - no prior week data)")
 
 # Show sample
-print("\nSample matched games with prior week luck:")
+print("\nSample matched games (PRIOR week luck determines category):")
 print(df_matched[[
     'week', 'away_abbr', 'home_abbr', 
-    'away_prior_luck', 'home_prior_luck',
-    'away_luck_cat', 'home_luck_cat',
-    'away_covered'
+    'away_prior_luck', 'away_prior_luck_cat',
+    'home_prior_luck', 'home_prior_luck_cat',
+    'matchup_type',
 ]].head(10).to_string())
 
 # =============================================================================
@@ -323,8 +355,8 @@ def print_matchup_results(df, cat1, cat2, label):
 # =============================================================================
 # Store for later use (needed by multiple sections)
 lucky_vs_unlucky = df_matched[
-    ((df_matched['away_luck_cat'] == 'Lucky') & (df_matched['home_luck_cat'] == 'Unlucky')) |
-    ((df_matched['away_luck_cat'] == 'Unlucky') & (df_matched['home_luck_cat'] == 'Lucky'))
+    ((df_matched['away_prior_luck_cat'] == 'Lucky') & (df_matched['home_prior_luck_cat'] == 'Unlucky')) |
+    ((df_matched['away_prior_luck_cat'] == 'Unlucky') & (df_matched['home_prior_luck_cat'] == 'Lucky'))
 ]
 
 # Skip full analysis if only running data quality check
@@ -347,18 +379,107 @@ if not args.data_quality_check:
     print("-" * 60)
     
     lucky_lucky = df_matched[
-        (df_matched['away_luck_cat'] == 'Lucky') & (df_matched['home_luck_cat'] == 'Lucky')
+        (df_matched['away_prior_luck_cat'] == 'Lucky') & (df_matched['home_prior_luck_cat'] == 'Lucky')
     ]
     unlucky_unlucky = df_matched[
-        (df_matched['away_luck_cat'] == 'Unlucky') & (df_matched['home_luck_cat'] == 'Unlucky')
+        (df_matched['away_prior_luck_cat'] == 'Unlucky') & (df_matched['home_prior_luck_cat'] == 'Unlucky')
     ]
     neutral_neutral = df_matched[
-        (df_matched['away_luck_cat'] == 'Neutral') & (df_matched['home_luck_cat'] == 'Neutral')
+        (df_matched['away_prior_luck_cat'] == 'Neutral') & (df_matched['home_prior_luck_cat'] == 'Neutral')
     ]
     
     print(f"   Lucky vs Lucky: {len(lucky_lucky)} games")
     print(f"   Unlucky vs Unlucky: {len(unlucky_unlucky)} games")
     print(f"   Neutral vs Neutral: {len(neutral_neutral)} games (baseline)")
+    
+    # =========================================================================
+    # STEP 7b: Week-by-Week Breakdown of Lucky vs Unlucky Strategy
+    # =========================================================================
+    print("\n" + "=" * 100)
+    print("WEEK-BY-WEEK BREAKDOWN: BET UNLUCKY TEAM IN LUCKY vs UNLUCKY MATCHUPS")
+    print("=" * 100)
+    
+    # Get all weeks sorted
+    weeks = sorted(lucky_vs_unlucky['week'].unique())
+    
+    # Track cumulative stats
+    cumulative_wins = 0
+    cumulative_losses = 0
+    
+    for week in weeks:
+        week_games = lucky_vs_unlucky[lucky_vs_unlucky['week'] == week].sort_values('game_time')
+        n_games = len(week_games)
+        
+        # Count unlucky team covers (our strategy)
+        week_wins = 0
+        week_losses = 0
+        bets = []
+        
+        for _, game in week_games.iterrows():
+            away = game['away_abbr']
+            home = game['home_abbr']
+            spread = game['consensus_spread']
+            away_score = int(game['away_score'])
+            home_score = int(game['home_score'])
+            
+            if game['away_prior_luck_cat'] == 'Unlucky':
+                # Away team is unlucky - bet away
+                bet_team = away
+                bet_opp = home
+                bet_spread = spread
+                unlucky_covered = game['away_covered']
+                unlucky_prior = game['away_prior_luck']
+                unlucky_off = game['away_prior_off_luck']
+                unlucky_def = game['away_prior_def_luck']
+                lucky_prior = game['home_prior_luck']
+                lucky_off = game['home_prior_off_luck']
+                lucky_def = game['home_prior_def_luck']
+            else:
+                # Home team is unlucky - bet home
+                bet_team = home
+                bet_opp = away
+                bet_spread = -spread  # Flip spread to home perspective
+                unlucky_covered = game['home_covered']
+                unlucky_prior = game['home_prior_luck']
+                unlucky_off = game['home_prior_off_luck']
+                unlucky_def = game['home_prior_def_luck']
+                lucky_prior = game['away_prior_luck']
+                lucky_off = game['away_prior_off_luck']
+                lucky_def = game['away_prior_def_luck']
+            
+            if unlucky_covered:
+                week_wins += 1
+                result = "✅ WIN"
+            else:
+                week_losses += 1
+                result = "❌ LOSS"
+            
+            # Format bet string with off/def breakdown
+            bet_str = f"{bet_team} {bet_spread:+.1f} vs {bet_opp} (Score: {away_score}-{home_score}) → {result}"
+            bet_str += f"\n         Unlucky {bet_team}: {unlucky_prior:+.1f} (off: {unlucky_off:+.1f}, def: {unlucky_def:+.1f})"
+            bet_str += f" | Lucky {bet_opp}: {lucky_prior:+.1f} (off: {lucky_off:+.1f}, def: {lucky_def:+.1f})"
+            bets.append(bet_str)
+        
+        # Update cumulative
+        cumulative_wins += week_wins
+        cumulative_losses += week_losses
+        
+        # Print week summary
+        print(f"\n{'='*80}")
+        print(f"WEEK {int(week)}: N={n_games} | Record: {week_wins}-{week_losses} | Cumulative: {cumulative_wins}-{cumulative_losses}")
+        print(f"{'='*80}")
+        
+        for bet in bets:
+            print(f"   • {bet}")
+    
+    # Final summary
+    total_games = cumulative_wins + cumulative_losses
+    if total_games > 0:
+        win_pct = cumulative_wins / total_games * 100
+        roi = calculate_roi(win_pct / 100)
+        print(f"\n{'='*100}")
+        print(f"📊 SEASON TOTAL: {cumulative_wins}-{cumulative_losses} ({win_pct:.1f}%) | ROI: {roi:+.1f}%")
+        print(f"{'='*100}")
 
 # =============================================================================
 # STEP 9: Grouped analysis by spread size and/or favorite/underdog
@@ -411,12 +532,12 @@ if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_chec
         lu_games = []
         
         lu_subset = df_subset[
-            ((df_subset['away_luck_cat'] == 'Lucky') & (df_subset['home_luck_cat'] == 'Unlucky')) |
-            ((df_subset['away_luck_cat'] == 'Unlucky') & (df_subset['home_luck_cat'] == 'Lucky'))
+            ((df_subset['away_prior_luck_cat'] == 'Lucky') & (df_subset['home_prior_luck_cat'] == 'Unlucky')) |
+            ((df_subset['away_prior_luck_cat'] == 'Unlucky') & (df_subset['home_prior_luck_cat'] == 'Lucky'))
         ]
         
         for _, game in lu_subset.iterrows():
-            if game['away_luck_cat'] == 'Unlucky':
+            if game['away_prior_luck_cat'] == 'Unlucky':
                 # Away team is unlucky
                 unlucky_is_favorite = game['away_is_favorite']
                 unlucky_covered = game['away_covered']
@@ -530,7 +651,7 @@ if args.show_games and not args.data_quality_check:
         home = game['home_abbr']
         week = int(game['week'])
         
-        if game['away_luck_cat'] == 'Lucky':
+        if game['away_prior_luck_cat'] == 'Lucky':
             lucky_team = away
             unlucky_team = home
             lucky_loc = 'Away'
@@ -893,7 +1014,7 @@ Key Finding:
         summary_unlucky_covers = 0
         
         for _, game in lucky_vs_unlucky.iterrows():
-            if game['away_luck_cat'] == 'Lucky':
+            if game['away_prior_luck_cat'] == 'Lucky':
                 if game['away_covered']:
                     summary_lucky_covers += 1
                 else:

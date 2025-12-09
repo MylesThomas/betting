@@ -140,10 +140,13 @@ def load_unexpected_points_data(file_path: Optional[Path] = None) -> pd.DataFram
     Note: Total luck is zero-sum per game (one team's luck = -1 × opponent's luck)
     """
     if file_path is None:
-        xlsx_files = sorted(UNEXPECTED_POINTS_DIR.glob("Unexpected Points*.xlsx"))
+        xlsx_files = list(UNEXPECTED_POINTS_DIR.glob("Unexpected Points*.xlsx"))
         if not xlsx_files:
             raise FileNotFoundError(f"No Unexpected Points files in {UNEXPECTED_POINTS_DIR}")
-        file_path = xlsx_files[-1]
+        # Sort by modification time (most recent first) to get the latest file
+        xlsx_files = sorted(xlsx_files, key=lambda f: f.stat().st_mtime, reverse=True)
+        file_path = xlsx_files[0]
+        print(f"Using latest Unexpected Points file: {file_path}")
     
     df = pd.read_excel(file_path, sheet_name="2025 Adjusted Scores")
     df['team_canonical'] = df['team'].apply(normalize_unexpected_points_abbr)
@@ -183,21 +186,56 @@ def load_unexpected_points_data(file_path: Optional[Path] = None) -> pd.DataFram
 
 def build_prior_luck_lookup(df_up: pd.DataFrame) -> Dict:
     """
-    Build lookup for prior week luck. Returns dict with:
-    - 'by_team_week': {(team, week): {'luck': total, 'offensive_luck': off, 'defensive_luck': def}}
+    Build lookup for prior week luck with full game context. Returns dict with:
+    - 'by_team_week': {(team, week): {luck details + game context}}
     - 'weeks_played': {team: [week1, week2, ...]}
+    
+    Each entry includes:
+    - luck, offensive_luck, defensive_luck
+    - week, opponent, score, opp_score, adj_score, opp_adj_score, won
     """
     by_team_week = {}
     weeks_played = {}
     
+    # First pass: collect all games by game_id to find opponents
+    games_by_id = {}
+    for _, row in df_up.iterrows():
+        game_id = row['game_id']
+        if game_id not in games_by_id:
+            games_by_id[game_id] = []
+        games_by_id[game_id].append(row)
+    
+    # Second pass: build lookup with opponent info
     for _, row in df_up.iterrows():
         team = row['team_canonical']
         week = row['week']
+        game_id = row['game_id']
+        score = row['score']
+        adj_score = row['adj_score']
+        
+        # Find opponent in same game
+        game_rows = games_by_id[game_id]
+        opp_row = None
+        for gr in game_rows:
+            if gr['team_canonical'] != team:
+                opp_row = gr
+                break
+        
+        opponent = opp_row['team_canonical'] if opp_row is not None else 'UNK'
+        opp_score = opp_row['score'] if opp_row is not None else 0
+        opp_adj_score = opp_row['adj_score'] if opp_row is not None else 0
         
         by_team_week[(team, week)] = {
             'luck': row['luck'],
-            'offensive_luck': row.get('offensive_luck', row['luck']),  # fallback for old data
+            'offensive_luck': row.get('offensive_luck', row['luck']),
             'defensive_luck': row.get('defensive_luck', 0.0),
+            'week': week,
+            'opponent': opponent,
+            'score': score,
+            'opp_score': opp_score,
+            'adj_score': adj_score,
+            'opp_adj_score': opp_adj_score,
+            'won': score > opp_score,
         }
         
         if team not in weeks_played:
@@ -226,6 +264,13 @@ def get_prior_week_luck_detailed(lookup: Dict, team: str, current_week: int) -> 
     - 'luck': total luck (offensive + defensive)
     - 'offensive_luck': how much team over/under performed scoring
     - 'defensive_luck': how much opponent over/under performed scoring
+    - 'week': the week number of the prior game
+    - 'opponent': opponent team abbreviation
+    - 'score': team's actual score
+    - 'opp_score': opponent's actual score
+    - 'adj_score': team's expected score
+    - 'opp_adj_score': opponent's expected score
+    - 'won': True if team won
     
     Returns None if no prior game found.
     """
@@ -251,7 +296,7 @@ def get_luck_matchup_ats_results(df: pd.DataFrame, luck_cat_a: str, luck_cat_b: 
     the Lucky team covered vs how often the Unlucky team covered.
     
     Args:
-        df: DataFrame with 'away_luck_cat', 'home_luck_cat', 'away_covered' columns
+        df: DataFrame with 'away_prior_luck_cat', 'home_prior_luck_cat', 'away_covered' columns
         luck_cat_a: First luck category ('Lucky', 'Neutral', or 'Unlucky')
         luck_cat_b: Second luck category ('Lucky', 'Neutral', or 'Unlucky')
     
@@ -259,8 +304,8 @@ def get_luck_matchup_ats_results(df: pd.DataFrame, luck_cat_a: str, luck_cat_b: 
         Tuple of (luck_cat_a_covers, luck_cat_b_covers, total_games)
     """
     subset = df[
-        ((df['away_luck_cat'] == luck_cat_a) & (df['home_luck_cat'] == luck_cat_b)) |
-        ((df['away_luck_cat'] == luck_cat_b) & (df['home_luck_cat'] == luck_cat_a))
+        ((df['away_prior_luck_cat'] == luck_cat_a) & (df['home_prior_luck_cat'] == luck_cat_b)) |
+        ((df['away_prior_luck_cat'] == luck_cat_b) & (df['home_prior_luck_cat'] == luck_cat_a))
     ]
     
     if len(subset) == 0:
@@ -270,7 +315,7 @@ def get_luck_matchup_ats_results(df: pd.DataFrame, luck_cat_a: str, luck_cat_b: 
     luck_cat_b_covers = 0
     
     for _, game in subset.iterrows():
-        if game['away_luck_cat'] == luck_cat_a:
+        if game['away_prior_luck_cat'] == luck_cat_a:
             if game['away_covered']:
                 luck_cat_a_covers += 1
             else:
