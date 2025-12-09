@@ -283,7 +283,7 @@ def lambda_handler(event, context):
         print("✅ Dashboard update complete!")
         print("=" * 80)
         print("")
-        print("View dashboard at: https://tqs-nba-props-dashboard.streamlit.app")
+        print("View dashboard at: https://tqs-props-dashboard.streamlit.app")
         
         # Send success notification
         success_message = f"""✅ TQS Props Dashboard - Daily Update Successful
@@ -292,7 +292,7 @@ Execution time: {datetime.now().isoformat()}
 
 The NBA and NFL arbitrage finders have completed successfully and new data has been pushed to GitHub.
 
-Dashboard: https://tqs-nba-props-dashboard.streamlit.app
+Dashboard: https://tqs-props-dashboard.streamlit.app
 
 Check CloudWatch Logs for details:
 https://us-east-2.console.aws.amazon.com/cloudwatch/home?region=us-east-2#logsV2:log-groups/log-group/$252Faws$252Flambda$252Fbetting-dashboard-daily-update

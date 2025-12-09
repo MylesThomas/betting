@@ -100,7 +100,7 @@ Lambda is FREE (well within free tier limits)
 
 **You're done when:**
 - Wake up at 6 AM CT
-- Open https://tqs-nba-props-dashboard.streamlit.app
+- Open https://tqs-props-dashboard.streamlit.app
 - See today's fresh data
 - You didn't run any commands
 - Profit! 💰

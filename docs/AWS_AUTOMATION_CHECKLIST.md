@@ -278,7 +278,7 @@ Note: You can do something like this, which is easier: rate(10 minutes)
   - Should see new commit with today's date
 
 - [ ] **10.4** Check Streamlit dashboard updated:
-  - Go to: https://tqs-nba-props-dashboard.streamlit.app
+  - Go to: https://tqs-props-dashboard.streamlit.app
   - Should show latest data
   - Check "Last Updated" timestamp
 
@@ -385,7 +385,7 @@ git pull
 
 You're done when:
 - [ ] Wake up at 6 AM CT (7 AM ET)
-- [ ] Open https://tqs-nba-props-dashboard.streamlit.app
+- [ ] Open https://tqs-props-dashboard.streamlit.app
 - [ ] See fresh data from that morning
 - [ ] You didn't have to run any commands! 🎉
 
