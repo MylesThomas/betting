@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Tyler Herro,player_points,22.5,-105,betmgm,0.5121951219512195,110,betonlineag,0.47619047619047616,0.9883855981416957,1.1750881316098694,True,51.82,48.18,101.17,101.18,1.17,100.0,"Bet $51.82 Over @ betmgm, $48.18 Under @ betonlineag",Miami Heat @ Orlando Magic,2025-12-09T23:10:00Z,7
