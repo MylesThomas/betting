@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Josh Hart,player_assists,3.5,174,fanduel,0.36496350364963503,-166,draftkings,0.6240601503759399,0.9890236540255749,1.1098163253981497,True,36.9,63.1,101.11,101.11,1.11,100.0,"Bet $36.90 Over @ fanduel, $63.10 Under @ draftkings",New York Knicks @ Toronto Raptors,2025-12-10T01:47:41Z,3
