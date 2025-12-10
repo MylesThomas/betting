@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Jake LaRavia,player_threes,0.5,115,fanatics,0.4651162790697675,-108,betonlineag,0.5192307692307693,0.9843470483005368,1.5901862789641008,True,47.25,52.75,101.59,101.59,1.59,100.0,"Bet $47.25 Over @ fanatics, $52.75 Under @ betonlineag",San Antonio Spurs @ Los Angeles Lakers,2025-12-11T03:00:00Z,3
