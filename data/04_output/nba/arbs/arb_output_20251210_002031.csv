@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Austin Reaves,player_assists,4.5,-106,fanduel,0.5145631067961165,109,draftkings,0.4784688995215311,0.9930320063176477,0.7016887308789688,True,51.82,48.18,100.71,100.7,0.7,100.0,"Bet $51.82 Over @ fanduel, $48.18 Under @ draftkings",San Antonio Spurs @ Los Angeles Lakers,2025-12-11T03:00:00Z,6
