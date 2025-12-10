@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Devin Vassell,player_threes,2.5,117,draftkings,0.4608294930875576,-115,betrivers,0.5348837209302325,0.9957132140177901,0.43052416316866626,True,46.28,53.72,100.43,100.43,0.43,100.0,"Bet $46.28 Over @ draftkings, $53.72 Under @ betrivers",San Antonio Spurs @ Los Angeles Lakers,2025-12-11T03:00:00Z,7
