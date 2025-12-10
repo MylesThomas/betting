@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Ryan Dunn,player_threes,0.5,-115,betmgm,0.5348837209302325,127,betonlineag,0.44052863436123346,0.975412355291466,2.5207436193677157,True,54.84,45.16,102.53,102.51,2.51,100.0,"Bet $54.84 Over @ betmgm, $45.16 Under @ betonlineag",Phoenix Suns @ Oklahoma City Thunder,2025-12-11T00:30:00Z,3
