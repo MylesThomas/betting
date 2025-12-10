@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Scottie Barnes,player_assists,4.5,119,williamhill_us,0.45662100456621,112,fanduel,0.4716981132075472,0.9283191177737572,7.72157772621811,True,49.19,50.81,107.73,107.72,7.72,100.0,"Bet $49.19 Over @ williamhill_us, $50.81 Under @ fanduel",New York Knicks @ Toronto Raptors,2025-12-10T01:47:41Z,3
