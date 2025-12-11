@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+John Collins,player_rebounds,4.5,116,betrivers,0.4629629629629629,-115,betmgm,0.5348837209302325,0.9978466838931954,0.21579628830386,True,46.4,53.6,100.22,100.21,0.21,100.0,"Bet $46.40 Over @ betrivers, $53.60 Under @ betmgm",Los Angeles Clippers @ Houston Rockets,2025-12-12T01:10:00Z,7
