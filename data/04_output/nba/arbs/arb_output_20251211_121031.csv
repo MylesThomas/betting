@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+James Harden,player_rebounds,4.5,115,betmgm,0.4651162790697675,-112,betrivers,0.5283018867924528,0.9934181658622203,0.6625441696113121,True,46.82,53.18,100.66,100.66,0.66,100.0,"Bet $46.82 Over @ betmgm, $53.18 Under @ betrivers",Los Angeles Clippers @ Houston Rockets,2025-12-12T01:10:00Z,7
