@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Malik Monk,player_points,13.5,-115,betmgm,0.5348837209302325,117,betrivers,0.4608294930875576,0.9957132140177901,0.43052416316866626,True,53.72,46.28,100.43,100.43,0.43,100.0,"Bet $53.72 Over @ betmgm, $46.28 Under @ betrivers",Denver Nuggets @ Sacramento Kings,2025-12-12T03:10:00Z,2
