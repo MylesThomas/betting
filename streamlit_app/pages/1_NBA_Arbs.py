@@ -439,7 +439,7 @@ def main():
         st.markdown("---")
         
         st.subheader("📈 Overall Summary (All Time)")
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             st.metric("🎯 Total Prop Markets", "0")
         with col2:
@@ -448,6 +448,8 @@ def main():
             st.metric("💰 Total Wagered", "$0.00")
         with col4:
             st.metric("💵 Total Profit", "$0.00")
+        with col5:
+            st.metric("📊 IRR (Annualized)", "N/A")
         
         return
     
@@ -565,6 +567,18 @@ def main():
         
         **Data refreshes automatically after scheduled runs.**
         """)
+        
+        st.markdown("---")
+        st.header("📊 IRR Calculation")
+        st.info("""
+        **IRR = (1 + ROI)^(365/days) - 1**
+        
+        Where:
+        - ROI = Total Profit / Total Wagered
+        - days = # of unique trading days
+        
+        *Example:* 3.6% ROI over 10 days → (1.036)^36.5 - 1 = **259%** annualized
+        """)
     
     # Apply filters
     filtered_df = df.copy()
@@ -602,7 +616,7 @@ def main():
     
     all_arbs_df = df[df['is_arb'] == True] if 'is_arb' in df.columns else pd.DataFrame()
     
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         total_prop_markets = len(df)
@@ -619,7 +633,7 @@ def main():
         if len(all_arbs_df) > 0 and 'over_stake' in all_arbs_df.columns and 'under_stake' in all_arbs_df.columns:
             total_wagered = (all_arbs_df['over_stake'].sum() + all_arbs_df['under_stake'].sum())
         
-        st.metric("💰 Total Wagered", f"${total_wagered:,.2f}",
+        st.metric("💰 Total Wagered", f"${total_wagered:,.0f}",
                  help="Total amount wagered across all arbs (assuming $100 stake)")
     
     with col4:
@@ -627,8 +641,32 @@ def main():
         if len(all_arbs_df) > 0 and 'guaranteed_profit' in all_arbs_df.columns:
             total_profit = all_arbs_df['guaranteed_profit'].sum()
         
-        st.metric("💵 Total Profit", f"${total_profit:,.2f}",
+        st.metric("💵 Total Profit", f"${total_profit:,.0f}",
                  help="Total guaranteed profit from all arbs")
+    
+    with col5:
+        # Calculate IRR using proper multi-day annualization
+        # Formula: (1 + total_roi)^(365/days) - 1
+        irr_str = "N/A"
+        if total_wagered > 0 and total_profit > 0:
+            # Count unique days with arb data
+            num_days = 1
+            if 'file_date' in all_arbs_df.columns:
+                num_days = all_arbs_df['file_date'].nunique()
+            elif 'game_date_et' in all_arbs_df.columns:
+                num_days = all_arbs_df['game_date_et'].nunique()
+            num_days = max(1, num_days)  # Avoid division by zero
+            
+            total_roi = total_profit / total_wagered
+            annualized_irr = ((1 + total_roi) ** (365 / num_days) - 1) * 100
+            
+            if annualized_irr >= 1000:
+                irr_str = f"{annualized_irr/1000:,.1f}K%"
+            else:
+                irr_str = f"{annualized_irr:,.0f}%"
+        
+        st.metric("📊 IRR (Annualized)", irr_str,
+                 help="Internal Rate of Return annualized based on actual days of data. Formula: (1 + total_roi)^(365/days) - 1")
     
     st.markdown("---")
     
