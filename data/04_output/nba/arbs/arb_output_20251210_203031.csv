@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Ajay Mitchell,player_points,11.5,-102,fanduel,0.504950495049505,105,draftkings,0.4878048780487805,0.9927553730982854,0.7297494526879111,True,50.86,49.14,100.72,100.74,0.72,100.0,"Bet $50.86 Over @ fanduel, $49.14 Under @ draftkings",Phoenix Suns @ Oklahoma City Thunder,2025-12-11T00:42:00Z,4
