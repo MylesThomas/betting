@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Patrick Williams,player_points,7.5,102,fanduel,0.49504950495049505,-101,draftkings,0.5024875621890548,0.9975370671395498,0.24690138758578506,True,49.63,50.37,100.25,100.24,0.24,100.0,"Bet $49.63 Over @ fanduel, $50.37 Under @ draftkings",Chicago Bulls @ Charlotte Hornets,2025-12-13T00:10:00Z,4
