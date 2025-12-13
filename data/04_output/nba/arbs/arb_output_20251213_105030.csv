@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Cason Wallace,player_points,7.5,100,betmgm,0.49999999999999994,101,draftkings,0.4975124378109453,0.9975124378109452,0.24937655860348684,True,50.12,49.88,100.24,100.26,0.24,100.0,"Bet $50.12 Over @ betmgm, $49.88 Under @ draftkings",San Antonio Spurs @ Oklahoma City Thunder,2025-12-14T02:00:00Z,6
