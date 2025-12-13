@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Karl-Anthony Towns,player_threes,2.5,190,bovada,0.3448275862068966,-186,betrivers,0.6503496503496503,0.9951772365565469,0.4846135207172253,True,34.65,65.35,100.48,100.48,0.48,100.0,"Bet $34.65 Over @ bovada, $65.35 Under @ betrivers",New York Knicks @ Orlando Magic,2025-12-13T22:30:00Z,4
