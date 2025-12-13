@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Jalen Brunson,player_points,28.5,-113,betrivers,0.5305164319248827,115,bovada,0.46511627906976744,0.9956327109946501,0.43864458822238106,True,53.28,46.72,100.43,100.45,0.43,100.0,"Bet $53.28 Over @ betrivers, $46.72 Under @ bovada",New York Knicks @ Orlando Magic,2025-12-13T22:30:00Z,2
