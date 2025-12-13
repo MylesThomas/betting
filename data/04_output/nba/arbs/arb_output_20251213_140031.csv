@@ -1,0 +1,2 @@
+player,market,line,best_over_odds,best_over_book,best_over_implied,best_under_odds,best_under_book,best_under_implied,total_prob,expected_profit_pct,is_arb,over_stake,under_stake,over_return,under_return,guaranteed_profit,total_wager,recommendation,game,game_time,num_bookmakers
+Anthony Black,player_assists,4.5,145,bovada,0.40816326530612246,-141,betrivers,0.5850622406639004,0.9932255059700229,0.6820700827010029,True,41.09,58.91,100.67,100.69,0.67,100.0,"Bet $41.09 Over @ bovada, $58.91 Under @ betrivers",New York Knicks @ Orlando Magic,2025-12-13T22:30:00Z,5
