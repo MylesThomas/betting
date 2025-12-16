@@ -58,6 +58,8 @@ import numpy as np
 from pathlib import Path
 import sys
 import argparse
+import glob
+from datetime import datetime
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
@@ -78,9 +80,33 @@ from nfl_luck_utils import (
     NFL_2025_BYE_WEEKS,
 )
 from nfl_team_utils import normalize_unexpected_points_abbr
-from config import NFL_LUCK_THRESHOLD_DEFAULT
+from config import NFL_LUCK_THRESHOLD_DEFAULT, DATA_ROOT
 
-INPUT_DATA_PATH = Path("/Users/thomasmyles/dev/betting/data/01_input/unexpected_points/Unexpected Points Subscriber Data (before week 15).xlsx")
+# =============================================================================
+# Find most recent Unexpected Points file
+# =============================================================================
+def find_most_recent_unexpected_points_file() -> Path:
+    """Find the most recent Unexpected Points Excel file."""
+    up_dir = DATA_ROOT / "01_input/unexpected_points"
+    
+    # Look for Excel files matching the pattern
+    pattern = "Unexpected Points Subscriber Data*.xlsx"
+    matching_files = sorted(glob.glob(str(up_dir / pattern)))
+    
+    if not matching_files:
+        raise FileNotFoundError(
+            f"No Unexpected Points files found in: {up_dir}\n"
+            f"   Download the latest data from:\n"
+            f"   https://docs.google.com/spreadsheets/d/1ktlf_ekms7aI6r0tF_HeX0zaxps-bHWYsgglUReC558/edit"
+        )
+    
+    # Sort by modification time (most recent first)
+    matching_files.sort(key=lambda x: Path(x).stat().st_mtime, reverse=True)
+    most_recent = Path(matching_files[0])
+    
+    return most_recent
+
+INPUT_DATA_PATH = find_most_recent_unexpected_points_file()
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Analyze NFL spread covering with both teams luck')
@@ -109,6 +135,10 @@ print(f"\nLuck threshold: ±{threshold}")
 print(f"  Lucky: luck >= +{threshold}")
 print(f"  Neutral: -{threshold} < luck < +{threshold}")
 print(f"  Unlucky: luck <= -{threshold}")
+
+print(f"\nℹ️  Using most recent Unexpected Points file:")
+print(f"   {INPUT_DATA_PATH.name}")
+print(f"   Modified: {datetime.fromtimestamp(INPUT_DATA_PATH.stat().st_mtime).strftime('%Y-%m-%d %H:%M:%S')}")
 
 # =============================================================================
 # STEP 1: Load all NFL betting lines
