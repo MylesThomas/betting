@@ -9,6 +9,13 @@ Strategy:
 - YOU control when requests fire (no auto-fetching)
 """
 
+import ssl
+import urllib3
+
+# SSL fix for Mac
+ssl._create_default_https_context = ssl._create_unverified_context
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import requests
 import pandas as pd
 from datetime import datetime
@@ -63,7 +70,7 @@ class OddsAPIEfficient:
         params['apiKey'] = self.api_key
         
         try:
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, verify=False)
             response.raise_for_status()
             
             # Track credits

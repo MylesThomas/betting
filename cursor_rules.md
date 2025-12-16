@@ -120,5 +120,7 @@ Examples you can copy and tweak:
 - git commit --message "docs: clarify DCO vs PGP signing"
 - git commit --message "build: cache deps to cut CI time"
 
-10. 
+10. don't stage large data files that won't make it past the github file size limitm of 50 (hard limit 100mb)
+- stop me and lmk that i need to .gitignore or do something else
 
+11. 
