@@ -46,6 +46,7 @@ Environment Variables Required:
 - AWS_REGION_NAME: us-east-2
 - SNS_TOPIC_ARN: arn:aws:sns:us-east-2:ACCOUNT_ID:betting-arb-alerts (optional)
 - MIN_PROFIT_PCT: 10.0 (optional, default 10.0 - only send email for 10%+ arbs)
+- MAX_STALENESS_MINUTES: 2.0 (optional, default 2.0 - max minutes since last bookmaker update)
 
 Secrets Required (in AWS Secrets Manager):
 - ODDS_API_KEY: Your Odds API key
@@ -79,7 +80,7 @@ import json
 import os
 import subprocess
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from botocore.exceptions import ClientError
 
@@ -280,18 +281,48 @@ def get_event_props(api_key, event_id):
     return response.json()
 
 
-def parse_props(event_data):
-    """Parse event props into list of dicts."""
+def parse_props(event_data, api_fetch_time=None):
+    """
+    Parse event props into list of dicts with staleness tracking.
+    
+    Args:
+        event_data: API response for a single event
+        api_fetch_time: datetime when API was called (UTC)
+    
+    Returns:
+        list of dicts with prop data including staleness info
+    """
     props = []
+    
+    if api_fetch_time is None:
+        api_fetch_time = datetime.now(timezone.utc)
     
     game = f"{event_data['away_team']} @ {event_data['home_team']}"
     game_time = event_data.get('commence_time')
     
+    # Convert fetch time to ET for display
+    et_tz = ZoneInfo(TIMEZONE)
+    fetch_time_et = api_fetch_time.astimezone(et_tz).strftime('%Y-%m-%d %H:%M:%S ET')
+    
     for bookmaker in event_data.get('bookmakers', []):
         book = bookmaker['key']
+        bookmaker_last_update = bookmaker.get('last_update')  # Capture bookmaker timestamp
         
         for market in bookmaker.get('markets', []):
             market_key = market['key']
+            market_last_update = market.get('last_update')  # Capture market timestamp
+            
+            # Calculate staleness (use market timestamp if available, else bookmaker)
+            last_update_str = market_last_update or bookmaker_last_update
+            staleness_minutes = None
+            
+            if last_update_str:
+                try:
+                    last_update_dt = datetime.fromisoformat(last_update_str.replace('Z', '+00:00'))
+                    staleness_seconds = (api_fetch_time - last_update_dt).total_seconds()
+                    staleness_minutes = staleness_seconds / 60.0
+                except:
+                    pass
             
             player_lines = {}
             for outcome in market.get('outcomes', []):
@@ -308,7 +339,12 @@ def parse_props(event_data):
                         'line': line,
                         'bookmaker': book,
                         'game': game,
-                        'game_time': game_time
+                        'game_time': game_time,
+                        'bookmaker_last_update': bookmaker_last_update,
+                        'market_last_update': market_last_update,
+                        'staleness_minutes': staleness_minutes,
+                        'api_fetch_time': api_fetch_time.isoformat(),
+                        'fetch_time_et': fetch_time_et
                     }
                 
                 if bet_type == 'Over':
@@ -321,11 +357,19 @@ def parse_props(event_data):
     return props
 
 
-def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0):
+def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0, max_staleness_minutes=2.0):
     """
     Find all arbs with profit >= min_profit_pct (default 0 = all arbs).
+    Includes staleness tracking for all bookmakers.
     
-    Returns list of dicts with full arb info compatible with dashboard schema.
+    Args:
+        all_props: List of prop dicts with staleness info
+        min_profit_pct: Minimum profit % threshold
+        total_stake: Total wager amount for stake calculations
+        max_staleness_minutes: Max minutes since last update (default 2.0)
+    
+    Returns:
+        list of dicts with full arb info compatible with dashboard schema
     """
     if not all_props:
         return []
@@ -375,6 +419,21 @@ def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0):
             # Build recommendation string
             recommendation = f"Bet ${over_stake:.2f} Over @ {best_over['bookmaker']}, ${under_stake:.2f} Under @ {best_under['bookmaker']}"
             
+            # Staleness tracking
+            over_staleness = best_over.get('staleness_minutes', 0) or 0
+            under_staleness = best_under.get('staleness_minutes', 0) or 0
+            max_staleness = max(over_staleness, under_staleness)
+            
+            # Determine if stale and which bookmaker(s)
+            is_stale = max_staleness > max_staleness_minutes
+            stale_bookmakers = []
+            if over_staleness > max_staleness_minutes:
+                stale_bookmakers.append(best_over['bookmaker'])
+            if under_staleness > max_staleness_minutes and best_under['bookmaker'] not in stale_bookmakers:
+                stale_bookmakers.append(best_under['bookmaker'])
+            
+            stale_bookmaker = ', '.join(stale_bookmakers) if stale_bookmakers else None
+            
             arbs.append({
                 'player': player,
                 'market': market,
@@ -397,7 +456,13 @@ def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0):
                 'recommendation': recommendation,
                 'game': group['game'].iloc[0],
                 'game_time': group['game_time'].iloc[0],
-                'num_bookmakers': len(group['bookmaker'].unique())
+                'num_bookmakers': len(group['bookmaker'].unique()),
+                'over_staleness_minutes': over_staleness,
+                'under_staleness_minutes': under_staleness,
+                'max_staleness': max_staleness,
+                'is_stale': is_stale,
+                'stale_bookmaker': stale_bookmaker,
+                'fetch_time_et': best_over.get('fetch_time_et', '')
             })
     
     return sorted(arbs, key=lambda x: x['expected_profit_pct'], reverse=True)
@@ -600,18 +665,21 @@ def lambda_handler(event, context):
                 'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
                 'over_stake', 'under_stake', 'over_return', 'under_return',
                 'guaranteed_profit', 'total_wager', 'recommendation', 'game',
-                'game_time', 'num_bookmakers'
+                'game_time', 'num_bookmakers', 'over_staleness_minutes',
+                'under_staleness_minutes', 'max_staleness', 'is_stale',
+                'stale_bookmaker', 'fetch_time_et'
             ])
             save_arb_output(empty_df, work_dir, timestamp=now)
             return {'statusCode': 200, 'body': 'No games today'}
         
         # Step 4: Fetch props for all games
         print("\n📥 Step 4: Fetching props for each game...")
+        api_fetch_time = datetime.now(timezone.utc)  # Capture fetch time for staleness tracking
         all_props = []
         for event in events:
             try:
                 props_data = get_event_props(odds_api_key, event['id'])
-                props = parse_props(props_data)
+                props = parse_props(props_data, api_fetch_time=api_fetch_time)
                 all_props.extend(props)
                 print(f"  ✓ {event['away_team']} @ {event['home_team']}: {len(props)} props")
             except Exception as e:
@@ -621,24 +689,39 @@ def lambda_handler(event, context):
         
         # Step 5: Find arbs
         print("\n🔍 Step 5: Finding arbitrage opportunities...")
-        all_arbs = find_arbs(all_props, min_profit_pct=0.0)
+        max_staleness_minutes = float(os.environ.get('MAX_STALENESS_MINUTES', '2.0'))
+        all_arbs = find_arbs(all_props, min_profit_pct=0.0, max_staleness_minutes=max_staleness_minutes)
         
         print(f"\n{'='*60}")
         print(f"📊 ALL ARBS FOUND: {len(all_arbs)}")
+        
+        # Staleness summary
+        if all_arbs:
+            stale_arbs = [a for a in all_arbs if a.get('is_stale', False)]
+            fresh_arbs = [a for a in all_arbs if not a.get('is_stale', False)]
+            print(f"   ✅ Fresh lines (≤{max_staleness_minutes} min): {len(fresh_arbs)}")
+            print(f"   ⚠️  Stale lines (>{max_staleness_minutes} min): {len(stale_arbs)}")
+        
         print(f"{'='*60}")
         
         if all_arbs:
             for i, arb in enumerate(all_arbs, 1):
                 market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
                 alert_flag = "🚨" if arb['expected_profit_pct'] >= min_profit else "  "
-                print(f"{alert_flag} {i:2d}. {arb['expected_profit_pct']:5.2f}% | {arb['player']:<25s} | {market_display} {arb['line']}")
+                stale_flag = " [STALE]" if arb.get('is_stale', False) else ""
+                print(f"{alert_flag} {i:2d}. {arb['expected_profit_pct']:5.2f}% | {arb['player']:<25s} | {market_display} {arb['line']}{stale_flag}")
                 print(f"        Over {arb['best_over_odds']:+4d} @ {arb['best_over_book']:<12s} | Under {arb['best_under_odds']:+4d} @ {arb['best_under_book']}")
+                if arb.get('is_stale', False):
+                    staleness = arb.get('max_staleness', 0)
+                    stale_book = arb.get('stale_bookmaker', 'Unknown')
+                    print(f"        ⚠️  Stale: {stale_book} ({staleness:.1f} min old)")
         else:
             print("   No arbs found at all.")
         
         print(f"{'='*60}\n")
         
         # Step 6: Save output file (sorted by expected_profit_pct descending)
+        # All arbs are saved to CSV (including stale ones for tracking)
         print("💾 Step 6: Saving output file...")
         if all_arbs:
             arbs_df = pd.DataFrame(all_arbs)
@@ -650,10 +733,13 @@ def lambda_handler(event, context):
                 'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
                 'over_stake', 'under_stake', 'over_return', 'under_return',
                 'guaranteed_profit', 'total_wager', 'recommendation', 'game',
-                'game_time', 'num_bookmakers'
+                'game_time', 'num_bookmakers', 'over_staleness_minutes',
+                'under_staleness_minutes', 'max_staleness', 'is_stale',
+                'stale_bookmaker', 'fetch_time_et'
             ])
         
         output_path = save_arb_output(arbs_df, work_dir, timestamp=now)
+        print(f"   💡 Note: CSV includes all arbs (stale ones flagged with is_stale=True)")
         
         # Step 7: Commit and push (only in Lambda)
         if is_lambda and github_token:
@@ -676,13 +762,21 @@ def lambda_handler(event, context):
             else:
                 print("ℹ️  No changes to commit")
         
-        # Step 8: Send email alert if any arbs found
-        high_value_arbs = [a for a in all_arbs if a['expected_profit_pct'] >= min_profit]
-        other_arbs = [a for a in all_arbs if a['expected_profit_pct'] < min_profit]
+        # Step 8: Send email alert if any FRESH high-value arbs found
+        # Filter out stale arbs from email alerts (but keep them in CSV for tracking)
+        fresh_arbs = [a for a in all_arbs if not a.get('is_stale', False)]
+        stale_arbs = [a for a in all_arbs if a.get('is_stale', False)]
         
-        print(f"\nFound {len(high_value_arbs)} arbs with {min_profit}%+ edge (email threshold)")
+        high_value_arbs = [a for a in fresh_arbs if a['expected_profit_pct'] >= min_profit]
+        other_arbs = [a for a in fresh_arbs if a['expected_profit_pct'] < min_profit]
         
-        # Only send email if we have HIGH-VALUE arbs (not every time we find any arb)
+        print(f"\n📊 EMAIL FILTERING:")
+        print(f"   Total arbs found: {len(all_arbs)}")
+        print(f"   Fresh arbs (≤{max_staleness_minutes} min): {len(fresh_arbs)}")
+        print(f"   Stale arbs (filtered from email): {len(stale_arbs)}")
+        print(f"   Fresh arbs with {min_profit}%+ edge: {len(high_value_arbs)}")
+        
+        # Only send email if we have FRESH HIGH-VALUE arbs
         if high_value_arbs:
             best_profit = high_value_arbs[0]['expected_profit_pct']
             subject = f"🚨 {len(high_value_arbs)} NBA ARB(S) FOUND! BEST: {best_profit:.1f}%"

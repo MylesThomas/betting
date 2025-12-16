@@ -40,6 +40,12 @@ USAGE:
     # Combine markets
     python scripts/find_nba_arb_opportunities.py --markets player_threes,player_points,player_rebounds
     
+    # Adjust staleness threshold (default: 2 minutes)
+    python scripts/find_nba_arb_opportunities.py --max-staleness-minutes 5.0
+    
+    # Remove stale arbs from output CSV (default: keep all, just flag)
+    python scripts/find_nba_arb_opportunities.py --filter-stale
+    
     # Historical backfill (get odds from past dates at 5pm UTC = noon ET)
     python scripts/find_nba_arb_opportunities.py --historical --start 2025-10-21 --end 2025-11-20
     
@@ -128,6 +134,41 @@ SSL CERTIFICATE FIX:
     SSL verification is disabled by default (common issue with pyenv on macOS).
     This is safe for development with trusted APIs like The Odds API.
     See api_setup/fixing_ssl.md for details.
+
+STALENESS TRACKING (NEW):
+    Bookmaker lines in the-odds-api sometimes lag behind their actual websites, creating
+    "phantom arbs" that appear profitable but don't actually exist when checked on site.
+    
+    Analysis showed 82% of arbs involved Bovada, with 3.2x higher avg profits (8.65% vs 2.74%).
+    These were mostly phantom arbs from stale API data.
+    
+    SOLUTION: Track last_update timestamps and FLAG stale lines from ANY bookmaker.
+    
+    Default behavior: 
+        - ALL arbs saved to CSV (including stale ones)
+        - Stale arbs marked with 'is_stale=True' column
+        - Email alerts can filter out stale ones using 'is_stale' column
+        - Keeps all data for tracking/analysis
+    
+    Options:
+        --max-staleness-minutes X.X  : Set custom threshold (default: 2.0 minutes)
+        --filter-stale               : Remove stale arbs from output CSV (not recommended)
+    
+    New CSV columns:
+        - fetch_time_et: When this data was pulled from the API (Eastern Time)
+        - over_minutes_stale, under_minutes_stale: Staleness of each side
+        - over_last_update, under_last_update: Timestamps when odds last updated (UTC)
+        - max_staleness: Worst staleness of either side
+        - is_stale: TRUE if any side is stale (use this for email filtering!)
+        - stale_bookmaker: Which bookmaker(s) have stale lines
+        - verify_manually: TRUE for high-profit stale arbs (>10% profit + stale)
+    
+    Usage in Lambda/Email alerts:
+        # Filter out stale arbs before sending email
+        fresh_arbs = arbs_df[arbs_df['is_stale'] == False]
+        # Only send alerts for fresh_arbs
+    
+    See docs/BOVADA_STALENESS_IMPLEMENTATION.md for full details.
 
 TODO / FUTURE ENHANCEMENTS:
     - Cross-line arbitrage (e.g., Over 3.5 + Under 4.5 for same player)
@@ -412,12 +453,29 @@ def get_event_odds(api_key, event_id, markets=DEFAULT_MARKETS, historical_date=N
     return data, usage
 
 
-def parse_event_props_to_df(event_data):
-    """Parse event odds data into DataFrame
+def parse_event_props_to_df(event_data, api_fetch_time=None):
+    """Parse event odds data into DataFrame WITH STALENESS TRACKING
     
     Handles both regular and historical API response formats
+    
+    Args:
+        event_data: API response data
+        api_fetch_time: When we fetched from API (datetime, UTC). If None, uses current time.
+    
+    Returns:
+        DataFrame with staleness columns: bookmaker_last_update, market_last_update, minutes_stale, fetch_time_et
     """
+    from datetime import datetime, timezone
+    
     props_list = []
+    
+    # Use current time if not provided
+    if api_fetch_time is None:
+        api_fetch_time = datetime.now(timezone.utc)
+    
+    # Convert to ET for logging
+    from zoneinfo import ZoneInfo
+    fetch_time_et = api_fetch_time.astimezone(ZoneInfo('America/New_York'))
     
     # Historical endpoint wraps data in 'data' key
     if 'data' in event_data:
@@ -429,9 +487,21 @@ def parse_event_props_to_df(event_data):
     
     for bookmaker in event_data.get('bookmakers', []):
         bookmaker_name = bookmaker['key']
+        bookmaker_last_update = bookmaker.get('last_update')  # NEW: capture timestamp
         
         for market in bookmaker.get('markets', []):
             market_key = market['key']
+            market_last_update = market.get('last_update')  # NEW: market-level timestamp
+            
+            # Calculate staleness (minutes since last update)
+            if market_last_update:
+                try:
+                    last_update_dt = datetime.fromisoformat(market_last_update.replace('Z', '+00:00'))
+                    minutes_stale = (api_fetch_time - last_update_dt).total_seconds() / 60
+                except:
+                    minutes_stale = None
+            else:
+                minutes_stale = None
             
             player_line_props = {}
             
@@ -451,7 +521,12 @@ def parse_event_props_to_df(event_data):
                         'line': line,
                         'bookmaker': bookmaker_name,
                         'game': game_info,
-                        'game_time': game_time
+                        'game_time': game_time,
+                        # NEW STALENESS FIELDS:
+                        'bookmaker_last_update': bookmaker_last_update,
+                        'market_last_update': market_last_update,
+                        'minutes_stale': round(minutes_stale, 2) if minutes_stale is not None else None,
+                        'fetch_time_et': fetch_time_et.strftime('%Y-%m-%d %H:%M:%S ET'),  # When we pulled this data
                     }
                 
                 if bet_type == 'Over':
@@ -540,7 +615,13 @@ def find_best_odds_per_player(props_df):
                 'recommendation': recommendation,
                 'game': group['game'].iloc[0],
                 'game_time': group['game_time'].iloc[0],
-                'num_bookmakers': len(group['bookmaker'].unique())
+                'num_bookmakers': len(group['bookmaker'].unique()),
+                # NEW: Add staleness tracking for best over/under
+                'over_minutes_stale': best_over.get('minutes_stale'),
+                'under_minutes_stale': best_under.get('minutes_stale'),
+                'over_last_update': best_over.get('market_last_update'),
+                'under_last_update': best_under.get('market_last_update'),
+                'fetch_time_et': best_over.get('fetch_time_et'),  # When we pulled this data (ET)
             })
     
     return pd.DataFrame(best_odds)
@@ -571,6 +652,25 @@ def display_arb_opportunities(arbs_df, min_profit_pct=0.0):
         print(f"🏀 {row['player']} - {row['line']} {market_display}")
         print(f"   Game: {row['game']}")
         print(f"   Time: {row['game_time']}")
+        
+        # Show staleness info if available
+        if 'fetch_time_et' in row and pd.notna(row['fetch_time_et']):
+            # Format fetch time for readability: "Dec 15, 2025 at 10:54 PM ET"
+            try:
+                dt = datetime.strptime(row['fetch_time_et'], '%Y-%m-%d %H:%M:%S ET')
+                fetch_time_display = dt.strftime('%b %d, %Y at %I:%M %p ET')
+            except:
+                fetch_time_display = row['fetch_time_et']  # Fallback to original if parsing fails
+            print(f"   📅 Pulled: {fetch_time_display}")
+        
+        if 'is_stale' in row:
+            if row['is_stale']:
+                max_staleness = row.get('max_staleness', 0)
+                stale_book = row.get('stale_bookmaker', 'Unknown')
+                print(f"   ⚠️  STALE LINE: {stale_book} ({max_staleness:.1f} min old) - VERIFY ON SITE!")
+            else:
+                print(f"   ✅ FRESH LINE (recently updated)")
+        
         print(f"\n   💰 PROFIT: {row['expected_profit_pct']:.2f}%")
         print(f"   📊 Total Probability: {row['total_prob']:.2%} (< 100% = ARB!)")
         print(f"\n   📊 Odds & Implied Probabilities:")
@@ -745,7 +845,73 @@ def run_demo():
     print("="*80 + "\n")
 
 
-def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_time="17:00:00"):
+def add_staleness_flags(best_odds_df, max_staleness_minutes=2.0):
+    """Add staleness flags for ALL bookmakers (not just Bovada).
+    
+    Marks any arb where either side hasn't updated in >max_staleness_minutes.
+    This helps identify phantom arbs from any stale bookmaker.
+    
+    Args:
+        best_odds_df: DataFrame with best odds for each (player, market, line)
+        max_staleness_minutes: Threshold for flagging stale lines (default: 2 minutes)
+    
+    Returns:
+        DataFrame with added columns:
+            - max_staleness: Max of over/under staleness
+            - is_stale: Boolean - TRUE if any side is stale (ANY bookmaker)
+            - stale_bookmaker: Which bookmaker(s) have stale lines
+            - verify_manually: Boolean flag for high-profit stale arbs
+    """
+    df = best_odds_df.copy()
+    
+    # Calculate max staleness from either side
+    df['max_staleness'] = df[['over_minutes_stale', 'under_minutes_stale']].max(axis=1)
+    
+    # Flag if ANY side is stale (applies to ALL bookmakers now)
+    df['is_stale'] = df['max_staleness'] > max_staleness_minutes
+    
+    # Identify which bookmaker(s) have stale lines
+    def get_stale_bookmaker(row):
+        stale_books = []
+        if row.get('over_minutes_stale', 0) > max_staleness_minutes:
+            stale_books.append(row['best_over_book'])
+        if row.get('under_minutes_stale', 0) > max_staleness_minutes:
+            stale_books.append(row['best_under_book'])
+        return ', '.join(set(stale_books)) if stale_books else None
+    
+    df['stale_bookmaker'] = df.apply(get_stale_bookmaker, axis=1)
+    
+    # Flag high-profit stale arbs for manual verification (any bookmaker)
+    high_profit = df['expected_profit_pct'] > 10  # >10% profit is suspiciously high
+    stale = df['is_stale'] == True
+    
+    df['verify_manually'] = high_profit & stale
+    
+    return df
+
+
+def filter_stale_arbs(best_odds_df):
+    """Separate stale vs fresh arbs (for email filtering).
+    
+    Use this to filter stale arbs BEFORE sending email alerts, but keep them in CSV.
+    
+    Args:
+        best_odds_df: DataFrame with arb opportunities (must have 'is_stale' column)
+    
+    Returns:
+        (fresh_df, stale_df): DataFrames with fresh and stale arbs
+    """
+    df = best_odds_df.copy()
+    
+    # Separate based on is_stale flag
+    fresh_df = df[df['is_stale'] == False].copy()
+    stale_df = df[df['is_stale'] == True].copy()
+    
+    return fresh_df, stale_df
+
+
+def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_time="17:00:00", 
+         filter_stale_from_output=False, max_staleness_minutes=2.0):
     """Main execution function
     
     Args:
@@ -770,6 +936,10 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
         target_datetime = datetime.now(tz)
         display_date = target_datetime.date()
     
+    # Capture API fetch time for staleness tracking
+    from datetime import timezone
+    api_fetch_time = datetime.now(timezone.utc)
+    
     print("="*80)
     print("🏀 NBA PROPS ARBITRAGE FINDER")
     if is_historical:
@@ -779,6 +949,14 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
         print(f"📅 HISTORICAL MODE: {display_date.strftime('%Y-%m-%d')} @ {historical_time} UTC ({et_time.strftime('%H:%M:%S %Z')})")
     else:
         print(f"📅 {target_datetime.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    
+    # Show staleness tracking config
+    print(f"🔍 Staleness tracking: ENABLED (threshold: {max_staleness_minutes} minutes)")
+    if filter_stale_from_output:
+        print(f"⚠️  Stale arbs will be EXCLUDED from output CSV")
+    else:
+        print(f"✅ All arbs kept in CSV (stale ones flagged with 'is_stale' column)")
+    
     print("="*80 + "\n")
     
     try:
@@ -887,7 +1065,7 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
                     historical_iso = target_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
                 
                 event_odds, usage = get_event_odds(api_key, event['id'], markets=markets, historical_date=historical_iso)
-                event_props_df = parse_event_props_to_df(event_odds)
+                event_props_df = parse_event_props_to_df(event_odds, api_fetch_time=api_fetch_time)
                 
                 api_calls.append({
                     'call': f'event_odds_{i}',
@@ -931,6 +1109,56 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
             return
         
         print(f"✅ Analyzed {len(best_odds_df)} (market, player, line) combinations\n")
+        
+        # Add staleness flags for ALL bookmakers
+        best_odds_df = add_staleness_flags(best_odds_df, max_staleness_minutes=max_staleness_minutes)
+        
+        # Show staleness analysis
+        fresh_df, stale_df = filter_stale_arbs(best_odds_df)
+        
+        if len(best_odds_df) > 0:
+            # Show when data was fetched (format nicely for console)
+            if 'fetch_time_et' in best_odds_df.columns:
+                fetch_time_str = best_odds_df['fetch_time_et'].iloc[0]
+                # Parse and reformat for readability: "Dec 15, 2025 at 9:42 PM ET"
+                try:
+                    dt = datetime.strptime(fetch_time_str, '%Y-%m-%d %H:%M:%S ET')
+                    fetch_time_display = dt.strftime('%b %d, %Y at %I:%M %p ET')
+                except:
+                    fetch_time_display = fetch_time_str  # Fallback to original if parsing fails
+            else:
+                fetch_time_display = 'N/A'
+            
+            print(f"🔍 STALENESS ANALYSIS:")
+            print(f"   📅 Data fetched: {fetch_time_display}")
+            print(f"   📊 Total opportunities: {len(best_odds_df)}")
+            print(f"   ✅ Fresh lines (≤{max_staleness_minutes} min): {len(fresh_df)}")
+            print(f"   ⚠️  Stale lines (>{max_staleness_minutes} min): {len(stale_df)}")
+            
+            # Show stale arbs by bookmaker
+            if len(stale_df) > 0:
+                stale_by_book = stale_df['stale_bookmaker'].value_counts()
+                print(f"\n   Stale arbs by bookmaker:")
+                for book, count in stale_by_book.head(5).items():
+                    print(f"      • {book}: {count} stale arbs")
+                
+                # Show top stale arbs (likely phantoms)
+                stale_sorted = stale_df.sort_values('expected_profit_pct', ascending=False).head(3)
+                print(f"\n   Top 3 stale arbs (likely phantoms - DON'T bet without verifying):")
+                for _, row in stale_sorted.iterrows():
+                    staleness = row.get('max_staleness', 0)
+                    print(f"      • {row['player']} {MARKET_DISPLAY_NAMES.get(row['market'], row['market'])} {row['line']}")
+                    print(f"        Profit: {row['expected_profit_pct']:.1f}% | {row['stale_bookmaker']} ({staleness:.1f} min stale)")
+            
+            print()
+        
+        # Optionally filter stale arbs from output (but keep by default for tracking)
+        if filter_stale_from_output:
+            print(f"⚠️  Removing stale arbs from output (filter_stale_from_output=True)")
+            best_odds_df = fresh_df
+        else:
+            print(f"✅ Keeping all arbs in output CSV (use 'is_stale' column to filter)")
+            print(f"   💡 TIP: Email alerts can filter out 'is_stale=True' rows\n")
         
         display_arb_opportunities(best_odds_df, min_profit_pct=MIN_ARB_PROFIT_PCT)
         display_close_opportunities(best_odds_df, min_prob=CLOSE_OPPORTUNITY_MIN, max_prob=CLOSE_OPPORTUNITY_MAX, min_arb_profit=MIN_ARB_PROFIT_PCT)
@@ -1099,8 +1327,9 @@ def run_historical_backfill(start_date, end_date, markets, limit=None, historica
         print("="*80 + "\n")
         
         try:
-            # Run the main function for this date
-            main(markets=markets, limit=limit, historical_date=current_date, historical_time=historical_time)
+            # Run the main function for this date (keep all arbs, just flag stale ones)
+            main(markets=markets, limit=limit, historical_date=current_date, historical_time=historical_time,
+                 filter_stale_from_output=False, max_staleness_minutes=2.0)
             success_count += 1
             print(f"\n✅ Day {day_count} complete\n")
         except Exception as e:
@@ -1147,6 +1376,12 @@ if __name__ == "__main__":
     parser.add_argument('--time', default="17:00:00",
                         help='Time for historical snapshot in UTC (HH:MM:SS, default 17:00:00 = noon ET)')
     
+    # Staleness tracking arguments (NEW)
+    parser.add_argument('--max-staleness-minutes', type=float, default=2.0,
+                        help='Maximum age in minutes before flagging lines as stale (default: 2.0, applies to ALL bookmakers)')
+    parser.add_argument('--filter-stale', action='store_true',
+                        help='Remove stale arbs from output CSV (default: keep all, just flag with is_stale column)')
+    
     args = parser.parse_args()
     
     if args.test:
@@ -1169,4 +1404,9 @@ if __name__ == "__main__":
             historical_time=args.time
         )
     else:
-        main(markets=args.markets, limit=args.limit)
+        main(
+            markets=args.markets, 
+            limit=args.limit,
+            filter_stale_from_output=args.filter_stale,
+            max_staleness_minutes=args.max_staleness_minutes
+        )
