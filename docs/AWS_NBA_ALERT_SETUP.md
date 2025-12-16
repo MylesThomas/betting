@@ -46,7 +46,7 @@ Use the same layers as daily Lambda:
 | `SECRET_NAME` | `betting-dashboard-secrets` |
 | `AWS_REGION_NAME` | `us-east-2` |
 | `SNS_TOPIC_ARN` | `arn:aws:sns:us-east-2:YOUR_ACCOUNT:betting-arb-alerts` |
-| `MIN_PROFIT_PCT` | `5.0` |
+| `MIN_PROFIT_PCT` | `10.0` |
 
 ### 4. IAM Permissions
 
@@ -75,15 +75,22 @@ Confirm the subscription email!
 
 ### 7. Create EventBridge Schedule
 
-**Recommended: Every 15 min during game hours (10am-11pm ET)**
+**⚠️ API CREDIT USAGE:**
+- Each run fetches ~10 games × 14 prop markets = ~140 API calls
+- Running every 5 min, 24/7 = 288 runs/day × 140 = 40,320 credits/day ❌ (TOO MUCH!)
+- Running every 5 min during game hours = 84 runs/day × 140 = 11,760 credits/day ✅
+
+**RECOMMENDED: Every 5 min, only 5pm-midnight ET (game hours)**
 ```
-cron(0/15 15-4 * * ? *)   # 15:00-04:00 UTC = 10am-11pm ET
+cron(0/5 22-5 * * ? *)   # 22:00-05:00 UTC = 5pm-midnight ET
 ```
 
-**Alternative: Every 15 minutes 24/7**
+**Alternative: Every 15 min during game hours (if credits very limited)**
 ```
-rate(15 minutes)
+cron(0/15 22-5 * * ? *)   # 28 runs/day × 140 = 3,920 credits/day
 ```
+
+**NOT RECOMMENDED: Running 24/7 (burns through entire monthly quota in days)**
 
 ## Test It
 

@@ -1,13 +1,22 @@
 """
-AWS Lambda Function - NBA Arb Alert (15-minute interval)
+AWS Lambda Function - NBA Arb Alert
 
-This Lambda function runs every 15 minutes and:
+SCHEDULE RECOMMENDATIONS:
+- Every 5 min, 24/7 = 288 runs/day × 140 API calls/run = 40,320 credits/day ❌
+  - (140 calls = 14 markets × ~10 games per run)
+- RECOMMENDED: Every 5 min, only 5pm-midnight ET (game hours)
+  - EventBridge cron: 0/5 22-5 * * ? * (22:00-05:00 UTC = 5pm-midnight ET)
+  - 7 hours × 12 runs/hour = 84 runs/day × 140 = 11,760 credits/day ✅
+  - Saves 28,560 credits/day vs running 24/7!
+
+This Lambda function:
 1. Clones the GitHub repo
 2. Fetches live NBA props from The Odds API (today's games only, ET timezone)
 3. Finds ALL arbitrage opportunities (any profit > 0)
 4. Saves output to repo with timestamp (arb_output_YYYYMMDD_HHMMSS.csv)
 5. Commits and pushes to GitHub
-6. Sends email alert via SNS if any arb has 5%+ edge
+6. Sends email alert via SNS ONLY if arb has 10%+ edge (configurable via MIN_PROFIT_PCT)
+7. **ERROR HANDLING**: Sends email via SNS if execution fails
 
 OUTPUT FILES:
     - Saved every 15 minutes to data/04_output/nba/arbs/arb_output_YYYYMMDD_HHMMSS.csv
@@ -36,7 +45,7 @@ Environment Variables Required:
 - SECRET_NAME: betting-dashboard-secrets
 - AWS_REGION_NAME: us-east-2
 - SNS_TOPIC_ARN: arn:aws:sns:us-east-2:ACCOUNT_ID:betting-arb-alerts (optional)
-- MIN_PROFIT_PCT: 5.0 (optional, default 5.0)
+- MIN_PROFIT_PCT: 10.0 (optional, default 10.0 - only send email for 10%+ arbs)
 
 Secrets Required (in AWS Secrets Manager):
 - ODDS_API_KEY: Your Odds API key
@@ -53,8 +62,14 @@ Lambda Layers Required:
 - betting-dashboard-dependencies (provides pandas, requests)
 
 Schedule (EventBridge):
-- Rate: rate(15 minutes)
-- Or cron for game hours only: cron(0/15 15-3 * * ? *)  # 10am-10pm ET
+- Rate: rate(15 minutes)  # Runs every 15 min, but code skips outside 6pm-midnight ET
+- Or cron for game hours only: cron(0/15 22-4 * * ? *)  # 6pm-midnight ET (UTC)
+  
+CREDIT SAVINGS:
+- Before time check: 24 hr × 4 runs/hr × 46 credits/run = 4,416 credits/day
+- After time check: 6 hr × 4 runs/hr × 46 credits/run = 1,104 credits/day
+- Daily savings: 3,312 credits (75% reduction!)
+- Monthly savings: ~100,000 credits
 
 Author: Myles Thomas
 Date: 2025-12-06
@@ -508,6 +523,31 @@ def lambda_handler(event, context):
     print(f"Time: {now.strftime('%Y-%m-%d %I:%M %p ET')}")
     print("=" * 60)
     
+    # ========================================================================
+    # TIME CHECK: Only run during game hours (6pm-midnight ET)
+    # ========================================================================
+    current_hour = now.hour
+    
+    # Skip if between midnight (0) and 6pm (18)
+    if current_hour < 18:
+        skip_msg = f"⏰ Skipping - outside game hours (current: {now.strftime('%I:%M %p ET')})"
+        print(skip_msg)
+        print("   Game hours: 6:00 PM - 11:59 PM ET")
+        print("   This saves ~960 credits/day during off-hours!")
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'skipped': True,
+                'reason': 'outside_game_hours',
+                'time': now.isoformat(),
+                'message': skip_msg
+            })
+        }
+    
+    print(f"✅ Within game hours (6pm-midnight ET) - proceeding...")
+    # ========================================================================
+    
     min_profit = float(os.environ.get('MIN_PROFIT_PCT', '5.0'))
     print(f"Looking for arbs with {min_profit}%+ edge...")
     
@@ -642,19 +682,15 @@ def lambda_handler(event, context):
         
         print(f"\nFound {len(high_value_arbs)} arbs with {min_profit}%+ edge (email threshold)")
         
-        if all_arbs:
-            # Subject depends on whether we have high-value arbs
-            if high_value_arbs:
-                best_profit = high_value_arbs[0]['expected_profit_pct']
-                subject = f"🚨 {len(high_value_arbs)} NBA ARB(S) FOUND! BEST: {best_profit:.1f}%"
-            else:
-                best_profit = all_arbs[0]['expected_profit_pct']
-                subject = f"📊 nba arb scan: {len(all_arbs)} arbs found (best: {best_profit:.1f}%)"
+        # Only send email if we have HIGH-VALUE arbs (not every time we find any arb)
+        if high_value_arbs:
+            best_profit = high_value_arbs[0]['expected_profit_pct']
+            subject = f"🚨 {len(high_value_arbs)} NBA ARB(S) FOUND! BEST: {best_profit:.1f}%"
             
             message = format_arb_email(high_value_arbs, other_arbs)
             
             print("\n" + "=" * 60)
-            print("📧 SENDING ALERT EMAIL")
+            print("📧 SENDING ALERT EMAIL (high-value arbs found)")
             print("=" * 60)
             
             send_email(subject, message)
@@ -686,12 +722,20 @@ def lambda_handler(event, context):
         import traceback
         traceback.print_exc()
         
+        # Send failure alert via SNS
         error_msg = f"""❌ NBA Arb Alert Check FAILED
 
-Time: {now.isoformat()}
+Time: {now.strftime('%Y-%m-%d %I:%M %p ET')}
 Error: {str(e)}
 
-Check CloudWatch logs for details.
+Traceback:
+{traceback.format_exc()[:500]}
+
+Check CloudWatch logs for full details:
+https://console.aws.amazon.com/cloudwatch/home?region=us-east-2#logsV2:log-groups/log-group/$252Faws$252Flambda$252F{os.environ.get('AWS_LAMBDA_FUNCTION_NAME', 'unknown')}
+
+NOTE: Lambda timeouts and out-of-memory errors won't trigger this email.
+Check CloudWatch metrics and set up separate alarms for those.
 """
         send_email("❌ NBA Arb Alert Failed", error_msg)
         
