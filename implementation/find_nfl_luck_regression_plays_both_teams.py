@@ -72,6 +72,7 @@ from nfl_luck_utils import (
     categorize_luck,
     categorize_spread,
     load_unexpected_points_data,
+    load_nfl_betting_lines,
     build_prior_luck_lookup,
     get_prior_week_luck,
     get_prior_week_luck_detailed,
@@ -106,7 +107,101 @@ if args.current_week and args.week is not None:
     parser.error("Cannot use both --current-week and --week")
 
 from config import DATA_ROOT
-INPUT_DATA_PATH = DATA_ROOT / f"03_intermediate/nfl_both_teams_luck_analysis_threshold_{int(args.threshold)}.csv"
+
+# =============================================================================
+# Find most recent luck analysis file
+# =============================================================================
+def find_most_recent_luck_file(threshold: float) -> Path:
+    """Find the most recent luck analysis file for given threshold."""
+    intermediate_dir = DATA_ROOT / "03_intermediate"
+    
+    # Look for files matching the pattern
+    pattern = f"nfl_both_teams_luck_analysis_threshold_{int(threshold)}*.csv"
+    matching_files = sorted(glob.glob(str(intermediate_dir / pattern)))
+    
+    if not matching_files:
+        raise FileNotFoundError(
+            f"No luck analysis files found matching: {pattern}\n"
+            f"   Run: python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold {int(threshold)}"
+        )
+    
+    # Sort by modification time (most recent first)
+    matching_files.sort(key=lambda x: Path(x).stat().st_mtime, reverse=True)
+    most_recent = Path(matching_files[0])
+    
+    return most_recent
+
+INPUT_DATA_PATH = find_most_recent_luck_file(args.threshold)
+print(f"\n{EMOJI['info']} Using most recent luck analysis file:")
+print(f"   {INPUT_DATA_PATH.name}")
+print(f"   Modified: {datetime.fromtimestamp(INPUT_DATA_PATH.stat().st_mtime).strftime('%Y-%m-%d %H:%M:%S')}")
+
+# =============================================================================
+# Helper function for finding best lines
+# =============================================================================
+def get_best_books_for_bet(df_lines: pd.DataFrame, game_id: str, bet_team_abbr: str, away_abbr: str) -> dict:
+    """
+    Find the best sportsbooks for a specific bet.
+    
+    For spread bets, higher spread is ALWAYS better (more points if underdog, 
+    less to cover if favorite).
+    
+    Returns dict with:
+    - best_spread: the best spread available
+    - best_books: list of books with the best spread
+    - ranked_books: all books sorted best to worst [(book, spread, price), ...]
+    """
+    game_lines = df_lines[df_lines['game_id'] == game_id].copy()
+    
+    if len(game_lines) == 0:
+        return {'best_spread': None, 'best_books': [], 'ranked_books': []}
+    
+    # Determine which spread/price columns to use based on bet team
+    is_betting_away = (bet_team_abbr == away_abbr)
+    spread_col = 'away_spread' if is_betting_away else 'home_spread'
+    
+    # Determine price column - use away_price for away bets, home_price for home bets
+    # Check if price columns exist at all
+    has_prices = 'away_price' in game_lines.columns or 'home_price' in game_lines.columns
+    
+    if has_prices:
+        if is_betting_away:
+            price_col = 'away_price' if 'away_price' in game_lines.columns else None
+        else:
+            price_col = 'home_price' if 'home_price' in game_lines.columns else 'away_price' if 'away_price' in game_lines.columns else None
+        
+        # Get spreads and prices by bookmaker
+        if price_col:
+            cols_to_get = ['bookmaker', spread_col, price_col]
+        else:
+            cols_to_get = ['bookmaker', spread_col]
+    else:
+        price_col = None
+        cols_to_get = ['bookmaker', spread_col]
+    
+    book_spreads = game_lines[cols_to_get].drop_duplicates()
+    book_spreads = book_spreads.dropna(subset=[spread_col])
+    
+    if len(book_spreads) == 0:
+        return {'best_spread': None, 'best_books': [], 'ranked_books': []}
+    
+    # Sort by spread descending (higher is better), then by price descending (less negative = better) if available
+    if price_col:
+        book_spreads = book_spreads.sort_values([spread_col, price_col], ascending=[False, False])
+        ranked_books = list(zip(book_spreads['bookmaker'], book_spreads[spread_col], book_spreads[price_col]))
+    else:
+        book_spreads = book_spreads.sort_values([spread_col], ascending=[False])
+        # Create ranked_books with None for price
+        ranked_books = list(zip(book_spreads['bookmaker'], book_spreads[spread_col], [None] * len(book_spreads)))
+    
+    best_spread = book_spreads[spread_col].iloc[0]
+    best_books = book_spreads[book_spreads[spread_col] == best_spread]['bookmaker'].tolist()
+    
+    return {
+        'best_spread': best_spread,
+        'best_books': best_books,
+        'ranked_books': ranked_books,
+    }
 
 # =============================================================================
 # BACKTEST MODE (--week N)
@@ -116,11 +211,7 @@ if args.week is not None:
     print(f"BACKTEST: Week {args.week}")
     print("=" * 100)
     
-    if not INPUT_DATA_PATH.exists():
-        print(f"\n{EMOJI['error']} File not found: {INPUT_DATA_PATH}")
-        print(f"   Run: python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold {int(args.threshold)}")
-        sys.exit(1)
-    
+    print(f"\n{EMOJI['info']} Loading data from: {INPUT_DATA_PATH}")
     df = pd.read_csv(INPUT_DATA_PATH)
     df['game_time'] = pd.to_datetime(df['game_time'])
     df_week = df[df['week'] == args.week].copy()
@@ -167,18 +258,62 @@ if args.week is not None:
     print(f"\n{EMOJI['target']} Lucky vs Unlucky: {len(df_plays)}")
     
     if len(df_plays) > 0:
+        # Load betting lines to get best spreads
+        print(f"\n{EMOJI['info']} Loading betting lines to find best spreads...")
+        df_lines_all = load_nfl_betting_lines()
+        df_lines_all = add_team_abbr_columns(df_lines_all)
+        df_lines_all['home_spread'] = -df_lines_all['away_spread']
+        
+        # Filter to this week's games
+        df_lines_week = df_lines_all[
+            df_lines_all['game_time'].dt.to_period('W') == df_week['game_time'].iloc[0].to_period('W')
+        ]
+        
         print("\nBET UNLUCKY TEAM:")
         wins = 0
         for _, p in df_plays.iterrows():
             if p['away_prior_luck_cat'] == 'Unlucky':
-                bet, spread, covered = p['away_abbr'], p['consensus_spread'], p['away_covered']
+                bet, consensus_spread, covered = p['away_abbr'], p['consensus_spread'], p['away_covered']
+                bet_away = p['away_abbr']
             else:
-                bet, spread, covered = p['home_abbr'], -p['consensus_spread'], p['home_covered']
+                bet, consensus_spread, covered = p['home_abbr'], -p['consensus_spread'], p['home_covered']
+                bet_away = p['away_abbr']
+            
+            # Find best line for this bet
+            game_lines = df_lines_week[
+                (df_lines_week['away_abbr'] == p['away_abbr']) & 
+                (df_lines_week['home_abbr'] == p['home_abbr'])
+            ]
+            
+            best_spread = consensus_spread
+            best_price = None
+            best_books = "N/A"
+            
+            if len(game_lines) > 0:
+                best_info = get_best_books_for_bet(game_lines, game_lines['game_id'].iloc[0], bet, p['away_abbr'])
+                if best_info['best_spread'] is not None:
+                    best_spread = best_info['best_spread']
+                    best_books = ', '.join(best_info['best_books'][:2])  # Show top 2 books
+                    # Get price from first ranked book
+                    if best_info['ranked_books']:
+                        price_val = best_info['ranked_books'][0][2]
+                        if price_val is not None and not pd.isna(price_val):
+                            best_price = int(price_val)
             
             result = EMOJI['success'] if covered else EMOJI['error']
             if covered:
                 wins += 1
-            print(f"  {result} {bet} {spread:+.1f}")
+            
+            # Format price
+            if best_price is not None:
+                price_str = f" @ {best_price:+d}" if best_price != 0 else " @ EVEN"
+            else:
+                price_str = ""
+            
+            edge = best_spread - consensus_spread
+            edge_str = f" (+{edge:.1f} edge)" if edge != 0 else ""
+            
+            print(f"  {result} {bet} {best_spread:+.1f}{price_str}{edge_str} [{best_books}] (consensus: {consensus_spread:+.1f})")
         
         print(f"\nRecord: {wins}-{len(df_plays)-wins}")
     
@@ -285,6 +420,7 @@ if upcoming_files:
     print(f"\nFound {len(upcoming_files)} file(s) in upcoming directory")
     dfs = []
     for csv_file in upcoming_files:
+        print(f"  {EMOJI['info']} Loading: {Path(csv_file).name}")
         df_temp = pd.read_csv(csv_file)
         df_temp['game_time'] = pd.to_datetime(df_temp['game_time'])
         if df_temp['game_time'].dt.tz is None:
@@ -503,56 +639,6 @@ for game_id, game_group in df_lines.groupby('game_id'):
     })
 
 df_consensus = pd.DataFrame(consensus_lines)
-
-
-def get_best_books_for_bet(df_lines: pd.DataFrame, game_id: str, bet_team_abbr: str, away_abbr: str) -> dict:
-    """
-    Find the best sportsbooks for a specific bet.
-    
-    For spread bets, higher spread is ALWAYS better (more points if underdog, 
-    less to cover if favorite).
-    
-    Returns dict with:
-    - best_spread: the best spread available
-    - best_books: list of books with the best spread
-    - ranked_books: all books sorted best to worst [(book, spread, price), ...]
-    """
-    game_lines = df_lines[df_lines['game_id'] == game_id].copy()
-    
-    if len(game_lines) == 0:
-        return {'best_spread': None, 'best_books': [], 'ranked_books': []}
-    
-    # Determine which spread/price columns to use based on bet team
-    is_betting_away = (bet_team_abbr == away_abbr)
-    spread_col = 'away_spread' if is_betting_away else 'home_spread'
-    
-    # Determine price column - use away_price for away bets, home_price for home bets
-    # Fall back to away_price if home_price doesn't exist (older data)
-    if is_betting_away:
-        price_col = 'away_price'
-    else:
-        price_col = 'home_price' if 'home_price' in game_lines.columns else 'away_price'
-    
-    # Get spreads and prices by bookmaker
-    cols_to_get = ['bookmaker', spread_col, price_col]
-    book_spreads = game_lines[cols_to_get].drop_duplicates()
-    book_spreads = book_spreads.dropna(subset=[spread_col])
-    
-    if len(book_spreads) == 0:
-        return {'best_spread': None, 'best_books': [], 'ranked_books': []}
-    
-    # Sort by spread descending (higher is better), then by price descending (less negative = better)
-    book_spreads = book_spreads.sort_values([spread_col, price_col], ascending=[False, False])
-    
-    best_spread = book_spreads[spread_col].iloc[0]
-    best_books = book_spreads[book_spreads[spread_col] == best_spread]['bookmaker'].tolist()
-    ranked_books = list(zip(book_spreads['bookmaker'], book_spreads[spread_col], book_spreads[price_col]))
-    
-    return {
-        'best_spread': best_spread,
-        'best_books': best_books,
-        'ranked_books': ranked_books,
-    }
 print(f"{EMOJI['success']} Calculated consensus spreads for {len(df_consensus)} games")
 
 # Determine target week from actual game dates (not from UP data)
@@ -888,4 +974,4 @@ if len(df_plays) > 0:
 
 print(f"\n{EMOJI['success']} COMPLETE")
 print("=" * 100)
-print(f"Note: Please verify that {INPUT_DATA_PATH} is the correct file, before making any bets.")
+print(f"Note: Using {INPUT_DATA_PATH.name} (threshold={int(args.threshold)})")
