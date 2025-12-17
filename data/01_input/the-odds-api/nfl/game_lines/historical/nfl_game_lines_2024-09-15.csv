@@ -1,0 +1,138 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,8.5,-105,-8.5,-115
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,-4.5,-110,4.5,-110
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,3.0,-105,-3.0,-115
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,6.5,-110,-6.5,-110
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,7.5,-110,-7.5,-110
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,-2.5,-105,2.5,-115
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,-4.0,-115,4.0,-105
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,-3.0,-115,3.0,-105
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,-3.5,-110,3.5,-110
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,9.0,-120,-9.0,100
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,-4.0,-112,4.0,-108
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,3.0,-106,-3.0,-114
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,6.5,-114,-6.5,-106
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,7.5,-107,-7.5,-113
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,-2.0,-117,2.0,-103
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,-4.0,-110,4.0,-110
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,-3.0,-112,3.0,-108
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,-4.0,-103,4.0,-117
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,8.5,-110,-8.5,-110
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,-4.5,-109,4.5,-112
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,3.0,-108,-3.0,-113
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,6.0,-107,-6.0,-114
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,7.5,-109,-7.5,-112
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,-2.5,-110,2.5,-110
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,-4.0,-113,4.0,-108
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,-3.0,-113,3.0,-108
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,-4.0,-107,4.0,-114
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,BetUS,betus,2024-09-15T16:55:05Z,spread,9.5,-120,-9.5,100
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,BetUS,betus,2024-09-15T16:55:05Z,spread,-4.5,-105,4.5,-115
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,BetUS,betus,2024-09-15T16:55:05Z,spread,3.0,-105,-3.0,-115
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,BetUS,betus,2024-09-15T16:55:05Z,spread,6.5,-110,-6.5,-110
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetUS,betus,2024-09-15T16:55:05Z,spread,9.0,-130,-9.0,110
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,BetUS,betus,2024-09-15T16:55:05Z,spread,-1.0,-125,1.0,105
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,BetUS,betus,2024-09-15T16:55:05Z,spread,-4.0,-115,4.0,-105
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,BetUS,betus,2024-09-15T16:55:05Z,spread,-3.0,-110,3.0,-110
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,BetUS,betus,2024-09-15T16:55:05Z,spread,-3.5,-110,3.5,-110
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,Bovada,bovada,2024-09-15T16:55:04Z,spread,8.5,-105,-8.5,-115
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,Bovada,bovada,2024-09-15T16:55:04Z,spread,-4.5,-105,4.5,-115
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,Bovada,bovada,2024-09-15T16:55:04Z,spread,3.0,100,-3.0,-120
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,Bovada,bovada,2024-09-15T16:55:04Z,spread,6.0,105,-6.0,-125
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,Bovada,bovada,2024-09-15T16:55:04Z,spread,8.0,-110,-8.0,-110
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,Bovada,bovada,2024-09-15T16:55:04Z,spread,-2.0,-120,2.0,100
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,Bovada,bovada,2024-09-15T16:55:04Z,spread,-4.0,-115,4.0,-105
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,Bovada,bovada,2024-09-15T16:55:04Z,spread,-3.0,-115,3.0,-105
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,8.5,-105,-8.5,-115
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-4.5,-115,4.5,-105
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,3.0,100,-3.0,-120
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,6.5,-105,-6.5,-115
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,7.5,-110,-7.5,-110
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-2.0,-115,2.0,-105
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-4.0,-115,4.0,-105
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-3.0,-115,3.0,-105
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-4.0,-105,4.0,-115
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,9.0,-112,-9.0,-108
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-5.0,-110,5.0,-110
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,3.0,100,-3.0,-120
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,6.5,-110,-6.5,-110
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,7.5,-108,-7.5,-112
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-3.0,100,3.0,-120
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-4.5,-112,4.5,-108
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-3.0,-110,3.0,-110
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-3.5,-108,3.5,-112
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,8.5,-110,-8.5,-110
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-4.5,-105,4.5,-115
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,3.0,-104,-3.0,-118
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,6.5,-110,-6.5,-110
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,7.5,-110,-7.5,-110
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-2.5,-110,2.5,-110
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-4.0,-115,4.0,-105
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-3.0,-120,3.0,-102
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-3.5,-110,3.5,-110
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,9.0,-114,-9.0,103
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,-4.0,-107,4.0,-103
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,3.0,-101,-3.0,-109
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,6.5,-109,-6.5,-101
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,7.5,-102,-7.5,-108
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,-2.5,-102,2.5,-108
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,-4.0,-105,4.0,-105
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,-3.0,-104,3.0,-106
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,-3.5,-109,3.5,-101
+5a2bfc721fb2300d4578743aee7ad891,2024-09-15 17:02:00+00:00,Las Vegas Raiders,Baltimore Ravens,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,9.0,-115,-9.0,-105
+b4769cda12183128858f49f475aabfce,2024-09-15 17:02:00+00:00,Los Angeles Chargers,Carolina Panthers,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-4.5,-110,4.5,-110
+111ac41e21c6f16a2d3d1511f07e2004,2024-09-15 17:02:00+00:00,Cleveland Browns,Jacksonville Jaguars,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,3.0,-105,-3.0,-115
+5b05775b536cda3f2efab93935af4f54,2024-09-15 17:02:00+00:00,New Orleans Saints,Dallas Cowboys,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,6.5,-110,-6.5,-110
+787ae4144b2b45d7ef8a9c7b1ab6abd8,2024-09-15 17:02:00+00:00,Tampa Bay Buccaneers,Detroit Lions,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,7.5,-110,-7.5,-110
+c4e5642a8746f3e8fbb09d59a611ffe4,2024-09-15 17:02:00+00:00,Indianapolis Colts,Green Bay Packers,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-2.5,-110,2.5,-110
+9d5dace601f10c135f5c03facf23fd22,2024-09-15 17:02:00+00:00,San Francisco 49ers,Minnesota Vikings,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-4.5,-110,4.5,-110
+42d27889b51ada96c20671b30129ce4e,2024-09-15 17:02:00+00:00,Seattle Seahawks,New England Patriots,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-3.0,-110,3.0,-110
+17d4d840f9f4094d76c6e9b53b18ac05,2024-09-15 17:02:00+00:00,New York Jets,Tennessee Titans,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-4.0,-110,4.0,-110
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,1.5,-110,-1.5,-110
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,1.0,-103,-1.0,-117
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,1.5,-112,-1.5,-109
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,BetUS,betus,2024-09-15T16:55:05Z,spread,1.0,-108,-1.0,-112
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,Bovada,bovada,2024-09-15T16:55:04Z,spread,1.5,-115,-1.5,-105
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,1.5,-105,-1.5,-115
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,1.5,-110,-1.5,-110
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,1.5,-110,-1.5,-110
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,1.0,102,-1.0,-113
+495d9f2c316b05ef092099ef9401a180,2024-09-15 17:03:00+00:00,New York Giants,Washington Commanders,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,1.5,-110,-1.5,-110
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,0.0,-115,0.0,-105
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,0.5,-110,-0.5,-110
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,BetUS,betus,2024-09-15T16:55:05Z,spread,0.0,-110,0.0,-110
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,Bovada,bovada,2024-09-15T16:55:04Z,spread,-1.0,-110,1.0,-110
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-0.0,-110,0.0,-110
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-1.0,-105,1.0,-115
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-1.5,-104,1.5,-118
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,0.0,-110,0.0,100
+db997fc1b5fe71f4960012f81c21a017,2024-09-15 20:05:00+00:00,Los Angeles Rams,Arizona Cardinals,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-1.0,-110,1.0,-110
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,-2.5,-115,2.5,-105
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,6.5,-110,-6.5,-110
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,-2.5,-115,2.5,-105
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,6.5,-112,-6.5,-109
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,-2.5,-120,2.5,-103
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetUS,betus,2024-09-15T16:55:05Z,spread,6.5,-110,-6.5,-110
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,BetUS,betus,2024-09-15T16:55:05Z,spread,-2.0,-120,2.0,100
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,Bovada,bovada,2024-09-15T16:55:04Z,spread,6.5,-110,-6.5,-110
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,Bovada,bovada,2024-09-15T16:55:04Z,spread,-2.5,-120,2.5,100
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,6.5,-105,-6.5,-115
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,-2.5,-125,2.5,105
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,6.5,-105,-6.5,-115
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,-3.0,-102,3.0,-118
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,6.5,-110,-6.5,-110
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,-2.5,-115,2.5,-105
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,6.5,-109,-6.5,-101
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,-2.5,-112,2.5,101
+faaeaab20409da65e7314cc1857ccfba,2024-09-15 20:25:00+00:00,Cincinnati Bengals,Kansas City Chiefs,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,6.5,-110,-6.5,-110
+3a300e2fb659ca896b5e60252f13150c,2024-09-15 20:25:00+00:00,Pittsburgh Steelers,Denver Broncos,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,-2.5,-120,2.5,100
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,BetMGM,betmgm,2024-09-15T16:55:04Z,spread,6.0,-110,-6.0,-110
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,BetOnline.ag,betonlineag,2024-09-15T16:55:04Z,spread,5.5,-105,-5.5,-115
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,BetRivers,betrivers,2024-09-15T16:55:04Z,spread,6.0,-110,-6.0,-110
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,BetUS,betus,2024-09-15T16:55:05Z,spread,6.0,-115,-6.0,-105
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,Bovada,bovada,2024-09-15T16:55:04Z,spread,5.5,-105,-5.5,-115
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,Caesars,williamhill_us,2024-09-15T16:54:27Z,spread,6.0,-110,-6.0,-110
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,DraftKings,draftkings,2024-09-15T16:55:04Z,spread,6.0,-112,-6.0,-108
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,FanDuel,fanduel,2024-09-15T16:55:06Z,spread,5.5,-105,-5.5,-115
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,LowVig.ag,lowvig,2024-09-15T16:55:04Z,spread,5.5,100,-5.5,-110
+7533f0f2d5cfe270fa0ccdc32a98c7fd,2024-09-16 00:20:00+00:00,Chicago Bears,Houston Texans,MyBookie.ag,mybookieag,2024-09-15T16:55:04Z,spread,6.0,-110,-6.0,-110

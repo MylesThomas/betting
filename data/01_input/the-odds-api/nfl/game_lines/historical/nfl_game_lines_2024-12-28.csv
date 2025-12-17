@@ -1,0 +1,31 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,BetMGM,betmgm,2024-12-28T16:55:28Z,spread,-6.0,-110,6.0,-110
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,BetOnline.ag,betonlineag,2024-12-28T16:55:28Z,spread,-6.0,-109,6.0,-111
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,BetRivers,betrivers,2024-12-28T16:54:53Z,spread,-6.0,-109,6.0,-113
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,BetUS,betus,2024-12-28T16:54:45Z,spread,-6.0,-110,6.0,-110
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,Bovada,bovada,2024-12-28T16:54:30Z,spread,-6.0,-105,6.0,-115
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,Caesars,williamhill_us,2024-12-28T16:42:47Z,spread,-6.0,-110,6.0,-110
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,DraftKings,draftkings,2024-12-28T16:55:17Z,spread,-6.0,-112,6.0,-108
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,FanDuel,fanduel,2024-12-28T16:55:12Z,spread,-5.5,-120,5.5,-102
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,LowVig.ag,lowvig,2024-12-28T16:55:17Z,spread,-6.0,-104,6.0,-106
+1bccaf2a9388f9d02f8f0c23cbc6b121,2024-12-28 18:01:00+00:00,Los Angeles Chargers,New England Patriots,MyBookie.ag,mybookieag,2024-12-28T16:54:08Z,spread,-6.0,-110,6.0,-110
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,BetMGM,betmgm,2024-12-28T16:55:28Z,spread,3.5,-115,-3.5,-105
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,BetOnline.ag,betonlineag,2024-12-28T16:55:28Z,spread,3.5,-120,-3.5,100
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,BetRivers,betrivers,2024-12-28T16:54:53Z,spread,3.5,-120,-3.5,-103
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,BetUS,betus,2024-12-28T16:54:45Z,spread,3.0,100,-3.0,-120
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,Bovada,bovada,2024-12-28T16:54:30Z,spread,3.5,-120,-3.5,100
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,Caesars,williamhill_us,2024-12-28T16:42:47Z,spread,3.0,105,-3.0,-125
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,DraftKings,draftkings,2024-12-28T16:55:17Z,spread,3.5,-120,-3.5,100
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,FanDuel,fanduel,2024-12-28T16:55:12Z,spread,3.0,-104,-3.0,-118
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,LowVig.ag,lowvig,2024-12-28T16:55:17Z,spread,3.5,-117,-3.5,106
+aa15f18a1c3124af14045b32185ff166,2024-12-28 21:31:00+00:00,Denver Broncos,Cincinnati Bengals,MyBookie.ag,mybookieag,2024-12-28T16:54:08Z,spread,3.5,-120,-3.5,100
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,BetMGM,betmgm,2024-12-28T16:55:28Z,spread,6.5,-105,-6.5,-115
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,BetOnline.ag,betonlineag,2024-12-28T16:55:28Z,spread,6.5,-105,-6.5,-115
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,BetRivers,betrivers,2024-12-28T16:54:53Z,spread,6.5,-107,-6.5,-114
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,BetUS,betus,2024-12-28T16:54:45Z,spread,6.5,-105,-6.5,-115
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,Bovada,bovada,2024-12-28T16:54:30Z,spread,6.5,-105,-6.5,-115
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,Caesars,williamhill_us,2024-12-28T16:42:47Z,spread,6.5,-110,-6.5,-110
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,DraftKings,draftkings,2024-12-28T16:55:17Z,spread,6.5,-108,-6.5,-112
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,FanDuel,fanduel,2024-12-28T16:55:12Z,spread,6.5,-110,-6.5,-110
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,LowVig.ag,lowvig,2024-12-28T16:55:17Z,spread,6.5,101,-6.5,-112
+8297b863d5f355bd3127adf93cf196a7,2024-12-29 01:16:00+00:00,Arizona Cardinals,Los Angeles Rams,MyBookie.ag,mybookieag,2024-12-28T16:54:08Z,spread,6.5,-105,-6.5,-115

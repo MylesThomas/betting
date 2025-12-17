@@ -1,0 +1,91 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,10.0,-110,-10.0,-110
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,7.5,-110,-7.5,-110
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,-2.0,-110,2.0,-110
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,10.0,-105,-10.0,-115
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,7.5,-116,-7.5,-104
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,-1.5,-110,1.5,-110
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,10.0,-110,-10.0,-110
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,7.5,-110,-7.5,-110
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,-2.0,-109,2.0,-112
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetUS,betus,2024-12-29T16:55:29Z,spread,10.0,-105,-10.0,-115
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,BetUS,betus,2024-12-29T16:55:29Z,spread,8.0,-120,-8.0,100
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,BetUS,betus,2024-12-29T16:55:29Z,spread,-1.0,-120,1.0,100
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,Bovada,bovada,2024-12-29T16:55:35Z,spread,9.5,-105,-9.5,-115
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,Bovada,bovada,2024-12-29T16:55:35Z,spread,7.5,-120,-7.5,100
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,Bovada,bovada,2024-12-29T16:55:35Z,spread,-1.5,-115,1.5,-105
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,10.0,-105,-10.0,-115
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,7.5,-110,-7.5,-110
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,-2.0,-115,2.0,-105
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,9.5,-105,-9.5,-115
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,7.5,-112,-7.5,-108
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,-2.0,-110,2.0,-110
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,9.5,-104,-9.5,-118
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,7.5,-112,-7.5,-108
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,-1.5,-114,1.5,-106
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,10.0,-101,-10.0,-109
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,7.5,-106,-7.5,-104
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,-1.5,-105,1.5,-105
+cb4060acc9d027ca0069619ef9983415,2024-12-29 18:00:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,10.0,-110,-10.0,-110
+d91d050a1528e77a870d681bbe42f514,2024-12-29 18:00:00+00:00,Dallas Cowboys,Philadelphia Eagles,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,7.5,-105,-7.5,-105
+398f58cef1cbb3c99805b52375104238,2024-12-29 18:00:00+00:00,Las Vegas Raiders,New Orleans Saints,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,-2.0,-110,2.0,-110
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,10.0,-110,-10.0,-110
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,-7.5,-110,7.5,-110
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,1.0,-115,-1.0,-105
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,10.0,-110,-10.0,-110
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,-7.0,-114,7.0,-106
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,0.0,-110,0.0,-110
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,10.0,-107,-10.0,-114
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,-7.5,-107,7.5,-114
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,0.0,-110,0.0,-110
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,BetUS,betus,2024-12-29T16:55:29Z,spread,10.0,-105,-10.0,-115
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,BetUS,betus,2024-12-29T16:55:29Z,spread,-7.5,100,7.5,-120
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,BetUS,betus,2024-12-29T16:55:29Z,spread,0.0,-110,0.0,-110
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,Bovada,bovada,2024-12-29T16:55:35Z,spread,10.0,-115,-10.0,-105
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,Bovada,bovada,2024-12-29T16:55:35Z,spread,-7.5,-110,7.5,-110
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,Bovada,bovada,2024-12-29T16:55:35Z,spread,1.0,-115,-1.0,-105
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,10.0,-105,-10.0,-115
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,-7.5,-105,7.5,-115
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,-0.0,-110,0.0,-110
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,10.0,-105,-10.0,-115
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,-7.5,-112,7.5,-108
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,-1.0,-105,1.0,-115
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,9.5,-102,-9.5,-120
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,-7.5,100,7.5,-122
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,1.5,-118,-1.5,-104
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,10.0,-105,-10.0,-105
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,-7.0,-109,7.0,-101
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,0.0,-105,0.0,-105
+eb5a71180b3558fdc20a896e98c00385,2024-12-29 18:01:00+00:00,New York Jets,Buffalo Bills,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,10.0,-110,-10.0,-110
+0ce683697325d7715a78889240d82cc7,2024-12-29 18:01:00+00:00,Indianapolis Colts,New York Giants,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,-7.5,100,7.5,-120
+68e8e424d470fb6d60f1b2f0a3f3d1e3,2024-12-29 18:01:00+00:00,Tennessee Titans,Jacksonville Jaguars,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,-1.0,-110,1.0,-110
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,-3.5,100,3.5,-120
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,-3.0,-123,3.0,103
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,-3.5,-104,3.5,-118
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,BetUS,betus,2024-12-29T16:55:29Z,spread,-3.0,-120,3.0,100
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,Bovada,bovada,2024-12-29T16:55:35Z,spread,-3.5,100,3.5,-120
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,-3.0,-120,3.0,100
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,-3.0,-118,3.0,-102
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,-3.5,-102,3.5,-120
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,-3.0,-119,3.0,108
+7c63b1e23a0c65ee07312131e1b7be7e,2024-12-29 21:05:00+00:00,Miami Dolphins,Cleveland Browns,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,-3.5,100,3.5,-120
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,1.0,-110,-1.0,-110
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,1.0,-110,-1.0,-110
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,0.5,-108,-0.5,-113
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,BetUS,betus,2024-12-29T16:55:29Z,spread,0.0,-110,0.0,-110
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,Bovada,bovada,2024-12-29T16:55:35Z,spread,1.0,-105,-1.0,-115
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,1.0,-115,-1.0,-105
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,1.0,-110,-1.0,-110
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,1.5,-115,-1.5,-105
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,1.0,-105,-1.0,-105
+c6aa971def88c7d2127d05ace3a8e643,2024-12-29 21:25:00+00:00,Green Bay Packers,Minnesota Vikings,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,1.0,-110,-1.0,-110
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,BetMGM,betmgm,2024-12-29T16:54:47Z,spread,3.5,-115,-3.5,-105
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,BetOnline.ag,betonlineag,2024-12-29T16:55:05Z,spread,3.5,-115,-3.5,-105
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,BetRivers,betrivers,2024-12-29T16:55:12Z,spread,3.5,-115,-3.5,-106
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,BetUS,betus,2024-12-29T16:55:29Z,spread,3.5,-115,-3.5,-105
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,Bovada,bovada,2024-12-29T16:55:35Z,spread,3.5,-110,-3.5,-110
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,Caesars,williamhill_us,2024-12-29T16:53:41Z,spread,3.5,-115,-3.5,-105
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,DraftKings,draftkings,2024-12-29T16:54:54Z,spread,3.5,-118,-3.5,-102
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,FanDuel,fanduel,2024-12-29T16:54:48Z,spread,3.5,-115,-3.5,-105
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,LowVig.ag,lowvig,2024-12-29T16:54:48Z,spread,3.5,-110,-3.5,100
+5f99b5d40cf65d48be81c3812cd1e95e,2024-12-30 01:21:00+00:00,Atlanta Falcons,Washington Commanders,MyBookie.ag,mybookieag,2024-12-29T16:54:25Z,spread,3.5,-115,-3.5,-105

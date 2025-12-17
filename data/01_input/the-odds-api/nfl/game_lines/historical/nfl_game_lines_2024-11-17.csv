@@ -1,0 +1,121 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,-3.0,-115,3.0,-105
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,-6.0,-110,6.0,-110
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,-1.5,-115,1.5,-105
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,13.5,-105,-13.5,-115
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,4.0,-110,-4.0,-110
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,7.5,-105,-7.5,-115
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,-4.0,-110,4.0,-110
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,-6.0,-110,6.0,-110
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,-3.0,-117,3.0,-103
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,-6.0,-110,6.0,-110
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,-1.5,-115,1.5,-105
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,14.0,-112,-14.0,-108
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,4.0,-105,-4.0,-115
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,7.5,-105,-7.5,-115
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,-4.0,-110,4.0,-110
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,-5.5,-115,5.5,-105
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,-3.5,-105,3.5,-117
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,-5.5,-114,5.5,-107
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,-1.5,-108,1.5,-113
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,14.0,-110,-14.0,-110
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,4.0,-109,-4.0,-112
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,7.5,-109,-7.5,-112
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,-4.0,-112,4.0,-109
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,-6.0,-110,6.0,-110
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetUS,betus,2024-11-17T16:55:17Z,spread,-3.0,-120,3.0,100
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,BetUS,betus,2024-11-17T16:55:17Z,spread,-6.0,-105,6.0,-115
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,BetUS,betus,2024-11-17T16:55:17Z,spread,-1.0,-120,1.0,100
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,BetUS,betus,2024-11-17T16:55:17Z,spread,14.0,-115,-14.0,-105
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,BetUS,betus,2024-11-17T16:55:17Z,spread,4.0,-110,-4.0,-110
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,BetUS,betus,2024-11-17T16:55:17Z,spread,9.0,-130,-9.0,110
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,BetUS,betus,2024-11-17T16:55:17Z,spread,-4.0,-110,4.0,-110
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,BetUS,betus,2024-11-17T16:55:17Z,spread,-6.0,-110,6.0,-110
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,Bovada,bovada,2024-11-17T16:54:54Z,spread,-3.5,100,3.5,-120
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,Bovada,bovada,2024-11-17T16:54:54Z,spread,-5.0,-115,5.0,-105
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,Bovada,bovada,2024-11-17T16:54:54Z,spread,-1.5,-110,1.5,-110
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,Bovada,bovada,2024-11-17T16:54:54Z,spread,13.5,-105,-13.5,-115
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,Bovada,bovada,2024-11-17T16:54:54Z,spread,4.0,-115,-4.0,-105
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,Bovada,bovada,2024-11-17T16:54:54Z,spread,7.5,-110,-7.5,-110
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,Bovada,bovada,2024-11-17T16:54:54Z,spread,-4.0,-115,4.0,-105
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,Bovada,bovada,2024-11-17T16:54:54Z,spread,-6.0,-115,6.0,-105
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,-3.0,-120,3.0,100
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,-6.0,-115,6.0,-105
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,-2.0,-115,2.0,-105
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,13.5,-105,-13.5,-115
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,4.0,-110,-4.0,-110
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,7.5,-110,-7.5,-110
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,-4.0,-105,4.0,-115
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,-6.0,-110,6.0,-110
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,-3.0,-120,3.0,100
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,-6.0,-115,6.0,-105
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,-2.0,-108,2.0,-112
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,14.0,-105,-14.0,-115
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,4.0,-108,-4.0,-112
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,8.0,-108,-8.0,-112
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,-4.0,-110,4.0,-110
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,-6.0,-118,6.0,-102
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,-3.5,-104,3.5,-118
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,-6.0,-110,6.0,-110
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,-1.5,-110,1.5,-110
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,13.5,-108,-13.5,-112
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,4.5,-115,-4.5,-105
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,8.5,-115,-8.5,-105
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,-4.5,-105,4.5,-115
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,-5.5,-120,5.5,-102
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,-3.0,-120,3.0,109
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,-6.0,-105,6.0,-105
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,-1.5,-108,1.5,-102
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,14.0,-113,-14.0,102
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,4.0,101,-4.0,-112
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,7.5,100,-7.5,-110
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,-4.0,-105,4.0,-105
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,-5.5,-114,5.5,103
+1e5feffbcc2b9c122727b45963203298,2024-11-17 18:00:00+00:00,Baltimore Ravens,Pittsburgh Steelers,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,-3.0,-115,3.0,-105
+7c742858a76089990395c3179731744b,2024-11-17 18:00:00+00:00,Green Bay Packers,Chicago Bears,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,-6.0,-110,6.0,-110
+ca63340028583e516e8053ee36318425,2024-11-17 18:00:00+00:00,Cleveland Browns,New Orleans Saints,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,-2.0,-110,2.0,-110
+d0f73537e153be7455c87ae97864ef7d,2024-11-17 18:00:00+00:00,Jacksonville Jaguars,Detroit Lions,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,14.0,-110,-14.0,-110
+e552bfd99b12a0acd319b922f7a9fa7c,2024-11-17 18:00:00+00:00,Indianapolis Colts,New York Jets,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,4.0,-105,-4.0,-115
+7614724acc0987e643d0a60e73167b2e,2024-11-17 18:00:00+00:00,Las Vegas Raiders,Miami Dolphins,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,8.0,-110,-8.0,-110
+73f1d28c0bfe32a1ff292b688bb85df3,2024-11-17 18:00:00+00:00,Los Angeles Rams,New England Patriots,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,-4.0,-110,4.0,-110
+6aa05bdde84274ea82472f0bc79baaad,2024-11-17 18:00:00+00:00,Minnesota Vikings,Tennessee Titans,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,-6.0,-105,6.0,-115
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,2.0,-110,-2.0,-110
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,6.0,-110,-6.0,-110
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,1.5,-106,-1.5,-114
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,6.0,-110,-6.0,-110
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,1.5,-108,-1.5,-113
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,6.0,-108,-6.0,-113
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,BetUS,betus,2024-11-17T16:55:17Z,spread,1.0,100,-1.0,-120
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,BetUS,betus,2024-11-17T16:55:17Z,spread,6.0,-110,-6.0,-110
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,Bovada,bovada,2024-11-17T16:54:54Z,spread,1.5,-105,-1.5,-115
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,Bovada,bovada,2024-11-17T16:54:54Z,spread,6.0,-110,-6.0,-110
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,2.0,-115,-2.0,-105
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,6.0,-110,-6.0,-110
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,1.5,-108,-1.5,-112
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,6.0,-112,-6.0,-108
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,1.5,-108,-1.5,-112
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,5.5,-104,-5.5,-118
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,2.0,-104,-2.0,-106
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,6.0,-111,-6.0,101
+4baedb2bf9b85f9b9ec40e88bacc1792,2024-11-17 21:05:00+00:00,Atlanta Falcons,Denver Broncos,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,2.0,-110,-2.0,-110
+cc4a0f06f87d64f4a02816ca7da514fa,2024-11-17 21:05:00+00:00,Seattle Seahawks,San Francisco 49ers,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,6.0,-110,-6.0,-110
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,2.5,-110,-2.5,-110
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,2.5,-112,-2.5,-108
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,2.0,-109,-2.0,-112
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,BetUS,betus,2024-11-17T16:55:17Z,spread,1.0,105,-1.0,-125
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,Bovada,bovada,2024-11-17T16:54:54Z,spread,2.5,-110,-2.5,-110
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,2.5,-115,-2.5,-105
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,2.5,-112,-2.5,-108
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,2.5,-112,-2.5,-108
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,2.0,102,-2.0,-113
+2ac4732d168fd3fd0958719e2b11aad1,2024-11-17 21:25:00+00:00,Kansas City Chiefs,Buffalo Bills,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,2.5,-110,-2.5,-110
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,BetMGM,betmgm,2024-11-17T16:55:20Z,spread,1.5,-110,-1.5,-110
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,BetOnline.ag,betonlineag,2024-11-17T16:55:04Z,spread,1.0,-105,-1.0,-115
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,BetRivers,betrivers,2024-11-17T16:55:18Z,spread,1.0,-112,-1.0,-109
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,BetUS,betus,2024-11-17T16:55:17Z,spread,1.0,-105,-1.0,-115
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,Bovada,bovada,2024-11-17T16:54:54Z,spread,1.5,-105,-1.5,-115
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,Caesars,williamhill_us,2024-11-17T16:53:30Z,spread,1.0,-115,-1.0,-105
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,DraftKings,draftkings,2024-11-17T16:55:20Z,spread,1.0,-108,-1.0,-112
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,FanDuel,fanduel,2024-11-17T16:54:54Z,spread,1.5,-115,-1.5,-105
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,LowVig.ag,lowvig,2024-11-17T16:55:09Z,spread,1.0,-101,-1.0,-109
+a2b3fd60eede2230285512b8c3b4eed3,2024-11-18 01:15:00+00:00,Cincinnati Bengals,Los Angeles Chargers,MyBookie.ag,mybookieag,2024-11-17T16:50:50Z,spread,1.0,-110,-1.0,-110
