@@ -434,6 +434,29 @@ def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0, max_staleness_mi
             
             stale_bookmaker = ', '.join(stale_bookmakers) if stale_bookmakers else None
             
+            # Get last update times for bookmakers
+            over_last_update = best_over.get('market_last_update') or best_over.get('bookmaker_last_update')
+            under_last_update = best_under.get('market_last_update') or best_under.get('bookmaker_last_update')
+            
+            # Convert to ET timezone for display
+            et_tz = ZoneInfo(TIMEZONE)
+            over_update_et = None
+            under_update_et = None
+            
+            if over_last_update:
+                try:
+                    over_dt = datetime.fromisoformat(over_last_update.replace('Z', '+00:00'))
+                    over_update_et = over_dt.astimezone(et_tz).strftime('%I:%M:%S %p ET')
+                except:
+                    pass
+            
+            if under_last_update:
+                try:
+                    under_dt = datetime.fromisoformat(under_last_update.replace('Z', '+00:00'))
+                    under_update_et = under_dt.astimezone(et_tz).strftime('%I:%M:%S %p ET')
+                except:
+                    pass
+            
             arbs.append({
                 'player': player,
                 'market': market,
@@ -441,9 +464,11 @@ def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0, max_staleness_mi
                 'best_over_odds': int(over_odds),
                 'best_over_book': best_over['bookmaker'],
                 'best_over_implied': arb['total_prob'] - american_to_probability(under_odds),  # over prob
+                'best_over_last_update': over_update_et,
                 'best_under_odds': int(under_odds),
                 'best_under_book': best_under['bookmaker'],
                 'best_under_implied': american_to_probability(under_odds),
+                'best_under_last_update': under_update_et,
                 'total_prob': arb['total_prob'],
                 'expected_profit_pct': arb['profit_pct'],
                 'is_arb': arb['is_arb'],
@@ -498,18 +523,27 @@ def save_arb_output(arbs_df, work_dir, timestamp=None):
 # EMAIL FORMATTING
 # ============================================================================
 
-def format_arb_email(high_value_arbs, other_arbs):
-    """Format arbs into email body with high-value at top, others below."""
+def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minutes=2.0):
+    """
+    Format arbs into email body with staleness indicators.
+    
+    Args:
+        high_value_arbs: Fresh high-value arbs (above threshold)
+        other_arbs: Fresh arbs below threshold
+        stale_arbs: Stale arbs (any profit level)
+        max_staleness_minutes: Threshold for staleness in minutes
+    """
     now = datetime.now(ZoneInfo(TIMEZONE))
-    total_arbs = len(high_value_arbs) + len(other_arbs)
+    fresh_arbs = high_value_arbs + other_arbs
+    total_arbs = len(fresh_arbs) + len(stale_arbs)
     
     # Header depends on whether we have high-value arbs
     if high_value_arbs:
         header = "🚨 high-value nba arbs found! 🚨"
-        arb_summary = f"arbs found: {total_arbs} ({len(high_value_arbs)} high-value)"
+        arb_summary = f"arbs found: {total_arbs} ({len(high_value_arbs)} high-value, {len(fresh_arbs)} fresh, {len(stale_arbs)} stale)"
     else:
         header = "📊 nba arb scan complete"
-        arb_summary = f"arbs found: {total_arbs} (none above threshold)"
+        arb_summary = f"arbs found: {total_arbs} ({len(fresh_arbs)} fresh, {len(stale_arbs)} stale)"
     
     lines = [
         header,
@@ -521,19 +555,42 @@ def format_arb_email(high_value_arbs, other_arbs):
         ""
     ]
     
-    # High-value arbs (detailed format)
+    # High-value FRESH arbs (detailed format)
     if high_value_arbs:
+        lines.extend([
+            "✅ FRESH ARBS (NOT STALE):",
+            ""
+        ])
+        
         for i, arb in enumerate(high_value_arbs, 1):
             market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
             
+            # Build timestamp info
+            fetch_time = arb.get('fetch_time_et', 'Unknown')
+            over_update = arb.get('best_over_last_update', 'Unknown')
+            under_update = arb.get('best_under_last_update', 'Unknown')
+            
+            # Staleness info
+            max_staleness = arb.get('max_staleness', 0)
+            is_stale = arb.get('is_stale', False)
+            
+            if max_staleness < max_staleness_minutes:
+                staleness_status = f"⏱️  Staleness: {max_staleness:.1f} min < {max_staleness_minutes:.1f} min threshold ✅ NOT STALE"
+            else:
+                staleness_status = f"⏱️  Staleness: {max_staleness:.1f} min > {max_staleness_minutes:.1f} min threshold ⚠️ STALE"
+            
             lines.extend([
-                f"#{i} - {arb['expected_profit_pct']:.2f}% PROFIT",
+                f"#{i} - {arb['expected_profit_pct']:.2f}% PROFIT ✅",
                 f"   Player: {arb['player']}",
                 f"   Market: {market_display} {arb['line']}",
                 f"   Game: {arb['game']}",
                 "",
                 f"   📈 OVER {arb['line']}: {arb['best_over_odds']:+d} @ {arb['best_over_book']}",
+                f"      Line updated: {over_update}",
                 f"   📉 UNDER {arb['line']}: {arb['best_under_odds']:+d} @ {arb['best_under_book']}",
+                f"      Line updated: {under_update}",
+                f"   🕐 Data pulled: {fetch_time}",
+                f"   {staleness_status}",
                 "",
                 f"   💰 Stake $100 total:",
                 f"      → ${arb['over_stake']:.2f} on OVER @ {arb['best_over_book']}",
@@ -544,29 +601,83 @@ def format_arb_email(high_value_arbs, other_arbs):
                 ""
             ])
     
-    # Other arbs (compact format)
+    # Other FRESH arbs (compact format)
     if other_arbs:
         if high_value_arbs:
             lines.extend([
                 "",
                 "=" * 50,
-                "📋 other arbs (below threshold):",
+                "📋 other fresh arbs (below threshold):",
                 "=" * 50,
+                ""
+            ])
+        else:
+            lines.extend([
+                "✅ FRESH ARBS (NOT STALE):",
                 ""
             ])
         
         for i, arb in enumerate(other_arbs, len(high_value_arbs) + 1):
             market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
+            fetch_time = arb.get('fetch_time_et', 'Unknown')
+            over_update = arb.get('best_over_last_update', 'Unknown')
+            under_update = arb.get('best_under_last_update', 'Unknown')
+            
+            # Staleness info
+            max_staleness = arb.get('max_staleness', 0)
+            
+            if max_staleness < max_staleness_minutes:
+                staleness_status = f"⏱️  {max_staleness:.1f} min < {max_staleness_minutes:.1f} min threshold ✅ NOT STALE"
+            else:
+                staleness_status = f"⏱️  {max_staleness:.1f} min > {max_staleness_minutes:.1f} min threshold ⚠️ STALE"
+            
             lines.extend([
-                f"#{i} - {arb['expected_profit_pct']:.2f}% | {arb['player']} | {market_display} {arb['line']}",
+                f"#{i} - {arb['expected_profit_pct']:.2f}% | {arb['player']} | {market_display} {arb['line']} ✅",
                 f"     Game: {arb['game']}",
-                f"     Over {arb['best_over_odds']:+d} @ {arb['best_over_book']} | Under {arb['best_under_odds']:+d} @ {arb['best_under_book']}",
+                f"     Over {arb['best_over_odds']:+d} @ {arb['best_over_book']} (updated {over_update})",
+                f"     Under {arb['best_under_odds']:+d} @ {arb['best_under_book']} (updated {under_update})",
+                f"     Data pulled: {fetch_time}",
+                f"     {staleness_status}",
+                ""
+            ])
+    
+    # STALE arbs section
+    if stale_arbs:
+        lines.extend([
+            "",
+            "=" * 50,
+            "⚠️  STALE ARBS (lines may have changed):",
+            "=" * 50,
+            ""
+        ])
+        
+        for i, arb in enumerate(stale_arbs, len(fresh_arbs) + 1):
+            market_display = MARKET_DISPLAY_NAMES.get(arb['market'], arb['market'])
+            staleness = arb.get('max_staleness', 0)
+            stale_book = arb.get('stale_bookmaker', 'Unknown')
+            fetch_time = arb.get('fetch_time_et', 'Unknown')
+            over_update = arb.get('best_over_last_update', 'Unknown')
+            under_update = arb.get('best_under_last_update', 'Unknown')
+            
+            # Staleness info
+            staleness_status = f"⏱️  {staleness:.1f} min > {max_staleness_minutes:.1f} min threshold ⚠️ STALE"
+            
+            lines.extend([
+                f"#{i} - {arb['expected_profit_pct']:.2f}% | {arb['player']} | {market_display} {arb['line']} ⚠️ STALE",
+                f"     Game: {arb['game']}",
+                f"     Over {arb['best_over_odds']:+d} @ {arb['best_over_book']} (updated {over_update})",
+                f"     Under {arb['best_under_odds']:+d} @ {arb['best_under_book']} (updated {under_update})",
+                f"     Data pulled: {fetch_time}",
+                f"     {staleness_status}",
+                f"     ⚠️  {stale_book} data is {staleness:.1f} min old - verify before betting!",
                 ""
             ])
     
     lines.extend([
         "",
         "⚡ act fast - lines move quickly!",
+        "✅ = fresh lines (safe to bet)",
+        "⚠️  = stale lines (double-check before betting)",
         "",
         "Dashboard: https://tqs-props-dashboard.streamlit.app"
     ])
@@ -661,8 +772,9 @@ def lambda_handler(event, context):
             print("No games today - saving empty file")
             empty_df = pd.DataFrame(columns=[
                 'player', 'market', 'line', 'best_over_odds', 'best_over_book',
-                'best_over_implied', 'best_under_odds', 'best_under_book',
-                'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
+                'best_over_implied', 'best_over_last_update', 'best_under_odds', 
+                'best_under_book', 'best_under_implied', 'best_under_last_update',
+                'total_prob', 'expected_profit_pct', 'is_arb',
                 'over_stake', 'under_stake', 'over_return', 'under_return',
                 'guaranteed_profit', 'total_wager', 'recommendation', 'game',
                 'game_time', 'num_bookmakers', 'over_staleness_minutes',
@@ -729,8 +841,9 @@ def lambda_handler(event, context):
         else:
             arbs_df = pd.DataFrame(columns=[
                 'player', 'market', 'line', 'best_over_odds', 'best_over_book',
-                'best_over_implied', 'best_under_odds', 'best_under_book',
-                'best_under_implied', 'total_prob', 'expected_profit_pct', 'is_arb',
+                'best_over_implied', 'best_over_last_update', 'best_under_odds', 
+                'best_under_book', 'best_under_implied', 'best_under_last_update',
+                'total_prob', 'expected_profit_pct', 'is_arb',
                 'over_stake', 'under_stake', 'over_return', 'under_return',
                 'guaranteed_profit', 'total_wager', 'recommendation', 'game',
                 'game_time', 'num_bookmakers', 'over_staleness_minutes',
@@ -762,8 +875,8 @@ def lambda_handler(event, context):
             else:
                 print("ℹ️  No changes to commit")
         
-        # Step 8: Send email alert if any FRESH high-value arbs found
-        # Filter out stale arbs from email alerts (but keep them in CSV for tracking)
+        # Step 8: Send email alert if any arbs found (fresh or stale)
+        # Separate fresh from stale arbs
         fresh_arbs = [a for a in all_arbs if not a.get('is_stale', False)]
         stale_arbs = [a for a in all_arbs if a.get('is_stale', False)]
         
@@ -773,15 +886,24 @@ def lambda_handler(event, context):
         print(f"\n📊 EMAIL FILTERING:")
         print(f"   Total arbs found: {len(all_arbs)}")
         print(f"   Fresh arbs (≤{max_staleness_minutes} min): {len(fresh_arbs)}")
-        print(f"   Stale arbs (filtered from email): {len(stale_arbs)}")
+        print(f"   Stale arbs (included in email): {len(stale_arbs)}")
         print(f"   Fresh arbs with {min_profit}%+ edge: {len(high_value_arbs)}")
         
-        # Only send email if we have FRESH HIGH-VALUE arbs
-        if high_value_arbs:
-            best_profit = high_value_arbs[0]['expected_profit_pct']
-            subject = f"🚨 {len(high_value_arbs)} NBA ARB(S) FOUND! BEST: {best_profit:.1f}%"
+        # Send email if we have any HIGH-VALUE arbs (fresh or stale)
+        high_value_arbs_all = [a for a in all_arbs if a['expected_profit_pct'] >= min_profit]
+        
+        if high_value_arbs_all:
+            best_profit = high_value_arbs_all[0]['expected_profit_pct']
             
-            message = format_arb_email(high_value_arbs, other_arbs)
+            # Subject line indicates staleness status
+            if high_value_arbs:
+                staleness_indicator = f" ({len(high_value_arbs)} FRESH, {len(stale_arbs)} STALE)" if stale_arbs else " (ALL FRESH)"
+            else:
+                staleness_indicator = " (ALL STALE)"
+            
+            subject = f"🚨 {len(high_value_arbs_all)} NBA ARB(S)! {best_profit:.1f}%{staleness_indicator}"
+            
+            message = format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minutes)
             
             print("\n" + "=" * 60)
             print("📧 SENDING ALERT EMAIL (high-value arbs found)")
@@ -793,18 +915,23 @@ def lambda_handler(event, context):
                 'statusCode': 200,
                 'body': json.dumps({
                     'total_arbs': len(all_arbs),
-                    'high_value_arbs': len(high_value_arbs),
+                    'fresh_arbs': len(fresh_arbs),
+                    'stale_arbs': len(stale_arbs),
+                    'high_value_arbs': len(high_value_arbs_all),
+                    'high_value_fresh': len(high_value_arbs),
                     'best_profit': best_profit,
                     'alert_sent': True,
                     'output_file': output_path
                 })
             }
         else:
-            print("No arbs found - no alert sent")
+            print("No high-value arbs found - no alert sent")
             return {
                 'statusCode': 200,
                 'body': json.dumps({
-                    'total_arbs': 0,
+                    'total_arbs': len(all_arbs),
+                    'fresh_arbs': len(fresh_arbs),
+                    'stale_arbs': len(stale_arbs),
                     'high_value_arbs': 0,
                     'alert_sent': False,
                     'output_file': output_path
