@@ -68,3 +68,6 @@ service_account.json
 credentials.json
 token.pickle
 .betting/
+# NFL research scraped data (regenerated each week)
+data/nfl_research/nfl_week*_scraped_*.json
+data/nfl_research/nfl_week*_scraped_*.txt
