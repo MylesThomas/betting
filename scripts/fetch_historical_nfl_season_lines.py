@@ -1,5 +1,5 @@
 """
-Fetch NFL Game Lines for 2024-25 Season
+Fetch NFL Game Lines for 2024 or 2025 Season
 
 Fetches historical betting lines (h2h + spreads) for each game day.
 Captures CLOSING lines by fetching on game day, not early opening lines.
@@ -7,9 +7,17 @@ Captures CLOSING lines by fetching on game day, not early opening lines.
 Similar approach to fetch_historical_props.py for NBA
 
 Usage:
-    python fetch_historical_nfl_season_lines.py               # Interactive mode
-    python fetch_historical_nfl_season_lines.py --london      # Fetch only London games
-    python fetch_historical_nfl_season_lines.py --prod-run    # Non-interactive full season fetch
+    # 2025 season (current, default)
+    python fetch_historical_nfl_season_lines.py --prod-run
+    
+    # 2024 season (historical backtest)
+    python fetch_historical_nfl_season_lines.py --season 2024 --prod-run
+    
+    # Interactive mode
+    python fetch_historical_nfl_season_lines.py
+    
+    # London games only
+    python fetch_historical_nfl_season_lines.py --london
 """
 
 import requests
@@ -43,12 +51,10 @@ MARKETS = 'spreads'  # Only spreads (not moneyline aka h2h)
 REGIONS = 'us'
 ODDS_FORMAT = 'american'
 
-# Season dates
-SEASON_START = '2025-09-04'  # Thursday, Sept 4, 2025
-TODAY = datetime.now().strftime('%Y-%m-%d')
-
 # Output directory - save each date as separate CSV
 OUTPUT_DIR = 'data/01_input/the-odds-api/nfl/game_lines/historical'
+
+# Season dates will be set based on --season argument
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -379,9 +385,13 @@ def fetch_date_lines(date_str, save=True):
     return df
 
 
-def fetch_full_season():
+def fetch_full_season(season_start, season_end):
     """
-    Fetch lines for all dates from season start to today
+    Fetch lines for all dates from season start to end date
+    
+    Args:
+        season_start: Start date in YYYY-MM-DD format
+        season_end: End date in YYYY-MM-DD format
     
     Returns:
         Summary dict with statistics
@@ -389,12 +399,11 @@ def fetch_full_season():
     print("="*80)
     print("NFL SEASON BETTING LINES FETCH")
     print("="*80)
-    print(f"Season: 2024-25")
-    print(f"Date range: {SEASON_START} to {TODAY}")
+    print(f"Date range: {season_start} to {season_end}")
     
     # Generate all dates in range
-    start_date = datetime.strptime(SEASON_START, '%Y-%m-%d').date()
-    end_date = datetime.strptime(TODAY, '%Y-%m-%d').date()
+    start_date = datetime.strptime(season_start, '%Y-%m-%d').date()
+    end_date = datetime.strptime(season_end, '%Y-%m-%d').date()
     
     all_dates = []
     current = start_date
@@ -512,7 +521,7 @@ def fetch_full_season():
     print(f"\n{'='*80}")
     print("FETCH SUMMARY")
     print(f"{'='*80}")
-    print(f"Date range: {SEASON_START} to {TODAY}")
+    print(f"Date range: {season_start} to {season_end}")
     print(f"")
     print(f"Total days checked: {stats['total_dates']}")
     print(f"Processed this session: {stats['processed']}")
@@ -551,16 +560,19 @@ def fetch_full_season():
 
 def fetch_london_games():
     """
-    Fetch all London games (games before 1pm ET) from the season
+    Fetch all London games (games before 1pm ET) from the 2025 season
     Saves to a single CSV file: 2025_game_lines_london.csv
+    
+    Note: Only configured for 2025 season. 2024 London games would need different dates.
     
     Uses 6 AM ET (10 AM UTC) snapshot to get closing lines before 9:30 AM ET kickoff
     """
     print("="*80)
-    print("LONDON GAMES MODE - Fetching games before 1pm ET")
+    print("LONDON GAMES MODE - 2025 Season Only")
     print("="*80)
     
     # Hardcoded London game dates for 2025 season
+    # Note: For 2024 season, would need to use 2024 London game dates
     # Oct 5, 2025:  Minnesota Vikings @ Cleveland Browns (2:30 PM BST / 9:30 AM ET) - Tottenham Hotspur Stadium
     # Oct 12, 2025: Denver Broncos @ New York Jets (2:30 PM BST / 9:30 AM ET) - Tottenham Hotspur Stadium
     # Oct 19, 2025: Los Angeles Rams @ Jacksonville Jaguars (2:30 PM BST / 9:30 AM ET) - Wembley Stadium
@@ -669,16 +681,35 @@ def fetch_london_games():
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Fetch NFL betting lines')
+    parser.add_argument('--season', type=int, default=2025, choices=[2024, 2025],
+                       help='Season to fetch (2024 or 2025, default: 2025)')
     parser.add_argument('--london', action='store_true', 
                        help='Fetch only London games (games before 1pm ET)')
     parser.add_argument('--prod-run', action='store_true',
                        help='Production mode: fetch full season non-interactively (for automation)')
     args = parser.parse_args()
     
+    # Set season-specific date ranges
+    if args.season == 2024:
+        SEASON_START = '2024-09-05'  # Thursday, Sept 5, 2024 (BAL @ KC)
+        SEASON_END = '2025-02-09'     # Super Bowl LIX
+        season_label = "2023-24"
+    else:  # 2025
+        SEASON_START = '2025-09-04'  # Thursday, Sept 4, 2025
+        SEASON_END = datetime.now().strftime('%Y-%m-%d')
+        season_label = "2024-25"
+    
+    # For completed seasons, use full range; for current season, use today
+    if args.season == 2024:
+        TODAY = SEASON_END
+    else:
+        TODAY = datetime.now().strftime('%Y-%m-%d')
+    
     print("="*80)
     print("NFL HISTORICAL GAME LINES FETCHER")
     print("="*80)
-    print(f"Season: 2024-25")
+    print(f"Season: {season_label} ({args.season})")
+    print(f"Date range: {SEASON_START} to {TODAY}")
     print(f"Markets: {MARKETS}")
     print(f"Output: {OUTPUT_DIR}")
     
@@ -696,7 +727,7 @@ if __name__ == "__main__":
         print(f"Fetching all dates from {SEASON_START} to {TODAY}")
         print(f"Skipping dates with existing files")
         
-        stats = fetch_full_season()
+        stats = fetch_full_season(SEASON_START, TODAY)
         
         if stats and stats['successful'] > 0:
             print(f"\n✅ Fetch completed - {stats['successful']} dates with games")
@@ -758,7 +789,7 @@ if __name__ == "__main__":
         print(f"This will check all dates from {SEASON_START} to {TODAY}")
         print(f"It will skip dates that already have files.")
         
-        stats = fetch_full_season()
+        stats = fetch_full_season(SEASON_START, TODAY)
         
         if stats and stats['successful'] > 0:
             print(f"\n✅ Fetch completed - {stats['successful']} dates with games")

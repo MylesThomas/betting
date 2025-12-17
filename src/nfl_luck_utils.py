@@ -10,7 +10,7 @@ import glob
 from typing import Optional, Dict, List
 
 from nfl_team_utils import add_team_abbr_columns, normalize_unexpected_points_abbr
-from config import DATA_ROOT, NFL_2025_BYE_WEEKS
+from config import DATA_ROOT, NFL_2024_BYE_WEEKS, NFL_2025_BYE_WEEKS
 
 # =============================================================================
 # PATHS
@@ -34,6 +34,16 @@ SPREAD_CATEGORIES: List[str] = ['0-3', '3.5-7', '7.5+']
 # =============================================================================
 # SIMPLE FUNCTIONS
 # =============================================================================
+
+def get_bye_weeks(season: int = 2025) -> Dict[str, int]:
+    """Get bye weeks dictionary for specified season."""
+    if season == 2024:
+        return NFL_2024_BYE_WEEKS
+    elif season == 2025:
+        return NFL_2025_BYE_WEEKS
+    else:
+        raise ValueError(f"Bye weeks not configured for season {season}")
+
 
 def get_nfl_week(game_date: pd.Timestamp, season: int = 2025) -> int:
     """Calculate NFL week from game date. Week 1 of 2025 starts Sept 4."""
@@ -80,12 +90,18 @@ def calculate_roi(win_pct: float, odds: int = -110) -> float:
 # DATA LOADING
 # =============================================================================
 
-def load_nfl_betting_lines(include_upcoming: bool = False) -> pd.DataFrame:
-    """Load all NFL betting lines from historical dir."""
+def load_nfl_betting_lines(include_upcoming: bool = False, season: int = 2025) -> pd.DataFrame:
+    """
+    Load all NFL betting lines from historical dir.
+    
+    Args:
+        include_upcoming: Include upcoming games dir. Default: False.
+        season: Season to filter (2024 or 2025). Default: 2025.
+    """
     csv_files = sorted(glob.glob(str(NFL_LINES_DIR / "nfl_game_lines_*.csv")))
     
-    # Add London games
-    london_file = NFL_LINES_DIR / "2025_game_lines_london.csv"
+    # Add season-specific London games
+    london_file = NFL_LINES_DIR / f"{season}_game_lines_london.csv"
     if london_file.exists():
         csv_files.append(str(london_file))
     
@@ -99,9 +115,14 @@ def load_nfl_betting_lines(include_upcoming: bool = False) -> pd.DataFrame:
     if df['game_time'].dt.tz is None:
         df['game_time'] = df['game_time'].dt.tz_localize('UTC')
     
-    # Filter to 2025 season
-    season_start = pd.Timestamp('2025-09-01', tz='UTC')
-    return df[df['game_time'] >= season_start].copy()
+    # Filter to specified season
+    if season == 2024:
+        season_start = pd.Timestamp('2024-09-01', tz='UTC')
+        season_end = pd.Timestamp('2025-02-28', tz='UTC')
+        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
+    else:  # 2025
+        season_start = pd.Timestamp('2025-09-01', tz='UTC')
+        return df[df['game_time'] >= season_start].copy()
 
 
 def calculate_consensus_lines(df_lines: pd.DataFrame) -> pd.DataFrame:
@@ -128,9 +149,13 @@ def calculate_consensus_lines(df_lines: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
-def load_unexpected_points_data(file_path: Optional[Path] = None) -> pd.DataFrame:
+def load_unexpected_points_data(file_path: Optional[Path] = None, season: int = 2025) -> pd.DataFrame:
     """
     Load Unexpected Points data with luck calculated.
+    
+    Args:
+        file_path: Path to Excel file. If None, uses most recent file.
+        season: Season to load (2024 or 2025). Default: 2025.
     
     Luck Components:
     - offensive_luck: your_score - your_adj_score (you scored more/less than expected)
@@ -148,7 +173,9 @@ def load_unexpected_points_data(file_path: Optional[Path] = None) -> pd.DataFram
         file_path = xlsx_files[0]
         print(f"Using latest Unexpected Points file: {file_path}")
     
-    df = pd.read_excel(file_path, sheet_name="2025 Adjusted Scores")
+    # Load the appropriate sheet for the season
+    sheet_name = f"{season} Adjusted Scores"
+    df = pd.read_excel(file_path, sheet_name=sheet_name)
     df['team_canonical'] = df['team'].apply(normalize_unexpected_points_abbr)
     
     # Calculate offensive luck (old method - kept for reference)

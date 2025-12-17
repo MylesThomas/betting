@@ -159,6 +159,25 @@ def get_nfl_week_for_date(date) -> int:
 
 
 # 2025 bye weeks (verified from nfl_luck_utils.py)
+NFL_2024_BYE_WEEKS = {
+    # Week 5
+    'DET': 5, 'LAC': 5, 'PHI': 5, 'TEN': 5,
+    # Week 6
+    'KC': 6, 'LAR': 6, 'MIA': 6, 'MIN': 6,
+    # Week 7
+    'CHI': 7, 'DAL': 7,
+    # Week 9
+    'PIT': 9, 'SF': 9,
+    # Week 10
+    'CLE': 10, 'GB': 10, 'LV': 10, 'SEA': 10,
+    # Week 11
+    'ARI': 11, 'CAR': 11, 'NYG': 11, 'TB': 11,
+    # Week 12
+    'ATL': 12, 'BUF': 12, 'CIN': 12, 'JAX': 12, 'NO': 12, 'NYJ': 12,
+    # Week 14
+    'BAL': 14, 'DEN': 14, 'HOU': 14, 'IND': 14, 'NE': 14, 'WAS': 14,
+}
+
 NFL_2025_BYE_WEEKS = {
     'ATL': 5, 'CHI': 5, 'GB': 5, 'PIT': 5,
     'HOU': 6, 'MIN': 6,

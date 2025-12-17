@@ -23,24 +23,35 @@ Threshold Guidelines:
 - --threshold 7: ~1 TD of variance, stronger signal, smaller sample
 
 Arguments:
+- --season YEAR: Season to analyze (2024 or 2025, default: 2025)
 - --threshold N: Set luck cutoff (default: 3, from config.py)
 - --group-by-spread: Break down by spread size (0-3, 3.5-7, 7.5+)
 - --include-fav-dog: Split by unlucky team's role (favorite vs underdog)
+- --group-by-win-loss: Break down by whether unlucky team won or lost prior game
 - --show-games: Display individual Lucky vs Unlucky games
 - --team ABBR: Show one team's game-by-game path through the season
 - --data-quality-check: Verify all teams have expected games based on bye weeks
 - --debug: Show detailed debugging info
 
 Usage:
-    # Basic analysis
+    # Basic analysis (2025 season)
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 5
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 3
+    
+    # Backtest 2024 season
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2024 --threshold 3
     
     # Group by spread size
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 5 --group-by-spread
     
     # Full breakdown: spread + unlucky team's role (6 analyses)
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 5 --group-by-spread --include-fav-dog
+    
+    # Group by prior game result (won vs lost)
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 3 --group-by-win-loss
+    
+    # Ultimate breakdown: spread + role + win/loss (12 analyses)
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 3 --group-by-spread --include-fav-dog --group-by-win-loss
     
     # Show individual games
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 3 --show-games
@@ -75,9 +86,9 @@ from nfl_luck_utils import (
     get_prior_week_luck_detailed,
     get_luck_matchup_ats_results,
     calculate_roi,
+    get_bye_weeks,
     LUCK_CATEGORIES,
     SPREAD_CATEGORIES,
-    NFL_2025_BYE_WEEKS,
 )
 from nfl_team_utils import normalize_unexpected_points_abbr
 from config import NFL_LUCK_THRESHOLD_DEFAULT, DATA_ROOT
@@ -114,6 +125,8 @@ parser.add_argument('--debug', action='store_true',
                    help='Show detailed debugging info')
 parser.add_argument('--threshold', type=float, default=NFL_LUCK_THRESHOLD_DEFAULT,
                    help=f'Luck threshold for categorization (default: {NFL_LUCK_THRESHOLD_DEFAULT})')
+parser.add_argument('--season', type=int, default=2025, choices=[2024, 2025],
+                   help='Season to analyze (default: 2025)')
 parser.add_argument('--team', type=str, default=None,
                    help='Show one team\'s path through the season (e.g., --team GB)')
 parser.add_argument('--show-games', action='store_true',
@@ -122,16 +135,21 @@ parser.add_argument('--group-by-spread', action='store_true',
                    help='Break down results by spread ranges (≤3, 3-7, >7)')
 parser.add_argument('--include-fav-dog', action='store_true',
                    help='Further break down by favorite/underdog (use with --group-by-spread for 6 tables)')
+parser.add_argument('--group-by-win-loss', action='store_true',
+                   help='Break down by whether unlucky team won or lost their prior game')
 parser.add_argument('--data-quality-check', action='store_true',
                    help='Verify each team has expected games based on bye weeks')
 args = parser.parse_args()
 
 threshold = args.threshold
+season = args.season
+bye_weeks = get_bye_weeks(season)
 
 print("=" * 100)
 print("NFL SPREAD COVERING: BOTH TEAMS' LUCK ANALYSIS")
 print("=" * 100)
-print(f"\nLuck threshold: ±{threshold}")
+print(f"\nSeason: {season}")
+print(f"Luck threshold: ±{threshold}")
 print(f"  Lucky: luck >= +{threshold}")
 print(f"  Neutral: -{threshold} < luck < +{threshold}")
 print(f"  Unlucky: luck <= -{threshold}")
@@ -144,10 +162,10 @@ print(f"   Modified: {datetime.fromtimestamp(INPUT_DATA_PATH.stat().st_mtime).st
 # STEP 1: Load all NFL betting lines
 # =============================================================================
 print("\n" + "=" * 100)
-print("STEP 1: Loading NFL betting lines")
+print(f"STEP 1: Loading NFL betting lines ({season} season)")
 print("=" * 100)
 
-df_lines = load_nfl_betting_lines()
+df_lines = load_nfl_betting_lines(season=season)
 print(f"Total betting lines loaded: {len(df_lines):,}")
 
 # =============================================================================
@@ -164,12 +182,12 @@ print(f"Consensus lines calculated: {len(df_consensus)} games")
 # STEP 3: Load Unexpected Points data (game results)
 # =============================================================================
 print("\n" + "=" * 100)
-print("STEP 3: Loading Unexpected Points data")
+print(f"STEP 3: Loading Unexpected Points data ({season} season)")
 print("=" * 100)
 
 # Use the latest file
 up_path = Path(INPUT_DATA_PATH)
-df_up = load_unexpected_points_data(file_path=up_path)
+df_up = load_unexpected_points_data(file_path=up_path, season=season)
 
 print(f"Unexpected Points data loaded: {len(df_up)} rows")
 print(f"Weeks: {df_up['week'].min()} to {df_up['week'].max()}")
@@ -332,9 +350,23 @@ for idx, bet_game in df_consensus.iterrows():
         'away_prior_luck': away_prior_luck,
         'away_prior_off_luck': away_prior_off_luck,
         'away_prior_def_luck': away_prior_def_luck,
+        'away_prior_week': away_prior_detail.get('week'),
+        'away_prior_opp': away_prior_detail.get('opponent'),
+        'away_prior_score': away_prior_detail.get('score'),
+        'away_prior_opp_score': away_prior_detail.get('opp_score'),
+        'away_prior_adj_score': away_prior_detail.get('adj_score'),
+        'away_prior_opp_adj_score': away_prior_detail.get('opp_adj_score'),
+        'away_prior_won': away_prior_detail.get('won'),
         'home_prior_luck': home_prior_luck,
         'home_prior_off_luck': home_prior_off_luck,
         'home_prior_def_luck': home_prior_def_luck,
+        'home_prior_week': home_prior_detail.get('week'),
+        'home_prior_opp': home_prior_detail.get('opponent'),
+        'home_prior_score': home_prior_detail.get('score'),
+        'home_prior_opp_score': home_prior_detail.get('opp_score'),
+        'home_prior_adj_score': home_prior_detail.get('adj_score'),
+        'home_prior_opp_adj_score': home_prior_detail.get('opp_adj_score'),
+        'home_prior_won': home_prior_detail.get('won'),
         # Luck categories based on PRIOR week's total luck
         'away_prior_luck_cat': away_prior_luck_cat,
         'home_prior_luck_cat': home_prior_luck_cat,
@@ -461,9 +493,21 @@ if not args.data_quality_check:
                 unlucky_prior = game['away_prior_luck']
                 unlucky_off = game['away_prior_off_luck']
                 unlucky_def = game['away_prior_def_luck']
+                unlucky_prior_week = game['away_prior_week']
+                unlucky_prior_opp = game['away_prior_opp']
+                unlucky_prior_score = game['away_prior_score']
+                unlucky_prior_opp_score = game['away_prior_opp_score']
+                unlucky_prior_adj_score = game['away_prior_adj_score']
+                unlucky_prior_opp_adj_score = game['away_prior_opp_adj_score']
                 lucky_prior = game['home_prior_luck']
                 lucky_off = game['home_prior_off_luck']
                 lucky_def = game['home_prior_def_luck']
+                lucky_prior_week = game['home_prior_week']
+                lucky_prior_opp = game['home_prior_opp']
+                lucky_prior_score = game['home_prior_score']
+                lucky_prior_opp_score = game['home_prior_opp_score']
+                lucky_prior_adj_score = game['home_prior_adj_score']
+                lucky_prior_opp_adj_score = game['home_prior_opp_adj_score']
             else:
                 # Home team is unlucky - bet home
                 bet_team = home
@@ -473,9 +517,21 @@ if not args.data_quality_check:
                 unlucky_prior = game['home_prior_luck']
                 unlucky_off = game['home_prior_off_luck']
                 unlucky_def = game['home_prior_def_luck']
+                unlucky_prior_week = game['home_prior_week']
+                unlucky_prior_opp = game['home_prior_opp']
+                unlucky_prior_score = game['home_prior_score']
+                unlucky_prior_opp_score = game['home_prior_opp_score']
+                unlucky_prior_adj_score = game['home_prior_adj_score']
+                unlucky_prior_opp_adj_score = game['home_prior_opp_adj_score']
                 lucky_prior = game['away_prior_luck']
                 lucky_off = game['away_prior_off_luck']
                 lucky_def = game['away_prior_def_luck']
+                lucky_prior_week = game['away_prior_week']
+                lucky_prior_opp = game['away_prior_opp']
+                lucky_prior_score = game['away_prior_score']
+                lucky_prior_opp_score = game['away_prior_opp_score']
+                lucky_prior_adj_score = game['away_prior_adj_score']
+                lucky_prior_opp_adj_score = game['away_prior_opp_adj_score']
             
             if unlucky_covered:
                 week_wins += 1
@@ -484,10 +540,14 @@ if not args.data_quality_check:
                 week_losses += 1
                 result = "❌ LOSS"
             
-            # Format bet string with off/def breakdown
+            # Format prior game context
+            unlucky_result = "W" if unlucky_prior_score > unlucky_prior_opp_score else "L"
+            lucky_result = "W" if lucky_prior_score > lucky_prior_opp_score else "L"
+            
+            # Format bet string with prior week game context
             bet_str = f"{bet_team} {bet_spread:+.1f} vs {bet_opp} (Score: {away_score}-{home_score}) → {result}"
-            bet_str += f"\n         Unlucky {bet_team}: {unlucky_prior:+.1f} (off: {unlucky_off:+.1f}, def: {unlucky_def:+.1f})"
-            bet_str += f" | Lucky {bet_opp}: {lucky_prior:+.1f} (off: {lucky_off:+.1f}, def: {lucky_def:+.1f})"
+            bet_str += f"\n         Unlucky {bet_team}: Wk{int(unlucky_prior_week)} {unlucky_result} {int(unlucky_prior_score)}-{int(unlucky_prior_opp_score)} vs {unlucky_prior_opp} → {unlucky_prior:+.1f} luck (off: {unlucky_off:+.1f}, def: {unlucky_def:+.1f}) -> predicted score {unlucky_result} {unlucky_prior_adj_score:.1f}-{unlucky_prior_opp_adj_score:.1f}"
+            bet_str += f"\n         Lucky {bet_opp}: Wk{int(lucky_prior_week)} {lucky_result} {int(lucky_prior_score)}-{int(lucky_prior_opp_score)} vs {lucky_prior_opp} → {lucky_prior:+.1f} luck (off: {lucky_off:+.1f}, def: {lucky_def:+.1f}) -> predicted score {lucky_result} {lucky_prior_adj_score:.1f}-{lucky_prior_opp_adj_score:.1f}"
             bets.append(bet_str)
         
         # Update cumulative
@@ -516,7 +576,12 @@ if not args.data_quality_check:
 # =============================================================================
 if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_check:
     print("\n" + "=" * 100)
-    print("GROUPED ANALYSIS: SPREAD SIZE" + (" + UNLUCKY TEAM'S ROLE" if args.include_fav_dog else ""))
+    header = "GROUPED ANALYSIS: SPREAD SIZE"
+    if args.include_fav_dog:
+        header += " + UNLUCKY TEAM'S ROLE"
+    if args.group_by_win_loss and (args.group_by_spread or args.include_fav_dog):
+        header += " + WIN/LOSS"
+    print(header)
     print("=" * 100)
     
     spread_cats = SPREAD_CATEGORIES
@@ -556,8 +621,8 @@ if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_chec
     
     def get_lucky_vs_unlucky_with_roles(df_subset):
         """
-        Extract Lucky vs Unlucky games and determine the unlucky team's role (fav/dog).
-        Returns list of dicts with game info and unlucky team's role.
+        Extract Lucky vs Unlucky games and determine the unlucky team's role (fav/dog) and prior game result.
+        Returns list of dicts with game info, unlucky team's role, and win/loss status.
         """
         lu_games = []
         
@@ -571,15 +636,18 @@ if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_chec
                 # Away team is unlucky
                 unlucky_is_favorite = game['away_is_favorite']
                 unlucky_covered = game['away_covered']
+                unlucky_won = game['away_prior_won']
             else:
                 # Home team is unlucky
                 unlucky_is_favorite = game['home_is_favorite']
                 unlucky_covered = game['home_covered']
+                unlucky_won = game['home_prior_won']
             
             lu_games.append({
                 'game': game,
                 'unlucky_is_favorite': unlucky_is_favorite,
                 'unlucky_covered': unlucky_covered,
+                'unlucky_won': unlucky_won,
                 'spread_cat': game['spread_cat'],
             })
         
@@ -603,36 +671,75 @@ if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_chec
             for role, role_label in [(True, 'UNLUCKY IS FAVORITE'), (False, 'UNLUCKY IS UNDERDOG')]:
                 lu_filtered = [g for g in lu_in_spread if g['unlucky_is_favorite'] == role]
                 
-                print(f"\n{'='*80}")
-                print(f"SPREAD {spread_cat} | {role_label} (n={len(lu_filtered)} Lucky vs Unlucky games)")
-                print(f"{'='*80}")
-                
-                if len(lu_filtered) > 0:
-                    unlucky_covers = sum(1 for g in lu_filtered if g['unlucky_covered'])
-                    total = len(lu_filtered)
-                    unlucky_pct = unlucky_covers / total * 100
-                    lucky_pct = 100 - unlucky_pct
-                    unlucky_roi = ((unlucky_pct / 100 * 1.909) - 1) * 100
+                if not args.group_by_win_loss:
+                    # Just Spread + Role (no win/loss breakdown)
+                    print(f"\n{'='*80}")
+                    print(f"SPREAD {spread_cat} | {role_label} (n={len(lu_filtered)} Lucky vs Unlucky games)")
+                    print(f"{'='*80}")
                     
-                    print(f"\n🎯 Unlucky team covers: {unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.1f}%) | ROI: {unlucky_roi:+.1f}%")
-                    print(f"   Lucky team covers: {total-unlucky_covers}-{unlucky_covers} ({lucky_pct:.1f}%)")
-                    
-                    if unlucky_pct > 52.5:
-                        print(f"   ✅ EDGE: Bet unlucky team")
-                    elif lucky_pct > 52.5:
-                        print(f"   ⚡ EDGE: Bet lucky team")
+                    if len(lu_filtered) > 0:
+                        unlucky_covers = sum(1 for g in lu_filtered if g['unlucky_covered'])
+                        total = len(lu_filtered)
+                        unlucky_pct = unlucky_covers / total * 100
+                        lucky_pct = 100 - unlucky_pct
+                        unlucky_roi = ((unlucky_pct / 100 * 1.909) - 1) * 100
+                        
+                        print(f"\n🎯 Unlucky team covers: {unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.1f}%) | ROI: {unlucky_roi:+.1f}%")
+                        print(f"   Lucky team covers: {total-unlucky_covers}-{unlucky_covers} ({lucky_pct:.1f}%)")
+                        
+                        if unlucky_pct > 52.5:
+                            print(f"   ✅ EDGE: Bet unlucky team")
+                        elif lucky_pct > 52.5:
+                            print(f"   ⚡ EDGE: Bet lucky team")
+                        else:
+                            print(f"   ⚖️  No clear edge")
                     else:
-                        print(f"   ⚖️  No clear edge")
+                        print(f"\n   No Lucky vs Unlucky games in this category")
                 else:
-                    print(f"\n   No Lucky vs Unlucky games in this category")
+                    # Spread + Role + Win/Loss (3-way breakdown)
+                    for won_status, won_label in [(True, 'WON PRIOR GAME'), (False, 'LOST PRIOR GAME')]:
+                        lu_filtered_wl = [g for g in lu_filtered if g['unlucky_won'] == won_status]
+                        
+                        print(f"\n{'='*80}")
+                        print(f"SPREAD {spread_cat} | {role_label} | {won_label} (n={len(lu_filtered_wl)} Lucky vs Unlucky games)")
+                        print(f"{'='*80}")
+                        
+                        if len(lu_filtered_wl) > 0:
+                            unlucky_covers = sum(1 for g in lu_filtered_wl if g['unlucky_covered'])
+                            total = len(lu_filtered_wl)
+                            unlucky_pct = unlucky_covers / total * 100
+                            lucky_pct = 100 - unlucky_pct
+                            unlucky_roi = calculate_roi(unlucky_pct / 100)
+                            
+                            print(f"\n🎯 Unlucky team covers: {unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.1f}%) | ROI: {unlucky_roi:+.1f}%")
+                            print(f"   Lucky team covers: {total-unlucky_covers}-{unlucky_covers} ({lucky_pct:.1f}%)")
+                            
+                            if unlucky_pct > 52.5:
+                                print(f"   ✅ EDGE: Bet unlucky team")
+                            elif lucky_pct > 52.5:
+                                print(f"   ⚡ EDGE: Bet lucky team")
+                            else:
+                                print(f"   ⚖️  No clear edge")
+                        else:
+                            print(f"\n   No Lucky vs Unlucky games in this category")
     
     # Summary table
     print("\n" + "=" * 100)
-    print("SUMMARY: UNLUCKY TEAM ATS BY SPREAD + ROLE")
+    summary_title = "SUMMARY: UNLUCKY TEAM ATS BY SPREAD"
+    if args.include_fav_dog:
+        summary_title += " + ROLE"
+    if args.group_by_win_loss and (args.group_by_spread or args.include_fav_dog):
+        summary_title += " + WIN/LOSS"
+    print(summary_title)
     print("=" * 100)
     
-    print(f"\n{'Group':<45s} {'Sample':<10s} {'Unlucky ATS':<15s} {'ROI':<10s}")
-    print("-" * 85)
+    if args.include_fav_dog and args.group_by_win_loss:
+        # 3-way breakdown
+        print(f"\n{'Group':<65s} {'Sample':<10s} {'Unlucky ATS':<15s} {'ROI':<10s}")
+        print("-" * 105)
+    else:
+        print(f"\n{'Group':<45s} {'Sample':<10s} {'Unlucky ATS':<15s} {'ROI':<10s}")
+        print("-" * 85)
     
     for spread_cat in spread_cats:
         lu_in_spread = [g for g in all_lu_games if g['spread_cat'] == spread_cat]
@@ -643,7 +750,7 @@ if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_chec
                 unlucky_covers = sum(1 for g in lu_in_spread if g['unlucky_covered'])
                 total = len(lu_in_spread)
                 unlucky_pct = unlucky_covers / total * 100
-                unlucky_roi = ((unlucky_pct / 100 * 1.909) - 1) * 100
+                unlucky_roi = calculate_roi(unlucky_pct / 100)
                 record = f"{unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.0f}%)"
                 roi_str = f"{unlucky_roi:+.1f}%"
                 edge = "💰" if unlucky_pct > 52.5 else ("💸" if unlucky_pct < 47.5 else "⚖️")
@@ -651,22 +758,125 @@ if (args.group_by_spread or args.include_fav_dog) and not args.data_quality_chec
             else:
                 print(f"Spread {spread_cat:<40s} {'0':<10s} {'-':<15s} {'-':<10s}")
         else:
-            # By spread + unlucky team's role
+            # By spread + unlucky team's role (and optionally win/loss)
             for role, role_label in [(True, 'Unlucky is Fav'), (False, 'Unlucky is Dog')]:
                 lu_filtered = [g for g in lu_in_spread if g['unlucky_is_favorite'] == role]
-                label = f"Spread {spread_cat} | {role_label}"
                 
-                if len(lu_filtered) > 0:
-                    unlucky_covers = sum(1 for g in lu_filtered if g['unlucky_covered'])
-                    total = len(lu_filtered)
-                    unlucky_pct = unlucky_covers / total * 100
-                    unlucky_roi = ((unlucky_pct / 100 * 1.909) - 1) * 100
-                    record = f"{unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.0f}%)"
-                    roi_str = f"{unlucky_roi:+.1f}%"
-                    edge = "💰" if unlucky_pct > 52.5 else ("💸" if unlucky_pct < 47.5 else "⚖️")
-                    print(f"{label:<45s} {total:<10d} {record:<15s} {roi_str:<10s} {edge}")
+                if not args.group_by_win_loss:
+                    # Just spread + role
+                    label = f"Spread {spread_cat} | {role_label}"
+                    
+                    if len(lu_filtered) > 0:
+                        unlucky_covers = sum(1 for g in lu_filtered if g['unlucky_covered'])
+                        total = len(lu_filtered)
+                        unlucky_pct = unlucky_covers / total * 100
+                        unlucky_roi = calculate_roi(unlucky_pct / 100)
+                        record = f"{unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.0f}%)"
+                        roi_str = f"{unlucky_roi:+.1f}%"
+                        edge = "💰" if unlucky_pct > 52.5 else ("💸" if unlucky_pct < 47.5 else "⚖️")
+                        print(f"{label:<45s} {total:<10d} {record:<15s} {roi_str:<10s} {edge}")
+                    else:
+                        print(f"{label:<45s} {'0':<10s} {'-':<15s} {'-':<10s}")
                 else:
-                    print(f"{label:<45s} {'0':<10s} {'-':<15s} {'-':<10s}")
+                    # Spread + role + win/loss (3-way)
+                    for won_status, won_label in [(True, 'Won'), (False, 'Lost')]:
+                        lu_filtered_wl = [g for g in lu_filtered if g['unlucky_won'] == won_status]
+                        label = f"Spread {spread_cat} | {role_label} | {won_label}"
+                        
+                        if len(lu_filtered_wl) > 0:
+                            unlucky_covers = sum(1 for g in lu_filtered_wl if g['unlucky_covered'])
+                            total = len(lu_filtered_wl)
+                            unlucky_pct = unlucky_covers / total * 100
+                            unlucky_roi = calculate_roi(unlucky_pct / 100)
+                            record = f"{unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.0f}%)"
+                            roi_str = f"{unlucky_roi:+.1f}%"
+                            edge = "💰" if unlucky_pct > 52.5 else ("💸" if unlucky_pct < 47.5 else "⚖️")
+                            print(f"{label:<65s} {total:<10d} {record:<15s} {roi_str:<10s} {edge}")
+                        else:
+                            print(f"{label:<65s} {'0':<10s} {'-':<15s} {'-':<10s}")
+
+# =============================================================================
+# STEP 9B: Grouped analysis by win/loss in prior game (standalone)
+# =============================================================================
+# Only run this if --group-by-win-loss is set WITHOUT spread/fav-dog grouping
+if args.group_by_win_loss and not (args.group_by_spread or args.include_fav_dog) and not args.data_quality_check:
+    print("\n" + "=" * 100)
+    print("GROUPED ANALYSIS: UNLUCKY TEAM'S PRIOR GAME RESULT (WIN vs LOSS)")
+    print("=" * 100)
+    
+    # Get all Lucky vs Unlucky games
+    lucky_vs_unlucky_subset = df_matched[
+        ((df_matched['away_prior_luck_cat'] == 'Lucky') & (df_matched['home_prior_luck_cat'] == 'Unlucky')) |
+        ((df_matched['away_prior_luck_cat'] == 'Unlucky') & (df_matched['home_prior_luck_cat'] == 'Lucky'))
+    ]
+    
+    # Extract Lucky vs Unlucky games with win/loss info
+    lu_games_wl = []
+    for _, game in lucky_vs_unlucky_subset.iterrows():
+        if game['away_prior_luck_cat'] == 'Unlucky':
+            # Away team is unlucky
+            unlucky_won = game['away_prior_won']
+            unlucky_covered = game['away_covered']
+        else:
+            # Home team is unlucky
+            unlucky_won = game['home_prior_won']
+            unlucky_covered = game['home_covered']
+        
+        lu_games_wl.append({
+            'game': game,
+            'unlucky_won': unlucky_won,
+            'unlucky_covered': unlucky_covered,
+        })
+    
+    # Group by win/loss
+    for won_status, status_label in [(True, 'UNLUCKY TEAM WON PRIOR GAME'), (False, 'UNLUCKY TEAM LOST PRIOR GAME')]:
+        lu_filtered = [g for g in lu_games_wl if g['unlucky_won'] == won_status]
+        
+        print(f"\n{'='*80}")
+        print(f"{status_label} (n={len(lu_filtered)} Lucky vs Unlucky games)")
+        print(f"{'='*80}")
+        
+        if len(lu_filtered) > 0:
+            unlucky_covers = sum(1 for g in lu_filtered if g['unlucky_covered'])
+            total = len(lu_filtered)
+            unlucky_pct = unlucky_covers / total * 100
+            lucky_pct = 100 - unlucky_pct
+            unlucky_roi = calculate_roi(unlucky_pct / 100)
+            
+            print(f"\n🎯 Unlucky team covers: {unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.1f}%) | ROI: {unlucky_roi:+.1f}%")
+            print(f"   Lucky team covers: {total-unlucky_covers}-{unlucky_covers} ({lucky_pct:.1f}%)")
+            
+            if unlucky_pct > 52.5:
+                print(f"   ✅ EDGE: Bet unlucky team")
+            elif lucky_pct > 52.5:
+                print(f"   ⚡ EDGE: Bet lucky team")
+            else:
+                print(f"   ⚖️  No clear edge")
+        else:
+            print(f"\n   No Lucky vs Unlucky games in this category")
+    
+    # Summary table
+    print("\n" + "=" * 100)
+    print("SUMMARY: UNLUCKY TEAM ATS BY PRIOR GAME RESULT")
+    print("=" * 100)
+    
+    print(f"\n{'Group':<45s} {'Sample':<10s} {'Unlucky ATS':<15s} {'ROI':<10s}")
+    print("-" * 85)
+    
+    for won_status, status_label in [(True, 'Unlucky Won Prior Game'), (False, 'Unlucky Lost Prior Game')]:
+        lu_filtered = [g for g in lu_games_wl if g['unlucky_won'] == won_status]
+        
+        if len(lu_filtered) > 0:
+            unlucky_covers = sum(1 for g in lu_filtered if g['unlucky_covered'])
+            total = len(lu_filtered)
+            unlucky_pct = unlucky_covers / total * 100
+            unlucky_roi = calculate_roi(unlucky_pct / 100)
+            record = f"{unlucky_covers}-{total-unlucky_covers} ({unlucky_pct:.0f}%)"
+            roi_str = f"{unlucky_roi:+.1f}%"
+            edge = "💰" if unlucky_pct > 52.5 else ("💸" if unlucky_pct < 47.5 else "⚖️")
+            print(f"{status_label:<45s} {total:<10d} {record:<15s} {roi_str:<10s} {edge}")
+        else:
+            print(f"{status_label:<45s} {'0':<10s} {'-':<15s} {'-':<10s}")
 
 # =============================================================================
 # STEP 10: Show individual games if requested
@@ -718,7 +928,7 @@ if args.team and not args.data_quality_check:
         print(f"\n⚠️  No games found for team: {team}")
         print(f"   Available teams: {sorted(df_up['team_canonical'].unique())}")
     else:
-        bye_week = NFL_2025_BYE_WEEKS.get(team, None)
+        bye_week = bye_weeks.get(team, None)
         print(f"\nShowing {len(team_up_data)} games for {team} (bye week {bye_week})")
         print(f"Threshold: ±{threshold} for Lucky/Unlucky classification")
         print()
@@ -963,7 +1173,7 @@ if args.data_quality_check:
     issues = []
     
     for team in all_teams:
-        bye_week = NFL_2025_BYE_WEEKS.get(team, None)
+        bye_week = bye_weeks.get(team, None)
         
         # Expected games through max_week (minus bye if it's passed)
         expected_games = max_week
@@ -1016,7 +1226,7 @@ print("=" * 100)
 intermediate_dir = Path("/Users/thomasmyles/dev/betting/data/03_intermediate")
 intermediate_dir.mkdir(parents=True, exist_ok=True)
 
-output_path = intermediate_dir / f"nfl_both_teams_luck_analysis_threshold_{int(threshold)}.csv"
+output_path = intermediate_dir / f"nfl_both_teams_luck_analysis_season_{season}_threshold_{int(threshold)}.csv"
 df_matched.to_csv(output_path, index=False)
 
 print(f"✅ Saved to: {output_path}")

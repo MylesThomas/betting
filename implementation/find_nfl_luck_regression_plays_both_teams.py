@@ -24,7 +24,7 @@ Luck Categories (based on --threshold, default from config.py):
 - Unlucky: luck <= -threshold
 
 Usage:
-    # Find plays for current week (asks before API calls)
+    # Find plays for current week (auto-detects current NFL season)
     python implementation/find_nfl_luck_regression_plays_both_teams.py --current-week
     python implementation/find_nfl_luck_regression_plays_both_teams.py --current-week --verbose-mode
     
@@ -34,8 +34,17 @@ Usage:
     # Custom threshold
     python implementation/find_nfl_luck_regression_plays_both_teams.py --current-week --threshold 5
     
+    # Backtest 2024 season week
+    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2024 --week 10 --threshold 3
+    
+    # Backtest 2025 season week
+    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2025 --week 15
+    
     # Test mode (simulates 2025-12-04 with 1 TNF game, no API calls)
     python implementation/find_nfl_luck_regression_plays_both_teams.py --current-week --test
+
+Note: --current-week mode automatically determines the current NFL season based on date.
+      (Jan-Aug uses previous year, Sept-Dec uses current year)
 """
 
 import pandas as pd
@@ -80,6 +89,23 @@ from nfl_luck_utils import (
 )
 from config import NFL_LUCK_THRESHOLD_DEFAULT, EMOJI
 
+# Helper to determine current NFL season
+def get_current_nfl_season() -> int:
+    """
+    Determine current NFL season based on date.
+    NFL season runs Sept-Feb, so:
+    - Jan-Aug: Previous calendar year is the season
+    - Sept-Dec: Current calendar year is the season
+    
+    Example: Dec 2024 = 2024 season, Feb 2025 = 2024 season, Sept 2025 = 2025 season
+    """
+    now = datetime.now()
+    # If we're in Jan-Aug, the NFL season is the previous year
+    if now.month <= 8:
+        return now.year - 1
+    else:
+        return now.year
+
 # INPUT_DATA_PATH = Path("/Users/thomasmyles/dev/betting/data/01_input/unexpected_points/Unexpected Points Subscriber Data (before week 15).xlsx")
 
 # Parse arguments
@@ -88,6 +114,8 @@ parser.add_argument('--current-week', action='store_true',
                    help='Find plays for current week (games in next 7 days). Will fetch live lines if needed.')
 parser.add_argument('--week', type=int,
                    help='Backtest a specific week (e.g., --week 13). Uses saved data, no API calls.')
+parser.add_argument('--season', type=int, default=2025, choices=[2024, 2025],
+                   help='Season to analyze (default: 2025). Only used with --week for backtesting.')
 parser.add_argument('--threshold', type=float, default=NFL_LUCK_THRESHOLD_DEFAULT,
                    help=f'Luck threshold for categorization (default: {NFL_LUCK_THRESHOLD_DEFAULT})')
 parser.add_argument('--verbose-mode', action='store_true',
@@ -111,18 +139,18 @@ from config import DATA_ROOT
 # =============================================================================
 # Find most recent luck analysis file
 # =============================================================================
-def find_most_recent_luck_file(threshold: float) -> Path:
-    """Find the most recent luck analysis file for given threshold."""
+def find_most_recent_luck_file(threshold: float, season: int = 2025) -> Path:
+    """Find the most recent luck analysis file for given threshold and season."""
     intermediate_dir = DATA_ROOT / "03_intermediate"
     
-    # Look for files matching the pattern
-    pattern = f"nfl_both_teams_luck_analysis_threshold_{int(threshold)}*.csv"
+    # Look for files matching the pattern (season-aware)
+    pattern = f"nfl_both_teams_luck_analysis_season_{season}_threshold_{int(threshold)}*.csv"
     matching_files = sorted(glob.glob(str(intermediate_dir / pattern)))
     
     if not matching_files:
         raise FileNotFoundError(
             f"No luck analysis files found matching: {pattern}\n"
-            f"   Run: python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold {int(threshold)}"
+            f"   Run: python backtesting/20251202_nfl_both_teams_luck_analysis.py --season {season} --threshold {int(threshold)}"
         )
     
     # Sort by modification time (most recent first)
@@ -131,7 +159,9 @@ def find_most_recent_luck_file(threshold: float) -> Path:
     
     return most_recent
 
-INPUT_DATA_PATH = find_most_recent_luck_file(args.threshold)
+# For backtest mode, use specified season; for current-week, use current NFL season (dynamic)
+backtest_season = args.season if args.week is not None else get_current_nfl_season()
+INPUT_DATA_PATH = find_most_recent_luck_file(args.threshold, backtest_season)
 print(f"\n{EMOJI['info']} Using most recent luck analysis file:")
 print(f"   {INPUT_DATA_PATH.name}")
 print(f"   Modified: {datetime.fromtimestamp(INPUT_DATA_PATH.stat().st_mtime).strftime('%Y-%m-%d %H:%M:%S')}")
@@ -208,7 +238,7 @@ def get_best_books_for_bet(df_lines: pd.DataFrame, game_id: str, bet_team_abbr: 
 # =============================================================================
 if args.week is not None:    
     print("=" * 100)
-    print(f"BACKTEST: Week {args.week}")
+    print(f"BACKTEST: {args.season} Season - Week {args.week}")
     print("=" * 100)
     
     print(f"\n{EMOJI['info']} Loading data from: {INPUT_DATA_PATH}")
@@ -318,7 +348,7 @@ if args.week is not None:
         print(f"\nRecord: {wins}-{len(df_plays)-wins}")
     
     # Save backtest results
-    output_dir = Path(f"/Users/thomasmyles/dev/betting/data/04_output/nfl/2025/plays/week_{args.week}")
+    output_dir = Path(f"/Users/thomasmyles/dev/betting/data/04_output/nfl/{args.season}/plays/week_{args.week}")
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
     threshold_str = f"threshold_{int(args.threshold)}"
@@ -363,8 +393,10 @@ print("STEP 1: Loading Unexpected Points data")
 print("=" * 100)
 
 try:
-    df_up = load_unexpected_points_data()
-    print(f"{EMOJI['success']} Loaded Unexpected Points data: {len(df_up)} rows")
+    # Current week always uses current NFL season (dynamic based on date)
+    current_nfl_season = get_current_nfl_season()
+    df_up = load_unexpected_points_data(season=current_nfl_season)
+    print(f"{EMOJI['success']} Loaded Unexpected Points data ({current_nfl_season} season): {len(df_up)} rows")
     print(f"   Weeks: {df_up['week'].min()} to {df_up['week'].max()}")
     max_week = df_up['week'].max()
 except FileNotFoundError as e:
@@ -935,7 +967,9 @@ else:
 # =============================================================================
 # STEP 7: Save outputs
 # =============================================================================
-output_dir = Path(f"/Users/thomasmyles/dev/betting/data/04_output/nfl/2025/plays/week_{target_week}")
+# Use current NFL season for output directory
+output_season = get_current_nfl_season()
+output_dir = Path(f"/Users/thomasmyles/dev/betting/data/04_output/nfl/{output_season}/plays/week_{target_week}")
 output_dir.mkdir(parents=True, exist_ok=True)
 
 timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
