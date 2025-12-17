@@ -47,6 +47,7 @@ Environment Variables Required:
 - SNS_TOPIC_ARN: arn:aws:sns:us-east-2:ACCOUNT_ID:betting-arb-alerts (optional)
 - MIN_PROFIT_PCT: 10.0 (optional, default 10.0 - only send email for 10%+ arbs)
 - MAX_STALENESS_MINUTES: 2.0 (optional, default 2.0 - max minutes since last bookmaker update)
+- EXCLUDED_BOOKMAKERS: 'bovada,mybookieag' (optional, comma-separated list of bookmaker keys to exclude from alerts)
 
 Secrets Required (in AWS Secrets Manager):
 - ODDS_API_KEY: Your Odds API key
@@ -102,6 +103,11 @@ TIMEZONE = 'America/New_York'
 
 # Markets to check
 MARKETS = 'player_points,player_rebounds,player_assists,player_threes,player_blocks,player_steals,player_double_double,player_triple_double,player_points_rebounds_assists'
+
+# Bookmakers to exclude from EMAIL ALERTS (but still saved to CSV for dashboard)
+# Set via environment variable: EXCLUDED_BOOKMAKERS='bovada,mybookieag'
+# Leave empty to get alerts for all bookmakers
+EXCLUDED_BOOKMAKERS = os.environ.get('EXCLUDED_BOOKMAKERS', '').split(',') if os.environ.get('EXCLUDED_BOOKMAKERS') else []
 
 # Market display names
 MARKET_DISPLAY_NAMES = {
@@ -799,7 +805,7 @@ def lambda_handler(event, context):
         
         print(f"\nTotal props: {len(all_props)}")
         
-        # Step 5: Find arbs
+        # Step 5: Find arbs (includes ALL bookmakers for CSV/dashboard)
         print("\n🔍 Step 5: Finding arbitrage opportunities...")
         max_staleness_minutes = float(os.environ.get('MAX_STALENESS_MINUTES', '2.0'))
         all_arbs = find_arbs(all_props, min_profit_pct=0.0, max_staleness_minutes=max_staleness_minutes)
@@ -876,6 +882,20 @@ def lambda_handler(event, context):
                 print("ℹ️  No changes to commit")
         
         # Step 8: Send email alert if any arbs found (fresh or stale)
+        # Filter out excluded bookmakers from EMAIL ALERTS (but they're already saved to CSV)
+        if EXCLUDED_BOOKMAKERS:
+            pre_filter_count = len(all_arbs)
+            all_arbs = [
+                a for a in all_arbs 
+                if a['best_over_book'] not in EXCLUDED_BOOKMAKERS 
+                and a['best_under_book'] not in EXCLUDED_BOOKMAKERS
+            ]
+            filtered_count = pre_filter_count - len(all_arbs)
+            if filtered_count > 0:
+                print(f"\n📧 EMAIL FILTERING:")
+                print(f"   Filtered out {filtered_count} arbs involving: {', '.join(EXCLUDED_BOOKMAKERS)}")
+                print(f"   (These are still saved to CSV for dashboard)")
+        
         # Separate fresh from stale arbs
         fresh_arbs = [a for a in all_arbs if not a.get('is_stale', False)]
         stale_arbs = [a for a in all_arbs if a.get('is_stale', False)]

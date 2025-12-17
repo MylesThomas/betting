@@ -38,15 +38,26 @@ Use the same layers as daily Lambda:
 
 ### 3. Environment Variables
 
-| Variable | Value |
-|----------|-------|
-| `GITHUB_REPO_URL` | `https://github.com/MylesThomas/betting.git` |
-| `GITHUB_USERNAME` | `MylesThomas` |
-| `GITHUB_EMAIL` | `mylescgthomas@gmail.com` |
-| `SECRET_NAME` | `betting-dashboard-secrets` |
-| `AWS_REGION_NAME` | `us-east-2` |
-| `SNS_TOPIC_ARN` | `arn:aws:sns:us-east-2:YOUR_ACCOUNT:betting-arb-alerts` |
-| `MIN_PROFIT_PCT` | `10.0` |
+| Variable | Value | Notes |
+|----------|-------|-------|
+| `GITHUB_REPO_URL` | `https://github.com/MylesThomas/betting.git` | Required |
+| `GITHUB_USERNAME` | `MylesThomas` | Required |
+| `GITHUB_EMAIL` | `mylescgthomas@gmail.com` | Required |
+| `SECRET_NAME` | `betting-dashboard-secrets` | Required |
+| `AWS_REGION_NAME` | `us-east-2` | Required |
+| `SNS_TOPIC_ARN` | `arn:aws:sns:us-east-2:YOUR_ACCOUNT:betting-arb-alerts` | Optional |
+| `MIN_PROFIT_PCT` | `10.0` | Optional (default: 10.0) |
+| `MAX_STALENESS_MINUTES` | `2.0` | Optional (default: 2.0) |
+| `EXCLUDED_BOOKMAKERS` | `bovada` | Optional (see "Phantom Arbs" below) |
+
+**Where to add these env vars:**
+1. Open AWS Lambda Console → Functions → `nba-arb-alerts-15min`
+2. Click **Configuration** tab
+3. Click **Environment variables** (left sidebar)
+4. Click **Edit** button (top right)
+5. Click **Add environment variable** for each one
+6. Enter Key and Value
+7. Click **Save**
 
 ### 4. IAM Permissions
 
@@ -114,25 +125,62 @@ data/04_output/nba/arbs/arb_output_20251206_171845.csv
 ## Email Example
 
 ```
-🚨 HIGH-VALUE NBA ARBS FOUND! 🚨
+🚨 high-value nba arbs found! 🚨
 
-Time: 2025-12-06 07:15 PM ET
-Arbs found: 1
+time: 2025-12-06 07:15 PM ET
+arbs found: 3 (1 high-value, 2 fresh, 1 stale)
 
 ==================================================
 
-#1 - 5.23% PROFIT
+✅ FRESH ARBS (NOT STALE):
+
+#1 - 5.23% PROFIT ✅
    Player: LeBron James
    Market: Points 25.5
-   Game: Lakers @ Clippers
+   Game: Los Angeles Lakers @ Los Angeles Clippers
 
    📈 OVER 25.5: +115 @ fanduel
+      Line updated: 07:14:32 PM ET
    📉 UNDER 25.5: +110 @ draftkings
+      Line updated: 07:14:45 PM ET
+   🕐 Data pulled: 2025-12-06 07:15:12 ET
+   ⏱️  Staleness: 0.6 min < 2.0 min threshold ✅ NOT STALE
 
    💰 Stake $100 total:
       → $48.54 on OVER @ fanduel
       → $51.46 on UNDER @ draftkings
       → Guaranteed profit: $5.23
+
+--------------------------------------------------
+
+==================================================
+📋 other fresh arbs (below threshold):
+==================================================
+
+#2 - 2.15% | Kawhi Leonard | Points 28.5 ✅
+     Game: Los Angeles Lakers @ Los Angeles Clippers
+     Over +108 @ betmgm (updated 07:13:42 PM ET)
+     Under -110 @ draftkings (updated 07:14:01 PM ET)
+     Data pulled: 2025-12-06 07:15:12 ET
+     ⏱️  1.4 min < 2.0 min threshold ✅ NOT STALE
+
+==================================================
+⚠️  STALE ARBS (lines may have changed):
+==================================================
+
+#3 - 8.42% | Paul George | Threes 2.5 ⚠️ STALE
+     Game: Los Angeles Lakers @ Los Angeles Clippers
+     Over +220 @ bovada (updated 07:10:15 PM ET)
+     Under -125 @ betonlineag (updated 07:14:32 PM ET)
+     Data pulled: 2025-12-06 07:15:12 ET
+     ⏱️  4.9 min > 2.0 min threshold ⚠️ STALE
+     ⚠️  bovada data is 4.9 min old - verify before betting!
+
+⚡ act fast - lines move quickly!
+✅ = fresh lines (safe to bet)
+⚠️  = stale lines (double-check before betting)
+
+Dashboard: https://tqs-props-dashboard.streamlit.app
 
 --------------------------------------------------
 
@@ -159,6 +207,11 @@ Dashboard: https://tqs-props-dashboard.streamlit.app
 **Lambda timeout:**
 - Increase timeout to 180 seconds
 - Increase memory to 1024 MB
+
+**Git push failures (alerts sent but no CSV in GitHub):**
+- Check CloudWatch logs for git errors
+- Verify GITHUB_TOKEN in Secrets Manager
+- Verify Lambda has write permissions to repo
 
 **Git push fails:**
 - Check GITHUB_TOKEN is valid (not expired)
