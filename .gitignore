@@ -57,6 +57,11 @@ data/01_input/the-odds-api/historical_props/
 logs/
 api_setup/logs/
 
+# Playwright (for automation)
+.pytest_cache/
+test-results/
+playwright-report/
+
 # Patch files (for git diff)
 *.patch
 
