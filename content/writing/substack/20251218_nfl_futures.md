@@ -1,7 +1,6 @@
-The Hidden Tax on NFL Championship Futures
+Title: The Hidden Tax on NFL Championship Futures
 
----
-Bookmakers Charge 18.5% Vig on Super Bowl Bets—Here's Why It Matters
+Subtitle: Bookmakers Charge 18.5% Vig on Super Bowl Bets—Here's Why It Matters
 
 If you've ever bet on NFL futures, you know the appeal: lock in a team early, root for them all season, and potentially cash big in February. But there's a hidden cost most bettors never calculate: futures markets carry massive vig compared to game lines.
 

@@ -246,6 +246,39 @@ def calculate_stakes(over_odds, under_odds, total=100):
     return round(over_stake, 2), round(under_stake, 2)
 
 
+def is_game_live(game_time_str, current_time=None):
+    """
+    Determine if a game is currently live.
+    
+    Args:
+        game_time_str: ISO format game start time (e.g., '2025-12-18T19:00:00Z')
+        current_time: Optional datetime to compare against (defaults to now)
+    
+    Returns:
+        bool: True if game is live, False if upcoming or finished
+    """
+    if not game_time_str:
+        return False
+    
+    if current_time is None:
+        current_time = datetime.now(timezone.utc)
+    
+    try:
+        game_start = datetime.fromisoformat(game_time_str.replace('Z', '+00:00'))
+        
+        # Game is live if:
+        # - Started (current time > start time)
+        # - Not finished (less than 3 hours since start)
+        time_since_start = (current_time - game_start).total_seconds() / 3600  # hours
+        
+        if time_since_start > 0 and time_since_start < 3:
+            return True
+        
+        return False
+    except:
+        return False
+
+
 # ============================================================================
 # API FUNCTIONS
 # ============================================================================
@@ -463,6 +496,10 @@ def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0, max_staleness_mi
                 except:
                     pass
             
+            # Determine if game is live
+            game_time_str = group['game_time'].iloc[0]
+            game_is_live = is_game_live(game_time_str)
+            
             arbs.append({
                 'player': player,
                 'market': market,
@@ -487,6 +524,7 @@ def find_arbs(all_props, min_profit_pct=0.0, total_stake=100.0, max_staleness_mi
                 'recommendation': recommendation,
                 'game': group['game'].iloc[0],
                 'game_time': group['game_time'].iloc[0],
+                'game_is_live': game_is_live,
                 'num_bookmakers': len(group['bookmaker'].unique()),
                 'over_staleness_minutes': over_staleness,
                 'under_staleness_minutes': under_staleness,
@@ -585,6 +623,9 @@ def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minu
             else:
                 staleness_status = f"⏱️  Staleness: {max_staleness:.1f} min > {max_staleness_minutes:.1f} min threshold ⚠️ STALE"
             
+            # Game status
+            game_status = "🔴 LIVE" if arb.get('game_is_live', False) else "⏰ UPCOMING"
+            
             lines.extend([
                 f"#{i} - {arb['expected_profit_pct']:.2f}% PROFIT ✅",
                 f"   Player: {arb['player']}",
@@ -597,6 +638,7 @@ def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minu
                 f"      Line updated: {under_update}",
                 f"   🕐 Data pulled: {fetch_time}",
                 f"   {staleness_status}",
+                f"   {game_status}",
                 "",
                 f"   💰 Stake $100 total:",
                 f"      → ${arb['over_stake']:.2f} on OVER @ {arb['best_over_book']}",
@@ -637,6 +679,9 @@ def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minu
             else:
                 staleness_status = f"⏱️  {max_staleness:.1f} min > {max_staleness_minutes:.1f} min threshold ⚠️ STALE"
             
+            # Game status
+            game_status = "🔴 LIVE" if arb.get('game_is_live', False) else "⏰ UPCOMING"
+            
             lines.extend([
                 f"#{i} - {arb['expected_profit_pct']:.2f}% | {arb['player']} | {market_display} {arb['line']} ✅",
                 f"     Game: {arb['game']}",
@@ -644,6 +689,7 @@ def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minu
                 f"     Under {arb['best_under_odds']:+d} @ {arb['best_under_book']} (updated {under_update})",
                 f"     Data pulled: {fetch_time}",
                 f"     {staleness_status}",
+                f"     {game_status}",
                 ""
             ])
     
@@ -668,6 +714,9 @@ def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minu
             # Staleness info
             staleness_status = f"⏱️  {staleness:.1f} min > {max_staleness_minutes:.1f} min threshold ⚠️ STALE"
             
+            # Game status
+            game_status = "🔴 LIVE" if arb.get('game_is_live', False) else "⏰ UPCOMING"
+            
             lines.extend([
                 f"#{i} - {arb['expected_profit_pct']:.2f}% | {arb['player']} | {market_display} {arb['line']} ⚠️ STALE",
                 f"     Game: {arb['game']}",
@@ -675,6 +724,7 @@ def format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minu
                 f"     Under {arb['best_under_odds']:+d} @ {arb['best_under_book']} (updated {under_update})",
                 f"     Data pulled: {fetch_time}",
                 f"     {staleness_status}",
+                f"     {game_status}",
                 f"     ⚠️  {stale_book} data is {staleness:.1f} min old - verify before betting!",
                 ""
             ])
@@ -783,7 +833,7 @@ def lambda_handler(event, context):
                 'total_prob', 'expected_profit_pct', 'is_arb',
                 'over_stake', 'under_stake', 'over_return', 'under_return',
                 'guaranteed_profit', 'total_wager', 'recommendation', 'game',
-                'game_time', 'num_bookmakers', 'over_staleness_minutes',
+                'game_time', 'game_is_live', 'num_bookmakers', 'over_staleness_minutes',
                 'under_staleness_minutes', 'max_staleness', 'is_stale',
                 'stale_bookmaker', 'fetch_time_et'
             ])
@@ -852,7 +902,7 @@ def lambda_handler(event, context):
                 'total_prob', 'expected_profit_pct', 'is_arb',
                 'over_stake', 'under_stake', 'over_return', 'under_return',
                 'guaranteed_profit', 'total_wager', 'recommendation', 'game',
-                'game_time', 'num_bookmakers', 'over_staleness_minutes',
+                'game_time', 'game_is_live', 'num_bookmakers', 'over_staleness_minutes',
                 'under_staleness_minutes', 'max_staleness', 'is_stale',
                 'stale_bookmaker', 'fetch_time_et'
             ])
