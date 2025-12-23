@@ -1,0 +1,155 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,8.0,-714,-8.0,500
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,-3.5,-118,3.5,-103
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,-4.0,-108,4.0,-108
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,Bovada,bovada,2020-10-25T16:49:12Z,spread,-4.0,-110,4.0,-110
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,-4.0,-110,4.0,-110
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-4.0,-110,4.0,-110
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,GTbets,gtbets,2020-10-25T16:49:16Z,spread,-3.5,-115,3.5,-115
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,Intertops,intertops,2020-10-25T16:49:15Z,spread,-4.0,-105,4.0,-115
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,-3.5,-115,3.5,104
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,-3.5,-115,3.5,-105
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,-4.0,-110,4.0,-110
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,Unibet,unibet,2020-10-25T16:49:10Z,spread,-4.0,-106,4.0,-106
+a9f96c56561285d07af8e2e5a47ed630,2020-10-25 17:00:00+00:00,Cleveland Browns,Cincinnati Bengals,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-4.0,-110,4.0,-110
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,-4.5,-250,4.5,200
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,10.0,-500,-10.0,375
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,8.5,-556,-8.5,400
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,13.0,-769,-13.0,525
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,9.0,-400,-9.0,310
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,-9.5,-109,9.5,-112
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,1.0,-115,-1.0,-105
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,-3.0,-101,3.0,-119
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,1.0,-111,-1.0,-111
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,1.0,-122,-1.0,102
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,-9.5,-108,9.5,-106
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,1.0,-108,-1.0,-108
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,-3.0,100,3.0,-114
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,1.0,-108,-1.0,-108
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,1.0,-114,-1.0,100
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,Bovada,bovada,2020-10-25T16:49:12Z,spread,-10.0,-105,10.0,-115
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,Bovada,bovada,2020-10-25T16:49:12Z,spread,1.0,-110,-1.0,-110
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,Bovada,bovada,2020-10-25T16:49:12Z,spread,-3.0,-110,3.0,-110
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,Bovada,bovada,2020-10-25T16:49:12Z,spread,1.0,-110,-1.0,-110
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,Bovada,bovada,2020-10-25T16:49:12Z,spread,-1.0,-105,1.0,-115
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,-9.5,-112,9.5,-108
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,1.0,-110,-1.0,-110
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,-3.0,-105,3.0,-118
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,1.0,-110,-1.0,-110
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,1.0,-118,-1.0,-105
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-10.0,-106,10.0,-114
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,1.5,-114,-1.5,-106
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-3.0,100,3.0,-122
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,1.5,-115,-1.5,-105
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-1.0,-110,1.0,-110
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,GTbets,gtbets,2020-10-25T16:49:16Z,spread,-9.5,-120,9.5,-110
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,GTbets,gtbets,2020-10-25T16:49:16Z,spread,1.5,-120,-1.5,-110
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,GTbets,gtbets,2020-10-25T16:49:16Z,spread,-3.0,101,3.0,-119
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,GTbets,gtbets,2020-10-25T16:49:16Z,spread,1.5,-120,-1.5,-110
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,GTbets,gtbets,2020-10-25T16:49:16Z,spread,1.5,-127,-1.5,-105
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,Intertops,intertops,2020-10-25T16:49:15Z,spread,-10.0,100,10.0,-120
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,Intertops,intertops,2020-10-25T16:49:15Z,spread,-3.0,-105,3.0,-115
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,Intertops,intertops,2020-10-25T16:49:15Z,spread,1.0,-110,-1.0,-110
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,-9.5,-105,9.5,-105
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,1.0,-108,-1.0,-102
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,-3.0,106,3.0,-118
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,0.0,106,0.0,-118
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,1.0,-118,-1.0,107
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,-10.5,-110,10.5,-110
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,0.0,-110,0.0,-110
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,-3.5,100,3.5,-120
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,1.0,-105,-1.0,-115
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,0.0,-110,0.0,-110
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,-9.5,-110,9.5,-110
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,1.0,-110,-1.0,-110
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,-3.0,100,3.0,-120
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,1.0,-110,-1.0,-110
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,1.0,-115,-1.0,-105
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,Unibet,unibet,2020-10-25T16:49:10Z,spread,-9.5,-108,9.5,-105
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,Unibet,unibet,2020-10-25T16:49:10Z,spread,1.0,-106,-1.0,-106
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,Unibet,unibet,2020-10-25T16:49:10Z,spread,-3.0,100,3.0,-114
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,Unibet,unibet,2020-10-25T16:49:10Z,spread,1.0,-106,-1.0,-106
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,Unibet,unibet,2020-10-25T16:49:10Z,spread,1.0,-112,-1.0,100
+31a303b0b1ee7efc138bfa98a968a335,2020-10-25 17:03:00+00:00,Buffalo Bills,New York Jets,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-9.5,-110,9.5,-110
+d6e4c59a38925d0c56c0a78358c4a9ba,2020-10-25 17:03:00+00:00,Pittsburgh Steelers,Tennessee Titans,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,1.0,-110,-1.0,-110
+f762310302e1f582872372728fc77411,2020-10-25 17:03:00+00:00,Green Bay Packers,Houston Texans,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-3.0,100,3.0,-120
+83a3e3c606e8d9cff0725e7c6c1e882f,2020-10-25 17:03:00+00:00,Detroit Lions,Atlanta Falcons,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,1.0,-110,-1.0,-110
+152cd603562b2098e3004e9bd32a173e,2020-10-25 17:03:00+00:00,Dallas Cowboys,Washington Football Team,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-0.0,-115,0.0,-105
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,17.0,-400,-17.0,300
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,7.0,-115,-7.0,-105
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,7.0,-108,-7.0,-108
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,Bovada,bovada,2020-10-25T16:49:12Z,spread,7.0,-115,-7.0,-105
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,7.0,-110,-7.0,-110
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,7.0,-110,-7.0,-110
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,GTbets,gtbets,2020-10-25T16:49:16Z,spread,7.5,-127,-7.5,-105
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,Intertops,intertops,2020-10-25T16:49:15Z,spread,7.0,-115,-7.0,-105
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,7.0,-106,-7.0,-104
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,6.5,-105,-6.5,-115
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,7.0,-115,-7.0,-105
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,Unibet,unibet,2020-10-25T16:49:10Z,spread,7.0,-106,-7.0,-106
+89b0d6731562e49bb11dba6a1056a525,2020-10-25 17:04:00+00:00,Carolina Panthers,New Orleans Saints,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,7.0,-110,-7.0,-110
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,8.5,-909,-8.5,575
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,-4.0,-108,4.0,-114
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,-4.0,-108,4.0,-108
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,Bovada,bovada,2020-10-25T16:49:12Z,spread,-4.0,-110,4.0,-110
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,-4.0,-110,4.0,-110
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-3.5,-114,3.5,-106
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,GTbets,gtbets,2020-10-25T16:49:16Z,spread,-4.0,-109,4.0,-109
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,Intertops,intertops,2020-10-25T16:49:15Z,spread,-4.0,-110,4.0,-110
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,-4.0,101,4.0,-112
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,-4.5,-110,4.5,-110
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,-4.0,-110,4.0,-110
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,Unibet,unibet,2020-10-25T16:49:10Z,spread,-4.0,-106,4.0,-106
+f1177f9de03802695aa269530481cdf2,2020-10-25 20:05:00+00:00,Tampa Bay Buccaneers,Las Vegas Raiders,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-4.0,-105,4.0,-115
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,-1.5,-303,1.5,240
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,17.5,-357,-17.5,280
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,12.5,-455,-12.5,340
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,-7.0,-111,7.0,-111
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,9.0,-132,-9.0,110
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,2.5,110,-2.5,-132
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,-7.0,-108,7.0,-108
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,7.5,-108,-7.5,-108
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,3.0,-118,-3.0,102
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,Bovada,bovada,2020-10-25T16:49:12Z,spread,-7.0,-115,7.0,-105
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,Bovada,bovada,2020-10-25T16:49:12Z,spread,7.5,-110,-7.5,-110
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,Bovada,bovada,2020-10-25T16:49:12Z,spread,3.0,-110,-3.0,-110
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,-7.0,-110,7.0,-110
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,7.5,-110,-7.5,-110
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,3.0,-120,-3.0,-103
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-7.0,-110,7.0,-110
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,7.5,-110,-7.5,-110
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,3.0,-106,-3.0,-114
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,GTbets,gtbets,2020-10-25T16:49:16Z,spread,-7.0,-109,7.0,-109
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,GTbets,gtbets,2020-10-25T16:49:16Z,spread,7.5,-109,-7.5,-109
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,GTbets,gtbets,2020-10-25T16:49:16Z,spread,3.0,-114,-3.0,-104
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,Intertops,intertops,2020-10-25T16:49:15Z,spread,-7.0,-115,7.0,-105
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,Intertops,intertops,2020-10-25T16:49:15Z,spread,7.5,-105,-7.5,-115
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,Intertops,intertops,2020-10-25T16:49:15Z,spread,3.0,-110,-3.0,-110
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,-7.0,100,7.0,-110
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,9.5,-125,-9.5,113
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,3.0,-109,-3.0,-101
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,-7.5,-105,7.5,-115
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,7.5,-105,-7.5,-115
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,3.0,-115,-3.0,-105
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,-7.0,-110,7.0,-110
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,7.5,-115,-7.5,-105
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,3.0,-110,-3.0,-110
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,Unibet,unibet,2020-10-25T16:49:10Z,spread,-7.0,-106,7.0,-106
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,Unibet,unibet,2020-10-25T16:49:10Z,spread,7.5,-106,-7.5,-106
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,Unibet,unibet,2020-10-25T16:49:10Z,spread,3.0,-116,-3.0,102
+6ec3c2eb6c177374ba9bdf7426825499,2020-10-25 20:25:00+00:00,Kansas City Chiefs,Denver Broncos,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-7.0,-110,7.0,-110
+d8bf865f2ff0d867113b4fe893551f48,2020-10-25 20:25:00+00:00,Jacksonville Jaguars,Los Angeles Chargers,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,7.5,-110,-7.5,-110
+c1850b9d2a3c80aa21dc0376479f5775,2020-10-25 20:25:00+00:00,San Francisco 49ers,New England Patriots,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,3.0,-115,-3.0,-105
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,BetMGM,betmgm,2020-10-25T16:49:18Z,spread,6.5,-455,-6.5,340
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,BetOnline.ag,betonlineag,2020-10-25T16:49:14Z,spread,-3.0,-132,3.0,110
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,BetRivers,betrivers,2020-10-25T16:49:17Z,spread,-3.5,-108,3.5,-108
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,Bovada,bovada,2020-10-25T16:49:12Z,spread,-3.5,-110,3.5,-110
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,DraftKings,draftkings,2020-10-25T16:49:18Z,spread,-3.5,-110,3.5,-110
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,FanDuel,fanduel,2020-10-25T16:49:17Z,spread,-3.5,-110,3.5,-110
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,GTbets,gtbets,2020-10-25T16:49:16Z,spread,-3.5,-109,3.5,-109
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,Intertops,intertops,2020-10-25T16:49:15Z,spread,-3.5,-105,3.5,-115
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,LowVig.ag,lowvig,2020-10-25T16:49:14Z,spread,-3.5,-104,3.5,-106
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,MyBookie.ag,mybookieag,2020-10-25T16:49:14Z,spread,-3.5,-110,3.5,-110
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,PointsBet (US),pointsbetus,2020-10-25T16:49:16Z,spread,-3.0,-130,3.0,110
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,Unibet,unibet,2020-10-25T16:49:10Z,spread,-3.5,-106,3.5,-106
+df7df95a563742418fb8f43e251de13a,2020-10-26 00:20:00+00:00,Seattle Seahawks,Arizona Cardinals,William Hill (US),williamhill_us,2020-10-25T16:49:16Z,spread,-3.5,-110,3.5,-110

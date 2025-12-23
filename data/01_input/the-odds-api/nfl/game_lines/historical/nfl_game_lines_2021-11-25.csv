@@ -1,0 +1,57 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,Barstool Sportsbook,barstool,2021-11-25T16:49:45Z,spread,-3.0,-105,3.0,-115
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,BetMGM,betmgm,2021-11-25T16:49:59Z,spread,-2.5,-115,2.5,-105
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,BetOnline.ag,betonlineag,2021-11-25T16:50:17Z,spread,-3.0,-101,3.0,-119
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,BetRivers,betrivers,2021-11-25T16:49:46Z,spread,-3.0,-103,3.0,-112
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,BetUS,betus,2021-11-25T16:50:04Z,spread,-3.0,-105,3.0,-115
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,DraftKings,draftkings,2021-11-25T16:50:26Z,spread,-3.0,100,3.0,-120
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,FOX Bet,foxbet,2021-11-25T16:49:43Z,spread,-3.0,100,3.0,-118
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,FanDuel,fanduel,2021-11-25T16:49:29Z,spread,-3.0,-104,3.0,-118
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,GTbets,gtbets,2021-11-25T16:50:07Z,spread,-3.0,-104,3.0,-114
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,Intertops,intertops,2021-11-25T16:50:36Z,spread,-3.0,100,3.0,-120
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,LowVig.ag,lowvig,2021-11-25T16:49:27Z,spread,-3.0,104,3.0,-115
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,MyBookie.ag,mybookieag,2021-11-25T16:49:07Z,spread,-3.0,-105,3.0,-115
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,PointsBet (US),pointsbetus,2021-11-25T16:49:26Z,spread,-3.0,-105,3.0,-115
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,SugarHouse,sugarhouse,2021-11-25T16:50:00Z,spread,-3.0,-103,3.0,-112
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,TwinSpires,twinspires,2021-11-25T16:49:25Z,spread,-3.0,-105,3.0,-115
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,Unibet,unibet,2021-11-25T16:49:23Z,spread,-3.0,-102,3.0,-111
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,William Hill (US),williamhill_us,2021-11-25T16:49:57Z,spread,-3.0,100,3.0,-120
+b6b7f177d3f5cee88b630f09c287453c,2021-11-25 17:30:00+00:00,Chicago Bears,Detroit Lions,WynnBET,wynnbet,2021-11-25T16:50:17Z,spread,-2.5,-115,2.5,-105
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,Barstool Sportsbook,barstool,2021-11-25T16:49:45Z,spread,7.5,-112,-7.5,-109
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,BetMGM,betmgm,2021-11-25T16:49:59Z,spread,7.5,-110,-7.5,-110
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,BetOnline.ag,betonlineag,2021-11-25T16:50:17Z,spread,7.5,-112,-7.5,-109
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,BetRivers,betrivers,2021-11-25T16:49:46Z,spread,7.5,-108,-7.5,-106
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,BetUS,betus,2021-11-25T16:50:04Z,spread,7.5,-110,-7.5,-110
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,Bovada,bovada,2021-11-25T16:49:30Z,spread,7.5,-115,-7.5,-105
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,DraftKings,draftkings,2021-11-25T16:50:26Z,spread,7.5,-115,-7.5,-105
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,FOX Bet,foxbet,2021-11-25T16:49:43Z,spread,7.5,-118,-7.5,100
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,FanDuel,fanduel,2021-11-25T16:49:29Z,spread,7.5,-110,-7.5,-110
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,GTbets,gtbets,2021-11-25T16:50:07Z,spread,7.5,-114,-7.5,-104
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,Intertops,intertops,2021-11-25T16:50:36Z,spread,7.5,-115,-7.5,-105
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,LowVig.ag,lowvig,2021-11-25T16:49:27Z,spread,7.5,-106,-7.5,-103
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,MyBookie.ag,mybookieag,2021-11-25T16:49:07Z,spread,7.0,110,-7.0,-130
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,PointsBet (US),pointsbetus,2021-11-25T16:49:26Z,spread,7.5,-110,-7.5,-110
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,SugarHouse,sugarhouse,2021-11-25T16:50:00Z,spread,7.5,-108,-7.5,-106
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,TwinSpires,twinspires,2021-11-25T16:49:25Z,spread,7.5,-112,-7.5,-109
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,Unibet,unibet,2021-11-25T16:49:23Z,spread,7.5,-108,-7.5,-105
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,William Hill (US),williamhill_us,2021-11-25T16:49:57Z,spread,7.5,-115,-7.5,-105
+32e3925403200044241bfcf0666033f4,2021-11-25 21:30:00+00:00,Las Vegas Raiders,Dallas Cowboys,WynnBET,wynnbet,2021-11-25T16:50:17Z,spread,7.5,-110,-7.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,Barstool Sportsbook,barstool,2021-11-25T16:49:45Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,BetMGM,betmgm,2021-11-25T16:49:59Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,BetOnline.ag,betonlineag,2021-11-25T16:50:17Z,spread,-6.0,-118,6.0,-103
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,BetRivers,betrivers,2021-11-25T16:49:46Z,spread,-6.5,-108,6.5,-108
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,BetUS,betus,2021-11-25T16:50:04Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,Bovada,bovada,2021-11-25T16:49:30Z,spread,-6.5,-115,6.5,-105
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,DraftKings,draftkings,2021-11-25T16:50:26Z,spread,-6.5,-105,6.5,-115
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,FOX Bet,foxbet,2021-11-25T16:49:43Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,FanDuel,fanduel,2021-11-25T16:49:29Z,spread,-6.5,-112,6.5,-108
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,GTbets,gtbets,2021-11-25T16:50:07Z,spread,-6.5,-109,6.5,-109
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,Intertops,intertops,2021-11-25T16:50:36Z,spread,-6.5,-105,6.5,-115
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,LowVig.ag,lowvig,2021-11-25T16:49:27Z,spread,-6.5,-106,6.5,-104
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,MyBookie.ag,mybookieag,2021-11-25T16:49:07Z,spread,-6.5,-115,6.5,-105
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,PointsBet (US),pointsbetus,2021-11-25T16:49:26Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,SugarHouse,sugarhouse,2021-11-25T16:50:00Z,spread,-6.5,-108,6.5,-108
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,TwinSpires,twinspires,2021-11-25T16:49:25Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,Unibet,unibet,2021-11-25T16:49:23Z,spread,-6.5,-106,6.5,-106
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,William Hill (US),williamhill_us,2021-11-25T16:49:57Z,spread,-6.5,-110,6.5,-110
+4e94e99414c3d29f81f451bf40d2d5e6,2021-11-26 01:20:00+00:00,Buffalo Bills,New Orleans Saints,WynnBET,wynnbet,2021-11-25T16:50:17Z,spread,-6.5,-110,6.5,-110

@@ -1,0 +1,248 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,3.0,-115,-3.0,-106
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,-4.0,-114,4.0,-108
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,1.5,-104,-1.5,-118
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,-3.5,-108,3.5,-114
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,-16.5,-109,16.5,-112
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,5.5,-114,-5.5,-108
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,-11.5,-109,11.5,-112
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,-4.5,-110,4.5,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,2.5,-110,-2.5,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,-3.0,-115,3.0,-105
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,-16.5,-110,16.5,-110
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,5.0,-110,-5.0,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,-11.5,-110,11.5,-110
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,3.0,-111,-3.0,-111
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,-4.5,-111,4.5,-111
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,14.5,-108,-14.5,-114
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,2.5,-115,-2.5,-105
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,-3.0,-120,3.0,100
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,-16.5,-112,16.5,-109
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,5.5,-111,-5.5,-111
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,-11.5,-115,11.5,-105
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,3.0,-112,-3.0,-103
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,-4.0,-109,4.0,-105
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,1.5,-104,-1.5,-118
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,-3.5,-105,3.5,-109
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,-16.5,-109,16.5,-112
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,5.5,-108,-5.5,-106
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,-11.5,-106,11.5,-109
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,BetUS,betus,2021-10-31T16:50:02Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,BetUS,betus,2021-10-31T16:50:02Z,spread,-4.5,-110,4.5,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,BetUS,betus,2021-10-31T16:50:02Z,spread,15.0,-110,-15.0,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,BetUS,betus,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,BetUS,betus,2021-10-31T16:50:02Z,spread,-3.0,-120,3.0,100
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,BetUS,betus,2021-10-31T16:50:02Z,spread,-17.0,-105,17.0,-115
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,BetUS,betus,2021-10-31T16:50:02Z,spread,5.0,-110,-5.0,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,BetUS,betus,2021-10-31T16:50:02Z,spread,-11.5,-110,11.5,-110
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,Bovada,bovada,2021-10-31T16:50:00Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,Bovada,bovada,2021-10-31T16:50:00Z,spread,-4.5,-110,4.5,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,Bovada,bovada,2021-10-31T16:50:00Z,spread,15.0,-110,-15.0,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,Bovada,bovada,2021-10-31T16:50:00Z,spread,2.5,-110,-2.5,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,Bovada,bovada,2021-10-31T16:50:00Z,spread,-3.0,-115,3.0,-105
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,Bovada,bovada,2021-10-31T16:50:00Z,spread,-17.0,-105,17.0,-115
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,Bovada,bovada,2021-10-31T16:50:00Z,spread,5.0,-110,-5.0,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,Bovada,bovada,2021-10-31T16:50:00Z,spread,-12.0,-115,12.0,-105
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,-4.5,-110,4.5,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,15.0,-110,-15.0,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,-3.0,-120,3.0,100
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,-16.5,-110,16.5,-110
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,5.0,-110,-5.0,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,-11.5,-110,11.5,-110
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,3.0,-110,-3.0,-110
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,-4.5,-110,4.5,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,2.0,-110,-2.0,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,-3.0,-118,3.0,100
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,-16.5,-110,16.5,-110
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,5.0,-110,-5.0,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,-11.0,-110,11.0,-110
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,-4.5,-105,4.5,-115
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,14.5,-105,-14.5,-115
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,2.5,-112,-2.5,-108
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,-3.5,-104,3.5,-118
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,-17.0,-105,17.0,-115
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,5.5,-112,-5.5,-108
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,-11.5,-115,11.5,-105
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,GTbets,gtbets,2021-10-31T16:50:01Z,spread,3.0,-114,-3.0,-104
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,GTbets,gtbets,2021-10-31T16:50:01Z,spread,-4.5,-109,4.5,-109
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,GTbets,gtbets,2021-10-31T16:50:01Z,spread,15.0,-109,-15.0,-109
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,GTbets,gtbets,2021-10-31T16:50:01Z,spread,2.5,-109,-2.5,-109
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,GTbets,gtbets,2021-10-31T16:50:01Z,spread,-3.0,-119,3.0,101
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,GTbets,gtbets,2021-10-31T16:50:01Z,spread,-16.5,-109,16.5,-109
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,GTbets,gtbets,2021-10-31T16:50:01Z,spread,5.0,-109,-5.0,-109
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,GTbets,gtbets,2021-10-31T16:50:01Z,spread,-11.5,-109,11.5,-109
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,Intertops,intertops,2021-10-31T16:49:59Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,Intertops,intertops,2021-10-31T16:49:59Z,spread,-4.5,-110,4.5,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,Intertops,intertops,2021-10-31T16:49:59Z,spread,15.0,-110,-15.0,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,Intertops,intertops,2021-10-31T16:49:59Z,spread,2.5,-110,-2.5,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,Intertops,intertops,2021-10-31T16:49:59Z,spread,-3.0,-120,3.0,100
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,Intertops,intertops,2021-10-31T16:49:59Z,spread,-16.5,-110,16.5,-110
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,Intertops,intertops,2021-10-31T16:49:59Z,spread,5.5,-110,-5.5,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,Intertops,intertops,2021-10-31T16:49:59Z,spread,-11.5,-110,11.5,-110
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,3.0,-109,-3.0,-101
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,-4.5,101,4.5,-112
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,14.5,-102,-14.5,-108
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,2.5,-109,-2.5,-101
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,-3.0,-116,3.0,105
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,-17.0,106,17.0,-118
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,5.5,-108,-5.5,-102
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,-11.5,-105,11.5,-105
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,3.0,-115,-3.0,-105
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,-4.0,-110,4.0,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,14.0,-105,-14.0,-115
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,3.0,-110,-3.0,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,-3.0,-110,3.0,-110
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,-16.0,-115,16.0,-105
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,4.0,-110,-4.0,-110
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,-11.5,-110,11.5,-110
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,3.0,-114,-3.0,100
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,-4.5,-108,4.5,-108
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,14.5,-108,-14.5,-108
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,2.5,-114,-2.5,100
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,-3.0,-122,3.0,107
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,-16.5,-108,16.5,-108
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,5.5,-108,-5.5,-108
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,-11.5,-108,11.5,-108
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,3.0,-112,-3.0,-103
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,-4.0,-109,4.0,-105
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,1.5,-104,-1.5,-118
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,-3.5,-105,3.5,-109
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,-16.5,-109,16.5,-112
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,5.5,-108,-5.5,-106
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,-11.5,-106,11.5,-109
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,3.0,-115,-3.0,-106
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,-4.0,-114,4.0,-108
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,1.5,-104,-1.5,-118
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,-3.5,-108,3.5,-114
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,-16.5,-109,16.5,-112
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,5.5,-114,-5.5,-108
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,-11.5,-109,11.5,-112
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,Unibet,unibet,2021-10-31T16:49:57Z,spread,3.0,-111,-3.0,-102
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,Unibet,unibet,2021-10-31T16:49:57Z,spread,-4.0,-109,4.0,-104
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,Unibet,unibet,2021-10-31T16:49:57Z,spread,14.5,-110,-14.5,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,Unibet,unibet,2021-10-31T16:49:57Z,spread,1.5,-103,-1.5,-118
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,Unibet,unibet,2021-10-31T16:49:57Z,spread,-3.5,-104,3.5,-109
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,Unibet,unibet,2021-10-31T16:49:57Z,spread,-16.5,-109,16.5,-111
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,Unibet,unibet,2021-10-31T16:49:57Z,spread,5.5,-108,-5.5,-105
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,Unibet,unibet,2021-10-31T16:49:57Z,spread,-11.5,-105,11.5,-109
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,3.0,-120,-3.0,-110
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,-4.5,-110,4.5,-120
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,15.0,-125,-15.0,-105
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,2.5,100,-2.5,-130
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,-3.0,-130,3.0,100
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,-16.5,-110,16.5,-120
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,5.0,-110,-5.0,-120
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,-11.5,-115,11.5,-115
+eccc804c4260133ea31c3e912567594e,2021-10-31 17:00:00+00:00,Tennessee Titans,Indianapolis Colts,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,3.0,-120,-3.0,100
+41058173619a6a1c3ab4df1882d86f56,2021-10-31 17:00:00+00:00,San Francisco 49ers,Chicago Bears,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,-4.0,-110,4.0,-110
+1237fd1355178ee3de1ab264d8edc7e2,2021-10-31 17:00:00+00:00,Miami Dolphins,Buffalo Bills,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,14.0,-110,-14.0,-110
+775840d0a473ff9dc9c97ee59bfadc4b,2021-10-31 17:00:00+00:00,Carolina Panthers,Atlanta Falcons,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,2.5,-110,-2.5,-110
+8edd9c063550a6f50c91521eb7b91936,2021-10-31 17:00:00+00:00,Philadelphia Eagles,Detroit Lions,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,-3.0,-110,3.0,-110
+9cb172d2de582817e9550812a7c88728,2021-10-31 17:00:00+00:00,Los Angeles Rams,Houston Texans,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,-16.0,-110,16.0,-110
+717af47d3cd2577eedc6154e977ffe05,2021-10-31 17:00:00+00:00,Pittsburgh Steelers,Cleveland Browns,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,4.0,-105,-4.0,-115
+b0035e0bb270c1ce90f6fe5b84f679f8,2021-10-31 17:00:00+00:00,Cincinnati Bengals,New York Jets,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,-11.0,-110,11.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,4.0,-109,-4.0,-112
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,3.5,-109,-3.5,-112
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,4.0,-110,-4.0,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,3.5,-105,-3.5,-115
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,4.0,-112,-4.0,-109
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,4.0,-109,-4.0,-112
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,3.5,-109,-3.5,-112
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,BetUS,betus,2021-10-31T16:50:02Z,spread,3.5,-110,-3.5,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,BetUS,betus,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,Bovada,bovada,2021-10-31T16:50:00Z,spread,3.5,-105,-3.5,-115
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,Bovada,bovada,2021-10-31T16:50:00Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,4.0,-115,-4.0,-105
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,4.5,-118,-4.5,100
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,3.5,-105,-3.5,-115
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,3.5,-105,-3.5,-115
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,GTbets,gtbets,2021-10-31T16:50:01Z,spread,3.5,-104,-3.5,-114
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,GTbets,gtbets,2021-10-31T16:50:01Z,spread,4.0,-109,-4.0,-109
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,Intertops,intertops,2021-10-31T16:49:59Z,spread,4.0,-110,-4.0,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,Intertops,intertops,2021-10-31T16:49:59Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,3.5,100,-3.5,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,4.0,-106,-4.0,-103
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,4.0,-110,-4.0,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,3.5,100,-3.5,-114
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,4.0,-108,-4.0,-108
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,4.0,-109,-4.0,-112
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,3.5,-109,-3.5,-112
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,4.0,-109,-4.0,-112
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,3.5,-109,-3.5,-112
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,Unibet,unibet,2021-10-31T16:49:57Z,spread,4.0,-109,-4.0,-111
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,Unibet,unibet,2021-10-31T16:49:57Z,spread,3.5,-109,-3.5,-111
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,3.5,-110,-3.5,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+bf98a13fe948d4c8454e9c60217d2fe5,2021-10-31 20:05:00+00:00,New England Patriots,Los Angeles Chargers,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,4.0,-110,-4.0,-110
+a0e3cf06741470e6fce9df61a04683cf,2021-10-31 20:05:00+00:00,Jacksonville Jaguars,Seattle Seahawks,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,3.5,-105,-3.5,-115
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,4.0,-112,-4.0,-109
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,4.0,-112,-4.0,-109
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,-4.0,-114,4.0,-108
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,4.0,-108,-4.0,-105
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,BetUS,betus,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,BetUS,betus,2021-10-31T16:50:02Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,Bovada,bovada,2021-10-31T16:50:00Z,spread,4.0,-115,-4.0,-105
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,Bovada,bovada,2021-10-31T16:50:00Z,spread,-4.0,-115,4.0,-105
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,GTbets,gtbets,2021-10-31T16:50:01Z,spread,4.0,-109,-4.0,-109
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,GTbets,gtbets,2021-10-31T16:50:01Z,spread,-4.0,-109,4.0,-109
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,Intertops,intertops,2021-10-31T16:49:59Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,Intertops,intertops,2021-10-31T16:49:59Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,4.0,-106,-4.0,-103
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,-4.0,-105,4.0,-105
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,-4.5,-110,4.5,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,4.0,-108,-4.0,-108
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,-4.0,-108,4.0,-108
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,4.0,-108,-4.0,-105
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,4.0,-112,-4.0,-109
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,Unibet,unibet,2021-10-31T16:49:57Z,spread,4.0,-108,-4.0,-104
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,Unibet,unibet,2021-10-31T16:49:57Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,4.0,-110,-4.0,-110
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,-4.0,-110,4.0,-110
+4ee15966b4691c58ca88880fc43e8b51,2021-10-31 20:25:00+00:00,Washington Football Team,Denver Broncos,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,3.5,-105,-3.5,-115
+913025ddb9bebcfbba2ac1bede26495c,2021-10-31 20:25:00+00:00,Tampa Bay Buccaneers,New Orleans Saints,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,-4.5,-110,4.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,Barstool Sportsbook,barstool,2021-10-31T16:50:04Z,spread,2.5,-108,-2.5,-114
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,BetMGM,betmgm,2021-10-31T16:50:13Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,BetOnline.ag,betonlineag,2021-10-31T16:49:59Z,spread,2.5,-115,-2.5,-105
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,BetRivers,betrivers,2021-10-31T16:50:03Z,spread,2.5,-104,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,BetUS,betus,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,Bovada,bovada,2021-10-31T16:50:00Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,DraftKings,draftkings,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,FOX Bet,foxbet,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,FanDuel,fanduel,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,GTbets,gtbets,2021-10-31T16:50:01Z,spread,2.5,-109,-2.5,-109
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,Intertops,intertops,2021-10-31T16:49:59Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,LowVig.ag,lowvig,2021-10-31T16:45:44Z,spread,2.5,-105,-2.5,-105
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,MyBookie.ag,mybookieag,2021-10-31T16:50:03Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,PointsBet (US),pointsbetus,2021-10-31T16:50:02Z,spread,2.5,-108,-2.5,-108
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,SugarHouse,sugarhouse,2021-10-31T16:50:03Z,spread,2.5,-104,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,TwinSpires,twinspires,2021-10-31T16:50:04Z,spread,2.5,-108,-2.5,-114
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,Unibet,unibet,2021-10-31T16:49:57Z,spread,2.5,-103,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,William Hill (US),williamhill_us,2021-10-31T16:50:02Z,spread,2.5,-110,-2.5,-110
+03d5388ef4ce1cda376e8de6fab0f769,2021-11-01 00:20:00+00:00,Dallas Cowboys,Minnesota Vikings,WynnBET,wynnbet,2021-10-31T16:50:04Z,spread,2.5,-110,-2.5,-110

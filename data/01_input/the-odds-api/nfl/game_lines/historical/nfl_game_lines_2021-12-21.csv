@@ -1,0 +1,37 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,Barstool Sportsbook,barstool,2021-12-21T16:50:04Z,spread,6.5,-108,-6.5,-114
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,Barstool Sportsbook,barstool,2021-12-21T16:50:04Z,spread,6.5,-112,-6.5,-109
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,BetMGM,betmgm,2021-12-21T16:49:16Z,spread,7.0,-115,-7.0,-105
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,BetMGM,betmgm,2021-12-21T16:49:16Z,spread,6.5,-110,-6.5,-110
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,BetOnline.ag,betonlineag,2021-12-21T16:49:59Z,spread,7.0,-119,-7.0,-102
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,BetOnline.ag,betonlineag,2021-12-21T16:49:59Z,spread,7.0,-115,-7.0,-105
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,BetRivers,betrivers,2021-12-21T16:46:47Z,spread,6.5,-104,-6.5,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,BetRivers,betrivers,2021-12-21T16:46:47Z,spread,6.5,-108,-6.5,-106
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,BetUS,betus,2021-12-21T16:46:14Z,spread,7.0,-115,-7.0,-105
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,BetUS,betus,2021-12-21T16:46:14Z,spread,7.0,-130,-7.0,110
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,Bovada,bovada,2021-12-21T16:50:14Z,spread,7.0,-110,-7.0,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,Bovada,bovada,2021-12-21T16:50:14Z,spread,7.0,-115,-7.0,-105
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,DraftKings,draftkings,2021-12-21T16:49:53Z,spread,6.5,-105,-6.5,-115
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,DraftKings,draftkings,2021-12-21T16:49:53Z,spread,6.5,-105,-6.5,-115
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,FOX Bet,foxbet,2021-12-21T16:45:31Z,spread,6.5,-110,-6.5,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,FOX Bet,foxbet,2021-12-21T16:45:31Z,spread,6.5,100,-6.5,-118
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,FanDuel,fanduel,2021-12-21T16:49:37Z,spread,7.0,-114,-7.0,-106
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,FanDuel,fanduel,2021-12-21T16:49:37Z,spread,6.5,-106,-6.5,-114
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,GTbets,gtbets,2021-12-21T16:48:19Z,spread,7.0,-114,-7.0,-104
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,GTbets,gtbets,2021-12-21T16:48:19Z,spread,6.5,-104,-6.5,-114
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,Intertops,intertops,2021-12-21T16:49:17Z,spread,7.0,-115,-7.0,-105
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,Intertops,intertops,2021-12-21T16:49:17Z,spread,6.5,-110,-6.5,-110
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,LowVig.ag,lowvig,2021-12-21T16:37:58Z,spread,7.0,-112,-7.0,101
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,LowVig.ag,lowvig,2021-12-21T16:37:58Z,spread,6.5,104,-6.5,-115
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,MyBookie.ag,mybookieag,2021-12-21T16:46:11Z,spread,7.0,-110,-7.0,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,MyBookie.ag,mybookieag,2021-12-21T16:46:11Z,spread,6.5,-105,-6.5,-115
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,PointsBet (US),pointsbetus,2021-12-21T16:46:46Z,spread,6.5,-110,-6.5,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,PointsBet (US),pointsbetus,2021-12-21T16:46:46Z,spread,6.5,-110,-6.5,-110
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,SugarHouse,sugarhouse,2021-12-21T16:49:45Z,spread,6.5,-104,-6.5,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,SugarHouse,sugarhouse,2021-12-21T16:49:45Z,spread,6.5,-108,-6.5,-106
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,TwinSpires,twinspires,2021-12-21T16:50:04Z,spread,6.5,-108,-6.5,-114
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,TwinSpires,twinspires,2021-12-21T16:50:04Z,spread,6.5,-112,-6.5,-109
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,Unibet,unibet,2021-12-21T16:49:37Z,spread,6.5,-103,-6.5,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,Unibet,unibet,2021-12-21T16:49:37Z,spread,6.5,-108,-6.5,-105
+002aa5a45545b1f33383d4c5366ba751,2021-12-22 00:00:00+00:00,Seattle Seahawks,Los Angeles Rams,William Hill (US),williamhill_us,2021-12-21T16:49:15Z,spread,6.5,-110,-6.5,-110
+28be1a9defdcdd5e8a9040b80fe841f7,2021-12-22 00:00:00+00:00,Washington Football Team,Philadelphia Eagles,William Hill (US),williamhill_us,2021-12-21T16:49:15Z,spread,6.5,-110,-6.5,-110

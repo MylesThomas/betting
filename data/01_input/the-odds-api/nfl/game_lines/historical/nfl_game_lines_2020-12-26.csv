@@ -1,0 +1,46 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetMGM,betmgm,2020-12-26T16:50:06Z,spread,-10.5,-110,10.5,-110
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetOnline.ag,betonlineag,2020-12-26T16:50:18Z,spread,-11.5,-106,11.5,-115
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,BetRivers,betrivers,2020-12-26T16:50:19Z,spread,-10.5,-112,10.5,-109
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,Bovada,bovada,2020-12-26T16:49:49Z,spread,-11.0,-110,11.0,-110
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,Caesars,caesars,2020-12-26T16:48:45Z,spread,-11.0,-110,11.0,-110
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,DraftKings,draftkings,2020-12-26T16:50:06Z,spread,-10.5,-112,10.5,-109
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,FanDuel,fanduel,2020-12-26T16:50:18Z,spread,-11.5,-106,11.5,-114
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,GTbets,gtbets,2020-12-26T16:49:25Z,spread,-11.0,-109,11.0,-109
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,Intertops,intertops,2020-12-26T16:50:19Z,spread,-11.0,-110,11.0,-110
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,LowVig.ag,lowvig,2020-12-26T16:49:03Z,spread,-11.5,-104,11.5,-106
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,MyBookie.ag,mybookieag,2020-12-26T16:49:02Z,spread,-11.5,-110,11.5,-110
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,PointsBet (US),pointsbetus,2020-12-26T16:49:47Z,spread,-11.0,-110,11.0,-110
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,SugarHouse,sugarhouse,2020-12-26T16:48:44Z,spread,-10.5,-112,10.5,-109
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,Unibet,unibet,2020-12-26T16:50:02Z,spread,-10.5,-111,10.5,-109
+7041ac91a3030e82f5c04d3d3feb9231,2020-12-26 18:00:00+00:00,Tampa Bay Buccaneers,Detroit Lions,William Hill (US),williamhill_us,2020-12-26T16:50:04Z,spread,-11.0,-110,11.0,-110
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,BetMGM,betmgm,2020-12-26T16:50:06Z,spread,5.5,-110,-5.5,-110
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,BetOnline.ag,betonlineag,2020-12-26T16:50:18Z,spread,6.0,-109,-6.0,-112
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,BetRivers,betrivers,2020-12-26T16:50:19Z,spread,5.5,-105,-5.5,-115
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,Bovada,bovada,2020-12-26T16:49:49Z,spread,6.0,-105,-6.0,-115
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,Caesars,caesars,2020-12-26T16:48:45Z,spread,6.0,-110,-6.0,-110
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,DraftKings,draftkings,2020-12-26T16:50:06Z,spread,5.5,-105,-5.5,-115
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,FanDuel,fanduel,2020-12-26T16:50:18Z,spread,5.5,-110,-5.5,-110
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,GTbets,gtbets,2020-12-26T16:49:25Z,spread,6.0,-109,-6.0,-109
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,Intertops,intertops,2020-12-26T16:50:19Z,spread,6.0,-110,-6.0,-110
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,LowVig.ag,lowvig,2020-12-26T16:49:03Z,spread,6.0,-103,-6.0,-106
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,MyBookie.ag,mybookieag,2020-12-26T16:49:02Z,spread,6.5,-115,-6.5,-105
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,PointsBet (US),pointsbetus,2020-12-26T16:49:47Z,spread,6.0,-110,-6.0,-110
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,SugarHouse,sugarhouse,2020-12-26T16:48:44Z,spread,5.5,-105,-5.5,-115
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,Unibet,unibet,2020-12-26T16:50:02Z,spread,5.5,-104,-5.5,-115
+69146a6fde2cf924305a97a24ed1b3d5,2020-12-26 21:30:00+00:00,San Francisco 49ers,Arizona Cardinals,William Hill (US),williamhill_us,2020-12-26T16:50:04Z,spread,6.0,-110,-6.0,-110
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,BetMGM,betmgm,2020-12-26T16:50:06Z,spread,-2.5,-110,2.5,-110
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,BetOnline.ag,betonlineag,2020-12-26T16:50:18Z,spread,-2.5,-111,2.5,-111
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,BetRivers,betrivers,2020-12-26T16:50:19Z,spread,-2.0,-112,2.0,-109
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,Bovada,bovada,2020-12-26T16:49:49Z,spread,-2.5,-115,2.5,-105
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,Caesars,caesars,2020-12-26T16:48:45Z,spread,-2.5,-110,2.5,-110
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,DraftKings,draftkings,2020-12-26T16:50:06Z,spread,-2.0,-112,2.0,-109
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,FanDuel,fanduel,2020-12-26T16:50:18Z,spread,-2.5,-106,2.5,-114
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,GTbets,gtbets,2020-12-26T16:49:25Z,spread,-2.5,-109,2.5,-109
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,Intertops,intertops,2020-12-26T16:50:19Z,spread,-2.5,-105,2.5,-115
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,LowVig.ag,lowvig,2020-12-26T16:49:03Z,spread,-2.5,-105,2.5,-105
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,MyBookie.ag,mybookieag,2020-12-26T16:49:02Z,spread,-3.0,-105,3.0,-115
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,PointsBet (US),pointsbetus,2020-12-26T16:49:47Z,spread,-2.5,-110,2.5,-110
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,SugarHouse,sugarhouse,2020-12-26T16:48:44Z,spread,-2.0,-112,2.0,-109
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,Unibet,unibet,2020-12-26T16:50:02Z,spread,-2.0,-111,2.0,-109
+43cf67662a7802f767bf8ee05d25becc,2020-12-27 01:15:00+00:00,Miami Dolphins,Las Vegas Raiders,William Hill (US),williamhill_us,2020-12-26T16:50:04Z,spread,-2.5,-110,2.5,-110

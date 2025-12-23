@@ -1,0 +1,158 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,-8.5,-110,8.5,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,11.0,-110,-11.0,-110
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,10.0,-110,-10.0,-110
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,-6.5,-115,6.5,-105
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,7.0,-105,-7.0,-115
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,-1.0,-105,1.0,-115
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,-9.0,100,9.0,-120
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,10.5,100,-10.5,-120
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,9.5,-112,-9.5,-109
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,-7.0,104,7.0,-125
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,7.5,-115,-7.5,-105
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,0.0,-111,-0.0,-111
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,-8.0,-114,8.0,-108
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,11.0,-112,-11.0,-109
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,9.5,-108,-9.5,-114
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,-6.5,-115,6.5,-106
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,-0.5,-110,0.5,-110
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,Bovada,bovada,2020-12-27T16:49:53Z,spread,-8.5,-110,8.5,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,Bovada,bovada,2020-12-27T16:49:53Z,spread,11.0,-110,-11.0,-110
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,Bovada,bovada,2020-12-27T16:49:53Z,spread,10.0,-115,-10.0,-105
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,Bovada,bovada,2020-12-27T16:49:53Z,spread,-7.0,100,7.0,-120
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,Bovada,bovada,2020-12-27T16:49:53Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,Bovada,bovada,2020-12-27T16:49:53Z,spread,-1.0,-105,1.0,-115
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,Caesars,caesars,2020-12-27T16:49:00Z,spread,-8.0,-110,8.0,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,Caesars,caesars,2020-12-27T16:49:00Z,spread,11.0,-110,-11.0,-110
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,Caesars,caesars,2020-12-27T16:49:00Z,spread,7.0,100,-7.0,-120
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,-8.0,-114,8.0,-108
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,11.0,-112,-11.0,-109
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,9.5,-108,-9.5,-114
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,-6.5,-115,6.5,-106
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,-0.5,-110,0.5,-110
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,-8.5,-104,8.5,-118
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,10.5,-106,-10.5,-114
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,9.5,-110,-9.5,-110
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,-6.5,-118,6.5,-104
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,7.5,-115,-7.5,-105
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,-1.0,-108,1.0,-112
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,GTbets,gtbets,2020-12-27T16:48:29Z,spread,-8.5,-109,8.5,-109
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,GTbets,gtbets,2020-12-27T16:48:29Z,spread,11.0,-109,-11.0,-109
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,GTbets,gtbets,2020-12-27T16:48:29Z,spread,9.5,-109,-9.5,-109
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,GTbets,gtbets,2020-12-27T16:48:29Z,spread,-6.5,-114,6.5,-104
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,GTbets,gtbets,2020-12-27T16:48:29Z,spread,7.5,-114,-7.5,-104
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,GTbets,gtbets,2020-12-27T16:48:29Z,spread,0.0,-109,0.0,-109
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,Intertops,intertops,2020-12-27T16:49:58Z,spread,-8.5,-110,8.5,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,Intertops,intertops,2020-12-27T16:49:58Z,spread,11.0,-105,-11.0,-115
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,Intertops,intertops,2020-12-27T16:49:58Z,spread,10.0,-115,-10.0,-105
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,Intertops,intertops,2020-12-27T16:49:58Z,spread,-6.5,-110,6.5,-110
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,Intertops,intertops,2020-12-27T16:49:58Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,Intertops,intertops,2020-12-27T16:49:58Z,spread,-1.0,-110,1.0,-110
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,-8.5,-102,8.5,-108
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,11.0,-110,-11.0,100
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,9.5,-106,-9.5,-103
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,-6.5,-109,6.5,-101
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,7.5,-116,-7.5,105
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,0.0,-109,0.0,-101
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,-8.5,-110,8.5,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,11.0,-110,-11.0,-110
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,10.0,-105,-10.0,-115
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,-7.0,-105,7.0,-115
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,7.5,-105,-7.5,-115
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,-1.0,-105,1.0,-115
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,-8.0,-110,8.0,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,11.0,-110,-11.0,-110
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,9.5,-115,-9.5,-105
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,-6.5,-110,6.5,-110
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,7.5,-115,-7.5,-105
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,0.0,-100000,0.0,-100000
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,-8.0,-114,8.0,-108
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,11.0,-112,-11.0,-109
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,9.5,-108,-9.5,-114
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,-6.5,-115,6.5,-106
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,-0.5,-110,0.5,-110
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,Unibet,unibet,2020-12-27T16:49:27Z,spread,-8.0,-112,8.0,-106
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,Unibet,unibet,2020-12-27T16:49:27Z,spread,11.0,-111,-11.0,-109
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,Unibet,unibet,2020-12-27T16:49:27Z,spread,9.5,-106,-9.5,-114
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,Unibet,unibet,2020-12-27T16:49:27Z,spread,-6.5,-115,6.5,-105
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,Unibet,unibet,2020-12-27T16:49:27Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,Unibet,unibet,2020-12-27T16:49:27Z,spread,-0.5,-110,0.5,-110
+9f1b68a11d955ee98663f66037c03bcf,2020-12-27 18:00:00+00:00,Chicago Bears,Jacksonville Jaguars,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,-8.0,-110,8.0,-110
+4e9b5460d1eac89cade3aef323424f6a,2020-12-27 18:00:00+00:00,Atlanta Falcons,Kansas City Chiefs,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,11.0,-110,-11.0,-110
+5b0bf9c1161d097a11f36d3a768f2a4b,2020-12-27 18:00:00+00:00,New York Giants,Baltimore Ravens,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,9.5,-110,-9.5,-110
+fccefe725a0f4e59f85347a276983d41,2020-12-27 18:00:00+00:00,Cleveland Browns,New York Jets,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,-6.5,-115,6.5,-105
+7fd92dc444bc4e4b1f846600a71e6cb4,2020-12-27 18:00:00+00:00,Cincinnati Bengals,Houston Texans,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,7.5,-110,-7.5,-110
+ee85c6ea839215cd36cc912a27da2154,2020-12-27 18:00:00+00:00,Indianapolis Colts,Pittsburgh Steelers,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,-0.0,-110,0.0,-110
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,2.5,-110,-2.5,-110
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,-1.0,-105,1.0,-115
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,2.5,-111,-2.5,-111
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,0.0,-125,-0.0,104
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,2.5,-109,-2.5,-112
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,-1.0,-109,1.0,-112
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,Bovada,bovada,2020-12-27T16:49:53Z,spread,2.5,-105,-2.5,-115
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,Bovada,bovada,2020-12-27T16:49:53Z,spread,-1.0,-110,1.0,-110
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,2.5,-109,-2.5,-112
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,-1.0,-109,1.0,-112
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,2.5,-108,-2.5,-112
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,-1.0,-114,1.0,-106
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,GTbets,gtbets,2020-12-27T16:48:29Z,spread,2.5,-109,-2.5,-109
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,GTbets,gtbets,2020-12-27T16:48:29Z,spread,-1.0,-109,1.0,-109
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,Intertops,intertops,2020-12-27T16:49:58Z,spread,2.5,-105,-2.5,-115
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,Intertops,intertops,2020-12-27T16:49:58Z,spread,-1.5,-110,1.5,-110
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,2.5,-105,-2.5,-105
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,-1.0,-110,1.0,100
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,3.0,-115,-3.0,-105
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,-1.0,-105,1.0,-115
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,2.5,-110,-2.5,-110
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,-1.0,-115,1.0,-105
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,2.5,-109,-2.5,-112
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,-1.0,-109,1.0,-112
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,Unibet,unibet,2020-12-27T16:49:27Z,spread,2.5,-109,-2.5,-111
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,Unibet,unibet,2020-12-27T16:49:27Z,spread,-1.0,-109,1.0,-111
+ac642e38e2f5d021f3dfe57a05393ce7,2020-12-27 21:05:00+00:00,Denver Broncos,Los Angeles Chargers,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,2.5,-110,-2.5,-110
+5f052a29ff245a4da36b0ea824060cea,2020-12-27 21:05:00+00:00,Carolina Panthers,Washington Football Team,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,-1.0,-110,1.0,-110
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,1.0,-110,-1.0,-110
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,-3.0,-115,3.0,-105
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,0.0,-104,-0.0,-116
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,-3.0,-119,3.0,-102
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,1.5,-112,-1.5,-109
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,-3.0,-114,3.0,-106
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,Bovada,bovada,2020-12-27T16:49:53Z,spread,1.0,-105,-1.0,-115
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,Bovada,bovada,2020-12-27T16:49:53Z,spread,-3.0,-120,3.0,100
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,1.5,-112,-1.5,-109
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,-3.0,-114,3.0,-106
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,1.0,-106,-1.0,-114
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,-3.0,-118,3.0,-104
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,GTbets,gtbets,2020-12-27T16:48:29Z,spread,1.0,-104,-1.0,-114
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,GTbets,gtbets,2020-12-27T16:48:29Z,spread,-3.0,-119,3.0,101
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,Intertops,intertops,2020-12-27T16:49:58Z,spread,1.5,-110,-1.5,-110
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,Intertops,intertops,2020-12-27T16:49:58Z,spread,-3.0,-115,3.0,-105
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,0.0,101,0.0,-116
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,-3.0,-114,3.0,103
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,1.5,-105,-1.5,-115
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,-3.0,-120,3.0,100
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,1.5,-110,-1.5,-110
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,-3.0,-120,3.0,100
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,1.5,-112,-1.5,-109
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,-3.0,-114,3.0,-106
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,Unibet,unibet,2020-12-27T16:49:27Z,spread,1.5,-111,-1.5,-109
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,Unibet,unibet,2020-12-27T16:49:27Z,spread,-3.0,-114,3.0,-105
+03cb40686270443048a95e248a45e133,2020-12-27 21:25:00+00:00,Los Angeles Rams,Seattle Seahawks,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,1.0,-105,-1.0,-115
+a8dfe2f941d80e50536285e79ea8a145,2020-12-27 21:25:00+00:00,Philadelphia Eagles,Dallas Cowboys,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,-3.0,-120,3.0,100
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,BetMGM,betmgm,2020-12-27T16:50:09Z,spread,3.0,-110,-3.0,-110
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,BetOnline.ag,betonlineag,2020-12-27T16:50:12Z,spread,3.0,102,-3.0,-123
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,BetRivers,betrivers,2020-12-27T16:49:08Z,spread,3.0,-104,-3.0,-118
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,Bovada,bovada,2020-12-27T16:49:53Z,spread,3.0,105,-3.0,-125
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,DraftKings,draftkings,2020-12-27T16:50:09Z,spread,3.0,-104,-3.0,-118
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,FanDuel,fanduel,2020-12-27T16:50:17Z,spread,3.5,-114,-3.5,-106
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,GTbets,gtbets,2020-12-27T16:48:29Z,spread,3.0,106,-3.0,-123
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,Intertops,intertops,2020-12-27T16:49:58Z,spread,3.5,-115,-3.5,-105
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,LowVig.ag,lowvig,2020-12-27T16:49:38Z,spread,3.0,104,-3.0,-115
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,MyBookie.ag,mybookieag,2020-12-27T16:50:09Z,spread,3.5,-120,-3.5,100
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,PointsBet (US),pointsbetus,2020-12-27T16:49:21Z,spread,3.0,105,-3.0,-125
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,SugarHouse,sugarhouse,2020-12-27T16:49:00Z,spread,3.0,-104,-3.0,-118
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,Unibet,unibet,2020-12-27T16:49:27Z,spread,3.0,-103,-3.0,-116
+6d35bb24f76281197576e7d4c1378a47,2020-12-28 01:20:00+00:00,Tennessee Titans,Green Bay Packers,William Hill (US),williamhill_us,2020-12-27T16:49:31Z,spread,3.0,105,-3.0,-125
