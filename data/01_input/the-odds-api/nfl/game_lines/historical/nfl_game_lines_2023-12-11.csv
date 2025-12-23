@@ -1,0 +1,31 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,BetMGM,betmgm,2023-12-11T16:55:00Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,BetMGM,betmgm,2023-12-11T16:55:00Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,BetOnline.ag,betonlineag,2023-12-11T16:54:13Z,spread,-6.0,-103,6.0,-116
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,BetOnline.ag,betonlineag,2023-12-11T16:54:13Z,spread,14.0,-116,-14.0,-104
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,BetRivers,betrivers,2023-12-11T16:53:51Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,BetRivers,betrivers,2023-12-11T16:53:51Z,spread,13.5,-107,-13.5,-114
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,BetUS,betus,2023-12-11T16:53:56Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,BetUS,betus,2023-12-11T16:53:56Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,Bovada,bovada,2023-12-11T16:54:52Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,Bovada,bovada,2023-12-11T16:54:52Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,Caesars,williamhill_us,2023-12-11T16:51:40Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,Caesars,williamhill_us,2023-12-11T16:51:40Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,DraftKings,draftkings,2023-12-11T16:53:50Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,DraftKings,draftkings,2023-12-11T16:53:50Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,FanDuel,fanduel,2023-12-11T16:52:17Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,FanDuel,fanduel,2023-12-11T16:52:17Z,spread,13.5,-102,-13.5,-120
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,LowVig.ag,lowvig,2023-12-11T16:54:02Z,spread,-6.0,100,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,LowVig.ag,lowvig,2023-12-11T16:54:02Z,spread,14.0,-110,-14.0,100
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,MyBookie.ag,mybookieag,2023-12-11T16:54:00Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,MyBookie.ag,mybookieag,2023-12-11T16:54:00Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,PointsBet (US),pointsbetus,2023-12-11T16:53:58Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,PointsBet (US),pointsbetus,2023-12-11T16:53:58Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,SuperBook,superbook,2023-12-11T16:55:08Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,SuperBook,superbook,2023-12-11T16:55:08Z,spread,14.0,-110,-14.0,-110
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,TwinSpires,twinspires,2023-12-11T16:54:06Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,TwinSpires,twinspires,2023-12-11T16:54:06Z,spread,13.5,-107,-13.5,-114
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,Unibet,unibet_us,2023-12-11T16:54:00Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,Unibet,unibet_us,2023-12-11T16:54:00Z,spread,13.5,-107,-13.5,-114
+ea43090cd4cc2eb2fb98ba3847aba986,2023-12-12 01:16:00+00:00,Green Bay Packers,New York Giants,WynnBET,wynnbet,2023-12-11T16:54:21Z,spread,-6.0,-110,6.0,-110
+2c4ca7353e2db06d12d583f8a46d38a7,2023-12-12 01:16:00+00:00,Tennessee Titans,Miami Dolphins,WynnBET,wynnbet,2023-12-11T16:54:21Z,spread,14.0,-110,-14.0,-110

@@ -1,0 +1,38 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,Barstool Sportsbook,barstool,2023-01-29T16:54:44Z,spread,3.0,-118,-3.0,-103
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,BetMGM,betmgm,2023-01-29T16:54:44Z,spread,2.5,100,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,BetOnline.ag,betonlineag,2023-01-29T16:54:43Z,spread,3.0,-120,-3.0,100
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,BetRivers,betrivers,2023-01-29T16:54:44Z,spread,3.0,-118,-3.0,-103
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,BetUS,betus,2023-01-29T16:53:04Z,spread,3.0,-115,-3.0,-105
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,Circa Sports,circasports,2023-01-29T16:53:05Z,spread,2.5,103,-2.5,-125
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,DraftKings,draftkings,2023-01-29T16:54:44Z,spread,2.5,100,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,FOX Bet,foxbet,2023-01-29T16:54:44Z,spread,2.5,-105,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,FanDuel,fanduel,2023-01-29T16:53:04Z,spread,2.5,-102,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,LowVig.ag,lowvig,2023-01-29T16:51:17Z,spread,2.5,109,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,MyBookie.ag,mybookieag,2023-01-29T16:54:44Z,spread,2.5,100,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,PointsBet (US),pointsbetus,2023-01-29T16:53:04Z,spread,2.5,100,-2.5,-120
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,SugarHouse,sugarhouse,2023-01-29T16:54:44Z,spread,3.0,-118,-3.0,-103
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,SuperBook,superbook,2023-01-29T16:54:46Z,spread,3.0,-120,-3.0,100
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,TwinSpires,twinspires,2023-01-29T16:54:45Z,spread,3.0,-118,-3.0,-103
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,Unibet,unibet_us,2023-01-29T16:53:05Z,spread,3.0,-118,-3.0,-103
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,William Hill (US),williamhill_us,2023-01-29T16:54:44Z,spread,3.0,-120,-3.0,100
+166c8a494be3d90661349d34c3901068,2023-01-29 20:00:00+00:00,San Francisco 49ers,Philadelphia Eagles,WynnBET,wynnbet,2023-01-29T16:54:45Z,spread,2.5,104,-2.5,-120
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,Barstool Sportsbook,barstool,2023-01-29T16:54:44Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetMGM,betmgm,2023-01-29T16:54:44Z,spread,2.5,-115,-2.5,-105
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetOnline.ag,betonlineag,2023-01-29T16:54:43Z,spread,2.0,-111,-2.0,-111
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetRivers,betrivers,2023-01-29T16:54:44Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,BetUS,betus,2023-01-29T16:53:04Z,spread,1.0,105,-1.0,-125
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,Bovada,bovada,2023-01-29T16:53:05Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,Circa Sports,circasports,2023-01-29T16:53:05Z,spread,2.5,-108,-2.5,-113
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,DraftKings,draftkings,2023-01-29T16:54:44Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,FOX Bet,foxbet,2023-01-29T16:54:44Z,spread,2.5,-118,-2.5,-105
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,FanDuel,fanduel,2023-01-29T16:53:04Z,spread,2.5,-115,-2.5,-105
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,LowVig.ag,lowvig,2023-01-29T16:51:17Z,spread,2.0,-104,-2.0,-106
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,MyBookie.ag,mybookieag,2023-01-29T16:54:44Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,PointsBet (US),pointsbetus,2023-01-29T16:53:04Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,SugarHouse,sugarhouse,2023-01-29T16:54:44Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,SuperBook,superbook,2023-01-29T16:54:46Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,TwinSpires,twinspires,2023-01-29T16:54:45Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,Unibet,unibet_us,2023-01-29T16:53:05Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,William Hill (US),williamhill_us,2023-01-29T16:54:44Z,spread,2.0,-110,-2.0,-110
+138fcddacb309da92de0ec0d08d786bd,2023-01-29 23:30:00+00:00,Cincinnati Bengals,Kansas City Chiefs,WynnBET,wynnbet,2023-01-29T16:54:45Z,spread,2.0,-108,-2.0,-108

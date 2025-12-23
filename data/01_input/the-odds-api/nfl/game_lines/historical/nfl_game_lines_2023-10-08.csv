@@ -1,0 +1,181 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+fdb93b64c39ea4a4312ffe74788b551b,2023-10-08 13:32:43+00:00,Jacksonville Jaguars,Buffalo Bills,Bovada,bovada,2023-10-08T16:55:12Z,spread,-11.5,-130,11.5,100
+fdb93b64c39ea4a4312ffe74788b551b,2023-10-08 13:32:43+00:00,Jacksonville Jaguars,Buffalo Bills,Caesars,williamhill_us,2023-10-08T16:51:30Z,spread,-5.0,-110,5.0,-120
+fdb93b64c39ea4a4312ffe74788b551b,2023-10-08 13:32:43+00:00,Jacksonville Jaguars,Buffalo Bills,TwinSpires,twinspires,2023-10-08T16:48:45Z,spread,-5.5,525,5.5,-835
+fdb93b64c39ea4a4312ffe74788b551b,2023-10-08 13:32:43+00:00,Jacksonville Jaguars,Buffalo Bills,Unibet,unibet_us,2023-10-08T16:48:46Z,spread,-5.5,525,5.5,-835
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,-2.5,-115,2.5,-105
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,12.5,-110,-12.5,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,2.5,-110,-2.5,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,12.5,-110,-12.5,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,1.5,-105,-1.5,-115
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,9.0,-106,-9.0,-114
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,-2.0,-116,2.0,-103
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,12.5,-108,-12.5,-112
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,2.0,-108,-2.0,-112
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,2.0,-109,-2.0,-112
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,9.0,-110,-9.0,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,13.0,-113,-13.0,-108
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,1.5,-112,-1.5,-109
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,BetUS,betus,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,BetUS,betus,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,BetUS,betus,2023-10-08T16:55:11Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,BetUS,betus,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,BetUS,betus,2023-10-08T16:55:11Z,spread,13.0,-115,-13.0,-105
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,BetUS,betus,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,Bovada,bovada,2023-10-08T16:55:12Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,Bovada,bovada,2023-10-08T16:55:12Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,Bovada,bovada,2023-10-08T16:55:12Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,Bovada,bovada,2023-10-08T16:55:12Z,spread,-2.5,-115,2.5,-105
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,Bovada,bovada,2023-10-08T16:55:12Z,spread,12.0,-110,-12.0,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,Bovada,bovada,2023-10-08T16:55:12Z,spread,2.0,-110,-2.0,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,12.5,-110,-12.5,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,2.0,-110,-2.0,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,-4.5,-112,4.5,-108
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,12.5,-110,-12.5,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,2.5,-112,-2.5,-108
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,9.5,-115,-9.5,-105
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,-2.5,-115,2.5,-105
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,13.0,-115,-13.0,-105
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,1.5,-105,-1.5,-115
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,2.5,-107,-2.5,-103
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,-4.5,-105,4.5,-105
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,9.0,-101,-9.0,-109
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,-2.0,-117,2.0,106
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,12.5,-105,-12.5,-105
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,2.0,-103,-2.0,-107
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,9.0,-110,-9.0,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,12.5,-110,-12.5,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,12.0,-110,-12.0,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,2.0,-110,-2.0,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,SuperBook,superbook,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,SuperBook,superbook,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,SuperBook,superbook,2023-10-08T16:55:11Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,SuperBook,superbook,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,SuperBook,superbook,2023-10-08T16:55:11Z,spread,12.5,-110,-12.5,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,SuperBook,superbook,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,2.0,-109,-2.0,-112
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,9.0,-110,-9.0,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,13.0,-113,-13.0,-108
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,1.5,-112,-1.5,-109
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,2.0,-109,-2.0,-112
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,-4.5,-110,4.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,9.0,-110,-9.0,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,13.0,-113,-13.0,-108
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,1.5,-112,-1.5,-109
+093f902b13a40cc6d60eb0a38e6d40e1,2023-10-08 17:03:00+00:00,Houston Texans,Atlanta Falcons,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,1.5,-110,-1.5,-110
+bef2023cdadb009e088e3ef6db2ea809,2023-10-08 17:03:00+00:00,Baltimore Ravens,Pittsburgh Steelers,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,-5.5,-110,5.5,-110
+83400c65dd84cef26b7911a49fe909f5,2023-10-08 17:03:00+00:00,Carolina Panthers,Detroit Lions,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,9.5,-110,-9.5,-110
+b0302377625f15c445b6ce2227a50529,2023-10-08 17:03:00+00:00,Tennessee Titans,Indianapolis Colts,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,-2.5,-110,2.5,-110
+d72ca5073fe1d69e6cd3beb37e52c081,2023-10-08 17:03:00+00:00,New York Giants,Miami Dolphins,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,13.0,-110,-13.0,-110
+088c8fc0a2e5f02bb2591f44a41a2cd1,2023-10-08 17:03:00+00:00,New Orleans Saints,New England Patriots,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,2.0,-110,-2.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,-3.0,-115,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,-4.0,-105,4.0,-115
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,-3.0,-115,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,-4.5,-105,4.5,-115
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,-3.0,-120,3.0,100
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,-3.0,-117,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,BetUS,betus,2023-10-08T16:55:11Z,spread,-3.0,-120,3.0,100
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,BetUS,betus,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,Bovada,bovada,2023-10-08T16:55:12Z,spread,-3.0,-115,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,Bovada,bovada,2023-10-08T16:55:12Z,spread,-3.5,-110,3.5,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,-3.0,-120,3.0,100
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,-3.0,-118,3.0,-102
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,-3.0,-115,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,-3.0,-109,3.0,-101
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,-4.0,-101,4.0,-109
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,-3.0,-115,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,-3.0,-115,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,-3.5,-110,3.5,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,SuperBook,superbook,2023-10-08T16:55:11Z,spread,-3.0,-120,3.0,100
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,SuperBook,superbook,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,-3.0,-117,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,-3.0,-117,3.0,-105
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,-4.0,-110,4.0,-110
+51324a8a97c14d19e5c8e9091ba8b37c,2023-10-08 20:08:00+00:00,Cincinnati Bengals,Arizona Cardinals,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,-3.0,-115,3.0,-110
+483964581fdd3bb0bf48d4735c2da6e2,2023-10-08 20:08:00+00:00,Philadelphia Eagles,Los Angeles Rams,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,-4.0,-110,4.0,-110
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,-3.5,-105,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,2.5,-115,-2.5,-105
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,-3.5,-105,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,2.0,-106,-2.0,-114
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,-3.0,-118,3.0,-102
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,-3.5,-106,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,BetUS,betus,2023-10-08T16:55:11Z,spread,2.0,-105,-2.0,-115
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,BetUS,betus,2023-10-08T16:55:11Z,spread,-3.5,-105,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,Bovada,bovada,2023-10-08T16:55:12Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,Bovada,bovada,2023-10-08T16:55:12Z,spread,-3.0,-120,3.0,100
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,2.0,-110,-2.0,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,-3.5,100,3.5,-120
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,-3.5,-110,3.5,-110
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,-3.5,-105,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,2.0,-101,-2.0,-109
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,-3.0,-114,3.0,103
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,2.0,-110,-2.0,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,-3.5,-110,3.5,-110
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,2.5,-105,-2.5,-115
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,-3.0,-115,3.0,-105
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,SuperBook,superbook,2023-10-08T16:55:11Z,spread,2.0,-110,-2.0,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,SuperBook,superbook,2023-10-08T16:55:11Z,spread,-3.5,100,3.5,-120
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,-3.5,-106,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,2.5,-110,-2.5,-110
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,-3.5,-106,3.5,-115
+8b607ae76ab2f647be17e7553ff57533,2023-10-08 20:26:00+00:00,New York Jets,Denver Broncos,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,2.5,-105,-2.5,-115
+166bf980718e06c346f9eb8a6ed882db,2023-10-08 20:26:00+00:00,Kansas City Chiefs,Minnesota Vikings,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,-3.5,-110,3.5,-110
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,Barstool Sportsbook,barstool,2023-10-08T16:55:12Z,spread,3.5,-120,-3.5,100
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,BetMGM,betmgm,2023-10-08T16:55:11Z,spread,3.5,-120,-3.5,100
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,BetOnline.ag,betonlineag,2023-10-08T16:55:10Z,spread,3.5,-115,-3.5,-105
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,BetRivers,betrivers,2023-10-08T16:55:11Z,spread,3.5,-115,-3.5,-106
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,BetUS,betus,2023-10-08T16:55:11Z,spread,3.0,105,-3.0,-125
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,Bovada,bovada,2023-10-08T16:55:12Z,spread,3.5,-110,-3.5,-110
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,Caesars,williamhill_us,2023-10-08T16:55:11Z,spread,3.5,-120,-3.5,100
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,DraftKings,draftkings,2023-10-08T16:55:11Z,spread,3.5,-108,-3.5,-112
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,FanDuel,fanduel,2023-10-08T16:55:11Z,spread,3.5,-115,-3.5,-105
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,LowVig.ag,lowvig,2023-10-08T16:55:13Z,spread,3.5,-113,-3.5,102
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,MyBookie.ag,mybookieag,2023-10-08T16:55:11Z,spread,3.5,-115,-3.5,-105
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,PointsBet (US),pointsbetus,2023-10-08T16:55:10Z,spread,3.5,-115,-3.5,-105
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,SuperBook,superbook,2023-10-08T16:55:11Z,spread,3.5,-120,-3.5,100
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,TwinSpires,twinspires,2023-10-08T16:55:11Z,spread,3.5,-115,-3.5,-106
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,Unibet,unibet_us,2023-10-08T16:55:11Z,spread,3.5,-115,-3.5,-106
+c240c9cee93e5677cdd74f93f77dd4c9,2023-10-09 00:23:00+00:00,Dallas Cowboys,San Francisco 49ers,WynnBET,wynnbet,2023-10-08T16:54:07Z,spread,3.5,-110,-3.5,-110

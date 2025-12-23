@@ -1,0 +1,42 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,BetOnline.ag,betonlineag,2023-12-16T16:55:15Z,spread,3.0,-105,-3.0,-115
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,BetRivers,betrivers,2023-12-16T16:55:16Z,spread,3.0,-110,-3.0,-110
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,BetUS,betus,2023-12-16T16:55:15Z,spread,3.0,-105,-3.0,-115
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,Bovada,bovada,2023-12-16T16:55:15Z,spread,3.0,-105,-3.0,-115
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,Caesars,williamhill_us,2023-12-16T16:54:07Z,spread,3.0,100,-3.0,-120
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,DraftKings,draftkings,2023-12-16T16:54:07Z,spread,3.0,-105,-3.0,-115
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,FanDuel,fanduel,2023-12-16T16:55:23Z,spread,3.0,-110,-3.0,-110
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,LowVig.ag,lowvig,2023-12-16T16:55:28Z,spread,3.0,-101,-3.0,-109
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,MyBookie.ag,mybookieag,2023-12-16T16:55:15Z,spread,3.0,-105,-3.0,-115
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,PointsBet (US),pointsbetus,2023-12-16T16:55:15Z,spread,3.0,-110,-3.0,-110
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,SuperBook,superbook,2023-12-16T16:55:17Z,spread,3.0,-110,-3.0,-110
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,Unibet,unibet_us,2023-12-16T16:55:16Z,spread,3.0,-110,-3.0,-110
+504debed5f593861f189755b6f1cd04c,2023-12-16 18:03:00+00:00,Minnesota Vikings,Cincinnati Bengals,WynnBET,wynnbet,2023-12-16T16:55:15Z,spread,3.0,-105,-3.0,-115
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,BetMGM,betmgm,2023-12-16T16:53:03Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,BetOnline.ag,betonlineag,2023-12-16T16:55:15Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,BetRivers,betrivers,2023-12-16T16:55:16Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,BetUS,betus,2023-12-16T16:55:15Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,Bovada,bovada,2023-12-16T16:55:15Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,Caesars,williamhill_us,2023-12-16T16:54:07Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,DraftKings,draftkings,2023-12-16T16:54:07Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,FanDuel,fanduel,2023-12-16T16:55:23Z,spread,1.5,-115,-1.5,-105
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,LowVig.ag,lowvig,2023-12-16T16:55:28Z,spread,1.0,-105,-1.0,-105
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,MyBookie.ag,mybookieag,2023-12-16T16:55:15Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,PointsBet (US),pointsbetus,2023-12-16T16:55:15Z,spread,0.5,-110,-0.5,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,SuperBook,superbook,2023-12-16T16:55:17Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,Unibet,unibet_us,2023-12-16T16:55:16Z,spread,1.0,-110,-1.0,-110
+333bbb25233d3e004f0979b9a9987074,2023-12-16 21:33:00+00:00,Pittsburgh Steelers,Indianapolis Colts,WynnBET,wynnbet,2023-12-16T16:55:15Z,spread,1.0,-115,-1.0,-105
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,BetMGM,betmgm,2023-12-16T16:53:03Z,spread,4.5,-105,-4.5,-115
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,BetOnline.ag,betonlineag,2023-12-16T16:55:15Z,spread,4.5,-104,-4.5,-116
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,BetRivers,betrivers,2023-12-16T16:55:16Z,spread,4.5,-110,-4.5,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,BetUS,betus,2023-12-16T16:55:15Z,spread,5.0,-110,-5.0,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,Bovada,bovada,2023-12-16T16:55:15Z,spread,5.0,-110,-5.0,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,Caesars,williamhill_us,2023-12-16T16:54:07Z,spread,5.0,-110,-5.0,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,DraftKings,draftkings,2023-12-16T16:54:07Z,spread,5.0,-110,-5.0,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,FanDuel,fanduel,2023-12-16T16:55:23Z,spread,4.5,-110,-4.5,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,LowVig.ag,lowvig,2023-12-16T16:55:28Z,spread,4.5,101,-4.5,-112
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,MyBookie.ag,mybookieag,2023-12-16T16:55:15Z,spread,5.0,-109,-5.0,-111
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,PointsBet (US),pointsbetus,2023-12-16T16:55:15Z,spread,5.0,-110,-5.0,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,SuperBook,superbook,2023-12-16T16:55:17Z,spread,5.0,-110,-5.0,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,Unibet,unibet_us,2023-12-16T16:55:16Z,spread,4.5,-110,-4.5,-110
+b8d545e119fa18b7183acc18f89d9b55,2023-12-17 01:18:00+00:00,Denver Broncos,Detroit Lions,WynnBET,wynnbet,2023-12-16T16:55:15Z,spread,5.0,-115,-5.0,-105
