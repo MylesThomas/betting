@@ -23,7 +23,7 @@ Threshold Guidelines:
 - --threshold 7: ~1 TD of variance, stronger signal, smaller sample
 
 Arguments:
-- --season YEAR: Season to analyze (2024 or 2025, default: 2025)
+- --season YEAR: Season to analyze (2022-2025, default: 2025)
 - --threshold N: Set luck cutoff (default: 3, from config.py)
 - --group-by-spread: Break down by spread size (0-3, 3.5-7, 7.5+)
 - --include-fav-dog: Split by unlucky team's role (favorite vs underdog)
@@ -38,8 +38,10 @@ Usage:
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 5
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 3
     
-    # Backtest 2024 season
+    # Backtest historical seasons
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2024 --threshold 3
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2023 --threshold 3
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2022 --threshold 3
     
     # Group by spread size
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 5 --group-by-spread
@@ -125,7 +127,7 @@ parser.add_argument('--debug', action='store_true',
                    help='Show detailed debugging info')
 parser.add_argument('--threshold', type=float, default=NFL_LUCK_THRESHOLD_DEFAULT,
                    help=f'Luck threshold for categorization (default: {NFL_LUCK_THRESHOLD_DEFAULT})')
-parser.add_argument('--season', type=int, default=2025, choices=[2024, 2025],
+parser.add_argument('--season', type=int, default=2025, choices=[2022, 2023, 2024, 2025],
                    help='Season to analyze (default: 2025)')
 parser.add_argument('--team', type=str, default=None,
                    help='Show one team\'s path through the season (e.g., --team GB)')
@@ -241,13 +243,14 @@ for game_id, game_group in df_up.groupby('game_id'):
 df_up_games = pd.DataFrame(up_games)
 print(f"Restructured UP data: {len(df_up_games)} games")
 
-# Match betting lines with UP games
+    # Match betting lines with UP games
 matched_games = []
 
 for idx, bet_game in df_consensus.iterrows():
     away = bet_game['away_abbr']
     home = bet_game['home_abbr']
     game_time = bet_game['game_time']
+    game_id = bet_game['game_id']
     
     # Estimate the NFL week from game date
     estimated_week = get_nfl_week(game_time)
@@ -307,9 +310,24 @@ for idx, bet_game in df_consensus.iterrows():
     home_prior_off_luck = home_prior_detail['offensive_luck']
     home_prior_def_luck = home_prior_detail['defensive_luck']
     
-    # Calculate actual game outcome vs spread
+    # Get best available spreads for both teams (for accurate backtest results)
+    # Get all lines for this game
+    game_lines = df_lines[df_lines['game_id'] == game_id]
+    
+    # Find best away spread (highest = most points)
+    away_spreads = game_lines['away_spread'].dropna()
+    best_away_spread = away_spreads.max() if len(away_spreads) > 0 else bet_game['consensus_spread']
+    
+    # Find best home spread (highest = most points, which is most negative away spread)
+    best_home_spread = -away_spreads.min() if len(away_spreads) > 0 else -bet_game['consensus_spread']
+    
+    # Calculate actual game outcome vs BEST AVAILABLE spreads
     actual_margin = away_score - home_score  # From away perspective
-    away_covered = (actual_margin + bet_game['consensus_spread']) > 0
+    away_covered_best = (actual_margin + best_away_spread) > 0
+    home_covered_best = not away_covered_best
+    
+    # Also calculate with consensus for comparison
+    away_covered_consensus = (actual_margin + bet_game['consensus_spread']) > 0
     
     # Categorize prior week luck for both teams
     away_prior_luck_cat = categorize_luck(away_prior_luck, threshold)
@@ -330,6 +348,8 @@ for idx, bet_game in df_consensus.iterrows():
         'away_abbr': away,
         'home_abbr': home,
         'consensus_spread': bet_game['consensus_spread'],
+        'best_away_spread': best_away_spread,
+        'best_home_spread': best_home_spread,
         'abs_spread': abs_spread,
         'spread_cat': spread_cat,
         'away_is_favorite': away_is_favorite,
@@ -337,8 +357,10 @@ for idx, bet_game in df_consensus.iterrows():
         'away_score': away_score,
         'home_score': home_score,
         'actual_margin': actual_margin,
-        'away_covered': away_covered,
-        'home_covered': not away_covered,
+        'away_covered': away_covered_best,
+        'home_covered': home_covered_best,
+        'away_covered_consensus': away_covered_consensus,
+        'home_covered_consensus': not away_covered_consensus,
         # THIS game's luck (for verification)
         'away_current_luck': away_current_luck,
         'away_current_off_luck': away_current_off_luck,
@@ -480,7 +502,7 @@ if not args.data_quality_check:
         for _, game in week_games.iterrows():
             away = game['away_abbr']
             home = game['home_abbr']
-            spread = game['consensus_spread']
+            consensus_spread = game['consensus_spread']
             away_score = int(game['away_score'])
             home_score = int(game['home_score'])
             
@@ -488,8 +510,10 @@ if not args.data_quality_check:
                 # Away team is unlucky - bet away
                 bet_team = away
                 bet_opp = home
-                bet_spread = spread
+                bet_spread = game['best_away_spread']
+                consensus_bet_spread = consensus_spread
                 unlucky_covered = game['away_covered']
+                unlucky_covered_consensus = game['away_covered_consensus']
                 unlucky_prior = game['away_prior_luck']
                 unlucky_off = game['away_prior_off_luck']
                 unlucky_def = game['away_prior_def_luck']
@@ -512,8 +536,10 @@ if not args.data_quality_check:
                 # Home team is unlucky - bet home
                 bet_team = home
                 bet_opp = away
-                bet_spread = -spread  # Flip spread to home perspective
+                bet_spread = game['best_home_spread']
+                consensus_bet_spread = -consensus_spread
                 unlucky_covered = game['home_covered']
+                unlucky_covered_consensus = game['home_covered_consensus']
                 unlucky_prior = game['home_prior_luck']
                 unlucky_off = game['home_prior_off_luck']
                 unlucky_def = game['home_prior_def_luck']
@@ -540,12 +566,22 @@ if not args.data_quality_check:
                 week_losses += 1
                 result = "❌ LOSS"
             
+            # Show if consensus would have been different
+            consensus_note = ""
+            if unlucky_covered != unlucky_covered_consensus:
+                consensus_result = "WIN" if unlucky_covered_consensus else "LOSS"
+                consensus_note = f" (consensus {consensus_bet_spread:+.1f} would be {consensus_result})"
+            
             # Format prior game context
             unlucky_result = "W" if unlucky_prior_score > unlucky_prior_opp_score else "L"
             lucky_result = "W" if lucky_prior_score > lucky_prior_opp_score else "L"
             
+            # Show edge from best line vs consensus
+            edge = bet_spread - consensus_bet_spread
+            edge_str = f" [+{edge:.1f} vs consensus]" if edge != 0 else ""
+            
             # Format bet string with prior week game context
-            bet_str = f"{bet_team} {bet_spread:+.1f} vs {bet_opp} (Score: {away_score}-{home_score}) → {result}"
+            bet_str = f"{bet_team} {bet_spread:+.1f}{edge_str} vs {bet_opp} (Score: {away_score}-{home_score}) → {result}{consensus_note}"
             bet_str += f"\n         Unlucky {bet_team}: Wk{int(unlucky_prior_week)} {unlucky_result} {int(unlucky_prior_score)}-{int(unlucky_prior_opp_score)} vs {unlucky_prior_opp} → {unlucky_prior:+.1f} luck (off: {unlucky_off:+.1f}, def: {unlucky_def:+.1f}) -> predicted score {unlucky_result} {unlucky_prior_adj_score:.1f}-{unlucky_prior_opp_adj_score:.1f}"
             bet_str += f"\n         Lucky {bet_opp}: Wk{int(lucky_prior_week)} {lucky_result} {int(lucky_prior_score)}-{int(lucky_prior_opp_score)} vs {lucky_prior_opp} → {lucky_prior:+.1f} luck (off: {lucky_off:+.1f}, def: {lucky_def:+.1f}) -> predicted score {lucky_result} {lucky_prior_adj_score:.1f}-{lucky_prior_opp_adj_score:.1f}"
             bets.append(bet_str)
@@ -567,8 +603,37 @@ if not args.data_quality_check:
     if total_games > 0:
         win_pct = cumulative_wins / total_games * 100
         roi = calculate_roi(win_pct / 100)
+        
+        # Calculate what record would have been with consensus
+        consensus_wins = 0
+        consensus_losses = 0
+        for _, game in lucky_vs_unlucky.iterrows():
+            if game['away_prior_luck_cat'] == 'Unlucky':
+                if game['away_covered_consensus']:
+                    consensus_wins += 1
+                else:
+                    consensus_losses += 1
+            else:
+                if game['home_covered_consensus']:
+                    consensus_wins += 1
+                else:
+                    consensus_losses += 1
+        
+        consensus_win_pct = consensus_wins / total_games * 100 if total_games > 0 else 0
+        consensus_roi = calculate_roi(consensus_win_pct / 100)
+        
         print(f"\n{'='*100}")
-        print(f"📊 SEASON TOTAL: {cumulative_wins}-{cumulative_losses} ({win_pct:.1f}%) | ROI: {roi:+.1f}%")
+        print(f"📊 SEASON TOTAL (BEST LINE): {cumulative_wins}-{cumulative_losses} ({win_pct:.1f}%) | ROI: {roi:+.1f}%")
+        print(f"📊 SEASON TOTAL (CONSENSUS): {consensus_wins}-{consensus_losses} ({consensus_win_pct:.1f}%) | ROI: {consensus_roi:+.1f}%")
+        
+        games_diff = cumulative_wins - consensus_wins
+        roi_diff = roi - consensus_roi
+        if games_diff > 0:
+            print(f"   ✅ Line shopping gained {games_diff} win(s) and {roi_diff:+.1f}% ROI")
+        elif games_diff < 0:
+            print(f"   ⚠️  Line shopping cost {-games_diff} win(s) and {roi_diff:+.1f}% ROI")
+        else:
+            print(f"   ⚖️  No difference between best line and consensus")
         print(f"{'='*100}")
 
 # =============================================================================
