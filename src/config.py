@@ -158,7 +158,47 @@ def get_nfl_week_for_date(date) -> int:
     return (days_since_start // 7) + 1
 
 
-# 2025 bye weeks (verified from nfl_luck_utils.py)
+# NFL Bye Weeks by Season
+# Format: 'ABBR': week_number
+
+NFL_2022_BYE_WEEKS = {
+    # Week 6
+    'DET': 6, 'HOU': 6, 'LV': 6, 'TEN': 6,
+    # Week 7
+    'BUF': 7, 'LAR': 7, 'MIN': 7, 'PHI': 7,
+    # Week 8
+    'KC': 8, 'LAC': 8,
+    # Week 9
+    'CLE': 9, 'DAL': 9, 'DEN': 9, 'NYG': 9, 'PIT': 9, 'SF': 9,
+    # Week 10
+    'BAL': 10, 'CIN': 10, 'NE': 10, 'NYJ': 10,
+    # Week 11
+    'JAX': 11, 'MIA': 11, 'SEA': 11, 'TB': 11,
+    # Week 13
+    'ARI': 13, 'CAR': 13,
+    # Week 14
+    'ATL': 14, 'CHI': 14, 'GB': 14, 'IND': 14, 'NO': 14, 'WAS': 14,
+}
+
+NFL_2023_BYE_WEEKS = {
+    # Week 5
+    'CLE': 5, 'LAC': 5, 'SEA': 5, 'TB': 5,
+    # Week 6
+    'GB': 6, 'PIT': 6,
+    # Week 7
+    'CAR': 7, 'CIN': 7, 'DAL': 7, 'HOU': 7, 'NYJ': 7, 'TEN': 7,
+    # Week 9
+    'DEN': 9, 'DET': 9, 'JAX': 9, 'SF': 9,
+    # Week 10
+    'KC': 10, 'LAR': 10, 'MIA': 10, 'PHI': 10,
+    # Week 11
+    'ATL': 11, 'IND': 11, 'NE': 11, 'NO': 11,
+    # Week 13
+    'BAL': 13, 'BUF': 13, 'CHI': 13, 'LV': 13, 'MIN': 13, 'NYG': 13,
+    # Week 14
+    'ARI': 14, 'WAS': 14,
+}
+
 NFL_2024_BYE_WEEKS = {
     # Week 5
     'DET': 5, 'LAC': 5, 'PHI': 5, 'TEN': 5,
@@ -179,14 +219,23 @@ NFL_2024_BYE_WEEKS = {
 }
 
 NFL_2025_BYE_WEEKS = {
+    # Week 5
     'ATL': 5, 'CHI': 5, 'GB': 5, 'PIT': 5,
+    # Week 6
     'HOU': 6, 'MIN': 6,
+    # Week 7
     'BAL': 7, 'BUF': 7,
+    # Week 8
     'ARI': 8, 'DET': 8, 'JAX': 8, 'LV': 8, 'LAR': 8, 'SEA': 8,
+    # Week 9
     'CLE': 9, 'NYJ': 9, 'PHI': 9, 'TB': 9,
+    # Week 10
     'CIN': 10, 'DAL': 10, 'KC': 10, 'TEN': 10,
+    # Week 11
     'IND': 11, 'NO': 11,
+    # Week 12
     'DEN': 12, 'LAC': 12, 'MIA': 12, 'WAS': 12,
+    # Week 14
     'CAR': 14, 'NE': 14, 'NYG': 14, 'SF': 14,
 }
 
