@@ -10,7 +10,7 @@ import glob
 from typing import Optional, Dict, List
 
 from nfl_team_utils import add_team_abbr_columns, normalize_unexpected_points_abbr
-from config import DATA_ROOT, NFL_2022_BYE_WEEKS, NFL_2023_BYE_WEEKS, NFL_2024_BYE_WEEKS, NFL_2025_BYE_WEEKS
+from config import DATA_ROOT, NFL_2020_BYE_WEEKS, NFL_2021_BYE_WEEKS, NFL_2022_BYE_WEEKS, NFL_2023_BYE_WEEKS, NFL_2024_BYE_WEEKS, NFL_2025_BYE_WEEKS
 
 # =============================================================================
 # PATHS
@@ -37,7 +37,11 @@ SPREAD_CATEGORIES: List[str] = ['0-3', '3.5-7', '7.5+']
 
 def get_bye_weeks(season: int = 2025) -> Dict[str, int]:
     """Get bye weeks dictionary for specified season."""
-    if season == 2022:
+    if season == 2020:
+        return NFL_2020_BYE_WEEKS
+    elif season == 2021:
+        return NFL_2021_BYE_WEEKS
+    elif season == 2022:
         return NFL_2022_BYE_WEEKS
     elif season == 2023:
         return NFL_2023_BYE_WEEKS
@@ -54,12 +58,16 @@ def get_nfl_week(game_date: pd.Timestamp, season: int = 2025) -> int:
     Calculate NFL week from game date.
     
     Season start dates (Week 1 Thursday):
+    - 2020: Sept 10 (HOU @ KC)
+    - 2021: Sept 9 (DAL @ TB)
     - 2022: Sept 8 (LAR vs BUF)
     - 2023: Sept 7 (DET @ KC)
     - 2024: Sept 5 (BAL @ KC)
     - 2025: Sept 4
     """
     season_starts = {
+        2020: pd.Timestamp('2020-09-10', tz='America/New_York'),
+        2021: pd.Timestamp('2021-09-09', tz='America/New_York'),
         2022: pd.Timestamp('2022-09-08', tz='America/New_York'),
         2023: pd.Timestamp('2023-09-07', tz='America/New_York'),
         2024: pd.Timestamp('2024-09-05', tz='America/New_York'),
@@ -67,7 +75,7 @@ def get_nfl_week(game_date: pd.Timestamp, season: int = 2025) -> int:
     }
     
     if season not in season_starts:
-        raise ValueError(f"Season {season} not supported. Use 2022-2025.")
+        raise ValueError(f"Season {season} not supported. Use 2020-2025.")
     
     week1_start = season_starts[season]
     
@@ -118,7 +126,7 @@ def load_nfl_betting_lines(include_upcoming: bool = False, season: int = 2025) -
     
     Args:
         include_upcoming: Include upcoming games dir. Default: False.
-        season: Season to filter (2022-2025). Default: 2025.
+        season: Season to filter (2020-2025). Default: 2025.
     """
     csv_files = sorted(glob.glob(str(NFL_LINES_DIR / "nfl_game_lines_*.csv")))
     
@@ -138,7 +146,15 @@ def load_nfl_betting_lines(include_upcoming: bool = False, season: int = 2025) -
         df['game_time'] = df['game_time'].dt.tz_localize('UTC')
     
     # Filter to specified season
-    if season == 2022:
+    if season == 2020:
+        season_start = pd.Timestamp('2020-09-01', tz='UTC')
+        season_end = pd.Timestamp('2021-02-28', tz='UTC')
+        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
+    elif season == 2021:
+        season_start = pd.Timestamp('2021-09-01', tz='UTC')
+        season_end = pd.Timestamp('2022-02-28', tz='UTC')
+        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
+    elif season == 2022:
         season_start = pd.Timestamp('2022-09-01', tz='UTC')
         season_end = pd.Timestamp('2023-02-28', tz='UTC')
         return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
@@ -185,11 +201,12 @@ def load_unexpected_points_data(file_path: Optional[Path] = None, season: int = 
     
     Args:
         file_path: Path to Excel file. If None, uses most recent file.
-        season: Season to load (2022-2025). Default: 2025.
+        season: Season to load (2020-2025). Default: 2025.
     
     Sheet naming convention:
-    - 2022, 2023: "Adjusted Scores '2022'" or "Adjusted Scores '2023'"
-    - 2012-2021: "Adjusted Scores 2012-2021" (all in one sheet)
+    - 2020, 2021: "Adjusted Scores 2012-2021" (combined sheet)
+    - 2022, 2023: "Adjusted Scores 2022" or "Adjusted Scores 2023"
+    - 2024, 2025+: "{year} Adjusted Scores" (e.g., "2024 Adjusted Scores")
     - Before 2012: Not supported (raises ValueError)
     
     Luck Components:

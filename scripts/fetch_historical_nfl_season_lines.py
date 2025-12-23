@@ -681,8 +681,8 @@ def fetch_london_games():
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Fetch NFL betting lines')
-    parser.add_argument('--season', type=int, default=2025, choices=[2022, 2023, 2024, 2025],
-                       help='Season to fetch (2022-2025, default: 2025)')
+    parser.add_argument('--season', type=int, default=2025, choices=[2020, 2021, 2022, 2023, 2024, 2025],
+                       help='Season to fetch (2020-2025, default: 2025)')
     parser.add_argument('--london', action='store_true', 
                        help='Fetch only London games (games before 1pm ET)')
     parser.add_argument('--prod-run', action='store_true',
@@ -690,7 +690,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Set season-specific date ranges
-    if args.season == 2022:
+    if args.season == 2020:
+        SEASON_START = '2020-09-10'  # Thursday, Sept 10, 2020 (HOU @ KC)
+        SEASON_END = '2021-02-07'     # Super Bowl LV
+        season_label = "2020"
+    elif args.season == 2021:
+        SEASON_START = '2021-09-09'  # Thursday, Sept 9, 2021 (DAL @ TB)
+        SEASON_END = '2022-02-13'     # Super Bowl LVI
+        season_label = "2021"
+    elif args.season == 2022:
         SEASON_START = '2022-09-08'  # Thursday, Sept 8, 2022 (LAR vs BUF)
         SEASON_END = '2023-02-12'     # Super Bowl LVII
         season_label = "2022"
@@ -708,7 +716,7 @@ if __name__ == "__main__":
         season_label = "2025"
     
     # For completed seasons, use full range; for current season, use today
-    if args.season in [2022, 2023, 2024]:
+    if args.season in [2020, 2021, 2022, 2023, 2024]:
         TODAY = SEASON_END
     else:
         TODAY = datetime.now().strftime('%Y-%m-%d')

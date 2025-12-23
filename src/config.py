@@ -161,6 +161,48 @@ def get_nfl_week_for_date(date) -> int:
 # NFL Bye Weeks by Season
 # Format: 'ABBR': week_number
 
+NFL_2020_BYE_WEEKS = {
+    # Week 4
+    'PIT': 4, 'TEN': 4,
+    # Week 5
+    'NE': 5, 'GB': 5, 'DET': 5, 'DEN': 5,
+    # Week 6
+    'SEA': 6, 'LAC': 6, 'NO': 6, 'LV': 6,
+    # Week 7
+    'MIN': 7, 'MIA': 7, 'IND': 7, 'BAL': 7,
+    # Week 8
+    'WAS': 8, 'ARI': 8, 'JAX': 8, 'HOU': 8,
+    # Week 9
+    'PHI': 9, 'LAR': 9, 'CLE': 9, 'CIN': 9,
+    # Week 10
+    'NYJ': 10, 'KC': 10, 'DAL': 10, 'ATL': 10,
+    # Week 11
+    'SF': 11, 'NYG': 11, 'CHI': 11, 'BUF': 11,
+    # Week 13
+    'TB': 13, 'CAR': 13,
+}
+
+NFL_2021_BYE_WEEKS = {
+    # Week 6
+    'ATL': 6, 'NO': 6, 'NYJ': 6, 'SF': 6,
+    # Week 7
+    'BUF': 7, 'DAL': 7, 'JAX': 7, 'LAC': 7, 'MIN': 7, 'PIT': 7,
+    # Week 8
+    'BAL': 8, 'LV': 8,
+    # Week 9
+    'DET': 9, 'SEA': 9, 'TB': 9, 'WAS': 9,
+    # Week 10
+    'CHI': 10, 'CIN': 10, 'HOU': 10, 'NYG': 10,
+    # Week 11
+    'DEN': 11, 'LAR': 11,
+    # Week 12
+    'ARI': 12, 'KC': 12,
+    # Week 13
+    'CAR': 13, 'CLE': 13, 'GB': 13, 'TEN': 13,
+    # Week 14
+    'IND': 14, 'MIA': 14, 'NE': 14, 'PHI': 14,
+}
+
 NFL_2022_BYE_WEEKS = {
     # Week 6
     'DET': 6, 'HOU': 6, 'LV': 6, 'TEN': 6,

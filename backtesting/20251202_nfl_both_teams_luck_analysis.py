@@ -23,7 +23,7 @@ Threshold Guidelines:
 - --threshold 7: ~1 TD of variance, stronger signal, smaller sample
 
 Arguments:
-- --season YEAR: Season to analyze (2022-2025, default: 2025)
+- --season YEAR: Season to analyze (2020-2025, default: 2025)
 - --threshold N: Set luck cutoff (default: 3, from config.py)
 - --group-by-spread: Break down by spread size (0-3, 3.5-7, 7.5+)
 - --include-fav-dog: Split by unlucky team's role (favorite vs underdog)
@@ -42,6 +42,8 @@ Usage:
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2024 --threshold 3
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2023 --threshold 3
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2022 --threshold 3
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2021 --threshold 3
+    python backtesting/20251202_nfl_both_teams_luck_analysis.py --season 2020 --threshold 3
     
     # Group by spread size
     python backtesting/20251202_nfl_both_teams_luck_analysis.py --threshold 5 --group-by-spread
@@ -127,7 +129,7 @@ parser.add_argument('--debug', action='store_true',
                    help='Show detailed debugging info')
 parser.add_argument('--threshold', type=float, default=NFL_LUCK_THRESHOLD_DEFAULT,
                    help=f'Luck threshold for categorization (default: {NFL_LUCK_THRESHOLD_DEFAULT})')
-parser.add_argument('--season', type=int, default=2025, choices=[2022, 2023, 2024, 2025],
+parser.add_argument('--season', type=int, default=2025, choices=[2020, 2021, 2022, 2023, 2024, 2025],
                    help='Season to analyze (default: 2025)')
 parser.add_argument('--team', type=str, default=None,
                    help='Show one team\'s path through the season (e.g., --team GB)')

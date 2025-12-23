@@ -34,11 +34,12 @@ Usage:
     # Custom threshold
     python implementation/find_nfl_luck_regression_plays_both_teams.py --current-week --threshold 5
     
-    # Backtest 2024 season week
+    # Backtest historical season weeks
     python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2024 --week 10 --threshold 3
-    
-    # Backtest 2025 season week
-    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2025 --week 15
+    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2023 --week 8 --threshold 3
+    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2022 --week 5 --threshold 3
+    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2021 --week 12 --threshold 3
+    python implementation/find_nfl_luck_regression_plays_both_teams.py --season 2020 --week 7 --threshold 3
     
     # Test mode (simulates 2025-12-04 with 1 TNF game, no API calls)
     python implementation/find_nfl_luck_regression_plays_both_teams.py --current-week --test
@@ -114,7 +115,7 @@ parser.add_argument('--current-week', action='store_true',
                    help='Find plays for current week (games in next 7 days). Will fetch live lines if needed.')
 parser.add_argument('--week', type=int,
                    help='Backtest a specific week (e.g., --week 13). Uses saved data, no API calls.')
-parser.add_argument('--season', type=int, default=2025, choices=[2022, 2023, 2024, 2025],
+parser.add_argument('--season', type=int, default=2025, choices=[2020, 2021, 2022, 2023, 2024, 2025],
                    help='Season to analyze (default: 2025). Only used with --week for backtesting.')
 parser.add_argument('--threshold', type=float, default=NFL_LUCK_THRESHOLD_DEFAULT,
                    help=f'Luck threshold for categorization (default: {NFL_LUCK_THRESHOLD_DEFAULT})')
