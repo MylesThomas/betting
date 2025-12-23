@@ -114,7 +114,7 @@ parser.add_argument('--current-week', action='store_true',
                    help='Find plays for current week (games in next 7 days). Will fetch live lines if needed.')
 parser.add_argument('--week', type=int,
                    help='Backtest a specific week (e.g., --week 13). Uses saved data, no API calls.')
-parser.add_argument('--season', type=int, default=2025, choices=[2024, 2025],
+parser.add_argument('--season', type=int, default=2025, choices=[2022, 2023, 2024, 2025],
                    help='Season to analyze (default: 2025). Only used with --week for backtesting.')
 parser.add_argument('--threshold', type=float, default=NFL_LUCK_THRESHOLD_DEFAULT,
                    help=f'Luck threshold for categorization (default: {NFL_LUCK_THRESHOLD_DEFAULT})')
@@ -290,7 +290,7 @@ if args.week is not None:
     if len(df_plays) > 0:
         # Load betting lines to get best spreads
         print(f"\n{EMOJI['info']} Loading betting lines to find best spreads...")
-        df_lines_all = load_nfl_betting_lines()
+        df_lines_all = load_nfl_betting_lines(season=args.season)
         df_lines_all = add_team_abbr_columns(df_lines_all)
         df_lines_all['home_spread'] = -df_lines_all['away_spread']
         
@@ -299,14 +299,17 @@ if args.week is not None:
             df_lines_all['game_time'].dt.to_period('W') == df_week['game_time'].iloc[0].to_period('W')
         ]
         
-        print("\nBET UNLUCKY TEAM:")
+        print("\nBET UNLUCKY TEAM (using BEST available line):")
         wins = 0
+        wins_consensus = 0
         for _, p in df_plays.iterrows():
             if p['away_prior_luck_cat'] == 'Unlucky':
-                bet, consensus_spread, covered = p['away_abbr'], p['consensus_spread'], p['away_covered']
+                bet = p['away_abbr']
+                consensus_spread = p['consensus_spread']
                 bet_away = p['away_abbr']
             else:
-                bet, consensus_spread, covered = p['home_abbr'], -p['consensus_spread'], p['home_covered']
+                bet = p['home_abbr']
+                consensus_spread = -p['consensus_spread']
                 bet_away = p['away_abbr']
             
             # Find best line for this bet
@@ -330,9 +333,22 @@ if args.week is not None:
                         if price_val is not None and not pd.isna(price_val):
                             best_price = int(price_val)
             
+            # Calculate if bet covered with BEST spread
+            actual_margin = p['away_score'] - p['home_score']
+            if p['away_prior_luck_cat'] == 'Unlucky':
+                # Bet away team with best spread
+                covered = (actual_margin + best_spread) > 0
+                covered_consensus = (actual_margin + consensus_spread) > 0
+            else:
+                # Bet home team with best spread
+                covered = (-actual_margin + best_spread) > 0
+                covered_consensus = (-actual_margin + consensus_spread) > 0
+            
             result = EMOJI['success'] if covered else EMOJI['error']
             if covered:
                 wins += 1
+            if covered_consensus:
+                wins_consensus += 1
             
             # Format price
             if best_price is not None:
@@ -343,9 +359,19 @@ if args.week is not None:
             edge = best_spread - consensus_spread
             edge_str = f" (+{edge:.1f} edge)" if edge != 0 else ""
             
-            print(f"  {result} {bet} {best_spread:+.1f}{price_str}{edge_str} [{best_books}] (consensus: {consensus_spread:+.1f})")
+            # Add note if consensus would have been different
+            consensus_note = ""
+            if covered != covered_consensus:
+                consensus_result = "WIN" if covered_consensus else "LOSS"
+                consensus_note = f" (consensus would be {consensus_result})"
+            
+            print(f"  {result} {bet} {best_spread:+.1f}{price_str}{edge_str} [{best_books}] (consensus: {consensus_spread:+.1f}){consensus_note}")
         
-        print(f"\nRecord: {wins}-{len(df_plays)-wins}")
+        print(f"\nRecord (BEST line): {wins}-{len(df_plays)-wins}")
+        print(f"Record (CONSENSUS): {wins_consensus}-{len(df_plays)-wins_consensus}")
+        if wins != wins_consensus:
+            games_diff = wins - wins_consensus
+            print(f"   ✅ Line shopping gained {games_diff} win(s)" if games_diff > 0 else f"   ⚠️  Line shopping cost {-games_diff} win(s)")
     
     # Save backtest results
     output_dir = Path(f"/Users/thomasmyles/dev/betting/data/04_output/nfl/{args.season}/plays/week_{args.week}")
