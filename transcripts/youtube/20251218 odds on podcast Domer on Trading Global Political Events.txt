@@ -1,0 +1,1346 @@
+# Title: How the World’s #1 Prediction Markets Trader Finds Edge! - Domer on Trading Global Political Events
+
+Link: https://www.youtube.com/watch?v=TJpXnvFuvZg
+
+Bio:
+
+5
+6
+7
+8
+9
+ 
+ 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+ 
+ 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+ 
+ views  
+Dec 18, 2025  Odds on Open Podcast
+ What’s the difference between prediction markets trading and equities trading? On Odds on Open, the world’s #1 prediction markets trader Domer explains how prediction markets work as a form of information-based trading, where news and signals can arrive at any moment, forcing continuous price discovery and repricing. Unlike stock markets, where returns often depend on long-term growth, valuation multiples, and market beta, prediction market strategy focuses on information timing, news flow, and market reaction to new data. Rather than forecasting final outcomes, traders focus on event-driven trading, short-term price movement, and probability trading, exploiting mispriced probabilities and trading event contracts instead of holding positions to resolution. This approach allows traders to generate expected value (EV) and highlights the difference between active trading vs passive investing.
+
+Domer also explains how many participants concentrate on high-volume headline markets, while traders look for prediction market edge in event contracts trading across smaller markets. On platforms like Polymarket and Kalshi, opportunities exist in alternative markets and micro events that are less crowded and prone to pricing errors. By specializing in specific market categories and focusing on liquidity, volume, and time horizon, traders can adjust position sizing and holding periods to match their edge. This approach mirrors quantitative trading and event-driven strategies, where domain knowledge and execution outperform broad speculation.
+
+Other subjects discussed...
+How prediction markets trading focuses on short-term price movement and active trading rather than holding event contracts to resolution.
+Prediction market strategy is based on exploiting mispriced probabilities to generate expected value (EV).
+Prediction market edge is most common in micro markets and sub-events with lower liquidity and attention.
+Event contracts trading rewards traders who identify information-driven repricing before markets adjust.
+Information-based trading in prediction markets reacts to discrete news rather than continuous market noise.
+Probability trading requires distinguishing mean reversion from true regime shifts after breaking news.
+Losses in prediction markets are often caused by crowded trades and poor position sizing, not direction.
+Position sizing must scale with edge and uncertainty to preserve long-term expected value (EV).
+Platforms like Polymarket and Kalshi allow large traders to temporarily distort prices.
+Capital concentration in alternative markets can create opportunity for smaller traders.
+Long-term success depends on repeatable decision-making rather than individual outcomes.
+Prediction markets exhibit less random variance than equities because prices move on information.
+Poker develops risk tolerance and variance management applicable to prediction markets trading.
+Regulation is likely to limit influenceable event contracts while allowing large markets to grow.
+
+00:00 Intro
+00:37: How Edge Works in Prediction Markets
+01:30: How to Evaluate a Plus-EV Bet
+03:53: Micro Events vs Headline Market Edge
+04:44: Determining What Is Priced In
+06:00: Short-Term Trading vs Holding to Resolution
+08:24: Synthesizing News for Unique Events
+10:16: Mean Reversion vs Momentum in Markets
+11:23: Identifying Underreaction to New Information
+14:26: Learning from Opposing Market Participants
+16:00: Avoiding Confirmation Bias as a Trader
+18:03: Losing Trades Caused by Confirmation Bias
+21:23: Evaluating Bet Quality in Hindsight
+25:46: Polling Errors and Market Pricing Lessons
+28:34: Position Sizing in Prediction Markets
+29:35: Sizing Bets Under Uncertainty
+31:58: Why Prediction Markets Are Hard to Price
+32:30: From Poker to Event Trading
+35:16: Poker Skills That Transfer to Trading
+38:23: Prediction Markets vs Equities Trading
+42:24: Why Prediction Markets Have Less Noise
+43:17: The French Whale and Market Distortion
+48:35: Skill vs Luck in Large Bets
+51:07: Ethics of Betting on Real-World Events
+55:45: Are Prediction Markets Good for Society?
+57:15: Incentive Risks and Market Influence
+1:00:12: Regulation and the Future of Prediction Markets
+
+# Transcript
+My guest this week made more than $3 million from trading on Poly Market. I've invited the number one prediction
+0:06
+markets trader in the world to Odds on Open. Meet Goomer. In 2024, he correctly
+0:13
+bet $4,000 that Donald Trump would pick JD Vance as his running mate and won over 100K. His work was previously
+0:20
+covered by Bloomberg and CBS. On the podcast, we talk about how top prediction markets traders find edge.
+0:29
+Domer, thanks so much for doing this. Yeah, hey, thanks for having me.
+0:36
+How does edge present itself in prediction markets?
+0:41
+Uh, yeah, I mean that's a great question. So, I mean, prediction markets are a little bit different than, you know, other types of investing or other
+0:49
+types of betting because the news can happen at literally any moment in time.
+0:54
+So, you kind of have to be ready for it and you have to you have to kind of fall
+0:59
+into a a pattern where you can anticipate when things are are likely to
+1:05
+happen or you know when news may drop. So, for instance, if you're if you're betting on something that's political,
+1:12
+you kind of want to be in the in the groove in in terms of politics and maybe it things tend to show up early in the
+1:18
+morning or late at night if people are trying to bury it. So, it it really depends on on what you're betting on, but you you have to kind of get into the
+1:25
+groove of of of what you're doing and and be able to research it. What I guess makes a good process for
+1:36
+evaluating a good bet. So, I I'll give you an example, right? So, that to make
+1:42
+things more specific and I think this is the example everyone asks, right? 2024 election, you have Trump and Kla running
+1:49
+or maybe Trump Biden. Um, how do you analyze something like that and synthesize all the news to make, let's
+1:56
+say, a plus EV bet? Yeah. So, I mean it. So, that is a very
+2:02
+longterm bet because there's a lot of things that are happening in that bet.
+2:07
+Like, let's say you start betting on it in January of 2024. Well, there's going to be primaries. There's going to be
+2:13
+primary debates. There's going to be debates between Biden and Trump or Biden and Camala or whatever. There's going to
+2:19
+be polling. There's going to be conventions. There's going to be VP picks. So, it's a very protracted
+2:24
+process and it depends, you know, and and within that large event, that large
+2:30
+very very very important event where the main market may have billions of dollars traded. There's a bunch of submarkets
+2:36
+like within these markets um like within the the overarching event in terms of what's going to happen in the short
+2:42
+term. So that there's a lot of things to analyze and I guess it depends exactly what you're trying to do and and I think
+2:49
+that's one thing that's important to know about prediction markets is like you don't necessarily have to be
+2:56
+predicting the exact election results. There can be multiple things that you're trying to find your space in or like
+3:03
+your exact specialty within prediction markets and you can pick and choose what you want to bet on. So, for instance,
+3:09
+you can focus on who's who's Trump going to pick as his VP or who is Camala going to pick as her VP or you can just focus
+3:17
+on what they're going to say during the debates. You can study like, you know, Trump's stump speech and be like, okay,
+3:22
+he talks about these things, he tends to not talk about these things. There's so there's multiple facets within it. And,
+3:29
+you know, one thing about prediction markets is you can just kind of go through the available markets. Like right now there's probably 2,000
+3:35
+available markets and you can just scroll through and you can be like, "Well, I don't know anything about this. I don't know anything about this." So you you're not forced to try and predict
+3:43
+things or bet things that you're not comfortable with or that you don't know anything about. And you you can kind of
+3:48
+find your your niche within the within the space. And do you find that most successful
+3:55
+prediction market better or political betters focus on those micro events and
+4:01
+is there more opportunity and edge there? Um yeah, I I would say most people focus
+4:07
+on the big level events, right? So it it really depends because there are some
+4:13
+micro events that you know may have 10,000 in volume. There are some events that may have, you know, tens of
+4:19
+millions in volume. So it really depends on on what you're trying to do and what time span you're trying to do it. But
+4:25
+generally speaking, people try and predict the high-profile things, the things that people care about, the
+4:30
+things that are on TV, that are in the news, that your parents are asking you about. So it it it really kind of jives
+4:37
+with like reality, what is important and what's not super important.
+4:43
+And so when you're looking at those highle events, as you said,
+4:49
+how do you determine what's priced in by the market? like you know given the current odds how do you figure out
+4:55
+directionally whether something is cheap or expensive. Yeah that so that's really hard and
+5:02
+maybe even impossible because you know a lot of these events are very unique.
+5:08
+they've never happened before, right? Trump verse Camala that has never happened before in the history of mankind, right? So, you're trying to
+5:14
+price something that is totally and completely unique. And so, there's a degree to which the pricing is kind of a
+5:21
+little bit made up. Not in the sense that people are just kind of just, you know, BSing or whatever, but you know,
+5:26
+there there's a lot of unknown things and you there are things that are you don't even know what you don't know,
+5:33
+right? So, so there's a lot of uncertainty within these numbers. And so I I guess what you would really want to
+5:40
+first approximate is not necessarily whether the prices are totally correct, although that's something you can definitely do. What you would probably
+5:47
+want to do is focus on day-to-day changes within the market. So for instance, you see a news story that some
+5:55
+scandal is about to hit, right? So you would want to short the candidate and maybe they go from 50 to 45 or you know
+6:02
+30 to 38 whatever whatever the news impact is. So you can trade these within
+6:07
+the short term without necessarily being an expert on what the ultimate answer is if that makes sense.
+6:14
+I see. And would you say that that is
+6:20
+where most prediction markets traders tend to find their edges like and tend
+6:26
+to trade the markets. Um, taking that example, that same example, the 2024
+6:32
+elections, they kind of have a short-term forecast of where the odds are going to move and then they bet on
+6:39
+that direction and then close their positions out. And I I guess my real
+6:44
+question is how much of prediction markets trading tends to be um those shortterm
+6:50
+price forecasts versus holding events to maturity and kind of just treating it as
+6:56
+okay, I'm going to be paid based on the outcome. Yeah. So, I would say like someone like
+7:02
+me who does this all the time, you know, as a living, I would be more inclined or
+7:08
+someone like me would be more inclined to trade short-term swings and not necessarily, you know, be just betting
+7:14
+on it and then turning my computer off and checking again two months from now whether I won or not. But, you know, a
+7:20
+lot of casual players, they really only care about what the final outcome is. So, there could be some Trump super
+7:26
+supporter who's going to be like, "Okay, I'm going to deposit 10,000. I'm going to bet on the candidate that I love and
+7:31
+he's going to win, right? So, I mean, it it really depends on the perspective, but someone like me is doing probably a
+7:38
+lot of swing trading, a lot of like, okay, I'm getting in, I'm getting out, I'm reacting to the latest news. Um, and
+7:45
+you don't really want your positions to be like super stale. You don't want to fall in love with your positions. You
+7:51
+don't want to be like, "Okay, I bought this at 30 and now it's at 40. I'm going to ride it to 100." Right? So, you need
+7:57
+to analyze things all the time. So, if you think it's worth 39 and it's at 40 right now, you probably should be
+8:03
+starting to sell some of it and not necessarily just trying to hold on and try and hit a big win or whatever. So,
+8:09
+you have to kind of be very um numerical about it and like, you know, not just
+8:16
+fall in love with your positions and and and let them either go to zero or go to 100.
+8:23
+And and so when you're looking at those bets and you're trading them, how do you go about synthesizing the news for
+8:31
+events that really have never happened before? I imagine that's hard.
+8:37
+Yeah. No, it's it's very hard because, you know, a lot of profits can be made when people overreact to the latest
+8:44
+news. Like for instance, there are all sorts of scandals that have plagued Trump since he arrived on the scene in
+8:51
+2016. And you know how many because this is a an easy and cheap example but you
+8:56
+know how many times did you hear oh it's over you know oh this is this right it's just like it's one of the most common
+9:03
+stories in politics. So it, you know, if you overreact to the news and you're like, "Okay, he's at 80 right now. He's
+9:09
+headed to zero." Like, you're going to lose that. And so you really have to figure out, okay, this actually is a big
+9:16
+scandal. He was at 80 before. I think I think the news is going to hit and he's going to go to 70 or something like
+9:23
+that. And you can't get too caught up in the exact moment. You really have to be disciplined about it and be like, "Okay,
+9:29
+he's down to 60. I think that's an overreaction." uh you know, even in the face of this scandal, I'm actually gonna
+9:35
+start betting on him at 60 even though like all the news is negative right now because you know there there has to be a
+9:41
+a low point at some point. So it it it's very nuanced and it and it's hard to do
+9:47
+because usually your instinct is to go with the crowd, right? So sometimes you're kind of betting against the
+9:53
+conventional wisdom that XYZ is you because people often overreact to the latest news whether it's a political
+9:59
+scandal or something totally unrelated to politics. Um people tend to overreact to the latest piece of news or
+10:06
+information and think that like overweing the latest like a recency bias
+10:12
+type of thing. Let's take something like that as an
+10:18
+example. Would you say because I'm right now when we're talking about pricing in the news
+10:27
+and you're saying people tend to overreact I'm seeing that as an analog to let's say m let's say mean reversion
+10:34
+in price right um and then I would say that the the opposite of that would be
+10:40
+momentum let's say that a big news story kind of cascades and it's this catalyst
+10:47
+for a greater trend And how do you identify one versus the other? Because I
+10:53
+imagine it's, you know, like as you've said, um, one scandal is not going to
+10:59
+hurt Trump's, um, is not going to hurt Trump's odds really. I mean, people have have thought that plenty times before,
+11:06
+everyone says it's over, but then lo and behold, two weeks later, everyone's forgotten. Um, versus something like say
+11:13
+Trump almost getting assassinated, right? and everyone's saying, "Okay, this is a great shift." Um, yeah. How do
+11:20
+you how do you think about those things? Yeah. So, I I I guess the ultimate counter example or the one recently that
+11:27
+that was a very profitable uh was peace uh between Israel and uh Palestine or
+11:34
+Hamas or however you define that. But because they were close for so long and there were so many near misses and it
+11:40
+was like, you know, XYZ is going to happen. Oh, it's going to happen in May. Oh, it's going to happen in you know, June. Oh, it's going to happen in July.
+11:46
+So, there were a lot of near misses. And so, by the time it finally came around, which I think was in um October, I want
+11:54
+to say, um maybe late September, early October if I'm remembering correctly. Anyway, so it was like some Trump tweet
+12:01
+where he's like, "Okay, Israel, stop bombing Gaza." Like, you know, get your act together or whatever. And I remember
+12:07
+seeing that and I was like, "Okay, the market is not reacting enough, right?"
+12:12
+So I think you know peace between them let's say by the end of November was trading at let's say 25 cents. I'm I'm
+12:19
+just making up. It was probably something like that. And I was like well given this Trump tweet where he's
+12:25
+basically telling Israel what to do. He's kind of acting like the president of Israel. I think this is probably
+12:30
+worth like way above 50 right now. Right. So I mean that's a huge shift in a very very important and well-traded
+12:37
+event. But, you know, all these people that were like, you know, burned all these times, they're like, "Oh, I think it's going to happen. Oh, I think it's
+12:43
+going to happen." They're very reticent to move the price that much. And so,
+12:48
+it's this goes back to how hard it is to do it because, you know, I could have easily been like, "Oh, you know, this is
+12:56
+this is just another, you know, empty near miss that's going to happen and I don't think the price should change that
+13:02
+much." But, you know, I I happened to analyze it correctly and I'm like, "Okay, this is actually sounds like it's going to happen." And so, I I made all
+13:09
+these big bets on on peace in the Middle East happening and I ended up winning that one. But, yeah, I mean, it's it's
+13:15
+very hard cuz it's very, you know, qualitative. It's not necessarily quantitative. There's a lot of context
+13:22
+involved. There's a lot of research involved. I remember the weekend that Trump tweeted that and or truth day,
+13:28
+whatever this nomenclature is now, and I was chatting with a bunch of people, you know, I was like, well, what's going to
+13:33
+happen, you know, and and I was chatting with people that were on the other side of the bet that I was on cuz I was just
+13:38
+trying to get to the bottom of it. And, you know, I I figured out that their main the reason that they were holding
+13:44
+the opposite position as me is because of all these other times it has failed. And I'm thinking to myself like, okay, I
+13:50
+mean that's a compelling reason, but like it seems like things are a lot different now. And so after talking with
+13:55
+all my counterparties or at least people that were on the other side of the bet, like I became even more confident in my
+14:01
+bet and I actually increased uh my betting. So that that's just an example of like reacting correctly to the news,
+14:09
+right? Uh, and I'm not some, you know, superstar robot that reacts perfectly every single time, but, you know, o over
+14:15
+time you want to react better than worse, you know, over the course of, you know, all these repeatable events or
+14:22
+whatever. Is that something you do often? Just talking to people on the other side of
+14:28
+your bed and truly trying to think, okay, why why are they on the other
+14:34
+side? And then synthesizing what do you know that that they don't? Yeah. No, I that's super important
+14:40
+because it's so easy to just look at you know confirmation bias is a really I
+14:45
+mean there are all these biases I think I've already mentioned too recency bias and confirmation bi there are all these
+14:51
+biases that are basically trying to screw with your brain they're basically trying to you know mess with you and and
+14:56
+and prove to you that what you're seeing is correct and your view of the world is is totally right. So, it's very easy to
+15:04
+look at your position and look at the facts and conform the facts that you're seeing to the position and the bias that
+15:12
+you already have that you're correct. So, it's very important to expose yourself to the idea that you're wrong
+15:18
+and be very open-minded about it and be like, okay, maybe I'm wrong. Like, in in the world where I am wrong, what does
+15:25
+that look like? Like, what are they what are their arguments? Because if you think about the other side of the equation, like I'm I love my position,
+15:32
+but they also love their position and they love their position for a reason. So why have they fallen in love with
+15:37
+this, right? So it it is very important to be analyzing it at all times, especially if you have a big position. I
+15:44
+mean, if you're just betting small, then you know, you don't really need to like analyze it or talk to your counterparties. But but if you're making
+15:49
+like a big position and this is a very serious endeavor, like it's really important to to figure out what's going
+15:55
+on on the other side of the ledger. what you've spoken about there about
+16:01
+confirmation bias. One of the things I find so interesting about it is that, you know, it can hit anyone, you know,
+16:07
+rich, poor, even if you've been in the game for for a long time. I mean, I'm thinking about top traders or hedge fund
+16:14
+managers who've been at their game for the longest time, they can still, you
+16:20
+know, they can fall prey to it and end up losing a lot of money. Um, I guess my
+16:25
+question for you is you're hailed as sort of this this um
+16:32
+prediction markets genius who who understands these things. Um, how do you
+16:39
+consistently and constantly put yourself in the position so that you won't get
+16:44
+burnt by by confirmation bias? Uh I mean so I think the very important
+16:51
+thing and this is a very simple answer but I think it's like kind of the key is to be thinking about it all the time
+16:56
+right it it's to have top of mind that you're being tricked by your brain and
+17:01
+that you you know you can look at your position and be like oh my god this is a great bet like you can you know you're
+17:07
+telling your wife or your spouse or your friends like oh I just made a great bet like it's very easy to fall in love with
+17:14
+everything that you're doing and think that you're I'm a super genius. So, you have to really be humble. You have to be
+17:20
+thinking about um the fact that you know the information that you're getting is not necessarily the whole truth. Um so,
+17:28
+yeah, I I I do think it's very very important and it's just something from experience that you have to have in mind because you know the other thing about
+17:34
+experience is I've been doing this for so long that I've been in the position where it's like oh like I was just blinded by the by my love for this like
+17:42
+I should have sold like two weeks before I before I actually did. So, you know, the one thing that experience teaches
+17:48
+you is, as I've repeated these number and, you know, an large number of times is that you really just have to be very
+17:55
+on your toes and aware of all these things that are trying to like, you know, lose you money, I guess.
+18:02
+Can you tell me about a time where you fell prey to confirmation bias and
+18:08
+really got burned? You know, I would say it it's funny
+18:13
+because I feel like it's the same exact thing that happened twice, although it was it was slightly different. So, I I
+18:19
+would say losing on Trump in 2016 and in 2024 were very similar and and in fact,
+18:27
+uh it was also true a little bit in 2020 because it ended up being a lot closer
+18:32
+than people thought. Um like Trump kind of easily lost but not like people thought it would be a blowout and it was
+18:38
+definitely not that. So, uh, you know, in 2016, a lot of the people that I was
+18:43
+surrounded with were all betting the same way. And it's, you know, if you're chatting with a lot of smart people and
+18:49
+a lot of traders, but everyone is already thinking along the same lines, like you're you're only going to be
+18:55
+telling each other information that is helpful, right? And like information that goes against your position is kind
+19:02
+of like, well, I'm not sure that's important. And then another person's like, I'm not sure that's important. And then all of a sudden, it's an echo
+19:07
+chamber, right? you put yourself inside of an echo chamber where everyone has just amplified what you already think.
+19:14
+And so that was, you know, 2016 I lost a pretty significant amount of money. Um,
+19:21
+I was actually able to live trade Trump at like 10%. After results started to
+19:28
+come in, um, so that was like that kind of saved my bacon or else I might have been out of the game. Um but yeah, so so
+19:35
+2016 was was a humbling experience because it was like everyone was like on the same page and you know, but then
+19:41
+2024 came around and I feel like it was a little bit of the same scenario. But I, you know, having lived through 2016,
+19:48
+I kept telling myself, okay, you want to be at 50, you you want to be at like zero going into election night, right?
+19:53
+You don't want to have a position. You don't want to have a position. But everyone that and and there were two
+19:59
+factors at play. Number one, I was again surrounded by people who were very like who were also on the same page as me,
+20:05
+but I I I was a little bit more cautious about this, but you know, it was it was definitely a factor. And then the second thing is that this French guy had come
+20:12
+in and was betting so much money on Trump that, you know, it it almost felt
+20:18
+like one person was distorting the odds. And I and I still think that was the case a little bit. You know, it it's
+20:25
+hard to go back and look and figure out whether the odds were correct or not, even even knowing all the information.
+20:30
+But, you know, those two things kind of clouded my vision and this, you know, this mantra that I had, go into election
+20:36
+night having zero, go into election night having zero position, you know, kind of faded into the backdrop. I I
+20:43
+kind of ignored ignored my own advice to myself. Uh so it's it's very easy to get
+20:49
+to get lost in these type of things and I took a bigger loss on Kamal than I than probably I should you know even
+20:55
+thinking that she was going to win which I think you know it's it was wrong but it's a fine position to have. I bet I
+21:02
+bet more than I should have. Um I I I should have been more cautious about it. Um, I shouldn't have been, you know,
+21:08
+blinded to what I was going to do and I should have stuck with my mantra and and what I was trying to do or at least hued
+21:13
+closer to it of having no position going into election night.
+21:22
+That was a very interesting time. Um, I guess
+21:28
+looking back I'm no expert on prediction markets and um I remember talking to my
+21:35
+brother on the on election day and and I was you know I thought Trump was going
+21:41
+to win but I didn't know if my confidence was higher than the odds. So I think on the day it was maybe like 63
+21:50
+37. I don't know if I'm correct there. And so I thought that, yeah, I thought
+21:55
+Trump was going to win. Um, and then looking at the odds, that kind of gave me confidence in in predicting that for
+22:02
+myself. But I guess I wasn't sure if I would have had any edge in that trade if
+22:08
+I had placed that bet. How do you think about that? And how do you evaluate when a bet was good in hindsight?
+22:17
+um if you're predict if you're forecasting a particular outcome when
+22:23
+you don't there's I mean there's no real way to do it I guess
+22:28
+yeah I so the the way that I think about the elections is right so 2016 the
+22:34
+polling was just very off right if you were betting on the polling you got blown out right that Trump vastly
+22:40
+outperformed his polling and and I think we kind of figured it out that the Trump voters were harder to find they didn't
+22:46
+trust pollsters, you know, they they were they didn't answer pollsters as much. So, there was a degree to which,
+22:53
+okay, yeah, the polls were all wrong, but we kind of figured out why they were wrong. And then 2020 was a little bit of
+22:59
+the same phenomenon to a lesser degree, but it was also a little clouded by CO. So, it it it's really hard to
+23:05
+disentangle exactly what happened. But I I I think there's a degree to which
+23:10
+again the same phenomenon kind of presented itself where uh Trump did better with people that were very hard
+23:17
+to pull than Biden did and and probably a bit better than people expected him to
+23:22
+do. And then so but what I think was influencing me quite a lot was 2022
+23:28
+rolled around and that was a midterm election and that was one where kind of Republicans were really trumpeting
+23:34
+themselves and being like, "Okay, we're going to do really well. Oh, this is going to be a red wave. And the polls were a little bit backing them up, but
+23:40
+not really. The the polls were closer to like a 50/50 type of election, but
+23:46
+people were like, well, the polls were wrong in 20 2016. The polls were wrong in 2020, so they're going to be wrong again. There's something about
+23:52
+Republicans that, you know, their people are hard to find. And, you know, I I the prices reflected that, right? So they
+23:59
+were very they were huge favorites to take the house and they were big favorites in a lot of individual um
+24:05
+Senate races where they were more like MAGA candidates um like slightly riskier
+24:10
+candidates for Republicans to run than some like you know normal accountant or something. You know it was a little bit
+24:15
+they were a little bit out there in terms of their Senate races. But so what happened in 2022 is that Democrats did a
+24:21
+lot better than people thought they would. uh they kept the Senate which was like a big win and so people became more
+24:28
+confident in the polling. They were like well you know all these Republicans got high on their own supply. They lost a
+24:34
+bunch of money in 2020 polls were all wrong. And so the latest meta on polling
+24:39
+was that they had kind of you know not necessarily that they had solved it or fixed it or it was 100% accurate but
+24:45
+that you know they they had kind of figured out a way to to at least
+24:51
+somewhat reflect the electorate. But what 2024 showed, I think the ultimate
+24:56
+lesson here is that Trump is kind of like a unicorn, right? It's not that Republican underpolling. It's that the
+25:02
+specific this one specific person is like very very very hard to pull. So, I
+25:08
+think, you know, in in 2024, people like me were like, "Okay, 20 the
+25:14
+lesson from 2022 is that Republicans aren't some mythical beast." But what
+25:19
+ended up happening is that Trump himself is a little bit of a mythical beast, I guess. And and and I think that was also
+25:25
+reflected in the results of the election because Trump outperformed his own Senate candidates. He outperformed House
+25:32
+candidates. So there was a degree to which it kind of you know proved itself that that Trump is like a singular
+25:39
+figure that is that is very hard to predict, very hard to pull and and all those things. So if that makes sense.
+25:46
+No, absolutely. But we know that in hindsight like I mean there's that Brazilian saying or at least I don't
+25:52
+think it's known but I remember my I have a Brazilian friend and and he says this thing all the time like everyone's
+25:57
+a general after the war, right? um we know those things to be true in
+26:04
+hindsight, but when you're in that moment, election day, a week before election day, um you look back to 2022
+26:11
+and it's like they've kind of patched the polling issue sort of, right? Like was it a bad
+26:20
+bet to bet Kamla? You know, I mean, there obviously there's things going for Trump and we can evaluate things in
+26:25
+hindsight and I I I guess my question here is how do you evaluate the quality
+26:31
+of a bet in hindsight? Yeah. I mean, so it's it's really hard. So I I I think on election day, my take
+26:38
+was that Camala was like 55% to win something like that and I think the market was at 6040 for Trump or
+26:45
+somewhere around there. So, I mean, I I don't think in hindsight that that was that bad of a take because if you factor
+26:53
+in that the French whale was distorting prices a bit. So maybe Trump's true price was like 55 or even 50 and I think
+27:00
+Camala is worth 55 like you know it it it's hard to to micro you know analyze
+27:07
+that or you know what to criticize myself too much where where I think I
+27:12
+made personally a mistake is that I bet too much on that edge right because the
+27:18
+here here's the reason that I bet so much on that because I thought the initial result would be a little slower
+27:26
+and a little bit more Camala friendly. So, it was also kind of like, okay, you know, as I'm starting to get the results
+27:32
+in, I can quickly move the ship around. Well, the the odds were always ahead of
+27:38
+where I had the market. So, as the results were coming in, I was like, well, I think Camala is maybe like 45
+27:43
+and now we're 40. Like, by that point, she was already at 30. So, it's like if if the market's always 10 steps lower
+27:49
+than where you are, it's very it's very hard to to get out of your bet. But,
+27:54
+yeah. So, I mean, it it's hard to analyze things in in hindsight, but I do think, you know, it it was pro Camala at
+28:02
+55 was probably a little bit too high, but I'm not sure the degree to which it was too high, whether she was actually
+28:08
+worth 45 or 20. You know, it it's really hard to disentangle that and figure that out even knowing the the results because
+28:15
+you can only go off of what you have at the moment, right? And it's hard to
+28:21
+like, you know, criticize yourself too much like, oh, you should have known that Trump was like some unicorn that
+28:26
+really outperforms this bold in the fog of war. It's it's hard to analyze things like that.
+28:34
+So, you mentioned there that the issue with the mistake you made really was in sizing. How do you go about thinking
+28:41
+about position size in a prediction markets portfolio context?
+28:46
+Yeah. I mean, so you really just want to go by the Kelly sizing, which is a very, very, very simple concept, and it's not
+28:52
+necessarily something that I'm like breaking down mathematically. It's more just a philosophy, which is basically,
+28:58
+you know, you should increase your bet relative to your edge. So, if a market is trading at 60 and you think it's
+29:05
+worth 70, you bet X number. But if you think it's worth 80, you bet a lot more than X. So, you really just size your
+29:13
+bet according to what you think your edge is and then you stick with that.
+29:21
+Now, I'm I guess partially skeptical. Um, how do you how can you size that if
+29:27
+I guess you can't fully be sure what your edge is? You know, it's your own forecasted edge, right? How does that
+29:34
+how do you think about that? Yeah. Well, I I think that's another dimension to it, right? So it's not just
+29:40
+what you think the market is like let's say to use the same exact example. So let's say uh a market is trading at 60
+29:47
+and you think it's worth 70 or the other example is you think it's worth 80. Well
+29:53
+the the example where you think it's worth 80 maybe your error bars are very high. Maybe it's like well I think it's
+29:58
+worth 80 but I'm not too sure about this. This is a little bit of unclear ground. You know maybe my error bars are
+30:05
+plus or minus 30 cents right or you know whatever. So it could be anywhere from 50 to 95. So you would probably factor
+30:13
+that into as far as what you're sizing. Whereas if you think it's definitely worth 70 and you're like, "Oh, plus or
+30:19
+minus one cent. Like I've really like, you know, I've analyzed this. I've bet this same event so many times. Like I
+30:25
+really have a good feel for this." Maybe you end up betting more on the one where you're really certain about the price
+30:32
+versus the one where you're kind of estimating it, but the error bars are high. So yeah, it's it it's really a
+30:37
+dynamic process where you're not only creating your own prices or at least
+30:43
+some direction of where you think the market is worth and then also your confidence level in in that prediction.
+30:50
+So, you know, you could stumble across a market where it's like, oh, this is at 20. I think it's worth 80. But you're
+30:56
+only betting like 50 bucks because it's like, oh, well, I don't know anything about music in like Brazil or something.
+31:01
+So, so it it it really depends on on exactly the topic that you're betting on along with along with where you think
+31:07
+the market is and market is worth like numerically.
+31:13
+Does that make sense? Yeah. Yeah. Yeah. For sure. And I think it's a it's not a it's not a solved
+31:19
+problem. Like I don't think there's any one answer that's
+31:25
+No, it's not not a solved problem. And also, you know, the pricing is not not a
+31:30
+solved problem by any means, right? So, a lot of, you know, if if you're scrolling through a prediction market
+31:36
+and let's say there's a thousand markets, like if if you were a god, right? So, if you're an an omnipotent
+31:42
+being looking down on this market, you would probably look at this market and be like 95% of these prices are wrong.
+31:48
+So, it's just a matter of figuring out what market is wrong, what market is the most wrong, you know, things along those
+31:54
+lines. Domer, in the 30 minutes we've been
+31:59
+speaking, um, we've talked a bit about prediction markets as a whole, about process. It seems to me that this game
+32:06
+is is super complex. As in, if I'm comparing it even to something like
+32:12
+equities, I think prediction markets are extremely difficult to price because there's so much information and and I
+32:19
+think it's it's it's very very difficult to synthesize. Uh I guess what was your
+32:25
+background in getting into them for for starters? Yeah. Well, so I I agree with that. I
+32:31
+think they are they are very hard to price and you have to kind of be comfortable with the fact that all this
+32:36
+is very hard. So yeah, so I my background um so I uh I went to college.
+32:41
+Um I graduated from college and I got a regular job. But what I was doing on the side is uh that's this is when poker got
+32:49
+really popular with uh ESPN. It was called the Chris Money Maker effect. And a lot of people my age, like young
+32:55
+males, were getting into online poker. And so along with my regular job at night, I was kind of playing poker on
+33:01
+the side. And I ended up making more playing poker than I was at my job. So I
+33:06
+was like, well, you know, I'll quit. I had a college degree, so I was comfortable quitting my job, trying to
+33:12
+play poker. Worst case scenario, it doesn't work out and I get a new job again. So I mean, that's not that big of
+33:17
+a deal. So So I quit my job. I put in my two weeks notice and then I started playing poker and then that pretty
+33:23
+quickly transitioned to betting on event contracts because the thing about poker
+33:28
+is there's a lot of downtime as you're watching other people in the hands, right? So, let's say you you have some
+33:34
+crap hand you folded, you know, your options are you can sit there for two minutes watching the rest of the players
+33:39
+finish the hand or you can do something else with your time, whether it's watch TV or whatever, you know. So I I would
+33:45
+be scrolling around on the on the sports books and stuff and you know maybe I put two bucks on the Knicks to win and I was
+33:51
+as I was scrolling around I saw that um like you could bet on other things like
+33:57
+there were like this other events area of the site and I was like what's going on here and I clicked on it and it was
+34:03
+like the who's going to win the Oscars and I'm very into movies. I'm not like you know like a super diehard Oscars fan
+34:09
+or anything but I but I was into movies. I watch a lot of movies. So I was like, "Okay, let me click on this." And I and it was the year of Crash versus
+34:16
+Brokeback Mountain. And and Crash was like 8 to1. And so I put 10 bucks on Crash and I won 80 bucks. And I was
+34:22
+like, "Holy [ __ ] I'm a genius." Like this this like oh not I found my calling. So
+34:29
+yeah. So it started as just an $80 win, which at the time was huge. In hindsight, obviously it's nothing, but
+34:35
+um yeah. So then I started researching it. I found out that there was a whole website devoted to it. And back then it
+34:41
+was is not nearly as big as it was now. So it was kind of like, you know, people betting in the millions rather than the
+34:47
+billions. Um so yeah, it was it was it was a lot of fun. Um I I kind of as I
+34:53
+discovered it like back then the two big markets were the Oscars and um the presidential elections. Now if you look
+35:00
+at prediction markets, there's a big event like every single day pretty much that is that is unique. So that's one
+35:05
+thing that has really changed about prediction markets is just how many markets are encompassed by it. So yeah,
+35:11
+it's been a it's been a journey. And what skills that you learned playing
+35:19
+poker do you think transitioned best to prediction markets or what skills in
+35:25
+general that you had prior were the skills that really transitioned amazingly to to to actually betting on
+35:31
+events? Yeah, I mean I I think just the idea of
+35:36
+being comfortable, you know, this is this is a very simple concept, but being comfortable researching something and
+35:43
+then putting money behind it because a lot of people are uncomfortable with that idea just as a concept, right? So
+35:49
+it's like right away they're it's too daunting, right? It's too intimidating. So just just that idea, the idea that you're
+35:56
+going to do that and maybe you know you start with like 10 bucks or whatever and you just go for it. And I I think one
+36:03
+thing that you figure out pretty quickly is like especially as a smart person, someone
+36:09
+that like follows the news, it seems very easy from the outside. And a lot of people are so influenced by hindsight
+36:17
+bias that they're like, "Oh, you know, Trump was only 60% to win. That was a lock. like I could have made. No, Bill.
+36:25
+People people interpret it as as sometimes easier than it is. So, so one thing that is I would say the first
+36:32
+thing is being comfortable risking money based on your own research. Number one, which I think poker kind of instills in
+36:38
+you that you're comfortable risking money. You know, you have some edge. You're you're comfortable doing that.
+36:43
+And then the second thing is you really have to be able to be humbled and not be
+36:49
+super arrogant and not think that you have all the answers because very quickly you're going to lose a bet
+36:55
+whether it's your first bet or your third bet like you're going to you're going to lose on something and you're going to think you're an idiot and then
+37:01
+it's a it's a matter of navigating around that being like okay that was okay I lost that like let me analyze
+37:06
+where I went wrong and then let's let's figure it out for the sec for the second one. So there's a lot of like learning
+37:12
+and self-improvement over time as you're navigating these wins and losses because
+37:17
+if if you think about poker a lot something that really impacts players is
+37:23
+the is the swinginess of it, right? So you can be the best poker player in the world and you can have a whole month
+37:29
+where you're losing money. Now that can be like it's very easy to look at your life in the abstract and be like okay
+37:35
+well this is a down month. Well, you know, in the midst of a down month, that is psychologically very, very, very
+37:40
+hard. There's a lot of self-doubt. You're wondering if you're doing the totally wrong thing. And so, it's a
+37:46
+matter of navigating that in real time, which is really, really, really hard. And, you know, the the repeatable nature
+37:53
+of all of this, especially in poker or in prediction markets, because I'm, you know, I have a thousand bets right now in prediction markets. You know, at
+37:59
+inter you're playing a thousand hands a day or whatever it is. So, it's a lot of repetition and being comfortable with
+38:06
+the fact that, okay, maybe you're only going to win 60% of the time and you have to be comfortable with losing, you
+38:11
+know, x percentage of the time. So, I I think those two things are are were really instilled in me uh from a poker
+38:18
+background. One of the things that I think is more
+38:25
+difficult about prediction markets versus say trading the markets let's say
+38:30
+prediction markets versus going long equities right with equities um I think
+38:36
+the daily and this is an oversimplification but I think the S&P and the NASDAQ are up 52 or 53 to 53% of
+38:45
+days and equities you know trading them isn't a zero sum game as in everyone can
+38:50
+make money. Whereas in prediction markets, um, someone is always taking
+38:55
+the other side of your bet. The house, call it poly market or koshi, is taking their cut. Um, and so you really do have
+39:03
+to have edge. It's not like the markets where you can not have edge and still make money by, you know, shooting at 100
+39:08
+different stocks and the general market going up. And so we have a lot of people
+39:14
+now who are interested in in getting into these markets. Um, a lot of smart people, a lot of not so smart people.
+39:21
+Um, and I would imagine most will get burned. Um, yeah. I guess where do you
+39:28
+see the future of prediction markets from
+39:36
+as as a as a tradable market when a lot of people are going to go in and just
+39:41
+get burned, lose money, leave? How how do you think about that?
+39:46
+Yeah, I mean to me it's a little bit similar to the meme stocks in terms of people getting in and burning money and
+39:52
+then losing. But, you know, if if if I think about this in the abstract, like, you know, there there's passive
+39:58
+investing, which is basically just putting money and then letting it go. And maybe you pick stocks to a certain
+40:03
+degree, and then there's active investing where you're really trying to like, you know, maybe you're doing it dayto-day or maybe quarterto quarter,
+40:10
+like you have a very specific thesis and you're doing it, but prediction markets is like extremely active investing,
+40:18
+right? So, you have to be like on top of it at all moments. not necessarily at all modes, but you you have to be on top
+40:23
+of it like you have to be really tracking it and you have to be, you know, very you have to be researching
+40:29
+it. So, I think I think it's kind of like if you think about it in terms of stock investing, it's basically super
+40:34
+super active investing because there was a time when um no prediction market
+40:40
+existed or at least it was it was very hard to get on them. And I went I did
+40:45
+stock trading and I did it very I did it very similar to prediction market trading where I had a thesis and I was
+40:51
+you know it was X and Y and Z and I was very investing in very disperate companies and you know it was like a
+40:57
+chicken company and then there was like an oil tank company and there was uh you know I was investing in Yahoo and
+41:03
+Alibaba there was like a arbitrage opportunity. So, so there were all these different like very specific
+41:08
+thesisminded things and I ended up making a pretty good amount of money.
+41:14
+But the one thing that really bothered me and it's the same thing that bothered me in poker is like, you know, there's a
+41:20
+lot of random walks. There's a lot of like randomness. Like stocks are down 3%
+41:25
+for not a very good reason and then stocks are up for not a very good reason. And it's it can be very annoying
+41:32
+if you're trying to do it on like very actively and like with a thesis and it's
+41:38
+like well you know I I have this very clear didactic like thesis but the stock
+41:43
+is just doing this random crap all the time like it it it's kind of annoying and that's not really the case in
+41:49
+prediction markets right it's not going to be like oh Trump is up 5 cents today because we feel like it or because you
+41:55
+know inflation doubt like it it's not as momentum It's not really like, you know,
+42:00
+the crowd or like a vibe. You know, if Trump is at five points today, some poll has come out or some scandal has hit his
+42:07
+opponent or something like that. So, so it's very uh information-based and very
+42:13
+news-based. So, in that sense, it's kind of like I I would describe it as like
+42:19
+super active invested based way. Interesting. Um
+42:25
+that's something I've never heard before. Um, so would you say that in some regards prediction markets trading
+42:32
+has less noise, less random variance than trading
+42:38
+equities as an example? Yeah. No, for sure. Less less random variance. It price moves are almost
+42:45
+always because of some event. Now, once in a while, especially as prediction
+42:50
+markets are still kind of like growing, there can be basically if you have one
+42:55
+person coming in, like the French whale is a great example, like if you have one person coming in with a ton of money,
+43:01
+like that's way bigger than the market is, they can distort prices. But that aside, yeah, the the prices are almost
+43:07
+always like nonfair, not rand non-random, like you know, something very specific has happened. Yeah.
+43:16
+Yeah. You me you talked a little bit there about the French whale and I think we spoke a little bit about it throughout the conversation but just for
+43:21
+our audience can you tell us a bit about that. What was the French whale in the 2024 election?
+43:28
+Yeah. So it was actually a guy so crypto markets like anyone can trade on these
+43:33
+crypto markets like all you have to do is deposit money and then you know you can kind of kind of offiscate yourself
+43:39
+as well. So, it was not clear that there was some French guy that was betting a bunch of Trump, but what was clear is
+43:46
+that there was a new account that had showed up and was betting quite a lot on Trump. And then and he was pushing the
+43:55
+prices of Trump to a place where he had not gone before. So, so this account was
+44:01
+not only buying a ton of one directional bets, but he was also moving the prices in order to get even more shares of it.
+44:08
+And this happened over the course of let's say uh I don't remember exactly but let's say it was like eight weeks
+44:14
+right and what would happen is uh a new account would show up buy a ton of Trump shares move the price and then a
+44:21
+different new account would show up and then after this started happening over the course of a few weeks like it ended
+44:28
+up being that there was like let's say four or five new accounts that had bet
+44:33
+millions sometimes tens of millions on the same outcome and it's like well this can't be a win. And so people were
+44:41
+trying to like figure it out like, okay, they were looking at the the times that the person deposited. They were looking
+44:46
+at the times the person traded. They were the person that started posting a couple comments. And people were kind
+44:53
+of, you know, let's let's try and figure out what's happening here. And I worked with this guy who kind of tracked where
+45:01
+all the transactions were coming from. And we figured out that all of these, let's say it's five new accounts were
+45:07
+all funded from kind of the same uh wallet. And so it was likely that the
+45:12
+five accounts were connected. And then the the timing on which these five accounts traded all seemed to align to
+45:19
+the point where it was likely that this was one single entity, one single person, whatever it was. you know, in in
+45:26
+in the fog of war, you know, my first thought is that this is someone like
+45:31
+doing something, you know, not good, right? They're like like it's like some
+45:37
+operative that is like, okay, we're going to push the price of Trump up, like it's a little nefarious or whatever. So, so it's it's a matter of
+45:44
+trying to figure out who it was. So, so we narrowed it down to it's one person or entity and then we looked at their
+45:49
+comments and I was putting their comments through cuz it was like kind of garbled English and I was putting their
+45:55
+comments through like chat GPT and and kind of working with chat GPT and it was like I think this person is French.
+46:01
+Okay. And so I I made this big post on on Twitter. I was like okay I think it's
+46:07
+one account. I think it's French. And I ended up chatting with the person very briefly. They were kind of rude and and
+46:13
+super into Trump and Yeah. Yeah. Yeah. And so what what they had done was they
+46:19
+had this guy this one guy who had amassed I think 50 million in bets on Trump. Yeah. Right. Yeah. Through
+46:28
+through five different accounts like he was number one it was not nefarious. He was a true believer. And then number two
+46:34
+he had spent I think probably upwards of a million dollars like doing his own polling. So he had contacted a US
+46:41
+polling company and he had told them exactly what type of polling he wanted to do. And he did a different type of polling. What he did was neighbor
+46:47
+polling. So basically he had the polling company call let's say me and they're like okay uh we don't care who you're
+46:54
+voting for. Who do you think your neighbors are voting for? Right? And so through that type of polling he got the
+47:01
+result that Trump was outperforming the quote unquote regular type of polling. Now, it's a little bit controversial
+47:08
+whether this was actually an edge or whether it was a little bit of confirmation bias, but he looked at
+47:14
+these polls that he had commissioned and he was like, "Okay, this is I'm correct." And that gave him even more
+47:20
+confidence. And so, he increased his his betting to like $50 million cuz I think he started off with like low millions
+47:26
+and then over 10 million. So, so as he was increasing his bet, he was also doing this polling. He was doing this
+47:31
+research. So, uh very interesting story. Um yeah and so it was one guy he was
+47:37
+true believer had done his own polls and and he won I think yeah he won tens of
+47:42
+millions of dollars easily and what was his background before was he a hedge fun manager a banker
+47:49
+he claimed yeah so he claimed to be a trader who had used to work at a trading
+47:56
+firm in New York it was kept a little bit nebulous he he did a few interviews but like his face was covered and so
+48:02
+it's totally unclear whether I you know whether it's believable or whether it's
+48:08
+a little bit of a story to put people on the wrong track. But I do think given cuz he he was using limit orders. Um
+48:15
+there was at least a small degree of sophistication there where the person didn't seem like they were just trying
+48:21
+to gamble money. So I think the story does make sense that he had a little bit of a finance background at least.
+48:29
+Interesting. So he was doing Sorry. Sorry if that was too long of an answer. I
+48:34
+No, no, no. I think I I'm I'm I'm super like intrigued now. U
+48:45
+and and a bit stumped because it's such a ridiculous story. It is. 50 million is crazy.
+48:52
+Do you think there was actual edge in something like that? like can we learn from that or do you think it was just a
+48:59
+guy who wanted to bet big and was really confident?
+49:05
+You know, I don't want to sound like sour grapes or you know that I'm like bitter about it, but I do think there
+49:12
+was a degree of pro probably a strong degree of confirmation bias where he
+49:18
+wanted Trump to win. He had the the thesis that Trump was going to win. He
+49:23
+did polling that told him that his thesis was correct and he kind of went all in on it.
+49:30
+Whether he bet 5% of his of what he's worth or 90% of what he's worth, I have
+49:36
+no idea. So, it's hard to criticize the bet sizing too much because I don't have any context for what percentage of his
+49:43
+bankroll he bet. But I I I do think he got a little bit lucky because I think
+49:50
+neighbor polling is a little bit controversial and that it's it's unclear if it actually provides any edge. So I I
+49:57
+think there is a universe where this guy did all of this and Camala squeaks out
+50:03
+of land and then the story the story is the story is completely different. But no no more $50 million.
+50:11
+Yes. Yes. uh but we do not live in that universe by any means and he was right
+50:16
+and he won a lot of money and kudos to him. Um but yeah it's it's hard to disentangle things you know in in
+50:22
+hindsight like that. So how do you think about luck versus skill?
+50:28
+Yeah I mean I I think there is some degree of luck. There's a degree to
+50:34
+which things are out of your control. And so when things are out of your control and and it's unclear what's
+50:40
+going to happen, I think there's a degree of quote unquote luck involved. But I think you can control the the
+50:47
+uncertainty of it. I think you can have knowledge that there is, you know, some random variance and that you can kind of
+50:54
+factor that into your bet. So I think a a lot of what we're doing is skill, but you know, it comes down some things come
+51:01
+down to luck in the end.
+51:06
+You know, something popped in my head, a thought popped in my head right now about um betting on things happening in
+51:13
+the world that are objectively bad. um call it war um suffering
+51:20
+um outcomes for trials which
+51:26
+may be severely negative for people involved and maybe for society. How do
+51:32
+you think about that? Do you evaluate things and go maybe like are there bets you won't touch out of call it like you
+51:40
+know just morals? How do you think about that? Yes. Well, I mean, I think my bias in
+51:47
+general is to bet on things not happening. So, it it would be very rare for me to bet on like just a naked bet
+51:55
+on like bad stuff happening. But I do think you know if if you think about
+52:00
+prediction markets in the abstract and you think about their usefulness and you think about the alternatives. So, if you
+52:07
+let let's take the example of will there be a war between uh Ukraine and Russia.
+52:12
+So if we rewind to when I think February of 2022 or whenever it was um so if you
+52:17
+rewind to a month beforehand and they put up a market on you know will Russia and the Ukraine and it was controversial
+52:25
+and I think you know and and to me it was also contro it was controversial to me at the time because it's like uh
+52:30
+should we have this up this is a bit unseammly etc. But you know if if you think about number one this is a very
+52:36
+important question to answer right it impacts so many people it impacts the world. So I if it's important to have an
+52:44
+answer to this question then what's the best way to get an answer to that and if if you remove prediction markets from
+52:50
+the mix and you look at the best way to get an answer. Well the best way to get an answer is kind of like experts right
+52:56
+quote unquote experts. Sometimes people are experts or sometimes people pretend to be experts but you know they can
+53:02
+disagree with each other and which is the first thing and so it's a very it's
+53:07
+kind of a hazy thing right so if you listen to one guy you think it's super likely if you listen to another guy you think it's super unlikely so number one
+53:14
+it's not synthesized it can be hazy depending on who you listen to and then the second thing about it is like um
+53:20
+there's no accountability right so if this guy is super entertaining like this former general they keep bringing him on
+53:26
+TV maybe he makes all these bad predictions, but he's he does it in a very entertaining way. Like there's no
+53:32
+there's no account of it. Like there's no scorecard like with let's say General Joe Smith comes on TV. It's not like oh
+53:38
+he's 0 and5 in his previous predictions. We're we're going to have him make another prediction but like he's 0 and five. So so there's no like scorecard or
+53:45
+anything like there's nobody keeping track of any of this stuff. So in that sense, I do think that prediction
+53:51
+markets are like a huge upgrade over that because if you're just trying to find out what's happening in the world,
+53:56
+like you can just go to polymerarket.com or koshi or whatever you know the competitors are and you just go to the
+54:02
+website and you're like, okay, this has an 18% chance of happening. Now that may be wrong. It may be 30. It may be 10,
+54:09
+but at least there there's some answer. It has been arrived at through a lot of
+54:15
+research. that has been arrived at by people who care about the answer, care about being right and have
+54:20
+accountability. You know, they'll lose money if they're right and they lose money and they're wrong. But it's also a huge upgrade over the alternative,
+54:28
+right? So, I think I think where I've come to is yeah, we should not be incentivizing people to bet money on bad
+54:35
+things and then bring bad things into the world. Like that that definitely is way too far. That should not happen
+54:42
+ever. But the degree to which prediction markets exist about quote unquote bad things and we're getting answers to the
+54:49
+question to like really important question that impact a lot of people like I'm tending to think that that's a
+54:55
+good thing. Now how we put these markets up maybe there's limits or whatever like
+55:00
+that can be something that can be navigated over time but I think my my long answer to that to that important
+55:06
+question is that I do think it's important. I do think these markets are good. Um, me personally, like I would be
+55:12
+very very very careful about betting on something bad that's happening because
+55:18
+first of all, bad stuff doesn't happen all that often. Like people tend to like the news hypes things up and you know
+55:24
+things aren't as dire as they appear to be. But, you know, it it some sometimes I do bet on like something not good
+55:32
+happening, but that's because of research or because I've really like, you know, done the work and and figured
+55:38
+out that I think, you know, it's probably more likely than the odds suggest or whatever.
+55:44
+Do you think that prediction markets are ultimately good for society? Yeah. No. No. I mean, undisput
+55:51
+indisputably, yes, I do think they're good for society. Now the degree the we
+55:57
+can argue over whether we should have questions on you know 10,000 different topics or not but I think the degree to
+56:04
+which they kind of answer important questions that we're trying to figure out that's super important because like
+56:10
+let's say we think about um let's say whether there'll be a war in the Middle East uh to use a bad example or whether
+56:17
+you know who the next president will be well people are already betting on these in financial markets right sometimes
+56:23
+they're buying oil futures about the Middle East or you know for presidential elections maybe they're betting on
+56:28
+private prison stocks or oil stocks or you know there are multiple ways in which people are expressing an opinion
+56:35
+on these things in financial markets and so the proxies or whatever. So if if you
+56:40
+clear away all the debris if you clear away you like okay we don't need to use a proxy like we're going to give you
+56:47
+what we think the answer is like you don't need to bet on 10-year treasuries to bet on what the Fed is going to do.
+56:53
+we're going to put up a market. Exactly. What is the Fed going to do? So, I think I think there's a degree to which yes,
+56:59
+these are super helpful. These are good for society and that, you know, the people that are betting on proxies for
+57:05
+what's going to happen in the world, they can actually bet on the actual thing whether it happens or not.
+57:14
+I hear both sides of the argument and I've had two guys on the podcast who
+57:19
+didn't, you know, didn't talk about prediction markets. One is Augustine Lebron who used to trade at Jane Street
+57:24
+and one is Todd Simkin who's currently um a director at Suscoana, you know, two trading firms. And Todd on the podcast,
+57:32
+I asked him a little bit about prediction markets actually. And he was saying that it's a great source of
+57:38
+information. It's a great way to hedge. And you look at what Augustine's been saying on Twitter on X and he's been
+57:45
+saying that it creates bad incentives. So um you know let's say
+57:52
+there's an 25% chance of something happening. Now you add volume to that
+57:58
+and you add people who can bet on that that can influence the outcome and
+58:03
+obviously that bad thing happening generally has outsized returns and they have a direct impact on whether or not
+58:10
+that happens. The incentive structure he argues is is bad for the fabric of
+58:16
+society. How do you think about those things? Yeah. So, I mean, well, well, number
+58:22
+one, that should be criminalized like regardless like we nobody should have financial incentives to do bad things
+58:28
+whether it's through prediction markets or through the stock market or whatever because I mean if you think about like
+58:35
+right now there are very there are huge incentives to do very bad things like someone could do something very very
+58:41
+negative in the world, buy a bunch of S&P puts, right, and make a lot of money. So I I I think there's a degree
+58:48
+to which that exists right now. Now I I do see the point that he has, right? So sometimes these are like micro events,
+58:54
+not very important whether it happens or not, and then you're giving them an incentive to do something. Um yeah, that
+59:00
+that should obviously be limited. This is something that prediction markets like kind of have to figure out how to
+59:06
+navigate. Um which is people betting on an event that they can then either make
+59:11
+happen or make not happen. um that's not a that's not a good place for any market to be in whether it's prediction markets
+59:18
+or the stock market. And then the the the second thing that I would want to say is is jumping off of um what the guy
+59:24
+at Suscoana said is, you know, like think about Poly Market existing, right?
+59:30
+Like I'm a big trader. Other people I know are traders, but a lot of the people that are visiting the site, they're never going to deposit any
+59:36
+money, right? They're not going to they're not going to bet on anything. They're just visiting the site because they want to know what's going to
+59:42
+happen. like who's going to be the next president of their country or who's going to do XYZ or you know is Russia
+59:48
+going to actually invade Ukraine. So there's a degree to which a lot of the users of the a lot of the consumers of
+59:55
+Poly Markets or Koshi's information is people that are never going to place a bet and so the information itself is
+1:00:02
+very powerful and very useful to people without being able to trade it at all. So I I I think that's an important point
+1:00:09
+to make. And I guess final question, where do you
+1:00:16
+see the regulatory aspect of prediction marks of prediction markets evolving?
+1:00:22
+And then two questions load into one. Where do you see the regulatory environment of
+1:00:28
+prediction markets evolving towards? And then where do you see prediction markets in 5 10 years? Do you think what TK
+1:00:35
+Menour says this is going to be as big as as the stock market, where do you see
+1:00:41
+those things going? Um, well, I think they're not going to be as big as the stock market, which I
+1:00:47
+which I think is is it's a little bit of a silly prediction and it's too unrealistic because the stock market is
+1:00:54
+so important, you know, and it's company values and stuff and stuff like that. So, it it's not going to be as big as
+1:00:59
+that. But I I do think it's going to be a lot bigger because if you think about
+1:01:05
+how many or if you if you go to the website right now and you scroll through it like you know the prediction markets
+1:01:10
+have a lot of markets up but there's a lot more markets that they can put up there people can get a lot more granular
+1:01:16
+about things and there are degrees to which you know things that we have on
+1:01:21
+the financial markets right now might be better purposed for prediction markets like overunder earnings and things like
+1:01:27
+that. So there there's a degree to which kind of maybe financial markets and prediction markets are going to merge a
+1:01:33
+little bit and maybe some things that people do on financial markets are going to be much better purposed for
+1:01:39
+prediction markets. So I do think they're going to get bigger both in terms of the volume of existing markets but also so many larger markets. But uh
+1:01:47
+to going back to your first question like the regulatory future of it, you know, it's hard to think that 5 or 10
+1:01:54
+years from now you're going to be able to bet an unlimited amount of money on any event in the world, especially be,
+1:02:02
+you know, going back to the previous question where we were talking about being able to influence things, right?
+1:02:07
+And especially if you're using like a crypto site or something where you can kind of mask it. Like if if you give
+1:02:14
+people the opportunity to make money, people will try to exploit that. People will try to take advantage of that.
+1:02:20
+Maybe there's not many of those people. Maybe a lot of them are already caught or about to be caught or something like
+1:02:25
+that, but they exist, right? People will try to exploit it. So I think there needs to be some guard rails in place.
+1:02:32
+Maybe some of these not so important markets have quote unquote limits. Maybe they're not super high limits. And I
+1:02:39
+think because if if you think about like, okay, why do we want these markets to exist? What's the good part of them?
+1:02:46
+Like why why are we doing this? And it's to price to price the future to figure
+1:02:51
+out what's going to happen. Yeah. And we don't need unlimited limits on stuff
+1:02:56
+that is not super important to price. Whereas stuff what that is very
+1:03:02
+important to price like who's the next president going to be the limits can be extremely high because there's so many
+1:03:08
+things going on. It impacts so many things that there's a degree to which you know like if you're betting 50
+1:03:15
+million this is this is a drop in the bucket compared to the impacts of the presidential election. As high as that
+1:03:20
+number is and as ridiculous as it is, like he distorted the price probably five to eight cents in 2024, but maybe
+1:03:28
+in 2028 if he bets 50 million, he moves the price half a cent, right? So, so there's a degree to which the markets
+1:03:35
+are so much big. Some of the questions that we're asking are so much bigger than the volume that is currently being
+1:03:40
+traded. So yeah, I I I I think maybe limits for stuff that's not super important and then the markets will be
+1:03:47
+so much bigger for stuff that is actually really important. Awesome. Thanks so much, Dr. I learned a
+1:03:53
+lot. Yeah, that was awesome. Thanks for having me.
