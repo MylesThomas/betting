@@ -681,8 +681,8 @@ def fetch_london_games():
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Fetch NFL betting lines')
-    parser.add_argument('--season', type=int, default=2025, choices=[2024, 2025],
-                       help='Season to fetch (2024 or 2025, default: 2025)')
+    parser.add_argument('--season', type=int, default=2025, choices=[2022, 2023, 2024, 2025],
+                       help='Season to fetch (2022-2025, default: 2025)')
     parser.add_argument('--london', action='store_true', 
                        help='Fetch only London games (games before 1pm ET)')
     parser.add_argument('--prod-run', action='store_true',
@@ -690,17 +690,25 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Set season-specific date ranges
-    if args.season == 2024:
+    if args.season == 2022:
+        SEASON_START = '2022-09-08'  # Thursday, Sept 8, 2022 (LAR vs BUF)
+        SEASON_END = '2023-02-12'     # Super Bowl LVII
+        season_label = "2022"
+    elif args.season == 2023:
+        SEASON_START = '2023-09-07'  # Thursday, Sept 7, 2023 (DET @ KC)
+        SEASON_END = '2024-02-11'     # Super Bowl LVIII
+        season_label = "2023"
+    elif args.season == 2024:
         SEASON_START = '2024-09-05'  # Thursday, Sept 5, 2024 (BAL @ KC)
         SEASON_END = '2025-02-09'     # Super Bowl LIX
-        season_label = "2023-24"
+        season_label = "2024"
     else:  # 2025
         SEASON_START = '2025-09-04'  # Thursday, Sept 4, 2025
         SEASON_END = datetime.now().strftime('%Y-%m-%d')
-        season_label = "2024-25"
+        season_label = "2025"
     
     # For completed seasons, use full range; for current season, use today
-    if args.season == 2024:
+    if args.season in [2022, 2023, 2024]:
         TODAY = SEASON_END
     else:
         TODAY = datetime.now().strftime('%Y-%m-%d')
