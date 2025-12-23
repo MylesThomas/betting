@@ -1,0 +1,236 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-14.0,-112,14.0,-108
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-6.0,-112,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,4.0,-114,-4.0,-108
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-3.5,-109,3.5,-112
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,3.0,-112,-3.0,-109
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-14.5,-110,14.5,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-6.5,-110,6.5,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,4.0,-110,-4.0,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,3.0,-120,-3.0,100
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,5.5,-110,-5.5,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-14.0,-105,14.0,-115
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-10.5,-104,10.5,-116
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-6.0,-112,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,4.0,-111,-4.0,-111
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-3.5,-111,3.5,-111
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,3.0,-111,-3.0,-111
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,6.0,-105,-6.0,-115
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-14.0,-108,14.0,-106
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-6.0,-112,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,4.0,-110,-4.0,-104
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-3.5,-109,3.5,-112
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,3.0,-108,-3.0,-106
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,BetUS,betus,2022-01-09T16:50:11Z,spread,-14.5,100,14.5,-120
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,BetUS,betus,2022-01-09T16:50:11Z,spread,-11.0,100,11.0,-120
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,BetUS,betus,2022-01-09T16:50:11Z,spread,-7.0,105,7.0,-125
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,BetUS,betus,2022-01-09T16:50:11Z,spread,3.5,-110,-3.5,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,BetUS,betus,2022-01-09T16:50:11Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,BetUS,betus,2022-01-09T16:50:11Z,spread,3.0,-110,-3.0,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,BetUS,betus,2022-01-09T16:50:11Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,Bovada,bovada,2022-01-09T16:50:10Z,spread,-14.0,-110,14.0,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,Bovada,bovada,2022-01-09T16:50:10Z,spread,-11.0,-105,11.0,-115
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,Bovada,bovada,2022-01-09T16:50:10Z,spread,-6.5,-105,6.5,-115
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,Bovada,bovada,2022-01-09T16:50:10Z,spread,3.5,-110,-3.5,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,Bovada,bovada,2022-01-09T16:50:10Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,Bovada,bovada,2022-01-09T16:50:10Z,spread,3.0,-110,-3.0,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,Bovada,bovada,2022-01-09T16:50:10Z,spread,6.0,-105,-6.0,-115
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-14.0,-110,14.0,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-10.5,-105,10.5,-115
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-6.0,-110,6.0,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,3.5,-110,-3.5,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-3.5,-105,3.5,-115
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,3.0,-105,-3.0,-115
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-14.0,-110,14.0,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-6.5,-110,6.5,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,3.5,-110,-3.5,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,3.0,-110,-3.0,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,6.0,-110,-6.0,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,-10.0,-115,10.0,-105
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,-6.0,-112,6.0,-108
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,3.5,-106,-3.5,-114
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,-3.0,-115,3.0,-105
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,3.0,-105,-3.0,-115
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-14.0,-109,14.0,-109
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-10.5,-109,10.5,-109
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-6.0,-109,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,GTbets,gtbets,2022-01-09T16:50:09Z,spread,3.5,-109,-3.5,-109
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-3.5,-109,3.5,-109
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,GTbets,gtbets,2022-01-09T16:50:09Z,spread,3.0,-109,-3.0,-109
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,GTbets,gtbets,2022-01-09T16:50:09Z,spread,6.0,-109,-6.0,-109
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,Intertops,intertops,2022-01-09T16:50:11Z,spread,-14.5,100,14.5,-120
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,Intertops,intertops,2022-01-09T16:50:11Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,Intertops,intertops,2022-01-09T16:50:11Z,spread,-6.5,-110,6.5,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,Intertops,intertops,2022-01-09T16:50:11Z,spread,4.0,-115,-4.0,-105
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,Intertops,intertops,2022-01-09T16:50:11Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,Intertops,intertops,2022-01-09T16:50:11Z,spread,3.0,-110,-3.0,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,Intertops,intertops,2022-01-09T16:50:11Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-15.0,-110,15.0,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-7.0,-110,7.0,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,4.0,-105,-4.0,-115
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-3.5,-105,3.5,-115
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,3.5,-110,-3.5,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,5.5,-110,-5.5,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-14.0,-115,14.0,-105
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-6.5,-110,6.5,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,3.5,-110,-3.5,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,3.0,-110,-3.0,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,6.0,-115,-6.0,-105
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-14.0,-108,14.0,-106
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-6.0,-112,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,4.0,-110,-4.0,-104
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-3.5,-109,3.5,-112
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,3.0,-108,-3.0,-106
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-14.0,-112,14.0,-108
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-6.0,-112,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,4.0,-114,-4.0,-108
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-3.5,-109,3.5,-112
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,3.0,-112,-3.0,-109
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,Unibet,unibet,2022-01-09T16:50:05Z,spread,-14.0,-106,14.0,-105
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,Unibet,unibet,2022-01-09T16:50:05Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,Unibet,unibet,2022-01-09T16:50:05Z,spread,-6.0,-111,6.0,-109
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,Unibet,unibet,2022-01-09T16:50:05Z,spread,4.0,-110,-4.0,-103
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,Unibet,unibet,2022-01-09T16:50:05Z,spread,-3.5,-109,3.5,-111
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,Unibet,unibet,2022-01-09T16:50:05Z,spread,3.0,-106,-3.0,-105
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,Unibet,unibet,2022-01-09T16:50:05Z,spread,6.0,-110,-6.0,-110
+a84b431e86647a9698859ae4b1cb62f2,2022-01-09 18:00:00+00:00,Indianapolis Colts,Jacksonville Jaguars,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-14.0,-110,14.0,-110
+469d0b84d522b6ba7c7089fc73a81e53,2022-01-09 18:00:00+00:00,Tennessee Titans,Houston Texans,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-10.5,-110,10.5,-110
+fd20bf64bde9c41529eff98f34e8360b,2022-01-09 18:00:00+00:00,Washington Football Team,New York Giants,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-6.5,-110,6.5,-110
+b158083c5706ac3c2648b3c8173a90e0,2022-01-09 18:00:00+00:00,Chicago Bears,Minnesota Vikings,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,3.5,-110,-3.5,-110
+d5e256835005a9281ae0ad53e623375e,2022-01-09 18:00:00+00:00,Green Bay Packers,Detroit Lions,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-3.5,-110,3.5,-110
+89eb172ec451fa98fcff7b2313f501e4,2022-01-09 18:00:00+00:00,Pittsburgh Steelers,Baltimore Ravens,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,3.0,-110,-3.0,-110
+e9402c475672bebad4b15cb8a82a286b,2022-01-09 18:00:00+00:00,Cincinnati Bengals,Cleveland Browns,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,6.0,-110,-6.0,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-6.0,-109,6.0,-112
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,16.0,-112,-16.0,-109
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-4.5,-109,4.5,-112
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,5.5,-112,-5.5,-109
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,3.5,-112,-3.5,-109
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-5.5,-110,5.5,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,16.5,-110,-16.5,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,3.5,-110,-3.5,-110
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-6.0,-111,6.0,-111
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,16.0,-115,-16.0,-105
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-4.5,-109,4.5,-112
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,5.5,-115,-5.5,-105
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,3.0,100,-3.0,-120
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,10.0,-120,-10.0,100
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-6.0,-109,6.0,-112
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,16.0,-108,-16.0,-106
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-4.5,-109,4.5,-112
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,5.5,-112,-5.5,-109
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,3.5,-112,-3.5,-109
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,BetUS,betus,2022-01-09T16:50:11Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,BetUS,betus,2022-01-09T16:50:11Z,spread,16.0,-115,-16.0,-105
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,BetUS,betus,2022-01-09T16:50:11Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,BetUS,betus,2022-01-09T16:50:11Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,BetUS,betus,2022-01-09T16:50:11Z,spread,3.5,-120,-3.5,100
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,BetUS,betus,2022-01-09T16:50:11Z,spread,11.0,-125,-11.0,105
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,Bovada,bovada,2022-01-09T16:50:10Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,Bovada,bovada,2022-01-09T16:50:10Z,spread,16.0,-115,-16.0,-105
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,Bovada,bovada,2022-01-09T16:50:10Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,Bovada,bovada,2022-01-09T16:50:10Z,spread,5.0,-110,-5.0,-110
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,Bovada,bovada,2022-01-09T16:50:10Z,spread,10.0,-110,-10.0,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,15.5,-110,-15.5,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-4.5,-105,4.5,-115
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,3.0,-105,-3.0,-115
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,9.5,-105,-9.5,-115
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,16.5,-110,-16.5,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,5.5,100,-5.5,-118
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,3.5,-110,-3.5,-110
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,16.0,-110,-16.0,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,-4.0,-110,4.0,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,5.5,-112,-5.5,-108
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,9.0,-110,-9.0,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-6.0,-109,6.0,-109
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,GTbets,gtbets,2022-01-09T16:50:09Z,spread,16.0,-109,-16.0,-109
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-4.5,-109,4.5,-109
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,GTbets,gtbets,2022-01-09T16:50:09Z,spread,5.5,-109,-5.5,-109
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,GTbets,gtbets,2022-01-09T16:50:09Z,spread,3.5,-114,-3.5,-104
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,GTbets,gtbets,2022-01-09T16:50:09Z,spread,9.5,-104,-9.5,-114
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,Intertops,intertops,2022-01-09T16:50:11Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,Intertops,intertops,2022-01-09T16:50:11Z,spread,16.0,-110,-16.0,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,Intertops,intertops,2022-01-09T16:50:11Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,Intertops,intertops,2022-01-09T16:50:11Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,Intertops,intertops,2022-01-09T16:50:11Z,spread,3.5,-115,-3.5,-105
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,Intertops,intertops,2022-01-09T16:50:11Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,16.5,-110,-16.5,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-3.5,-105,3.5,-115
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,3.5,-115,-3.5,-105
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,9.0,-105,-9.0,-115
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,16.5,-110,-16.5,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,3.5,-110,-3.5,-110
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-6.0,-109,6.0,-112
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,16.0,-108,-16.0,-106
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-4.5,-109,4.5,-112
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,5.5,-112,-5.5,-109
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,3.5,-112,-3.5,-109
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-6.0,-109,6.0,-112
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,16.0,-112,-16.0,-109
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-4.5,-109,4.5,-112
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,5.5,-112,-5.5,-109
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,3.5,-112,-3.5,-109
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,Unibet,unibet,2022-01-09T16:50:05Z,spread,-6.0,-109,6.0,-111
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,Unibet,unibet,2022-01-09T16:50:05Z,spread,16.0,-108,-16.0,-105
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,Unibet,unibet,2022-01-09T16:50:05Z,spread,-4.5,-109,4.5,-111
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,Unibet,unibet,2022-01-09T16:50:05Z,spread,5.5,-111,-5.5,-109
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,Unibet,unibet,2022-01-09T16:50:05Z,spread,3.5,-111,-3.5,-109
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,Unibet,unibet,2022-01-09T16:50:05Z,spread,9.5,-110,-9.5,-110
+14a8edc98fc58e8f6ae30aaed7b5c1fc,2022-01-09 21:25:00+00:00,New England Patriots,Miami Dolphins,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-6.0,-110,6.0,-110
+11511284da753651fefdfbc08cf51e2c,2022-01-09 21:25:00+00:00,New York Jets,Buffalo Bills,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,16.0,-110,-16.0,-110
+db65d83c1b4b4d7eed4a953ee05ff059,2022-01-09 21:25:00+00:00,New Orleans Saints,Atlanta Falcons,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-4.5,-110,4.5,-110
+0e9f9370d138d4fdef46aadd8dbf72ec,2022-01-09 21:25:00+00:00,Seattle Seahawks,Arizona Cardinals,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,5.5,-110,-5.5,-110
+04dbadcea53d7d51ef5ede96914a6890,2022-01-09 21:25:00+00:00,San Francisco 49ers,Los Angeles Rams,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,3.5,-115,-3.5,-105
+672e109ed4d235a5502ce414277db27e,2022-01-09 21:25:00+00:00,Carolina Panthers,Tampa Bay Buccaneers,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,9.5,-110,-9.5,-110
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,Barstool Sportsbook,barstool,2022-01-09T16:50:12Z,spread,-3.0,-112,3.0,-109
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,BetMGM,betmgm,2022-01-09T16:48:37Z,spread,-3.0,-115,3.0,-105
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,BetOnline.ag,betonlineag,2022-01-09T16:50:09Z,spread,-2.5,-125,2.5,104
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,BetRivers,betrivers,2022-01-09T16:50:12Z,spread,-3.0,-108,3.0,-108
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,BetUS,betus,2022-01-09T16:50:11Z,spread,-3.0,-110,3.0,-110
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,Bovada,bovada,2022-01-09T16:50:10Z,spread,-3.0,-110,3.0,-110
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,DraftKings,draftkings,2022-01-09T16:50:11Z,spread,-3.0,-105,3.0,-115
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,FOX Bet,foxbet,2022-01-09T16:50:11Z,spread,-3.0,-110,3.0,-110
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,FanDuel,fanduel,2022-01-09T16:50:10Z,spread,-3.0,-112,3.0,-108
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,GTbets,gtbets,2022-01-09T16:50:09Z,spread,-3.0,-109,3.0,-109
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,Intertops,intertops,2022-01-09T16:50:11Z,spread,-3.0,-110,3.0,-110
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,MyBookie.ag,mybookieag,2022-01-09T16:50:13Z,spread,-3.0,-115,3.0,-105
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,PointsBet (US),pointsbetus,2022-01-09T16:48:26Z,spread,-3.0,-110,3.0,-110
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,SugarHouse,sugarhouse,2022-01-09T16:50:11Z,spread,-3.0,-108,3.0,-108
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,TwinSpires,twinspires,2022-01-09T16:50:12Z,spread,-3.0,-112,3.0,-109
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,Unibet,unibet,2022-01-09T16:50:05Z,spread,-3.0,-106,3.0,-106
+1361c7d4506dfd8ca1e2a22a3f59df09,2022-01-10 01:20:00+00:00,Los Angeles Chargers,Las Vegas Raiders,William Hill (US),williamhill_us,2022-01-09T16:50:11Z,spread,-3.0,-110,3.0,-110

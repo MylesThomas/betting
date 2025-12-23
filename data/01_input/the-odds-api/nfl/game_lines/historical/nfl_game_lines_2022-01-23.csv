@@ -1,0 +1,34 @@
+game_id,game_time,away_team,home_team,bookmaker,bookmaker_key,last_update,market,away_spread,away_odds,home_spread,home_odds
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,Barstool Sportsbook,barstool,2022-01-23T16:47:53Z,spread,2.5,-105,-2.5,-118
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,BetMGM,betmgm,2022-01-23T16:46:36Z,spread,2.5,-105,-2.5,-115
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,BetOnline.ag,betonlineag,2022-01-23T16:46:33Z,spread,3.0,-119,-3.0,-101
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,BetRivers,betrivers,2022-01-23T16:46:34Z,spread,2.5,100,-2.5,-115
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,BetUS,betus,2022-01-23T16:49:18Z,spread,2.5,100,-2.5,-120
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,DraftKings,draftkings,2022-01-23T16:46:34Z,spread,2.5,100,-2.5,-120
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,FOX Bet,foxbet,2022-01-23T16:49:18Z,spread,3.0,-118,-3.0,100
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,FanDuel,fanduel,2022-01-23T16:46:33Z,spread,3.0,-118,-3.0,-104
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,GTbets,gtbets,2022-01-23T16:49:19Z,spread,3.0,-119,-3.0,101
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,Intertops,intertops,2022-01-23T16:49:19Z,spread,2.5,100,-2.5,-120
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,MyBookie.ag,mybookieag,2022-01-23T16:49:22Z,spread,2.5,100,-2.5,-120
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,PointsBet (US),pointsbetus,2022-01-23T16:47:53Z,spread,3.0,-120,-3.0,100
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,SugarHouse,sugarhouse,2022-01-23T16:47:52Z,spread,2.5,102,-2.5,-115
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,TwinSpires,twinspires,2022-01-23T16:49:20Z,spread,2.5,-105,-2.5,-118
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,Unibet,unibet,2022-01-23T16:49:15Z,spread,2.5,102,-2.5,-115
+9b57c09caaa462758b88048c3c94244b,2022-01-23 20:00:00+00:00,Los Angeles Rams,Tampa Bay Buccaneers,William Hill (US),williamhill_us,2022-01-23T16:46:33Z,spread,3.0,-120,-3.0,100
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,Barstool Sportsbook,barstool,2022-01-23T16:47:53Z,spread,1.0,-109,-1.0,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,BetMGM,betmgm,2022-01-23T16:46:36Z,spread,1.5,-110,-1.5,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,BetOnline.ag,betonlineag,2022-01-23T16:46:33Z,spread,1.0,-106,-1.0,-115
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,BetRivers,betrivers,2022-01-23T16:46:34Z,spread,1.0,-108,-1.0,-108
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,BetUS,betus,2022-01-23T16:49:18Z,spread,1.0,-110,-1.0,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,Bovada,bovada,2022-01-23T16:46:36Z,spread,1.0,-105,-1.0,-115
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,DraftKings,draftkings,2022-01-23T16:46:34Z,spread,1.0,-110,-1.0,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,FOX Bet,foxbet,2022-01-23T16:49:18Z,spread,1.5,-110,-1.5,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,FanDuel,fanduel,2022-01-23T16:46:33Z,spread,1.5,-110,-1.5,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,GTbets,gtbets,2022-01-23T16:49:19Z,spread,1.0,-109,-1.0,-109
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,Intertops,intertops,2022-01-23T16:49:19Z,spread,1.5,-110,-1.5,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,MyBookie.ag,mybookieag,2022-01-23T16:49:22Z,spread,2.5,-115,-2.5,-105
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,PointsBet (US),pointsbetus,2022-01-23T16:47:53Z,spread,1.5,-110,-1.5,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,SugarHouse,sugarhouse,2022-01-23T16:47:52Z,spread,1.0,-108,-1.0,-108
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,TwinSpires,twinspires,2022-01-23T16:49:20Z,spread,1.0,-109,-1.0,-110
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,Unibet,unibet,2022-01-23T16:49:15Z,spread,1.0,-106,-1.0,-108
+0963803fde75fc06fae773fbce4bf076,2022-01-23 23:30:00+00:00,Buffalo Bills,Kansas City Chiefs,William Hill (US),williamhill_us,2022-01-23T16:46:33Z,spread,1.0,-110,-1.0,-110
