@@ -3,8 +3,43 @@ TQS NBA Props Dashboard
 
 NBA Player Props Arbitrage Dashboard - find and track arb opportunities.
 
+DATA SOURCE: S3 (migrated from Git)
+    - Lambda saves arb files to: s3://betting-nba-arbs/nba/arbs/YYYY-MM-DD/
+    - Dashboard reads directly from S3
+    - No more git clone/pull operations
+
+AWS CREDENTIALS SETUP (Streamlit Cloud):
+    1. Go to: https://share.streamlit.io/
+    2. Click on your app → Settings (⚙️) → Secrets
+    3. Add the following in TOML format:
+       
+       ```toml
+       AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
+       AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+       AWS_DEFAULT_REGION = "us-east-2"
+       S3_BUCKET_NAME = "betting-nba-arbs"
+       ```
+    
+    4. Click "Save"
+    5. App will auto-restart with new credentials
+    
+    HOW TO GET AWS CREDENTIALS:
+    - Go to: https://console.aws.amazon.com/iam/
+    - Click "Users" → Find your user
+    - Click "Security credentials" tab
+    - Scroll to "Access keys" → "Create access key"
+    - Choose "Application running outside AWS"
+    - Copy both keys (secret key only shown once!)
+    - Paste into Streamlit Cloud Secrets (TOML format above)
+    
+    Note: These are stored securely in Streamlit Cloud and accessed via os.getenv()
+
+LOCAL TESTING:
+    If running locally, credentials are auto-loaded from ~/.aws/credentials
+    (set up via `aws configure` command)
+
 DATA HANDLING:
-    - Lambda runs every 15 minutes, saving snapshots to data/04_output/nba/arbs/
+    - Lambda runs every 15 minutes, saving snapshots to S3
     - Each file contains arbs found at that moment (lines change frequently)
     - Dashboard loads ALL files for a date and DEDUPES by (player, market, line)
     - For duplicate combos, keeps the row with HIGHEST expected_profit_pct
@@ -30,12 +65,18 @@ from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import sys
+import boto3
+from io import StringIO
 
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from src.team_utils_simple import add_team_column_simple
 from src.team_utils import get_all_teams
 from src.config import NBA_TEAMS
+
+# S3 Configuration
+S3_BUCKET = os.getenv('S3_BUCKET_NAME', 'betting-nba-arbs')
+s3_client = boto3.client('s3')
 
 
 def validate_team_game_mapping(df: pd.DataFrame) -> list:
@@ -244,15 +285,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Constants  
-DATA_DIR = Path(__file__).parent.parent.parent / "data/04_output/nba/arbs"
+# Constants - no longer needed, using S3
+# Dashboard now reads directly from S3 bucket
 
 
 # Helper functions
 @st.cache_data(ttl=60)
 def load_all_arbs():
     """
-    Load all arbitrage opportunities from all files.
+    Load all arbitrage opportunities from S3.
     
     DEDUPLICATION STRATEGY:
     - Multiple files may exist per day (Lambda runs every 15 min)
@@ -264,159 +305,195 @@ def load_all_arbs():
     Returns:
         DataFrame with deduped arbs, keeping best expected_profit_pct per player/market/line/day
     """
-    if not DATA_DIR.exists():
-        return None
-    
-    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"))
-    
-    if not arb_files:
-        return None
-    
-    all_dfs = []
-    
-    for arb_file in arb_files:
-        try:
-            df = pd.read_csv(arb_file)
-            
-            # Skip empty files
-            if len(df) == 0:
+    try:
+        # List all files in S3 under nba/arbs/
+        response = s3_client.list_objects_v2(
+            Bucket=S3_BUCKET,
+            Prefix='nba/arbs/'
+        )
+        
+        if 'Contents' not in response:
+            return None
+        
+        # Filter for CSV files
+        arb_files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.csv')]
+        
+        if not arb_files:
+            return None
+        
+        all_dfs = []
+        
+        for s3_key in arb_files:
+            try:
+                # Download file from S3
+                obj = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
+                csv_content = obj['Body'].read().decode('utf-8')
+                df = pd.read_csv(StringIO(csv_content))
+                
+                # Skip empty files
+                if len(df) == 0:
+                    continue
+                
+                # Extract date from S3 key: nba/arbs/2025-12-24/arb_output_20251224_180000.csv
+                parts = s3_key.split('/')
+                if len(parts) >= 4:
+                    file_date = parts[2]  # YYYY-MM-DD
+                    filename = parts[-1]  # arb_output_20251224_180000.csv
+                    
+                    # Extract time from filename
+                    filename_parts = filename.replace('.csv', '').split('_')
+                    if len(filename_parts) >= 3:
+                        date_str = filename_parts[-2]  # YYYYMMDD
+                        time_str = filename_parts[-1]  # HHMMSS
+                        
+                        file_datetime_utc = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
+                        # Convert UTC to ET for display
+                        file_datetime_utc = file_datetime_utc.replace(tzinfo=ZoneInfo('UTC'))
+                        file_datetime_et = file_datetime_utc.astimezone(ZoneInfo('America/New_York'))
+                        
+                        df['file_date'] = file_date
+                        df['file_datetime'] = file_datetime_et
+                        df['source_file'] = filename
+                
+                all_dfs.append(df)
+            except Exception as e:
+                st.warning(f"Failed to load {s3_key}: {e}")
                 continue
-            
-            parts = arb_file.stem.split('_')
-            date_str = parts[-2]
-            time_str = parts[-1]
-            
-            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-            file_datetime_utc = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
-            # Convert UTC to ET for display
-            file_datetime_utc = file_datetime_utc.replace(tzinfo=ZoneInfo('UTC'))
-            file_datetime_et = file_datetime_utc.astimezone(ZoneInfo('America/New_York'))
-            
-            df['file_date'] = file_date
-            df['file_datetime'] = file_datetime_et
-            df['source_file'] = arb_file.name
-            
-            all_dfs.append(df)
-        except Exception as e:
-            continue
-    
-    if not all_dfs:
+        
+        if not all_dfs:
+            return None
+        
+        combined_df = pd.concat(all_dfs, ignore_index=True)
+        
+        # Deduplicate: for each (file_date, player, market, line), keep the row with best expected_profit_pct
+        if len(combined_df) > 0 and 'expected_profit_pct' in combined_df.columns:
+            # Sort by expected_profit_pct descending, then take first per group
+            combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
+            combined_df = combined_df.drop_duplicates(
+                subset=['file_date', 'player', 'market', 'line'],
+                keep='first'
+            )
+            # Re-sort by file_date (desc) then expected_profit_pct (desc)
+            combined_df = combined_df.sort_values(
+                ['file_date', 'expected_profit_pct'], 
+                ascending=[False, False]
+            )
+        
+        return combined_df
+        
+    except Exception as e:
+        st.error(f"Error loading from S3: {e}")
         return None
-    
-    combined_df = pd.concat(all_dfs, ignore_index=True)
-    
-    # Deduplicate: for each (file_date, player, market, line), keep the row with best expected_profit_pct
-    if len(combined_df) > 0 and 'expected_profit_pct' in combined_df.columns:
-        # Sort by expected_profit_pct descending, then take first per group
-        combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
-        combined_df = combined_df.drop_duplicates(
-            subset=['file_date', 'player', 'market', 'line'],
-            keep='first'
-        )
-        # Re-sort by file_date (desc) then expected_profit_pct (desc)
-        combined_df = combined_df.sort_values(
-            ['file_date', 'expected_profit_pct'], 
-            ascending=[False, False]
-        )
-    
-    return combined_df
 
 
 @st.cache_data(ttl=60)
 def get_arb_history():
     """
-    Get historical summary by DATE (not by file).
+    Get historical summary by DATE (not by file) from S3.
     
     Multiple files may exist per day (Lambda runs every 15 min).
     This function groups by date and shows deduped metrics.
     """
-    if not DATA_DIR.exists():
-        return []
-    
-    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"), reverse=True)
-    
-    if not arb_files:
-        return []
-    
-    # Group files by date
-    files_by_date = {}
-    for file in arb_files:
-        try:
-            parts = file.stem.split('_')
-            date_str = parts[-2]
-            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-            
-            if file_date not in files_by_date:
-                files_by_date[file_date] = []
-            files_by_date[file_date].append(file)
-        except:
-            continue
-    
-    history = []
-    for file_date, files in sorted(files_by_date.items(), reverse=True):
-        try:
-            # Load all files for this date
-            day_dfs = []
-            for file in files:
-                try:
-                    df = pd.read_csv(file)
-                    if len(df) > 0:
-                        day_dfs.append(df)
-                except:
-                    continue
-            
-            if not day_dfs:
+    try:
+        # List all files in S3
+        response = s3_client.list_objects_v2(
+            Bucket=S3_BUCKET,
+            Prefix='nba/arbs/'
+        )
+        
+        if 'Contents' not in response:
+            return []
+        
+        arb_files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.csv')]
+        
+        if not arb_files:
+            return []
+        
+        # Group files by date
+        files_by_date = {}
+        for s3_key in arb_files:
+            try:
+                parts = s3_key.split('/')
+                if len(parts) >= 3:
+                    file_date = parts[2]  # YYYY-MM-DD from path structure
+                    
+                    if file_date not in files_by_date:
+                        files_by_date[file_date] = []
+                    files_by_date[file_date].append(s3_key)
+            except:
                 continue
-            
-            combined = pd.concat(day_dfs, ignore_index=True)
-            
-            # Dedupe by player/market/line, keep best expected_profit_pct
-            if 'expected_profit_pct' in combined.columns:
-                combined = combined.sort_values('expected_profit_pct', ascending=False)
-                deduped = combined.drop_duplicates(
-                    subset=['player', 'market', 'line'],
-                    keep='first'
-                )
-            else:
-                deduped = combined.drop_duplicates(
-                    subset=['player', 'market', 'line'],
-                    keep='first'
-                )
-            
-            # Calculate metrics on deduped data
-            arbs_df = deduped[deduped['is_arb'] == True] if 'is_arb' in deduped.columns else pd.DataFrame()
-            
-            total_wagered = 0
-            total_profit = 0
-            avg_profit_pct = 0
-            max_profit_pct = 0
-            
-            if len(arbs_df) > 0:
-                if 'over_stake' in arbs_df.columns and 'under_stake' in arbs_df.columns:
-                    total_wagered = (arbs_df['over_stake'].sum() + arbs_df['under_stake'].sum())
-                if 'guaranteed_profit' in arbs_df.columns:
-                    total_profit = arbs_df['guaranteed_profit'].sum()
-                if 'expected_profit_pct' in arbs_df.columns:
-                    avg_profit_pct = arbs_df['expected_profit_pct'].mean()
-                    max_profit_pct = arbs_df['expected_profit_pct'].max()
-            
-            num_games = deduped['game'].nunique() if 'game' in deduped.columns else 0
-            
-            history.append({
-                'date': file_date,
-                'num_games': num_games,
-                'num_snapshots': len(files),  # How many 15-min snapshots
-                'prop_markets': len(deduped),  # Unique player/market/line combos
-                'arbs_found': len(arbs_df),
-                'avg_profit': avg_profit_pct,
-                'max_profit': max_profit_pct,
-                'total_wagered': total_wagered,
-                'total_profit': total_profit
-            })
-        except:
-            continue
-    
-    return history
+        
+        history = []
+        for file_date, s3_keys in sorted(files_by_date.items(), reverse=True):
+            try:
+                # Load all files for this date
+                day_dfs = []
+                for s3_key in s3_keys:
+                    try:
+                        obj = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
+                        csv_content = obj['Body'].read().decode('utf-8')
+                        df = pd.read_csv(StringIO(csv_content))
+                        if len(df) > 0:
+                            day_dfs.append(df)
+                    except:
+                        continue
+                
+                if not day_dfs:
+                    continue
+                
+                combined = pd.concat(day_dfs, ignore_index=True)
+                
+                # Dedupe by player/market/line, keep best expected_profit_pct
+                if 'expected_profit_pct' in combined.columns:
+                    combined = combined.sort_values('expected_profit_pct', ascending=False)
+                    deduped = combined.drop_duplicates(
+                        subset=['player', 'market', 'line'],
+                        keep='first'
+                    )
+                else:
+                    deduped = combined.drop_duplicates(
+                        subset=['player', 'market', 'line'],
+                        keep='first'
+                    )
+                
+                # Calculate metrics on deduped data
+                arbs_df = deduped[deduped['is_arb'] == True] if 'is_arb' in deduped.columns else pd.DataFrame()
+                
+                total_wagered = 0
+                total_profit = 0
+                avg_profit_pct = 0
+                max_profit_pct = 0
+                
+                if len(arbs_df) > 0:
+                    if 'over_stake' in arbs_df.columns and 'under_stake' in arbs_df.columns:
+                        total_wagered = (arbs_df['over_stake'].sum() + arbs_df['under_stake'].sum())
+                    if 'guaranteed_profit' in arbs_df.columns:
+                        total_profit = arbs_df['guaranteed_profit'].sum()
+                    if 'expected_profit_pct' in arbs_df.columns:
+                        avg_profit_pct = arbs_df['expected_profit_pct'].mean()
+                        max_profit_pct = arbs_df['expected_profit_pct'].max()
+                
+                num_games = deduped['game'].nunique() if 'game' in deduped.columns else 0
+                
+                history.append({
+                    'date': file_date,
+                    'num_games': num_games,
+                    'num_snapshots': len(s3_keys),  # How many 15-min snapshots
+                    'prop_markets': len(deduped),  # Unique player/market/line combos
+                    'arbs_found': len(arbs_df),
+                    'avg_profit': avg_profit_pct,
+                    'max_profit': max_profit_pct,
+                    'total_wagered': total_wagered,
+                    'total_profit': total_profit
+                })
+            except:
+                continue
+        
+        return history
+        
+    except Exception as e:
+        st.error(f"Error loading history from S3: {e}")
+        return []
 
 
 # Main app
@@ -557,7 +634,9 @@ def main():
         st.markdown("---")
         st.header("📝 Info")
         st.info("""
-        **Scheduled run:** 12:00 PM ET (daily)
+        **Data Source:** S3 (betting-nba-arbs)
+        
+        **Scheduled run:** Every 15 min (6pm-midnight ET)
         
         **Markets monitored:**
         - Points, Rebounds, Assists
@@ -565,7 +644,16 @@ def main():
         - Double/Triple Doubles
         - Combined stats
         
-        **Data refreshes automatically after scheduled runs.**
+        **Data refreshes automatically from S3.**
+        
+        **AWS Setup (Streamlit Cloud):**
+        Add to Secrets in Streamlit Cloud settings:
+        ```
+        AWS_ACCESS_KEY_ID = "your_key"
+        AWS_SECRET_ACCESS_KEY = "your_secret"
+        AWS_DEFAULT_REGION = "us-east-2"
+        S3_BUCKET_NAME = "betting-nba-arbs"
+        ```
         """)
         
         st.markdown("---")
