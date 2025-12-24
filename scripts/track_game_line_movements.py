@@ -866,9 +866,16 @@ VIG_THRESHOLD_CENTS = 3.0  # Beyond this, use steeper curve
 VIG_LINEAR_FACTOR = 0.015  # Normal range adjustment per dime
 VIG_EXTREME_FACTOR = 0.025  # Extreme range adjustment per dime
 
-# Movement detection
-MOVEMENT_THRESHOLD_DEFAULT = 0.5  # Points of adjusted movement to flag as significant
+# Movement detection - sport-specific thresholds
+MOVEMENT_THRESHOLD_NBA = float(os.getenv('MOVEMENT_THRESHOLD_NBA', '2.0'))  # NBA moves more
+MOVEMENT_THRESHOLD_NFL = float(os.getenv('MOVEMENT_THRESHOLD_NFL', '1.0'))  # NFL more stable
 STEAM_MOVE_MIN_BOOKS = 3  # Min books moving same direction to flag steam move
+
+# Map sports to thresholds
+MOVEMENT_THRESHOLDS = {
+    SPORT_NBA: MOVEMENT_THRESHOLD_NBA,
+    SPORT_NFL: MOVEMENT_THRESHOLD_NFL
+}
 
 # Timestamp format for filenames
 TIMESTAMP_FORMAT = '%Y%m%d_%H%M%S'
@@ -1075,7 +1082,7 @@ def calculate_adjusted_spread(raw_spread: float, price: int) -> float:
 # =============================================================================
 
 def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.DataFrame], 
-                         movement_threshold: float, current_time: datetime, 
+                         sport_thresholds: Dict[str, float], current_time: datetime, 
                          current_snapshots: Dict[str, pd.DataFrame] = None) -> str:
     """
     Format movements into plain text email (SNS doesn't support HTML).
@@ -1083,7 +1090,7 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
     Args:
         sport_summaries: Dict with summary stats per sport
         all_movements: Dict mapping sport name to movements DataFrame
-        movement_threshold: Threshold for significant movements
+        sport_thresholds: Dict mapping sport name to threshold
         current_time: Current timestamp
         current_snapshots: Dict mapping sport name to current snapshot DataFrame
     
@@ -1098,7 +1105,9 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
     lines.append("🚨 LINE MOVEMENT ALERT")
     lines.append("=" * 80)
     lines.append(f"Time: {time_str}")
-    lines.append(f"Threshold: ≥{movement_threshold} adjusted points")
+    # Show thresholds per sport
+    threshold_strs = [f"{sport}: ≥{thresh}pts" for sport, thresh in sport_thresholds.items()]
+    lines.append(f"Thresholds: {', '.join(threshold_strs)}")
     lines.append("")
     
     # Summary section
@@ -1109,73 +1118,65 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
         lines.append(f"{sport_name}: {summary['num_games']} games, {summary['unique_days']} days, {movement_count} movements")
     lines.append("")
     
-    # Current games tracked section (show all current lines)
-    if current_snapshots:
-        lines.append("=" * 80)
-        lines.append("📊 CURRENT GAMES TRACKED")
-        lines.append("=" * 80)
-        
-        for sport_name in current_snapshots.keys():
-            df = current_snapshots[sport_name]
-            if df is None or df.empty:
-                continue
-            
-            df = current_snapshots[sport_name]
-            if df.empty:
-                continue
-            
-            lines.append(f"\n{sport_name} - {df['game_id'].nunique()} games:")
-            lines.append("-" * 80)
-            
-            # Group by game
-            for game_id in df['game_id'].unique():
-                game_df = df[df['game_id'] == game_id]
-                first_row = game_df.iloc[0]
-                
-                lines.append(f"\n  {first_row['away_team']} @ {first_row['home_team']}")
-                lines.append(f"  Game Time: {first_row['game_time_et']}")
-                lines.append(f"  Books tracking: {len(game_df)}")
-                
-                # Show a few bookmaker lines (top 3)
-                for idx, (_, row) in enumerate(game_df.head(3).iterrows()):
-                    lines.append(f"    • {row['bookmaker']}: Away {row['away_spread']}/{row['away_price']} | Home {row['home_spread']}/{row['home_price']}")
-                
-                if len(game_df) > 3:
-                    lines.append(f"    ... and {len(game_df) - 3} more books")
-                lines.append("")
-        
-        lines.append("")
+    # Significant movements section (MOVED TO TOP) - grouped by reason
+    has_any_significant = False
     
-    # Significant movements section
-    has_significant = False
+    # First: Crossed Zero (highest priority)
+    has_crossed_zero = False
     for sport_name in all_movements.keys():
         df = all_movements[sport_name]
         if df is None or df.empty:
             continue
         
-        df = all_movements[sport_name]
-        if df.empty:
-            continue
-        
-        significant = df[
-            (df['significant_hourly'] == True) | 
-            (df['significant_daily'] == True) |
+        crossed_zero = df[
             (df['crossed_zero_1h'] == True) |
             (df['crossed_zero_24h'] == True)
         ]
         
-        if not significant.empty:
-            if not has_significant:
+        if not crossed_zero.empty:
+            if not has_crossed_zero:
                 lines.append("=" * 80)
-                lines.append("📊 SIGNIFICANT MOVEMENTS")
+                lines.append("🚨 CROSSED ZERO - Favorite/Underdog Flip")
                 lines.append("=" * 80)
-                has_significant = True
+                has_crossed_zero = True
+                has_any_significant = True
             
-            lines.append(f"\n{sport_name} ({len(significant)} significant movements):")
+            lines.append(f"\n{sport_name} ({len(crossed_zero)} crossed zero):")
             lines.append("-" * 80)
-            lines.extend(format_movements_text(significant))
+            lines.extend(format_movements_text(crossed_zero))
     
-    if not has_significant:
+    # Second: Large moves (≥threshold)
+    has_large_moves = False
+    for sport_name in all_movements.keys():
+        df = all_movements[sport_name]
+        if df is None or df.empty:
+            continue
+        
+        # Large moves that didn't cross zero
+        large_moves = df[
+            (
+                (df['significant_hourly'] == True) | 
+                (df['significant_daily'] == True)
+            ) &
+            (df['crossed_zero_1h'] == False) &
+            (df['crossed_zero_24h'] == False)
+        ]
+        
+        if not large_moves.empty:
+            if not has_large_moves:
+                if has_crossed_zero:
+                    lines.append("")
+                lines.append("=" * 80)
+                lines.append(f"📊 LARGE MOVES (NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts)")
+                lines.append("=" * 80)
+                has_large_moves = True
+                has_any_significant = True
+            
+            lines.append(f"\n{sport_name} ({len(large_moves)} large moves):")
+            lines.append("-" * 80)
+            lines.extend(format_movements_text(large_moves))
+    
+    if not has_any_significant:
         lines.append("=" * 80)
         lines.append("✅ NO SIGNIFICANT MOVEMENTS DETECTED")
         lines.append("=" * 80)
@@ -1215,6 +1216,43 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
     lines.append("")
     lines.append("=" * 80)
     
+    # Current games tracked section (MOVED TO BOTTOM)
+    if current_snapshots:
+        lines.append("📊 CURRENT GAMES TRACKED")
+        lines.append("=" * 80)
+        
+        for sport_name in current_snapshots.keys():
+            df = current_snapshots[sport_name]
+            if df is None or df.empty:
+                continue
+            
+            df = current_snapshots[sport_name]
+            if df.empty:
+                continue
+            
+            lines.append(f"\n{sport_name} - {df['game_id'].nunique()} games:")
+            lines.append("-" * 80)
+            
+            # Group by game
+            for game_id in df['game_id'].unique():
+                game_df = df[df['game_id'] == game_id]
+                first_row = game_df.iloc[0]
+                
+                lines.append(f"\n  {first_row['away_team']} @ {first_row['home_team']}")
+                lines.append(f"  Game Time: {first_row['game_time_et']}")
+                lines.append(f"  Books tracking: {len(game_df)}")
+                
+                # Show a few bookmaker lines (top 3)
+                for idx, (_, row) in enumerate(game_df.head(3).iterrows()):
+                    lines.append(f"    • {row['bookmaker']}: Away {row['away_spread']}/{row['away_price']} | Home {row['home_spread']}/{row['home_price']}")
+                
+                if len(game_df) > 3:
+                    lines.append(f"    ... and {len(game_df) - 3} more books")
+                lines.append("")
+        
+        lines.append("")
+        lines.append("=" * 80)
+    
     return "\n".join(lines)
 
 
@@ -1229,14 +1267,13 @@ def format_movements_text(df: pd.DataFrame) -> List[str]:
         was_24h = f"{row['prev_24h_raw_spread']}/{row['prev_24h_price']}" if pd.notna(row.get('prev_24h_raw_spread')) else "—"
         now = f"{row['current_raw_spread']}/{row['current_price']}"
         
-        crossed_flag = ""
-        if row.get('crossed_zero_1h') or row.get('crossed_zero_24h'):
-            crossed_flag = " 🚨 CROSSED ZERO"
+        crossed_flag = " 🚨" if (row.get('crossed_zero_1h') or row.get('crossed_zero_24h')) else ""
         
-        lines.append(f"  {game_str}")
+        lines.append(f"  {game_str}{crossed_flag}")
         lines.append(f"    Book: {row['bookmaker']} | Side: {row['side']}")
-        lines.append(f"    Was (1h): {was_1h} | Was (24h): {was_24h} | Now: {now}")
-        lines.append(f"    Type: {row.get('movement_type', 'none')}{crossed_flag}")
+        lines.append(f"    24h ago: {was_24h}")
+        lines.append(f"    1h ago: {was_1h}")
+        lines.append(f"    Now: {now}")
         lines.append("")
     
     return lines
@@ -1468,9 +1505,10 @@ def main():
                        help='Generate report from existing snapshots (no new fetch)')
     parser.add_argument('--check-api-usage', action='store_true',
                        help='Check what API would return and save to S3 tmp/ folder (uses 1 API call)')
+    # Deprecated: kept for backwards compatibility but not used
     parser.add_argument('--movement-threshold', type=float, 
-                       default=MOVEMENT_THRESHOLD_DEFAULT,
-                       help=f'Movement threshold in points (default: {MOVEMENT_THRESHOLD_DEFAULT})')
+                       default=None,
+                       help='(Deprecated) Use MOVEMENT_THRESHOLD_NBA and MOVEMENT_THRESHOLD_NFL env vars')
     
     args = parser.parse_args()
     
@@ -1630,6 +1668,9 @@ def main():
         print(f"\n   🔍 Detecting line movements...")
         movements = []
         
+        # Get threshold for this sport
+        sport_threshold = MOVEMENT_THRESHOLDS[sport]
+        
         for _, current_row in current_df.iterrows():
             game_id = current_row['game_id']
             bookmaker = current_row['bookmaker']
@@ -1654,14 +1695,14 @@ def main():
             
             # Process away side
             movement_away = process_side_movement(
-                current_row, prev_1h_row, prev_24h_row, 'away', args.movement_threshold
+                current_row, prev_1h_row, prev_24h_row, 'away', sport_threshold
             )
             if movement_away:
                 movements.append(movement_away)
             
             # Process home side
             movement_home = process_side_movement(
-                current_row, prev_1h_row, prev_24h_row, 'home', args.movement_threshold
+                current_row, prev_1h_row, prev_24h_row, 'home', sport_threshold
             )
             if movement_home:
                 movements.append(movement_home)
@@ -1722,6 +1763,12 @@ def main():
         for sport_name, df in saved_movements:
             movements_dict[sport_name] = df
         
+        # Build sport thresholds dict for email
+        sport_thresholds = {
+            'NBA': MOVEMENT_THRESHOLD_NBA,
+            'NFL': MOVEMENT_THRESHOLD_NFL
+        }
+        
         # Generate email with ET timestamp
         current_time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
         time_str_et = current_time_et.strftime('%b %d, %Y %I:%M %p ET')
@@ -1731,7 +1778,7 @@ def main():
         else:
             subject = f"✅ Line Movement Check - No Significant Changes - {time_str_et}"
         
-        html_body = format_movement_email(sport_summaries, movements_dict, args.movement_threshold, current_time, current_snapshots)
+        html_body = format_movement_email(sport_summaries, movements_dict, sport_thresholds, current_time, current_snapshots)
         
         # Send via SNS
         send_email_via_sns(subject, html_body)
