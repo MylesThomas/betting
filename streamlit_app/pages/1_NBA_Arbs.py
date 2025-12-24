@@ -441,16 +441,17 @@ def get_arb_history():
     This function groups by date and shows deduped metrics.
     """
     try:
-        # List all files in S3
-        response = s3_client.list_objects_v2(
+        # List all files in S3 (with pagination for >1000 files)
+        arb_files = []
+        paginator = s3_client.get_paginator('list_objects_v2')
+        page_iterator = paginator.paginate(
             Bucket=S3_BUCKET,
             Prefix='nba/arbs/'
         )
         
-        if 'Contents' not in response:
-            return []
-        
-        arb_files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.csv')]
+        for page in page_iterator:
+            if 'Contents' in page:
+                arb_files.extend([obj['Key'] for obj in page['Contents'] if obj['Key'].endswith('.csv')])
         
         if not arb_files:
             return []
