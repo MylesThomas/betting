@@ -1114,8 +1114,11 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
     lines.append("SUMMARY:")
     lines.append("-" * 80)
     for sport_name, summary in sport_summaries.items():
-        movement_count = len(all_movements.get(sport_name, pd.DataFrame()))
-        lines.append(f"{sport_name}: {summary['num_games']} games, {summary['unique_days']} days, {movement_count} movements")
+        df = all_movements.get(sport_name, pd.DataFrame())
+        unique_games_with_moves = df['game_id'].nunique() if not df.empty else 0
+        unique_games_crossed_zero = df[df['crossed_zero_1h'] | df['crossed_zero_24h']]['game_id'].nunique() if not df.empty else 0
+        
+        lines.append(f"{sport_name}: {summary['num_games']} games tracked | {unique_games_with_moves} games with moves | {unique_games_crossed_zero} games crossed zero")
     lines.append("")
     
     # Significant movements section (MOVED TO TOP) - grouped by reason
@@ -1134,6 +1137,9 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
         ]
         
         if not crossed_zero.empty:
+            # Count unique games
+            unique_games = crossed_zero['game_id'].nunique()
+            
             if not has_crossed_zero:
                 lines.append("=" * 80)
                 lines.append("🚨 CROSSED ZERO - Favorite/Underdog Flip")
@@ -1141,7 +1147,7 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
                 has_crossed_zero = True
                 has_any_significant = True
             
-            lines.append(f"\n{sport_name} ({len(crossed_zero)} crossed zero):")
+            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
             lines.append("-" * 80)
             lines.extend(format_movements_text(crossed_zero))
     
@@ -1163,6 +1169,9 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
         ]
         
         if not large_moves.empty:
+            # Count unique games
+            unique_games = large_moves['game_id'].nunique()
+            
             if not has_large_moves:
                 if has_crossed_zero:
                     lines.append("")
@@ -1172,7 +1181,7 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
                 has_large_moves = True
                 has_any_significant = True
             
-            lines.append(f"\n{sport_name} ({len(large_moves)} large moves):")
+            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
             lines.append("-" * 80)
             lines.extend(format_movements_text(large_moves))
     
@@ -1205,8 +1214,11 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
         ]
         
         if not other.empty:
+            # Count unique games
+            unique_games = other['game_id'].nunique()
+            
             has_other = True
-            lines.append(f"\n{sport_name} ({len(other)} small movements):")
+            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
             lines.append("-" * 80)
             lines.extend(format_movements_text(other))
     
@@ -1257,23 +1269,37 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
 
 
 def format_movements_text(df: pd.DataFrame) -> List[str]:
-    """Format movements DataFrame as plain text lines."""
+    """Format movements DataFrame as plain text lines, grouped by game."""
     lines = []
     
-    for _, row in df.iterrows():
-        game_str = f"{row['away_team']} @ {row['home_team']}"
+    # Filter to only show home side
+    df_home = df[df['side'] == 'home'].copy()
+    
+    # Group by game
+    game_groups = df_home.groupby(['game_id', 'away_team', 'home_team'])
+    
+    for (game_id, away_team, home_team), game_df in game_groups:
+        # Check if any movement in this game crossed zero
+        has_crossed_zero = game_df['crossed_zero_1h'].any() or game_df['crossed_zero_24h'].any()
+        crossed_flag = " 🚨" if has_crossed_zero else ""
         
-        was_1h = f"{row['prev_1h_raw_spread']}/{row['prev_1h_price']}" if pd.notna(row.get('prev_1h_raw_spread')) else "—"
-        was_24h = f"{row['prev_24h_raw_spread']}/{row['prev_24h_price']}" if pd.notna(row.get('prev_24h_raw_spread')) else "—"
-        now = f"{row['current_raw_spread']}/{row['current_price']}"
+        # Game header with home team labeled
+        lines.append(f"  {away_team} @ {home_team} (home){crossed_flag}")
+        lines.append("")
         
-        crossed_flag = " 🚨" if (row.get('crossed_zero_1h') or row.get('crossed_zero_24h')) else ""
+        # List all bookmakers for this game
+        for _, row in game_df.iterrows():
+            was_1h = f"{row['prev_1h_raw_spread']}/{row['prev_1h_price']}" if pd.notna(row.get('prev_1h_raw_spread')) else "—"
+            was_24h = f"{row['prev_24h_raw_spread']}/{row['prev_24h_price']}" if pd.notna(row.get('prev_24h_raw_spread')) else "—"
+            now = f"{row['current_raw_spread']}/{row['current_price']}"
+            
+            lines.append(f"    Book: {row['bookmaker']}")
+            lines.append(f"    24h ago: {was_24h}")
+            lines.append(f"    1h ago: {was_1h}")
+            lines.append(f"    Now: {now}")
+            lines.append("")
         
-        lines.append(f"  {game_str}{crossed_flag}")
-        lines.append(f"    Book: {row['bookmaker']} | Side: {row['side']}")
-        lines.append(f"    24h ago: {was_24h}")
-        lines.append(f"    1h ago: {was_1h}")
-        lines.append(f"    Now: {now}")
+        # Extra spacing between games
         lines.append("")
     
     return lines
@@ -1314,18 +1340,29 @@ def detect_crossed_zero(prev_spread: float, current_spread: float) -> bool:
     """
     Detect if spread crossed zero (favorite/underdog flip).
     
+    Only counts as crossing if line goes from positive to negative or vice versa.
+    Does NOT count if starting from or ending at exactly 0.0 (pick'em).
+    
     Args:
         prev_spread: Previous spread value
         current_spread: Current spread value
     
     Returns:
-        True if crossed zero
+        True if crossed zero (changed from pos to neg or neg to pos)
     """
-    # Check if signs are different or either is exactly zero
-    if prev_spread == 0 or current_spread == 0:
-        return True
+    # No movement = no crossing
+    if prev_spread == current_spread:
+        return False
     
-    return (prev_spread < 0 and current_spread > 0) or (prev_spread > 0 and current_spread < 0)
+    # Must go from one side to the other (not from/to zero)
+    # Examples:
+    #   1.5 → -1.5: True ✓ (underdog to favorite)
+    #   -2.0 → 1.0: True ✓ (favorite to underdog)
+    #   1.5 → 0.0: False ✗ (underdog to pick'em, not a flip)
+    #   0.0 → -1.5: False ✗ (pick'em to favorite, not a flip)
+    #   0.0 → 0.5: False ✗ (pick'em to underdog, not a flip)
+    #   1.5 → 2.0: False ✗ (still underdog)
+    return (prev_spread > 0 and current_spread < 0) or (prev_spread < 0 and current_spread > 0)
 
 
 def calculate_movement_type(prev_raw: float, prev_price: int, 
@@ -1435,6 +1472,12 @@ def parse_api_response_to_dataframe(api_data: list, fetched_at: str) -> pd.DataF
         game_time = game['commence_time']
         away_team = game['away_team']
         home_team = game['home_team']
+        
+        # Debug: Log first game to verify home/away assignment
+        if len(rows) == 0:
+            print(f"\n   📋 Example game from API:")
+            print(f"      Away: {away_team}")
+            print(f"      Home: {home_team}")
         
         for bookmaker in game.get('bookmakers', []):
             bookmaker_key = bookmaker['key']
