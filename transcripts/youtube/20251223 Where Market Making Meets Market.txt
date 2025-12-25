@@ -1,0 +1,1439 @@
+Title: Where Market Making Meets Market Microstructure
+
+Link: https://www.youtube.com/watch?v=S7eig5VXFpY&t=2287s
+
+Creator: Sasha Stoikiv
+
+Description: A talk at the International Association of Quantitative Finance (IAQF) seminar on 2/14/23
+
+---
+
+okay well um so where Market making meets Market microstructure is
+0:07
+um these are two concepts that sort of work very much hand in hand and this is a
+0:12
+little you know the only clip art or visual that I've made myself and
+0:18
+um you know by taking these three pictures and sticking them together but essentially when I think of Market making I think of this job that uh you
+0:27
+know a market maker comes into work every day and uh you know the beginning of these Brown emotions might be the the
+0:34
+price uh of an asset at the beginning of the day and uh 100 here is the end of
+0:41
+the day and I think of these uh Traders or market makers doing this every day and sort of dealing with this risk
+0:47
+essentially uh if they're long or short um you know there's going to be some
+0:54
+risk involved and the the job of a market maker is to post bids and offers
+1:00
+in these markets to provide liquidity and uh you know the the way we thought
+1:06
+of this model and you know as the as a building block you know when we first
+1:11
+thought of what Market making uh what the market making problem was uh we
+1:17
+really thought in terms of these one day of of brown in motions and how how
+1:22
+should a Trader ride these Brownian motions to you know buy at the bid and sell at the ask
+1:30
+and then you know the the you'll see that when I in the first half
+1:35
+of the talk when I focused on Market making we won't put too much of a lens
+1:40
+on this price and what it means we'll just look at these paths and call them the mid price and then in the second
+1:47
+part of the talk I'll sort of question that assumption like is the mid
+1:53
+price really a great uh notion of fair price should we be thinking of other
+1:59
+prices and then that's when you need to zoom in and get your hands a bit dirty
+2:05
+and actually learn the rules of trading and how it happens with these little tick sizes and bids and offers an
+2:12
+arrival of orders and you know a very kind of strange
+2:17
+chaotic thing that happens at the micro scale so so in a way you know uh this
+2:24
+talk could have been called uh you know a tale of two time scales one time scale on the left which is or the one day time
+2:31
+scale and one time scale on the right which is what if you zoom into the to
+2:36
+the millisecond or to the second and start looking at what's happening there so it's maybe you know if you're
+2:44
+physics-minded this could be you could think of the uh you know the
+2:50
+the way you know analyzing waves from afar and then zooming in and realizing
+2:55
+that they're particles and so in a way when I talk about when I think of where Market making meets uh Market
+3:02
+microstructure I think of the the same thing that looks very different when you
+3:07
+zoom in all right so
+3:12
+um first off you know since we just started maybe uh some of you uh have
+3:19
+some ideas about what uh Market making is but I'm going to go real basic for
+3:24
+for people who don't really uh know necessarily what it is so
+3:30
+um the What the how and the why okay so the first question what is market making
+3:37
+so uh very soon I'll go a little bit into what it was but the way I would
+3:43
+like to answer the question what is market making today is I will say it's an algorithm that updates bids and asks
+3:50
+quotes and that's where I'm gonna leave it at okay so
+3:55
+um at the very uh most basic you can think of someone turning on a computer
+4:00
+in the morning and turning it off at night and hopefully there's more money
+4:06
+at the at the end of the day than at the beginning of the day uh now how does that work okay that's that's where we
+4:13
+need to start thinking about uh State variables what which what are optimal strategies you
+4:22
+know what exactly is happening and ultimately how Market making works I'll
+4:28
+I'll break it down a little bit more later but it's essentially knowing what the fair price is or the right price
+4:35
+then knowing developing your personal version of what the right price is and
+4:42
+then uh putting a little premium you know subtracting a little bit calling that
+4:47
+your bid and adding a little bit and calling out that your ask and following this price around in order and then
+4:55
+finally the why why Market making well to the the the group needs for Market
+5:02
+making is to provide liquidity and it sounds a bit vague provide liquidity you
+5:08
+know is that good bad we don't know well ultimately the way I would like to think
+5:14
+of it is it provides immediacy to another Trader that doesn't have time to
+5:19
+stick around all day looking at a chart that's moving okay so essentially we
+5:24
+need someone and this someone is in fact nowadays an algorithm to be there all
+5:30
+the time for to provide the luxury for us to be able to buy and sell whenever
+5:35
+we want all right so
+5:41
+now that um I've sort of defined the the basics
+5:46
+of Market making I think it's good to go a little bit into into the past and in fact into the 80s uh this is Wall Street
+5:53
+in the in the 1980s and I think it's it's sort of uh fun to look at this
+5:58
+picture because you know uh when you just see numbers on a screen you you
+6:04
+lose the idea that this is a market and you lose the idea that uh this is the
+6:11
+interaction between many uh many agents so if you look at these in fact if you look
+6:19
+at this area of the of which of this of this Market
+6:26
+it really kind of looks like the kind of markets where we buy fruits and vegetables and you know uh you know go
+6:34
+on our our weekend to get fresh stuff um there's one really fundamental
+6:41
+difference why we don't call these guys just merchants or sales people is that
+6:47
+on top of their Wares you know clearly this is a stock market they're buying they're they're selling stocks they're
+6:54
+sort of always two prices there's the price at which these market makers will
+7:00
+buy and there's a price at which they will sell and I think that it's sort of interesting to see that in a usual
+7:07
+Market you you don't you can't bring your fish and sort of sell them so that
+7:12
+they'll be sold later it's purely a selling business and these what makes Market what defines for me a market
+7:19
+maker is the two-sided nature it's like now
+7:24
+um maybe I'll admit someone all right so this is uh Hong Kong Stock Exchange in
+7:33
+the 90s so you can see in in 10 years you know quite a bit has changed there's
+7:40
+a lot of more computers per person and this is starting to become automated and
+7:47
+uh and I think of you know I think of these pictures as a very telling a very
+7:52
+interesting story about how the colorfulness and the humanity of these
+7:59
+markets is kind of Disappearing a little bit and getting automated and in fact if you look at uh your typical market today
+8:07
+this is probably the way it looks you know not not a fly you know a very cold
+8:13
+sort of uh rational environment a data center that might be either in Jersey or
+8:21
+some other outskirts of the financial City all right
+8:28
+so now that we've done our our pictures let me go through a little bit of that
+8:33
+history but in terms of the academic papers that uh uh on Market making so
+8:40
+the paper that's sort of inspired uh Marco and I the most was this whole
+8:45
+install uh Market maker paper which was essentially an inventory
+8:52
+problem and um and they developed you know already in the 80s a really nice framework that
+8:58
+resembles ours quite a bit it has some utility functions it has some Hamilton
+9:03
+Jacobi Bellman equations and it has some really quite complicated formulas that
+9:10
+um that indicates the the mechanics behind a dealer and in fact the dealers
+9:17
+uh at the time were called Specialists I think the people I was pointing at were
+9:22
+Specialists um though I'm not 100 sure um but the these Specialists were
+9:29
+monopolists so forever for several certain stocks only one person was the
+9:36
+go-to person that provided a bid and then ask and that's quite a different different environments than the one that
+9:43
+was already emerging in 2008 this idea of like electronic markets where there's
+9:49
+not a single person putting bids and offers but rather a wide variety of Agents putting bids and offers and
+9:56
+competing for for trades and um and so another Twist of that
+10:04
+ultimately helped this paper is that we we made some approximation that gave a
+10:10
+rather intuitive formula for how this automated Market maker might be
+10:15
+programmed um and so uh what we see afterwards we
+10:21
+see a you know this uh next paper here in 2012
+10:27
+um did something quite interesting which is uh it bounded the inventory so it
+10:32
+sort of took a an even more realistic um risk control which market makers have
+10:38
+which is you you cannot go outside of certain out risk bounds
+10:43
+and that helped the mathematics quite a bit and it rendered it a lot more rigorous they were able to to prove
+10:50
+existence uh and uniqueness of solutions and they were also able to show that
+10:56
+this is this simplifies to a system of ODS if not not a close form solution
+11:01
+something a lot easier to handle and um and then we have some many nice
+11:08
+generalizations in 2014 uh the the incorporation of price impact and
+11:15
+adverse selection in the market maker uh and the multi-asset case in 2017 and
+11:21
+this paper is actually has many other twists and bells and twists so uh I
+11:27
+would say this 2017 paper by John's is a great way to start really in this
+11:33
+literature if you want to um take a look and then there's this recent case which incorporates
+11:39
+stochastic volatility which you know I'm going I'm fast forwarding a little bit to the to the the later part of the talk
+11:47
+which um where actually there are many open source versions of this Market making
+11:53
+code that are being used in cryptocurrencies uh and in cryptocurrencies the volatility can blow
+12:01
+up very fast and in fact uh you know the the the bells and whistles that have been
+12:07
+added to these markets um you know take into account the idea that volatility can be very very
+12:14
+bursting um all right so Market making you know
+12:20
+what's the main idea well I I like this this meme quite a lot because I often
+12:26
+feel like this guy whenever I talk to people about their ideas on finance uh
+12:32
+which is that yes the idea doesn't boil down to I want to buy low and so high it's probably not a great idea uh but
+12:40
+you know the Devil is a little bit in the details and um and I'm gonna you know try to provide
+12:46
+the the answer to these questions from the point of view of of the market maker who naturally buys sets buys and sells
+12:54
+at the same time and therefore by definition the buy is lower than the cell
+13:00
+uh and the only difference here is in this meme this it seems like uh oh you
+13:07
+would buy low wait a few days and say hi uh the only uh word that I would change
+13:14
+here is days and change it to minutes or seconds and and essentially that's sort
+13:19
+of the magic idea behind Market making all right so how do they make money well
+13:25
+let's I'm gonna try and break it down into a few steps first it's this idea that you will make the beta spread times
+13:33
+the volume that you trade at least in the best case scenario and the other challenge is well you got
+13:41
+to do put set your beta spread around the right price so if if people are
+13:46
+trading down here and you're setting your bids and your asks way above it it's it's just not realistic so it the
+13:53
+the prices you quote need to be relative to a natural the price that other people are trading
+14:00
+at and you know I I would say that uh something that uh every market makers
+14:07
+keenly aware of is that they need to manage their inventory so inventory
+14:12
+meaning the number of shares if it's stuck uh that they have and essentially
+14:18
+the ideal position is to be flat so uh think of a market maker
+14:26
+as someone who can be a long X and short X but not one really wants to stay
+14:32
+Within These bounds and prefers being at zero um and the way these inventory the the
+14:40
+inventory is reduced is Again by bullet
+14:45
+point number two by quoting around the correct uh the right price level
+14:51
+okay so you know in this sort of uh you know
+14:57
+if you want if you don't you know if you want to use the minimal amount of math
+15:02
+to express the idea of a market maker I think you would look at this kind of equations first of all what's the right
+15:09
+price my first answer my first stab at this is going to be the mid price uh
+15:14
+and then I'm going to contradict myself you know in 30 minutes or so but for for the next 30 minutes the the right price
+15:22
+to first order will be the market mid price and then to second order I will
+15:29
+need to adjust my personal or my reservation price with respect to this mid price and the way I'll do it is with
+15:36
+minus beta q q being my inventory so if I'm long I'm gonna my personal valuation
+15:44
+will be a bit lower because I'm desperate to sell really and if I'm short my personal evaluation will
+15:51
+be a bit higher than this mid price because I want to buy so this is sort of this is the main
+15:58
+mechanism of inventory management really and then because uh this would imply
+16:04
+that you're buying and selling at the same price and that doesn't obey the law of Buy Low sell High
+16:11
+market makers typically ask for a premium below and above this reservation
+16:19
+price so R minus Delta and R plus built and for now I'm not going to worry too
+16:25
+much what beta and Delta are and really the the reason uh to frame this into an
+16:33
+optimization problem is to hopefully tease out what this beta and Delta should be and what should it depend on
+16:42
+all right so now I'm going to step into uh sort of the world of optimization and
+16:49
+specifically stochastic optimization so uh something that um so so let's let's
+16:56
+start with just a few State variables we're going to need so the first one is
+17:01
+just this um you know this essentially a Brownian motion it's and the price it
+17:07
+represents the price of the of the stock and for now we're going to think of this as as the mid price and so you know
+17:14
+essentially think of these as one day of trading on a on a pretty volatile asset
+17:22
+okay so so this is uh this is the price but unlike most models let's say black
+17:29
+straws the black strolls model or other models that allow for dynamic trading here you will not be allowed to trade at
+17:37
+this mid price uh and there's no it's not a fixed
+17:42
+transaction cost model but rather it's a model where you stick your bids slightly
+17:48
+below uh and you're asked slightly above this mid price and the question is by how much and so why
+17:57
+um you know what what is the the optimization or what it in this you might need to shift this
+18:03
+to the side of it employee
+18:11
+go away yeah
+18:18
+this okay beautiful
+18:23
+all right so so you're the idea here and maybe the picture is where we should
+18:28
+start is that this blue line is the mid price and the the orange line is the ask
+18:35
+price and the the green one is the bit price and so a market maker to be
+18:41
+noticed needs to follow this mid price around and the the main mechanism of of
+18:48
+trading is that if you follow if you're very close to the mid price you see a
+18:54
+lot of trading if you're far away forget about it you're not going to get any trades so the mechanism here is that
+19:02
+the buy orders uh arrive uh with the croissant rival rate with intensity
+19:09
+Lambda and this Lambda depends on how far your bid is from uh the mid price
+19:16
+and it's decays exponentially so uh essentially a market maker that squeezes
+19:23
+uh around the bid and the ask you know by let's say one cent and follows it
+19:28
+everywhere we'll see a lot more trades than one that does the same with two cents we'll see a lot more trades that
+19:35
+someone does it with three cents Etc so if you know a lot about order books you
+19:40
+know don't worry too much but because this is this has some problems but in
+19:46
+terms of uh you know uh think of it as a market with a certain Supply and a
+19:51
+certain demand around people competing with you to supply these limit orders it
+19:57
+sort of does make sense that there there needs to be
+20:02
+um some kind of uh you know in all optimization problems there's there's a you win some you lose some if you're
+20:09
+further away from from the mid you will each make more money each time you trade
+20:15
+but you'll trade rarely and if you're close to the mid you'll trade a lot but each time you'll make a tiny little
+20:21
+amount so that that's the interplayer that's where the optimization uh will
+20:26
+come in all right so what's the objective um here we have a sort of a classic
+20:32
+uh-ish maximize maximization of expected utility so negative e to the negative
+20:40
+gamma of this term here is just the utility function
+20:45
+um this also reminds me of my first talk uh at NYU when I first arrived fresh as a
+20:55
+fresh PhD graduate and I had a lot to say about utility functions and I I
+21:00
+didn't get booed off stage but there was a lot of uh you know dislike uh with
+21:07
+utility functions and in fact we put in a lot of effort in this paper to make the utility functions disappear
+21:13
+so hopefully um you know this doesn't throw you off
+21:19
+too much but think of it as a one parameter family given by gamma where
+21:24
+gamma going to zero is risk averse risk neutral and the larger the gamma the
+21:30
+more risk-averse you are and um and this is basically just to
+21:35
+concave uh increase in function all right but the you know I could uh I
+21:44
+could yeah
+21:52
+so we'll see at the end when we get the results we can just set gamma to zero
+21:58
+and see what we get but essentially what you'll see is that uh as gamma goes to
+22:04
+zero the trader will care will not care about inventory anymore so the risk of
+22:10
+the price moving will be unimportant because the stock prices uh is as likely
+22:17
+to go up as to go down and and the market maker will not care so
+22:24
+yes absolutely
+22:44
+yeah so so for example if if you quote a very tight spread this risk will be a
+22:51
+bit less worrisome because uh the other side will come quite often if but if you
+22:56
+have very widespreads indeed you you go long and then you may never go short
+23:02
+again so or go back to uh so so what what's inside of the
+23:10
+utility function let's just look at this is essentially the wealth of the trader at time T and we're going to think of
+23:16
+capital T as the end of the day and Little T is right now or in the middle
+23:21
+of or at the beginning or the middle of the day so uh the utility function here is over the
+23:29
+cache you will have at time T and Qs is the quantity of stocks times the price so basically the value of your
+23:37
+um the the value of your inventory so
+23:45
+um at the end of the day all that matters is the value of what
+23:51
+you're sitting on so the this is your p l it's the cash p l plus the inventory
+23:59
+and so the cash p l evolves in a very simple way so every time you sell you
+24:05
+you add PA to your pile of cash and every time you buy you add you subtract
+24:12
+PD from your pile of cash and the quantity or your inventory
+24:17
+simply goes up when you buy it and it goes down when you sell so that those are basically the the Dynamics of x q
+24:24
+and we already saw that the Dynamics of s is just a Browning motion
+24:49
+yes that's what I mean so the arrival of orders are so
+24:54
+I think that the our Market maker is only a
+25:00
+trading with a fraction of the total number of Trades and so in fact if
+25:06
+they're far away from the mid it's a tiny fraction like maybe one percent of the volume and if it's uh close to zero
+25:13
+to close to the mid price then you know you're participating in almost every trade and these uh these Dynamics are
+25:21
+the trades that the market maker sees not every trade in the order
+25:31
+um sure
+25:37
+sure yes so in fact I think of zero as the
+25:46
+the ideal position but later on when we go into a market making in
+25:52
+cryptocurrencies uh market makers typically have two coins that they need
+25:58
+to to trade in and and there the target might not might be 0.5 per or half of
+26:03
+your of your budget so so I think the uh you know in the first half of the talk
+26:09
+think of the ideal scenario to be flat and have zero inventory
+26:24
+yeah or you can think of maybe this Market maker having a
+26:30
+an optimal position that they want to to revert around and you know uh so yeah so
+26:37
+yeah there's many twists and and generalizations of this I think um for for Simplicity let's think of
+26:45
+zero as the ideal position
+26:52
+[Music] so these oh okay
+27:00
+okay
+27:16
+all right this is very interesting so technically uh when you CL at the end of
+27:24
+the day x t plus qst may not be quite as safe as x t plus
+27:32
+zero MST why because there's an overnight move that could be gigantic so
+27:37
+in fact this model will have a certain counter-intuitive feature that the trader will be more risk-averse at
+27:45
+the beginning of the day and will be willing to take on strange inventory positions at the end of the day so that
+27:51
+that is definitely a something we I don't know if you would say was messed
+27:59
+up but uh you could definitely include Q um x t plus q t plus one as t plus one
+28:08
+and there if you had this extra source of noise for the overnight move you'd
+28:13
+find that the market maker might behave quite different so um so yeah good question this this and
+28:21
+in fact in the world of cryptocurrencies that keep you know giving you these three sneak previews they never close so
+28:29
+very often people uh will adapt this model to an infinite horizon or want to
+28:36
+make the time T disappear so rather they're looking for time insensitive uh
+28:42
+strategies
+28:53
+why do I assume a croissant ah well uh because a lot of this uh technology here
+29:01
+that's gonna the magic that happens between posing a an optimal utility
+29:06
+problem and uh then writing an equation that you're able to solve which is this
+29:12
+Hamilton Jacobi Bellman equation this requires a Markov assumption and so if
+29:19
+you're ever going to have models with jumpiness and you want Markov then really passions is sort of the way to go
+29:27
+um or at least to make these more tractable because to be honest these equations are not extremely tractable so
+29:34
+how do we get this equation if you've never seen anything like this before well what you do is you use the dynamic
+29:42
+programming principle which is that if you want to maximize optimize this or
+29:47
+between little time T and capital T you need to do it over the next delta T and
+29:53
+then be optimal at t plus delta T onward and then you take a limit and these
+29:58
+limits give you these partial differential equations and in fact when there's poisson so the the ugliest term
+30:05
+you know maybe if you've seen the Black Shoals PD this term doesn't scare you much but these jumpy terms are sort of
+30:14
+at the heart of this problem because what you have is you have these utilities
+30:19
+um that that these differences of utilities um and you know this is not a very
+30:27
+standard pde so it's it ends up uh well in this case it ends up being very hard
+30:34
+to solve unless you make some assumptions on the boundedness of of the
+30:39
+inventory but I won't get too much in the technical details just to show you
+30:45
+that um the idea is to set up a problem in a probabilistic sense and then turn it
+30:52
+into a deterministic uh differential equation and and then you
+31:00
+know these are very like quite hard to solve numerically and
+31:06
+so you know one way to overcome this is to take asymptotic expansions and
+31:12
+essentially what I'm showing you here is an approximation to the solution of this Hamilton Jacobi Bellman equation
+31:21
+and this solution uh you'll recognize a few features or things that I desired
+31:26
+about my market making earlier on uh but with a few more parameters that we can
+31:33
+now discuss so first of all there's the the idea that the bid and ask prices are
+31:39
+are given by premiums above and below a reservation price and that this
+31:45
+reservation price is something that takes the mid price and tilts it in the
+31:51
+direction opposite to your inventory and then the the the extra things to
+31:57
+discuss are okay what is the beta or what is this sensitivity of the price
+32:02
+with respect to the inventory and here we see that it's proportional to your risk conversion and to your inventory
+32:11
+risk or rather the and you can see that this depends on on time till the end of
+32:18
+the day um so in fact uh you tilt things more aggressively at the beginning of the day
+32:24
+than at the end of the day something which many market makers would want to see reversed
+32:30
+um but you know and and the the other interesting thing is that the premiums
+32:36
+around the the mid sorry the premiums that the market maker has to set around
+32:43
+um its reservation price is um has two terms one that depends on the
+32:51
+volatility and basically the risk of this asset and the other which only depends on the microstructure so this K
+32:58
+if you remember was the the rate at which you're trading decays as you go
+33:03
+further and further from the mid so so think of this as the the risk component
+33:09
+of the spread and think of this as the microstructure component that spread so
+33:14
+you um it's and somehow the two are a little bit tied together by this risk aversion
+33:21
+parameter um but you know this is essentially the the formulas that
+33:27
+um in more recent years have seen a little Revival so
+33:32
+um so okay before I get into this uh crypto uh currency stuff that I'm sure
+33:38
+you're all very excited uh to hear about uh let me yeah
+34:03
+foreign
+34:19
+yeah but but the tilting sorry so so yeah the question is
+34:25
+um it's about the the behavior of the market maker towards the end of the day
+34:31
+and I you know you're hinting that there are certain aspects that are attractive
+34:36
+about this I uh the spread the beta spread of the market maker gets tighter towards the end hence helping them get
+34:43
+out of the their position but the tilting up and down around the mid price
+34:48
+is less and less aggressive we'll see what this you know I have a very simple simulation going on
+34:55
+here essentially Brownian motions plus some arrivals that illustrate a little
+35:00
+bit what is happening so uh first the inventory so you see that the inventory
+35:06
+starts at zero and stays within pretty tight bounds however uh the behavior in
+35:12
+these simulations is that uh bigger inventories kind of creep up towards the end of the day so this may not be ideal
+35:20
+if you really want a zero position at the end of the day in fact many market makers remove that dependency on time
+35:28
+and replace T minus t by a constant and then this would look much more like a like a
+35:36
+tunnel and most of your inventories would be really tightly controlled throughout the day
+35:43
+um another you know illustration is that if you uh plot the p l in other words remember
+35:51
+the the stock price plus the Quant sorry the Cash Plus the quantity of stocks times the stock price so essentially
+35:58
+Your Mark to Market p l uh then you see that this has a positive drift and uh
+36:05
+and that it's relatively tight in other words there aren't that many losses
+36:11
+um so you know this obviously this is a simulation don't you know don't get too
+36:17
+encouraged to start up your Market making business uh tomorrow but I don't
+36:23
+want to discourage you either so let's let's we'll we'll go into the the
+36:29
+more realistic uh in fact I don't think I want to talk that much about this other than uh showing you that this very
+36:36
+highly peaked p l is the strategy that I was showing you earlier which is uh
+36:42
+controls for risk and this is compared to another strategy that I call this symmetric strategy which is we we all
+36:51
+you know there's uh there's a profit maximizing spread for a risk neutral
+36:56
+agent which is essentially do find the the distance away from the
+37:01
+mid that is that creates the most P L per unit of time and if you do that
+37:07
+you'll see that uh you'll get the p l in blue but you'll find that uh your
+37:13
+inventory will go out of control so potentially could lead to very big wins
+37:18
+but also very big losses in other words you know the this is the uh
+37:23
+um you know the one of the most important uh constraints of the market
+37:29
+makers is this control of inventory
+37:45
+um
+38:02
+thank you um
+38:18
+but our market makers are allowed to have sizes
+38:25
+by supposedly one yeah
+38:31
+I'm nuts but there are some papers that have tackled exactly that so
+38:37
+um so there are versions of this that allow for variable quantities and and
+38:43
+that's another way of controlling inventory and there are also some of these papers
+38:48
+that include trends that may last for a small amount of time and uh and Alpha
+38:56
+signals and you know there are uh there are definitely some bells and whistles
+39:01
+that that we can add to that um and in fact so right now I'm gonna
+39:15
+um right so the shift can so
+39:22
+there are two reasons you may shift away up and down the mid-rise the first reason might be you think or you see
+39:30
+maybe in the order book Trends through your signal analysis the other one is
+39:36
+you have an inventory that asks you to tilt so there's the there's the microstructure or you know let's say
+39:44
+price prediction problem and then there's the inventory management problem and I think that's you know so far I've
+39:51
+only really talked about the inventory control problem
+39:56
+and now I'm going to show you some results related to live trading so a few
+40:02
+months ago um I had a some um you know entrepreneurs from a uh
+40:09
+cryptocurrency Market making company uh that uh you know send me an email and
+40:16
+and you know wanted to talk to me and ultimately they ended up telling me Oh have you heard of uh this uh company
+40:23
+called um hummingbots uh and they um you know they
+40:31
+they turned me on to the idea to the fact that in this open source software called hummingbot there are many many uh
+40:38
+Market making algorithms that are open source and that people can download and
+40:44
+use them so and apparently one of the popular models is the survey and it is
+40:49
+toikov model that seems to be sort of a a very much used by many crypto
+40:57
+companies uh the idea being that when crypto coins come into existence uh they
+41:04
+need to make everyone feel secure that there's a two-sided market for this and they hire companies to do Market making
+41:11
+for them and even you know give them maybe a portion of the total amount of
+41:17
+coins to do this job and and uh and he was this person was kind of hinting that
+41:23
+actually many of them just sort of use uh uh at the United strike of model and
+41:29
+call it a day and essentially this company was interested in um in sort of making this type of uh
+41:36
+trading available to to more people um in sort of
+41:42
+have a crowd source of market makers if you will so here's a nice picture that I
+41:47
+saw I think it sort of says it all this is a a Bitcoin uh price chart that I
+41:54
+found and you know you can see that this is a pretty uh a liquid Market it goes
+42:00
+through very erratic drops and what you see the colors here are uh limits buy
+42:08
+orders and limit sell orders that are being updated in the order book and the color scheme I think is just the size of
+42:14
+the order but if you follow some of these little um sort of Stripes around you see that
+42:21
+they it seems like these uh there are some market makers that are hugging the
+42:28
+price a little bit like in this personal arrival model and sort of following it around and waiting to get lucky and
+42:34
+essentially hoping to make the this bid ask spread so I think this is pretty uh
+42:42
+interesting that you can see this on cryptocurrency markets with your naked eye because in almost any other order
+42:49
+book that I've seen that that are much denser and where you can't tell one
+42:55
+Trader apart from the other uh you don't really see this kind of behavior of of
+43:01
+uh market makers following the price so it's a it's kind of a nice example and
+43:06
+in fact I I sort of think that uh maybe the model in our paper was maybe more
+43:12
+appropriate for cryptocurrencies than uh in stocks or or more or futures or more
+43:19
+liquid assets specifically because all right there's there's something that
+43:24
+I think you know some people would call it a product Market fit it's you know this uh this model
+43:32
+sort of implicitly assumes that there's a lot of wiggle room for your tilting of your of your quotes and in most order
+43:40
+books there isn't you're either at the top of the book or you're or you're not there so so I think that one of the
+43:46
+reasons I've rationalized the people in cryptocurrencies uh care about this
+43:52
+model is because it sort of seems to have been made for it uh before cryptocurrencies existed so I find that
+44:00
+kind of amusing so anyways you can go to this hummingbot website uh it's it's
+44:05
+very simple there's 12 different ways you can download it yep
+44:18
+um so the question is why is this model more suitable for crypto than other markets so the essentially what I'm
+44:25
+going the point I'm going to try to make for the second half of this talk is that the tick size in cryptocurrencies is
+44:33
+extremely small and what that means is that there are many empty slides where
+44:38
+you can put an order and uh no and have no competition most other markets have large cues at
+44:46
+every price and and this idea that you will trade if you're seven ticks away from the mid is impossible so so in some
+44:55
+way some of the critiques uh we've had for this this um Market making algorithm is that it
+45:03
+doesn't really work let's say on a Futures Market with or the S P 500 or
+45:08
+you know ETFs and stocks that are uh very large things where the fixed size
+45:14
+is very large if you don't know what I mean by large and small because I'll get into it
+45:19
+um very soon all right so
+45:25
+here's what happens when you first launch this uh this code and this code is all open source so if there's one
+45:32
+line of code in there that you want to change a little bit it's very easy to recompile it and and then run uh run
+45:39
+with it what it first asks you is what's your Market making strategy so uh here I
+45:45
+picked the aveenada market making uh the second thing it asks you is what's your your data source and you
+45:53
+know I had to create a cuecoin account for this to to work what's your trading
+45:59
+pair Bitcoin USD um what's the the time frame infinite
+46:05
+you know this is the idea that this T minus t is just replaced by a number
+46:10
+um then the amount of Bitcoin per order so this is the the trade size the the
+46:17
+risk aversion um and then there's you know there's a parameter which is not in the model but
+46:23
+it's it's an implementation issue is how often do you uh cancel and replace your
+46:29
+quotes So the frequency of updates here 10 seconds
+46:34
+and then you have to give it your inventory Target so your ideal amount so your ideal amount in in when you trade
+46:41
+cryptocurrencies is not zero because and you can't really go short
+46:46
+um to my knowledge you can't really go short in these markets so really you put uh safety to say that you know you want
+46:53
+to keep your inventory at half Bitcoin half USD and then it creates a little
+47:00
+configuration file and it says Press Start just you know just you can look at this configure
+47:06
+sorry look at the configuration file essentially this is a sort of a very
+47:12
+simple uh heuristic that populates all of the um
+47:17
+the the parameters in the model and ultimately you when you just press
+47:24
+start it's sort of and this is paper trading so I haven't really put any real money behind this
+47:30
+um at least not yet and this is sort of what the status at any point during the
+47:36
+the day while you're running it uh you know Sears your your balance essentially
+47:42
+right now the inventory is 54 Bitcoin we wanted 50 50 and it's 45 uh USD
+47:50
+and so um so there's a mid price here's a reservation price which is a little bit
+47:57
+lower because we have too much Bitcoin so we want to sell it essentially this is
+48:04
+um right now seems kind of intuitive there's a spread of four dollars around the mid price
+48:11
+and uh ah and another twist is that it this estimates the volatility in real
+48:17
+time so right now the volatility is this point double or nine percent it's if
+48:22
+volatility goes up it does adjust it so think of it as you know using your Black
+48:28
+Shoals formula and even though it's based on a fixed volatility people can use it however they like and and here
+48:35
+they like to to widen their spreads as volatility goes up which I think is
+48:40
+sensible all right so first the good news uh you know at the end it spits out a bunch of
+48:47
+hypothetical trades that you would have done and the way it does that is rather simple at every point in time it keeps
+48:55
+track of where your bid and your ask is and if it sees any trades in the market that are below your bid or above your
+49:01
+ass boom you're assumed to be executed and what you see is the the the the the
+49:07
+size in in Bitcoin was 0.1 so we see that this Market maker kind of stays
+49:14
+neatly within plus or minus five trades around zero
+49:19
+well that's the good news uh not as good news was when I started calculating my p
+49:25
+l I realized that there was never this algorithm never had a chance and uh you
+49:32
+know uh also to be perfectly honest I also closed my laptop a few times and
+49:37
+they have done this over the course of a few days so the big drawdowns maybe are not you know could be taken away but
+49:44
+ultimately this thing goes down quite severely
+49:49
+all right why why is that well uh the first is a genuinely good excuse the
+49:57
+price of Bitcoin went down over this time and I was aiming at a at a 50 long
+50:03
+Bitcoin so okay I I suffered just that downturn so that's
+50:09
+that's one answer it's not the whole answer uh my other excuse is I didn't
+50:15
+mess around with parameters at all I never really uh I just put in a few
+50:20
+random numbers and pressed play I'm told by some of the people who wrote These
+50:26
+algorithms that they run you know 10 or 20 of them in parallel and kind of you
+50:31
+know keep the data and you know they fine-tune these things and they find uh where where their parameters should be
+50:39
+um but the good news is inventory was kept under control and I think that the more honest answer of why this didn't
+50:46
+work is that the mid price does not have a lot of information in it so if and now
+50:53
+I'm going to take you on a little uh let's see how much time I have for this little Adventure in uh microstructure
+51:00
+maybe um to try to see what can we do essentially answer this question can we
+51:06
+do better than the midpoints yeah we have a question
+51:17
+um good question I I think in it might be a
+51:24
+setting uh I didn't really pay attention to that to the trading card my guess is
+51:31
+so you you do so in in many markets you get rebates for being a market maker and
+51:39
+these exchanges like binance or cuecoin uh they don't really give you rebates so
+51:45
+who will pay you actually the owners of the coin will sometimes pay certain
+51:51
+people to keep uh Market making uh and that that is that could be a source of
+51:57
+Revenue but as a little player jumping in the order book no one's paying you
+52:02
+for that so my guess is that but you do patreon yeah so the unlike uh
+52:11
+the stock markets where you get rebate for limit orders and pay for for trading these cryptocurrency exchanges typically
+52:18
+charge both people and they give you a discount if you trade very high volumes
+52:25
+all right so let me yeah
+52:38
+so I was net long so during the settings that I chose uh here were 50 50. so I
+52:47
+was aiming at a 50 50 Bitcoin USD balance
+52:54
+in the stock markets it's very easy to go short and and long and or it's much
+53:00
+easier and therefore the ideal place to be is at zero in cryptocurrency markets
+53:06
+typically um people are between two coins
+53:18
+yeah and in fact this is Bitcoin usdt if I did Bitcoin ethereum maybe these this
+53:26
+would be even safer because uh if I had the 50 50 maybe I don't know maybe there
+53:33
+would be a bit of diversification but it's it's a very risky uh asset
+53:40
+class for sure so so this was the bad news uh and let's try to see what you
+53:46
+know what's the Hope or you know if I were to spend a lot of energy on these open source codes how would I improve
+53:53
+them so let's um let's think a little bit about this so this gets me into my second topic of
+54:01
+the day which is Market microstructure it's you know a little bit harder to
+54:06
+Define it's a bit of a you know different people will Define it differently
+54:11
+um to me market microstructure is the mechanisms of trading so being
+54:17
+interested in how and and this includes the venues of
+54:23
+trading so the rules of these venues it also includes the uh sort of
+54:30
+uh you know analysis of the participants of trading or it's it's kind of a
+54:36
+um it's it's kind of a an intersection between the motivations of that makes
+54:43
+people trade and the places where they end up trading so it could be uh now
+54:49
+it's dominated by limit um sort of the mid-order books is is the the fun the most common mechanism for
+54:56
+trading but there are also dark pools you know there are many venues you can trade at and then there are market
+55:03
+makers but they're just one of many participants there are some people who trade very differently from market
+55:08
+makers now how you know how do people use
+55:14
+Market making well um you know I may be a bit biased but I
+55:19
+think that one of the big motivations or I'm not motivation but the the outcomes
+55:24
+of Market making papers is oh well by studying this venue and these actors I
+55:31
+can make prediction about the price and and then you know you might say that's
+55:36
+the ultimate goal of Market microstructure is is it to predict future prices and I would say maybe why
+55:44
+and again this is kind of a personal take I think that all of Market microstructure wants to explain away all
+55:53
+the mechanics of trading to come to the essence of what the fair price is and so
+55:59
+this fair price sometimes is is called the fair price sometimes it's called the true price because it's called the
+56:06
+efficient price sometimes it's called the micro price so these are all different terms that are thrown around
+56:12
+for this kind of a holy grail of like how do I get through all this mess of
+56:18
+people jumping around in this venue to to the fair price and so this is kind of
+56:24
+the yeah [Music]
+56:46
+um yeah I suppose I mean in the same way
+56:53
+that uh under dollar bills on the floor tend to disappear but I still pick them
+56:59
+up if I see them uh but so yeah so so this this the barrier to entry is
+57:05
+extremely low so it took me uh not much time to lose all this money on paper so
+57:12
+the I think that uh you know and today I'm gonna provide you with one idea to
+57:19
+improve this I don't know if this idea will will save this strategy it might take three or four ideas to make this
+57:26
+work and then whoever gets the fifth idea probably will take most of the
+57:31
+money so so yeah I I do agree that this is a very easy uh or you know there's
+57:39
+another risk which is that this whole cryptocurrency uh all these coins are
+57:44
+going to collapse and then you know that's a genuine risk here
+57:50
+um so uh this is kind of one of my it gives me the chance to say one of my
+57:57
+favorite Jokes which is there are two kinds of people the kind of people who think there are two kinds of people and the others and
+58:05
+uh and so obviously the there's actually a whole spectrum of
+58:12
+market microstructures and there's a lot of variables across which we could look it's just that I find that uh large tick
+58:20
+size and small tick size almost says it all to me so about the
+58:25
+market microstructure and I I like to focus on this as a as a defining variable so large tick size just means
+58:32
+that the minimum the grid upon which you can put prices is relatively large
+58:39
+compared to the price so think of maybe a grid size you know a price of uh a
+58:46
+stock that has a ten dollar price and then think of
+58:52
+you know a bit ass spread of one cent and that's a rather it's 10 basis points it's a
+58:59
+significant uh amount and if if there are lots of buyers and sellers uh that
+59:06
+is what I call the your quintessential or what is a quintessential large tick signs relative to the price now what
+59:13
+happens in you know specifically in cryptocurrencies is that
+59:19
+um these these markets seem to not have really cared much about the grid size they just made it super small and as
+59:25
+these prices started going up to ten thousand and twenty thousand no one really got the memo that maybe we could
+59:32
+change the grid size so it stayed tiny and and of course there are many markets
+59:38
+where the tick size is small other examples are you know tech stocks that have gone to prices like two thousand
+59:44
+dollars and even though they're very liquid do not have a single Cent beta
+59:49
+spread so those are uh other examples of small click size stocks but I think
+59:55
+cryptocurrencies is currently my my best example for small tick size so who has
+1:00:01
+large tick sizes uh typically Futures you know traded on the CME for example
+1:00:07
+very large Tech sizes um they're low price stocks just because
+1:00:12
+the beta spread has to be one cent so naturally the thick size becomes large
+1:00:17
+and then very liquid ETFs or very liquid stocks and by liquid
+1:00:23
+I just need lots of trading happening and these typically have large tick
+1:00:30
+sizes and if you look at a you know a chart or a visual of these things uh you
+1:00:36
+can see that these horizontal lines show you um you know it's a visual of the order
+1:00:43
+book and it basically shows you that the the price is almost always at a one cent
+1:00:50
+tick and um so in in green here you see the trades
+1:00:57
+and buy trades in red you see the sell trades and you really see that this
+1:01:03
+thing is very I guess chunky I would call it it just kind of goes you can really see when it jumps up and
+1:01:11
+jumps down and it doesn't look like a brilliant motion really
+1:01:17
+um and then and here you can see the the queue sizes um
+1:01:22
+and yeah this when I look at a picture like this I see large thick signs
+1:01:29
+um now um what happened or the sort of the main insights together from large tick sites
+1:01:36
+uh assets is that the imbalance is king So I I call this the least well kept
+1:01:43
+secret in high frequency trading which is that if you gonna look at a data set
+1:01:48
+that has bid ask bid size ask size at some point you'll figure out that the
+1:01:54
+ratio of bit size to bit size plus ask size might be something to look at and it turns out that it matters quite a lot
+1:02:01
+and it's one what I like about this sort of microstructure signal is that it's
+1:02:07
+not one of these signals that you write a paper about it and it disappears this is here to stay it's very much part of
+1:02:13
+the structure of large tick order books so when the imbalance is close to one
+1:02:19
+that means there's uh let's say a bit size of 100 and an Ask size of one
+1:02:25
+that means there's a tremendous amount of buyers and there's only one seller at
+1:02:30
+the ask this turns out to be something that everyone loves to jump on and buy
+1:02:35
+so everyone if you see a bit size of a hundred and a half size of one everyone wants to buy that at that ask so
+1:02:44
+paradoxically the side of the order book where you see the least liquidity is the
+1:02:49
+one where everyone wants to fight to jump on it uh I I used to think that
+1:02:54
+people go where the liquid liquidity is but actually it is completely reversed
+1:03:00
+um and you know this is empirically true there's not a single large stock where
+1:03:05
+where I haven't seen this
+1:03:11
+uh there's no dark markets but there's this thing uh these
+1:03:17
+decentralized exchanges uh like uniswap is one I don't know if you've heard
+1:03:23
+about it so um so the question was about dark pools in in cryptocurrencies and
+1:03:29
+and those are they have implemented a thing called automated market makers amm which is uh
+1:03:37
+pools of coins two coins and then people put money in these pools and other
+1:03:43
+people transact with it and the people who put the money in get rewards for it so it's sort of like an automatic uh an
+1:03:52
+even more rule-based Market maker than the one I'm describing here and I think that in some ways is similar to um to a
+1:03:59
+dark pool in the mechanics of it um but the truth is I've
+1:04:06
+um I've never really studied dark pools and I don't know that much about how they differ from from these
+1:04:12
+cryptocurrency um automatic market makers
+1:04:21
+oh quantity so whenever I write QB I mean the quantity at the bid and QA is
+1:04:28
+the quantity at the ask at the best bid and the best ask yes so
+1:04:36
+those are just um yeah top of the book imbalance
+1:04:42
+and on uh the SNP e-mini so that's a very liquid future uh you can see that
+1:04:50
+here I'm plotting the imbalance and conditional on this imbalance if a trade
+1:04:56
+happens uh basically I have q I've accumulated the buy and sell volume
+1:05:01
+on these imbalances and you can see very clearly when the
+1:05:07
+imbalance is close to one uh there's a lot of by volume happening in these instances paradoxically on the
+1:05:14
+side that has the least amount of volume uh volume quoted so this is a this is a
+1:05:20
+transaction volume really and then you know when the imbalance is small everyone wants to sell so that that is
+1:05:28
+you know the these type of Curves I I have yet to see a market where
+1:05:34
+they're not uh steep in this particular or asymmetric in this particular way
+1:05:41
+um so that you know all it says is pay attention to imbalance and that if
+1:05:47
+you're going to build a microstructure model on a single Factor well it's probably that this one especially on
+1:05:53
+large tick stocks um so now why is that uh interesting
+1:05:59
+well you can do a few things you can use the imbalance as a a factor in a model
+1:06:05
+that will predict the price I don't know five minutes from now or 10 minutes from now or the the next v-wap or some kind
+1:06:13
+you can predict anything you you want and you'll get many different models
+1:06:19
+that help you build uh you know combine the imbalance with the current price
+1:06:25
+what I'm uh you know this is based on um on the paper I wrote a few years ago
+1:06:32
+um there's a way of of defining uh the fair price that I call the micro price that
+1:06:39
+can add a little bit of rigor to uh well what if you don't know the Horizon of
+1:06:44
+the fair at which you're trying to predict things and all you want is to ask yourself what's my fair price right
+1:06:51
+now and that's that's um so so this is one way of doing it which
+1:06:57
+um which I find interesting so the idea is you take a limit of price approximations and your price
+1:07:04
+approximation Pi is the expected mid price at Tau I Tau I being the ice mid
+1:07:11
+price change so the first most natural thing you might want to do is you might
+1:07:17
+Define your P1 your fair price as the expected mid price at the moment that the price moves at
+1:07:24
+this random time and that in one in large tick markets will be the current mid plus one take or the current the uh
+1:07:32
+sorry the current mid plus one thing or minus one so it's really a weighted average of two prices
+1:07:40
+now the idea here is oh well what about if we go a little further and fast
+1:07:45
+forward this movie to the second price change well empirically you'll find that
+1:07:51
+there's a very big reversion if the price ticks up it'll often take right back down more often than it'll take up
+1:07:58
+twice so that that suddenly makes you think that maybe this
+1:08:03
+P1 is not as accurate as you you might want and maybe
+1:08:09
+you have a slightly longer Horizon and really this idea of taking the the this limit I to Infinity is to say okay right
+1:08:17
+now my my price I don't know how to define it it's messy there's lots of buyers some Sellers and there's uh
+1:08:24
+essentially a mid but no one can trade at the Smith so uh so how do I Define
+1:08:29
+the fair price and the idea is to take okay the mid is imperfect now but it's a
+1:08:35
+bit more if I squint and I push it back uh one time step it's a bit better and
+1:08:42
+if I push it to Infinity you know the microstructure and the the the sort of the ugliness of this
+1:08:49
+granular Market disappears and essentially this this is smooth now this
+1:08:55
+limit doesn't exist by all means in every uh for every uh model that you
+1:09:00
+might invent in fact if the model if there's any amount of trend predictable
+1:09:06
+Trend in this market the limit as p goes to infinity is infinity and and then the price doesn't converge so so even
+1:09:14
+defining this requires a lot of symmetry in in your modeling but here's a you
+1:09:19
+know just to give you an idea because I I don't have that much more time this is a little bit the the type of
+1:09:25
+um Markov chains that come come around this isn't the the uh that you can
+1:09:33
+compute micro prices around think of three states a small imbalance a middle
+1:09:39
+imbalance and a high imbalance and then the price can stay the same and it can bounce around between low high and mid
+1:09:46
+and balance and at some point a transition happens and it bumps up or it goes down and it's sort of absorbed
+1:09:53
+that's the one step version of this the two-step version of this is the price goes up and now it has a low imbalance
+1:10:00
+and it may bounce around and go up again or it may bounce back down so so you can
+1:10:05
+see how maybe this will help you visualize essentially what the price uh
+1:10:11
+how the micro price might be computed through let's say a simulation uh
+1:10:17
+calibrated to to data and in fact we've done something like this on on some
+1:10:22
+actual uh data so for example Bank of America large tick asset
+1:10:28
+you can see that so the the micro price is essentially the mid price
+1:10:33
+plus an adjustment and this adjustment is in sense or in fractions of ascent
+1:10:39
+and if the imbalance is low uh so maybe focus on the spread equal one tick
+1:10:45
+because Bank of America is 99 of this time is is a one tick spread
+1:10:51
+um you can see what when the imbalance is low you should subtract uh almost
+1:10:56
+half a cent from the mid price to get the fair price in other words the fair price is close to the big and similarly
+1:11:03
+when the imbalance is High um this is also you should add half a
+1:11:09
+cent to your fair price and what you see here is that if the spread is two ticks this is a lot
+1:11:16
+flatter than you'd think and in fact so the blue line is the extreme of just the mid crisis the fair price so you can see
+1:11:23
+that for a tick size of two uh if if there's a two large cues and an empty
+1:11:28
+spot in the middle well most people even if there's a bit of an imbalance view of the mid price as the fair price
+1:11:36
+or rather this is what this model uh implies and if you look at Chevron and
+1:11:41
+because now I'm I'm going to want to arrive to bitcoin uh but halfway there
+1:11:47
+I'm going to look at Chevron and I'm going to notice something interesting which is when Chevron typically trades
+1:11:54
+at two or three cent ticks at the time of this data set and when the spread is
+1:12:01
+one tick which is unusually small then you can see that the the imbalance has a
+1:12:07
+large impact on how much you should adjust your midline however for four
+1:12:12
+tick spread which is unusually large for Chevron then uh the imbalance says less
+1:12:19
+or is less meaning so maybe you know now I'm gonna try and make a leap of faith and say okay what
+1:12:25
+would it be in Bitcoin well I imagine that in Bitcoin maybe there's a spread
+1:12:32
+that's multiple tick sizes and if that's the case then maybe my imbalance at the
+1:12:37
+top of the book has no meaning and they're now now I really may need to
+1:12:42
+care about deeper in the book what's going on and so this is a picture of uh
+1:12:49
+it's coin I'm going to accelerate a little bit let me just say that this is actually a very thin order book The the
+1:12:56
+lowest price here to the Upper price is actually one hundred dollars and so this
+1:13:01
+may seem oh there's a lot of sides but no this is cumulative sizes so these are not populated or the books they're
+1:13:08
+they're order books with little spikes uh and deserts in between so there's
+1:13:14
+this um so something needs to be done so now this is a heuristic and this is
+1:13:20
+somewhere that I did with some Masters students at Cornell Financial Engineering in their thesis last
+1:13:28
+semester and they came up with this Vamp so Vamp is a volume adjusted mid price
+1:13:38
+and the idea is take a parameter the parameter that it depends on is just Q
+1:13:44
+so think of Q as the total amount of dollars you you want to buy right now or
+1:13:50
+the total amount of dollars you want to send so they set Q to something like a hundred thousand dollars
+1:13:55
+and then you accumulate on the ask so on the bid price first all the
+1:14:02
+um you know the the all the prices at which uh an order that sells into the
+1:14:09
+order will accumulate two so so it could be the first 10 levels let's say of the
+1:14:14
+order book and then you know you weigh you look at the sizes at each of these
+1:14:20
+cues and you weigh the prices by those sites so essentially uh you pick a size and this size will
+1:14:27
+tell you how deep in the book of bytes you need to take and then you're going to take a weighted average of these
+1:14:35
+prices in this big bites let's say and you do the same on the ask side and you get a you know a new bid we're going to
+1:14:43
+call it the v-wap vid and the v-wap ask and actually we'll find that this D1 bit
+1:14:48
+and view of s is way wider than the bid ask spread that seems to be uh
+1:14:54
+rather unnaturally tight so here's the idea you
+1:15:00
+build this now they didn't just pull it out of nowhere and then run with it they
+1:15:06
+actually showed that the difference in between the vamp and the mid is a lot a
+1:15:11
+good predictor of uh you know whether the the asset will go up or down at
+1:15:18
+various time scales ranging from one second to 60 Seconds so so it seems quite robust so so you know uh another
+1:15:27
+group of students uh also wrote a a market maker in cryptocurrencies and
+1:15:33
+took us simplify a very simple Market maker uh where essentially the
+1:15:39
+reservation price was just s minus beta Q they they played around with the parameter beta and the bid ask spread so
+1:15:47
+Delta a plus Delta D is a bit of spread was a constant so not a function of
+1:15:52
+volatility so again this is a very back of the envelope simple Market maker and
+1:15:58
+the the the idea or is now okay well we can do a market maker around the mid
+1:16:04
+price but we can also do a market maker around the volume this Vamp or volume
+1:16:10
+adjusted mid price and let's see what the P L's how they differ in other words
+1:16:15
+does the my this sort of microstructure twist maybe adding some Alpha to your
+1:16:21
+price does that help and I have to say that the first day or
+1:16:27
+the first time I ran this or rather the first half of the day that I ran this I
+1:16:32
+was super impressed I thought wow this is uh What uh this Vamp is is magical
+1:16:38
+because if you just Market make around the mid price you sort of stay flat and
+1:16:43
+if you uh if you do it around this different price which is very easy to
+1:16:49
+compute you do a whole lot better however running it a little bit more
+1:16:56
+this is the full day uh you know there was a catastrophic plunge uh you know
+1:17:02
+maybe three four hours into it um and you know
+1:17:08
+I just you know obviously looked at the price Dynamics and yeah there was a big drop in in the price at that time that's
+1:17:15
+sort of the Enemy Number One of market makers is is these violent changes in
+1:17:20
+your in your day-to-day it may look good and you can optimize for a lot of factors and I think this is sort of what
+1:17:27
+we've done here but it's a dangerous business yeah
+1:17:41
+about three minutes
+1:17:50
+yeah so so in this setup one Improvement might be oh what if this K and this beta
+1:17:58
+much like in the model we made that of like a function of volatility so if
+1:18:05
+volatility goes up my spreads will go up my tilting will increase maybe that'll
+1:18:10
+save me a little bit in these tough spots and so that that's actually how hummingbot has implemented this they do
+1:18:17
+uh calculate volatility in real time does it always save you I don't know
+1:18:23
+because volatility takes a little while to calculate and uh and and it could be
+1:18:29
+too late by the time uh your your volatility is it has been updated
+1:18:35
+so you know this is I have to say kind of a in the nature of Market making so
+1:18:41
+it it has this you know actually in the nature of maybe Financial engineering is
+1:18:47
+that very often things that are built seem like uh a regular good money maker
+1:18:52
+you know like picking pennies in front of a tractor and the you know it seems
+1:18:58
+like a good business until it isn't but the problem is that when it isn't it's it's uh sort of the end of of your of
+1:19:05
+your uh of your business so it's a very uh you know very exciting business I
+1:19:10
+like the math behind it but I'm a little bit afraid to put all my money into it
+1:19:16
+though um these crypto my new crypto friends would like me to do to join them
+1:19:23
+in their Enterprise so um so yeah that this is this is all I
+1:19:28
+have for now if you have any questions you're happy to answer
