@@ -3,11 +3,11 @@ Asa Newell,ATL,Asa Newell
 Caleb Houstan,ATL,Caleb Houstan
 Dyson Daniels,ATL,Dyson Daniels
 Eli John Ndiaye,ATL,Eli John Ndiaye
-Jacob Toppin,ATL,Jacob Toppin
 Jalen Johnson,ATL,Jalen Johnson
 Keaton Wallace,ATL,Keaton Wallace
 Kristaps Porziņģis,ATL,Kristaps Porzingis
 Luke Kennard,ATL,Luke Kennard
+Malik Williams,ATL,Malik Williams
 Mouhamed Gueye,ATL,Mouhamed Gueye
 N'Faly Dante,ATL,N'Faly Dante
 Nickeil Alexander-Walker,ATL,Nickeil Alexander-Walker
@@ -53,7 +53,6 @@ Xavier Tillman,BOS,Xavier Tillman
 Antonio Reeves,CHA,Antonio Reeves
 Brandon Miller,CHA,Brandon Miller
 Collin Sexton,CHA,Collin Sexton
-Drew Peterson,CHA,Drew Peterson
 Grant Williams,CHA,Grant Williams
 Josh Green,CHA,Josh Green
 KJ Simpson,CHA,Kj Simpson
@@ -63,6 +62,7 @@ Liam McNeeley,CHA,Liam Mcneeley
 Mason Plumlee,CHA,Mason Plumlee
 Miles Bridges,CHA,Miles Bridges
 Moussa Diabaté,CHA,Moussa Diabate
+PJ Hall,CHA,Pj Hall
 Pat Connaughton,CHA,Pat Connaughton
 Ryan Kalkbrenner,CHA,Ryan Kalkbrenner
 Sion James,CHA,Sion James
@@ -157,19 +157,20 @@ Tobias Harris,DET,Tobias Harris
 Tolu Smith,DET,Tolu Smith
 Wendell Moore Jr.,DET,Wendell Moore Jr
 Al Horford,GSW,Al Horford
-Alex Toohey,GSW,Alex Toohey
 Brandin Podziemski,GSW,Brandin Podziemski
 Buddy Hield,GSW,Buddy Hield
 De'Anthony Melton,GSW,De'Anthony Melton
 Draymond Green,GSW,Draymond Green
 Gary Payton II,GSW,Gary Payton
 Gui Santos,GSW,Gui Santos
-Jackson Rowe,GSW,Jackson Rowe
 Jimmy Butler III,GSW,Jimmy Butler
 Jonathan Kuminga,GSW,Jonathan Kuminga
+LJ Cryer,GSW,Lj Cryer
+Malevy Leons,GSW,Malevy Leons
 Moses Moody,GSW,Moses Moody
 Pat Spencer,GSW,Pat Spencer
 Quinten Post,GSW,Quinten Post
+Seth Curry,GSW,Seth Curry
 Stephen Curry,GSW,Stephen Curry
 Trayce Jackson-Davis,GSW,Trayce Jackson-Davis
 Will Richard,GSW,Will Richard
@@ -186,16 +187,18 @@ Jae'Sean Tate,HOU,Jae'Sean Tate
 Jeff Green,HOU,Jeff Green
 Josh Okogie,HOU,Josh Okogie
 Kevin Durant,HOU,Kevin Durant
-Kevon Harris,HOU,Kevon Harris
 Reed Sheppard,HOU,Reed Sheppard
 Steven Adams,HOU,Steven Adams
 Tari Eason,HOU,Tari Eason
+Tyler Smith,HOU,Tyler Smith
 Aaron Nesmith,IND,Aaron Nesmith
 Andrew Nembhard,IND,Andrew Nembhard
 Ben Sheppard,IND,Ben Sheppard
 Bennedict Mathurin,IND,Bennedict Mathurin
+Ethan Thompson,IND,Ethan Thompson
 Garrison Mathews,IND,Garrison Mathews
 Isaiah Jackson,IND,Isaiah Jackson
+James Wiseman,IND,James Wiseman
 Jarace Walker,IND,Jarace Walker
 Jay Huff,IND,Jay Huff
 Jeremiah Robinson-Earl,IND,Jeremiah Robinson-Earl
@@ -204,7 +207,6 @@ Kam Jones,IND,Kam Jones
 Obi Toppin,IND,Obi Toppin
 Pascal Siakam,IND,Pascal Siakam
 Quenton Jackson,IND,Quenton Jackson
-RayJ Dennis,IND,Rayj Dennis
 T.J. McConnell,IND,Tj Mcconnell
 Taelon Peter,IND,Taelon Peter
 Tony Bradley,IND,Tony Bradley
@@ -216,7 +218,6 @@ Cam Christie,LAC,Cam Christie
 Chris Paul,LAC,Chris Paul
 Derrick Jones Jr.,LAC,Derrick Jones Jr
 Ivica Zubac,LAC,Ivica Zubac
-Jahmyl Telfort,LAC,Jahmyl Telfort
 James Harden,LAC,James Harden
 John Collins,LAC,John Collins
 Jordan Miller,LAC,Jordan Miller
@@ -225,14 +226,15 @@ Kobe Brown,LAC,Kobe Brown
 Kobe Sanders,LAC,Kobe Sanders
 Kris Dunn,LAC,Kris Dunn
 Nicolas Batum,LAC,Nicolas Batum
+RayJ Dennis,LAC,Rayj Dennis
 Yanic Konan Niederhäuser,LAC,Yanic Konan Niederhauser
 Adou Thiero,LAL,Adou Thiero
 Austin Reaves,LAL,Austin Reaves
 Bronny James,LAL,Bronny James
 Chris Mañon,LAL,Chris Manon
-Christian Koloko,LAL,Christian Koloko
 Dalton Knecht,LAL,Dalton Knecht
 Deandre Ayton,LAL,Deandre Ayton
+Drew Timme,LAL,Drew Timme
 Gabe Vincent,LAL,Gabe Vincent
 Jake LaRavia,LAL,Jake Laravia
 Jarred Vanderbilt,LAL,Jarred Vanderbilt
@@ -246,6 +248,7 @@ Rui Hachimura,LAL,Rui Hachimura
 Brandon Clarke,MEM,Brandon Clarke
 Cam Spencer,MEM,Cam Spencer
 Cedric Coward,MEM,Cedric Coward
+Christian Koloko,MEM,Christian Koloko
 GG Jackson,MEM,Gg Jackson
 Ja Morant,MEM,Ja Morant
 Jahmai Mashack,MEM,Jahmai Mashack
@@ -255,7 +258,6 @@ Jaylen Wells,MEM,Jaylen Wells
 Jock Landale,MEM,Jock Landale
 John Konchar,MEM,John Konchar
 Kentavious Caldwell-Pope,MEM,Kentavious Caldwell-Pope
-Kobe Bufkin,MEM,Kobe Bufkin
 Olivier-Maxence Prosper,MEM,Olivier-Maxence Prosper
 Santi Aldama,MEM,Santi Aldama
 Scotty Pippen Jr.,MEM,Scotty Pippen Jr
@@ -388,7 +390,6 @@ Adem Bona,PHI,Adem Bona
 Andre Drummond,PHI,Andre Drummond
 Dominick Barlow,PHI,Dominick Barlow
 Eric Gordon,PHI,Eric Gordon
-Hunter Sallis,PHI,Hunter Sallis
 Jabari Walker,PHI,Jabari Walker
 Jared McCain,PHI,Jared Mccain
 Joel Embiid,PHI,Joel Embiid
@@ -469,7 +470,7 @@ Keldon Johnson,SAS,Keldon Johnson
 Kelly Olynyk,SAS,Kelly Olynyk
 Lindy Waters III,SAS,Lindy Waters
 Luke Kornet,SAS,Luke Kornet
-Riley Minix,SAS,Riley Minix
+Stanley Umude,SAS,Stanley Umude
 Stephon Castle,SAS,Stephon Castle
 Victor Wembanyama,SAS,Victor Wembanyama
 A.J. Lawson,TOR,Aj Lawson
