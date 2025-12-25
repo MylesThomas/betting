@@ -17,10 +17,14 @@ Example:
 import sys
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 BASE_DIR = Path(__file__).parent.parent
 ORDER_BOOKS_DIR = BASE_DIR / "data" / "04_output" / "prediction_markets" / "order_books"
+BASELINES_DIR = BASE_DIR / "data" / "04_output" / "prediction_markets" / "market_baselines"
+
+# Create baselines directory if it doesn't exist
+BASELINES_DIR.mkdir(parents=True, exist_ok=True)
 
 # =============================================================================
 # FILL DETECTION CONFIG
@@ -43,6 +47,10 @@ LOG_ALL_FILLS = True  # Show 📊 section for complete fill record
 # OVERREACTION SCORE CONFIG (Domer's fade vs follow framework)
 # =============================================================================
 
+# PHASE 1: ABSOLUTE THRESHOLDS (Current implementation)
+# These are calibrated for mid-sized markets (~1-10M volume)
+# Will be replaced by market-relative thresholds in Phase 2/3
+
 # Fill velocity thresholds (contracts per minute)
 FILL_VELOCITY_HIGH = 2000  # >2000/min = panic (overreaction)
 FILL_VELOCITY_MODERATE = 1000  # 1000-2000/min = active
@@ -60,6 +68,130 @@ SPREAD_MODERATE = 1.5  # 1.5-3x widening = active
 DEPTH_DRAIN = 0.6  # <60% remaining = exhaustion (overreaction)
 DEPTH_MODERATE = 0.8  # 60-80% remaining = active
 DEPTH_GROWTH = 1.2  # >120% depth = accumulation (potential underreaction)
+
+# ROADMAP:
+# Phase 2: SKIPPED (go straight to Phase 3)
+# Phase 3: Market-specific baselines (PRIMARY IMPLEMENTATION)
+
+# =============================================================================
+# BASELINE MANAGEMENT (Phase 3)
+# =============================================================================
+
+def load_baseline(market_ticker):
+    """Load market-specific baseline if it exists."""
+    baseline_file = BASELINES_DIR / f"{market_ticker}_baseline.json"
+    
+    if not baseline_file.exists():
+        return None
+    
+    try:
+        with open(baseline_file, 'r') as f:
+            return json.load(f)
+    except:
+        return None
+
+
+def update_baseline(market_ticker, current_metrics):
+    """
+    Update rolling 48h baseline for a market.
+    
+    Args:
+        market_ticker: Market identifier
+        current_metrics: Dict with fill_velocity, aggression_ratio, spread, depth
+    """
+    baseline_file = BASELINES_DIR / f"{market_ticker}_baseline.json"
+    
+    # Load existing or create new
+    if baseline_file.exists():
+        with open(baseline_file, 'r') as f:
+            baseline = json.load(f)
+    else:
+        baseline = {
+            'market_ticker': market_ticker,
+            'first_seen': datetime.now().isoformat(),
+            'samples': []
+        }
+    
+    # Add current sample
+    baseline['samples'].append({
+        'timestamp': datetime.now().isoformat(),
+        'metrics': current_metrics
+    })
+    
+    # Keep only last 48h (288 samples at 10min intervals, or 576 at 5min)
+    cutoff = datetime.now() - timedelta(hours=48)
+    baseline['samples'] = [
+        s for s in baseline['samples']
+        if datetime.fromisoformat(s['timestamp']) > cutoff
+    ]
+    
+    # Calculate statistics
+    if baseline['samples']:
+        # Extract metrics
+        velocities = [s['metrics']['fill_velocity'] for s in baseline['samples'] if 'fill_velocity' in s['metrics']]
+        aggressions = [s['metrics']['aggression_ratio'] for s in baseline['samples'] if 'aggression_ratio' in s['metrics']]
+        spreads = [s['metrics']['spread'] for s in baseline['samples'] if 'spread' in s['metrics']]
+        depths = [s['metrics']['depth'] for s in baseline['samples'] if 'depth' in s['metrics']]
+        
+        baseline['hours_of_data'] = len(baseline['samples']) * 5 / 60  # Assuming 5min intervals
+        baseline['last_updated'] = datetime.now().isoformat()
+        baseline['ready_for_alerts'] = baseline['hours_of_data'] >= 48
+        
+        # Calculate percentiles
+        import statistics
+        
+        def calc_stats(values):
+            if not values:
+                return {}
+            sorted_vals = sorted(values)
+            n = len(sorted_vals)
+            return {
+                'mean': statistics.mean(values),
+                'median': statistics.median(values),
+                'std': statistics.stdev(values) if n > 1 else 0,
+                'p10': sorted_vals[int(n * 0.10)] if n > 0 else 0,
+                'p90': sorted_vals[int(n * 0.90)] if n > 0 else 0,
+                'p95': sorted_vals[int(n * 0.95)] if n > 0 else 0,
+            }
+        
+        baseline['metrics'] = {
+            'fill_velocity': calc_stats(velocities),
+            'aggression_ratio': calc_stats(aggressions),
+            'spread': calc_stats(spreads),
+            'depth': calc_stats(depths),
+        }
+    
+    # Save
+    with open(baseline_file, 'w') as f:
+        json.dump(baseline, f, indent=2)
+    
+    return baseline
+
+
+def get_percentile_score(value, distribution):
+    """
+    Calculate score based on where value sits in distribution.
+    
+    Returns -1 to 3:
+        -1: Very low (bottom 5%) - potential underreaction
+         0: Normal (5th-75th percentile)
+         1: Elevated (75th-90th percentile)
+         2: High (90th-95th percentile)
+         3: Extreme (top 5%) - overreaction
+    """
+    if not distribution or 'p10' not in distribution:
+        return 0
+    
+    if value >= distribution['p95']:
+        return 3  # Top 5%
+    elif value >= distribution['p90']:
+        return 2  # Top 10%
+    elif value >= distribution.get('p75', distribution['median']):
+        return 1  # Top 25%
+    elif value <= distribution['p10']:
+        return -1  # Bottom 10% (unusually low)
+    else:
+        return 0  # Normal range
 
 
 def get_spread_threshold(price):
@@ -289,6 +421,358 @@ def calculate_weighted_std(prices, weights):
     return variance ** 0.5
 
 
+def calculate_overreaction_score(fill_data, market_ticker=None, baseline=None):
+    """
+    Calculate overreaction score (0-10) using market baseline or fallback to absolute thresholds.
+    
+    Phase 3 (PREFERRED): Use market-specific baseline if available (>48h data)
+    Phase 1 (FALLBACK): Use absolute thresholds during calibration
+    
+    Score interpretation:
+        0-3: UNDERREACTION - market not reacting enough (FOLLOW opportunity)
+        4-6: NORMAL - efficient pricing
+        7-10: OVERREACTION - market panicking (FADE opportunity)
+    
+    Args:
+        fill_data: Dict from detect_fills() containing fill metrics
+        market_ticker: Market identifier (for loading baseline)
+        baseline: Pre-loaded baseline dict (optional, will load if not provided)
+    
+    Returns:
+        Dict with score, components, signal, and calibration status
+    """
+    if not fill_data:
+        return None
+    
+    # Load baseline if not provided
+    if market_ticker and not baseline:
+        baseline = load_baseline(market_ticker)
+    
+    # Determine if we can use baseline
+    use_baseline = baseline and baseline.get('ready_for_alerts', False)
+    
+    if use_baseline:
+        return _calculate_score_phase3(fill_data, baseline)
+    else:
+        return _calculate_score_phase1(fill_data, baseline)
+
+
+def _calculate_score_phase1(fill_data, baseline=None):
+    """
+    Phase 1: Absolute thresholds (fallback during calibration).
+    
+    Used when <48h of baseline data available.
+    """
+    score = 0
+    components = {}
+    
+    # Calculate time in minutes
+    time_minutes = max(fill_data['time_delta'] / 60, 0.1)  # Avoid division by zero
+    
+    # 1. FILL VELOCITY (0-3 points)
+    # Total contracts filled per minute (both sides)
+    total_filled = fill_data['yes_filled_total'] + fill_data['no_filled_total']
+    fill_velocity = total_filled / time_minutes
+    
+    if fill_velocity > FILL_VELOCITY_HIGH:  # >2000/min = panic
+        velocity_score = 3
+        velocity_label = "VERY HIGH (panic)"
+    elif fill_velocity > FILL_VELOCITY_MODERATE:  # 1000-2000/min
+        velocity_score = 2
+        velocity_label = "HIGH (active)"
+    elif fill_velocity > FILL_VELOCITY_LOW:  # 300-1000/min
+        velocity_score = 1
+        velocity_label = "MODERATE"
+    else:  # <300/min = orderly
+        velocity_score = -1  # Negative = potential underreaction
+        velocity_label = "LOW (orderly)"
+    
+    score += velocity_score
+    components['fill_velocity'] = {
+        'value': fill_velocity,
+        'score': velocity_score,
+        'label': velocity_label
+    }
+    
+    # 2. AGGRESSION RATIO (0-3 points)
+    # What % of activity was aggressive (taking liquidity) vs passive (adding)
+    total_activity = (fill_data['yes_filled_total'] + fill_data['yes_added_total'] + 
+                     fill_data['no_filled_total'] + fill_data['no_added_total'])
+    
+    if total_activity > 0:
+        aggression_ratio = (fill_data['yes_filled_total'] + fill_data['no_filled_total']) / total_activity
+        
+        if aggression_ratio > AGGRESSION_PANIC:  # >75% aggressive
+            aggression_score = 3
+            aggression_label = "VERY HIGH (retail stampede)"
+        elif aggression_ratio > 0.60:
+            aggression_score = 2
+            aggression_label = "HIGH (aggressive)"
+        elif aggression_ratio > AGGRESSION_ORDERLY:  # >40%
+            aggression_score = 1
+            aggression_label = "MODERATE"
+        else:  # <40% = patient capital
+            aggression_score = -1
+            aggression_label = "LOW (patient capital)"
+    else:
+        aggression_ratio = 0
+        aggression_score = 0
+        aggression_label = "NO ACTIVITY"
+    
+    score += aggression_score
+    components['aggression_ratio'] = {
+        'value': aggression_ratio,
+        'score': aggression_score,
+        'label': aggression_label
+    }
+    
+    # 3. SPREAD WIDENING (0-2 points)
+    # Calculate current and previous spreads
+    prev_yes = fill_data.get('prev_best_yes', 0)
+    curr_yes = fill_data.get('curr_best_yes', 0)
+    prev_no = fill_data.get('prev_best_no', 0)
+    curr_no = fill_data.get('curr_best_no', 0)
+    
+    prev_spread = abs(1.0 - prev_yes - prev_no) if prev_yes and prev_no else 0.02
+    curr_spread = abs(1.0 - curr_yes - curr_no) if curr_yes and curr_no else 0.02
+    
+    spread_multiple = curr_spread / prev_spread if prev_spread > 0 else 1.0
+    
+    if spread_multiple > SPREAD_CHAOS:  # 3x+ widening
+        spread_score = 2
+        spread_label = "VERY WIDE (chaos)"
+    elif spread_multiple > SPREAD_MODERATE:  # 1.5-3x
+        spread_score = 1
+        spread_label = "WIDENING"
+    else:
+        spread_score = 0
+        spread_label = "STABLE"
+    
+    score += spread_score
+    components['spread_widening'] = {
+        'value': spread_multiple,
+        'score': spread_score,
+        'label': spread_label
+    }
+    
+    # 4. LIQUIDITY DRAIN (0-2 points)
+    # How much legitimate depth remains?
+    prev_total_vol = fill_data['prev_yes_vol'] + fill_data['prev_no_vol']
+    curr_total_vol = fill_data['curr_yes_vol'] + fill_data['curr_no_vol']
+    
+    depth_ratio = curr_total_vol / prev_total_vol if prev_total_vol > 0 else 1.0
+    
+    if depth_ratio < DEPTH_DRAIN:  # <60% remaining = exhaustion
+        depth_score = 2
+        depth_label = "SEVERE DRAIN (exhaustion)"
+    elif depth_ratio < DEPTH_MODERATE:  # 60-80% remaining
+        depth_score = 1
+        depth_label = "DRAINING"
+    elif depth_ratio > DEPTH_GROWTH:  # >120% = accumulation
+        depth_score = -1
+        depth_label = "GROWING (accumulation)"
+    else:
+        depth_score = 0
+        depth_label = "STABLE"
+    
+    score += depth_score
+    components['liquidity_depth'] = {
+        'value': depth_ratio,
+        'score': depth_score,
+        'label': depth_label
+    }
+    
+    # Cap score at 0-10
+    final_score = max(0, min(10, score))
+    
+    # Determine signal
+    if final_score >= 7:
+        signal = "FADE"
+        signal_description = "OVERREACTION - Market panicking, fade the move"
+        signal_emoji = "🔻"
+    elif final_score <= 3:
+        signal = "FOLLOW"
+        signal_description = "UNDERREACTION - Market not reacting enough, follow the move"
+        signal_emoji = "🔺"
+    else:
+        signal = "NEUTRAL"
+        signal_description = "NORMAL - Efficient pricing, no clear edge"
+        signal_emoji = "↔️"
+    
+    # Add calibration status
+    hours_collected = baseline['hours_of_data'] if baseline else 0
+    
+    return {
+        'score': final_score,
+        'raw_score': score,  # Before capping
+        'signal': signal,
+        'signal_description': signal_description,
+        'signal_emoji': signal_emoji,
+        'components': components,
+        'time_minutes': time_minutes,
+        'alert_ready': False,  # Phase 1 = calibrating, no alerts
+        'status': f'CALIBRATING ({hours_collected:.0f}h / 48h)',
+        'method': 'Phase 1 (absolute thresholds)',
+    }
+
+
+def _calculate_score_phase3(fill_data, baseline):
+    """
+    Phase 3: Market-specific baseline scoring (primary method).
+    
+    Used when >=48h of baseline data available.
+    Uses percentile-based scoring relative to this market's history.
+    """
+    score = 0
+    components = {}
+    
+    # Calculate time in minutes
+    time_minutes = max(fill_data['time_delta'] / 60, 0.1)
+    
+    # 1. FILL VELOCITY (percentile-based)
+    total_filled = fill_data['yes_filled_total'] + fill_data['no_filled_total']
+    fill_velocity = total_filled / time_minutes
+    
+    velocity_dist = baseline['metrics'].get('fill_velocity', {})
+    velocity_score = get_percentile_score(fill_velocity, velocity_dist)
+    
+    if velocity_score == 3:
+        velocity_label = "EXTREME (top 5%)"
+    elif velocity_score == 2:
+        velocity_label = "HIGH (top 10%)"
+    elif velocity_score == 1:
+        velocity_label = "ELEVATED (top 25%)"
+    elif velocity_score == -1:
+        velocity_label = "VERY LOW (bottom 10%)"
+    else:
+        velocity_label = "NORMAL"
+    
+    score += velocity_score
+    components['fill_velocity'] = {
+        'value': fill_velocity,
+        'score': velocity_score,
+        'label': velocity_label,
+        'baseline_p90': velocity_dist.get('p90', 0),
+    }
+    
+    # 2. AGGRESSION RATIO (percentile-based)
+    total_activity = (fill_data['yes_filled_total'] + fill_data['yes_added_total'] + 
+                     fill_data['no_filled_total'] + fill_data['no_added_total'])
+    
+    if total_activity > 0:
+        aggression_ratio = (fill_data['yes_filled_total'] + fill_data['no_filled_total']) / total_activity
+        aggression_dist = baseline['metrics'].get('aggression_ratio', {})
+        aggression_score = get_percentile_score(aggression_ratio, aggression_dist)
+        
+        if aggression_score == 3:
+            aggression_label = "EXTREME (top 5%)"
+        elif aggression_score == 2:
+            aggression_label = "HIGH (top 10%)"
+        elif aggression_score == 1:
+            aggression_label = "ELEVATED"
+        elif aggression_score == -1:
+            aggression_label = "VERY LOW"
+        else:
+            aggression_label = "NORMAL"
+    else:
+        aggression_ratio = 0
+        aggression_score = 0
+        aggression_label = "NO ACTIVITY"
+    
+    score += aggression_score
+    components['aggression_ratio'] = {
+        'value': aggression_ratio,
+        'score': aggression_score,
+        'label': aggression_label,
+        'baseline_p90': aggression_dist.get('p90', 0) if total_activity > 0 else 0,
+    }
+    
+    # 3. SPREAD WIDENING (still use relative change - already normalized)
+    prev_yes = fill_data.get('prev_best_yes', 0)
+    curr_yes = fill_data.get('curr_best_yes', 0)
+    prev_no = fill_data.get('prev_best_no', 0)
+    curr_no = fill_data.get('curr_best_no', 0)
+    
+    prev_spread = abs(1.0 - prev_yes - prev_no) if prev_yes and prev_no else 0.02
+    curr_spread = abs(1.0 - curr_yes - curr_no) if curr_yes and curr_no else 0.02
+    
+    spread_multiple = curr_spread / prev_spread if prev_spread > 0 else 1.0
+    
+    if spread_multiple > 3.0:
+        spread_score = 2
+        spread_label = "VERY WIDE (3x+)"
+    elif spread_multiple > 1.5:
+        spread_score = 1
+        spread_label = "WIDENING"
+    else:
+        spread_score = 0
+        spread_label = "STABLE"
+    
+    score += spread_score
+    components['spread_widening'] = {
+        'value': spread_multiple,
+        'score': spread_score,
+        'label': spread_label,
+    }
+    
+    # 4. LIQUIDITY DEPTH (percentile-based)
+    curr_total_vol = fill_data['curr_yes_vol'] + fill_data['curr_no_vol']
+    depth_dist = baseline['metrics'].get('depth', {})
+    
+    # Invert scoring for depth (low depth = high score)
+    depth_percentile_score = get_percentile_score(curr_total_vol, depth_dist)
+    depth_score = -depth_percentile_score  # Flip: low depth = high score
+    
+    if depth_score == -3:  # Very high depth
+        depth_label = "VERY DEEP (unusually high)"
+    elif depth_score == -2:
+        depth_label = "DEEP"
+    elif depth_score == 1:
+        depth_label = "THIN"
+    elif depth_score == 2:
+        depth_label = "VERY THIN"
+    else:
+        depth_label = "NORMAL"
+    
+    score += depth_score
+    components['liquidity_depth'] = {
+        'value': curr_total_vol,
+        'score': depth_score,
+        'label': depth_label,
+        'baseline_median': depth_dist.get('median', 0),
+    }
+    
+    # Cap score at 0-10
+    final_score = max(0, min(10, score))
+    
+    # Determine signal
+    if final_score >= 7:
+        signal = "FADE"
+        signal_description = "OVERREACTION - Market panicking, fade the move"
+        signal_emoji = "🔻"
+    elif final_score <= 3:
+        signal = "FOLLOW"
+        signal_description = "UNDERREACTION - Market not reacting enough, follow the move"
+        signal_emoji = "🔺"
+    else:
+        signal = "NEUTRAL"
+        signal_description = "NORMAL - Efficient pricing, no clear edge"
+        signal_emoji = "↔️"
+    
+    return {
+        'score': final_score,
+        'raw_score': score,
+        'signal': signal,
+        'signal_description': signal_description,
+        'signal_emoji': signal_emoji,
+        'components': components,
+        'time_minutes': time_minutes,
+        'alert_ready': True,  # Phase 3 = ready for alerts
+        'status': f'BASELINE READY ({baseline["hours_of_data"]:.0f}h)',
+        'method': 'Phase 3 (market baseline)',
+    }
+
+
 def detect_fills(prev_book, curr_book):
     """
     Compare two order book snapshots and detect fill activity.
@@ -413,6 +897,10 @@ def detect_fills(prev_book, curr_book):
         'prev_no_vol': prev_no_vol,
         'curr_yes_vol': sum(s for _, s in curr_yes_legit),
         'curr_no_vol': sum(s for _, s in curr_no_legit),
+        'prev_best_yes': prev_best_yes,
+        'curr_best_yes': curr_best_yes,
+        'prev_best_no': prev_best_no,
+        'curr_best_no': curr_best_no,
     }
 
 
@@ -500,6 +988,65 @@ def display_fill_detection(fill_data):
     print(f"\n  Market Direction: {momentum_emoji[fill_data['momentum']]}  {fill_data['momentum']}")
 
 
+def display_overreaction_score(overreaction_data):
+    """Display overreaction/underreaction score and trading signal."""
+    if not overreaction_data:
+        return
+    
+    print("\n" + "="*80)
+    print(f"OVERREACTION SCORE: {overreaction_data['score']}/10 - {overreaction_data['signal']}")
+    print("="*80)
+    
+    # Show calibration status
+    status_emoji = "✅" if overreaction_data['alert_ready'] else "⚠️"
+    print(f"\n{status_emoji}  STATUS: {overreaction_data['status']}")
+    print(f"   Method: {overreaction_data['method']}")
+    
+    if not overreaction_data['alert_ready']:
+        print(f"   ⏳ Still collecting baseline data - NO ALERTS until 48h reached")
+    
+    print(f"\n{overreaction_data['signal_emoji']}  SIGNAL: {overreaction_data['signal_description']}")
+    
+    print(f"\nAnalysis Window: {overreaction_data['time_minutes']:.1f} minutes")
+    
+    print(f"\nComponent Scores:")
+    
+    # Fill velocity
+    fv = overreaction_data['components']['fill_velocity']
+    print(f"  1. Fill Velocity: {fv['value']:.0f} contracts/min")
+    print(f"     Score: {fv['score']:+d}/3 - {fv['label']}")
+    
+    # Aggression ratio
+    ar = overreaction_data['components']['aggression_ratio']
+    print(f"  2. Aggression Ratio: {ar['value']:.1%}")
+    print(f"     Score: {ar['score']:+d}/3 - {ar['label']}")
+    
+    # Spread widening
+    sw = overreaction_data['components']['spread_widening']
+    print(f"  3. Spread Widening: {sw['value']:.2f}x")
+    print(f"     Score: {sw['score']:+d}/2 - {sw['label']}")
+    
+    # Liquidity depth
+    ld = overreaction_data['components']['liquidity_depth']
+    print(f"  4. Liquidity Depth: {ld['value']:.1%} of previous")
+    print(f"     Score: {ld['score']:+d}/2 - {ld['label']}")
+    
+    # Trading recommendation
+    print(f"\n💡 TRADING RECOMMENDATION:")
+    if overreaction_data['signal'] == "FADE":
+        print(f"   → Market is OVERREACTING (score: {overreaction_data['score']}/10)")
+        print(f"   → Consider FADING the move (bet against current direction)")
+        print(f"   → Rationale: Retail panic, exhaustion signs, wide spreads")
+    elif overreaction_data['signal'] == "FOLLOW":
+        print(f"   → Market is UNDERREACTING (score: {overreaction_data['score']}/10)")
+        print(f"   → Consider FOLLOWING the move (bet with current direction)")
+        print(f"   → Rationale: Patient accumulation, orderly flow, not pricing in news")
+    else:
+        print(f"   → Market appears EFFICIENT (score: {overreaction_data['score']}/10)")
+        print(f"   → No clear trading edge at this time")
+        print(f"   → Wait for stronger signal")
+
+
 def compare_snapshots(market_ticker, num_snapshots=3):
     """Show evolution of order book over last N snapshots."""
     files = sorted(ORDER_BOOKS_DIR.glob(f"{market_ticker}_*.json"))[-num_snapshots:]
@@ -572,6 +1119,11 @@ def main():
         fill_data = detect_fills(prev_book, order_book)
         if fill_data:
             display_fill_detection(fill_data)
+            
+            # Calculate and display overreaction score
+            overreaction_data = calculate_overreaction_score(fill_data, market_ticker=market_ticker)
+            if overreaction_data:
+                display_overreaction_score(overreaction_data)
     else:
         print("\n" + "="*80)
         print("FILL DETECTION")

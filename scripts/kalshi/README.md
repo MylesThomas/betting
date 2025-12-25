@@ -254,10 +254,14 @@ KALSHI_API_SECRET=your_secret_here
 python scripts/kalshi/find_kalshi_markets.py
 ```
 
-### Step 3: Start collecting data
+### Step 3: Start collecting data (automated)
 ```bash
-# Run every 1-5 minutes (use cron or while loop)
-python scripts/kalshi/monitor_kalshi_markets.py
+# Option A: Cron (runs every 5 minutes)
+crontab -e
+# Add: */5 * * * * cd /path/to/betting && python scripts/kalshi/monitor_kalshi_markets.py
+
+# Option B: Background loop
+nohup bash -c 'while true; do python scripts/kalshi/monitor_kalshi_markets.py; sleep 300; done' &
 ```
 
 ### Step 4: Analyze order books
@@ -265,32 +269,129 @@ python scripts/kalshi/monitor_kalshi_markets.py
 python scripts/kalshi/view_kalshi_order_book.py KXELONMARS-99
 ```
 
-### Step 5: Look for signals
-- Large fills in legitimate range → momentum
-- Price spikes >10% → fade opportunity
-- Liquidity drying up → exit signal
-- Patient capital entering → follow signal
+### Step 5: Watch for signals
+- **Overreaction Score 7-10**: FADE opportunity (market panicking)
+- **Overreaction Score 0-3**: FOLLOW opportunity (market underreacting)
+- **Overreaction Score 4-6**: NEUTRAL (no clear edge)
+
+---
+
+## Operational Workflow
+
+See [OPERATIONAL_WORKFLOW.md](./OPERATIONAL_WORKFLOW.md) for complete daily monitoring schedule:
+
+- **Morning routine**: Discover new markets, review overnight activity (20 min)
+- **Continuous loop**: Monitor every 5 min (automated)
+- **Quick checks**: Scan every 30 min for signals
+- **Deep analysis**: Full review every 2 hours
+- **Weekly review**: Calibrate thresholds, add/remove markets
+- **Monthly review**: Performance analysis, strategy refinement
+
+---
+
+## Overreaction Score Scaling Roadmap
+
+### Phase 1: ✅ COMPLETE (Absolute Thresholds)
+**Status**: Implemented  
+**Approach**: Hardcoded thresholds calibrated for mid-sized markets (~1-10M volume)
+
+**Current Config**:
+- Fill velocity: 300 / 1000 / 2000 contracts/min (low / moderate / high)
+- Aggression ratio: 40% / 75% (orderly / panic)
+- Spread widening: 1.5x / 3.0x (moderate / chaos)
+- Liquidity drain: 60% / 80% / 120% (drain / stable / growth)
+
+**Limitation**: Won't scale well to very large (presidential) or very small (micro event) markets
+
+**Use Case**: POC testing, mid-sized markets
+
+---
+
+### Phase 2: 🔲 TODO (Market Classification)
+**Status**: Not started  
+**Approach**: Classify markets by total volume, adjust thresholds accordingly
+
+**Implementation Plan**:
+1. Fetch market volume from Kalshi API on each run
+2. Classify: Mega (>10M), Large (1-10M), Medium (100k-1M), Small (<100k)
+3. Scale thresholds by market size:
+   ```python
+   # Example: Presidential election (10M+ volume)
+   fill_velocity_high = 10000  # vs 2000 for medium markets
+   
+   # Example: Micro event (50k volume)
+   fill_velocity_high = 500    # vs 2000 for medium markets
+   ```
+
+**Pros**: Works immediately across all market sizes  
+**Cons**: Still somewhat arbitrary thresholds
+
+**ETA**: Next iteration (after Phase 1 testing)
+
+---
+
+### Phase 3: 🔲 TODO (Market-Specific Baselines)
+**Status**: Not started  
+**Approach**: Use each market's own historical data to determine "normal"
+
+**Implementation Plan**:
+1. Store rolling 24-48h of metrics per market:
+   - Average fill velocity
+   - Average aggression ratio
+   - Typical spread
+   - Normal depth levels
+
+2. Calculate overreaction score **relative to baseline**:
+   ```python
+   # Instead of: "2000 contracts/min is high"
+   # Use: "4x this market's average is high"
+   
+   velocity_multiple = current_velocity / market_baseline_velocity
+   if velocity_multiple > 4.0:  # 4x above normal for THIS market
+       score = 3
+   ```
+
+3. Requires database/file storage:
+   ```
+   data/
+     04_output/
+       prediction_markets/
+         market_baselines/
+           KXELONMARS-99_baseline.json
+           KXTRUMP2028_baseline.json
+   ```
+
+**Pros**: Self-calibrating, perfectly scaled to each market  
+**Cons**: Needs 24-48h of data before useful
+
+**ETA**: After 1-2 weeks of monitoring multiple markets
 
 ---
 
 ## Next Steps (TODO)
 
 ### Immediate:
-- [ ] Add signal detection module (`detect_signals.py`)
-- [ ] Implement momentum scoring (0-10 scale)
-- [ ] Add real-time alerting (Slack/email notifications)
+- [x] Overreaction score implementation (Phase 1)
+- [ ] Test on multiple markets to validate thresholds
+- [ ] Add real-time alerting (email/Slack when score >7 or <3)
 
-### Phase 2:
+### Short-term:
+- [ ] Implement Phase 2 (market classification)
+- [ ] Multi-market monitoring (expand from 5 POC markets)
 - [ ] Backtest framework (track hypothetical trades)
 - [ ] Win rate tracking by signal type
+
+### Medium-term:
+- [ ] Implement Phase 3 (market baselines)
 - [ ] Round-trip P&L calculator
 - [ ] Hold time analysis (optimal exit timing)
-
-### Phase 3:
 - [ ] Multi-market scanner (find best opportunities)
+
+### Long-term:
 - [ ] Correlation analysis (hedge strategies)
 - [ ] Automated position sizing recommendations
 - [ ] Risk management dashboard
+- [ ] Integration with actual trading API
 
 ---
 
