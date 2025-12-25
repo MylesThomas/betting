@@ -200,8 +200,27 @@ def main():
     print(f"\n✅ Retrieved {len(roster_df)} players across 30 teams")
     print()
     
+    # Add manual roster additions from config
+    print("Step 2: Adding manual roster entries from config...")
+    manual_additions = [
+        {'player_name': 'Jeremiah Robinson-Earl', 'team': 'IND'},
+        # Add more players here as needed:
+        # {'player_name_nba_api': 'Player Name', 'team': 'TEAM'},
+    ]
+    
+    if manual_additions:
+        manual_df = pd.DataFrame(manual_additions)
+        manual_df = manual_df.rename(columns={'player_name': 'player_name_nba_api'})
+        roster_df = pd.concat([roster_df, manual_df], ignore_index=True)
+        print(f"✅ MANUALLY added {len(manual_additions)} players not returned by NBA API:")
+        for entry in manual_additions:
+            print(f"   - {entry['player_name_nba_api']} ({entry['team']})")
+    else:
+        print("   No manual additions found in config")
+    print()
+    
     # Add normalized name for easier lookups
-    print("Step 2: Normalizing player names for matching...")
+    print("Step 3: Normalizing player names for matching...")
     roster_df['player_normalized'] = roster_df['player_name_nba_api'].apply(normalize_player_name)
     
     # Reorder columns (removed player_name_odds_api since it's rarely populated and not used)
@@ -211,12 +230,12 @@ def main():
     roster_df = roster_df.sort_values(['team', 'player_name_nba_api'])
     
     # Save full roster cache to CSV
-    print(f"\nStep 3: Saving full roster cache to {OUTPUT_PATH}")
+    print(f"\nStep 4: Saving full roster cache to {OUTPUT_PATH}")
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     roster_df.to_csv(OUTPUT_PATH, index=False)
     
-    # Step 4: Automatically create player_team_cache.csv for quick lookups
-    print(f"\nStep 4: Creating player_team_cache.csv for quick lookups...")
+    # Step 5: Automatically create player_team_cache.csv for quick lookups
+    print(f"\nStep 5: Creating player_team_cache.csv for quick lookups...")
     from datetime import datetime
     
     player_team_cache = pd.DataFrame({
