@@ -381,10 +381,6 @@ def load_all_arbs(max_workers: int = 100):
         if not arb_files:
             return None
         
-        # Show progress indicator
-        progress_placeholder = st.empty()
-        progress_placeholder.info(f"📥 Loading {len(arb_files)} files from S3 (parallel with {max_workers} workers)...")
-        
         # Load files in parallel with ThreadPoolExecutor
         all_dfs = []
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -392,19 +388,10 @@ def load_all_arbs(max_workers: int = 100):
             future_to_key = {executor.submit(load_single_s3_file, s3_key): s3_key for s3_key in arb_files}
             
             # Collect results as they complete
-            completed = 0
             for future in as_completed(future_to_key):
                 df = future.result()
                 if df is not None:
                     all_dfs.append(df)
-                
-                completed += 1
-                # Update progress every 100 files
-                if completed % 100 == 0 or completed == len(arb_files):
-                    progress_placeholder.info(f"📥 Loading {completed}/{len(arb_files)} files... ({len(all_dfs)} valid)")
-        
-        # Clear progress indicator
-        progress_placeholder.empty()
         
         if not all_dfs:
             return None
@@ -412,6 +399,7 @@ def load_all_arbs(max_workers: int = 100):
         combined_df = pd.concat(all_dfs, ignore_index=True)
         
         # Deduplicate: for each (file_date, player, market, line), keep the row with best expected_profit_pct
+        # NOTE: S3 files ONLY contain rows where is_arb=True (Lambda only saves profitable arbs)
         if len(combined_df) > 0 and 'expected_profit_pct' in combined_df.columns:
             # Sort by expected_profit_pct descending, then take first per group
             combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
@@ -433,12 +421,20 @@ def load_all_arbs(max_workers: int = 100):
 
 
 @st.cache_data(ttl=60)
-def get_arb_history():
+def get_arb_history(max_workers: int = 100):
     """
     Get historical summary by DATE (not by file) from S3.
     
     Multiple files may exist per day (Lambda runs every 15 min).
     This function groups by date and shows deduped metrics.
+    
+    OPTIMIZATION: Uses parallel loading with ThreadPoolExecutor for speed.
+    
+    Args:
+        max_workers: Number of parallel download threads (default: 100)
+    
+    Returns:
+        List of dictionaries with daily metrics
     """
     try:
         # List all files in S3 (with pagination for >1000 files)
@@ -470,21 +466,32 @@ def get_arb_history():
             except:
                 continue
         
+        # Load ALL files in parallel first (reuse load_single_s3_file helper)
+        all_dfs_with_dates = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_key = {executor.submit(load_single_s3_file, s3_key): s3_key for s3_key in arb_files}
+            
+            for future in as_completed(future_to_key):
+                s3_key = future_to_key[future]
+                df = future.result()
+                if df is not None:
+                    # Extract date from key
+                    parts = s3_key.split('/')
+                    if len(parts) >= 3:
+                        file_date = parts[2]
+                        all_dfs_with_dates.append((file_date, df))
+        
+        # Group loaded DataFrames by date
+        dfs_by_date = {}
+        for file_date, df in all_dfs_with_dates:
+            if file_date not in dfs_by_date:
+                dfs_by_date[file_date] = []
+            dfs_by_date[file_date].append(df)
+        
+        # Calculate metrics for each date
         history = []
-        for file_date, s3_keys in sorted(files_by_date.items(), reverse=True):
+        for file_date, day_dfs in sorted(dfs_by_date.items(), reverse=True):
             try:
-                # Load all files for this date
-                day_dfs = []
-                for s3_key in s3_keys:
-                    try:
-                        obj = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
-                        csv_content = obj['Body'].read().decode('utf-8')
-                        df = pd.read_csv(StringIO(csv_content))
-                        if len(df) > 0:
-                            day_dfs.append(df)
-                    except:
-                        continue
-                
                 if not day_dfs:
                     continue
                 
@@ -504,7 +511,7 @@ def get_arb_history():
                     )
                 
                 # Calculate metrics on deduped data
-                arbs_df = deduped[deduped['is_arb'] == True] if 'is_arb' in deduped.columns else pd.DataFrame()
+                arbs_df = deduped[deduped['is_arb'] == True] # Past iterations had is_arb=False rows in the output, so filtering those
                 
                 total_wagered = 0
                 total_profit = 0
@@ -521,12 +528,12 @@ def get_arb_history():
                         max_profit_pct = arbs_df['expected_profit_pct'].max()
                 
                 num_games = deduped['game'].nunique() if 'game' in deduped.columns else 0
+                num_snapshots = len([d for d in day_dfs])
                 
                 history.append({
                     'date': file_date,
                     'num_games': num_games,
-                    'num_snapshots': len(s3_keys),  # How many 15-min snapshots
-                    'prop_markets': len(deduped),  # Unique player/market/line combos
+                    'num_snapshots': num_snapshots,  # How many 15-min snapshots
                     'arbs_found': len(arbs_df),
                     'avg_profit': avg_profit_pct,
                     'max_profit': max_profit_pct,
@@ -563,16 +570,14 @@ def main():
         st.markdown("---")
         
         st.subheader("📈 Overall Summary (All Time)")
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("🎯 Total Prop Markets", "0")
-        with col2:
             st.metric("✅ Total Arb Opportunities", "0")
-        with col3:
+        with col2:
             st.metric("💰 Total Wagered", "$0.00")
-        with col4:
+        with col3:
             st.metric("💵 Total Profit", "$0.00")
-        with col5:
+        with col4:
             st.metric("📊 IRR (Annualized)", "N/A")
         
         return
@@ -751,35 +756,57 @@ def main():
     
     all_arbs_df = df[df['is_arb'] == True] if 'is_arb' in df.columns else pd.DataFrame()
     
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_prop_markets = len(df)
-        st.metric("🎯 Total Prop Markets", f"{total_prop_markets:,}", 
-                 help="Total prop markets analyzed across all dates")
+        total_arbs = len(all_arbs_df)
+        # Format with K/M/B if over 1000
+        if total_arbs >= 1_000_000_000:
+            arbs_str = f"{total_arbs/1_000_000_000:,.1f}B"
+        elif total_arbs >= 1_000_000:
+            arbs_str = f"{total_arbs/1_000_000:,.1f}M"
+        elif total_arbs >= 1_000:
+            arbs_str = f"{total_arbs/1_000:,.1f}K"
+        else:
+            arbs_str = f"{total_arbs:,}"
+        st.metric("✅ Total Arb Opportunities", arbs_str,
+                 help="Total arbitrage opportunities found across all dates")
     
     with col2:
-        total_arbs = len(all_arbs_df)
-        st.metric("✅ Total Arb Opportunities", f"{total_arbs:,}",
-                 help="Total arbitrage opportunities found (is_arb=True)")
-    
-    with col3:
         total_wagered = 0
         if len(all_arbs_df) > 0 and 'over_stake' in all_arbs_df.columns and 'under_stake' in all_arbs_df.columns:
             total_wagered = (all_arbs_df['over_stake'].sum() + all_arbs_df['under_stake'].sum())
         
-        st.metric("💰 Total Wagered", f"${total_wagered:,.0f}",
+        # Format with K/M/B if over 1000
+        if total_arbs >= 1_000_000_000:
+            arbs_str = f"{total_arbs/1_000_000_000:,.1f}B"
+        elif total_wagered >= 1_000_000:
+            wagered_str = f"${total_wagered/1_000_000:,.1f}M"
+        elif total_wagered >= 1_000:
+            wagered_str = f"${total_wagered/1_000:,.1f}K"
+        else:
+            wagered_str = f"${total_wagered:,.0f}"
+        st.metric("💰 Total Wagered", wagered_str,
                  help="Total amount wagered across all arbs (assuming $100 stake)")
     
-    with col4:
+    with col3:
         total_profit = 0
         if len(all_arbs_df) > 0 and 'guaranteed_profit' in all_arbs_df.columns:
             total_profit = all_arbs_df['guaranteed_profit'].sum()
         
-        st.metric("💵 Total Profit", f"${total_profit:,.0f}",
+        # Format with K/M/B if over 1000
+        if total_arbs >= 1_000_000_000:
+            arbs_str = f"{total_arbs/1_000_000_000:,.1f}B"
+        elif total_profit >= 1_000_000:
+            profit_str = f"${total_profit/1_000_000:,.1f}M"
+        elif total_profit >= 1_000:
+            profit_str = f"${total_profit/1_000:,.1f}K"
+        else:
+            profit_str = f"${total_profit:,.0f}"
+        st.metric("💵 Total Profit", profit_str,
                  help="Total guaranteed profit from all arbs")
     
-    with col5:
+    with col4:
         # Calculate IRR using proper multi-day annualization
         # Formula: (1 + total_roi)^(365/days) - 1
         irr_str = "N/A"
@@ -839,26 +866,23 @@ def main():
     if len(daily_arbs_df) > 0 and 'guaranteed_profit' in daily_arbs_df.columns:
         daily_profit = daily_arbs_df['guaranteed_profit'].sum()
     
-    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         st.metric("🏀 Games", unique_games,
                  help="Number of NBA games for selected date(s)")
     with col2:
-        st.metric("🎯 Prop Markets", daily_total_props,
-                 help=f"Total prop markets for selected date(s)")
-    with col3:
         st.metric("✅ Arb Opportunities", daily_arbs_count, 
                  help=f"Profitable arbitrage opportunities (is_arb=True)")
-    with col4:
+    with col3:
         st.metric("💰 Total Wagered", f"${daily_wagered:,.2f}",
                  help="Total amount wagered on arbs (assuming $100 stake)")
-    with col5:
+    with col4:
         st.metric("💵 Total Profit", f"${daily_profit:,.2f}",
                  help="Total guaranteed profit from arbs")
-    with col6:
+    with col5:
         st.metric("📈 Avg Edge", daily_avg_edge_str,
                  help="Average edge (profit %) for arbs")
-    with col7:
+    with col6:
         st.metric("🔥 Best Arb", daily_max_profit_str,
                  help="Highest profit opportunity")
     
@@ -1041,7 +1065,7 @@ def main():
         
         st.markdown("**Daily Summary (deduped by player/market/line, best profit kept):**")
         
-        column_order = ['date', 'num_games', 'num_snapshots', 'prop_markets', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
+        column_order = ['date', 'num_games', 'num_snapshots', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
         display_history = history_df[column_order]
         
         def color_profit_gradient_history(val):
@@ -1074,7 +1098,6 @@ def main():
                 "date": st.column_config.TextColumn("Date"),
                 "num_games": st.column_config.NumberColumn("# Games", format="%d"),
                 "num_snapshots": st.column_config.NumberColumn("Snapshots", format="%d", help="Number of 15-min data snapshots"),
-                "prop_markets": st.column_config.NumberColumn("Unique Props", format="%d", help="Unique player/market/line combos"),
                 "arbs_found": st.column_config.NumberColumn("Arbs Found", format="%d"),
                 "avg_profit": st.column_config.NumberColumn("Avg Profit %", format="%.2f%%"),
                 "max_profit": st.column_config.NumberColumn("Best Arb", format="%.2f%%"),

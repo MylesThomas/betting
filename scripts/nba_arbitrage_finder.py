@@ -344,13 +344,13 @@ LOCAL TESTING (before deploying to Lambda):
 4. Test modes:
    
    # Test API connection + save to S3 tmp/ folder (for testing)
-   python scripts/lambda_function_nba_alerts.py --test
+   python scripts/nba_arbitrage_finder.py --test
    
    # Run for real (saves to production S3 path)
-   python scripts/lambda_function_nba_alerts.py
+   python scripts/nba_arbitrage_finder.py
    
    # Dry run (fetch arbs but don't save to S3)
-   python scripts/lambda_function_nba_alerts.py --dry-run
+   python scripts/nba_arbitrage_finder.py --dry-run
 
 5. Verify S3 (test mode):
    aws s3 ls s3://betting-nba-arbs/tmp/nba/arbs/ --recursive
@@ -365,10 +365,10 @@ WORKFLOW (similar to track_game_line_movements.py):
 cd betting
 
 # Test API + save to S3 tmp/ folder
-python scripts/lambda_function_nba_alerts.py --test
+python scripts/nba_arbitrage_finder.py --test
 
 # Run for real - saves to production S3
-python scripts/lambda_function_nba_alerts.py
+python scripts/nba_arbitrage_finder.py
 
 # Deploy to Lambda
 # 1. Copy code to Lambda console
@@ -1394,13 +1394,13 @@ def main():
     
     Usage:
         # Test API connection (saves to S3 tmp/ folder for testing)
-        python scripts/lambda_function_nba_alerts.py --test
+        python scripts/nba_arbitrage_finder.py --test
         
         # Run for real (saves to production S3)
-        python scripts/lambda_function_nba_alerts.py
+        python scripts/nba_arbitrage_finder.py
         
         # Run without saving to S3 (dry run - not implemented yet)
-        # python scripts/lambda_function_nba_alerts.py --dry-run
+        # python scripts/nba_arbitrage_finder.py --dry-run
     """
     import argparse
     
