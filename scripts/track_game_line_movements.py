@@ -1272,31 +1272,65 @@ def format_movements_text(df: pd.DataFrame) -> List[str]:
     """Format movements DataFrame as plain text lines, grouped by game."""
     lines = []
     
-    # Filter to only show home side
-    df_home = df[df['side'] == 'home'].copy()
+    # Group by game (we'll get both sides and merge them)
+    game_groups = df.groupby(['game_id', 'away_team', 'home_team', 'bookmaker'])
     
-    # Group by game
-    game_groups = df_home.groupby(['game_id', 'away_team', 'home_team'])
+    # Reorganize to group by game first, then bookmaker
+    game_bookmaker_data = {}
+    for (game_id, away_team, home_team, bookmaker), group in game_groups:
+        game_key = (game_id, away_team, home_team)
+        if game_key not in game_bookmaker_data:
+            game_bookmaker_data[game_key] = {}
+        
+        # Store away and home rows separately
+        for _, row in group.iterrows():
+            if row['side'] == 'away':
+                if bookmaker not in game_bookmaker_data[game_key]:
+                    game_bookmaker_data[game_key][bookmaker] = {}
+                game_bookmaker_data[game_key][bookmaker]['away'] = row
+            elif row['side'] == 'home':
+                if bookmaker not in game_bookmaker_data[game_key]:
+                    game_bookmaker_data[game_key][bookmaker] = {}
+                game_bookmaker_data[game_key][bookmaker]['home'] = row
     
-    for (game_id, away_team, home_team), game_df in game_groups:
+    # Now format output
+    for (game_id, away_team, home_team), bookmakers in game_bookmaker_data.items():
         # Check if any movement in this game crossed zero
-        has_crossed_zero = game_df['crossed_zero_1h'].any() or game_df['crossed_zero_24h'].any()
+        has_crossed_zero = False
+        for bookmaker_data in bookmakers.values():
+            for side_data in bookmaker_data.values():
+                if side_data.get('crossed_zero_1h', False) or side_data.get('crossed_zero_24h', False):
+                    has_crossed_zero = True
+                    break
+        
         crossed_flag = " 🚨" if has_crossed_zero else ""
         
-        # Game header with home team labeled
-        lines.append(f"  {away_team} @ {home_team} (home){crossed_flag}")
+        # Game header
+        lines.append(f"  {away_team} @ {home_team}{crossed_flag}")
         lines.append("")
         
         # List all bookmakers for this game
-        for _, row in game_df.iterrows():
-            was_1h = f"{row['prev_1h_raw_spread']}/{row['prev_1h_price']}" if pd.notna(row.get('prev_1h_raw_spread')) else "—"
-            was_24h = f"{row['prev_24h_raw_spread']}/{row['prev_24h_price']}" if pd.notna(row.get('prev_24h_raw_spread')) else "—"
-            now = f"{row['current_raw_spread']}/{row['current_price']}"
+        for bookmaker, side_data in bookmakers.items():
+            away_row = side_data.get('away')
+            home_row = side_data.get('home')
             
-            lines.append(f"    Book: {row['bookmaker']}")
-            lines.append(f"    24h ago: {was_24h}")
-            lines.append(f"    1h ago: {was_1h}")
-            lines.append(f"    Now: {now}")
+            # Build formatted strings for away/home at each time point
+            # 24h ago
+            away_24h = f"{away_row['prev_24h_raw_spread']}/{away_row['prev_24h_price']}" if away_row is not None and pd.notna(away_row.get('prev_24h_raw_spread')) else "—"
+            home_24h = f"{home_row['prev_24h_raw_spread']}/{home_row['prev_24h_price']}" if home_row is not None and pd.notna(home_row.get('prev_24h_raw_spread')) else "—"
+            
+            # 1h ago
+            away_1h = f"{away_row['prev_1h_raw_spread']}/{away_row['prev_1h_price']}" if away_row is not None and pd.notna(away_row.get('prev_1h_raw_spread')) else "—"
+            home_1h = f"{home_row['prev_1h_raw_spread']}/{home_row['prev_1h_price']}" if home_row is not None and pd.notna(home_row.get('prev_1h_raw_spread')) else "—"
+            
+            # Now
+            away_now = f"{away_row['current_raw_spread']}/{away_row['current_price']}" if away_row is not None else "—"
+            home_now = f"{home_row['current_raw_spread']}/{home_row['current_price']}" if home_row is not None else "—"
+            
+            lines.append(f"    Book: {bookmaker}")
+            lines.append(f"    24h ago: Away {away_24h} | Home {home_24h}")
+            lines.append(f"    1h ago:  Away {away_1h} | Home {home_1h}")
+            lines.append(f"    Now:     Away {away_now} | Home {home_now}")
             lines.append("")
         
         # Extra spacing between games
