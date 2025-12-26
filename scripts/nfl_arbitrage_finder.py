@@ -261,6 +261,7 @@ IAM PERMISSIONS (Lambda execution role):
 - s3:GetObject (read arb files from S3 - for future features)
 - s3:ListBucket (list files in S3 - for cleanup/maintenance)
 - logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents (CloudWatch Logs)
+  NOTE: Log group /aws/lambda/nfl-arbitrage-finder is created automatically on first run
 
 SCHEDULE (EventBridge):
 Recommended: Rate expression with code-level day/time checks

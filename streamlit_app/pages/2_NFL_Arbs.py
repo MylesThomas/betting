@@ -252,6 +252,31 @@ st.markdown("""
 # Constants - no longer needed, using S3
 # Dashboard now reads directly from S3 bucket
 
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def format_large_number(num):
+    """
+    Format large numbers with K/M/B suffixes.
+    
+    Examples:
+        1234 -> "1.2K"
+        12345 -> "12.3K"
+        1234567 -> "1.2M"
+        1234567890 -> "1.2B"
+    """
+    if num >= 1_000_000_000:
+        return f"{num / 1_000_000_000:.1f}B"
+    elif num >= 1_000_000:
+        return f"{num / 1_000_000:.1f}M"
+    elif num >= 1_000:
+        return f"{num / 1_000:.1f}K"
+    else:
+        return f"{num:.0f}"
+
+
 # Market display names
 MARKET_DISPLAY_NAMES = {
     'player_pass_yds': 'Passing Yards',
@@ -762,12 +787,12 @@ def main():
     
     with col1:
         total_prop_markets = len(df)
-        st.metric("🎯 Total Prop Markets", f"{total_prop_markets:,}", 
+        st.metric("🎯 Total Prop Markets", format_large_number(total_prop_markets), 
                  help="Total prop markets analyzed across all dates")
     
     with col2:
         total_arbs = len(all_arbs_df)
-        st.metric("✅ Total Arb Opportunities", f"{total_arbs:,}",
+        st.metric("✅ Total Arb Opportunities", format_large_number(total_arbs),
                  help="Total arbitrage opportunities found (is_arb=True)")
     
     with col3:
@@ -775,7 +800,7 @@ def main():
         if len(all_arbs_df) > 0 and 'over_stake' in all_arbs_df.columns and 'under_stake' in all_arbs_df.columns:
             total_wagered = (all_arbs_df['over_stake'].sum() + all_arbs_df['under_stake'].sum())
         
-        st.metric("💰 Total Wagered", f"${total_wagered:,.0f}",
+        st.metric("💰 Total Wagered", f"${format_large_number(total_wagered)}",
                  help="Total amount wagered across all arbs (assuming $100 stake)")
     
     with col4:
@@ -783,7 +808,7 @@ def main():
         if len(all_arbs_df) > 0 and 'guaranteed_profit' in all_arbs_df.columns:
             total_profit = all_arbs_df['guaranteed_profit'].sum()
         
-        st.metric("💵 Total Profit", f"${total_profit:,.0f}",
+        st.metric("💵 Total Profit", f"${format_large_number(total_profit)}",
                  help="Total guaranteed profit from all arbs")
     
     with col5:
