@@ -919,7 +919,128 @@ SES NOTES:
 - If in SES Sandbox mode: can only send to verified emails
 - For production: request SES production access in AWS Support
 - Email size limit: 10 MB (should handle 10-20 games comfortably)
-- Charts embedded as base64 data URIs (inline, not attachments)
+
+CHART DELIVERY (Gmail Compatible):
+Gmail blocks base64-encoded images for security. Solution: Host charts on S3.
+
+S3 Path Structure:
+  s3://betting-line-movement-snapshots/email-charts/{timestamp}/{game_id}.png
+  
+  Example:
+  email-charts/20251226_090200/abc123_LAL_BOS.png
+  email-charts/20251226_090200/def456_GB_BAL.png
+
+Process:
+1. Generate chart as PNG bytes (matplotlib)
+2. Upload to S3 with public-read ACL
+3. Get public S3 URL: https://betting-line-movement-snapshots.s3.us-east-2.amazonaws.com/email-charts/{timestamp}/{game_id}.png
+4. Embed in email HTML: <img src="https://...">
+5. Gmail trusts S3 URLs and displays images
+
+S3 Bucket Policy (Required):
+Make email-charts/* publicly accessible so Gmail can display images.
+
+===============================================================================
+OPTION 1: Enable ACLs (RECOMMENDED - Simpler, code already handles it)
+===============================================================================
+
+Step 1: Go to S3 Console
+  https://s3.console.aws.amazon.com/s3/buckets/betting-line-movement-snapshots
+
+Step 2: Click on bucket name "betting-line-movement-snapshots" (if not already there)
+
+Step 3: Click "Permissions" tab at the top
+
+Step 4: Find "Object Ownership" section (should be 2nd section after Block Public Access)
+  
+Step 5: Click "Edit" button
+
+Step 6: Select "ACLs enabled" radio button
+
+Step 7: Check the acknowledgment box:
+  ☑️ "I acknowledge that ACLs will be restored"
+
+Step 8: Click "Save changes"
+
+Done! The Lambda code already uploads with public-read ACL, so charts will be accessible.
+
+===============================================================================
+OPTION 2: Bucket Policy (More complex, requires disabling Block Public Access) [I DID THIS ONE]
+===============================================================================
+
+Step 1: Go to S3 Console
+  https://s3.console.aws.amazon.com/s3/buckets/betting-line-movement-snapshots
+
+Step 2: Click bucket name "betting-line-movement-snapshots"
+
+Step 3: Click "Permissions" tab
+
+Step 4: Find "Block public access (bucket settings)" section (FIRST section at top)
+
+Step 5: Click "Edit" button on that section
+
+Step 6: Uncheck ALL 4 boxes (or at minimum, uncheck the 3rd one):
+  ☐ Block public access to buckets and objects granted through new access control lists (ACLs)
+  ☐ Block public access to buckets and objects granted through any access control lists (ACLs)
+  ☐ Block public access to buckets and objects granted through new public bucket or access point policies
+  ☐ Block public access to buckets and objects granted through any public bucket or access point policies
+
+Step 7: Click "Save changes"
+
+Step 8: Type "confirm" in the text box when prompted
+
+Step 9: Click "Confirm"
+
+Step 10: Scroll down to "Bucket policy" section
+
+Step 11: Click "Edit"
+
+Step 12: Paste this complete policy:
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": "s3:GetObject",
+        "Resource": [
+          "arn:aws:s3:::betting-line-movement-snapshots/email-charts/*",
+          "arn:aws:s3:::betting-line-movement-snapshots/tmp/*"
+        ]
+      }
+    ]
+  }
+
+Note: The tmp/* path allows testing with manually uploaded files before deployment.
+
+Step 13: Click "Save changes"
+
+Done! Charts in email-charts/* and tmp/* will be publicly accessible.
+
+===============================================================================
+Verify It Worked:
+===============================================================================
+After deploying Lambda and running once, check if chart URL is publicly accessible:
+1. Find a chart URL in CloudWatch logs (will be printed during upload)
+2. Open URL in browser
+3. Should see the PNG image without authentication
+
+Test with existing file:
+You can test public access settings using the test PNG you uploaded:
+https://betting-line-movement-snapshots.s3.us-east-2.amazonaws.com/tmp/tqs-white-background-zoomed-out.png
+
+If you see "Access Denied" → ACLs not enabled or Block Public Access is on
+If image displays → Settings are correct! ✅
+
+Example chart URL format after deployment:
+https://betting-line-movement-snapshots.s3.us-east-2.amazonaws.com/email-charts/20251226_090200/abc123_Lakers_Celtics.png
+
+Note: I uploaded a .png here for testing: 
+
+Cleanup Strategy:
+- Charts only needed for ~24 hours (until next email)
+- Can add S3 lifecycle rule: Delete objects in email-charts/ after 7 days
+- Or run monthly cleanup script
 
 TROUBLESHOOTING:
 - Email not received: Check CloudWatch logs for errors, verify email in SES
@@ -1005,6 +1126,12 @@ SUPPORTED_SPORTS = [SPORT_NBA, SPORT_NFL]
 SPORT_DISPLAY_NAMES = {
     SPORT_NBA: 'NBA',
     SPORT_NFL: 'NFL'
+}
+
+# Reverse mapping: Display name -> API sport key
+DISPLAY_NAME_TO_SPORT_KEY = {
+    'NBA': SPORT_NBA,
+    'NFL': SPORT_NFL
 }
 
 # Time windows
@@ -1249,6 +1376,45 @@ def calculate_adjusted_spread(raw_spread: float, price: int) -> float:
 # CHART GENERATION FUNCTIONS
 # =============================================================================
 
+def upload_chart_to_s3(chart_bytes: bytes, timestamp: str, game_id: str, away_team: str, home_team: str) -> str:
+    """
+    Upload chart PNG to S3 and return public URL.
+    
+    Args:
+        chart_bytes: PNG image as bytes
+        timestamp: Run timestamp (e.g., '20251226_090200')
+        game_id: Unique game identifier
+        away_team: Away team name
+        home_team: Home team name
+    
+    Returns:
+        Public S3 URL for the chart
+    """
+    # Create S3 key: email-charts/{timestamp}/{game_id}_{away}_{home}.png
+    safe_away = away_team.replace(' ', '_')
+    safe_home = home_team.replace(' ', '_')
+    s3_key = f"email-charts/{timestamp}/{game_id}_{safe_away}_{safe_home}.png"
+    
+    try:
+        # Upload with public-read ACL
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=s3_key,
+            Body=chart_bytes,
+            ContentType='image/png',
+            ACL='public-read'
+        )
+        
+        # Return public URL
+        url = f"https://{S3_BUCKET}.s3.us-east-2.amazonaws.com/{s3_key}"
+        print(f"      ✅ Chart uploaded to S3: {s3_key}")
+        return url
+    
+    except Exception as e:
+        print(f"      ❌ Failed to upload chart to S3: {e}")
+        return None
+
+
 def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) -> bytes:
     """
     Create line movement chart for email embedding (matplotlib version for Lambda).
@@ -1479,7 +1645,7 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
         all_movements: Dict mapping sport name to movements DataFrame
         sport_thresholds: Dict mapping sport name to threshold  
         current_time: Current timestamp
-        sport_to_api_key: Dict mapping sport display name to API key (e.g., 'NBA' -> 'basketball_nba')
+        sport_to_api_key: Dict mapping sport display name to API sport key (e.g., 'NBA' -> 'basketball_nba')
         current_snapshots: Dict mapping sport name to current snapshot DataFrame
     
     Returns:
@@ -1504,7 +1670,9 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
     
     # Generate charts for games with movements
     print(f"\n📊 Generating charts for {len(games_with_movements)} games...")
-    game_charts = {}
+    run_timestamp = current_time.strftime(TIMESTAMP_FORMAT)  # e.g., '20251226_090200'
+    game_charts = {}  # Will store game_id -> S3 URL
+    
     for game_id, game_info in games_with_movements.items():
         print(f"   Fetching snapshots for {game_info['away_team']} @ {game_info['home_team']}...")
         
@@ -1518,9 +1686,16 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
                 title=f"{game_info['away_team']} @ {game_info['home_team']}"
             )
             if chart_bytes:
-                chart_b64 = base64.b64encode(chart_bytes).decode('utf-8')
-                game_charts[game_id] = chart_b64
-                print(f"      ✅ Chart generated ({len(chart_b64)} bytes base64)")
+                # Upload to S3 and get public URL
+                chart_url = upload_chart_to_s3(
+                    chart_bytes,
+                    run_timestamp,
+                    game_id,
+                    game_info['away_team'],
+                    game_info['home_team']
+                )
+                if chart_url:
+                    game_charts[game_id] = chart_url
         else:
             print(f"      ⚠️  No snapshots found for this game")
     
@@ -1638,7 +1813,7 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
             if game_id in game_charts:
                 html_parts.append(f"""
                 <div class="chart">
-                    <img src="data:image/png;base64,{game_charts[game_id]}" alt="Line Movement Chart">
+                    <img src="{game_charts[game_id]}" alt="Line Movement Chart" style="max-width: 100%; height: auto;">
                 </div>
                 """)
             
@@ -1715,10 +1890,18 @@ def format_movements_text_for_game(df: pd.DataFrame) -> str:
         for _, row in book_df.iterrows():
             side = row['side']
             
+            # Format with proper column names
+            spread_24h = row['prev_24h_raw_spread'] if pd.notna(row.get('prev_24h_raw_spread')) else '—'
+            price_24h = row['prev_24h_price'] if pd.notna(row.get('prev_24h_price')) else '—'
+            spread_1h = row['prev_1h_raw_spread'] if pd.notna(row.get('prev_1h_raw_spread')) else '—'
+            price_1h = row['prev_1h_price'] if pd.notna(row.get('prev_1h_price')) else '—'
+            spread_now = row['current_raw_spread']
+            price_now = row['current_price']
+            
             lines.append(f"\nBook: {bookmaker}")
-            lines.append(f"24h ago: {side} {row['spread_24h_ago']}/{row['price_24h_ago']}")
-            lines.append(f"1h ago:  {side} {row['spread_1h_ago']}/{row['price_1h_ago']}")
-            lines.append(f"Now:     {side} {row['spread_current']}/{row['price_current']}")
+            lines.append(f"24h ago: {side} {spread_24h}/{price_24h}")
+            lines.append(f"1h ago:  {side} {spread_1h}/{price_1h}")
+            lines.append(f"Now:     {side} {spread_now}/{price_now}")
     
     return '\n'.join(lines)
 
@@ -2487,7 +2670,15 @@ def main():
         
         if df_1h is None and df_24h is None:
             print(f"\n   ℹ️  First run for {sport} - no historical data for comparison")
-            print(f"      Future runs will detect movement")
+            print(f"      Current snapshot saved to S3")
+            print(f"      ⏰ Next run at top of hour will have data for comparison")
+            
+            # Calculate next top of hour
+            current_time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
+            next_hour_et = (current_time_et + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+            minutes_until_next = int((next_hour_et - current_time_et).total_seconds() / 60)
+            print(f"      📅 Next scheduled run: {next_hour_et.strftime('%I:%M %p ET')} ({minutes_until_next} minutes)")
+            
             continue
         
         # Compare and detect movements
@@ -2595,12 +2786,6 @@ def main():
             'NFL': MOVEMENT_THRESHOLD_NFL
         }
         
-        # Build sport to API key mapping
-        sport_to_api_key = {
-            'NBA': SPORT_NBA,
-            'NFL': SPORT_NFL
-        }
-        
         # Generate email with ET timestamp
         current_time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
         time_str_et = current_time_et.strftime('%b %d, %Y %I:%M %p ET')
@@ -2616,7 +2801,7 @@ def main():
             movements_dict, 
             sport_thresholds, 
             current_time,
-            sport_to_api_key,
+            DISPLAY_NAME_TO_SPORT_KEY,
             current_snapshots
         )
         
