@@ -69,7 +69,15 @@ def fetch_futures(sport_key):
 
 
 def parse_futures_to_df(data, sport_name):
-    """Parse futures data into a DataFrame"""
+    """
+    Parse futures data into a DataFrame.
+    
+    Note: The Odds API with oddsFormat='american' should return proper American odds.
+    Positive odds (underdogs) are returned as positive integers (e.g., 150 means +150).
+    Negative odds (favorites) are returned as negative integers (e.g., -110).
+    
+    Some bookmakers may have data quality issues - we store odds as-is from the API.
+    """
     futures_list = []
     
     for item in data:
@@ -82,11 +90,13 @@ def parse_futures_to_df(data, sport_name):
                 market_key = market['key']
                 
                 for outcome in market.get('outcomes', []):
+                    odds = outcome.get('price')
+                    
                     futures_list.append({
                         'sport': sport_name,
                         'bookmaker': bookmaker_name,
                         'team': outcome.get('name'),
-                        'odds': outcome.get('price')
+                        'odds': odds
                     })
     
     return pd.DataFrame(futures_list)
@@ -117,12 +127,16 @@ def main():
         if not df_nfl.empty:
             print(f"✅ Found {len(df_nfl)} odds from {df_nfl['bookmaker'].nunique()} bookmakers")
             
-            # Show top 10 favorites
-            avg_odds = df_nfl.groupby('team')['odds'].mean().sort_values()
-            print("\nTop 10 Super Bowl Favorites:")
-            print("-" * 60)
-            for i, (team, odds) in enumerate(avg_odds.head(10).items(), 1):
-                print(f"{i:2d}. {team:<35} {odds:+7.0f}")
+            # Show top 10 favorites by best available odds
+            # Best odds = most favorable to bettor (least negative for favorites, most positive for dogs)
+            best_odds_per_team = df_nfl.loc[df_nfl.groupby('team')['odds'].idxmax()]
+            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=False)
+            
+            print("\nTop 10 Super Bowl Favorites (Best Available Odds):")
+            print("-" * 70)
+            for i, row in enumerate(best_odds_per_team.head(10).itertuples(), 1):
+                odds_str = f"+{int(row.odds)}" if row.odds > 0 else f"{int(row.odds)}"
+                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.bookmaker})")
             
             # Save to CSV with timestamp
             output_file = f'../data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_{timestamp}.csv'
@@ -144,12 +158,16 @@ def main():
         if not df_nba.empty:
             print(f"✅ Found {len(df_nba)} odds from {df_nba['bookmaker'].nunique()} bookmakers")
             
-            # Show top 10 favorites
-            avg_odds = df_nba.groupby('team')['odds'].mean().sort_values()
-            print("\nTop 10 NBA Championship Favorites:")
-            print("-" * 60)
-            for i, (team, odds) in enumerate(avg_odds.head(10).items(), 1):
-                print(f"{i:2d}. {team:<35} {odds:+7.0f}")
+            # Show top 10 favorites by best available odds
+            # Best odds = most favorable to bettor (least negative for favorites, most positive for dogs)
+            best_odds_per_team = df_nba.loc[df_nba.groupby('team')['odds'].idxmax()]
+            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=False)
+            
+            print("\nTop 10 NBA Championship Favorites (Best Available Odds):")
+            print("-" * 70)
+            for i, row in enumerate(best_odds_per_team.head(10).itertuples(), 1):
+                odds_str = f"+{int(row.odds)}" if row.odds > 0 else f"{int(row.odds)}"
+                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.bookmaker})")
             
             # Save to CSV with timestamp
             output_file = f'../data/01_input/the-odds-api/nba/futures/nba_championship_futures_{timestamp}.csv'
