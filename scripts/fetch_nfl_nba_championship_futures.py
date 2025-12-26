@@ -1,18 +1,20 @@
 """
-Simple test script to fetch NFL and NBA championship futures from The Odds API.
+Simple script to fetch championship futures from The Odds API.
 
 Purpose:
 - Fetch NFL Super Bowl championship odds
 - Fetch NBA Championship odds
+- Fetch NCAA Football (CFP) Championship odds
 - Save timestamped files to track odds movement over time
 
 Usage:
-    cd /Users/thomasmyles/dev/betting/api_setup
-    python3 test_futures_simple.py
+    cd /Users/thomasmyles/dev/betting
+    python3 scripts/fetch_nfl_nba_championship_futures.py
 
 Output:
 - data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_YYYYMMDD_HHMMSS.csv
 - data/01_input/the-odds-api/nba/futures/nba_championship_futures_YYYYMMDD_HHMMSS.csv
+- data/01_input/the-odds-api/ncaaf/futures/ncaaf_championship_futures_YYYYMMDD_HHMMSS.csv
 
 API docs: https://the-odds-api.com/liveapi/guides/v4/
 """
@@ -27,8 +29,16 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
 import pandas as pd
 import os
+import sys
 from datetime import datetime
 from dotenv import load_dotenv
+from pathlib import Path
+
+# Add src to path for odds_utils
+repo_root = Path(__file__).parent.parent
+sys.path.insert(0, str(repo_root / 'src'))
+
+from odds_utils import odds_to_implied_probability
 
 # Monkey-patch requests to disable SSL verification
 original_request = requests.Session.request
@@ -77,6 +87,8 @@ def parse_futures_to_df(data, sport_name):
     Negative odds (favorites) are returned as negative integers (e.g., -110).
     
     Some bookmakers may have data quality issues - we store odds as-is from the API.
+    
+    Also calculates implied probability for easier sorting and analysis.
     """
     futures_list = []
     
@@ -91,12 +103,14 @@ def parse_futures_to_df(data, sport_name):
                 
                 for outcome in market.get('outcomes', []):
                     odds = outcome.get('price')
+                    implied_prob = odds_to_implied_probability(odds)
                     
                     futures_list.append({
                         'sport': sport_name,
                         'bookmaker': bookmaker_name,
                         'team': outcome.get('name'),
-                        'odds': odds
+                        'odds': odds,
+                        'implied_prob': implied_prob
                     })
     
     return pd.DataFrame(futures_list)
@@ -127,17 +141,17 @@ def main():
         if not df_nfl.empty:
             print(f"✅ Found {len(df_nfl)} odds from {df_nfl['bookmaker'].nunique()} bookmakers")
             
-            # Show top 10 favorites by best available odds
-            # Best odds = most favorable to bettor (least negative for favorites, most positive for dogs)
+            # Show top 10 favorites - use best odds per team (highest implied prob = lowest odds)
+            # Get best odds for each team (max odds = most favorable to bettor)
             best_odds_per_team = df_nfl.loc[df_nfl.groupby('team')['odds'].idxmax()]
-            # Sort by odds ascending (most negative = biggest favorite)
-            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=True)
+            # Sort by implied probability descending (highest prob = biggest favorite)
+            best_odds_per_team = best_odds_per_team.sort_values('implied_prob', ascending=False)
             
             print("\nTop 10 Super Bowl Favorites (Best Available Odds):")
-            print("-" * 70)
+            print("-" * 75)
             for i, row in enumerate(best_odds_per_team.head(10).itertuples(), 1):
                 odds_str = f"+{int(row.odds)}" if row.odds > 0 else f"{int(row.odds)}"
-                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.bookmaker})")
+                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
             
             # Save to CSV with timestamp
             output_file = f'../data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_{timestamp}.csv'
@@ -159,17 +173,17 @@ def main():
         if not df_nba.empty:
             print(f"✅ Found {len(df_nba)} odds from {df_nba['bookmaker'].nunique()} bookmakers")
             
-            # Show top 10 favorites by best available odds
-            # Best odds = most favorable to bettor (least negative for favorites, most positive for dogs)
+            # Show top 10 favorites - use best odds per team (highest implied prob = lowest odds)
+            # Get best odds for each team (max odds = most favorable to bettor)
             best_odds_per_team = df_nba.loc[df_nba.groupby('team')['odds'].idxmax()]
-            # Sort by odds ascending (most negative = biggest favorite)
-            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=True)
+            # Sort by implied probability descending (highest prob = biggest favorite)
+            best_odds_per_team = best_odds_per_team.sort_values('implied_prob', ascending=False)
             
             print("\nTop 10 NBA Championship Favorites (Best Available Odds):")
-            print("-" * 70)
+            print("-" * 75)
             for i, row in enumerate(best_odds_per_team.head(10).itertuples(), 1):
                 odds_str = f"+{int(row.odds)}" if row.odds > 0 else f"{int(row.odds)}"
-                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.bookmaker})")
+                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
             
             # Save to CSV with timestamp
             output_file = f'../data/01_input/the-odds-api/nba/futures/nba_championship_futures_{timestamp}.csv'
@@ -182,6 +196,38 @@ def main():
     except Exception as e:
         print(f"❌ Error fetching NBA futures: {e}")
     
+    # Test NCAA Football Championship futures (College Football Playoff)
+    print("\n\n🏈 Fetching NCAA Football Championship futures...")
+    try:
+        ncaaf_data = fetch_futures('americanfootball_ncaaf_championship_winner')
+        df_ncaaf = parse_futures_to_df(ncaaf_data, 'NCAAF')
+        
+        if not df_ncaaf.empty:
+            print(f"✅ Found {len(df_ncaaf)} odds from {df_ncaaf['bookmaker'].nunique()} bookmakers")
+            
+            # Show top 10 favorites - use best odds per team (highest implied prob = lowest odds)
+            # Get best odds for each team (max odds = most favorable to bettor)
+            best_odds_per_team = df_ncaaf.loc[df_ncaaf.groupby('team')['odds'].idxmax()]
+            # Sort by implied probability descending (highest prob = biggest favorite)
+            best_odds_per_team = best_odds_per_team.sort_values('implied_prob', ascending=False)
+            
+            print("\nTop 10 CFP National Championship Favorites (Best Available Odds):")
+            print("-" * 75)
+            for i, row in enumerate(best_odds_per_team.head(10).itertuples(), 1):
+                odds_str = f"+{int(row.odds)}" if row.odds > 0 else f"{int(row.odds)}"
+                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
+            
+            # Save to CSV with timestamp
+            output_file = f'../data/01_input/the-odds-api/ncaaf/futures/ncaaf_championship_futures_{timestamp}.csv'
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            df_ncaaf.to_csv(output_file, index=False)
+            print(f"\n💾 Saved to: {output_file}")
+        else:
+            print("⚠️  No NCAA Football futures data found")
+            
+    except Exception as e:
+        print(f"❌ Error fetching NCAA Football futures: {e}")
+    
     print("\n" + "="*80)
     print("✅ TEST COMPLETE")
     print("="*80)
@@ -191,7 +237,6 @@ def main():
     print("   - baseball_mlb_world_series_winner")
     print("   - icehockey_nhl_championship_winner")
     print("   - basketball_ncaab_championship_winner")
-    print("   - americanfootball_ncaaf_championship_winner")
 
 
 if __name__ == "__main__":
