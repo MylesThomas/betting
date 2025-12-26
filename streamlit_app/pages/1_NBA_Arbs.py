@@ -75,6 +75,10 @@ from src.team_utils_simple import add_team_column_simple
 from src.team_utils import get_all_teams
 from src.config import NBA_TEAMS
 
+# Add utils to path for shared formatters
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.formatters import format_large_number
+
 # S3 Configuration
 S3_BUCKET = os.getenv('S3_BUCKET_NAME', 'betting-nba-arbs')
 s3_client = boto3.client('s3')
@@ -760,16 +764,7 @@ def main():
     
     with col1:
         total_arbs = len(all_arbs_df)
-        # Format with K/M/B if over 1000
-        if total_arbs >= 1_000_000_000:
-            arbs_str = f"{total_arbs/1_000_000_000:,.1f}B"
-        elif total_arbs >= 1_000_000:
-            arbs_str = f"{total_arbs/1_000_000:,.1f}M"
-        elif total_arbs >= 1_000:
-            arbs_str = f"{total_arbs/1_000:,.1f}K"
-        else:
-            arbs_str = f"{total_arbs:,}"
-        st.metric("✅ Total Arb Opportunities", arbs_str,
+        st.metric("✅ Total Arb Opportunities", format_large_number(total_arbs),
                  help="Total arbitrage opportunities found across all dates")
     
     with col2:
@@ -777,16 +772,7 @@ def main():
         if len(all_arbs_df) > 0 and 'over_stake' in all_arbs_df.columns and 'under_stake' in all_arbs_df.columns:
             total_wagered = (all_arbs_df['over_stake'].sum() + all_arbs_df['under_stake'].sum())
         
-        # Format with K/M/B if over 1000
-        if total_arbs >= 1_000_000_000:
-            arbs_str = f"{total_arbs/1_000_000_000:,.1f}B"
-        elif total_wagered >= 1_000_000:
-            wagered_str = f"${total_wagered/1_000_000:,.1f}M"
-        elif total_wagered >= 1_000:
-            wagered_str = f"${total_wagered/1_000:,.1f}K"
-        else:
-            wagered_str = f"${total_wagered:,.0f}"
-        st.metric("💰 Total Wagered", wagered_str,
+        st.metric("💰 Total Wagered", f"${format_large_number(total_wagered)}",
                  help="Total amount wagered across all arbs (assuming $100 stake)")
     
     with col3:
@@ -794,16 +780,7 @@ def main():
         if len(all_arbs_df) > 0 and 'guaranteed_profit' in all_arbs_df.columns:
             total_profit = all_arbs_df['guaranteed_profit'].sum()
         
-        # Format with K/M/B if over 1000
-        if total_arbs >= 1_000_000_000:
-            arbs_str = f"{total_arbs/1_000_000_000:,.1f}B"
-        elif total_profit >= 1_000_000:
-            profit_str = f"${total_profit/1_000_000:,.1f}M"
-        elif total_profit >= 1_000:
-            profit_str = f"${total_profit/1_000:,.1f}K"
-        else:
-            profit_str = f"${total_profit:,.0f}"
-        st.metric("💵 Total Profit", profit_str,
+        st.metric("💵 Total Profit", f"${format_large_number(total_profit)}",
                  help="Total guaranteed profit from all arbs")
     
     with col4:

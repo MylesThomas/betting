@@ -74,6 +74,10 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from src.nfl_team_utils import NFL_TEAM_MAPPING, full_name_to_abbr
 from src.config import get_current_nfl_week, get_nfl_week_range, get_nfl_week_for_date
 
+# Add utils to path for shared formatters
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.formatters import format_large_number
+
 # S3 Configuration
 S3_BUCKET = os.getenv('S3_BUCKET_NAME_NFL', 'betting-nfl-arbs')
 s3_client = boto3.client('s3')
@@ -257,24 +261,7 @@ st.markdown("""
 # HELPER FUNCTIONS
 # ============================================================================
 
-def format_large_number(num):
-    """
-    Format large numbers with K/M/B suffixes.
-    
-    Examples:
-        1234 -> "1.2K"
-        12345 -> "12.3K"
-        1234567 -> "1.2M"
-        1234567890 -> "1.2B"
-    """
-    if num >= 1_000_000_000:
-        return f"{num / 1_000_000_000:.1f}B"
-    elif num >= 1_000_000:
-        return f"{num / 1_000_000:.1f}M"
-    elif num >= 1_000:
-        return f"{num / 1_000:.1f}K"
-    else:
-        return f"{num:.0f}"
+# Note: format_large_number() now imported from utils.formatters
 
 
 # Market display names

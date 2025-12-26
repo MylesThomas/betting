@@ -214,8 +214,8 @@ def main():
         - 10+ US Sportsbooks
         
         ⏰ **Update Schedule:**
-        - NBA: 12:00 PM ET daily
-        - NFL: Before game time
+        - NBA: Every 5 min during game days
+        - NFL: Every 5 min during game days
         
         💡 **Pro Tips:**
         - Higher profit % = better opportunity
