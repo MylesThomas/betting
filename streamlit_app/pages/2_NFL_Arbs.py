@@ -2,19 +2,86 @@
 TQS NFL Props Dashboard
 
 NFL Player Props Arbitrage Dashboard - find and track arb opportunities.
+
+DATA SOURCE: S3 (migrated from Git)
+    - Lambda saves arb files to: s3://betting-nfl-arbs/nfl/arbs/YYYY-MM-DD/
+    - Dashboard reads directly from S3
+    - No more git clone/pull operations
+
+AWS CREDENTIALS SETUP (Streamlit Cloud):
+    1. Go to: https://share.streamlit.io/
+    2. Click on your app → Settings (⚙️) → Secrets
+    3. Add the following in TOML format:
+       
+       ```toml
+       AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
+       AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+       AWS_DEFAULT_REGION = "us-east-2"
+       S3_BUCKET_NAME_NFL = "betting-nfl-arbs"
+       ```
+    
+    4. Click "Save"
+    5. App will auto-restart with new credentials
+    
+    HOW TO GET AWS CREDENTIALS:
+    - Go to: https://console.aws.amazon.com/iam/
+    - Click "Users" → Find your user
+    - Click "Security credentials" tab
+    - Scroll to "Access keys" → "Create access key"
+    - Choose "Application running outside AWS"
+    - Copy both keys (secret key only shown once!)
+    - Paste into Streamlit Cloud Secrets (TOML format above)
+    
+    Note: These are stored securely in Streamlit Cloud and accessed via os.getenv()
+
+LOCAL TESTING:
+    If running locally, credentials are auto-loaded from ~/.aws/credentials
+    (set up via `aws configure` command)
+
+DATA HANDLING:
+    - Lambda runs every 5 minutes during game days, saving snapshots to S3
+    - Each file contains arbs found at that moment (lines change frequently)
+    - Dashboard loads ALL files for a date and DEDUPES by (player, market, line)
+    - For duplicate combos, keeps the row with HIGHEST expected_profit_pct
+    - This captures the BEST opportunity that appeared during the day
+
+DEDUPLICATION:
+    - Same player/market/line may appear in multiple 5-min snapshots
+    - Odds fluctuate, so arb may be 3% at 1pm but 5% at 2pm
+    - We keep the 5% version (best opportunity)
+    - Metrics (total arbs, profit, etc.) calculated on deduped data
+
+LIVE PROP BEHAVIOR (observed):
+    - NFL lines move frequently, especially during live games
+    - Arb opportunities appear and disappear within minutes
+    - 5-min snapshots capture most opportunities during game days
+    - Best arbs often last < 30 minutes before books adjust
 """
 
 import streamlit as st
 import pandas as pd
+import os
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import sys
+import boto3
+from io import StringIO
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from src.nfl_team_utils import NFL_TEAM_MAPPING, full_name_to_abbr
 from src.config import get_current_nfl_week, get_nfl_week_range, get_nfl_week_for_date
+
+# S3 Configuration
+S3_BUCKET = os.getenv('S3_BUCKET_NAME_NFL', 'betting-nfl-arbs')
+s3_client = boto3.client('s3')
+
+# Performance tuning for parallel S3 downloads
+# Higher = faster loading but more memory/network usage
+# 200 workers can handle hundreds of files in seconds
+MAX_WORKERS = 200
 
 
 # Page config
@@ -182,8 +249,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Constants  
-DATA_DIR = Path(__file__).parent.parent.parent / "data/04_output/nfl/arbs"
+# Constants - no longer needed, using S3
+# Dashboard now reads directly from S3 bucket
 
 # Market display names
 MARKET_DISPLAY_NAMES = {
@@ -209,6 +276,248 @@ MARKET_DISPLAY_NAMES = {
 }
 
 
+# Helper functions
+def load_single_s3_file(s3_key: str) -> pd.DataFrame:
+    """
+    Load a single S3 file (used for parallel processing).
+    
+    Args:
+        s3_key: S3 key to load
+    
+    Returns:
+        DataFrame with file metadata added, or None if failed
+    """
+    try:
+        # Download file from S3
+        obj = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
+        csv_content = obj['Body'].read().decode('utf-8')
+        df = pd.read_csv(StringIO(csv_content))
+        
+        # Skip empty files
+        if len(df) == 0:
+            return None
+        
+        # Extract date from S3 key: nfl/arbs/2025-12-24/arb_output_20251224_180000.csv
+        parts = s3_key.split('/')
+        if len(parts) >= 4:
+            file_date = parts[2]  # YYYY-MM-DD
+            filename = parts[-1]  # arb_output_20251224_180000.csv
+            
+            # Extract time from filename
+            filename_parts = filename.replace('.csv', '').split('_')
+            if len(filename_parts) >= 3:
+                date_str = filename_parts[-2]  # YYYYMMDD
+                time_str = filename_parts[-1]  # HHMMSS
+                
+                file_datetime_utc = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
+                # Convert UTC to ET for display
+                file_datetime_utc = file_datetime_utc.replace(tzinfo=ZoneInfo('UTC'))
+                file_datetime_et = file_datetime_utc.astimezone(ZoneInfo('America/New_York'))
+                
+                df['file_date'] = file_date
+                df['file_datetime'] = file_datetime_et
+                df['source_file'] = filename
+        
+        return df
+    except Exception as e:
+        # Silently skip failed files (will be logged if needed)
+        return None
+
+
+@st.cache_data(ttl=60)
+def load_all_arbs(max_workers: int = MAX_WORKERS):
+    """
+    Load all arbitrage opportunities from S3 (parallel loading for speed).
+    
+    PARALLEL LOADING:
+    - Uses ThreadPoolExecutor with {MAX_WORKERS} workers by default
+    - Loads files much faster than sequential loading
+    - Each worker downloads and parses one file independently
+    
+    DEDUPLICATION STRATEGY:
+    - Multiple files may exist per day (Lambda runs every 5 min during game days)
+    - Same player/market/line may appear in multiple files with different odds
+    - We keep the BEST opportunity (highest expected_profit_pct) for each:
+      - (file_date, player, market, line) combination
+    - This captures the best historical opportunity even as lines move
+    
+    Args:
+        max_workers: Number of parallel download threads (default: 200)
+    
+    Returns:
+        DataFrame with deduped arbs, keeping best expected_profit_pct per player/market/line/day
+    """
+    try:
+        # List all files in S3 under nfl/arbs/ (with pagination for >1000 files)
+        arb_files = []
+        paginator = s3_client.get_paginator('list_objects_v2')
+        page_iterator = paginator.paginate(
+            Bucket=S3_BUCKET,
+            Prefix='nfl/arbs/'
+        )
+        
+        for page in page_iterator:
+            if 'Contents' in page:
+                # Filter for CSV files
+                arb_files.extend([obj['Key'] for obj in page['Contents'] if obj['Key'].endswith('.csv')])
+        
+        if not arb_files:
+            return None
+        
+        # Load files in parallel with ThreadPoolExecutor
+        all_dfs = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_key = {executor.submit(load_single_s3_file, s3_key): s3_key for s3_key in arb_files}
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_key):
+                df = future.result()
+                if df is not None:
+                    all_dfs.append(df)
+        
+        if not all_dfs:
+            return None
+        
+        combined_df = pd.concat(all_dfs, ignore_index=True)
+        
+        # Deduplicate: for each (file_date, player, market, line), keep the row with best expected_profit_pct
+        if len(combined_df) > 0 and 'expected_profit_pct' in combined_df.columns:
+            # Sort by expected_profit_pct descending, then take first per group
+            combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
+            combined_df = combined_df.drop_duplicates(
+                subset=['file_date', 'player', 'market', 'line'],
+                keep='first'
+            )
+            # Re-sort by file_date (desc) then expected_profit_pct (desc)
+            combined_df = combined_df.sort_values(
+                ['file_date', 'expected_profit_pct'], 
+                ascending=[False, False]
+            )
+        
+        return combined_df
+        
+    except Exception as e:
+        st.error(f"Error loading from S3: {e}")
+        return None
+
+
+@st.cache_data(ttl=60)
+def get_arb_history(max_workers: int = MAX_WORKERS):
+    """
+    Get historical summary by DATE (not by file) from S3.
+    
+    Multiple files may exist per day (Lambda runs every 5 min during game days).
+    This function groups by date and shows deduped metrics.
+    
+    OPTIMIZATION: Uses parallel loading with ThreadPoolExecutor for speed.
+    
+    Args:
+        max_workers: Number of parallel download threads (default: 200)
+    
+    Returns:
+        List of dictionaries with daily metrics
+    """
+    try:
+        # List all files in S3 (with pagination for >1000 files)
+        arb_files = []
+        paginator = s3_client.get_paginator('list_objects_v2')
+        page_iterator = paginator.paginate(
+            Bucket=S3_BUCKET,
+            Prefix='nfl/arbs/'
+        )
+        
+        for page in page_iterator:
+            if 'Contents' in page:
+                arb_files.extend([obj['Key'] for obj in page['Contents'] if obj['Key'].endswith('.csv')])
+        
+        if not arb_files:
+            return []
+        
+        # Load ALL files in parallel first (reuse load_single_s3_file helper)
+        all_dfs_with_dates = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_key = {executor.submit(load_single_s3_file, s3_key): s3_key for s3_key in arb_files}
+            
+            for future in as_completed(future_to_key):
+                s3_key = future_to_key[future]
+                df = future.result()
+                if df is not None:
+                    # Extract date from key
+                    parts = s3_key.split('/')
+                    if len(parts) >= 3:
+                        file_date = parts[2]
+                        all_dfs_with_dates.append((file_date, df))
+        
+        # Group loaded DataFrames by date
+        dfs_by_date = {}
+        for file_date, df in all_dfs_with_dates:
+            if file_date not in dfs_by_date:
+                dfs_by_date[file_date] = []
+            dfs_by_date[file_date].append(df)
+        
+        # Calculate metrics for each date
+        history = []
+        for file_date, day_dfs in sorted(dfs_by_date.items(), reverse=True):
+            try:
+                if not day_dfs:
+                    continue
+                
+                combined = pd.concat(day_dfs, ignore_index=True)
+                
+                # Dedupe by player/market/line, keep best expected_profit_pct
+                if 'expected_profit_pct' in combined.columns:
+                    combined = combined.sort_values('expected_profit_pct', ascending=False)
+                    deduped = combined.drop_duplicates(
+                        subset=['player', 'market', 'line'],
+                        keep='first'
+                    )
+                else:
+                    deduped = combined.drop_duplicates(
+                        subset=['player', 'market', 'line'],
+                        keep='first'
+                    )
+                
+                # Calculate metrics on deduped data
+                arbs_df = deduped[deduped['is_arb'] == True] if 'is_arb' in deduped.columns else deduped
+                
+                total_wagered = 0
+                total_profit = 0
+                avg_profit_pct = 0
+                max_profit_pct = 0
+                
+                if len(arbs_df) > 0:
+                    if 'over_stake' in arbs_df.columns and 'under_stake' in arbs_df.columns:
+                        total_wagered = (arbs_df['over_stake'].sum() + arbs_df['under_stake'].sum())
+                    if 'guaranteed_profit' in arbs_df.columns:
+                        total_profit = arbs_df['guaranteed_profit'].sum()
+                    if 'expected_profit_pct' in arbs_df.columns:
+                        avg_profit_pct = arbs_df['expected_profit_pct'].mean()
+                        max_profit_pct = arbs_df['expected_profit_pct'].max()
+                
+                num_games = deduped['game'].nunique() if 'game' in deduped.columns else 0
+                num_snapshots = len([d for d in day_dfs])
+                
+                history.append({
+                    'date': file_date,
+                    'num_games': num_games,
+                    'num_snapshots': num_snapshots,  # How many 5-min snapshots
+                    'arbs_found': len(arbs_df),
+                    'avg_profit': avg_profit_pct,
+                    'max_profit': max_profit_pct,
+                    'total_wagered': total_wagered,
+                    'total_profit': total_profit
+                })
+            except:
+                continue
+        
+        return history
+        
+    except Exception as e:
+        st.error(f"Error loading history from S3: {e}")
+        return []
+
+
 def add_team_column(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add team abbreviation column based on game matchup.
@@ -230,106 +539,6 @@ def add_team_column(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# Helper functions
-@st.cache_data(ttl=60)
-def load_all_arbs():
-    """Load all arbitrage opportunities from all files."""
-    if not DATA_DIR.exists():
-        return None
-    
-    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"))
-    
-    if not arb_files:
-        return None
-    
-    all_dfs = []
-    
-    for arb_file in arb_files:
-        try:
-            df = pd.read_csv(arb_file)
-            
-            parts = arb_file.stem.split('_')
-            date_str = parts[-2]
-            time_str = parts[-1]
-            
-            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-            file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
-            
-            df['file_date'] = file_date
-            df['file_datetime'] = file_datetime
-            df['source_file'] = arb_file.name
-            
-            all_dfs.append(df)
-        except Exception as e:
-            continue
-    
-    if not all_dfs:
-        return None
-    
-    combined_df = pd.concat(all_dfs, ignore_index=True)
-    
-    return combined_df
-
-
-@st.cache_data(ttl=60)
-def get_arb_history():
-    """Get list of all historical arb files."""
-    if not DATA_DIR.exists():
-        return []
-    
-    arb_files = sorted(DATA_DIR.glob("arb_output_*.csv"), reverse=True)
-    
-    history = []
-    for file in arb_files:
-        try:
-            df = pd.read_csv(file)
-            
-            parts = file.stem.split('_')
-            date_str = parts[-2]
-            time_str = parts[-1]
-            
-            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-            file_datetime = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
-            
-            total_props = len(df)
-            
-            arbs_df = df[df['is_arb'] == True] if 'is_arb' in df.columns else pd.DataFrame()
-            arbs_count = len(arbs_df)
-            
-            total_wagered = 0
-            total_profit = 0
-            avg_profit_pct = 0
-            max_profit_pct = 0
-            
-            if len(arbs_df) > 0:
-                if 'over_stake' in arbs_df.columns and 'under_stake' in arbs_df.columns:
-                    total_wagered = (arbs_df['over_stake'].sum() + arbs_df['under_stake'].sum())
-                if 'guaranteed_profit' in arbs_df.columns:
-                    total_profit = arbs_df['guaranteed_profit'].sum()
-                if 'expected_profit_pct' in arbs_df.columns:
-                    avg_profit_pct = arbs_df['expected_profit_pct'].mean()
-                    max_profit_pct = arbs_df['expected_profit_pct'].max()
-            
-            num_games = df['game'].nunique() if 'game' in df.columns else 0
-            
-            history.append({
-                'date': file_date,
-                'datetime': file_datetime,
-                'num_games': num_games,
-                'file': file.name,
-                'prop_markets': total_props,
-                'arbs_found': arbs_count,
-                'avg_profit': avg_profit_pct,
-                'max_profit': max_profit_pct,
-                'total_wagered': total_wagered,
-                'total_profit': total_profit
-            })
-        except:
-            continue
-    
-    return history
-
-
 # Main app
 def main():
     # Header
@@ -342,18 +551,7 @@ def main():
     
     if df is None:
         st.warning("⚠️ No NFL arb data files found yet.")
-        st.info("""
-        **To generate NFL arb data, run:**
-        
-        ```bash
-        python scripts/find_nfl_arb_opportunities.py
-        ```
-        
-        Or for the full week's games:
-        ```bash
-        python scripts/find_nfl_arb_opportunities.py --week
-        ```
-        """)
+        st.info("Data will be updated automatically during NFL game days (Thu/Sun/Mon).")
         
         # Show empty metrics
         st.markdown("---")
@@ -488,15 +686,27 @@ def main():
         - Sunday: 13-14 games
         - Monday Night: 1 game
         
+        **Data Source:** S3 (betting-nfl-arbs)
+        
+        **Scheduled run:** Every 5 min during game days
+        
         **Markets monitored:**
         - Passing: Yards, TDs, Completions
         - Rushing: Yards, Attempts
         - Receiving: Yards, Receptions
         - Touchdowns: Anytime TD
+        - Kicking: Points, Field Goals
+        - Defense: Tackles, Sacks
         
-        **Run the script before games:**
+        **Data refreshes automatically from S3.**
+        
+        **AWS Setup (Streamlit Cloud):**
+        Add to Secrets in Streamlit Cloud settings:
         ```
-        python scripts/find_nfl_arb_opportunities.py --week --all-markets
+        AWS_ACCESS_KEY_ID = "your_key"
+        AWS_SECRET_ACCESS_KEY = "your_secret"
+        AWS_DEFAULT_REGION = "us-east-2"
+        S3_BUCKET_NAME_NFL = "betting-nfl-arbs"
         ```
         """)
         
@@ -839,9 +1049,9 @@ def main():
     if history:
         history_df = pd.DataFrame(history)
         
-        st.markdown("**Recent Runs:**")
+        st.markdown("**Daily Summary (deduped by player/market/line, best profit kept):**")
         
-        column_order = ['date', 'num_games', 'prop_markets', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
+        column_order = ['date', 'num_games', 'num_snapshots', 'arbs_found', 'avg_profit', 'max_profit', 'total_wagered', 'total_profit']
         display_history = history_df[column_order]
         
         def color_profit_gradient_history(val):
@@ -873,7 +1083,7 @@ def main():
             column_config={
                 "date": st.column_config.TextColumn("Date"),
                 "num_games": st.column_config.NumberColumn("# Games", format="%d"),
-                "prop_markets": st.column_config.NumberColumn("Prop Markets", format="%d"),
+                "num_snapshots": st.column_config.NumberColumn("Snapshots", format="%d", help="Number of 5-min data snapshots"),
                 "arbs_found": st.column_config.NumberColumn("Arbs Found", format="%d"),
                 "avg_profit": st.column_config.NumberColumn("Avg Profit %", format="%.2f%%"),
                 "max_profit": st.column_config.NumberColumn("Best Arb", format="%.2f%%"),
@@ -882,7 +1092,7 @@ def main():
             }
         )
     else:
-        st.info("No historical data available yet. Run the arb finder script to generate data.")
+        st.info("No historical data available yet.")
 
 
 if __name__ == "__main__":
