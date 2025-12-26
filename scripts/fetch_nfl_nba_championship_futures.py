@@ -130,7 +130,8 @@ def main():
             # Show top 10 favorites by best available odds
             # Best odds = most favorable to bettor (least negative for favorites, most positive for dogs)
             best_odds_per_team = df_nfl.loc[df_nfl.groupby('team')['odds'].idxmax()]
-            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=False)
+            # Sort by odds ascending (most negative = biggest favorite)
+            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=True)
             
             print("\nTop 10 Super Bowl Favorites (Best Available Odds):")
             print("-" * 70)
@@ -161,7 +162,8 @@ def main():
             # Show top 10 favorites by best available odds
             # Best odds = most favorable to bettor (least negative for favorites, most positive for dogs)
             best_odds_per_team = df_nba.loc[df_nba.groupby('team')['odds'].idxmax()]
-            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=False)
+            # Sort by odds ascending (most negative = biggest favorite)
+            best_odds_per_team = best_odds_per_team.sort_values('odds', ascending=True)
             
             print("\nTop 10 NBA Championship Favorites (Best Available Odds):")
             print("-" * 70)
