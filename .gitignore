@@ -77,3 +77,6 @@ token.pickle
 data/nfl_research/nfl_week*_scraped_*.json
 data/nfl_research/nfl_week*_scraped_*.txt
 .cursor/
+
+# Lambda deployment artifacts
+lambda_function.zip

@@ -667,45 +667,91 @@ SETUP STEPS:
    Note: The role already has CloudWatch Logs permissions (created automatically)
 
 7. Lambda Layers (Python Dependencies)
-   a) Create layer with: pandas, numpy, requests
+   This script now requires matplotlib for chart generation, which makes the layer larger.
    
-   Note: Only these 3 packages needed for Lambda layer:
-   - pandas, numpy, requests (not in Lambda runtime by default)
+   Required packages for Lambda layer:
+   - pandas, numpy, matplotlib, requests (not in Lambda runtime by default)
    
-   NOT needed (already available or not used):
+   NOT needed (already available):
    - boto3: Already included in Lambda runtime
    - python-dotenv: Lambda uses environment variables directly
-   - urllib3: Installed automatically as requests dependency
    
+   a) Create layer locally:
    ```bash
    mkdir -p lambda_layer/python
    pip install --platform manylinux2014_x86_64 \
      --target=lambda_layer/python \
      --python-version 3.12 \
      --only-binary=:all: \
-     pandas numpy requests
+     pandas numpy matplotlib requests
    cd lambda_layer && zip -r layer.zip python
    ```
-   b) Upload as Lambda layer, attach to function
-   - Layers -> Create layer
-   - Name: betting-line-movement-dependencies
-   - Description: Betting line movement dependencies
-   - Upload lambda_layer/layer.zip
-   - Compatible architectures -> x86_64
-   - Compatible runtimes -> Python 3.12
-   - Create layer
-
-   c) Attach custom layer to the lambda function:
-   - Lambda -> Code -> Scroll down... -> Layers -> Add a layer
+   
+   b) Upload to S3 (layer will be ~74MB, too large for direct upload):
+   ```bash
+   aws s3 cp layer.zip s3://betting-line-movement-snapshots/lambda-layers/line-movement-dependencies-layer.zip --region us-east-2
+   ```
+   
+   c) Publish layer from S3:
+   ```bash
+   aws lambda publish-layer-version \
+     --layer-name line-movement-dependencies \
+     --description "pandas, numpy, matplotlib, requests for line movement tracking" \
+     --content S3Bucket=betting-line-movement-snapshots,S3Key=lambda-layers/line-movement-dependencies-layer.zip \
+     --compatible-runtimes python3.12 \
+     --compatible-architectures x86_64 \
+     --region us-east-2
+   ```
+   
+   Copy the LayerVersionArn from the output (looks like: arn:aws:lambda:us-east-2:ACCOUNT_ID:layer:line-movement-dependencies:1)
+   
+   d) Attach layer to Lambda function:
+   ```bash
+   aws lambda update-function-configuration \
+     --function-name track-line-movement-hourly \
+     --layers arn:aws:lambda:us-east-2:ACCOUNT_ID:layer:line-movement-dependencies:1 \
+     --region us-east-2
+   ```
+   
+   Replace ACCOUNT_ID with your AWS account ID from the LayerVersionArn.
+   
+   Alternative (via Console):
+   - Lambda -> track-line-movement-hourly -> Code tab -> Layers section (scroll down)
+   - Click "Add a layer"
    - Layer source: Custom layers
-   - Choose: betting-line-movement-dependencies
-   - Version: Latest version
+   - Choose: line-movement-dependencies
+   - Version: 1 (or latest)
    - Click "Add"
 
 
-8. Lambda Handler Code (adapt this script)
-
-...
+8. Lambda Handler Code (Deploy this script)
+   
+   This script IS the Lambda function code. Deploy it with proper naming:
+   
+   a) Create deployment package:
+   ```bash
+   cd /path/to/betting
+   cp scripts/track_game_line_movements.py lambda_function.py
+   zip lambda_function.zip lambda_function.py
+   rm lambda_function.py  # cleanup temp file
+   ```
+   
+   b) Deploy to Lambda:
+   ```bash
+   aws lambda update-function-code \
+     --function-name track-line-movement-hourly \
+     --zip-file fileb://lambda_function.zip \
+     --region us-east-2
+   ```
+   
+   c) Verify handler is set correctly:
+   - Lambda Console → Configuration → General configuration
+   - Runtime settings → Handler: lambda_function.lambda_handler
+   - (This should already be set, but verify if you get import errors)
+   
+   Note: Lambda expects the file to be named 'lambda_function.py' with a 
+   'lambda_handler' function, but this script auto-detects Lambda environment
+   and runs main() automatically.
 
 9. EventBridge Schedule (after testing Lambda manually)
    Go to: https://console.aws.amazon.com/events/
@@ -769,9 +815,121 @@ RELATED FILES:
 - src/nfl_luck_utils.py (helper: load_nfl_betting_lines)
 - docs/lambda_function_line_movement.py (Lambda handler - to be created)
 
+------------------------------------------------------------------------------------------------
+
+EMAIL ALERTS WITH LINE MOVEMENT VISUALIZATIONS (SES):
+
+Updated to use AWS SES (Simple Email Service) instead of SNS for HTML emails with inline charts.
+Charts show historical line movement for each game with significant movements.
+
+CHART FEATURES:
+- Plots both away and home team spreads (mirrored lines)
+- Inverted y-axis: favorites (negative) at top, underdogs (positive) at bottom
+- Dynamic favorite/underdog detection with color-coded zones (green=favorite, red=underdog)
+- Major sportsbooks only (DraftKings, FanDuel, BetMGM, Caesars, BetRivers)
+- Color-coded lines per sportsbook with distinct markers
+- Shows time range and current favorite in subtitle
+- Fetches all historical snapshots from S3 (up to 1 week back)
+
+REQUIRED SETUP FOR SES:
+
+1. Verify Email in AWS SES:
+   a) Go to AWS SES Console: https://console.aws.amazon.com/ses/
+   b) Make sure region is us-east-2 (Ohio) - top right
+   c) Click "Identities" in left sidebar (under Configuration section)
+   d) Click "Create identity" button (top right)
+   e) Select:
+      - Identity type: Email address
+      - Email address: mylescgthomas@gmail.com
+      - Click "Create identity"
+   f) Check inbox and click verification link from AWS
+   g) Return to SES → Identities to confirm status shows "Verified"
+   
+   Check verification status via CLI (requires SES permissions on IAM user):
+   aws sesv2 list-email-identities --region us-east-2
+   
+   Or check specific email:
+   aws sesv2 get-email-identity --email-identity mylescgthomas@gmail.com --region us-east-2
+   
+   Note: Easiest to just verify via console (SES → Identities → check for "Verified" status)
+
+2. Add Lambda Environment Variables:
+   (In Lambda Console → Configuration → Environment variables → Edit)
+
+   Note: Lambda Function is 'track-line-movement-hourly'
+   
+   NEW (required for SES):
+   - SES_FROM_EMAIL=mylescgthomas@gmail.com
+   - SES_TO_EMAIL=mylescgthomas@gmail.com
+   
+   EXISTING (keep these):
+   - ODDS_API_KEY=<from Secrets Manager>
+   - S3_BUCKET=betting-line-movement-snapshots
+   - MOVEMENT_THRESHOLD_NBA=0.5
+   - MOVEMENT_THRESHOLD_NFL=0.5
+   - AWS_REGION_NAME=us-east-2
+   
+   DEPRECATED (can remove after testing):
+   - SNS_TOPIC_ARN=<old SNS topic>
+
+3. Add SES Permissions to Lambda IAM Role:
+   a) Lambda → Configuration → Permissions → Execution role (click role name)
+   b) Add permissions → Attach policies
+   c) Search: AmazonSESFullAccess
+   d) Select and click "Add permissions"
+   
+   Or use custom policy (more restrictive):
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "ses:SendEmail",
+           "ses:SendRawEmail"
+         ],
+         "Resource": "*"
+       }
+     ]
+   }
+
+4. Increase Lambda Timeout (if needed):
+   - Chart generation takes ~1-2 seconds per game
+   - Recommended: 120 seconds (2 minutes)
+   - Update: Lambda → Configuration → General configuration → Edit → Timeout
+
+5. Test Deployment:
+   a) Deploy updated code to Lambda
+   b) Test manually: Lambda → Test → Invoke
+   c) Check CloudWatch Logs for:
+      - "📊 Generating charts for X games..."
+      - "✅ Email sent via SES: ..."
+      - "   Message ID: XXXXXXXX"
+   d) Check inbox for email with inline charts
+
+DEPENDENCIES (already in Lambda layer):
+- pandas, numpy, requests (custom layer)
+- matplotlib (for chart generation)
+- boto3 (included in Lambda runtime)
+- Standard library: io.BytesIO, base64, datetime, etc.
+
+NO ADDITIONAL PACKAGES NEEDED - all dependencies already available!
+
+SES NOTES:
+- If in SES Sandbox mode: can only send to verified emails
+- For production: request SES production access in AWS Support
+- Email size limit: 10 MB (should handle 10-20 games comfortably)
+- Charts embedded as base64 data URIs (inline, not attachments)
+
+TROUBLESHOOTING:
+- Email not received: Check CloudWatch logs for errors, verify email in SES
+- Charts not displaying: Check logs for "Chart generated" messages
+- Permission errors: Verify SES policy attached to Lambda role
+- Timeout errors: Increase Lambda timeout to 120-180 seconds
+
 AUTHOR: Thomas Myles
 CREATED: 2024-12-24
-LAST UPDATED: 2024-12-24
+LAST UPDATED: 2024-12-26 (Added SES + chart visualization)
 """
 
 import pandas as pd
@@ -790,8 +948,15 @@ import urllib3
 from typing import Optional, Tuple, Dict, List
 import math
 import boto3
-from io import StringIO
+from io import StringIO, BytesIO
 import json
+import base64
+
+# Visualization imports (for chart generation)
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend for Lambda
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 # Load environment variables
 load_dotenv()
@@ -853,12 +1018,15 @@ DISPLAY_TIMEZONE = 'America/New_York'  # Eastern Time for logging
 
 # AWS Configuration
 S3_BUCKET = os.getenv('S3_BUCKET', 'betting-line-movement-snapshots') # Set in Lambda environment
-SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN', '')  # Set in Lambda environment
+SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN', '')  # Set in Lambda environment (deprecated - using SES now)
+SES_FROM_EMAIL = os.getenv('SES_FROM_EMAIL', 'mylescgthomas@gmail.com')  # Verified sender in SES
+SES_TO_EMAIL = os.getenv('SES_TO_EMAIL', 'mylescgthomas@gmail.com')  # Verified recipient
 IS_LAMBDA = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ  # AWS automatically sets this env var in Lambda; False when running locally
 
 # Initialize boto3 clients
 s3_client = boto3.client('s3')
-sns_client = boto3.client('sns') if IS_LAMBDA else None
+sns_client = boto3.client('sns') if IS_LAMBDA else None  # Kept for backward compat
+ses_client = boto3.client('ses', region_name='us-east-2') if IS_LAMBDA else None  # SES for HTML emails (must match verified email region)
 
 # Vig adjustment formula constants
 VIG_BASELINE_PRICE = -110  # Standard vig baseline
@@ -1078,8 +1246,482 @@ def calculate_adjusted_spread(raw_spread: float, price: int) -> float:
 
 
 # =============================================================================
+# CHART GENERATION FUNCTIONS
+# =============================================================================
+
+def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) -> bytes:
+    """
+    Create line movement chart for email embedding (matplotlib version for Lambda).
+    
+    Args:
+        df: DataFrame with S3 structure (fetched_at, bookmaker, away_spread, home_spread, away_team, home_team)
+        title: Chart title (defaults to game matchup)
+    
+    Returns:
+        PNG image as bytes for base64 encoding
+    """
+    if df.empty:
+        return None
+    
+    # Parse timestamps
+    df['timestamp'] = pd.to_datetime(df['fetched_at'])
+    df = df.sort_values('timestamp')
+    
+    # Get game info
+    away_team = df['away_team'].iloc[0]
+    home_team = df['home_team'].iloc[0]
+    
+    # Get time range for subtitle
+    first_snapshot = df['timestamp'].min()
+    last_snapshot = df['timestamp'].max()
+    time_range_hours = (last_snapshot - first_snapshot).total_seconds() / 3600
+    
+    # Format times for subtitle
+    first_time_str = first_snapshot.strftime('%b %d %I:%M %p')
+    last_time_str = last_snapshot.strftime('%b %d %I:%M %p ET')
+    
+    # Determine current favorite
+    latest_spread = df['away_spread'].iloc[-1]
+    if latest_spread < 0:
+        favorite = away_team
+        underdog = home_team
+    elif latest_spread > 0:
+        favorite = home_team
+        underdog = away_team
+    else:
+        favorite = "Pick'em"
+        underdog = "Pick'em"
+    
+    if not title:
+        title = f"{away_team} @ {home_team}"
+    
+    subtitle = f"{time_range_hours:.0f}h movement ({first_time_str} → {last_time_str})"
+    if favorite != "Pick'em":
+        subtitle += f" | Current Favorite: {favorite}"
+    
+    # Focus on major books
+    major_books = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'betrivers']
+    df_major = df[df['bookmaker'].isin(major_books)].copy()
+    
+    # Create figure
+    plt.style.use('seaborn-v0_8-darkgrid')
+    fig, ax = plt.subplots(figsize=(14, 7))
+    
+    # Color map for bookmakers
+    book_colors = {
+        'draftkings': '#53D337',
+        'fanduel': '#0E8FEF',
+        'betmgm': '#BA9000',
+        'caesars': '#0033A0',
+        'betrivers': '#00A4E4'
+    }
+    
+    # Plot each bookmaker's line - both teams (mirror)
+    for bookmaker in major_books:
+        book_df = df_major[df_major['bookmaker'] == bookmaker].copy()
+        if book_df.empty:
+            continue
+        
+        color = book_colors.get(bookmaker, '#333333')
+        
+        # Plot away team spread (solid line)
+        ax.plot(
+            book_df['timestamp'],
+            book_df['away_spread'],
+            label=f"{bookmaker.upper()} ({away_team})",
+            color=color,
+            marker='o',
+            markersize=5,
+            linewidth=3,
+            alpha=0.9,
+            linestyle='-'
+        )
+        
+        # Plot home team spread (dashed line - mirror)
+        ax.plot(
+            book_df['timestamp'],
+            book_df['home_spread'],
+            label=f"{bookmaker.upper()} ({home_team})",
+            color=color,
+            marker='s',
+            markersize=5,
+            linewidth=3,
+            alpha=0.9,
+            linestyle='--'
+        )
+    
+    # Add horizontal line at 0 (pick'em)
+    ax.axhline(y=0, color='red', linestyle='--', linewidth=2, alpha=0.6, zorder=1)
+    
+    # Add shaded regions (green for favorites at top after inversion, red for underdogs at bottom)
+    y_min, y_max = ax.get_ylim()
+    ax.axhspan(0, y_max, alpha=0.05, color='red', zorder=0)    # Underdog zone (positive values)
+    ax.axhspan(y_min, 0, alpha=0.05, color='green', zorder=0)  # Favorite zone (negative values)
+    
+    # INVERT Y-AXIS: Favorites (negative) at top after inversion
+    ax.invert_yaxis()
+    
+    # Formatting
+    ax.set_xlabel('Time', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Spread (points)', fontsize=13, fontweight='bold')
+    
+    # Title and subtitle
+    ax.set_title(title, fontsize=16, fontweight='bold', pad=35)
+    ax.text(0.5, 1.03, subtitle, transform=ax.transAxes,
+            ha='center', va='bottom', fontsize=11, style='italic', color='#555')
+    
+    # Add favorite/underdog zone labels (dynamically determined)
+    if favorite != "Pick'em":
+        ax.text(0.02, 0.98, f'← {favorite.upper()} - FAVORITES', transform=ax.transAxes,
+                ha='left', va='top', fontsize=10, fontweight='bold', color='darkgreen',
+                bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.8))
+        ax.text(0.02, 0.02, f'← {underdog.upper()} - UNDERDOGS', transform=ax.transAxes,
+                ha='left', va='bottom', fontsize=10, fontweight='bold', color='darkred',
+                bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.8))
+    
+    # Format x-axis
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M'))
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.yticks(fontsize=10)
+    
+    # Grid
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    
+    # Legend - show all books with both teams
+    ax.legend(loc='upper right', framealpha=0.95, fontsize=8, ncol=2, 
+              title='Sportsbooks', title_fontsize=10)
+    
+    # Tight layout
+    plt.tight_layout()
+    
+    # Convert to bytes
+    buf = BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='white')
+    buf.seek(0)
+    img_bytes = buf.read()
+    plt.close(fig)
+    
+    return img_bytes
+
+
+def fetch_all_snapshots_for_game(sport: str, game_id: str, time_window_hours: int = 168) -> pd.DataFrame:
+    """
+    Fetch all snapshots for a specific game from S3 within a time window.
+    
+    Args:
+        sport: 'basketball_nba' or 'americanfootball_nfl'
+        game_id: Game ID from The Odds API
+        time_window_hours: How far back to look (default 1 week)
+    
+    Returns:
+        DataFrame with all snapshots for this game
+    """
+    all_snapshots = list_s3_snapshots(sport)
+    
+    if not all_snapshots:
+        return pd.DataFrame()
+    
+    # Calculate time cutoff
+    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
+    
+    # Collect data from all relevant snapshots
+    game_data = []
+    
+    for s3_key in all_snapshots:
+        # Extract timestamp from filename
+        filename = s3_key.split('/')[-1]
+        timestamp_str = filename.replace('snapshot_', '').replace('.csv', '')
+        
+        try:
+            file_time = datetime.strptime(timestamp_str, TIMESTAMP_FORMAT)
+            file_time = file_time.replace(tzinfo=timezone.utc)
+            
+            # Skip if outside time window
+            if file_time < cutoff_time:
+                continue
+            
+            # Load snapshot
+            df = load_dataframe_from_s3(s3_key)
+            if df is None or df.empty:
+                continue
+            
+            # Filter to just this game
+            game_df = df[df['game_id'] == game_id]
+            if not game_df.empty:
+                game_data.append(game_df)
+                
+        except ValueError:
+            continue
+    
+    if not game_data:
+        return pd.DataFrame()
+    
+    # Combine all snapshots
+    combined_df = pd.concat(game_data, ignore_index=True)
+    combined_df = combined_df.sort_values('fetched_at')
+    
+    return combined_df
+
+
+# =============================================================================
 # EMAIL FORMATTING FUNCTIONS
 # =============================================================================
+
+def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, pd.DataFrame], 
+                               sport_thresholds: Dict[str, float], current_time: datetime,
+                               sport_to_api_key: Dict[str, str], 
+                               current_snapshots: Dict[str, pd.DataFrame] = None) -> str:
+    """
+    Format movements into HTML email with inline charts.
+    
+    Args:
+        sport_summaries: Dict with summary stats per sport
+        all_movements: Dict mapping sport name to movements DataFrame
+        sport_thresholds: Dict mapping sport name to threshold  
+        current_time: Current timestamp
+        sport_to_api_key: Dict mapping sport display name to API key (e.g., 'NBA' -> 'basketball_nba')
+        current_snapshots: Dict mapping sport name to current snapshot DataFrame
+    
+    Returns:
+        HTML string for email body with embedded charts
+    """
+    time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
+    time_str = time_et.strftime('%b %d, %Y %I:%M %p ET')
+    
+    # Collect unique game IDs that have movements
+    games_with_movements = {}
+    for sport_name, df in all_movements.items():
+        if df is not None and not df.empty:
+            game_ids = df['game_id'].unique()
+            for game_id in game_ids:
+                if game_id not in games_with_movements:
+                    games_with_movements[game_id] = {
+                        'sport_name': sport_name,
+                        'sport_key': sport_to_api_key.get(sport_name, ''),
+                        'away_team': df[df['game_id'] == game_id]['away_team'].iloc[0],
+                        'home_team': df[df['game_id'] == game_id]['home_team'].iloc[0]
+                    }
+    
+    # Generate charts for games with movements
+    print(f"\n📊 Generating charts for {len(games_with_movements)} games...")
+    game_charts = {}
+    for game_id, game_info in games_with_movements.items():
+        print(f"   Fetching snapshots for {game_info['away_team']} @ {game_info['home_team']}...")
+        
+        # Fetch all snapshots for this game
+        snapshots_df = fetch_all_snapshots_for_game(game_info['sport_key'], game_id, time_window_hours=168)
+        
+        if not snapshots_df.empty:
+            print(f"      Found {len(snapshots_df)} snapshot rows, generating chart...")
+            chart_bytes = create_line_movement_chart_for_email(
+                snapshots_df,
+                title=f"{game_info['away_team']} @ {game_info['home_team']}"
+            )
+            if chart_bytes:
+                chart_b64 = base64.b64encode(chart_bytes).decode('utf-8')
+                game_charts[game_id] = chart_b64
+                print(f"      ✅ Chart generated ({len(chart_b64)} bytes base64)")
+        else:
+            print(f"      ⚠️  No snapshots found for this game")
+    
+    # Build HTML email
+    html_parts = []
+    html_parts.append(f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }}
+            .header {{
+                background-color: #0066cc;
+                color: white;
+                padding: 20px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }}
+            h1 {{
+                margin: 0;
+                font-size: 24px;
+            }}
+            .subtitle {{
+                margin-top: 5px;
+                opacity: 0.9;
+            }}
+            .summary {{
+                background-color: white;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                border-left: 4px solid #0066cc;
+            }}
+            .section {{
+                background-color: white;
+                padding: 20px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }}
+            .section h2 {{
+                color: #0066cc;
+                border-bottom: 2px solid #0066cc;
+                padding-bottom: 10px;
+                margin-top: 0;
+            }}
+            .game {{
+                margin: 20px 0;
+                padding: 15px;
+                background-color: #f9f9f9;
+                border-radius: 5px;
+            }}
+            .game h3 {{
+                margin-top: 0;
+                color: #333;
+            }}
+            .chart {{
+                margin: 15px 0;
+                text-align: center;
+            }}
+            .chart img {{
+                max-width: 100%;
+                height: auto;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }}
+            .movement-details {{
+                font-family: 'Courier New', monospace;
+                font-size: 13px;
+                background-color: #fff;
+                padding: 10px;
+                border-radius: 3px;
+                white-space: pre-wrap;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🚨 LINE MOVEMENT ALERT</h1>
+            <div class="subtitle">Time: {time_str}</div>
+            <div class="subtitle">Thresholds: {', '.join([f"{sport}: ≥{thresh}pts" for sport, thresh in sport_thresholds.items()])}</div>
+        </div>
+    """)
+    
+    # Summary section
+    html_parts.append('<div class="summary"><h2>Summary</h2>')
+    for sport_name, summary in sport_summaries.items():
+        df = all_movements.get(sport_name, pd.DataFrame())
+        unique_games_with_moves = df['game_id'].nunique() if not df.empty else 0
+        unique_games_crossed_zero = df[df['crossed_zero_1h'] | df['crossed_zero_24h']]['game_id'].nunique() if not df.empty else 0
+        html_parts.append(f"<p><strong>{sport_name}:</strong> {summary['num_games']} games tracked | {unique_games_with_moves} games with moves | {unique_games_crossed_zero} games crossed zero</p>")
+    html_parts.append('</div>')
+    
+    # Process movements and add charts
+    for sport_name in all_movements.keys():
+        df = all_movements[sport_name]
+        if df is None or df.empty:
+            continue
+        
+        # Group by game
+        for game_id in df['game_id'].unique():
+            game_df = df[df['game_id'] == game_id]
+            first_row = game_df.iloc[0]
+            
+            html_parts.append(f"""
+            <div class="section">
+                <h2>{first_row['away_team']} @ {first_row['home_team']}</h2>
+            """)
+            
+            # Add chart if available
+            if game_id in game_charts:
+                html_parts.append(f"""
+                <div class="chart">
+                    <img src="data:image/png;base64,{game_charts[game_id]}" alt="Line Movement Chart">
+                </div>
+                """)
+            
+            # Add movement details as text
+            movement_text = format_movements_text_for_game(game_df)
+            html_parts.append(f"""
+                <div class="movement-details">{movement_text}</div>
+            </div>
+            """)
+    
+    # Current games tracked section
+    if current_snapshots:
+        html_parts.append("""
+        <div class="section">
+            <h2>📊 CURRENT GAMES TRACKED</h2>
+        """)
+        
+        for sport_name in current_snapshots.keys():
+            df = current_snapshots[sport_name]
+            if df is None or df.empty:
+                continue
+            
+            num_games = df['game_id'].nunique()
+            html_parts.append(f"""
+            <div class="game">
+                <h3>{sport_name} - {num_games} games</h3>
+            """)
+            
+            # Group by game
+            for game_id in df['game_id'].unique():
+                game_df = df[df['game_id'] == game_id]
+                first_row = game_df.iloc[0]
+                
+                html_parts.append(f"""
+                <div style="margin: 15px 0; padding: 10px; background-color: white; border-radius: 3px;">
+                    <strong>{first_row['away_team']} @ {first_row['home_team']}</strong><br>
+                    Game Time: {first_row['game_time_et']}<br>
+                    Books tracking: {len(game_df)}
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                """)
+                
+                # Show top 3 bookmaker lines
+                for idx, (_, row) in enumerate(game_df.head(3).iterrows()):
+                    html_parts.append(f"""
+                        <li>{row['bookmaker']}: Away {row['away_spread']}/{row['away_price']} | Home {row['home_spread']}/{row['home_price']}</li>
+                    """)
+                
+                if len(game_df) > 3:
+                    html_parts.append(f"""
+                        <li><em>... and {len(game_df) - 3} more books</em></li>
+                    """)
+                
+                html_parts.append("""
+                    </ul>
+                </div>
+                """)
+            
+            html_parts.append('</div>')
+        
+        html_parts.append('</div>')
+    
+    html_parts.append('</body></html>')
+    
+    return ''.join(html_parts)
+
+
+def format_movements_text_for_game(df: pd.DataFrame) -> str:
+    """Format movements for a single game as text."""
+    lines = []
+    
+    # Group by bookmaker
+    for bookmaker in df['bookmaker'].unique():
+        book_df = df[df['bookmaker'] == bookmaker]
+        for _, row in book_df.iterrows():
+            side = row['side']
+            
+            lines.append(f"\nBook: {bookmaker}")
+            lines.append(f"24h ago: {side} {row['spread_24h_ago']}/{row['price_24h_ago']}")
+            lines.append(f"1h ago:  {side} {row['spread_1h_ago']}/{row['price_1h_ago']}")
+            lines.append(f"Now:     {side} {row['spread_current']}/{row['price_current']}")
+    
+    return '\n'.join(lines)
+
 
 def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.DataFrame], 
                          sport_thresholds: Dict[str, float], current_time: datetime, 
@@ -1121,69 +1763,132 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
         lines.append(f"{sport_name}: {summary['num_games']} games tracked | {unique_games_with_moves} games with moves | {unique_games_crossed_zero} games crossed zero")
     lines.append("")
     
-    # Significant movements section (MOVED TO TOP) - grouped by reason
+    # Significant movements section - SPLIT BY TIMEFRAME
+    # Priority: 1h movements at TOP (most urgent), 24h movements at BOTTOM (context)
     has_any_significant = False
     
-    # First: Crossed Zero (highest priority)
-    has_crossed_zero = False
+    # =========================================================================
+    # SECTION 1: 1-HOUR MOVEMENTS (URGENT - AT TOP)
+    # =========================================================================
+    
+    # First: Crossed Zero in Last Hour
+    has_crossed_zero_1h = False
     for sport_name in all_movements.keys():
         df = all_movements[sport_name]
         if df is None or df.empty:
             continue
         
-        crossed_zero = df[
-            (df['crossed_zero_1h'] == True) |
-            (df['crossed_zero_24h'] == True)
-        ]
+        crossed_zero_1h = df[df['crossed_zero_1h'] == True]
         
-        if not crossed_zero.empty:
-            # Count unique games
-            unique_games = crossed_zero['game_id'].nunique()
+        if not crossed_zero_1h.empty:
+            unique_games = crossed_zero_1h['game_id'].nunique()
             
-            if not has_crossed_zero:
+            if not has_crossed_zero_1h:
                 lines.append("=" * 80)
-                lines.append("🚨 CROSSED ZERO - Favorite/Underdog Flip")
+                lines.append("🚨 CROSSED ZERO (Last Hour) - Favorite/Underdog Flip")
                 lines.append("=" * 80)
-                has_crossed_zero = True
+                has_crossed_zero_1h = True
                 has_any_significant = True
             
             lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
             lines.append("-" * 80)
-            lines.extend(format_movements_text(crossed_zero))
+            lines.extend(format_movements_text(crossed_zero_1h))
     
-    # Second: Large moves (≥threshold)
-    has_large_moves = False
+    # Second: Large moves in Last Hour
+    has_large_moves_1h = False
     for sport_name in all_movements.keys():
         df = all_movements[sport_name]
         if df is None or df.empty:
             continue
         
-        # Large moves that didn't cross zero
-        large_moves = df[
-            (
-                (df['significant_hourly'] == True) | 
-                (df['significant_daily'] == True)
-            ) &
+        # Large 1h moves that didn't cross zero in 1h
+        large_moves_1h = df[
+            (df['significant_hourly'] == True) &
+            (df['crossed_zero_1h'] == False)
+        ]
+        
+        if not large_moves_1h.empty:
+            unique_games = large_moves_1h['game_id'].nunique()
+            
+            if not has_large_moves_1h:
+                if has_crossed_zero_1h:
+                    lines.append("")
+                lines.append("=" * 80)
+                lines.append(f"📊 LARGE MOVES (Last Hour) - NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts")
+                lines.append("=" * 80)
+                has_large_moves_1h = True
+                has_any_significant = True
+            
+            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
+            lines.append("-" * 80)
+            lines.extend(format_movements_text(large_moves_1h))
+    
+    # =========================================================================
+    # SECTION 2: 24-HOUR MOVEMENTS (CONTEXT - AT BOTTOM)
+    # =========================================================================
+    
+    # Third: Crossed Zero in 24h (but NOT in last hour)
+    has_crossed_zero_24h = False
+    for sport_name in all_movements.keys():
+        df = all_movements[sport_name]
+        if df is None or df.empty:
+            continue
+        
+        # Crossed zero in 24h window but NOT in the last hour
+        crossed_zero_24h_only = df[
+            (df['crossed_zero_24h'] == True) &
+            (df['crossed_zero_1h'] == False)
+        ]
+        
+        if not crossed_zero_24h_only.empty:
+            unique_games = crossed_zero_24h_only['game_id'].nunique()
+            
+            if not has_crossed_zero_24h:
+                if has_crossed_zero_1h or has_large_moves_1h:
+                    lines.append("")
+                lines.append("=" * 80)
+                lines.append("⏰ CROSSED ZERO (24h Window) - Longer-Term Trend")
+                lines.append("=" * 80)
+                has_crossed_zero_24h = True
+                has_any_significant = True
+            
+            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
+            lines.append("-" * 80)
+            lines.extend(format_movements_text(crossed_zero_24h_only))
+    
+    # Fourth: Large moves in 24h (but NOT in last hour and didn't cross zero)
+    has_large_moves_24h = False
+    for sport_name in all_movements.keys():
+        df = all_movements[sport_name]
+        if df is None or df.empty:
+            continue
+        
+        # Large 24h moves that:
+        # - Are significant in 24h window
+        # - Did NOT cross zero in 1h or 24h
+        # - Are NOT already flagged as significant in 1h
+        large_moves_24h_only = df[
+            (df['significant_daily'] == True) &
+            (df['significant_hourly'] == False) &
             (df['crossed_zero_1h'] == False) &
             (df['crossed_zero_24h'] == False)
         ]
         
-        if not large_moves.empty:
-            # Count unique games
-            unique_games = large_moves['game_id'].nunique()
+        if not large_moves_24h_only.empty:
+            unique_games = large_moves_24h_only['game_id'].nunique()
             
-            if not has_large_moves:
-                if has_crossed_zero:
+            if not has_large_moves_24h:
+                if has_crossed_zero_1h or has_large_moves_1h or has_crossed_zero_24h:
                     lines.append("")
                 lines.append("=" * 80)
-                lines.append(f"📊 LARGE MOVES (NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts)")
+                lines.append(f"📈 LARGE MOVES (24h Window) - NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts")
                 lines.append("=" * 80)
-                has_large_moves = True
+                has_large_moves_24h = True
                 has_any_significant = True
             
             lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
             lines.append("-" * 80)
-            lines.extend(format_movements_text(large_moves))
+            lines.extend(format_movements_text(large_moves_24h_only))
     
     if not has_any_significant:
         lines.append("=" * 80)
@@ -1354,6 +2059,50 @@ def send_email_via_sns(subject: str, body: str):
         print(f"✅ Email sent via SNS: {subject}")
     except Exception as e:
         print(f"Error: Failed to send email via SNS: {e}")
+
+
+def send_email_via_ses(subject: str, html_body: str, text_body: str):
+    """
+    Send HTML email with inline images via AWS SES.
+    
+    Args:
+        subject: Email subject
+        html_body: HTML content with base64-encoded images
+        text_body: Plain text fallback
+    """
+    if not ses_client:
+        print("Warning: SES client not initialized, skipping email")
+        return
+    
+    try:
+        response = ses_client.send_email(
+            Source=SES_FROM_EMAIL,
+            Destination={
+                'ToAddresses': [SES_TO_EMAIL]
+            },
+            Message={
+                'Subject': {
+                    'Data': subject,
+                    'Charset': 'UTF-8'
+                },
+                'Body': {
+                    'Text': {
+                        'Data': text_body,
+                        'Charset': 'UTF-8'
+                    },
+                    'Html': {
+                        'Data': html_body,
+                        'Charset': 'UTF-8'
+                    }
+                }
+            }
+        )
+        print(f"✅ Email sent via SES: {subject}")
+        print(f"   Message ID: {response['MessageId']}")
+    except Exception as e:
+        print(f"❌ Error: Failed to send email via SES: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 # =============================================================================
@@ -1846,6 +2595,12 @@ def main():
             'NFL': MOVEMENT_THRESHOLD_NFL
         }
         
+        # Build sport to API key mapping
+        sport_to_api_key = {
+            'NBA': SPORT_NBA,
+            'NFL': SPORT_NFL
+        }
+        
         # Generate email with ET timestamp
         current_time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
         time_str_et = current_time_et.strftime('%b %d, %Y %I:%M %p ET')
@@ -1855,10 +2610,27 @@ def main():
         else:
             subject = f"✅ Line Movement Check - No Significant Changes - {time_str_et}"
         
-        html_body = format_movement_email(sport_summaries, movements_dict, sport_thresholds, current_time, current_snapshots)
+        # Generate HTML email with charts
+        html_body = format_movement_email_html(
+            sport_summaries, 
+            movements_dict, 
+            sport_thresholds, 
+            current_time,
+            sport_to_api_key,
+            current_snapshots
+        )
         
-        # Send via SNS
-        send_email_via_sns(subject, html_body)
+        # Generate plain text fallback
+        text_body = format_movement_email(
+            sport_summaries, 
+            movements_dict, 
+            sport_thresholds, 
+            current_time, 
+            current_snapshots
+        )
+        
+        # Send via SES with HTML and inline images
+        send_email_via_ses(subject, html_body, text_body)
     else:
         print(f"\n💻 Local run complete - email only sent when running in Lambda")
     
