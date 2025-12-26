@@ -80,3 +80,5 @@ data/nfl_research/nfl_week*_scraped_*.txt
 
 # Lambda deployment artifacts
 lambda_function.zip
+lambda_function.py
+current_policy.json
