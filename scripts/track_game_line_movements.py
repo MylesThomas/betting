@@ -840,7 +840,7 @@ REQUIRED SETUP FOR SES:
    d) Click "Create identity" button (top right)
    e) Select:
       - Identity type: Email address
-      - Email address: mylescgthomas@gmail.com
+      - Email address: myles@thomasquantitativestrategies.com / mylescgthomas@gmail.com
       - Click "Create identity"
    f) Check inbox and click verification link from AWS
    g) Return to SES → Identities to confirm status shows "Verified"
@@ -849,7 +849,7 @@ REQUIRED SETUP FOR SES:
    aws sesv2 list-email-identities --region us-east-2
    
    Or check specific email:
-   aws sesv2 get-email-identity --email-identity mylescgthomas@gmail.com --region us-east-2
+   aws sesv2 get-email-identity --email-identity myles@thomasquantitativestrategies.com --region us-east-2
    
    Note: Easiest to just verify via console (SES → Identities → check for "Verified" status)
 
@@ -859,7 +859,7 @@ REQUIRED SETUP FOR SES:
    Note: Lambda Function is 'track-line-movement-hourly'
    
    NEW (required for SES):
-   - SES_FROM_EMAIL=mylescgthomas@gmail.com
+   - SES_FROM_EMAIL=myles@thomasquantitativestrategies.com
    - SES_TO_EMAIL=mylescgthomas@gmail.com
    
    EXISTING (keep these):
@@ -907,6 +907,46 @@ REQUIRED SETUP FOR SES:
       - "   Message ID: XXXXXXXX"
    d) Check inbox for email with inline charts
 
+6. Gmail Spam Prevention (CRITICAL - Do this IMMEDIATELY):
+   
+   After first email arrives, mark as NOT SPAM to train Gmail:
+   
+   a) Check Spam folder in Gmail (first SES email will likely go here)
+   b) Open the email
+   c) Click "Not spam" button at the top
+   d) Gmail will move it to inbox AND learn that future emails are legitimate
+   
+   OPTIONAL - Whitelist sender permanently:
+   
+   Method 1 (Recommended): Create filter
+   a) Open any email from myles@thomasquantitativestrategies.com
+   b) Click three dots (⋮) → "Filter messages like this"
+   c) From field should auto-populate with: myles@thomasquantitativestrategies.com
+   d) Click "Create filter"
+   e) Check: "Never send it to Spam"
+   f) Check: "Also apply filter to matching conversations" (to fix existing emails)
+   g) Click "Create filter"
+   
+   Method 2: Add to contacts
+   a) Click sender's email address: myles@thomasquantitativestrategies.com
+   b) Popup will appear → Click "Add to contacts"
+   c) Confirm
+   
+   Method 3: Star important emails
+   a) Star any email from this sender
+   b) Gmail learns starred senders are important
+   
+   Why SES emails go to spam initially:
+   - New sender address (no reputation yet)
+   - Automated emails trigger spam filters
+   - HTML emails with images are scrutinized more
+   - Gmail needs training that you want these emails
+   
+   PRO TIP: Using a professional domain (thomasquantitativestrategies.com) instead
+   of Gmail may reduce spam likelihood, but still mark as "Not spam" after first email.
+   
+   Once you mark as "Not spam" ONCE, future emails should arrive in inbox.
+
 DEPENDENCIES (already in Lambda layer):
 - pandas, numpy, requests (custom layer)
 - matplotlib (for chart generation)
@@ -941,7 +981,7 @@ S3 Bucket Policy (Required):
 Make email-charts/* publicly accessible so Gmail can display images.
 
 ===============================================================================
-OPTION 1: Enable ACLs (RECOMMENDED - Simpler, code already handles it)
+OPTION 1: Enable ACLs (Simpler, but NOT recommended if you already used Option 2)
 ===============================================================================
 
 Step 1: Go to S3 Console
@@ -962,10 +1002,10 @@ Step 7: Check the acknowledgment box:
 
 Step 8: Click "Save changes"
 
-Done! The Lambda code already uploads with public-read ACL, so charts will be accessible.
+Done! The Lambda code uploads with public-read ACL, so charts will be accessible.
 
 ===============================================================================
-OPTION 2: Bucket Policy (More complex, requires disabling Block Public Access) [I DID THIS ONE]
+OPTION 2: Bucket Policy (Recommended - More secure) [STANDARD APPROACH - I DID THIS ONE]
 ===============================================================================
 
 Step 1: Go to S3 Console
@@ -1013,6 +1053,9 @@ Step 12: Paste this complete policy:
 
 Note: The tmp/* path allows testing with manually uploaded files before deployment.
 
+NOTE: Lambda code does NOT use ACLs - it relies on bucket policy for public access.
+      This is more secure and works with "ACLs disabled" bucket setting.
+
 Step 13: Click "Save changes"
 
 Done! Charts in email-charts/* and tmp/* will be publicly accessible.
@@ -1041,6 +1084,39 @@ Cleanup Strategy:
 - Charts only needed for ~24 hours (until next email)
 - Can add S3 lifecycle rule: Delete objects in email-charts/ after 7 days
 - Or run monthly cleanup script
+
+TROUBLESHOOTING CHARTS:
+========================
+
+1. "❌ Failed to upload chart to S3: AccessControlListNotSupported"
+   
+   Problem: Your S3 bucket has ACLs disabled, but old code tried to use ACL='public-read'
+   
+   Solution: Code has been fixed to NOT use ACLs (relies on bucket policy instead).
+             Just redeploy the updated Lambda code.
+   
+   Verify bucket policy is set (from Option 2 above):
+   - S3 Console → betting-line-movement-snapshots → Permissions → Bucket policy
+   - Should have policy allowing s3:GetObject on email-charts/* and tmp/*
+
+2. "Charts generated but not displaying in Gmail"
+   
+   Problem: Images blocked or URLs not accessible
+   
+   Solutions:
+   a) Check if Gmail is blocking images: Look for "Images are not displayed" banner
+      Click "Always display images from myles@thomasquantitativestrategies.com"
+   
+   b) Test chart URL directly: Copy URL from CloudWatch logs, paste in browser
+      Should display image without authentication
+   
+   c) Verify bucket policy allows public GetObject (see Option 2 setup above)
+
+3. "⚠️ No snapshots found for this game"
+   
+   Problem: Not enough historical data yet (need 1h+ of snapshots)
+   
+   Solution: Wait for next hourly run. First run has no history to chart.
 
 TROUBLESHOOTING:
 - Email not received: Check CloudWatch logs for errors, verify email in SES
@@ -1146,7 +1222,7 @@ DISPLAY_TIMEZONE = 'America/New_York'  # Eastern Time for logging
 # AWS Configuration
 S3_BUCKET = os.getenv('S3_BUCKET', 'betting-line-movement-snapshots') # Set in Lambda environment
 SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN', '')  # Set in Lambda environment (deprecated - using SES now)
-SES_FROM_EMAIL = os.getenv('SES_FROM_EMAIL', 'mylescgthomas@gmail.com')  # Verified sender in SES
+SES_FROM_EMAIL = os.getenv('SES_FROM_EMAIL', 'myles@thomasquantitativestrategies.com')  # Verified sender in SES
 SES_TO_EMAIL = os.getenv('SES_TO_EMAIL', 'mylescgthomas@gmail.com')  # Verified recipient
 IS_LAMBDA = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ  # AWS automatically sets this env var in Lambda; False when running locally
 
@@ -1396,13 +1472,16 @@ def upload_chart_to_s3(chart_bytes: bytes, timestamp: str, game_id: str, away_te
     s3_key = f"email-charts/{timestamp}/{game_id}_{safe_away}_{safe_home}.png"
     
     try:
-        # Upload with public-read ACL
+        # Upload as public (bucket policy handles public access, not ACLs)
+        # NOTE: ACL='public-read' is COMMENTED OUT because S3 bucket has ACLs disabled
+        # (using Option 2: Bucket Policy approach from docstring setup instructions).
+        # If you enable ACLs (Option 1), uncomment the ACL line below.
         s3_client.put_object(
             Bucket=S3_BUCKET,
             Key=s3_key,
             Body=chart_bytes,
             ContentType='image/png',
-            ACL='public-read'
+            # ACL='public-read'  # Only needed if using ACL-based permissions (Option 1)
         )
         
         # Return public URL
