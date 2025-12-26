@@ -88,7 +88,7 @@ CURRENT_NFL_DATE = datetime.now()
 # Titles and Footer Text
 # -----------------------------------------------------------------------------
 TITLE = "NFL Super Bowl Futures: True Odds vs. What Books Charge"
-SUBTITLE = "Bookmakers charge an *average 18.5% vig* on championship futures (vs. 4-5% on game lines)"
+# SUBTITLE is generated dynamically in prepare_data_for_visualization() with calculated avg vig
 
 FOOTER_NOTES = """
 1. 'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%).  
@@ -142,7 +142,7 @@ FOOTER_FONT_SIZE = 11
 LOGO_HEIGHT = 21           # pixels - controls row height (images drive row size)
 HEADER_PADDING_PX = 1      # Padding around column headers
 DATA_ROW_PADDING_PX = 1    # Padding around data rows (smaller = more compact)
-HEADING_PADDING_PX = 10    # Padding around title/subtitle
+HEADING_PADDING_PX = 3     # Padding around title/subtitle (reduced from 10)
 
 # -----------------------------------------------------------------------------
 # Column Widths (pixels)
@@ -210,7 +210,7 @@ def prepare_data_for_visualization(df, logo_map):
         df: Raw dataframe from nfl_championship_fair_odds.csv
         
     Returns:
-        DataFrame ready for visualization with formatted columns
+        tuple: (DataFrame ready for visualization, average_vig_pct)
     """
     print("📊 Preparing data for visualization...\n")
     
@@ -279,6 +279,10 @@ def prepare_data_for_visualization(df, logo_map):
         axis=1
     )
     
+    # Calculate average vig across all teams with odds (for subtitle)
+    teams_with_odds = df_display[df_display['has_odds']]
+    average_vig_pct = teams_with_odds['vig_diff'].mean()
+    
     # Format vig_diff for display
     df_display['vig_diff_str'] = df_display.apply(
         lambda row: '-' if pd.isna(row['vig_diff']) or row['vig_diff'] is None
@@ -304,22 +308,27 @@ def prepare_data_for_visualization(df, logo_map):
     print(f"   ✅ Prepared {len(df_display)} teams")
     print(f"   ✅ {df_display['has_odds'].sum()} teams have odds available")
     print(f"   ✅ {(~df_display['has_odds']).sum()} teams eliminated/no odds")
-    print(f"   ✅ {df_display['logo_url'].notna().sum()} teams have logo URLs\n")
+    print(f"   ✅ {df_display['logo_url'].notna().sum()} teams have logo URLs")
+    print(f"   ✅ Average vig: {average_vig_pct:.1f}%\n")
     
-    return df_display
+    return df_display, average_vig_pct
 
 
-def create_gt_table_with_r(df_display):
+def create_gt_table_with_r(df_display, average_vig_pct):
     """
     Create a publication-quality table using R's gt package via rpy2.
     
     Args:
         df_display: Prepared dataframe with all display columns
+        average_vig_pct: Calculated average vig percentage across all teams
         
     Returns:
         Path to saved PNG file
     """
     print("🎨 Creating table with R's gt package...\n")
+    
+    # Generate subtitle dynamically with calculated vig
+    subtitle = f"Bookmakers charge an *average {average_vig_pct:.1f}% vig* on championship futures (vs. 4-5% on game lines)"
     
     try:
         import rpy2.robjects as ro
@@ -392,7 +401,7 @@ def create_gt_table_with_r(df_display):
       # Title and subtitle - 538 style
       tab_header(
         title = md("**{TITLE}**"),
-        subtitle = md("{SUBTITLE}")
+        subtitle = md("{subtitle}")
       ) %>%
       
       # Column alignment
@@ -608,10 +617,10 @@ def main():
     print(f"   🏈 Loaded {len(logo_map)} team logos\n")
     
     # Prepare data (same logic as v2)
-    df_display = prepare_data_for_visualization(df, logo_map)
+    df_display, average_vig_pct = prepare_data_for_visualization(df, logo_map)
     
     # Create table using R's gt package
-    output_path = create_gt_table_with_r(df_display)
+    output_path = create_gt_table_with_r(df_display, average_vig_pct)
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE!")
