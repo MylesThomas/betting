@@ -1515,6 +1515,7 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     # Get game info
     away_team = df['away_team'].iloc[0]
     home_team = df['home_team'].iloc[0]
+    game_time = pd.to_datetime(df['game_time'].iloc[0])
     
     # Get time range for subtitle
     first_snapshot = df['timestamp'].min()
@@ -1524,6 +1525,10 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     # Format times for subtitle
     first_time_str = first_snapshot.strftime('%b %d %I:%M %p')
     last_time_str = last_snapshot.strftime('%b %d %I:%M %p ET')
+    
+    # Format game time for title
+    game_time_et = game_time.tz_convert(ZoneInfo('America/New_York'))
+    game_time_str = game_time_et.strftime('%b %d, %I:%M %p ET')
     
     # Determine current favorite
     latest_spread = df['away_spread'].iloc[-1]
@@ -1538,21 +1543,32 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
         underdog = "Pick'em"
     
     if not title:
-        title = f"{away_team} @ {home_team}"
+        title = f"{away_team} @ {home_team} ({game_time_str})"
     
     subtitle = f"{time_range_hours:.0f}h movement ({first_time_str} → {last_time_str})"
     if favorite != "Pick'em":
         subtitle += f" | Current Favorite: {favorite}"
     
-    # Focus on major books
+    # Focus on major books (but show ALL books present in data)
     major_books = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'betrivers']
-    df_major = df[df['bookmaker'].isin(major_books)].copy()
+    
+    # Get all unique bookmakers in the data
+    available_books = df['bookmaker'].unique().tolist()
+    
+    # Prioritize major books first, then add any others
+    books_to_plot = [b for b in major_books if b in available_books]
+    other_books = [b for b in available_books if b not in major_books]
+    books_to_plot.extend(sorted(other_books))  # Add other books alphabetically
+    
+    df_major = df[df['bookmaker'].isin(books_to_plot)].copy()
+    
+    print(f"      📊 Plotting {len(books_to_plot)} bookmakers: {', '.join(books_to_plot)}")
     
     # Create figure
     plt.style.use('seaborn-v0_8-darkgrid')
     fig, ax = plt.subplots(figsize=(14, 7))
     
-    # Color map for bookmakers
+    # Color map for bookmakers (major books get brand colors, others get defaults)
     book_colors = {
         'draftkings': '#53D337',
         'fanduel': '#0E8FEF',
@@ -1561,19 +1577,29 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
         'betrivers': '#00A4E4'
     }
     
+    # Default colors for other books (distinct palette)
+    default_colors = ['#E74C3C', '#9B59B6', '#1ABC9C', '#F39C12', '#34495E', '#16A085']
+    color_idx = 0
+    
     # Plot each bookmaker's line - both teams (mirror)
-    for bookmaker in major_books:
+    # Use _nolegend_ suffix for home team to avoid duplicate legend entries
+    for i, bookmaker in enumerate(books_to_plot):
         book_df = df_major[df_major['bookmaker'] == bookmaker].copy()
         if book_df.empty:
             continue
         
-        color = book_colors.get(bookmaker, '#333333')
+        # Get color (brand color if available, otherwise default palette)
+        if bookmaker in book_colors:
+            color = book_colors[bookmaker]
+        else:
+            color = default_colors[color_idx % len(default_colors)]
+            color_idx += 1
         
-        # Plot away team spread (solid line)
+        # Plot away team spread (solid line) - ONLY THIS ONE GETS LEGEND
         ax.plot(
             book_df['timestamp'],
             book_df['away_spread'],
-            label=f"{bookmaker.upper()} ({away_team})",
+            label=bookmaker.upper(),  # Simplified: just bookmaker name
             color=color,
             marker='o',
             markersize=5,
@@ -1582,11 +1608,10 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
             linestyle='-'
         )
         
-        # Plot home team spread (dashed line - mirror)
+        # Plot home team spread (dashed line - mirror) - NO LEGEND (mirror image)
         ax.plot(
             book_df['timestamp'],
             book_df['home_spread'],
-            label=f"{bookmaker.upper()} ({home_team})",
             color=color,
             marker='s',
             markersize=5,
@@ -1597,6 +1622,38 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     
     # Add horizontal line at 0 (pick'em)
     ax.axhline(y=0, color='red', linestyle='--', linewidth=2, alpha=0.6, zorder=1)
+    
+    # Add vertical lines for 1h and 24h ago (if within time range)
+    now = last_snapshot  # Use last snapshot as "now"
+    time_1h_ago = now - timedelta(hours=1)
+    time_24h_ago = now - timedelta(hours=24)
+    
+    # Format "now" timestamp for display
+    now_et = now.astimezone(ZoneInfo('America/New_York'))
+    now_str = now_et.strftime('%I:%M %p ET')
+    
+    if first_snapshot <= time_1h_ago <= last_snapshot:
+        ax.axvline(x=time_1h_ago, color='orange', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
+        # Add label for 1h line
+        ax.text(time_1h_ago, ax.get_ylim()[0], '1h ago', 
+                ha='center', va='top', fontsize=9, color='orange', 
+                fontweight='bold', rotation=0,
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+    
+    if first_snapshot <= time_24h_ago <= last_snapshot:
+        ax.axvline(x=time_24h_ago, color='purple', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
+        # Add label for 24h line
+        ax.text(time_24h_ago, ax.get_ylim()[0], '24h ago', 
+                ha='center', va='top', fontsize=9, color='purple', 
+                fontweight='bold', rotation=0,
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+    
+    # Add "now" anchor timestamp annotation (bottom right)
+    ax.text(0.98, 0.02, f'Anchor: {now_str}', 
+            transform=ax.transAxes,
+            ha='right', va='bottom', fontsize=9, color='#666', 
+            style='italic',
+            bbox=dict(boxstyle='round,pad=0.4', facecolor='white', alpha=0.9, edgecolor='#ccc'))
     
     # Add shaded regions (green for favorites at top after inversion, red for underdogs at bottom)
     y_min, y_max = ax.get_ylim()
@@ -1632,9 +1689,9 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     # Grid
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     
-    # Legend - show all books with both teams
-    ax.legend(loc='upper right', framealpha=0.95, fontsize=8, ncol=2, 
-              title='Sportsbooks', title_fontsize=10)
+    # Legend - simplified to show only bookmaker names (not repeated for each team)
+    ax.legend(loc='upper right', framealpha=0.95, fontsize=10, ncol=1, 
+              title='Sportsbooks', title_fontsize=11)
     
     # Tight layout
     plt.tight_layout()
