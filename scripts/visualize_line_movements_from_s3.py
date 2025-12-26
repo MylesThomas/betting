@@ -545,20 +545,33 @@ time_24h_ago <- now - hours(24)
 # Format anchor time
 now_et <- format(now, "%I:%M %p ET", tz="America/New_York")
 
-# Determine favorite
+# Determine favorite and calculate consensus
 latest_spread <- df %>% filter(timestamp == max(timestamp)) %>% pull(away_spread) %>% first()
+consensus_spread <- df %>% filter(timestamp == max(timestamp)) %>% pull(away_spread) %>% median()
+
 if (latest_spread < 0) {{
   favorite <- away_team
   underdog <- home_team
 }} else if (latest_spread > 0) {{
   favorite <- home_team
   underdog <- away_team
+  consensus_spread <- -consensus_spread  # Flip for home favorite
 }} else {{
   favorite <- "Pick'em"
   underdog <- "Pick'em"
 }}
 
+# Format consensus for display
+consensus_str <- if (consensus_spread == 0) {{
+  "Pick'em"
+}} else if (consensus_spread < 0) {{
+  paste0(favorite, " ", consensus_spread)
+}} else {{
+  paste0(underdog, " +", consensus_spread)
+}}
+
 cat(sprintf("   Current favorite: %s\\n", favorite))
+cat(sprintf("   Consensus line: %s\\n", consensus_str))
 cat(sprintf("   Anchor time: %s\\n\\n", now_et))
 
 # Create plot
@@ -575,22 +588,23 @@ p <- ggplot(df, aes(x=timestamp)) +
              size=2, alpha=0.9, shape=15) +
   # Horizontal line at 0
   geom_hline(yintercept=0, color="red", linetype="dashed", linewidth=1, alpha=0.6) +
-  # Vertical lines for 1h and 24h ago
-  geom_vline(xintercept=time_1h_ago, color="orange", linetype="dashed", linewidth=1, alpha=0.7) +
+  # Vertical lines for time markers
   geom_vline(xintercept=time_24h_ago, color="purple", linetype="dashed", linewidth=1, alpha=0.7) +
+  geom_vline(xintercept=time_1h_ago, color="orange", linetype="dashed", linewidth=1, alpha=0.7) +
+  geom_vline(xintercept=now, color="darkgreen", linetype="solid", linewidth=1.5, alpha=0.8) +
   # Shaded regions
   annotate("rect", xmin=-Inf, xmax=Inf, ymin=0, ymax=Inf, fill="red", alpha=0.05) +
   annotate("rect", xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=0, fill="green", alpha=0.05) +
   # Labels and theme
   scale_x_datetime(date_labels="%m/%d %H:%M", date_breaks="12 hours") +
-  scale_y_reverse() +  # Invert y-axis (favorites at top)
+  scale_y_reverse(breaks=seq(-14, 14, by=1)) +  # Integer ticks only, reversed (favorites at top)
   scale_color_manual(values=c(
     "draftkings"="#53D337", "fanduel"="#0E8FEF", "betmgm"="#BA9000",
     "caesars"="#0033A0", "betrivers"="#00A4E4"
   )) +
   labs(
     title=paste0(away_team, " @ ", home_team, " (", game_time_str, ")"),
-    subtitle=paste0("{time_range_hours}h movement | Current Favorite: ", favorite),
+    subtitle=paste0("{time_range_hours}h movement | Consensus: ", consensus_str),
     x="Time",
     y="Spread (points)",
     color="Sportsbooks"
@@ -606,10 +620,12 @@ p <- ggplot(df, aes(x=timestamp)) +
     axis.text.x=element_text(angle=45, hjust=1)
   ) +
   # Add annotations for time markers
-  annotate("text", x=time_1h_ago, y=Inf, label="1h ago", 
-           color="orange", fontface="bold", size=3.5, vjust=-0.5) +
   annotate("text", x=time_24h_ago, y=Inf, label="24h ago", 
            color="purple", fontface="bold", size=3.5, vjust=-0.5) +
+  annotate("text", x=time_1h_ago, y=Inf, label="1h ago", 
+           color="orange", fontface="bold", size=3.5, vjust=-0.5) +
+  annotate("text", x=now, y=Inf, label="now", 
+           color="darkgreen", fontface="bold", size=4, vjust=-0.5) +
   # Add anchor timestamp
   annotate("text", x=Inf, y=-Inf, label=paste0("Anchor: ", now_et), 
            color="#666", size=3, hjust=1.1, vjust=-0.5, fontface="italic")

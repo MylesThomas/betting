@@ -1530,24 +1530,33 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     game_time_et = game_time.tz_convert(ZoneInfo('America/New_York'))
     game_time_str = game_time_et.strftime('%b %d, %I:%M %p ET')
     
-    # Determine current favorite
+    # Determine current favorite and calculate consensus
     latest_spread = df['away_spread'].iloc[-1]
+    consensus_spread = df['away_spread'].iloc[-1:].median()  # Median of latest spreads
+    
     if latest_spread < 0:
         favorite = away_team
         underdog = home_team
     elif latest_spread > 0:
         favorite = home_team
         underdog = away_team
+        consensus_spread = -consensus_spread  # Flip for home favorite
     else:
         favorite = "Pick'em"
         underdog = "Pick'em"
     
+    # Format consensus for display
+    if consensus_spread == 0:
+        consensus_str = "Pick'em"
+    elif consensus_spread < 0:
+        consensus_str = f"{favorite} {consensus_spread:.1f}".replace('.0', '')
+    else:
+        consensus_str = f"{underdog} +{consensus_spread:.1f}".replace('.0', '')
+    
     if not title:
         title = f"{away_team} @ {home_team} ({game_time_str})"
     
-    subtitle = f"{time_range_hours:.0f}h movement ({first_time_str} → {last_time_str})"
-    if favorite != "Pick'em":
-        subtitle += f" | Current Favorite: {favorite}"
+    subtitle = f"{time_range_hours:.0f}h movement ({first_time_str} → {last_time_str}) | Consensus: {consensus_str}"
     
     # Focus on major books (but show ALL books present in data)
     major_books = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'betrivers']
@@ -1623,7 +1632,7 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     # Add horizontal line at 0 (pick'em)
     ax.axhline(y=0, color='red', linestyle='--', linewidth=2, alpha=0.6, zorder=1)
     
-    # Add vertical lines for 1h and 24h ago (if within time range)
+    # Add vertical lines for time markers (24h, 1h, now)
     now = last_snapshot  # Use last snapshot as "now"
     time_1h_ago = now - timedelta(hours=1)
     time_24h_ago = now - timedelta(hours=24)
@@ -1631,6 +1640,14 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     # Format "now" timestamp for display
     now_et = now.astimezone(ZoneInfo('America/New_York'))
     now_str = now_et.strftime('%I:%M %p ET')
+    
+    if first_snapshot <= time_24h_ago <= last_snapshot:
+        ax.axvline(x=time_24h_ago, color='purple', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
+        # Add label for 24h line
+        ax.text(time_24h_ago, ax.get_ylim()[0], '24h ago', 
+                ha='center', va='top', fontsize=9, color='purple', 
+                fontweight='bold', rotation=0,
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
     
     if first_snapshot <= time_1h_ago <= last_snapshot:
         ax.axvline(x=time_1h_ago, color='orange', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
@@ -1640,13 +1657,12 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
                 fontweight='bold', rotation=0,
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
     
-    if first_snapshot <= time_24h_ago <= last_snapshot:
-        ax.axvline(x=time_24h_ago, color='purple', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
-        # Add label for 24h line
-        ax.text(time_24h_ago, ax.get_ylim()[0], '24h ago', 
-                ha='center', va='top', fontsize=9, color='purple', 
-                fontweight='bold', rotation=0,
-                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+    # Add "now" line (most recent snapshot)
+    ax.axvline(x=now, color='darkgreen', linestyle='-', linewidth=2.5, alpha=0.8, zorder=1)
+    ax.text(now, ax.get_ylim()[0], 'now', 
+            ha='center', va='top', fontsize=10, color='darkgreen', 
+            fontweight='bold', rotation=0,
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
     
     # Add "now" anchor timestamp annotation (bottom right)
     ax.text(0.98, 0.02, f'Anchor: {now_str}', 
@@ -1662,6 +1678,11 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     
     # INVERT Y-AXIS: Favorites (negative) at top after inversion
     ax.invert_yaxis()
+    
+    # Set integer-only y-axis ticks for easier reading
+    y_min, y_max = ax.get_ylim()
+    y_ticks = range(int(y_max), int(y_min) + 1)  # Already inverted, so max to min
+    ax.set_yticks(y_ticks)
     
     # Formatting
     ax.set_xlabel('Time', fontsize=13, fontweight='bold')
