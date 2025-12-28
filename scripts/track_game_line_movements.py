@@ -1158,6 +1158,9 @@ import matplotlib.dates as mdates
 # Load environment variables
 load_dotenv()
 
+# Import after we've added src to path (will be imported below after path setup)
+# Note: Team utils removed - using full team names in output
+
 # Fix SSL certificate issues (for API calls)
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1574,20 +1577,39 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     print(f"      📊 Plotting {len(books_to_plot)} bookmakers: {', '.join(books_to_plot)}")
     
     # Create figure
-    plt.style.use('seaborn-v0_8-darkgrid')
+    plt.style.use(['seaborn-v0_8-darkgrid', 'fivethirtyeight'])
+
     fig, ax = plt.subplots(figsize=(14, 7))
     
-    # Color map for bookmakers (major books get brand colors, others get defaults)
+    # Color map for bookmakers - expanded palette with high contrast colors
+    # Uses colorblind-friendly, distinct colors for up to 15+ bookmakers
     book_colors = {
-        'draftkings': '#53D337',
-        'fanduel': '#0E8FEF',
-        'betmgm': '#BA9000',
-        'caesars': '#0033A0',
-        'betrivers': '#00A4E4'
+        # Major books (brand-ish colors, adjusted for visibility)
+        'draftkings': '#00B050',      # Bright green
+        'fanduel': '#0070C0',         # Bright blue
+        'betmgm': '#FFC000',          # Gold/yellow
+        'caesars': '#7030A0',         # Purple
+        'betrivers': '#00B0F0',       # Cyan
+        
+        # Additional books (distinct, high-contrast colors)
+        'bovada': '#C00000',          # Red
+        'fanatics': '#FF6B35',        # Orange-red
+        'lowvig': '#7030A0',          # Purple
+        'mybookieag': '#00A650',      # Teal green
+        'williamhill_us': '#E91E63',  # Pink
+        'betonlineag': '#FF5722',     # Deep orange
+        'betus': '#9C27B0',           # Purple-magenta
+        'pointsbetus': '#795548',     # Brown
+        'superbook': '#607D8B',       # Blue-grey
+        'wynnbet': '#009688',         # Teal
     }
     
-    # Default colors for other books (distinct palette)
-    default_colors = ['#E74C3C', '#9B59B6', '#1ABC9C', '#F39C12', '#34495E', '#16A085']
+    # Extended default colors for any additional books (high contrast)
+    default_colors = [
+        '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', 
+        '#1ABC9C', '#E67E22', '#16A085', '#27AE60', '#2980B9',
+        '#8E44AD', '#C0392B', '#D35400', '#BDC3C7', '#34495E'
+    ]
     color_idx = 0
     
     # Plot each bookmaker's line - both teams (mirror)
@@ -1611,9 +1633,9 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
             label=bookmaker.upper(),  # Simplified: just bookmaker name
             color=color,
             marker='o',
-            markersize=5,
-            linewidth=3,
-            alpha=0.9,
+            markersize=4,        # Smaller markers (was 5)
+            linewidth=2,         # Thinner lines (was 3)
+            alpha=0.85,          # Slightly more transparent (was 0.9)
             linestyle='-'
         )
         
@@ -1623,44 +1645,48 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
             book_df['home_spread'],
             color=color,
             marker='s',
-            markersize=5,
-            linewidth=3,
-            alpha=0.9,
+            markersize=4,        # Smaller markers (was 5)
+            linewidth=2,         # Thinner lines (was 3)
+            alpha=0.85,          # Slightly more transparent (was 0.9)
             linestyle='--'
         )
     
     # Add horizontal line at 0 (pick'em)
     ax.axhline(y=0, color='red', linestyle='--', linewidth=2, alpha=0.6, zorder=1)
     
-    # Add vertical lines for time markers (24h, 1h, now)
+    # Add vertical lines for time markers (24h, 1h, now) - all in uniform gray
     now = last_snapshot  # Use last snapshot as "now"
     time_1h_ago = now - timedelta(hours=1)
     time_24h_ago = now - timedelta(hours=24)
+    
+    # Uniform styling for all vertical lines
+    vline_color = '#555555'  # Dark gray
+    vline_alpha = 0.6
     
     # Format "now" timestamp for display
     now_et = now.astimezone(ZoneInfo('America/New_York'))
     now_str = now_et.strftime('%I:%M %p ET')
     
     if first_snapshot <= time_24h_ago <= last_snapshot:
-        ax.axvline(x=time_24h_ago, color='purple', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
+        ax.axvline(x=time_24h_ago, color=vline_color, linestyle='--', linewidth=2, alpha=vline_alpha, zorder=1)
         # Add label for 24h line
         ax.text(time_24h_ago, ax.get_ylim()[0], '24h ago', 
-                ha='center', va='top', fontsize=9, color='purple', 
+                ha='center', va='top', fontsize=9, color=vline_color, 
                 fontweight='bold', rotation=0,
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
     
     if first_snapshot <= time_1h_ago <= last_snapshot:
-        ax.axvline(x=time_1h_ago, color='orange', linestyle='--', linewidth=2, alpha=0.7, zorder=1)
+        ax.axvline(x=time_1h_ago, color=vline_color, linestyle='--', linewidth=2, alpha=vline_alpha, zorder=1)
         # Add label for 1h line
         ax.text(time_1h_ago, ax.get_ylim()[0], '1h ago', 
-                ha='center', va='top', fontsize=9, color='orange', 
+                ha='center', va='top', fontsize=9, color=vline_color, 
                 fontweight='bold', rotation=0,
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
     
     # Add "now" line (most recent snapshot)
-    ax.axvline(x=now, color='darkgreen', linestyle='-', linewidth=2.5, alpha=0.8, zorder=1)
+    ax.axvline(x=now, color=vline_color, linestyle='-', linewidth=2.5, alpha=vline_alpha, zorder=1)
     ax.text(now, ax.get_ylim()[0], 'now', 
-            ha='center', va='top', fontsize=10, color='darkgreen', 
+            ha='center', va='top', fontsize=10, color=vline_color, 
             fontweight='bold', rotation=0,
             bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
     
@@ -1710,11 +1736,21 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     # Grid
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     
-    # Legend - simplified to show only bookmaker names (not repeated for each team)
-    ax.legend(loc='upper right', framealpha=0.95, fontsize=10, ncol=1, 
-              title='Sportsbooks', title_fontsize=11)
+    # Legend - placed outside plot area on the right to avoid overlap
+    # Number of bookmakers determines layout strategy
+    num_books = len(books_to_plot)
     
-    # Tight layout
+    if num_books <= 5:
+        # Few books: keep inside plot area, upper right
+        ax.legend(loc='upper right', framealpha=0.95, fontsize=10, ncol=1,
+                  title='Sportsbooks', title_fontsize=11)
+    else:
+        # Many books: move outside to the right to avoid overlap
+        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', framealpha=0.95, 
+                  fontsize=9, ncol=1, title='Sportsbooks', title_fontsize=10,
+                  borderaxespad=0)
+    
+    # Tight layout with space for legend
     plt.tight_layout()
     
     # Convert to bytes
@@ -2038,27 +2074,61 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
 
 
 def format_movements_text_for_game(df: pd.DataFrame) -> str:
-    """Format movements for a single game as text."""
+    """
+    Format movements for a single game as text.
+    Shows ONE line per bookmaker (using the team with negative spread, or away team if both positive).
+    """
     lines = []
     
-    # Group by bookmaker
-    for bookmaker in df['bookmaker'].unique():
-        book_df = df[df['bookmaker'] == bookmaker]
-        for _, row in book_df.iterrows():
-            side = row['side']
-            
-            # Format with proper column names
-            spread_24h = row['prev_24h_raw_spread'] if pd.notna(row.get('prev_24h_raw_spread')) else '—'
-            price_24h = row['prev_24h_price'] if pd.notna(row.get('prev_24h_price')) else '—'
-            spread_1h = row['prev_1h_raw_spread'] if pd.notna(row.get('prev_1h_raw_spread')) else '—'
-            price_1h = row['prev_1h_price'] if pd.notna(row.get('prev_1h_price')) else '—'
-            spread_now = row['current_raw_spread']
-            price_now = row['current_price']
-            
-            lines.append(f"\nBook: {bookmaker}")
-            lines.append(f"24h ago: {side} {spread_24h}/{price_24h}")
-            lines.append(f"1h ago:  {side} {spread_1h}/{price_1h}")
-            lines.append(f"Now:     {side} {spread_now}/{price_now}")
+    # Group by bookmaker and get both sides
+    bookmaker_groups = df.groupby('bookmaker')
+    
+    for bookmaker, book_df in bookmaker_groups:
+        # Get away and home rows
+        away_row = book_df[book_df['side'] == 'away'].iloc[0] if len(book_df[book_df['side'] == 'away']) > 0 else None
+        home_row = book_df[book_df['side'] == 'home'].iloc[0] if len(book_df[book_df['side'] == 'home']) > 0 else None
+        
+        # Determine which side to show (prefer the negative spread, i.e., the favorite)
+        # If both are positive (unlikely) or one is missing, default to away
+        if away_row is not None and home_row is not None:
+            # Use the side with negative spread (the favorite)
+            if away_row['current_raw_spread'] < 0:
+                display_row = away_row
+                display_side = 'away'
+            elif home_row['current_raw_spread'] < 0:
+                display_row = home_row
+                display_side = 'home'
+            else:
+                # Both positive (rare), default to away
+                display_row = away_row
+                display_side = 'away'
+        elif away_row is not None:
+            display_row = away_row
+            display_side = 'away'
+        elif home_row is not None:
+            display_row = home_row
+            display_side = 'home'
+        else:
+            continue  # No data for this bookmaker
+        
+        # Use full team name for display
+        if display_side == 'away':
+            team_display = display_row['away_team']
+        else:
+            team_display = display_row['home_team']
+        
+        # Format with proper column names
+        spread_24h = display_row['prev_24h_raw_spread'] if pd.notna(display_row.get('prev_24h_raw_spread')) else '—'
+        price_24h = display_row['prev_24h_price'] if pd.notna(display_row.get('prev_24h_price')) else '—'
+        spread_1h = display_row['prev_1h_raw_spread'] if pd.notna(display_row.get('prev_1h_raw_spread')) else '—'
+        price_1h = display_row['prev_1h_price'] if pd.notna(display_row.get('prev_1h_price')) else '—'
+        spread_now = display_row['current_raw_spread']
+        price_now = display_row['current_price']
+        
+        lines.append(f"\nBook: {bookmaker}")
+        lines.append(f"24h ago: {team_display} {spread_24h}/{price_24h}")
+        lines.append(f"1h ago:  {team_display} {spread_1h}/{price_1h}")
+        lines.append(f"Now:     {team_display} {spread_now}/{price_now}")
     
     return '\n'.join(lines)
 
@@ -2364,18 +2434,48 @@ def format_movements_text(df: pd.DataFrame) -> List[str]:
             away_24h = f"{away_row['prev_24h_raw_spread']}/{away_row['prev_24h_price']}" if away_row is not None and pd.notna(away_row.get('prev_24h_raw_spread')) else "—"
             home_24h = f"{home_row['prev_24h_raw_spread']}/{home_row['prev_24h_price']}" if home_row is not None and pd.notna(home_row.get('prev_24h_raw_spread')) else "—"
             
-            # 1h ago
-            away_1h = f"{away_row['prev_1h_raw_spread']}/{away_row['prev_1h_price']}" if away_row is not None and pd.notna(away_row.get('prev_1h_raw_spread')) else "—"
-            home_1h = f"{home_row['prev_1h_raw_spread']}/{home_row['prev_1h_price']}" if home_row is not None and pd.notna(home_row.get('prev_1h_raw_spread')) else "—"
+            # Determine which side to show (prefer the negative spread, i.e., the favorite)
+            if away_row is not None and home_row is not None:
+                # Use the side with negative spread (the favorite)
+                if away_row['current_raw_spread'] < 0:
+                    display_row = away_row
+                    display_side = 'away'
+                    display_team = away_team
+                elif home_row['current_raw_spread'] < 0:
+                    display_row = home_row
+                    display_side = 'home'
+                    display_team = home_team
+                else:
+                    # Both positive (rare), default to away
+                    display_row = away_row
+                    display_side = 'away'
+                    display_team = away_team
+            elif away_row is not None:
+                display_row = away_row
+                display_side = 'away'
+                display_team = away_team
+            elif home_row is not None:
+                display_row = home_row
+                display_side = 'home'
+                display_team = home_team
+            else:
+                continue  # No data for this bookmaker
             
-            # Now
-            away_now = f"{away_row['current_raw_spread']}/{away_row['current_price']}" if away_row is not None else "—"
-            home_now = f"{home_row['current_raw_spread']}/{home_row['current_price']}" if home_row is not None else "—"
+            # Use full team name for display
+            team_display = display_team
+            
+            # Build formatted strings
+            spread_24h = display_row['prev_24h_raw_spread'] if pd.notna(display_row.get('prev_24h_raw_spread')) else '—'
+            price_24h = display_row['prev_24h_price'] if pd.notna(display_row.get('prev_24h_price')) else '—'
+            spread_1h = display_row['prev_1h_raw_spread'] if pd.notna(display_row.get('prev_1h_raw_spread')) else '—'
+            price_1h = display_row['prev_1h_price'] if pd.notna(display_row.get('prev_1h_price')) else '—'
+            spread_now = display_row['current_raw_spread']
+            price_now = display_row['current_price']
             
             lines.append(f"    Book: {bookmaker}")
-            lines.append(f"    24h ago: Away {away_24h} | Home {home_24h}")
-            lines.append(f"    1h ago:  Away {away_1h} | Home {home_1h}")
-            lines.append(f"    Now:     Away {away_now} | Home {home_now}")
+            lines.append(f"    24h ago: {team_display} {spread_24h}/{price_24h}")
+            lines.append(f"    1h ago:  {team_display} {spread_1h}/{price_1h}")
+            lines.append(f"    Now:     {team_display} {spread_now}/{price_now}")
             lines.append("")
         
         # Extra spacing between games
