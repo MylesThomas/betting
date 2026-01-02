@@ -600,6 +600,7 @@ def main():
     
     # Read the CSV (same as v2)
     csv_file = repo_root / 'data/04_output/nfl/nfl_championship_fair_odds.csv'
+    metadata_file = repo_root / 'data/04_output/nfl/nfl_championship_metadata.csv'
     
     if not csv_file.exists():
         print(f"❌ CSV file not found: {csv_file}")
@@ -612,15 +613,26 @@ def main():
     print(f"   📊 Loaded {len(df)} teams")
     print(f"   📊 Columns: {list(df.columns)}\n")
     
+    # Read metadata to get actual average vig across bookmakers
+    if metadata_file.exists():
+        metadata_df = pd.read_csv(metadata_file)
+        avg_vig_pct = metadata_df['avg_vig_pct'].iloc[0]
+        print(f"   📊 Average market vig: {avg_vig_pct:.2f}%\n")
+    else:
+        print(f"   ⚠️  Metadata file not found, calculating vig from team data")
+        # Fallback to old method (will be inaccurate)
+        teams_with_odds = df[df['num_books'] > 0]
+        avg_vig_pct = ((teams_with_odds['implied_prob_avg'] - teams_with_odds['fair_prob']) * 100).mean()
+    
     # Get team logos
     logo_map = get_team_logos()
     print(f"   🏈 Loaded {len(logo_map)} team logos\n")
     
-    # Prepare data (same logic as v2)
-    df_display, average_vig_pct = prepare_data_for_visualization(df, logo_map)
+    # Prepare data (same logic as v2, but we'll override the vig calculation)
+    df_display, _ = prepare_data_for_visualization(df, logo_map)
     
-    # Create table using R's gt package
-    output_path = create_gt_table_with_r(df_display, average_vig_pct)
+    # Create table using R's gt package with correct vig
+    output_path = create_gt_table_with_r(df_display, avg_vig_pct)
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE!")
