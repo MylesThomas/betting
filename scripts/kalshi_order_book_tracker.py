@@ -1613,7 +1613,11 @@ def main():
         health = load_json_from_s3(health_key)
         
         if not health:
-            print("   ⚠️  No health data found - tracker hasn't run yet or health tracking not enabled")
+            print("   ❌ ERROR: Health tracking file not found in S3")
+            print(f"   Expected: s3://{S3_BUCKET_KALSHI}/{health_key}")
+            print("")
+            print("   This means the tracker has never run successfully, or health")
+            print("   tracking is not enabled. Run the tracker at least once to initialize.")
             return
         
         print("\n" + "=" * 80)
@@ -1758,6 +1762,9 @@ def main():
     
     print(f"   Currently tracking: {len(active_markets)} markets")
     
+    # Start timing for health tracking
+    start_time = time.time()
+    
     # Step 2: Discover new markets (unless skipped or check-api only)
     if not args.skip_discovery:
         new_count = discover_and_add_new_markets()
@@ -1824,6 +1831,83 @@ def main():
     if not IS_LAMBDA and actionable_markets:
         text_body = format_signals_email(actionable_markets, neutral_markets, timestamp, len(active_markets))
         print("\n" + text_body)
+    
+    # Step 5: Update health tracking
+    duration = time.time() - start_time
+    print(f"\n⏱️  Run duration: {duration:.1f} seconds")
+    
+    # Load existing health data
+    health_key = "config/tracker_health.json"
+    health = load_json_from_s3(health_key)
+    
+    if health is None:
+        # Initialize health tracking
+        health = {
+            'consecutive_runs_no_signals': 0,
+            'total_runs': 0,
+            'total_signals_generated': 0
+        }
+        print("   🆕 Initializing health tracking")
+    
+    # Update health data
+    health['last_run'] = timestamp.isoformat()
+    health['last_run_duration_seconds'] = duration
+    health['total_runs'] = health.get('total_runs', 0) + 1
+    
+    if actionable_markets:
+        # Reset no-signal streak
+        health['consecutive_runs_no_signals'] = 0
+        health['last_signal_detected'] = timestamp.isoformat()
+        health['total_signals_generated'] = health.get('total_signals_generated', 0) + len(actionable_markets)
+        print(f"   📊 Signals detected: {len(actionable_markets)} (streak reset)")
+    else:
+        # Increment no-signal streak
+        health['consecutive_runs_no_signals'] = health.get('consecutive_runs_no_signals', 0) + 1
+        no_signal_count = health['consecutive_runs_no_signals']
+        print(f"   📊 No signals: {no_signal_count} consecutive runs")
+        
+        # Send health check email if 24 hours without signals
+        if no_signal_count >= 24:
+            print(f"   🚨 24h without signals - sending health check email")
+            
+            health_subject = f"🏥 Kalshi Tracker Health Check - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
+            health_text = f"""
+================================================================================
+🏥 KALSHI TRACKER HEALTH CHECK
+================================================================================
+Time: {time_et.strftime('%b %d, %Y %I:%M %p ET')}
+
+⚠️  NO SIGNALS FOR {no_signal_count} HOURS
+
+The tracker is running correctly but hasn't detected any actionable signals
+in the past {no_signal_count} hours. This could mean:
+
+1. Markets are trading normally (no extreme imbalances)
+2. Thresholds may need adjustment
+3. Market conditions are quiet
+
+================================================================================
+SYSTEM STATUS
+================================================================================
+
+✅ Tracker Status: Running normally
+⏱️  Last Run Duration: {duration:.1f} seconds
+📊 Markets Processed: {len(active_markets)}
+📈 Total Runs (Lifetime): {health['total_runs']}
+🎯 Total Signals (Lifetime): {health.get('total_signals_generated', 0)}
+📅 Last Signal: {health.get('last_signal_detected', 'Never')}
+
+================================================================================
+"""
+            health_html = f"<html><body><pre>{health_text}</pre></body></html>"
+            send_email_via_ses(health_subject, health_html, health_text)
+            
+            # Reset streak after sending health check
+            health['consecutive_runs_no_signals'] = 0
+    
+    # Save updated health data
+    save_json_to_s3(health, health_key)
+    print(f"   💾 Health tracking updated")
     
     print("\n✅ Complete")
 
