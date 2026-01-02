@@ -389,6 +389,17 @@ def main():
     team_avg.to_csv(output_file, index=False)
     print(f"\n💾 Saved team averages to: {output_file}")
     
+    # Also save metadata with average vig
+    metadata_file = repo_root / 'data/04_output/nfl/nfl_championship_metadata.csv'
+    metadata_df = pd.DataFrame([{
+        'timestamp': pd.Timestamp.now(),
+        'avg_vig_pct': avg_vig,
+        'num_teams': len(df['team'].unique()),
+        'num_bookmakers': len(df['bookmaker'].unique())
+    }])
+    metadata_df.to_csv(metadata_file, index=False)
+    print(f"💾 Saved metadata to: {metadata_file}")
+    
     return team_avg
 
 
