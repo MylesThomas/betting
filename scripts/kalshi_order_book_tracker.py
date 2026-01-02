@@ -698,9 +698,9 @@ IS_LAMBDA = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ
 # ============================================================================
 # IMPORTANT: Processing limit for testing
 # ============================================================================
-# Set to 5 for initial Lambda test to verify it works end-to-end
-# Once working, increase to 10000 for production (processes all markets)
-MAX_MARKETS_TO_PROCESS = 100  # TODO: Change to 10000 after successful test
+# Market Processing Limit
+# ============================================================================
+MAX_MARKETS_TO_PROCESS = 10000  # Process all markets (no limit in production)
 # ============================================================================
 
 # Initialize boto3 clients
@@ -1696,28 +1696,25 @@ def main():
     print(f"Actionable signals: {len(actionable_markets)}")
     print(f"Neutral markets: {len(neutral_markets)}")
     
-    if actionable_markets or IS_LAMBDA:
+    # Only send email if there are actionable signals
+    if actionable_markets:
         # Generate plain text email
         text_body = format_signals_email(actionable_markets, neutral_markets, timestamp, len(active_markets))
         
         # TODO: Generate HTML email with charts (future enhancement)
         html_body = f"<html><body><pre>{text_body}</pre></body></html>"  # Simple wrapper for now
         
-        if actionable_markets:
-            subject = f"🚨 Kalshi Trading Signals - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
-        else:
-            subject = f"✅ Kalshi Check - No Signals - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
+        subject = f"🚨 Kalshi Trading Signals - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
         
-        # Send email via SES (only in Lambda)
-        if IS_LAMBDA:
-            send_email_via_ses(subject, html_body, text_body)
-        else:
-            print(f"\n💻 Local run - email would be sent in Lambda")
-            print(f"   Subject: {subject}")
-        
-        # Print to console
-        if not IS_LAMBDA:
-            print("\n" + text_body)
+        # Send email via SES
+        send_email_via_ses(subject, html_body, text_body)
+    else:
+        print("\n📧 No actionable signals - skipping email")
+    
+    # Print to console (local runs only)
+    if not IS_LAMBDA and actionable_markets:
+        text_body = format_signals_email(actionable_markets, neutral_markets, timestamp, len(active_markets))
+        print("\n" + text_body)
     
     print("\n✅ Complete")
 
