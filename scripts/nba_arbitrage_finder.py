@@ -1428,15 +1428,19 @@ def lambda_handler(event, context):
         high_value_arbs_all = [a for a in all_arbs if a['expected_profit_pct'] >= min_profit]
         
         if high_value_arbs_all:
-            best_profit = high_value_arbs_all[0]['expected_profit_pct']
-            
             # Subject line indicates staleness status
             if high_value_arbs:
+                # Use fresh arbs for subject (count and best profit)
+                arb_count = len(high_value_arbs)
+                best_profit = high_value_arbs[0]['expected_profit_pct']
                 staleness_indicator = f" ({len(high_value_arbs)} FRESH, {len(stale_arbs)} STALE)" if stale_arbs else " (ALL FRESH)"
             else:
+                # All high-value arbs are stale
+                arb_count = len(high_value_arbs_all)
+                best_profit = high_value_arbs_all[0]['expected_profit_pct']
                 staleness_indicator = " (ALL STALE)"
             
-            subject = f"🚨 {len(high_value_arbs_all)} NBA ARB(S)! {best_profit:.1f}%{staleness_indicator}"
+            subject = f"🚨 {arb_count} NBA ARB(S)! {best_profit:.1f}%{staleness_indicator}"
             
             message = format_arb_email(high_value_arbs, other_arbs, stale_arbs, max_staleness_minutes)
             
