@@ -101,7 +101,8 @@ DATA STRUCTURE (S3)
 -------------------
 s3://kalshi-order-book-snapshots/
 ├── config/
-│   └── tracked_markets.json          # Market configuration
+│   ├── tracked_markets.json          # Market configuration
+│   └── tracker_health.json           # Health check state
 ├── data/
 │   ├── 01_input/
 │   │   └── kalshi/
@@ -158,6 +159,36 @@ Market Baseline JSON Format (Phase 3):
     "p85": 8.0
   }
 }
+
+Tracker Health Check JSON Format:
+{
+  "last_run": "2024-12-25T01:00:00Z",
+  "last_run_duration_seconds": 45.2,
+  "consecutive_runs_no_signals": 5,
+  "last_signal_detected": "2024-12-24T18:00:00Z",
+  "total_runs": 48,
+  "total_signals_generated": 12
+}
+
+Why Health Check Tracking?
+- If consecutive_runs_no_signals >= 24 (24 hours), send health alert email
+- Track run duration to detect performance degradation over time
+- Prevents silent failures (e.g., baselines stuck, API issues, threshold too strict)
+- User gets either: (1) signal emails OR (2) daily health check if no signals
+- Ensures system is running and working correctly
+- Can alert if Lambda is approaching timeout (e.g., duration > 540s for 10min timeout)
+
+Health Check Email Trigger Flow:
+  Run → Start timer
+      → Signals detected? 
+        ├─ YES → Send signal email, reset counter to 0
+        └─ NO → Increment counter
+            └─ Counter >= 24? 
+                ├─ YES → Send "24h no signals" health check email
+                │        Include: markets processed, avg run time, system status
+                │        Reset counter to 0
+                └─ NO → Skip email, save updated counter
+      → End timer, save duration to health.json
 
 TIME WINDOWS FOR SIGNAL GENERATION
 -----------------------------------
@@ -1561,6 +1592,8 @@ def main():
                        help='Test tracking on a single market ticker (e.g., KXGREENLAND-29)')
     parser.add_argument('--list-markets', action='store_true',
                        help='Load and display tracked markets from S3 config')
+    parser.add_argument('--health', action='store_true',
+                       help='Display tracker health status from S3 (run duration, no-signal streak)')
     
     args = parser.parse_args()
     
@@ -1572,6 +1605,82 @@ def main():
     print("=" * 80)
     print(f"Time: {time_et.strftime('%Y-%m-%d %H:%M:%S ET')}")
     print("")
+    
+    # Health check mode
+    if args.health:
+        print("🏥 Loading tracker health status from S3...")
+        health_key = "config/tracker_health.json"
+        health = load_json_from_s3(health_key)
+        
+        if not health:
+            print("   ⚠️  No health data found - tracker hasn't run yet or health tracking not enabled")
+            return
+        
+        print("\n" + "=" * 80)
+        print("TRACKER HEALTH STATUS")
+        print("=" * 80)
+        
+        # Parse timestamps
+        last_run = health.get('last_run')
+        last_signal = health.get('last_signal_detected')
+        
+        if last_run:
+            last_run_dt = datetime.fromisoformat(last_run).astimezone(ZoneInfo(DISPLAY_TIMEZONE))
+            print(f"\n📅 Last Run: {last_run_dt.strftime('%Y-%m-%d %I:%M %p ET')}")
+            
+            # Calculate time since last run
+            time_since = datetime.now(timezone.utc) - datetime.fromisoformat(last_run)
+            hours_since = time_since.total_seconds() / 3600
+            if hours_since < 2:
+                print(f"   ✅ {hours_since:.1f} hours ago (healthy)")
+            elif hours_since < 4:
+                print(f"   ⚠️  {hours_since:.1f} hours ago (slightly delayed)")
+            else:
+                print(f"   ❌ {hours_since:.1f} hours ago (stale - check Lambda)")
+        
+        # Run duration
+        duration = health.get('last_run_duration_seconds', 0)
+        print(f"\n⏱️  Last Run Duration: {duration:.1f} seconds")
+        if duration > 540:
+            print(f"   ⚠️  Approaching Lambda timeout (10min = 600s)")
+        elif duration > 300:
+            print(f"   ⚠️  Long run time - consider optimization")
+        elif duration > 0:
+            print(f"   ✅ Normal execution time")
+        
+        # Signal streak
+        no_signal_runs = health.get('consecutive_runs_no_signals', 0)
+        print(f"\n📊 Consecutive Runs with No Signals: {no_signal_runs}")
+        if no_signal_runs >= 24:
+            print(f"   🚨 {no_signal_runs} hours without signals - health check email should be sent")
+        elif no_signal_runs >= 12:
+            print(f"   ⚠️  {no_signal_runs} hours quiet - halfway to health check threshold")
+        else:
+            print(f"   ✅ Within normal range (health check triggers at 24)")
+        
+        # Last signal detected
+        if last_signal:
+            last_signal_dt = datetime.fromisoformat(last_signal).astimezone(ZoneInfo(DISPLAY_TIMEZONE))
+            print(f"\n🎯 Last Signal Detected: {last_signal_dt.strftime('%Y-%m-%d %I:%M %p ET')}")
+            
+            time_since_signal = datetime.now(timezone.utc) - datetime.fromisoformat(last_signal)
+            hours_since_signal = time_since_signal.total_seconds() / 3600
+            print(f"   ({hours_since_signal:.1f} hours ago)")
+        else:
+            print(f"\n🎯 Last Signal Detected: Never")
+        
+        # Totals
+        total_runs = health.get('total_runs', 0)
+        total_signals = health.get('total_signals_generated', 0)
+        print(f"\n📈 Lifetime Stats:")
+        print(f"   Total Runs: {total_runs}")
+        print(f"   Total Signals: {total_signals}")
+        if total_runs > 0:
+            signal_rate = (total_signals / total_runs) * 100
+            print(f"   Signal Rate: {signal_rate:.1f}% of runs")
+        
+        print("\n" + "=" * 80)
+        return
     
     # List markets mode
     if args.list_markets:
