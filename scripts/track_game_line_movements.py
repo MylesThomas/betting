@@ -1525,9 +1525,11 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     last_snapshot = df['timestamp'].max()
     time_range_hours = (last_snapshot - first_snapshot).total_seconds() / 3600
     
-    # Format times for subtitle
-    first_time_str = first_snapshot.strftime('%b %d %I:%M %p')
-    last_time_str = last_snapshot.strftime('%b %d %I:%M %p ET')
+    # Format times for subtitle (convert to ET timezone)
+    first_snapshot_et = first_snapshot.tz_convert(ZoneInfo('America/New_York'))
+    last_snapshot_et = last_snapshot.tz_convert(ZoneInfo('America/New_York'))
+    first_time_str = first_snapshot_et.strftime('%b %d %I:%M %p')
+    last_time_str = last_snapshot_et.strftime('%b %d %I:%M %p ET')
     
     # Format game time for title
     game_time_et = game_time.tz_convert(ZoneInfo('America/New_York'))
@@ -1559,7 +1561,18 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     if not title:
         title = f"{away_team} @ {home_team} ({game_time_str})"
     
-    subtitle = f"{time_range_hours:.0f}h movement ({first_time_str} → {last_time_str}) | Consensus: {consensus_str}"
+    # Format time range nicely
+    if time_range_hours >= 24:
+        days = int(time_range_hours // 24)
+        hours = int(time_range_hours % 24)
+        if hours > 0:
+            time_range_str = f"{days} day{'s' if days != 1 else ''}, {hours} hour{'s' if hours != 1 else ''}"
+        else:
+            time_range_str = f"{days} day{'s' if days != 1 else ''}"
+    else:
+        time_range_str = f"{time_range_hours:.0f}h"
+    
+    subtitle = f"{time_range_str} movement ({first_time_str} → {last_time_str}) | Consensus: {consensus_str}"
     
     # Focus on major books (but show ALL books present in data)
     major_books = ['draftkings', 'fanduel', 'betmgm', 'caesars', 'betrivers']
@@ -1581,27 +1594,27 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
 
     fig, ax = plt.subplots(figsize=(14, 7))
     
-    # Color map for bookmakers - expanded palette with high contrast colors
-    # Uses colorblind-friendly, distinct colors for up to 15+ bookmakers
+    # Color map for bookmakers - distinct, high-contrast colors
+    # Optimized for visual clarity when many books plotted together
     book_colors = {
         # Major books (brand-ish colors, adjusted for visibility)
         'draftkings': '#00B050',      # Bright green
         'fanduel': '#0070C0',         # Bright blue
         'betmgm': '#FFC000',          # Gold/yellow
-        'caesars': '#7030A0',         # Purple
         'betrivers': '#00B0F0',       # Cyan
+        'betonlineag': '#FF5722',     # Deep orange
         
         # Additional books (distinct, high-contrast colors)
-        'bovada': '#C00000',          # Red
-        'fanatics': '#FF6B35',        # Orange-red
-        'lowvig': '#7030A0',          # Purple
-        'mybookieag': '#00A650',      # Teal green
-        'williamhill_us': '#E91E63',  # Pink
-        'betonlineag': '#FF5722',     # Deep orange
-        'betus': '#9C27B0',           # Purple-magenta
-        'pointsbetus': '#795548',     # Brown
-        'superbook': '#607D8B',       # Blue-grey
-        'wynnbet': '#009688',         # Teal
+        'betus': '#C00000',           # Bright red
+        'bovada': '#8B0000',          # Dark red
+        'fanatics': '#FF1493',        # Deep pink
+        'lowvig': '#9370DB',          # Medium purple
+        'mybookieag': '#008B8B',      # Dark cyan
+        'williamhill_us': '#E91E63',  # Pink-red
+        'caesars': '#4B0082',         # Indigo
+        'pointsbetus': '#D2691E',     # Chocolate brown
+        'superbook': '#2F4F4F',       # Dark slate grey
+        'wynnbet': '#006400',         # Dark green
     }
     
     # Extended default colors for any additional books (high contrast)
@@ -1874,10 +1887,7 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
         
         if not snapshots_df.empty:
             print(f"      Found {len(snapshots_df)} snapshot rows, generating chart...")
-            chart_bytes = create_line_movement_chart_for_email(
-                snapshots_df,
-                title=f"{game_info['away_team']} @ {game_info['home_team']}"
-            )
+            chart_bytes = create_line_movement_chart_for_email(snapshots_df)
             if chart_bytes:
                 # Upload to S3 and get public URL
                 chart_url = upload_chart_to_s3(
