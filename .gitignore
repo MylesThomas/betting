@@ -76,7 +76,12 @@ token.pickle
 # NFL research scraped data (regenerated each week)
 data/nfl_research/nfl_week*_scraped_*.json
 data/nfl_research/nfl_week*_scraped_*.txt
-.cursor/
+
+# Cursor IDE - track rules only
+.cursor/.DS_Store
+.cursor/settings.json
+.cursor/launch.json
+.cursor/plans/
 
 # Lambda deployment artifacts
 lambda_function.zip

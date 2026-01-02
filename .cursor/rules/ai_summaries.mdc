@@ -1,0 +1,10 @@
+---
+description: Route all AI summary files to docs/AI_summaries
+alwaysApply: true
+---
+
+# AI Summary File Routing
+
+All `AI_summaries` files should be stored in `docs/AI_summaries`.  
+Do not place AI summaries elsewhere.  
+Keep paths consistent and relative.
