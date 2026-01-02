@@ -1,6 +1,8 @@
 """
 Track Kalshi Prediction Market Order Books Hourly
 
+Lambda function: kalshi-order-book-tracker
+
 This script monitors high-volume Kalshi prediction markets by tracking order book
 snapshots, detecting fills, calculating overreaction scores, and generating trading
 signals based on order book microstructure analysis.
