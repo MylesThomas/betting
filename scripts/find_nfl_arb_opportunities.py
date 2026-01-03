@@ -81,6 +81,17 @@ NFL SCHEDULE:
     - Sunday: 13-14 games (main slate)
     - Monday Night: 1 game
 
+PAUSING ARBITRAGE EMAILS (Keep script running, stop inbox clutter):
+    If running via AWS Lambda/automation and getting too many emails:
+    Create a Gmail filter to auto-archive:
+    1. Click an email → three dots → "Filter messages like this"
+    2. Set filter: From AWS Notifications, Subject contains "NFL" (or "NBA")
+    3. Check: "Skip the Inbox (Archive it)" + "Mark as read"
+    Result: Automation runs, emails sent, but inbox stays clean
+    
+    To re-enable: Delete the Gmail filter
+    - Filter I put in place for v1: ARB(S)
+
 Author: Myles Thomas
 Date: 2025-12-06
 """

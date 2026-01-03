@@ -115,6 +115,17 @@ AUTOMATION:
     # Add to crontab for daily 9 AM runs
     0 9 * * * /path/to/scripts/run_daily_arb_check.sh >> /path/to/logs/arb.log 2>&1
 
+PAUSING ARBITRAGE EMAILS (Keep script running, stop inbox clutter):
+    If running via AWS Lambda/automation and getting too many emails:
+    Create a Gmail filter to auto-archive:
+    1. Click an email → three dots → "Filter messages like this"
+    2. Set filter: From AWS Notifications, Subject contains "NBA ARB" (or "NFL")
+    3. Check: "Skip the Inbox (Archive it)" + "Mark as read"
+    Result: Automation runs, emails sent, but inbox stays clean
+    
+    To re-enable: Delete the Gmail filter
+    - Filter I put in place for v1: ARB(S)
+
 OTHER MARKETS:
     Markets available:
     - player_points
