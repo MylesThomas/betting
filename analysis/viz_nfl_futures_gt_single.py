@@ -101,7 +101,7 @@ FOOTER_DATA_DATE = datetime.now().strftime("%B %d, %Y")  # Auto-generate today's
 # -----------------------------------------------------------------------------
 # Output Settings (Image Dimensions & Quality)
 # -----------------------------------------------------------------------------
-OUTPUT_FILENAME = "futures_vig_single.png"
+OUTPUT_FILENAME = "nfl_futures_vig_single.png"
 
 # Aspect ratio settings
 RATIO_TYPE = "portrait"  # "portrait" (9:16, taller) or "landscape" (16:9, wider)
