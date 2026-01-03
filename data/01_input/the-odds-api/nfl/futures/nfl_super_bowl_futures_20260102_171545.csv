@@ -1,0 +1,113 @@
+sport,bookmaker,team,odds,implied_prob,record
+NFL,fanduel,Seattle Seahawks,550,0.15384615384615385,10-7
+NFL,fanduel,Los Angeles Rams,550,0.15384615384615385,10-7
+NFL,fanduel,Denver Broncos,750,0.11764705882352941,10-7
+NFL,fanduel,Philadelphia Eagles,950,0.09523809523809523,14-3
+NFL,fanduel,San Francisco 49ers,950,0.09523809523809523,6-11
+NFL,fanduel,New England Patriots,1000,0.09090909090909091,4-13
+NFL,fanduel,Buffalo Bills,1000,0.09090909090909091,13-4
+NFL,fanduel,Jacksonville Jaguars,1300,0.07142857142857142,4-13
+NFL,fanduel,Houston Texans,1300,0.07142857142857142,10-7
+NFL,fanduel,Chicago Bears,1700,0.05555555555555555,5-12
+NFL,fanduel,Green Bay Packers,1800,0.05263157894736842,11-6
+NFL,fanduel,Baltimore Ravens,1900,0.05,12-5
+NFL,fanduel,Los Angeles Chargers,2200,0.043478260869565216,11-6
+NFL,fanduel,Pittsburgh Steelers,10000,0.009900990099009901,10-7
+NFL,fanduel,Carolina Panthers,12500,0.007936507936507936,5-12
+NFL,fanduel,Tampa Bay Buccaneers,17500,0.005681818181818182,10-7
+NFL,betonlineag,Seattle Seahawks,550,0.15384615384615385,10-7
+NFL,betonlineag,Los Angeles Rams,575,0.14814814814814814,10-7
+NFL,betonlineag,San Francisco 49ers,625,0.13793103448275862,6-11
+NFL,betonlineag,Denver Broncos,825,0.10810810810810811,10-7
+NFL,betonlineag,Buffalo Bills,900,0.1,13-4
+NFL,betonlineag,Philadelphia Eagles,950,0.09523809523809523,14-3
+NFL,betonlineag,New England Patriots,1100,0.08333333333333333,4-13
+NFL,betonlineag,Houston Texans,1200,0.07692307692307693,10-7
+NFL,betonlineag,Jacksonville Jaguars,1200,0.07692307692307693,4-13
+NFL,betonlineag,Chicago Bears,1800,0.05263157894736842,5-12
+NFL,betonlineag,Green Bay Packers,1800,0.05263157894736842,11-6
+NFL,betonlineag,Baltimore Ravens,2000,0.047619047619047616,12-5
+NFL,betonlineag,Los Angeles Chargers,2200,0.043478260869565216,11-6
+NFL,betonlineag,Pittsburgh Steelers,8000,0.012345679012345678,10-7
+NFL,betonlineag,Carolina Panthers,10000,0.009900990099009901,5-12
+NFL,betonlineag,Tampa Bay Buccaneers,15000,0.006622516556291391,10-7
+NFL,betrivers,Los Angeles Rams,550,0.15384615384615385,10-7
+NFL,betrivers,Seattle Seahawks,550,0.15384615384615385,10-7
+NFL,betrivers,Denver Broncos,800,0.1111111111111111,10-7
+NFL,betrivers,San Francisco 49ers,850,0.10526315789473684,6-11
+NFL,betrivers,New England Patriots,900,0.1,4-13
+NFL,betrivers,Philadelphia Eagles,900,0.1,14-3
+NFL,betrivers,Buffalo Bills,1000,0.09090909090909091,13-4
+NFL,betrivers,Houston Texans,1300,0.07142857142857142,10-7
+NFL,betrivers,Jacksonville Jaguars,1300,0.07142857142857142,4-13
+NFL,betrivers,Chicago Bears,2000,0.047619047619047616,5-12
+NFL,betrivers,Green Bay Packers,2000,0.047619047619047616,11-6
+NFL,betrivers,Baltimore Ravens,2200,0.043478260869565216,12-5
+NFL,betrivers,Los Angeles Chargers,2500,0.038461538461538464,11-6
+NFL,betrivers,Pittsburgh Steelers,8000,0.012345679012345678,10-7
+NFL,betrivers,Carolina Panthers,10000,0.009900990099009901,5-12
+NFL,betrivers,Tampa Bay Buccaneers,15000,0.006622516556291391,10-7
+NFL,draftkings,Seattle Seahawks,500,0.16666666666666666,10-7
+NFL,draftkings,Los Angeles Rams,550,0.15384615384615385,10-7
+NFL,draftkings,Denver Broncos,700,0.125,10-7
+NFL,draftkings,San Francisco 49ers,850,0.10526315789473684,6-11
+NFL,draftkings,New England Patriots,850,0.10526315789473684,4-13
+NFL,draftkings,Philadelphia Eagles,1000,0.09090909090909091,14-3
+NFL,draftkings,Buffalo Bills,1100,0.08333333333333333,13-4
+NFL,draftkings,Jacksonville Jaguars,1300,0.07142857142857142,4-13
+NFL,draftkings,Houston Texans,1400,0.06666666666666667,10-7
+NFL,draftkings,Baltimore Ravens,2000,0.047619047619047616,12-5
+NFL,draftkings,Green Bay Packers,2200,0.043478260869565216,11-6
+NFL,draftkings,Chicago Bears,2200,0.043478260869565216,5-12
+NFL,draftkings,Los Angeles Chargers,2800,0.034482758620689655,11-6
+NFL,draftkings,Pittsburgh Steelers,10000,0.009900990099009901,10-7
+NFL,draftkings,Carolina Panthers,12000,0.008264462809917356,5-12
+NFL,draftkings,Tampa Bay Buccaneers,15000,0.006622516556291391,10-7
+NFL,bovada,Los Angeles Rams,560,0.15151515151515152,10-7
+NFL,bovada,Seattle Seahawks,560,0.15151515151515152,10-7
+NFL,bovada,San Francisco 49ers,800,0.1111111111111111,6-11
+NFL,bovada,Denver Broncos,810,0.10989010989010989,10-7
+NFL,bovada,Buffalo Bills,900,0.1,13-4
+NFL,bovada,Philadelphia Eagles,1000,0.09090909090909091,14-3
+NFL,bovada,New England Patriots,1100,0.08333333333333333,4-13
+NFL,bovada,Jacksonville Jaguars,1300,0.07142857142857142,4-13
+NFL,bovada,Houston Texans,1400,0.06666666666666667,10-7
+NFL,bovada,Los Angeles Chargers,2000,0.047619047619047616,11-6
+NFL,bovada,Baltimore Ravens,2200,0.043478260869565216,12-5
+NFL,bovada,Green Bay Packers,2300,0.041666666666666664,11-6
+NFL,bovada,Chicago Bears,2300,0.041666666666666664,5-12
+NFL,bovada,Pittsburgh Steelers,10000,0.009900990099009901,10-7
+NFL,bovada,Tampa Bay Buccaneers,15000,0.006622516556291391,10-7
+NFL,bovada,Carolina Panthers,15000,0.006622516556291391,5-12
+NFL,betmgm,Los Angeles Rams,550,0.15384615384615385,10-7
+NFL,betmgm,Seattle Seahawks,550,0.15384615384615385,10-7
+NFL,betmgm,Denver Broncos,800,0.1111111111111111,10-7
+NFL,betmgm,San Francisco 49ers,850,0.10526315789473684,6-11
+NFL,betmgm,New England Patriots,900,0.1,4-13
+NFL,betmgm,Philadelphia Eagles,900,0.1,14-3
+NFL,betmgm,Buffalo Bills,1000,0.09090909090909091,13-4
+NFL,betmgm,Houston Texans,1300,0.07142857142857142,10-7
+NFL,betmgm,Jacksonville Jaguars,1400,0.06666666666666667,4-13
+NFL,betmgm,Baltimore Ravens,2200,0.043478260869565216,12-5
+NFL,betmgm,Chicago Bears,2200,0.043478260869565216,5-12
+NFL,betmgm,Green Bay Packers,2200,0.043478260869565216,11-6
+NFL,betmgm,Los Angeles Chargers,2800,0.034482758620689655,11-6
+NFL,betmgm,Pittsburgh Steelers,10000,0.009900990099009901,10-7
+NFL,betmgm,Tampa Bay Buccaneers,12500,0.007936507936507936,10-7
+NFL,betmgm,Carolina Panthers,15000,0.006622516556291391,5-12
+NFL,lowvig,Seattle Seahawks,550,0.15384615384615385,10-7
+NFL,lowvig,Los Angeles Rams,575,0.14814814814814814,10-7
+NFL,lowvig,San Francisco 49ers,625,0.13793103448275862,6-11
+NFL,lowvig,Denver Broncos,825,0.10810810810810811,10-7
+NFL,lowvig,Buffalo Bills,900,0.1,13-4
+NFL,lowvig,Philadelphia Eagles,950,0.09523809523809523,14-3
+NFL,lowvig,New England Patriots,1100,0.08333333333333333,4-13
+NFL,lowvig,Houston Texans,1200,0.07692307692307693,10-7
+NFL,lowvig,Jacksonville Jaguars,1200,0.07692307692307693,4-13
+NFL,lowvig,Chicago Bears,1800,0.05263157894736842,5-12
+NFL,lowvig,Green Bay Packers,1800,0.05263157894736842,11-6
+NFL,lowvig,Baltimore Ravens,2000,0.047619047619047616,12-5
+NFL,lowvig,Los Angeles Chargers,2200,0.043478260869565216,11-6
+NFL,lowvig,Pittsburgh Steelers,8000,0.012345679012345678,10-7
+NFL,lowvig,Carolina Panthers,10000,0.009900990099009901,5-12
+NFL,lowvig,Tampa Bay Buccaneers,15000,0.006622516556291391,10-7
