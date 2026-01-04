@@ -20,12 +20,17 @@ The script performs three core functions:
 
 WORKFLOW (3-STEP FLOW)
 -----------------------
+**Lambda Schedule:**
+- Runs hourly (EventBridge trigger)
+- Midnight ET (00:00): Full discovery run + daily status email (always sent)
+- All other hours: Skip discovery, only track existing markets, only email on signals
+
 TODO List:
 [ ] 1. Load existing markets from S3 config
     - Read tracked_markets.json from S3
     - Parse list of active market tickers
 
-[✓] 2. Discover and add new markets
+[✓] 2. Discover and add new markets (midnight ET only)
     - Fetch all open markets from Kalshi API (with pagination)
     - Filter by volume (>= 100K contracts), liquidity (has yes_bid), non-sports
     - Add qualifying new markets to S3 config with metadata
@@ -85,7 +90,8 @@ Structure:
       "category": "politics",
       "initial_volume": 2017107,
       "initial_price": 0.21,
-      "active": true
+      "active": true,
+      "consecutive_failures": 0  // Auto-deactivate after 3 consecutive API failures
     },
     ...
   ]
@@ -96,6 +102,7 @@ Why S3 Config File?
 - Version Control: S3 versioning tracks changes to market list
 - Auditability: Can see when/why markets were added
 - No Hardcoding: Avoids brittle market lists in code
+- Auto-Deactivation: Markets with 3+ consecutive API failures are auto-deactivated
 
 DATA STRUCTURE (S3)
 -------------------
@@ -580,7 +587,8 @@ aws s3 ls s3://kalshi-order-book-snapshots/data/04_output/kalshi/market_baseline
 - After 48h, market-specific percentiles enable Phase 3 signal detection
 - Check S3 config regularly: `s3://kalshi-order-book-snapshots/config/tracked_markets.json`
 - Markets can be deactivated by setting `"active": false` in config (no Lambda redeploy needed)
-- **Lambda skips market discovery by default** (saves time/memory) - run `--check-api` locally to discover new markets
+- **Markets auto-deactivate after 3 consecutive API failures** (expired/closed markets)
+- **Lambda runs discovery daily at midnight ET** - rest of day skips discovery for speed
 
 USAGE
 -----
@@ -922,7 +930,8 @@ def add_market_to_config(market_ticker: str, category: str, initial_volume: int,
         'category': category,
         'initial_volume': initial_volume,
         'initial_price': initial_price,
-        'active': True
+        'active': True,
+        'consecutive_failures': 0
     })
     
     save_markets_config(config)
@@ -1277,7 +1286,7 @@ def format_market_signals_text(market_ticker: str, current_metrics: dict, signal
     return "\n".join(lines)
 
 
-def format_signals_email(actionable_markets: List[dict], neutral_markets: List[str], timestamp: datetime, markets_processed: int = 0) -> str:
+def format_signals_email(actionable_markets: List[dict], neutral_markets: List[str], timestamp: datetime, markets_processed: int = 0, new_markets_added: int = 0, is_daily: bool = False) -> str:
     """
     Format all signals into plain text email.
     
@@ -1286,13 +1295,18 @@ def format_signals_email(actionable_markets: List[dict], neutral_markets: List[s
         neutral_markets: List of market tickers with no signals
         timestamp: Current run time
         markets_processed: Total markets attempted (including calibrating)
+        new_markets_added: Number of new markets discovered (daily run only)
+        is_daily: Whether this is the daily discovery run
     """
     time_et = timestamp.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
     time_str = time_et.strftime('%b %d, %Y %I:%M %p ET')
     
     lines = []
     lines.append("=" * 80)
-    lines.append("🚨 KALSHI TRADING SIGNALS")
+    if is_daily and not actionable_markets:
+        lines.append("📅 KALSHI DAILY STATUS")
+    else:
+        lines.append("🚨 KALSHI TRADING SIGNALS")
     lines.append("=" * 80)
     lines.append(f"Time: {time_str}")
     lines.append("")
@@ -1302,6 +1316,13 @@ def format_signals_email(actionable_markets: List[dict], neutral_markets: List[s
     lines.append(f"Markets processed: {markets_processed if markets_processed > 0 else total_with_data}")
     lines.append(f"Actionable signals: {len(actionable_markets)}")
     lines.append(f"Neutral markets: {len(neutral_markets)}")
+    
+    # Show discovery info on daily runs
+    if is_daily:
+        lines.append("")
+        lines.append("🔍 MARKET DISCOVERY (Daily)")
+        lines.append(f"   New markets added: {new_markets_added}")
+    
     lines.append("")
     
     # Actionable markets
@@ -1577,8 +1598,13 @@ def process_market(market_ticker: str, timestamp: datetime) -> Optional[dict]:
     }
 
 
-def main():
-    """Main execution function."""
+def main(is_daily_run=False):
+    """
+    Main execution function.
+    
+    Args:
+        is_daily_run: If True, sends email regardless of signals (daily status report)
+    """
     parser = argparse.ArgumentParser(
         description='Track Kalshi order books and generate trading signals'
     )
@@ -1714,19 +1740,24 @@ def main():
             category = market.get('category', 'unknown')
             volume = market.get('initial_volume', 0)
             price = market.get('initial_price', 0)
+            failures = market.get('consecutive_failures', 0)
             
             print(f"\n{i}. {ticker}")
             print(f"   Added: {date_added}")
             print(f"   Category: {category}")
             print(f"   Initial Volume: {volume:,}")
             print(f"   Initial Price: {price:.2f}")
+            if failures > 0:
+                print(f"   ⚠️  Consecutive failures: {failures}/3")
         
         if inactive:
             print("\n" + "=" * 80)
             print(f"INACTIVE MARKETS ({len(inactive)}):")
             print("=" * 80)
             for market in inactive:
-                print(f"   • {market.get('ticker', 'unknown')} (added: {market.get('date_added', 'unknown')})")
+                failures = market.get('consecutive_failures', 0)
+                reason = f"(auto-deactivated after {failures} failures)" if failures >= 3 else "(manually deactivated)"
+                print(f"   • {market.get('ticker', 'unknown')} {reason}")
         
         return
     
@@ -1766,9 +1797,10 @@ def main():
     start_time = time.time()
     
     # Step 2: Discover new markets (unless skipped or check-api only)
+    new_markets_added = 0
     if not args.skip_discovery:
-        new_count = discover_and_add_new_markets()
-        if new_count > 0:
+        new_markets_added = discover_and_add_new_markets()
+        if new_markets_added > 0:
             # Reload config
             config = load_markets_config()
             active_markets = [m for m in config['markets'] if m.get('active', True)]
@@ -1787,15 +1819,34 @@ def main():
     
     actionable_markets = []
     neutral_markets = []
+    markets_to_update = []  # Track failure counts
     
-    for market_config in active_markets:
+    for i, market_config in enumerate(active_markets):
         ticker = market_config['ticker']
         print(f"\n   Processing {ticker}...")
         
         result = process_market(ticker, timestamp)
         
         if result is None:
-            continue  # Skipped (no data or calibrating)
+            # API failure or no data - increment failure count
+            consecutive_failures = market_config.get('consecutive_failures', 0) + 1
+            market_config['consecutive_failures'] = consecutive_failures
+            markets_to_update.append(market_config)
+            
+            if consecutive_failures >= 3:
+                # Auto-deactivate after 3 failures
+                if market_config.get('active', True):
+                    print(f"   ❌ {ticker}: 3 consecutive failures - AUTO-DEACTIVATING")
+                    market_config['active'] = False
+            else:
+                print(f"   ⚠️  {ticker}: API failure ({consecutive_failures}/3)")
+            
+            continue
+        
+        # Success - reset failure count
+        if market_config.get('consecutive_failures', 0) > 0:
+            market_config['consecutive_failures'] = 0
+            markets_to_update.append(market_config)
         
         if result['signals']:
             actionable_markets.append(result)
@@ -1803,6 +1854,22 @@ def main():
         else:
             neutral_markets.append(ticker)
             print(f"   ↔️  {ticker}: No signals (neutral)")
+    
+    # Update failure counts in S3 config if any changes
+    if markets_to_update:
+        config = load_markets_config()
+        for updated_market in markets_to_update:
+            # Find and update the market in config
+            for market in config['markets']:
+                if market['ticker'] == updated_market['ticker']:
+                    market['consecutive_failures'] = updated_market.get('consecutive_failures', 0)
+                    market['active'] = updated_market.get('active', True)
+                    break
+        save_markets_config(config)
+        
+        deactivated_count = sum(1 for m in markets_to_update if not m.get('active', True))
+        if deactivated_count > 0:
+            print(f"\n   🔄 Auto-deactivated {deactivated_count} market(s) due to repeated failures")
     
     # Step 4: Generate and send alerts
     print("\n" + "=" * 80)
@@ -1812,15 +1879,29 @@ def main():
     print(f"Actionable signals: {len(actionable_markets)}")
     print(f"Neutral markets: {len(neutral_markets)}")
     
-    # Only send email if there are actionable signals
-    if actionable_markets:
+    # Send email: always on daily runs, only on signals for hourly runs
+    should_send_email = actionable_markets or is_daily_run
+    
+    if should_send_email:
         # Generate plain text email
-        text_body = format_signals_email(actionable_markets, neutral_markets, timestamp, len(active_markets))
+        text_body = format_signals_email(
+            actionable_markets, 
+            neutral_markets, 
+            timestamp, 
+            len(active_markets),
+            new_markets_added,
+            is_daily_run
+        )
         
         # TODO: Generate HTML email with charts (future enhancement)
         html_body = f"<html><body><pre>{text_body}</pre></body></html>"  # Simple wrapper for now
         
-        subject = f"🚨 Kalshi Trading Signals - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
+        if is_daily_run and not actionable_markets:
+            subject = f"📅 Kalshi Daily Status - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
+            print("\n📧 Sending daily status email (midnight run)")
+        else:
+            subject = f"🚨 Kalshi Trading Signals - {time_et.strftime('%b %d, %Y %I:%M %p ET')}"
+            print("\n📧 Sending signal alert email")
         
         # Send email via SES
         send_email_via_ses(subject, html_body, text_body)
@@ -1828,8 +1909,15 @@ def main():
         print("\n📧 No actionable signals - skipping email")
     
     # Print to console (local runs only)
-    if not IS_LAMBDA and actionable_markets:
-        text_body = format_signals_email(actionable_markets, neutral_markets, timestamp, len(active_markets))
+    if not IS_LAMBDA and (actionable_markets or is_daily_run):
+        text_body = format_signals_email(
+            actionable_markets, 
+            neutral_markets, 
+            timestamp, 
+            len(active_markets),
+            new_markets_added,
+            is_daily_run
+        )
         print("\n" + text_body)
     
     # Step 5: Update health tracking
@@ -1921,15 +2009,33 @@ def lambda_handler(event, context):
     AWS Lambda handler function.
     
     Entry point when running in Lambda.
+    
+    Schedule:
+    - Midnight ET (00:00): Full discovery run + daily status email (always sent)
+    - All other hours: Skip discovery, only email on signals
     """
     try:
         print("Lambda function started")
         print(f"Event: {json.dumps(event)}")
         
-        # Run main logic with skip-discovery enabled (hourly runs don't need market discovery)
-        # To discover new markets, run locally with --check-api
-        sys.argv = ['kalshi_order_book_tracker.py', '--skip-discovery']
-        main()
+        # Check current hour in ET to determine if this is the daily discovery run
+        current_time_et = datetime.now(timezone.utc).astimezone(ZoneInfo(DISPLAY_TIMEZONE))
+        current_hour_et = current_time_et.hour
+        
+        is_daily_run = (current_hour_et == 0)  # Midnight ET
+        
+        if is_daily_run:
+            print(f"🌙 DAILY DISCOVERY RUN (Midnight ET)")
+            print(f"   - Will discover new markets")
+            print(f"   - Will send daily status email regardless of signals")
+            sys.argv = ['kalshi_order_book_tracker.py']  # No flags = full discovery
+        else:
+            print(f"⏰ HOURLY RUN ({current_hour_et:02d}:00 ET)")
+            print(f"   - Skipping market discovery")
+            print(f"   - Will only email if signals detected")
+            sys.argv = ['kalshi_order_book_tracker.py', '--skip-discovery']
+        
+        main(is_daily_run=is_daily_run)
         
         return {
             'statusCode': 200,
