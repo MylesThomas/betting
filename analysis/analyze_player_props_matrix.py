@@ -55,7 +55,7 @@ while not (project_root / '.gitignore').exists() and project_root != project_roo
 sys.path.insert(0, str(project_root))
 
 # Data path - modify this to point to your merged dataset
-DATA_PATH = project_root / 'merged_data.csv'
+DATA_PATH = project_root / 'data' / '03_intermediate' / 'merged_data.csv'
 
 # Emoji map for status/output
 EMOJI = {
