@@ -214,7 +214,7 @@ def main():
         roster_df = pd.concat([roster_df, manual_df], ignore_index=True)
         print(f"✅ MANUALLY added {len(manual_additions)} players not returned by NBA API:")
         for entry in manual_additions:
-            print(f"   - {entry['player_name_nba_api']} ({entry['team']})")
+            print(f"   - {entry['player_name']} ({entry['team']})")
     else:
         print("   No manual additions found in config")
     print()

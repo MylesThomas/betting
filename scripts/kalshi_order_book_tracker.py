@@ -48,7 +48,7 @@ MARKET SELECTION CRITERIA
 --------------------------
 Markets must meet ALL of the following to be added to tracking:
 
-1. **High Volume**: >= 100,000 contracts traded
+1. **High Volume**: >= 10,000 contracts traded
    - Ensures sufficient market depth and interest
    - Higher volume = more reliable price discovery
 
@@ -697,7 +697,7 @@ LOOKBACK_WINDOW_168H = timedelta(hours=168)  # 1 week
 SNAPSHOT_TIME_TOLERANCE = timedelta(minutes=5)  # Allow 5min variance when finding snapshots
 
 # Market selection criteria
-MIN_VOLUME = 100000  # Minimum 100K contracts traded (be selective)
+MIN_VOLUME = 10000  # Minimum 10K contracts traded
 
 # Comprehensive sports keywords to exclude sports betting markets
 SPORTS_KEYWORDS = [
@@ -726,6 +726,10 @@ SPORTS_TICKER_PREFIXES = [
     'KXNHL-',       # NHL
     'KXMLS-',       # MLS
     'KXNCAAB-',     # NCAA Basketball
+    'KXMVESPORTS',  # Multi-variant sports markets
+    'KXMVENFLS',    # Multi-variant NFL single game
+    'KXMVENBAS',    # Multi-variant NBA
+    'KXUNITEDCUP',  # Tennis United Cup
 ]
 
 # AWS Configuration
@@ -1640,7 +1644,7 @@ def main(is_daily_run=False):
         
         if not health:
             print("   ❌ ERROR: Health tracking file not found in S3")
-            print(f"   Expected: s3://{S3_BUCKET_KALSHI}/{health_key}")
+            print(f"   Expected: s3://{S3_BUCKET}/{health_key}")
             print("")
             print("   This means the tracker has never run successfully, or health")
             print("   tracking is not enabled. Run the tracker at least once to initialize.")
