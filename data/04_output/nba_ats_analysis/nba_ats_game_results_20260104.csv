@@ -1,0 +1,1039 @@
+team,game_date,opponent,location,spread,actual_margin,ats_margin,ats_result,fav_dog,team_points,opp_points
+Sacramento Kings,2025-10-22,Phoenix Suns,Away,3.5,-4,-0.5,L,Underdog,116,120
+Phoenix Suns,2025-10-22,Sacramento Kings,Home,-3.5,4,0.5,W,Favorite,120,116
+Washington Wizards,2025-12-20,Memphis Grizzlies,Away,12.5,8,20.5,W,Underdog,130,122
+Memphis Grizzlies,2025-12-20,Washington Wizards,Home,-12.5,-8,-20.5,L,Favorite,122,130
+New Orleans Pelicans,2025-11-08,San Antonio Spurs,Away,10.5,-7,3.5,W,Underdog,119,126
+San Antonio Spurs,2025-11-08,New Orleans Pelicans,Home,-10.5,7,-3.5,L,Favorite,126,119
+Atlanta Hawks,2025-11-16,Phoenix Suns,Away,1.5,2,3.5,W,Underdog,124,122
+Phoenix Suns,2025-11-16,Atlanta Hawks,Home,-1.5,-2,-3.5,L,Favorite,122,124
+Minnesota Timberwolves,2025-10-24,Los Angeles Lakers,Away,-1.5,-18,-19.5,L,Favorite,110,128
+Los Angeles Lakers,2025-10-24,Minnesota Timberwolves,Home,1.5,18,19.5,W,Underdog,128,110
+Utah Jazz,2026-01-03,Golden State Warriors,Away,12.5,-9,3.5,W,Underdog,114,123
+Golden State Warriors,2026-01-03,Utah Jazz,Home,-12.5,9,-3.5,L,Favorite,123,114
+Memphis Grizzlies,2025-10-29,Phoenix Suns,Away,-1.5,1,-0.5,L,Favorite,114,113
+Phoenix Suns,2025-10-29,Memphis Grizzlies,Home,1.5,-1,0.5,W,Underdog,113,114
+Detroit Pistons,2025-12-23,Sacramento Kings,Away,-9.5,9,-0.5,L,Favorite,136,127
+Sacramento Kings,2025-12-23,Detroit Pistons,Home,9.5,-9,0.5,W,Underdog,127,136
+Philadelphia 76ers,2025-11-04,Chicago Bulls,Away,1.5,-2,-0.5,L,Underdog,111,113
+Chicago Bulls,2025-11-04,Philadelphia 76ers,Home,-1.5,2,0.5,W,Favorite,113,111
+Minnesota Timberwolves,2025-11-09,Sacramento Kings,Away,-4.5,27,22.5,W,Favorite,144,117
+Sacramento Kings,2025-11-09,Minnesota Timberwolves,Home,4.5,-27,-22.5,L,Underdog,117,144
+Memphis Grizzlies,2025-11-02,Toronto Raptors,Away,4.5,-13,-8.5,L,Underdog,104,117
+Toronto Raptors,2025-11-02,Memphis Grizzlies,Home,-4.5,13,8.5,W,Favorite,117,104
+Phoenix Suns,2025-11-12,Dallas Mavericks,Away,-2.5,9,6.5,W,Favorite,123,114
+Dallas Mavericks,2025-11-12,Phoenix Suns,Home,2.5,-9,-6.5,L,Underdog,114,123
+Washington Wizards,2025-11-03,New York Knicks,Away,13.5,-17,-3.5,L,Underdog,102,119
+New York Knicks,2025-11-03,Washington Wizards,Home,-13.5,17,3.5,W,Favorite,119,102
+Memphis Grizzlies,2025-11-12,Boston Celtics,Away,8.5,-36,-27.5,L,Underdog,95,131
+Boston Celtics,2025-11-12,Memphis Grizzlies,Home,-8.5,36,27.5,W,Favorite,131,95
+Sacramento Kings,2025-11-28,Utah Jazz,Away,2.5,-9,-6.5,L,Underdog,119,128
+Utah Jazz,2025-11-28,Sacramento Kings,Home,-2.5,9,6.5,W,Favorite,128,119
+Charlotte Hornets,2025-10-28,Miami Heat,Away,4.5,-27,-22.5,L,Underdog,117,144
+Miami Heat,2025-10-28,Charlotte Hornets,Home,-4.5,27,22.5,W,Favorite,144,117
+Oklahoma City Thunder,2025-10-23,Indiana Pacers,Away,-7.5,6,-1.5,L,Favorite,141,135
+Indiana Pacers,2025-10-23,Oklahoma City Thunder,Home,7.5,-6,1.5,W,Underdog,135,141
+LA Clippers,2025-11-22,Charlotte Hornets,Away,-1.5,15,13.5,W,Favorite,131,116
+Charlotte Hornets,2025-11-22,LA Clippers,Home,1.5,-15,-13.5,L,Underdog,116,131
+Toronto Raptors,2025-11-08,Philadelphia 76ers,Away,5.5,-10,-4.5,L,Underdog,120,130
+Philadelphia 76ers,2025-11-08,Toronto Raptors,Home,-5.5,10,4.5,W,Favorite,130,120
+Sacramento Kings,2025-11-20,Memphis Grizzlies,Away,3.5,-41,-37.5,L,Underdog,96,137
+Memphis Grizzlies,2025-11-20,Sacramento Kings,Home,-3.5,41,37.5,W,Favorite,137,96
+Portland Trail Blazers,2025-12-31,Oklahoma City Thunder,Away,15.5,-29,-13.5,L,Underdog,95,124
+Oklahoma City Thunder,2025-12-31,Portland Trail Blazers,Home,-15.5,29,13.5,W,Favorite,124,95
+Utah Jazz,2025-11-03,Boston Celtics,Away,10.5,2,12.5,W,Underdog,105,103
+Boston Celtics,2025-11-03,Utah Jazz,Home,-10.5,-2,-12.5,L,Favorite,103,105
+Indiana Pacers,2025-12-05,Chicago Bulls,Away,4.5,15,19.5,W,Underdog,120,105
+Chicago Bulls,2025-12-05,Indiana Pacers,Home,-4.5,-15,-19.5,L,Favorite,105,120
+Miami Heat,2025-12-09,Orlando Magic,Away,1.5,-9,-7.5,L,Underdog,108,117
+Orlando Magic,2025-12-09,Miami Heat,Home,-1.5,9,7.5,W,Favorite,117,108
+Cleveland Cavaliers,2025-11-07,Washington Wizards,Away,-13.5,33,19.5,W,Favorite,148,115
+Washington Wizards,2025-11-07,Cleveland Cavaliers,Home,13.5,-33,-19.5,L,Underdog,115,148
+Golden State Warriors,2025-12-07,Chicago Bulls,Away,-1.5,32,30.5,W,Favorite,123,91
+Chicago Bulls,2025-12-07,Golden State Warriors,Home,1.5,-32,-30.5,L,Underdog,91,123
+Minnesota Timberwolves,2025-12-04,New Orleans Pelicans,Away,-12.5,9,-3.5,L,Favorite,125,116
+New Orleans Pelicans,2025-12-04,Minnesota Timberwolves,Home,12.5,-9,3.5,W,Underdog,116,125
+Chicago Bulls,2025-11-17,Denver Nuggets,Away,13.5,3,16.5,W,Underdog,130,127
+Denver Nuggets,2025-11-17,Chicago Bulls,Home,-13.5,-3,-16.5,L,Favorite,127,130
+Minnesota Timberwolves,2025-12-29,Chicago Bulls,Away,-6.5,35,28.5,W,Favorite,136,101
+Chicago Bulls,2025-12-29,Minnesota Timberwolves,Home,6.5,-35,-28.5,L,Underdog,101,136
+Orlando Magic,2025-11-16,Houston Rockets,Away,7.5,-4,3.5,W,Underdog,113,117
+Houston Rockets,2025-11-16,Orlando Magic,Home,-7.5,4,-3.5,L,Favorite,117,113
+Memphis Grizzlies,2025-12-22,Oklahoma City Thunder,Away,15.5,-16,-0.5,L,Underdog,103,119
+Oklahoma City Thunder,2025-12-22,Memphis Grizzlies,Home,-15.5,16,0.5,W,Favorite,119,103
+New York Knicks,2025-11-19,Dallas Mavericks,Away,-8.5,2,-6.5,L,Favorite,113,111
+Dallas Mavericks,2025-11-19,New York Knicks,Home,8.5,-2,6.5,W,Underdog,111,113
+Utah Jazz,2025-12-12,Memphis Grizzlies,Away,7.5,4,11.5,W,Underdog,130,126
+Memphis Grizzlies,2025-12-12,Utah Jazz,Home,-7.5,-4,-11.5,L,Favorite,126,130
+Oklahoma City Thunder,2025-12-19,Minnesota Timberwolves,Away,-5.5,-5,-10.5,L,Favorite,107,112
+Minnesota Timberwolves,2025-12-19,Oklahoma City Thunder,Home,5.5,5,10.5,W,Underdog,112,107
+Detroit Pistons,2025-11-18,Atlanta Hawks,Away,-6.5,8,1.5,W,Favorite,120,112
+Atlanta Hawks,2025-11-18,Detroit Pistons,Home,6.5,-8,-1.5,L,Underdog,112,120
+Golden State Warriors,2025-12-04,Philadelphia 76ers,Away,4.5,-1,3.5,W,Underdog,98,99
+Philadelphia 76ers,2025-12-04,Golden State Warriors,Home,-4.5,1,-3.5,L,Favorite,99,98
+Oklahoma City Thunder,2025-12-23,San Antonio Spurs,Away,-6.5,-20,-26.5,L,Favorite,110,130
+San Antonio Spurs,2025-12-23,Oklahoma City Thunder,Home,6.5,20,26.5,W,Underdog,130,110
+Denver Nuggets,2025-11-12,LA Clippers,Away,-4.5,14,9.5,W,Favorite,130,116
+LA Clippers,2025-11-12,Denver Nuggets,Home,4.5,-14,-9.5,L,Underdog,116,130
+Atlanta Hawks,2025-11-22,New Orleans Pelicans,Away,-9.5,17,7.5,W,Favorite,115,98
+New Orleans Pelicans,2025-11-22,Atlanta Hawks,Home,9.5,-17,-7.5,L,Underdog,98,115
+Oklahoma City Thunder,2025-11-07,Sacramento Kings,Away,-11.5,31,19.5,W,Favorite,132,101
+Sacramento Kings,2025-11-07,Oklahoma City Thunder,Home,11.5,-31,-19.5,L,Underdog,101,132
+Houston Rockets,2025-11-30,Utah Jazz,Away,-12.5,28,15.5,W,Favorite,129,101
+Utah Jazz,2025-11-30,Houston Rockets,Home,12.5,-28,-15.5,L,Underdog,101,129
+Detroit Pistons,2025-12-15,Boston Celtics,Away,1.5,7,8.5,W,Underdog,112,105
+Boston Celtics,2025-12-15,Detroit Pistons,Home,-1.5,-7,-8.5,L,Favorite,105,112
+Houston Rockets,2025-11-07,San Antonio Spurs,Away,-4.5,-11,-15.5,L,Favorite,110,121
+San Antonio Spurs,2025-11-07,Houston Rockets,Home,4.5,11,15.5,W,Underdog,121,110
+Detroit Pistons,2025-12-30,Los Angeles Lakers,Away,-2.5,22,19.5,W,Favorite,128,106
+Los Angeles Lakers,2025-12-30,Detroit Pistons,Home,2.5,-22,-19.5,L,Underdog,106,128
+Golden State Warriors,2025-11-18,Orlando Magic,Away,-2.5,-8,-10.5,L,Favorite,113,121
+Orlando Magic,2025-11-18,Golden State Warriors,Home,2.5,8,10.5,W,Underdog,121,113
+Miami Heat,2026-01-01,Detroit Pistons,Away,4.5,6,10.5,W,Underdog,118,112
+Detroit Pistons,2026-01-01,Miami Heat,Home,-4.5,-6,-10.5,L,Favorite,112,118
+Philadelphia 76ers,2025-10-22,Boston Celtics,Away,4.5,1,5.5,W,Underdog,117,116
+Boston Celtics,2025-10-22,Philadelphia 76ers,Home,-4.5,-1,-5.5,L,Favorite,116,117
+Los Angeles Lakers,2025-11-12,Oklahoma City Thunder,Away,8.5,-29,-20.5,L,Underdog,92,121
+Oklahoma City Thunder,2025-11-12,Los Angeles Lakers,Home,-8.5,29,20.5,W,Favorite,121,92
+Brooklyn Nets,2026-01-02,Washington Wizards,Away,2.5,-20,-17.5,L,Underdog,99,119
+Washington Wizards,2026-01-02,Brooklyn Nets,Home,-2.5,20,17.5,W,Favorite,119,99
+Denver Nuggets,2025-12-07,Charlotte Hornets,Away,-10.5,9,-1.5,L,Favorite,115,106
+Charlotte Hornets,2025-12-07,Denver Nuggets,Home,10.5,-9,1.5,W,Underdog,106,115
+Detroit Pistons,2025-12-03,Milwaukee Bucks,Away,-4.5,-4,-8.5,L,Favorite,109,113
+Milwaukee Bucks,2025-12-03,Detroit Pistons,Home,4.5,4,8.5,W,Underdog,113,109
+Oklahoma City Thunder,2025-10-25,Atlanta Hawks,Away,-8.5,17,8.5,W,Favorite,117,100
+Atlanta Hawks,2025-10-25,Oklahoma City Thunder,Home,8.5,-17,-8.5,L,Underdog,100,117
+Atlanta Hawks,2025-11-10,LA Clippers,Away,4.5,3,7.5,W,Underdog,105,102
+LA Clippers,2025-11-10,Atlanta Hawks,Home,-4.5,-3,-7.5,L,Favorite,102,105
+Chicago Bulls,2025-12-12,Charlotte Hornets,Away,-2.5,3,0.5,W,Favorite,129,126
+Charlotte Hornets,2025-12-12,Chicago Bulls,Home,2.5,-3,-0.5,L,Underdog,126,129
+Denver Nuggets,2025-10-31,Portland Trail Blazers,Away,-4.5,-2,-6.5,L,Favorite,107,109
+Portland Trail Blazers,2025-10-31,Denver Nuggets,Home,4.5,2,6.5,W,Underdog,109,107
+Houston Rockets,2025-11-05,Memphis Grizzlies,Away,-7.5,15,7.5,W,Favorite,124,109
+Memphis Grizzlies,2025-11-05,Houston Rockets,Home,7.5,-15,-7.5,L,Underdog,109,124
+Minnesota Timberwolves,2025-10-22,Portland Trail Blazers,Away,-5.5,4,-1.5,L,Favorite,118,114
+Portland Trail Blazers,2025-10-22,Minnesota Timberwolves,Home,5.5,-4,1.5,W,Underdog,114,118
+Milwaukee Bucks,2025-12-27,Chicago Bulls,Away,2.5,9,11.5,W,Underdog,112,103
+Chicago Bulls,2025-12-27,Milwaukee Bucks,Home,-2.5,-9,-11.5,L,Favorite,103,112
+Portland Trail Blazers,2025-12-05,Detroit Pistons,Away,8.5,-6,2.5,W,Underdog,116,122
+Detroit Pistons,2025-12-05,Portland Trail Blazers,Home,-8.5,6,-2.5,L,Favorite,122,116
+Detroit Pistons,2025-12-26,Utah Jazz,Away,-9.5,-2,-11.5,L,Favorite,129,131
+Utah Jazz,2025-12-26,Detroit Pistons,Home,9.5,2,11.5,W,Underdog,131,129
+New Orleans Pelicans,2025-11-02,Oklahoma City Thunder,Away,12.5,-31,-18.5,L,Underdog,106,137
+Oklahoma City Thunder,2025-11-02,New Orleans Pelicans,Home,-12.5,31,18.5,W,Favorite,137,106
+Cleveland Cavaliers,2025-11-28,Atlanta Hawks,Away,-6.5,-7,-13.5,L,Favorite,123,130
+Atlanta Hawks,2025-11-28,Cleveland Cavaliers,Home,6.5,7,13.5,W,Underdog,130,123
+Dallas Mavericks,2025-12-22,New Orleans Pelicans,Away,-1.5,-6,-7.5,L,Favorite,113,119
+New Orleans Pelicans,2025-12-22,Dallas Mavericks,Home,1.5,6,7.5,W,Underdog,119,113
+Houston Rockets,2025-11-19,Cleveland Cavaliers,Away,-1.5,10,8.5,W,Favorite,114,104
+Cleveland Cavaliers,2025-11-19,Houston Rockets,Home,1.5,-10,-8.5,L,Underdog,104,114
+Dallas Mavericks,2025-11-29,LA Clippers,Away,8.5,4,12.5,W,Underdog,114,110
+LA Clippers,2025-11-29,Dallas Mavericks,Home,-8.5,-4,-12.5,L,Favorite,110,114
+Atlanta Hawks,2025-10-27,Chicago Bulls,Away,-2.5,-5,-7.5,L,Favorite,123,128
+Chicago Bulls,2025-10-27,Atlanta Hawks,Home,2.5,5,7.5,W,Underdog,128,123
+Sacramento Kings,2025-11-01,Milwaukee Bucks,Away,6.5,2,8.5,W,Underdog,135,133
+Milwaukee Bucks,2025-11-01,Sacramento Kings,Home,-6.5,-2,-8.5,L,Favorite,133,135
+Houston Rockets,2025-12-01,Utah Jazz,Away,-11.5,-8,-19.5,L,Favorite,125,133
+Utah Jazz,2025-12-01,Houston Rockets,Home,11.5,8,19.5,W,Underdog,133,125
+Milwaukee Bucks,2025-12-21,Minnesota Timberwolves,Away,11.5,-3,8.5,W,Underdog,100,103
+Minnesota Timberwolves,2025-12-21,Milwaukee Bucks,Home,-11.5,3,-8.5,L,Favorite,103,100
+Denver Nuggets,2025-11-29,Phoenix Suns,Away,-3.5,18,14.5,W,Favorite,130,112
+Phoenix Suns,2025-11-29,Denver Nuggets,Home,3.5,-18,-14.5,L,Underdog,112,130
+Minnesota Timberwolves,2025-11-01,Charlotte Hornets,Away,-4.5,17,12.5,W,Favorite,122,105
+Charlotte Hornets,2025-11-01,Minnesota Timberwolves,Home,4.5,-17,-12.5,L,Underdog,105,122
+Houston Rockets,2025-12-20,Denver Nuggets,Away,-1.5,14,12.5,W,Favorite,115,101
+Denver Nuggets,2025-12-20,Houston Rockets,Home,1.5,-14,-12.5,L,Underdog,101,115
+Orlando Magic,2025-11-23,Boston Celtics,Away,4.5,-9,-4.5,L,Underdog,129,138
+Boston Celtics,2025-11-23,Orlando Magic,Home,-4.5,9,4.5,W,Favorite,138,129
+San Antonio Spurs,2025-12-10,Los Angeles Lakers,Away,7.5,13,20.5,W,Underdog,132,119
+Los Angeles Lakers,2025-12-10,San Antonio Spurs,Home,-7.5,-13,-20.5,L,Favorite,119,132
+San Antonio Spurs,2025-11-23,Phoenix Suns,Away,1.5,-9,-7.5,L,Underdog,102,111
+Phoenix Suns,2025-11-23,San Antonio Spurs,Home,-1.5,9,7.5,W,Favorite,111,102
+Atlanta Hawks,2025-10-24,Orlando Magic,Away,5.5,4,9.5,W,Underdog,111,107
+Orlando Magic,2025-10-24,Atlanta Hawks,Home,-5.5,-4,-9.5,L,Favorite,107,111
+Golden State Warriors,2025-10-30,Milwaukee Bucks,Away,-7.5,-10,-17.5,L,Favorite,110,120
+Milwaukee Bucks,2025-10-30,Golden State Warriors,Home,7.5,10,17.5,W,Underdog,120,110
+Memphis Grizzlies,2025-11-18,San Antonio Spurs,Away,6.5,-10,-3.5,L,Underdog,101,111
+San Antonio Spurs,2025-11-18,Memphis Grizzlies,Home,-6.5,10,3.5,W,Favorite,111,101
+Dallas Mavericks,2025-12-15,Utah Jazz,Away,-1.5,-7,-8.5,L,Favorite,133,140
+Utah Jazz,2025-12-15,Dallas Mavericks,Home,1.5,7,8.5,W,Underdog,140,133
+New Orleans Pelicans,2025-12-06,Brooklyn Nets,Away,3.5,-18,-14.5,L,Underdog,101,119
+Brooklyn Nets,2025-12-06,New Orleans Pelicans,Home,-3.5,18,14.5,W,Favorite,119,101
+Toronto Raptors,2025-12-26,Washington Wizards,Away,-8.5,-21,-29.5,L,Favorite,117,138
+Washington Wizards,2025-12-26,Toronto Raptors,Home,8.5,21,29.5,W,Underdog,138,117
+Los Angeles Lakers,2025-12-14,Phoenix Suns,Away,1.5,2,3.5,W,Underdog,116,114
+Phoenix Suns,2025-12-14,Los Angeles Lakers,Home,-1.5,-2,-3.5,L,Favorite,114,116
+Toronto Raptors,2025-11-11,Brooklyn Nets,Away,-10.5,10,-0.5,L,Favorite,119,109
+Brooklyn Nets,2025-11-11,Toronto Raptors,Home,10.5,-10,0.5,W,Underdog,109,119
+Memphis Grizzlies,2025-12-15,LA Clippers,Away,5.5,18,23.5,W,Underdog,121,103
+LA Clippers,2025-12-15,Memphis Grizzlies,Home,-5.5,-18,-23.5,L,Favorite,103,121
+San Antonio Spurs,2026-01-02,Indiana Pacers,Away,-5.5,10,4.5,W,Favorite,123,113
+Indiana Pacers,2026-01-02,San Antonio Spurs,Home,5.5,-10,-4.5,L,Underdog,113,123
+Philadelphia 76ers,2025-12-30,Memphis Grizzlies,Away,-1.5,3,1.5,W,Favorite,139,136
+Memphis Grizzlies,2025-12-30,Philadelphia 76ers,Home,1.5,-3,-1.5,L,Underdog,136,139
+Portland Trail Blazers,2025-11-12,New Orleans Pelicans,Away,-8.5,8,-0.5,L,Favorite,125,117
+New Orleans Pelicans,2025-11-12,Portland Trail Blazers,Home,8.5,-8,0.5,W,Underdog,117,125
+Chicago Bulls,2025-11-19,Portland Trail Blazers,Away,-3.5,1,-2.5,L,Favorite,122,121
+Portland Trail Blazers,2025-11-19,Chicago Bulls,Home,3.5,-1,2.5,W,Underdog,121,122
+Washington Wizards,2025-11-05,Boston Celtics,Away,12.5,-29,-16.5,L,Underdog,107,136
+Boston Celtics,2025-11-05,Washington Wizards,Home,-12.5,29,16.5,W,Favorite,136,107
+Boston Celtics,2025-11-11,Philadelphia 76ers,Away,-1.5,-2,-3.5,L,Favorite,100,102
+Philadelphia 76ers,2025-11-11,Boston Celtics,Home,1.5,2,3.5,W,Underdog,102,100
+Washington Wizards,2025-12-23,Charlotte Hornets,Away,6.5,-17,-10.5,L,Underdog,109,126
+Charlotte Hornets,2025-12-23,Washington Wizards,Home,-6.5,17,10.5,W,Favorite,126,109
+Houston Rockets,2025-12-15,Denver Nuggets,Away,-1.5,-3,-4.5,L,Favorite,125,128
+Denver Nuggets,2025-12-15,Houston Rockets,Home,1.5,3,4.5,W,Underdog,128,125
+Dallas Mavericks,2025-12-20,Philadelphia 76ers,Away,1.5,-7,-5.5,L,Underdog,114,121
+Philadelphia 76ers,2025-12-20,Dallas Mavericks,Home,-1.5,7,5.5,W,Favorite,121,114
+Denver Nuggets,2026-01-02,Cleveland Cavaliers,Away,14.5,-5,9.5,W,Underdog,108,113
+Cleveland Cavaliers,2026-01-02,Denver Nuggets,Home,-14.5,5,-9.5,L,Favorite,113,108
+Minnesota Timberwolves,2025-11-05,New York Knicks,Away,3.5,-23,-19.5,L,Underdog,114,137
+New York Knicks,2025-11-05,Minnesota Timberwolves,Home,-3.5,23,19.5,W,Favorite,137,114
+Sacramento Kings,2025-11-14,Minnesota Timberwolves,Away,11.5,-14,-2.5,L,Underdog,110,124
+Minnesota Timberwolves,2025-11-14,Sacramento Kings,Home,-11.5,14,2.5,W,Favorite,124,110
+Sacramento Kings,2026-01-02,Phoenix Suns,Away,13.5,-27,-13.5,L,Underdog,102,129
+Phoenix Suns,2026-01-02,Sacramento Kings,Home,-13.5,27,13.5,W,Favorite,129,102
+San Antonio Spurs,2025-12-13,Oklahoma City Thunder,Away,11.5,2,13.5,W,Underdog,111,109
+Oklahoma City Thunder,2025-12-13,San Antonio Spurs,Home,-11.5,-2,-13.5,L,Favorite,109,111
+New York Knicks,2025-12-18,Indiana Pacers,Away,-3.5,1,-2.5,L,Favorite,114,113
+Indiana Pacers,2025-12-18,New York Knicks,Home,3.5,-1,2.5,W,Underdog,113,114
+Brooklyn Nets,2025-10-22,Charlotte Hornets,Away,6.5,-19,-12.5,L,Underdog,117,136
+Charlotte Hornets,2025-10-22,Brooklyn Nets,Home,-6.5,19,12.5,W,Favorite,136,117
+Orlando Magic,2025-12-31,Indiana Pacers,Away,-4.5,2,-2.5,L,Favorite,112,110
+Indiana Pacers,2025-12-31,Orlando Magic,Home,4.5,-2,2.5,W,Underdog,110,112
+Golden State Warriors,2025-11-16,New Orleans Pelicans,Away,-10.5,18,7.5,W,Favorite,124,106
+New Orleans Pelicans,2025-11-16,Golden State Warriors,Home,10.5,-18,-7.5,L,Underdog,106,124
+Utah Jazz,2025-12-22,Denver Nuggets,Away,12.5,-23,-10.5,L,Underdog,112,135
+Denver Nuggets,2025-12-22,Utah Jazz,Home,-12.5,23,10.5,W,Favorite,135,112
+Toronto Raptors,2025-12-18,Milwaukee Bucks,Away,-5.5,6,0.5,W,Favorite,111,105
+Milwaukee Bucks,2025-12-18,Toronto Raptors,Home,5.5,-6,-0.5,L,Underdog,105,111
+Indiana Pacers,2025-10-25,Memphis Grizzlies,Away,2.5,-25,-22.5,L,Underdog,103,128
+Memphis Grizzlies,2025-10-25,Indiana Pacers,Home,-2.5,25,22.5,W,Favorite,128,103
+Charlotte Hornets,2025-12-01,Brooklyn Nets,Away,-4.5,-13,-17.5,L,Favorite,103,116
+Brooklyn Nets,2025-12-01,Charlotte Hornets,Home,4.5,13,17.5,W,Underdog,116,103
+Golden State Warriors,2025-11-19,Miami Heat,Away,10.5,-14,-3.5,L,Underdog,96,110
+Miami Heat,2025-11-19,Golden State Warriors,Home,-10.5,14,3.5,W,Favorite,110,96
+Orlando Magic,2025-11-01,Washington Wizards,Away,-8.5,31,22.5,W,Favorite,125,94
+Washington Wizards,2025-11-01,Orlando Magic,Home,8.5,-31,-22.5,L,Underdog,94,125
+Portland Trail Blazers,2025-10-26,LA Clippers,Away,8.5,-7,1.5,W,Underdog,107,114
+LA Clippers,2025-10-26,Portland Trail Blazers,Home,-8.5,7,-1.5,L,Favorite,114,107
+Los Angeles Lakers,2025-11-23,Utah Jazz,Away,-9.5,2,-7.5,L,Favorite,108,106
+Utah Jazz,2025-11-23,Los Angeles Lakers,Home,9.5,-2,7.5,W,Underdog,106,108
+Philadelphia 76ers,2025-11-02,Brooklyn Nets,Away,-4.5,24,19.5,W,Favorite,129,105
+Brooklyn Nets,2025-11-02,Philadelphia 76ers,Home,4.5,-24,-19.5,L,Underdog,105,129
+Washington Wizards,2025-12-31,Milwaukee Bucks,Away,10.5,1,11.5,W,Underdog,114,113
+Milwaukee Bucks,2025-12-31,Washington Wizards,Home,-10.5,-1,-11.5,L,Favorite,113,114
+Golden State Warriors,2025-11-12,San Antonio Spurs,Away,3.5,5,8.5,W,Underdog,125,120
+San Antonio Spurs,2025-11-12,Golden State Warriors,Home,-3.5,-5,-8.5,L,Favorite,120,125
+Houston Rockets,2025-12-06,Dallas Mavericks,Away,-7.5,-13,-20.5,L,Favorite,109,122
+Dallas Mavericks,2025-12-06,Houston Rockets,Home,7.5,13,20.5,W,Underdog,122,109
+LA Clippers,2025-10-28,Golden State Warriors,Away,-1.5,-19,-20.5,L,Favorite,79,98
+Golden State Warriors,2025-10-28,LA Clippers,Home,1.5,19,20.5,W,Underdog,98,79
+Sacramento Kings,2025-11-03,Denver Nuggets,Away,11.5,-6,5.5,W,Underdog,124,130
+Denver Nuggets,2025-11-03,Sacramento Kings,Home,-11.5,6,-5.5,L,Favorite,130,124
+Minnesota Timberwolves,2025-11-24,Sacramento Kings,Away,-10.5,-5,-15.5,L,Favorite,112,117
+Sacramento Kings,2025-11-24,Minnesota Timberwolves,Home,10.5,5,15.5,W,Underdog,117,112
+Golden State Warriors,2025-11-05,Sacramento Kings,Away,2.5,-5,-2.5,L,Underdog,116,121
+Sacramento Kings,2025-11-05,Golden State Warriors,Home,-2.5,5,2.5,W,Favorite,121,116
+Orlando Magic,2025-11-28,Detroit Pistons,Away,3.5,3,6.5,W,Underdog,112,109
+Detroit Pistons,2025-11-28,Orlando Magic,Home,-3.5,-3,-6.5,L,Favorite,109,112
+Orlando Magic,2025-12-22,Golden State Warriors,Away,6.5,-23,-16.5,L,Underdog,97,120
+Golden State Warriors,2025-12-22,Orlando Magic,Home,-6.5,23,16.5,W,Favorite,120,97
+Atlanta Hawks,2025-12-29,Oklahoma City Thunder,Away,17.5,-11,6.5,W,Underdog,129,140
+Oklahoma City Thunder,2025-12-29,Atlanta Hawks,Home,-17.5,11,-6.5,L,Favorite,140,129
+Boston Celtics,2025-10-31,Philadelphia 76ers,Away,-1.5,1,-0.5,L,Favorite,109,108
+Philadelphia 76ers,2025-10-31,Boston Celtics,Home,1.5,-1,0.5,W,Underdog,108,109
+Chicago Bulls,2025-11-08,Cleveland Cavaliers,Away,8.5,-6,2.5,W,Underdog,122,128
+Cleveland Cavaliers,2025-11-08,Chicago Bulls,Home,-8.5,6,-2.5,L,Favorite,128,122
+Orlando Magic,2025-12-18,Denver Nuggets,Away,6.5,-11,-4.5,L,Underdog,115,126
+Denver Nuggets,2025-12-18,Orlando Magic,Home,-6.5,11,4.5,W,Favorite,126,115
+Atlanta Hawks,2026-01-03,Toronto Raptors,Away,4.5,-17,-12.5,L,Underdog,117,134
+Toronto Raptors,2026-01-03,Atlanta Hawks,Home,-4.5,17,12.5,W,Favorite,134,117
+Miami Heat,2025-11-02,Los Angeles Lakers,Away,4.5,-10,-5.5,L,Underdog,120,130
+Los Angeles Lakers,2025-11-02,Miami Heat,Home,-4.5,10,5.5,W,Favorite,130,120
+Charlotte Hornets,2025-11-17,Toronto Raptors,Away,8.5,-2,6.5,W,Underdog,108,110
+Toronto Raptors,2025-11-17,Charlotte Hornets,Home,-8.5,2,-6.5,L,Favorite,110,108
+LA Clippers,2025-11-23,Cleveland Cavaliers,Away,7.5,-15,-7.5,L,Underdog,105,120
+Cleveland Cavaliers,2025-11-23,LA Clippers,Home,-7.5,15,7.5,W,Favorite,120,105
+Memphis Grizzlies,2025-11-22,Dallas Mavericks,Away,-1.5,6,4.5,W,Favorite,102,96
+Dallas Mavericks,2025-11-22,Memphis Grizzlies,Home,1.5,-6,-4.5,L,Underdog,96,102
+Boston Celtics,2025-11-29,Minnesota Timberwolves,Away,5.5,-4,1.5,W,Underdog,115,119
+Minnesota Timberwolves,2025-11-29,Boston Celtics,Home,-5.5,4,-1.5,L,Favorite,119,115
+Denver Nuggets,2025-10-27,Minnesota Timberwolves,Away,-6.5,13,6.5,W,Favorite,127,114
+Minnesota Timberwolves,2025-10-27,Denver Nuggets,Home,6.5,-13,-6.5,L,Underdog,114,127
+Charlotte Hornets,2025-12-14,Cleveland Cavaliers,Away,12.5,8,20.5,W,Underdog,119,111
+Cleveland Cavaliers,2025-12-14,Charlotte Hornets,Home,-12.5,-8,-20.5,L,Favorite,111,119
+Utah Jazz,2025-10-24,Sacramento Kings,Away,5.5,-1,4.5,W,Underdog,104,105
+Sacramento Kings,2025-10-24,Utah Jazz,Home,-5.5,1,-4.5,L,Favorite,105,104
+Indiana Pacers,2025-12-12,Philadelphia 76ers,Away,5.5,-10,-4.5,L,Underdog,105,115
+Philadelphia 76ers,2025-12-12,Indiana Pacers,Home,-5.5,10,4.5,W,Favorite,115,105
+Brooklyn Nets,2025-10-27,Houston Rockets,Away,15.5,-28,-12.5,L,Underdog,109,137
+Houston Rockets,2025-10-27,Brooklyn Nets,Home,-15.5,28,12.5,W,Favorite,137,109
+Boston Celtics,2025-12-04,Washington Wizards,Away,-10.5,45,34.5,W,Favorite,146,101
+Washington Wizards,2025-12-04,Boston Celtics,Home,10.5,-45,-34.5,L,Underdog,101,146
+Portland Trail Blazers,2025-12-11,New Orleans Pelicans,Away,-4.5,-23,-27.5,L,Favorite,120,143
+New Orleans Pelicans,2025-12-11,Portland Trail Blazers,Home,4.5,23,27.5,W,Underdog,143,120
+Atlanta Hawks,2025-12-01,Detroit Pistons,Away,9.5,-1,8.5,W,Underdog,98,99
+Detroit Pistons,2025-12-01,Atlanta Hawks,Home,-9.5,1,-8.5,L,Favorite,99,98
+Minnesota Timberwolves,2025-12-12,Golden State Warriors,Away,5.5,7,12.5,W,Underdog,127,120
+Golden State Warriors,2025-12-12,Minnesota Timberwolves,Home,-5.5,-7,-12.5,L,Favorite,120,127
+Charlotte Hornets,2025-12-05,Toronto Raptors,Away,7.5,25,32.5,W,Underdog,111,86
+Toronto Raptors,2025-12-05,Charlotte Hornets,Home,-7.5,-25,-32.5,L,Favorite,86,111
+Memphis Grizzlies,2025-12-17,Minnesota Timberwolves,Away,6.5,6,12.5,W,Underdog,116,110
+Minnesota Timberwolves,2025-12-17,Memphis Grizzlies,Home,-6.5,-6,-12.5,L,Favorite,110,116
+Miami Heat,2025-12-21,New York Knicks,Away,7.5,-7,0.5,W,Underdog,125,132
+New York Knicks,2025-12-21,Miami Heat,Home,-7.5,7,-0.5,L,Favorite,132,125
+Indiana Pacers,2025-11-11,Utah Jazz,Away,-2.5,-24,-26.5,L,Favorite,128,152
+Utah Jazz,2025-11-11,Indiana Pacers,Home,2.5,24,26.5,W,Underdog,152,128
+Los Angeles Lakers,2025-11-10,Charlotte Hornets,Away,-8.5,10,1.5,W,Favorite,121,111
+Charlotte Hornets,2025-11-10,Los Angeles Lakers,Home,8.5,-10,-1.5,L,Underdog,111,121
+Chicago Bulls,2025-11-16,Utah Jazz,Away,-4.5,-3,-7.5,L,Favorite,147,150
+Utah Jazz,2025-11-16,Chicago Bulls,Home,4.5,3,7.5,W,Underdog,150,147
+San Antonio Spurs,2025-11-10,Chicago Bulls,Away,-5.5,4,-1.5,L,Favorite,121,117
+Chicago Bulls,2025-11-10,San Antonio Spurs,Home,5.5,-4,1.5,W,Underdog,117,121
+Indiana Pacers,2025-12-27,Miami Heat,Away,6.5,-26,-19.5,L,Underdog,116,142
+Miami Heat,2025-12-27,Indiana Pacers,Home,-6.5,26,19.5,W,Favorite,142,116
+Philadelphia 76ers,2025-11-28,Brooklyn Nets,Away,-6.5,12,5.5,W,Favorite,115,103
+Brooklyn Nets,2025-11-28,Philadelphia 76ers,Home,6.5,-12,-5.5,L,Underdog,103,115
+Golden State Warriors,2025-12-29,Brooklyn Nets,Away,-6.5,13,6.5,W,Favorite,120,107
+Brooklyn Nets,2025-12-29,Golden State Warriors,Home,6.5,-13,-6.5,L,Underdog,107,120
+Philadelphia 76ers,2025-12-26,Chicago Bulls,Away,-1.5,-7,-8.5,L,Favorite,102,109
+Chicago Bulls,2025-12-26,Philadelphia 76ers,Home,1.5,7,8.5,W,Underdog,109,102
+Orlando Magic,2025-12-20,Utah Jazz,Away,-8.5,1,-7.5,L,Favorite,128,127
+Utah Jazz,2025-12-20,Orlando Magic,Home,8.5,-1,7.5,W,Underdog,127,128
+Oklahoma City Thunder,2026-01-02,Golden State Warriors,Away,-13.5,37,23.5,W,Favorite,131,94
+Golden State Warriors,2026-01-02,Oklahoma City Thunder,Home,13.5,-37,-23.5,L,Underdog,94,131
+Memphis Grizzlies,2025-12-23,Utah Jazz,Away,-4.5,9,4.5,W,Favorite,137,128
+Utah Jazz,2025-12-23,Memphis Grizzlies,Home,4.5,-9,-4.5,L,Underdog,128,137
+Phoenix Suns,2025-10-25,Denver Nuggets,Away,12.5,-22,-9.5,L,Underdog,111,133
+Denver Nuggets,2025-10-25,Phoenix Suns,Home,-12.5,22,9.5,W,Favorite,133,111
+Oklahoma City Thunder,2025-12-02,Golden State Warriors,Away,-10.5,12,1.5,W,Favorite,124,112
+Golden State Warriors,2025-12-02,Oklahoma City Thunder,Home,10.5,-12,-1.5,L,Underdog,112,124
+LA Clippers,2025-12-11,Houston Rockets,Away,8.5,-2,6.5,W,Underdog,113,115
+Houston Rockets,2025-12-11,LA Clippers,Home,-8.5,2,-6.5,L,Favorite,115,113
+Detroit Pistons,2025-11-24,Indiana Pacers,Away,-9.5,5,-4.5,L,Favorite,122,117
+Indiana Pacers,2025-11-24,Detroit Pistons,Home,9.5,-5,4.5,W,Underdog,117,122
+Portland Trail Blazers,2025-11-21,Golden State Warriors,Away,10.5,4,14.5,W,Underdog,127,123
+Golden State Warriors,2025-11-21,Portland Trail Blazers,Home,-10.5,-4,-14.5,L,Favorite,123,127
+Detroit Pistons,2025-11-22,Milwaukee Bucks,Away,-8.5,13,4.5,W,Favorite,129,116
+Milwaukee Bucks,2025-11-22,Detroit Pistons,Home,8.5,-13,-4.5,L,Underdog,116,129
+Golden State Warriors,2025-11-14,San Antonio Spurs,Away,2.5,1,3.5,W,Underdog,109,108
+San Antonio Spurs,2025-11-14,Golden State Warriors,Home,-2.5,-1,-3.5,L,Favorite,108,109
+Dallas Mavericks,2025-11-17,Minnesota Timberwolves,Away,14.5,-24,-9.5,L,Underdog,96,120
+Minnesota Timberwolves,2025-11-17,Dallas Mavericks,Home,-14.5,24,9.5,W,Favorite,120,96
+Charlotte Hornets,2025-12-22,Cleveland Cavaliers,Away,9.5,-7,2.5,W,Underdog,132,139
+Cleveland Cavaliers,2025-12-22,Charlotte Hornets,Home,-9.5,7,-2.5,L,Favorite,139,132
+San Antonio Spurs,2025-11-05,Los Angeles Lakers,Away,1.5,-2,-0.5,L,Underdog,116,118
+Los Angeles Lakers,2025-11-05,San Antonio Spurs,Home,-1.5,2,0.5,W,Favorite,118,116
+Oklahoma City Thunder,2025-11-15,Charlotte Hornets,Away,-17.5,13,-4.5,L,Favorite,109,96
+Charlotte Hornets,2025-11-15,Oklahoma City Thunder,Home,17.5,-13,4.5,W,Underdog,96,109
+Atlanta Hawks,2025-11-30,Philadelphia 76ers,Away,2.5,8,10.5,W,Underdog,142,134
+Philadelphia 76ers,2025-11-30,Atlanta Hawks,Home,-2.5,-8,-10.5,L,Favorite,134,142
+Phoenix Suns,2025-11-08,LA Clippers,Away,4.5,11,15.5,W,Underdog,114,103
+LA Clippers,2025-11-08,Phoenix Suns,Home,-4.5,-11,-15.5,L,Favorite,103,114
+Los Angeles Lakers,2025-12-20,LA Clippers,Away,-1.5,-15,-16.5,L,Favorite,88,103
+LA Clippers,2025-12-20,Los Angeles Lakers,Home,1.5,15,16.5,W,Underdog,103,88
+Orlando Magic,2025-10-29,Detroit Pistons,Away,-1.5,-19,-20.5,L,Favorite,116,135
+Detroit Pistons,2025-10-29,Orlando Magic,Home,1.5,19,20.5,W,Underdog,135,116
+San Antonio Spurs,2025-12-25,Oklahoma City Thunder,Away,9.5,15,24.5,W,Underdog,117,102
+Oklahoma City Thunder,2025-12-25,San Antonio Spurs,Home,-9.5,-15,-24.5,L,Favorite,102,117
+Houston Rockets,2025-12-18,New Orleans Pelicans,Away,-9.5,-5,-14.5,L,Favorite,128,133
+New Orleans Pelicans,2025-12-18,Houston Rockets,Home,9.5,5,14.5,W,Underdog,133,128
+Portland Trail Blazers,2026-01-03,San Antonio Spurs,Away,8.5,5,13.5,W,Underdog,115,110
+San Antonio Spurs,2026-01-03,Portland Trail Blazers,Home,-8.5,-5,-13.5,L,Favorite,110,115
+LA Clippers,2025-12-18,Oklahoma City Thunder,Away,16.5,-21,-4.5,L,Underdog,101,122
+Oklahoma City Thunder,2025-12-18,LA Clippers,Home,-16.5,21,4.5,W,Favorite,122,101
+Milwaukee Bucks,2025-11-10,Dallas Mavericks,Away,-3.5,2,-1.5,L,Favorite,116,114
+Dallas Mavericks,2025-11-10,Milwaukee Bucks,Home,3.5,-2,1.5,W,Underdog,114,116
+Orlando Magic,2025-12-29,Toronto Raptors,Away,-1.5,-1,-2.5,L,Favorite,106,107
+Toronto Raptors,2025-12-29,Orlando Magic,Home,1.5,1,2.5,W,Underdog,107,106
+Atlanta Hawks,2025-12-06,Washington Wizards,Away,-9.5,15,5.5,W,Favorite,131,116
+Washington Wizards,2025-12-06,Atlanta Hawks,Home,9.5,-15,-5.5,L,Underdog,116,131
+Detroit Pistons,2025-12-22,Portland Trail Blazers,Away,-6.5,8,1.5,W,Favorite,110,102
+Portland Trail Blazers,2025-12-22,Detroit Pistons,Home,6.5,-8,-1.5,L,Underdog,102,110
+Golden State Warriors,2025-11-11,Oklahoma City Thunder,Away,7.5,-24,-16.5,L,Underdog,102,126
+Oklahoma City Thunder,2025-11-11,Golden State Warriors,Home,-7.5,24,16.5,W,Favorite,126,102
+Indiana Pacers,2025-11-26,Toronto Raptors,Away,10.5,-2,8.5,W,Underdog,95,97
+Toronto Raptors,2025-11-26,Indiana Pacers,Home,-10.5,2,-8.5,L,Favorite,97,95
+Portland Trail Blazers,2025-12-07,Memphis Grizzlies,Away,1.5,-23,-21.5,L,Underdog,96,119
+Memphis Grizzlies,2025-12-07,Portland Trail Blazers,Home,-1.5,23,21.5,W,Favorite,119,96
+Boston Celtics,2025-10-26,Detroit Pistons,Away,2.5,-6,-3.5,L,Underdog,113,119
+Detroit Pistons,2025-10-26,Boston Celtics,Home,-2.5,6,3.5,W,Favorite,119,113
+Oklahoma City Thunder,2025-11-09,Memphis Grizzlies,Away,-10.5,14,3.5,W,Favorite,114,100
+Memphis Grizzlies,2025-11-09,Oklahoma City Thunder,Home,10.5,-14,-3.5,L,Underdog,100,114
+Phoenix Suns,2025-10-24,LA Clippers,Away,10.5,-27,-16.5,L,Underdog,102,129
+LA Clippers,2025-10-24,Phoenix Suns,Home,-10.5,27,16.5,W,Favorite,129,102
+Oklahoma City Thunder,2025-11-04,LA Clippers,Away,-8.5,19,10.5,W,Favorite,126,107
+LA Clippers,2025-11-04,Oklahoma City Thunder,Home,8.5,-19,-10.5,L,Underdog,107,126
+LA Clippers,2025-12-06,Minnesota Timberwolves,Away,8.5,-3,5.5,W,Underdog,106,109
+Minnesota Timberwolves,2025-12-06,LA Clippers,Home,-8.5,3,-5.5,L,Favorite,109,106
+Boston Celtics,2025-12-30,Utah Jazz,Away,-8.5,10,1.5,W,Favorite,129,119
+Utah Jazz,2025-12-30,Boston Celtics,Home,8.5,-10,-1.5,L,Underdog,119,129
+Houston Rockets,2025-10-29,Toronto Raptors,Away,-5.5,18,12.5,W,Favorite,139,121
+Toronto Raptors,2025-10-29,Houston Rockets,Home,5.5,-18,-12.5,L,Underdog,121,139
+New York Knicks,2025-12-09,Toronto Raptors,Away,-6.5,16,9.5,W,Favorite,117,101
+Toronto Raptors,2025-12-09,New York Knicks,Home,6.5,-16,-9.5,L,Underdog,101,117
+Phoenix Suns,2025-12-20,Golden State Warriors,Away,5.5,-3,2.5,W,Underdog,116,119
+Golden State Warriors,2025-12-20,Phoenix Suns,Home,-5.5,3,-2.5,L,Favorite,119,116
+Chicago Bulls,2025-11-28,Charlotte Hornets,Away,-2.5,-7,-9.5,L,Favorite,116,123
+Charlotte Hornets,2025-11-28,Chicago Bulls,Home,2.5,7,9.5,W,Underdog,123,116
+Indiana Pacers,2025-11-21,Cleveland Cavaliers,Away,15.5,-11,4.5,W,Underdog,109,120
+Cleveland Cavaliers,2025-11-21,Indiana Pacers,Home,-15.5,11,-4.5,L,Favorite,120,109
+Brooklyn Nets,2025-11-21,Boston Celtics,Away,14.5,8,22.5,W,Underdog,113,105
+Boston Celtics,2025-11-21,Brooklyn Nets,Home,-14.5,-8,-22.5,L,Favorite,105,113
+Miami Heat,2025-12-03,Dallas Mavericks,Away,-4.5,-10,-14.5,L,Favorite,108,118
+Dallas Mavericks,2025-12-03,Miami Heat,Home,4.5,10,14.5,W,Underdog,118,108
+Cleveland Cavaliers,2025-11-12,Miami Heat,Away,5.5,14,19.5,W,Underdog,130,116
+Miami Heat,2025-11-12,Cleveland Cavaliers,Home,-5.5,-14,-19.5,L,Favorite,116,130
+LA Clippers,2025-12-01,Miami Heat,Away,6.5,-17,-10.5,L,Underdog,123,140
+Miami Heat,2025-12-01,LA Clippers,Home,-6.5,17,10.5,W,Favorite,140,123
+Oklahoma City Thunder,2025-10-27,Dallas Mavericks,Away,-8.5,7,-1.5,L,Favorite,101,94
+Dallas Mavericks,2025-10-27,Oklahoma City Thunder,Home,8.5,-7,1.5,W,Underdog,94,101
+Chicago Bulls,2025-12-19,Cleveland Cavaliers,Away,4.5,11,15.5,W,Underdog,136,125
+Cleveland Cavaliers,2025-12-19,Chicago Bulls,Home,-4.5,-11,-15.5,L,Favorite,125,136
+Miami Heat,2025-12-19,Boston Celtics,Away,7.5,-13,-5.5,L,Underdog,116,129
+Boston Celtics,2025-12-19,Miami Heat,Home,-7.5,13,5.5,W,Favorite,129,116
+Milwaukee Bucks,2025-12-26,Memphis Grizzlies,Away,5.5,-21,-15.5,L,Underdog,104,125
+Memphis Grizzlies,2025-12-26,Milwaukee Bucks,Home,-5.5,21,15.5,W,Favorite,125,104
+Cleveland Cavaliers,2025-10-27,Detroit Pistons,Away,-2.5,21,18.5,W,Favorite,116,95
+Detroit Pistons,2025-10-27,Cleveland Cavaliers,Home,2.5,-21,-18.5,L,Underdog,95,116
+Golden State Warriors,2025-12-14,Portland Trail Blazers,Away,-5.5,-5,-10.5,L,Favorite,131,136
+Portland Trail Blazers,2025-12-14,Golden State Warriors,Home,5.5,5,10.5,W,Underdog,136,131
+Portland Trail Blazers,2025-11-23,Oklahoma City Thunder,Away,15.5,-27,-11.5,L,Underdog,95,122
+Oklahoma City Thunder,2025-11-23,Portland Trail Blazers,Home,-15.5,27,11.5,W,Favorite,122,95
+Phoenix Suns,2025-12-01,Los Angeles Lakers,Away,5.5,17,22.5,W,Underdog,125,108
+Los Angeles Lakers,2025-12-01,Phoenix Suns,Home,-5.5,-17,-22.5,L,Favorite,108,125
+Cleveland Cavaliers,2025-11-24,Toronto Raptors,Away,1.5,-11,-9.5,L,Underdog,99,110
+Toronto Raptors,2025-11-24,Cleveland Cavaliers,Home,-1.5,11,9.5,W,Favorite,110,99
+Los Angeles Lakers,2025-11-14,New Orleans Pelicans,Away,-9.5,14,4.5,W,Favorite,118,104
+New Orleans Pelicans,2025-11-14,Los Angeles Lakers,Home,9.5,-14,-4.5,L,Underdog,104,118
+Milwaukee Bucks,2025-10-26,Cleveland Cavaliers,Away,6.5,-5,1.5,W,Underdog,113,118
+Cleveland Cavaliers,2025-10-26,Milwaukee Bucks,Home,-6.5,5,-1.5,L,Favorite,118,113
+Portland Trail Blazers,2026-01-02,New Orleans Pelicans,Away,-3.5,13,9.5,W,Favorite,122,109
+New Orleans Pelicans,2026-01-02,Portland Trail Blazers,Home,3.5,-13,-9.5,L,Underdog,109,122
+Phoenix Suns,2025-12-26,New Orleans Pelicans,Away,-5.5,7,1.5,W,Favorite,115,108
+New Orleans Pelicans,2025-12-26,Phoenix Suns,Home,5.5,-7,-1.5,L,Underdog,108,115
+Boston Celtics,2025-10-24,New York Knicks,Away,3.5,-10,-6.5,L,Underdog,95,105
+New York Knicks,2025-10-24,Boston Celtics,Home,-3.5,10,6.5,W,Favorite,105,95
+Brooklyn Nets,2025-11-09,New York Knicks,Away,15.5,-36,-20.5,L,Underdog,98,134
+New York Knicks,2025-11-09,Brooklyn Nets,Home,-15.5,36,20.5,W,Favorite,134,98
+Los Angeles Lakers,2025-10-29,Minnesota Timberwolves,Away,7.5,1,8.5,W,Underdog,116,115
+Minnesota Timberwolves,2025-10-29,Los Angeles Lakers,Home,-7.5,-1,-8.5,L,Favorite,115,116
+Dallas Mavericks,2025-12-27,Sacramento Kings,Away,-2.5,-6,-8.5,L,Favorite,107,113
+Sacramento Kings,2025-12-27,Dallas Mavericks,Home,2.5,6,8.5,W,Underdog,113,107
+Philadelphia 76ers,2025-11-20,Milwaukee Bucks,Away,-2.5,9,6.5,W,Favorite,123,114
+Milwaukee Bucks,2025-11-20,Philadelphia 76ers,Home,2.5,-9,-6.5,L,Underdog,114,123
+Brooklyn Nets,2025-11-23,Toronto Raptors,Away,12.5,-10,2.5,W,Underdog,109,119
+Toronto Raptors,2025-11-23,Brooklyn Nets,Home,-12.5,10,-2.5,L,Favorite,119,109
+New Orleans Pelicans,2025-10-29,Denver Nuggets,Away,12.5,-34,-21.5,L,Underdog,88,122
+Denver Nuggets,2025-10-29,New Orleans Pelicans,Home,-12.5,34,21.5,W,Favorite,122,88
+Washington Wizards,2025-10-22,Milwaukee Bucks,Away,9.5,-13,-3.5,L,Underdog,120,133
+Milwaukee Bucks,2025-10-22,Washington Wizards,Home,-9.5,13,3.5,W,Favorite,133,120
+Los Angeles Lakers,2025-12-05,Boston Celtics,Away,8.5,-21,-12.5,L,Underdog,105,126
+Boston Celtics,2025-12-05,Los Angeles Lakers,Home,-8.5,21,12.5,W,Favorite,126,105
+Miami Heat,2025-11-14,New York Knicks,Away,6.5,-8,-1.5,L,Underdog,132,140
+New York Knicks,2025-11-14,Miami Heat,Home,-6.5,8,1.5,W,Favorite,140,132
+Charlotte Hornets,2025-12-03,New York Knicks,Away,9.5,-15,-5.5,L,Underdog,104,119
+New York Knicks,2025-12-03,Charlotte Hornets,Home,-9.5,15,5.5,W,Favorite,119,104
+Minnesota Timberwolves,2025-11-26,Oklahoma City Thunder,Away,9.5,-8,1.5,W,Underdog,105,113
+Oklahoma City Thunder,2025-11-26,Minnesota Timberwolves,Home,-9.5,8,-1.5,L,Favorite,113,105
+Philadelphia 76ers,2025-10-28,Washington Wizards,Away,-4.5,5,0.5,W,Favorite,139,134
+Washington Wizards,2025-10-28,Philadelphia 76ers,Home,4.5,-5,-0.5,L,Underdog,134,139
+Phoenix Suns,2025-11-26,Sacramento Kings,Away,-4.5,12,7.5,W,Favorite,112,100
+Sacramento Kings,2025-11-26,Phoenix Suns,Home,4.5,-12,-7.5,L,Underdog,100,112
+Philadelphia 76ers,2025-12-19,New York Knicks,Away,6.5,9,15.5,W,Underdog,116,107
+New York Knicks,2025-12-19,Philadelphia 76ers,Home,-6.5,-9,-15.5,L,Favorite,107,116
+Portland Trail Blazers,2025-10-29,Utah Jazz,Away,-3.5,2,-1.5,L,Favorite,136,134
+Utah Jazz,2025-10-29,Portland Trail Blazers,Home,3.5,-2,1.5,W,Underdog,134,136
+Dallas Mavericks,2025-11-24,Miami Heat,Away,7.5,-4,3.5,W,Underdog,102,106
+Miami Heat,2025-11-24,Dallas Mavericks,Home,-7.5,4,-3.5,L,Favorite,106,102
+San Antonio Spurs,2025-10-24,New Orleans Pelicans,Away,-4.5,4,-0.5,L,Favorite,120,116
+New Orleans Pelicans,2025-10-24,San Antonio Spurs,Home,4.5,-4,0.5,W,Underdog,116,120
+Indiana Pacers,2025-12-20,New Orleans Pelicans,Away,2.5,-19,-16.5,L,Underdog,109,128
+New Orleans Pelicans,2025-12-20,Indiana Pacers,Home,-2.5,19,16.5,W,Favorite,128,109
+San Antonio Spurs,2025-12-08,New Orleans Pelicans,Away,-8.5,3,-5.5,L,Favorite,135,132
+New Orleans Pelicans,2025-12-08,San Antonio Spurs,Home,8.5,-3,5.5,W,Underdog,132,135
+Memphis Grizzlies,2025-11-11,New York Knicks,Away,9.5,-13,-3.5,L,Underdog,120,133
+New York Knicks,2025-11-11,Memphis Grizzlies,Home,-9.5,13,3.5,W,Favorite,133,120
+Toronto Raptors,2025-11-29,Charlotte Hornets,Away,-7.5,-7,-14.5,L,Favorite,111,118
+Charlotte Hornets,2025-11-29,Toronto Raptors,Home,7.5,7,14.5,W,Underdog,118,111
+Chicago Bulls,2025-11-24,New Orleans Pelicans,Away,-4.5,-13,-17.5,L,Favorite,130,143
+New Orleans Pelicans,2025-11-24,Chicago Bulls,Home,4.5,13,17.5,W,Underdog,143,130
+Sacramento Kings,2025-11-19,Oklahoma City Thunder,Away,18.5,-14,4.5,W,Underdog,99,113
+Oklahoma City Thunder,2025-11-19,Sacramento Kings,Home,-18.5,14,-4.5,L,Favorite,113,99
+Los Angeles Lakers,2025-12-07,Philadelphia 76ers,Away,-3.5,4,0.5,W,Favorite,112,108
+Philadelphia 76ers,2025-12-07,Los Angeles Lakers,Home,3.5,-4,-0.5,L,Underdog,108,112
+Minnesota Timberwolves,2025-12-25,Denver Nuggets,Away,1.5,-4,-2.5,L,Underdog,138,142
+Denver Nuggets,2025-12-25,Minnesota Timberwolves,Home,-1.5,4,2.5,W,Favorite,142,138
+Memphis Grizzlies,2025-11-15,Cleveland Cavaliers,Away,10.5,-8,2.5,W,Underdog,100,108
+Cleveland Cavaliers,2025-11-15,Memphis Grizzlies,Home,-10.5,8,-2.5,L,Favorite,108,100
+Toronto Raptors,2025-12-23,Miami Heat,Away,5.5,21,26.5,W,Underdog,112,91
+Miami Heat,2025-12-23,Toronto Raptors,Home,-5.5,-21,-26.5,L,Favorite,91,112
+Cleveland Cavaliers,2025-12-27,Houston Rockets,Away,2.5,-17,-14.5,L,Underdog,100,117
+Houston Rockets,2025-12-27,Cleveland Cavaliers,Home,-2.5,17,14.5,W,Favorite,117,100
+Brooklyn Nets,2025-12-27,Minnesota Timberwolves,Away,12.5,16,28.5,W,Underdog,123,107
+Minnesota Timberwolves,2025-12-27,Brooklyn Nets,Home,-12.5,-16,-28.5,L,Favorite,107,123
+Philadelphia 76ers,2025-12-05,Milwaukee Bucks,Away,-1.5,15,13.5,W,Favorite,116,101
+Milwaukee Bucks,2025-12-05,Philadelphia 76ers,Home,1.5,-15,-13.5,L,Underdog,101,116
+Milwaukee Bucks,2025-10-24,Toronto Raptors,Away,1.5,6,7.5,W,Underdog,122,116
+Toronto Raptors,2025-10-24,Milwaukee Bucks,Home,-1.5,-6,-7.5,L,Favorite,116,122
+Dallas Mavericks,2025-11-01,Detroit Pistons,Away,7.5,-12,-4.5,L,Underdog,110,122
+Detroit Pistons,2025-11-01,Dallas Mavericks,Home,-7.5,12,4.5,W,Favorite,122,110
+Portland Trail Blazers,2025-11-10,Orlando Magic,Away,1.5,-3,-1.5,L,Underdog,112,115
+Orlando Magic,2025-11-10,Portland Trail Blazers,Home,-1.5,3,1.5,W,Favorite,115,112
+Washington Wizards,2025-12-18,San Antonio Spurs,Away,15.5,-25,-9.5,L,Underdog,94,119
+San Antonio Spurs,2025-12-18,Washington Wizards,Home,-15.5,25,9.5,W,Favorite,119,94
+Denver Nuggets,2025-12-29,Miami Heat,Away,-1.5,-24,-25.5,L,Favorite,123,147
+Miami Heat,2025-12-29,Denver Nuggets,Home,1.5,24,25.5,W,Underdog,147,123
+Cleveland Cavaliers,2025-12-29,San Antonio Spurs,Away,3.5,12,15.5,W,Underdog,113,101
+San Antonio Spurs,2025-12-29,Cleveland Cavaliers,Home,-3.5,-12,-15.5,L,Favorite,101,113
+Atlanta Hawks,2025-11-13,Utah Jazz,Away,-1.5,10,8.5,W,Favorite,132,122
+Utah Jazz,2025-11-13,Atlanta Hawks,Home,1.5,-10,-8.5,L,Underdog,122,132
+Chicago Bulls,2025-12-23,Atlanta Hawks,Away,3.5,3,6.5,W,Underdog,126,123
+Atlanta Hawks,2025-12-23,Chicago Bulls,Home,-3.5,-3,-6.5,L,Favorite,123,126
+Washington Wizards,2025-11-28,Indiana Pacers,Away,6.5,-33,-26.5,L,Underdog,86,119
+Indiana Pacers,2025-11-28,Washington Wizards,Home,-6.5,33,26.5,W,Favorite,119,86
+Washington Wizards,2025-11-21,Toronto Raptors,Away,14.5,-30,-15.5,L,Underdog,110,140
+Toronto Raptors,2025-11-21,Washington Wizards,Home,-14.5,30,15.5,W,Favorite,140,110
+Milwaukee Bucks,2025-11-28,New York Knicks,Away,7.5,-9,-1.5,L,Underdog,109,118
+New York Knicks,2025-11-28,Milwaukee Bucks,Home,-7.5,9,1.5,W,Favorite,118,109
+Utah Jazz,2025-12-05,New York Knicks,Away,15.5,-34,-18.5,L,Underdog,112,146
+New York Knicks,2025-12-05,Utah Jazz,Home,-15.5,34,18.5,W,Favorite,146,112
+Charlotte Hornets,2025-12-20,Detroit Pistons,Away,10.5,-26,-15.5,L,Underdog,86,112
+Detroit Pistons,2025-12-20,Charlotte Hornets,Home,-10.5,26,15.5,W,Favorite,112,86
+Cleveland Cavaliers,2025-10-29,Boston Celtics,Away,-3.5,-20,-23.5,L,Favorite,105,125
+Boston Celtics,2025-10-29,Cleveland Cavaliers,Home,3.5,20,23.5,W,Underdog,125,105
+Miami Heat,2025-11-21,Chicago Bulls,Away,2.5,36,38.5,W,Underdog,143,107
+Chicago Bulls,2025-11-21,Miami Heat,Home,-2.5,-36,-38.5,L,Favorite,107,143
+Chicago Bulls,2025-11-12,Detroit Pistons,Away,-2.5,-11,-13.5,L,Favorite,113,124
+Detroit Pistons,2025-11-12,Chicago Bulls,Home,2.5,11,13.5,W,Underdog,124,113
+Milwaukee Bucks,2025-11-04,Toronto Raptors,Away,2.5,-28,-25.5,L,Underdog,100,128
+Toronto Raptors,2025-11-04,Milwaukee Bucks,Home,-2.5,28,25.5,W,Favorite,128,100
+Milwaukee Bucks,2025-12-06,Detroit Pistons,Away,12.5,-12,0.5,W,Underdog,112,124
+Detroit Pistons,2025-12-06,Milwaukee Bucks,Home,-12.5,12,-0.5,L,Favorite,124,112
+New York Knicks,2025-12-27,Atlanta Hawks,Away,-6.5,3,-3.5,L,Favorite,128,125
+Atlanta Hawks,2025-12-27,New York Knicks,Home,6.5,-3,3.5,W,Underdog,125,128
+Brooklyn Nets,2025-11-29,Milwaukee Bucks,Away,11.5,-17,-5.5,L,Underdog,99,116
+Milwaukee Bucks,2025-11-29,Brooklyn Nets,Home,-11.5,17,5.5,W,Favorite,116,99
+Sacramento Kings,2025-12-14,Minnesota Timberwolves,Away,9.5,-14,-4.5,L,Underdog,103,117
+Minnesota Timberwolves,2025-12-14,Sacramento Kings,Home,-9.5,14,4.5,W,Favorite,117,103
+Dallas Mavericks,2025-11-28,Los Angeles Lakers,Away,9.5,-10,-0.5,L,Underdog,119,129
+Los Angeles Lakers,2025-11-28,Dallas Mavericks,Home,-9.5,10,0.5,W,Favorite,129,119
+Oklahoma City Thunder,2025-11-05,Portland Trail Blazers,Away,-3.5,-2,-5.5,L,Favorite,119,121
+Portland Trail Blazers,2025-11-05,Oklahoma City Thunder,Home,3.5,2,5.5,W,Underdog,121,119
+Portland Trail Blazers,2025-10-27,Los Angeles Lakers,Away,-3.5,14,10.5,W,Favorite,122,108
+Los Angeles Lakers,2025-10-27,Portland Trail Blazers,Home,3.5,-14,-10.5,L,Underdog,108,122
+Atlanta Hawks,2025-11-20,San Antonio Spurs,Away,1.5,-9,-7.5,L,Underdog,126,135
+San Antonio Spurs,2025-11-20,Atlanta Hawks,Home,-1.5,9,7.5,W,Favorite,135,126
+Toronto Raptors,2025-11-13,Cleveland Cavaliers,Away,7.5,13,20.5,W,Underdog,126,113
+Cleveland Cavaliers,2025-11-13,Toronto Raptors,Home,-7.5,-13,-20.5,L,Favorite,113,126
+Boston Celtics,2025-12-07,Toronto Raptors,Away,-3.5,8,4.5,W,Favorite,121,113
+Toronto Raptors,2025-12-07,Boston Celtics,Home,3.5,-8,-4.5,L,Underdog,113,121
+Memphis Grizzlies,2025-11-30,Sacramento Kings,Away,-3.5,8,4.5,W,Favorite,115,107
+Sacramento Kings,2025-11-30,Memphis Grizzlies,Home,3.5,-8,-4.5,L,Underdog,107,115
+Toronto Raptors,2025-10-31,Cleveland Cavaliers,Away,4.5,11,15.5,W,Underdog,112,101
+Cleveland Cavaliers,2025-10-31,Toronto Raptors,Home,-4.5,-11,-15.5,L,Favorite,101,112
+Memphis Grizzlies,2025-11-26,New Orleans Pelicans,Away,-3.5,5,1.5,W,Favorite,133,128
+New Orleans Pelicans,2025-11-26,Memphis Grizzlies,Home,3.5,-5,-1.5,L,Underdog,128,133
+Dallas Mavericks,2025-12-01,Denver Nuggets,Away,11.5,10,21.5,W,Underdog,131,121
+Denver Nuggets,2025-12-01,Dallas Mavericks,Home,-11.5,-10,-21.5,L,Favorite,121,131
+Phoenix Suns,2025-12-05,Houston Rockets,Away,9.5,-19,-9.5,L,Underdog,98,117
+Houston Rockets,2025-12-05,Phoenix Suns,Home,-9.5,19,9.5,W,Favorite,117,98
+Utah Jazz,2025-11-07,Minnesota Timberwolves,Away,12.5,-40,-27.5,L,Underdog,97,137
+Minnesota Timberwolves,2025-11-07,Utah Jazz,Home,-12.5,40,27.5,W,Favorite,137,97
+Denver Nuggets,2025-12-11,Sacramento Kings,Away,-10.5,31,20.5,W,Favorite,136,105
+Sacramento Kings,2025-12-11,Denver Nuggets,Home,10.5,-31,-20.5,L,Underdog,105,136
+New York Knicks,2025-10-28,Milwaukee Bucks,Away,-2.5,-10,-12.5,L,Favorite,111,121
+Milwaukee Bucks,2025-10-28,New York Knicks,Home,2.5,10,12.5,W,Underdog,121,111
+Brooklyn Nets,2025-12-23,Philadelphia 76ers,Away,9.5,8,17.5,W,Underdog,114,106
+Philadelphia 76ers,2025-12-23,Brooklyn Nets,Home,-9.5,-8,-17.5,L,Favorite,106,114
+Sacramento Kings,2025-12-30,LA Clippers,Away,10.5,-41,-30.5,L,Underdog,90,131
+LA Clippers,2025-12-30,Sacramento Kings,Home,-10.5,41,30.5,W,Favorite,131,90
+Indiana Pacers,2025-12-22,Boston Celtics,Away,11.5,-8,3.5,W,Underdog,95,103
+Boston Celtics,2025-12-22,Indiana Pacers,Home,-11.5,8,-3.5,L,Favorite,103,95
+Denver Nuggets,2025-11-21,Houston Rockets,Away,2.5,3,5.5,W,Underdog,112,109
+Houston Rockets,2025-11-21,Denver Nuggets,Home,-2.5,-3,-5.5,L,Favorite,109,112
+Atlanta Hawks,2026-01-02,New York Knicks,Away,5.5,12,17.5,W,Underdog,111,99
+New York Knicks,2026-01-02,Atlanta Hawks,Home,-5.5,-12,-17.5,L,Favorite,99,111
+Detroit Pistons,2025-12-28,LA Clippers,Away,-3.5,-13,-16.5,L,Favorite,99,112
+LA Clippers,2025-12-28,Detroit Pistons,Home,3.5,13,16.5,W,Underdog,112,99
+Washington Wizards,2025-12-02,Philadelphia 76ers,Away,13.5,-19,-5.5,L,Underdog,102,121
+Philadelphia 76ers,2025-12-02,Washington Wizards,Home,-13.5,19,5.5,W,Favorite,121,102
+Philadelphia 76ers,2025-11-05,Cleveland Cavaliers,Away,11.5,-11,0.5,W,Underdog,121,132
+Cleveland Cavaliers,2025-11-05,Philadelphia 76ers,Home,-11.5,11,-0.5,L,Favorite,132,121
+Memphis Grizzlies,2025-11-28,LA Clippers,Away,6.5,5,11.5,W,Underdog,112,107
+LA Clippers,2025-11-28,Memphis Grizzlies,Home,-6.5,-5,-11.5,L,Favorite,107,112
+San Antonio Spurs,2025-11-30,Minnesota Timberwolves,Away,4.5,-13,-8.5,L,Underdog,112,125
+Minnesota Timberwolves,2025-11-30,San Antonio Spurs,Home,-4.5,13,8.5,W,Favorite,125,112
+Boston Celtics,2025-12-20,Toronto Raptors,Away,1.5,16,17.5,W,Underdog,112,96
+Toronto Raptors,2025-12-20,Boston Celtics,Home,-1.5,-16,-17.5,L,Favorite,96,112
+Charlotte Hornets,2026-01-02,Milwaukee Bucks,Away,5.5,-1,4.5,W,Underdog,121,122
+Milwaukee Bucks,2026-01-02,Charlotte Hornets,Home,-5.5,1,-4.5,L,Favorite,122,121
+Philadelphia 76ers,2025-12-28,Oklahoma City Thunder,Away,15.5,-25,-9.5,L,Underdog,104,129
+Oklahoma City Thunder,2025-12-28,Philadelphia 76ers,Home,-15.5,25,9.5,W,Favorite,129,104
+Chicago Bulls,2025-11-07,Milwaukee Bucks,Away,4.5,-16,-11.5,L,Underdog,110,126
+Milwaukee Bucks,2025-11-07,Chicago Bulls,Home,-4.5,16,11.5,W,Favorite,126,110
+Houston Rockets,2025-12-21,Sacramento Kings,Away,-12.5,-1,-13.5,L,Favorite,124,125
+Sacramento Kings,2025-12-21,Houston Rockets,Home,12.5,1,13.5,W,Underdog,125,124
+Dallas Mavericks,2025-11-03,Houston Rockets,Away,12.5,-8,4.5,W,Underdog,102,110
+Houston Rockets,2025-11-03,Dallas Mavericks,Home,-12.5,8,-4.5,L,Favorite,110,102
+Detroit Pistons,2025-10-22,Chicago Bulls,Away,-3.5,-4,-7.5,L,Favorite,111,115
+Chicago Bulls,2025-10-22,Detroit Pistons,Home,3.5,4,7.5,W,Underdog,115,111
+Indiana Pacers,2025-11-09,Golden State Warriors,Away,12.5,-31,-18.5,L,Underdog,83,114
+Golden State Warriors,2025-11-09,Indiana Pacers,Home,-12.5,31,18.5,W,Favorite,114,83
+Milwaukee Bucks,2025-11-17,Cleveland Cavaliers,Away,5.5,-12,-6.5,L,Underdog,106,118
+Cleveland Cavaliers,2025-11-17,Milwaukee Bucks,Home,-5.5,12,6.5,W,Favorite,118,106
+Minnesota Timberwolves,2025-11-03,Brooklyn Nets,Away,-9.5,16,6.5,W,Favorite,125,109
+Brooklyn Nets,2025-11-03,Minnesota Timberwolves,Home,9.5,-16,-6.5,L,Underdog,109,125
+Charlotte Hornets,2025-10-25,Philadelphia 76ers,Away,4.5,-4,0.5,W,Underdog,121,125
+Philadelphia 76ers,2025-10-25,Charlotte Hornets,Home,-4.5,4,-0.5,L,Favorite,125,121
+Orlando Magic,2025-11-12,New York Knicks,Away,3.5,17,20.5,W,Underdog,124,107
+New York Knicks,2025-11-12,Orlando Magic,Home,-3.5,-17,-20.5,L,Favorite,107,124
+Los Angeles Lakers,2025-10-31,Memphis Grizzlies,Away,-2.5,5,2.5,W,Favorite,117,112
+Memphis Grizzlies,2025-10-31,Los Angeles Lakers,Home,2.5,-5,-2.5,L,Underdog,112,117
+Dallas Mavericks,2025-12-05,Oklahoma City Thunder,Away,15.5,-21,-5.5,L,Underdog,111,132
+Oklahoma City Thunder,2025-12-05,Dallas Mavericks,Home,-15.5,21,5.5,W,Favorite,132,111
+Boston Celtics,2025-11-07,Orlando Magic,Away,3.5,-13,-9.5,L,Underdog,110,123
+Orlando Magic,2025-11-07,Boston Celtics,Home,-3.5,13,9.5,W,Favorite,123,110
+Brooklyn Nets,2025-10-26,San Antonio Spurs,Away,10.5,-11,-0.5,L,Underdog,107,118
+San Antonio Spurs,2025-10-26,Brooklyn Nets,Home,-10.5,11,0.5,W,Favorite,118,107
+Boston Celtics,2025-12-28,Portland Trail Blazers,Away,-7.5,-6,-13.5,L,Favorite,108,114
+Portland Trail Blazers,2025-12-28,Boston Celtics,Home,7.5,6,13.5,W,Underdog,114,108
+LA Clippers,2025-11-16,Boston Celtics,Away,5.5,-3,2.5,W,Underdog,118,121
+Boston Celtics,2025-11-16,LA Clippers,Home,-5.5,3,-2.5,L,Favorite,121,118
+Phoenix Suns,2025-12-27,New Orleans Pelicans,Away,-4.5,9,4.5,W,Favorite,123,114
+New Orleans Pelicans,2025-12-27,Phoenix Suns,Home,4.5,-9,-4.5,L,Underdog,114,123
+Dallas Mavericks,2025-12-25,Golden State Warriors,Away,7.5,-10,-2.5,L,Underdog,116,126
+Golden State Warriors,2025-12-25,Dallas Mavericks,Home,-7.5,10,2.5,W,Favorite,126,116
+Brooklyn Nets,2025-11-16,Washington Wizards,Away,2.5,23,25.5,W,Underdog,129,106
+Washington Wizards,2025-11-16,Brooklyn Nets,Home,-2.5,-23,-25.5,L,Favorite,106,129
+Toronto Raptors,2025-12-15,Miami Heat,Away,5.5,10,15.5,W,Underdog,106,96
+Miami Heat,2025-12-15,Toronto Raptors,Home,-5.5,-10,-15.5,L,Favorite,96,106
+Charlotte Hornets,2025-11-23,Atlanta Hawks,Away,7.5,-3,4.5,W,Underdog,110,113
+Atlanta Hawks,2025-11-23,Charlotte Hornets,Home,-7.5,3,-4.5,L,Favorite,113,110
+Golden State Warriors,2025-11-07,Denver Nuggets,Away,9.5,-25,-15.5,L,Underdog,104,129
+Denver Nuggets,2025-11-07,Golden State Warriors,Home,-9.5,25,15.5,W,Favorite,129,104
+Milwaukee Bucks,2025-11-26,Miami Heat,Away,10.5,-3,7.5,W,Underdog,103,106
+Miami Heat,2025-11-26,Milwaukee Bucks,Home,-10.5,3,-7.5,L,Favorite,106,103
+Miami Heat,2025-10-24,Memphis Grizzlies,Away,3.5,32,35.5,W,Underdog,146,114
+Memphis Grizzlies,2025-10-24,Miami Heat,Home,-3.5,-32,-35.5,L,Favorite,114,146
+San Antonio Spurs,2025-12-03,Orlando Magic,Away,8.5,2,10.5,W,Underdog,114,112
+Orlando Magic,2025-12-03,San Antonio Spurs,Home,-8.5,-2,-10.5,L,Favorite,112,114
+Phoenix Suns,2025-12-10,Oklahoma City Thunder,Away,15.5,-49,-33.5,L,Underdog,89,138
+Oklahoma City Thunder,2025-12-10,Phoenix Suns,Home,-15.5,49,33.5,W,Favorite,138,89
+Golden State Warriors,2025-11-01,Indiana Pacers,Away,-10.5,-5,-15.5,L,Favorite,109,114
+Indiana Pacers,2025-11-01,Golden State Warriors,Home,10.5,5,15.5,W,Underdog,114,109
+Brooklyn Nets,2025-12-03,Chicago Bulls,Away,7.5,10,17.5,W,Underdog,113,103
+Chicago Bulls,2025-12-03,Brooklyn Nets,Home,-7.5,-10,-17.5,L,Favorite,103,113
+Denver Nuggets,2025-10-23,Golden State Warriors,Away,1.5,-6,-4.5,L,Underdog,131,137
+Golden State Warriors,2025-10-23,Denver Nuggets,Home,-1.5,6,4.5,W,Favorite,137,131
+Boston Celtics,2026-01-03,LA Clippers,Away,1.5,31,32.5,W,Underdog,146,115
+LA Clippers,2026-01-03,Boston Celtics,Home,-1.5,-31,-32.5,L,Favorite,115,146
+Minnesota Timberwolves,2025-11-21,Phoenix Suns,Away,-4.5,-1,-5.5,L,Favorite,113,114
+Phoenix Suns,2025-11-21,Minnesota Timberwolves,Home,4.5,1,5.5,W,Underdog,114,113
+Denver Nuggets,2025-12-31,Toronto Raptors,Away,7.5,3,10.5,W,Underdog,106,103
+Toronto Raptors,2025-12-31,Denver Nuggets,Home,-7.5,-3,-10.5,L,Favorite,103,106
+Boston Celtics,2025-11-30,Cleveland Cavaliers,Away,7.5,2,9.5,W,Underdog,117,115
+Cleveland Cavaliers,2025-11-30,Boston Celtics,Home,-7.5,-2,-9.5,L,Favorite,115,117
+Cleveland Cavaliers,2025-12-01,Indiana Pacers,Away,-4.5,16,11.5,W,Favorite,135,119
+Indiana Pacers,2025-12-01,Cleveland Cavaliers,Home,4.5,-16,-11.5,L,Underdog,119,135
+Brooklyn Nets,2025-11-05,Indiana Pacers,Away,6.5,9,15.5,W,Underdog,112,103
+Indiana Pacers,2025-11-05,Brooklyn Nets,Home,-6.5,-9,-15.5,L,Favorite,103,112
+Dallas Mavericks,2025-11-08,Washington Wizards,Away,-4.5,6,1.5,W,Favorite,111,105
+Washington Wizards,2025-11-08,Dallas Mavericks,Home,4.5,-6,-1.5,L,Underdog,105,111
+Oklahoma City Thunder,2025-11-30,Portland Trail Blazers,Away,-11.5,8,-3.5,L,Favorite,123,115
+Portland Trail Blazers,2025-11-30,Oklahoma City Thunder,Home,11.5,-8,3.5,W,Underdog,115,123
+New Orleans Pelicans,2025-11-29,Golden State Warriors,Away,9.5,-8,1.5,W,Underdog,96,104
+Golden State Warriors,2025-11-29,New Orleans Pelicans,Home,-9.5,8,-1.5,L,Favorite,104,96
+New York Knicks,2025-11-22,Orlando Magic,Away,1.5,-12,-10.5,L,Underdog,121,133
+Orlando Magic,2025-11-22,New York Knicks,Home,-1.5,12,10.5,W,Favorite,133,121
+New Orleans Pelicans,2025-12-14,Chicago Bulls,Away,4.5,10,14.5,W,Underdog,114,104
+Chicago Bulls,2025-12-14,New Orleans Pelicans,Home,-4.5,-10,-14.5,L,Favorite,104,114
+Atlanta Hawks,2025-11-25,Washington Wizards,Away,-10.5,-19,-29.5,L,Favorite,113,132
+Washington Wizards,2025-11-25,Atlanta Hawks,Home,10.5,19,29.5,W,Underdog,132,113
+Oklahoma City Thunder,2025-12-07,Utah Jazz,Away,-11.5,30,18.5,W,Favorite,131,101
+Utah Jazz,2025-12-07,Oklahoma City Thunder,Home,11.5,-30,-18.5,L,Underdog,101,131
+Utah Jazz,2025-11-18,Los Angeles Lakers,Away,13.5,-14,-0.5,L,Underdog,126,140
+Los Angeles Lakers,2025-11-18,Utah Jazz,Home,-13.5,14,0.5,W,Favorite,140,126
+Milwaukee Bucks,2025-12-29,Charlotte Hornets,Away,-3.5,10,6.5,W,Favorite,123,113
+Charlotte Hornets,2025-12-29,Milwaukee Bucks,Home,3.5,-10,-6.5,L,Underdog,113,123
+Boston Celtics,2025-12-26,Indiana Pacers,Away,-8.5,18,9.5,W,Favorite,140,122
+Indiana Pacers,2025-12-26,Boston Celtics,Home,8.5,-18,-9.5,L,Underdog,122,140
+San Antonio Spurs,2025-11-26,Portland Trail Blazers,Away,1.5,13,14.5,W,Underdog,115,102
+Portland Trail Blazers,2025-11-26,San Antonio Spurs,Home,-1.5,-13,-14.5,L,Favorite,102,115
+Milwaukee Bucks,2025-12-14,Brooklyn Nets,Away,-1.5,-45,-46.5,L,Favorite,82,127
+Brooklyn Nets,2025-12-14,Milwaukee Bucks,Home,1.5,45,46.5,W,Underdog,127,82
+San Antonio Spurs,2025-12-19,Atlanta Hawks,Away,-3.5,28,24.5,W,Favorite,126,98
+Atlanta Hawks,2025-12-19,San Antonio Spurs,Home,3.5,-28,-24.5,L,Underdog,98,126
+Sacramento Kings,2025-11-22,Denver Nuggets,Away,10.5,5,15.5,W,Underdog,128,123
+Denver Nuggets,2025-11-22,Sacramento Kings,Home,-10.5,-5,-15.5,L,Favorite,123,128
+LA Clippers,2025-12-03,Atlanta Hawks,Away,1.5,23,24.5,W,Underdog,115,92
+Atlanta Hawks,2025-12-03,LA Clippers,Home,-1.5,-23,-24.5,L,Favorite,92,115
+Milwaukee Bucks,2025-11-12,Charlotte Hornets,Away,-2.5,-11,-13.5,L,Favorite,100,111
+Charlotte Hornets,2025-11-12,Milwaukee Bucks,Home,2.5,11,13.5,W,Underdog,111,100
+Chicago Bulls,2025-12-21,Atlanta Hawks,Away,4.5,2,6.5,W,Underdog,152,150
+Atlanta Hawks,2025-12-21,Chicago Bulls,Home,-4.5,-2,-6.5,L,Favorite,150,152
+Phoenix Suns,2025-11-28,Oklahoma City Thunder,Away,14.5,-4,10.5,W,Underdog,119,123
+Oklahoma City Thunder,2025-11-28,Phoenix Suns,Home,-14.5,4,-10.5,L,Favorite,123,119
+Philadelphia 76ers,2026-01-03,New York Knicks,Away,3.5,11,14.5,W,Underdog,130,119
+New York Knicks,2026-01-03,Philadelphia 76ers,Home,-3.5,-11,-14.5,L,Favorite,119,130
+Chicago Bulls,2025-11-29,Indiana Pacers,Away,-2.5,-2,-4.5,L,Favorite,101,103
+Indiana Pacers,2025-11-29,Chicago Bulls,Home,2.5,2,4.5,W,Underdog,103,101
+Milwaukee Bucks,2025-12-01,Washington Wizards,Away,-10.5,-3,-13.5,L,Favorite,126,129
+Washington Wizards,2025-12-01,Milwaukee Bucks,Home,10.5,3,13.5,W,Underdog,129,126
+Detroit Pistons,2025-11-07,Brooklyn Nets,Away,-10.5,18,7.5,W,Favorite,125,107
+Brooklyn Nets,2025-11-07,Detroit Pistons,Home,10.5,-18,-7.5,L,Underdog,107,125
+Cleveland Cavaliers,2025-12-12,Washington Wizards,Away,-16.5,4,-12.5,L,Favorite,130,126
+Washington Wizards,2025-12-12,Cleveland Cavaliers,Home,16.5,-4,12.5,W,Underdog,126,130
+Memphis Grizzlies,2025-10-27,Golden State Warriors,Away,8.5,-13,-4.5,L,Underdog,118,131
+Golden State Warriors,2025-10-27,Memphis Grizzlies,Home,-8.5,13,4.5,W,Favorite,131,118
+Orlando Magic,2025-11-25,Philadelphia 76ers,Away,-4.5,41,36.5,W,Favorite,144,103
+Philadelphia 76ers,2025-11-25,Orlando Magic,Home,4.5,-41,-36.5,L,Underdog,103,144
+Sacramento Kings,2025-12-06,Miami Heat,Away,8.5,16,24.5,W,Underdog,127,111
+Miami Heat,2025-12-06,Sacramento Kings,Home,-8.5,-16,-24.5,L,Favorite,111,127
+Los Angeles Lakers,2025-10-26,Sacramento Kings,Away,3.5,7,10.5,W,Underdog,127,120
+Sacramento Kings,2025-10-26,Los Angeles Lakers,Home,-3.5,-7,-10.5,L,Favorite,120,127
+New York Knicks,2025-12-13,Orlando Magic,Away,-4.5,12,7.5,W,Favorite,132,120
+Orlando Magic,2025-12-13,New York Knicks,Home,4.5,-12,-7.5,L,Underdog,120,132
+Denver Nuggets,2025-11-24,Memphis Grizzlies,Away,-6.5,10,3.5,W,Favorite,125,115
+Memphis Grizzlies,2025-11-24,Denver Nuggets,Home,6.5,-10,-3.5,L,Underdog,115,125
+Sacramento Kings,2025-12-18,Portland Trail Blazers,Away,8.5,-1,7.5,W,Underdog,133,134
+Portland Trail Blazers,2025-12-18,Sacramento Kings,Home,-8.5,1,-7.5,L,Favorite,134,133
+Indiana Pacers,2025-11-17,Detroit Pistons,Away,11.5,-15,-3.5,L,Underdog,112,127
+Detroit Pistons,2025-11-17,Indiana Pacers,Home,-11.5,15,3.5,W,Favorite,127,112
+Toronto Raptors,2025-10-26,Dallas Mavericks,Away,-1.5,-10,-11.5,L,Favorite,129,139
+Dallas Mavericks,2025-10-26,Toronto Raptors,Home,1.5,10,11.5,W,Underdog,139,129
+Minnesota Timberwolves,2025-12-31,Atlanta Hawks,Away,-5.5,-24,-29.5,L,Favorite,102,126
+Atlanta Hawks,2025-12-31,Minnesota Timberwolves,Home,5.5,24,29.5,W,Underdog,126,102
+Utah Jazz,2025-10-31,Phoenix Suns,Away,3.5,-22,-18.5,L,Underdog,96,118
+Phoenix Suns,2025-10-31,Utah Jazz,Home,-3.5,22,18.5,W,Favorite,118,96
+New Orleans Pelicans,2025-10-22,Memphis Grizzlies,Away,4.5,-6,-1.5,L,Underdog,122,128
+Memphis Grizzlies,2025-10-22,New Orleans Pelicans,Home,-4.5,6,1.5,W,Favorite,128,122
+Minnesota Timberwolves,2025-12-02,New Orleans Pelicans,Away,-12.5,7,-5.5,L,Favorite,149,142
+New Orleans Pelicans,2025-12-02,Minnesota Timberwolves,Home,12.5,-7,5.5,W,Underdog,142,149
+New York Knicks,2025-12-02,Boston Celtics,Away,-1.5,-6,-7.5,L,Favorite,117,123
+Boston Celtics,2025-12-02,New York Knicks,Home,1.5,6,7.5,W,Underdog,123,117
+Cleveland Cavaliers,2025-12-17,Chicago Bulls,Away,-5.5,-16,-21.5,L,Favorite,111,127
+Chicago Bulls,2025-12-17,Cleveland Cavaliers,Home,5.5,16,21.5,W,Underdog,127,111
+Cleveland Cavaliers,2025-10-22,New York Knicks,Away,-1.5,-8,-9.5,L,Favorite,111,119
+New York Knicks,2025-10-22,Cleveland Cavaliers,Home,1.5,8,9.5,W,Underdog,119,111
+Denver Nuggets,2025-12-03,Indiana Pacers,Away,-8.5,15,6.5,W,Favorite,135,120
+Indiana Pacers,2025-12-03,Denver Nuggets,Home,8.5,-15,-6.5,L,Underdog,120,135
+Portland Trail Blazers,2025-11-16,Dallas Mavericks,Away,-3.5,-5,-8.5,L,Favorite,133,138
+Dallas Mavericks,2025-11-16,Portland Trail Blazers,Home,3.5,5,8.5,W,Underdog,138,133
+Charlotte Hornets,2025-11-14,Milwaukee Bucks,Away,9.5,-13,-3.5,L,Underdog,134,147
+Milwaukee Bucks,2025-11-14,Charlotte Hornets,Home,-9.5,13,3.5,W,Favorite,147,134
+Oklahoma City Thunder,2025-11-21,Utah Jazz,Away,-16.5,32,15.5,W,Favorite,144,112
+Utah Jazz,2025-11-21,Oklahoma City Thunder,Home,16.5,-32,-15.5,L,Underdog,112,144
+Sacramento Kings,2025-12-28,Los Angeles Lakers,Away,12.5,-24,-11.5,L,Underdog,101,125
+Los Angeles Lakers,2025-12-28,Sacramento Kings,Home,-12.5,24,11.5,W,Favorite,125,101
+Orlando Magic,2025-12-07,New York Knicks,Away,1.5,-6,-4.5,L,Underdog,100,106
+New York Knicks,2025-12-07,Orlando Magic,Home,-1.5,6,4.5,W,Favorite,106,100
+Miami Heat,2025-12-05,Orlando Magic,Away,6.5,-1,5.5,W,Underdog,105,106
+Orlando Magic,2025-12-05,Miami Heat,Home,-6.5,1,-5.5,L,Favorite,106,105
+Houston Rockets,2025-12-23,LA Clippers,Away,-7.5,-20,-27.5,L,Favorite,108,128
+LA Clippers,2025-12-23,Houston Rockets,Home,7.5,20,27.5,W,Underdog,128,108
+Orlando Magic,2025-11-04,Atlanta Hawks,Away,-3.5,-15,-18.5,L,Favorite,112,127
+Atlanta Hawks,2025-11-04,Orlando Magic,Home,3.5,15,18.5,W,Underdog,127,112
+San Antonio Spurs,2025-12-21,Washington Wizards,Away,-15.5,11,-4.5,L,Favorite,124,113
+Washington Wizards,2025-12-21,San Antonio Spurs,Home,15.5,-11,4.5,W,Underdog,113,124
+Phoenix Suns,2025-12-31,Cleveland Cavaliers,Away,6.5,-16,-9.5,L,Underdog,113,129
+Cleveland Cavaliers,2025-12-31,Phoenix Suns,Home,-6.5,16,9.5,W,Favorite,129,113
+Cleveland Cavaliers,2025-10-24,Brooklyn Nets,Away,-11.5,7,-4.5,L,Favorite,131,124
+Brooklyn Nets,2025-10-24,Cleveland Cavaliers,Home,11.5,-7,4.5,W,Underdog,124,131
+Dallas Mavericks,2025-12-29,Portland Trail Blazers,Away,2.5,-3,-0.5,L,Underdog,122,125
+Portland Trail Blazers,2025-12-29,Dallas Mavericks,Home,-2.5,3,0.5,W,Favorite,125,122
+Miami Heat,2025-11-23,Philadelphia 76ers,Away,-1.5,10,8.5,W,Favorite,127,117
+Philadelphia 76ers,2025-11-23,Miami Heat,Home,1.5,-10,-8.5,L,Underdog,117,127
+New Orleans Pelicans,2025-12-31,Chicago Bulls,Away,1.5,-16,-14.5,L,Underdog,118,134
+Chicago Bulls,2025-12-31,New Orleans Pelicans,Home,-1.5,16,14.5,W,Favorite,134,118
+Brooklyn Nets,2025-11-14,Orlando Magic,Away,14.5,-7,7.5,W,Underdog,98,105
+Orlando Magic,2025-11-14,Brooklyn Nets,Home,-14.5,7,-7.5,L,Favorite,105,98
+New York Knicks,2025-11-26,Charlotte Hornets,Away,-6.5,28,21.5,W,Favorite,129,101
+Charlotte Hornets,2025-11-26,New York Knicks,Home,6.5,-28,-21.5,L,Underdog,101,129
+New York Knicks,2025-11-17,Miami Heat,Away,1.5,-2,-0.5,L,Underdog,113,115
+Miami Heat,2025-11-17,New York Knicks,Home,-1.5,2,0.5,W,Favorite,115,113
+Philadelphia 76ers,2025-12-14,Atlanta Hawks,Away,4.5,-3,1.5,W,Underdog,117,120
+Atlanta Hawks,2025-12-14,Philadelphia 76ers,Home,-4.5,3,-1.5,L,Favorite,120,117
+New Orleans Pelicans,2025-11-05,Dallas Mavericks,Away,8.5,2,10.5,W,Underdog,101,99
+Dallas Mavericks,2025-11-05,New Orleans Pelicans,Home,-8.5,-2,-10.5,L,Favorite,99,101
+Houston Rockets,2025-11-01,Boston Celtics,Away,-5.5,27,21.5,W,Favorite,128,101
+Boston Celtics,2025-11-01,Houston Rockets,Home,5.5,-27,-21.5,L,Underdog,101,128
+Boston Celtics,2025-11-18,Brooklyn Nets,Away,-11.5,14,2.5,W,Favorite,113,99
+Brooklyn Nets,2025-11-18,Boston Celtics,Home,11.5,-14,-2.5,L,Underdog,99,113
+Miami Heat,2025-10-22,Orlando Magic,Away,8.5,-4,4.5,W,Underdog,121,125
+Orlando Magic,2025-10-22,Miami Heat,Home,-8.5,4,-4.5,L,Favorite,125,121
+Utah Jazz,2025-11-05,Detroit Pistons,Away,9.5,-11,-1.5,L,Underdog,103,114
+Detroit Pistons,2025-11-05,Utah Jazz,Home,-9.5,11,1.5,W,Favorite,114,103
+Indiana Pacers,2025-12-29,Houston Rockets,Away,13.5,-7,6.5,W,Underdog,119,126
+Houston Rockets,2025-12-29,Indiana Pacers,Home,-13.5,7,-6.5,L,Favorite,126,119
+LA Clippers,2025-11-25,Los Angeles Lakers,Away,6.5,-17,-10.5,L,Underdog,118,135
+Los Angeles Lakers,2025-11-25,LA Clippers,Home,-6.5,17,10.5,W,Favorite,135,118
+Orlando Magic,2025-10-30,Charlotte Hornets,Away,-3.5,16,12.5,W,Favorite,123,107
+Charlotte Hornets,2025-10-30,Orlando Magic,Home,3.5,-16,-12.5,L,Underdog,107,123
+Chicago Bulls,2025-12-01,Orlando Magic,Away,9.5,-5,4.5,W,Underdog,120,125
+Orlando Magic,2025-12-01,Chicago Bulls,Home,-9.5,5,-4.5,L,Favorite,125,120
+LA Clippers,2025-11-14,Dallas Mavericks,Away,-3.5,6,2.5,W,Favorite,133,127
+Dallas Mavericks,2025-11-14,LA Clippers,Home,3.5,-6,-2.5,L,Underdog,127,133
+Memphis Grizzlies,2026-01-02,Los Angeles Lakers,Away,4.5,-7,-2.5,L,Underdog,121,128
+Los Angeles Lakers,2026-01-02,Memphis Grizzlies,Home,-4.5,7,2.5,W,Favorite,128,121
+Golden State Warriors,2025-12-18,Phoenix Suns,Away,-1.5,-1,-2.5,L,Favorite,98,99
+Phoenix Suns,2025-12-18,Golden State Warriors,Home,1.5,1,2.5,W,Underdog,99,98
+Washington Wizards,2025-10-24,Dallas Mavericks,Away,9.5,10,19.5,W,Underdog,117,107
+Dallas Mavericks,2025-10-24,Washington Wizards,Home,-9.5,-10,-19.5,L,Favorite,107,117
+Houston Rockets,2025-10-21,Oklahoma City Thunder,Away,6.5,-1,5.5,W,Underdog,124,125
+Oklahoma City Thunder,2025-10-21,Houston Rockets,Home,-6.5,1,-5.5,L,Favorite,125,124
+Cleveland Cavaliers,2025-11-10,Miami Heat,Away,-7.5,-2,-9.5,L,Favorite,138,140
+Miami Heat,2025-11-10,Cleveland Cavaliers,Home,7.5,2,9.5,W,Underdog,140,138
+Oklahoma City Thunder,2025-11-17,New Orleans Pelicans,Away,-18.5,17,-1.5,L,Favorite,126,109
+New Orleans Pelicans,2025-11-17,Oklahoma City Thunder,Home,18.5,-17,1.5,W,Underdog,109,126
+Portland Trail Blazers,2025-12-03,Cleveland Cavaliers,Away,10.5,12,22.5,W,Underdog,122,110
+Cleveland Cavaliers,2025-12-03,Portland Trail Blazers,Home,-10.5,-12,-22.5,L,Favorite,110,122
+Houston Rockets,2025-11-24,Phoenix Suns,Away,-6.5,22,15.5,W,Favorite,114,92
+Phoenix Suns,2025-11-24,Houston Rockets,Home,6.5,-22,-15.5,L,Underdog,92,114
+Toronto Raptors,2025-11-07,Atlanta Hawks,Away,2.5,12,14.5,W,Underdog,109,97
+Atlanta Hawks,2025-11-07,Toronto Raptors,Home,-2.5,-12,-14.5,L,Favorite,97,109
+Boston Celtics,2025-12-11,Milwaukee Bucks,Away,-9.5,-15,-24.5,L,Favorite,101,116
+Milwaukee Bucks,2025-12-11,Boston Celtics,Home,9.5,15,24.5,W,Underdog,116,101
+Atlanta Hawks,2025-10-29,Brooklyn Nets,Away,-8.5,5,-3.5,L,Favorite,117,112
+Brooklyn Nets,2025-10-29,Atlanta Hawks,Home,8.5,-5,3.5,W,Underdog,112,117
+Indiana Pacers,2025-10-29,Dallas Mavericks,Away,5.5,-2,3.5,W,Underdog,105,107
+Dallas Mavericks,2025-10-29,Indiana Pacers,Home,-5.5,2,-3.5,L,Favorite,107,105
+Memphis Grizzlies,2025-12-28,Washington Wizards,Away,-8.5,-4,-12.5,L,Favorite,112,116
+Washington Wizards,2025-12-28,Memphis Grizzlies,Home,8.5,4,12.5,W,Underdog,116,112
+Minnesota Timberwolves,2026-01-03,Miami Heat,Away,-2.5,10,7.5,W,Favorite,125,115
+Miami Heat,2026-01-03,Minnesota Timberwolves,Home,2.5,-10,-7.5,L,Underdog,115,125
+Los Angeles Lakers,2025-11-03,Portland Trail Blazers,Away,9.5,8,17.5,W,Underdog,123,115
+Portland Trail Blazers,2025-11-03,Los Angeles Lakers,Home,-9.5,-8,-17.5,L,Favorite,115,123
+Los Angeles Lakers,2025-11-08,Atlanta Hawks,Away,-5.5,-20,-25.5,L,Favorite,102,122
+Atlanta Hawks,2025-11-08,Los Angeles Lakers,Home,5.5,20,25.5,W,Underdog,122,102
+Charlotte Hornets,2025-11-19,Indiana Pacers,Away,-1.5,-9,-10.5,L,Favorite,118,127
+Indiana Pacers,2025-11-19,Charlotte Hornets,Home,1.5,9,10.5,W,Underdog,127,118
+New Orleans Pelicans,2025-10-31,LA Clippers,Away,10.5,-2,8.5,W,Underdog,124,126
+LA Clippers,2025-10-31,New Orleans Pelicans,Home,-10.5,2,-8.5,L,Favorite,126,124
+Phoenix Suns,2025-11-04,Golden State Warriors,Away,10.5,-11,-0.5,L,Underdog,107,118
+Golden State Warriors,2025-11-04,Phoenix Suns,Home,-10.5,11,0.5,W,Favorite,118,107
+Denver Nuggets,2025-12-27,Orlando Magic,Away,-3.5,-1,-4.5,L,Favorite,126,127
+Orlando Magic,2025-12-27,Denver Nuggets,Home,3.5,1,4.5,W,Underdog,127,126
+Utah Jazz,2025-11-02,Charlotte Hornets,Away,-1.5,-23,-24.5,L,Favorite,103,126
+Charlotte Hornets,2025-11-02,Utah Jazz,Home,1.5,23,24.5,W,Underdog,126,103
+Charlotte Hornets,2025-12-26,Orlando Magic,Away,5.5,15,20.5,W,Underdog,120,105
+Orlando Magic,2025-12-26,Charlotte Hornets,Home,-5.5,-15,-20.5,L,Favorite,105,120
+Washington Wizards,2025-12-14,Indiana Pacers,Away,10.5,19,29.5,W,Underdog,108,89
+Indiana Pacers,2025-12-14,Washington Wizards,Home,-10.5,-19,-29.5,L,Favorite,89,108
+New York Knicks,2025-12-29,New Orleans Pelicans,Away,-8.5,5,-3.5,L,Favorite,130,125
+New Orleans Pelicans,2025-12-29,New York Knicks,Home,8.5,-5,3.5,W,Underdog,125,130
+Utah Jazz,2025-11-24,Golden State Warriors,Away,13.5,-17,-3.5,L,Underdog,117,134
+Golden State Warriors,2025-11-24,Utah Jazz,Home,-13.5,17,3.5,W,Favorite,134,117
+New York Knicks,2025-11-24,Brooklyn Nets,Away,-12.5,13,0.5,W,Favorite,113,100
+Brooklyn Nets,2025-11-24,New York Knicks,Home,12.5,-13,-0.5,L,Underdog,100,113
+Phoenix Suns,2025-12-29,Washington Wizards,Away,-10.5,14,3.5,W,Favorite,115,101
+Washington Wizards,2025-12-29,Phoenix Suns,Home,10.5,-14,-3.5,L,Underdog,101,115
+San Antonio Spurs,2025-11-02,Phoenix Suns,Away,-5.5,-12,-17.5,L,Favorite,118,130
+Phoenix Suns,2025-11-02,San Antonio Spurs,Home,5.5,12,17.5,W,Underdog,130,118
+New Orleans Pelicans,2025-12-23,Cleveland Cavaliers,Away,9.5,-23,-13.5,L,Underdog,118,141
+Cleveland Cavaliers,2025-12-23,New Orleans Pelicans,Home,-9.5,23,13.5,W,Favorite,141,118
+Houston Rockets,2025-11-26,Golden State Warriors,Away,3.5,4,7.5,W,Underdog,104,100
+Golden State Warriors,2025-11-26,Houston Rockets,Home,-3.5,-4,-7.5,L,Favorite,100,104
+Miami Heat,2025-12-26,Atlanta Hawks,Away,2.5,15,17.5,W,Underdog,126,111
+Atlanta Hawks,2025-12-26,Miami Heat,Home,-2.5,-15,-17.5,L,Favorite,111,126
+Orlando Magic,2026-01-02,Chicago Bulls,Away,-5.5,-7,-12.5,L,Favorite,114,121
+Chicago Bulls,2026-01-02,Orlando Magic,Home,5.5,7,12.5,W,Underdog,121,114
+Memphis Grizzlies,2025-12-02,San Antonio Spurs,Away,5.5,-7,-1.5,L,Underdog,119,126
+San Antonio Spurs,2025-12-02,Memphis Grizzlies,Home,-5.5,7,1.5,W,Favorite,126,119
+Atlanta Hawks,2025-12-18,Charlotte Hornets,Away,-4.5,-7,-11.5,L,Favorite,126,133
+Charlotte Hornets,2025-12-18,Atlanta Hawks,Home,4.5,7,11.5,W,Underdog,133,126
+Washington Wizards,2025-11-12,Houston Rockets,Away,16.5,-23,-6.5,L,Underdog,112,135
+Houston Rockets,2025-11-12,Washington Wizards,Home,-16.5,23,6.5,W,Favorite,135,112
+Toronto Raptors,2025-10-22,Atlanta Hawks,Away,5.5,20,25.5,W,Underdog,138,118
+Atlanta Hawks,2025-10-22,Toronto Raptors,Home,-5.5,-20,-25.5,L,Favorite,118,138
+Charlotte Hornets,2025-11-04,New Orleans Pelicans,Away,2.5,-4,-1.5,L,Underdog,112,116
+New Orleans Pelicans,2025-11-04,Charlotte Hornets,Home,-2.5,4,1.5,W,Favorite,116,112
+Indiana Pacers,2025-11-08,Denver Nuggets,Away,9.5,-17,-7.5,L,Underdog,100,117
+Denver Nuggets,2025-11-08,Indiana Pacers,Home,-9.5,17,7.5,W,Favorite,117,100
+Denver Nuggets,2025-11-15,Minnesota Timberwolves,Away,-1.5,11,9.5,W,Favorite,123,112
+Minnesota Timberwolves,2025-11-15,Denver Nuggets,Home,1.5,-11,-9.5,L,Underdog,112,123
+Houston Rockets,2026-01-01,Brooklyn Nets,Away,-13.5,24,10.5,W,Favorite,120,96
+Brooklyn Nets,2026-01-01,Houston Rockets,Home,13.5,-24,-10.5,L,Underdog,96,120
+Houston Rockets,2026-01-03,Dallas Mavericks,Away,-7.5,-6,-13.5,L,Favorite,104,110
+Dallas Mavericks,2026-01-03,Houston Rockets,Home,7.5,6,13.5,W,Underdog,110,104
+Philadelphia 76ers,2026-01-01,Dallas Mavericks,Away,-2.5,15,12.5,W,Favorite,123,108
+Dallas Mavericks,2026-01-01,Philadelphia 76ers,Home,2.5,-15,-12.5,L,Underdog,108,123
+Chicago Bulls,2025-10-25,Orlando Magic,Away,5.5,12,17.5,W,Underdog,110,98
+Orlando Magic,2025-10-25,Chicago Bulls,Home,-5.5,-12,-17.5,L,Favorite,98,110
+Charlotte Hornets,2025-11-07,Miami Heat,Away,7.5,-18,-10.5,L,Underdog,108,126
+Miami Heat,2025-11-07,Charlotte Hornets,Home,-7.5,18,10.5,W,Favorite,126,108
+Golden State Warriors,2025-12-31,Charlotte Hornets,Away,-7.5,7,-0.5,L,Favorite,132,125
+Charlotte Hornets,2025-12-31,Golden State Warriors,Home,7.5,-7,0.5,W,Underdog,125,132
+Miami Heat,2025-11-05,Denver Nuggets,Away,9.5,-10,-0.5,L,Underdog,112,122
+Denver Nuggets,2025-11-05,Miami Heat,Home,-9.5,10,0.5,W,Favorite,122,112
+Houston Rockets,2025-12-25,Los Angeles Lakers,Away,-2.5,23,20.5,W,Favorite,119,96
+Los Angeles Lakers,2025-12-25,Houston Rockets,Home,2.5,-23,-20.5,L,Underdog,96,119
+Atlanta Hawks,2025-11-02,Cleveland Cavaliers,Away,6.5,-8,-1.5,L,Underdog,109,117
+Cleveland Cavaliers,2025-11-02,Atlanta Hawks,Home,-6.5,8,1.5,W,Favorite,117,109
+Portland Trail Blazers,2025-11-08,Miami Heat,Away,-3.5,-5,-8.5,L,Favorite,131,136
+Miami Heat,2025-11-08,Portland Trail Blazers,Home,3.5,5,8.5,W,Underdog,136,131
+Miami Heat,2025-10-30,San Antonio Spurs,Away,5.5,-6,-0.5,L,Underdog,101,107
+San Antonio Spurs,2025-10-30,Miami Heat,Home,-5.5,6,0.5,W,Favorite,107,101
+Boston Celtics,2026-01-01,Sacramento Kings,Away,-10.5,14,3.5,W,Favorite,120,106
+Sacramento Kings,2026-01-01,Boston Celtics,Home,10.5,-14,-3.5,L,Underdog,106,120
+LA Clippers,2025-12-26,Portland Trail Blazers,Away,-2.5,16,13.5,W,Favorite,119,103
+Portland Trail Blazers,2025-12-26,LA Clippers,Home,2.5,-16,-13.5,L,Underdog,103,119
+Los Angeles Lakers,2025-11-15,Milwaukee Bucks,Away,1.5,24,25.5,W,Underdog,119,95
+Milwaukee Bucks,2025-11-15,Los Angeles Lakers,Home,-1.5,-24,-25.5,L,Favorite,95,119
+Portland Trail Blazers,2025-12-20,Sacramento Kings,Away,-4.5,5,0.5,W,Favorite,98,93
+Sacramento Kings,2025-12-20,Portland Trail Blazers,Home,4.5,-5,-0.5,L,Underdog,93,98
+Utah Jazz,2025-12-04,Brooklyn Nets,Away,-5.5,13,7.5,W,Favorite,123,110
+Brooklyn Nets,2025-12-04,Utah Jazz,Home,5.5,-13,-7.5,L,Underdog,110,123
+Golden State Warriors,2025-12-28,Toronto Raptors,Away,-4.5,-14,-18.5,L,Favorite,127,141
+Toronto Raptors,2025-12-28,Golden State Warriors,Home,4.5,14,18.5,W,Underdog,141,127
+New York Knicks,2025-12-31,San Antonio Spurs,Away,3.5,-2,1.5,W,Underdog,132,134
+San Antonio Spurs,2025-12-31,New York Knicks,Home,-3.5,2,-1.5,L,Favorite,134,132
+Los Angeles Lakers,2025-12-23,Phoenix Suns,Away,2.5,-24,-21.5,L,Underdog,108,132
+Phoenix Suns,2025-12-23,Los Angeles Lakers,Home,-2.5,24,21.5,W,Favorite,132,108
+New York Knicks,2025-10-31,Chicago Bulls,Away,-5.5,-10,-15.5,L,Favorite,125,135
+Chicago Bulls,2025-10-31,New York Knicks,Home,5.5,10,15.5,W,Underdog,135,125
+Golden State Warriors,2025-12-06,Cleveland Cavaliers,Away,8.5,5,13.5,W,Underdog,99,94
+Cleveland Cavaliers,2025-12-06,Golden State Warriors,Home,-8.5,-5,-13.5,L,Favorite,94,99
+Utah Jazz,2026-01-01,LA Clippers,Away,14.5,-17,-2.5,L,Underdog,101,118
+LA Clippers,2026-01-01,Utah Jazz,Home,-14.5,17,2.5,W,Favorite,118,101
+Golden State Warriors,2025-10-21,Los Angeles Lakers,Away,-2.5,10,7.5,W,Favorite,119,109
+Los Angeles Lakers,2025-10-21,Golden State Warriors,Home,2.5,-10,-7.5,L,Underdog,109,119
+LA Clippers,2025-10-22,Utah Jazz,Away,-10.5,-21,-31.5,L,Favorite,108,129
+Utah Jazz,2025-10-22,LA Clippers,Home,10.5,21,31.5,W,Underdog,129,108
+Houston Rockets,2025-11-09,Milwaukee Bucks,Away,-4.5,7,2.5,W,Favorite,122,115
+Milwaukee Bucks,2025-11-09,Houston Rockets,Home,4.5,-7,-2.5,L,Underdog,115,122
+Indiana Pacers,2025-11-13,Phoenix Suns,Away,3.5,-35,-31.5,L,Underdog,98,133
+Phoenix Suns,2025-11-13,Indiana Pacers,Home,-3.5,35,31.5,W,Favorite,133,98
+Washington Wizards,2025-10-30,Oklahoma City Thunder,Away,15.5,-19,-3.5,L,Underdog,108,127
+Oklahoma City Thunder,2025-10-30,Washington Wizards,Home,-15.5,19,3.5,W,Favorite,127,108
+San Antonio Spurs,2025-11-28,Denver Nuggets,Away,7.5,3,10.5,W,Underdog,139,136
+Denver Nuggets,2025-11-28,San Antonio Spurs,Home,-7.5,-3,-10.5,L,Favorite,136,139
+New York Knicks,2025-10-26,Miami Heat,Away,-2.5,-8,-10.5,L,Favorite,107,115
+Miami Heat,2025-10-26,New York Knicks,Home,2.5,8,10.5,W,Underdog,115,107
+Phoenix Suns,2025-11-18,Portland Trail Blazers,Away,2.5,17,19.5,W,Underdog,127,110
+Portland Trail Blazers,2025-11-18,Phoenix Suns,Home,-2.5,-17,-19.5,L,Favorite,110,127
+Toronto Raptors,2025-11-30,New York Knicks,Away,8.5,-22,-13.5,L,Underdog,94,116
+New York Knicks,2025-11-30,Toronto Raptors,Home,-8.5,22,13.5,W,Favorite,116,94
+Miami Heat,2025-11-03,LA Clippers,Away,7.5,1,8.5,W,Underdog,120,119
+LA Clippers,2025-11-03,Miami Heat,Home,-7.5,-1,-8.5,L,Favorite,119,120
+Dallas Mavericks,2025-11-07,Memphis Grizzlies,Away,4.5,-14,-9.5,L,Underdog,104,118
+Memphis Grizzlies,2025-11-07,Dallas Mavericks,Home,-4.5,14,9.5,W,Favorite,118,104
+Chicago Bulls,2025-11-02,New York Knicks,Away,7.5,-12,-4.5,L,Underdog,116,128
+New York Knicks,2025-11-02,Chicago Bulls,Home,-7.5,12,4.5,W,Favorite,128,116
+Denver Nuggets,2025-12-23,Dallas Mavericks,Away,-6.5,-1,-7.5,L,Favorite,130,131
+Dallas Mavericks,2025-12-23,Denver Nuggets,Home,6.5,1,7.5,W,Underdog,131,130
+Sacramento Kings,2025-10-29,Chicago Bulls,Away,4.5,-13,-8.5,L,Underdog,113,126
+Chicago Bulls,2025-10-29,Sacramento Kings,Home,-4.5,13,8.5,W,Favorite,126,113
+Detroit Pistons,2025-11-26,Boston Celtics,Away,-2.5,-3,-5.5,L,Favorite,114,117
+Boston Celtics,2025-11-26,Detroit Pistons,Home,2.5,3,5.5,W,Underdog,117,114
+Orlando Magic,2025-12-23,Portland Trail Blazers,Away,-1.5,4,2.5,W,Favorite,110,106
+Portland Trail Blazers,2025-12-23,Orlando Magic,Home,1.5,-4,-2.5,L,Underdog,106,110
+New York Knicks,2025-12-23,Minnesota Timberwolves,Away,7.5,-11,-3.5,L,Underdog,104,115
+Minnesota Timberwolves,2025-12-23,New York Knicks,Home,-7.5,11,3.5,W,Favorite,115,104
+Portland Trail Blazers,2025-11-14,Houston Rockets,Away,7.5,-24,-16.5,L,Underdog,116,140
+Houston Rockets,2025-11-14,Portland Trail Blazers,Home,-7.5,24,16.5,W,Favorite,140,116
+Toronto Raptors,2025-11-15,Indiana Pacers,Away,-6.5,18,11.5,W,Favorite,129,111
+Indiana Pacers,2025-11-15,Toronto Raptors,Home,6.5,-18,-11.5,L,Underdog,111,129
+Los Angeles Lakers,2025-12-18,Utah Jazz,Away,-9.5,8,-1.5,L,Favorite,143,135
+Utah Jazz,2025-12-18,Los Angeles Lakers,Home,9.5,-8,1.5,W,Underdog,135,143
+San Antonio Spurs,2025-10-22,Dallas Mavericks,Away,4.5,33,37.5,W,Underdog,125,92
+Dallas Mavericks,2025-10-22,San Antonio Spurs,Home,-4.5,-33,-37.5,L,Favorite,92,125
+Utah Jazz,2025-12-27,San Antonio Spurs,Away,14.5,13,27.5,W,Underdog,127,114
+San Antonio Spurs,2025-12-27,Utah Jazz,Home,-14.5,-13,-27.5,L,Favorite,114,127
+Sacramento Kings,2025-10-28,Oklahoma City Thunder,Away,8.5,-6,2.5,W,Underdog,101,107
+Oklahoma City Thunder,2025-10-28,Sacramento Kings,Home,-8.5,6,-2.5,L,Favorite,107,101
+Atlanta Hawks,2025-10-31,Indiana Pacers,Away,-2.5,20,17.5,W,Favorite,128,108
+Indiana Pacers,2025-10-31,Atlanta Hawks,Home,2.5,-20,-17.5,L,Underdog,108,128
+Philadelphia 76ers,2025-11-14,Detroit Pistons,Away,1.5,-9,-7.5,L,Underdog,105,114
+Detroit Pistons,2025-11-14,Philadelphia 76ers,Home,-1.5,9,7.5,W,Favorite,114,105
+LA Clippers,2025-12-05,Memphis Grizzlies,Away,-2.5,-9,-11.5,L,Favorite,98,107
+Memphis Grizzlies,2025-12-05,LA Clippers,Home,2.5,9,11.5,W,Underdog,107,98
+Miami Heat,2025-12-18,Brooklyn Nets,Away,-7.5,11,3.5,W,Favorite,106,95
+Brooklyn Nets,2025-12-18,Miami Heat,Home,7.5,-11,-3.5,L,Underdog,95,106
+Boston Celtics,2025-11-09,Orlando Magic,Away,3.5,4,7.5,W,Underdog,111,107
+Orlando Magic,2025-11-09,Boston Celtics,Home,-3.5,-4,-7.5,L,Favorite,107,111
+New Orleans Pelicans,2025-11-10,Phoenix Suns,Away,8.5,-23,-14.5,L,Underdog,98,121
+Phoenix Suns,2025-11-10,New Orleans Pelicans,Home,-8.5,23,14.5,W,Favorite,121,98
+Atlanta Hawks,2025-12-12,Detroit Pistons,Away,6.5,-27,-20.5,L,Underdog,115,142
+Detroit Pistons,2025-12-12,Atlanta Hawks,Home,-6.5,27,20.5,W,Favorite,142,115
+Toronto Raptors,2025-11-19,Philadelphia 76ers,Away,-2.5,9,6.5,W,Favorite,121,112
+Philadelphia 76ers,2025-11-19,Toronto Raptors,Home,2.5,-9,-6.5,L,Underdog,112,121
+Minnesota Timberwolves,2025-11-10,Utah Jazz,Away,-7.5,7,-0.5,L,Favorite,120,113
+Utah Jazz,2025-11-10,Minnesota Timberwolves,Home,7.5,-7,0.5,W,Underdog,113,120
+Detroit Pistons,2025-12-18,Dallas Mavericks,Away,-5.5,-2,-7.5,L,Favorite,114,116
+Dallas Mavericks,2025-12-18,Detroit Pistons,Home,5.5,2,7.5,W,Underdog,116,114
+Sacramento Kings,2025-11-16,San Antonio Spurs,Away,6.5,-13,-6.5,L,Underdog,110,123
+San Antonio Spurs,2025-11-16,Sacramento Kings,Home,-6.5,13,6.5,W,Favorite,123,110
+Golden State Warriors,2025-10-24,Portland Trail Blazers,Away,-2.5,-20,-22.5,L,Favorite,119,139
+Portland Trail Blazers,2025-10-24,Golden State Warriors,Home,2.5,20,22.5,W,Underdog,139,119
+Sacramento Kings,2025-12-03,Houston Rockets,Away,15.5,-26,-10.5,L,Underdog,95,121
+Houston Rockets,2025-12-03,Sacramento Kings,Home,-15.5,26,10.5,W,Favorite,121,95
+Denver Nuggets,2025-11-11,Sacramento Kings,Away,-8.5,14,5.5,W,Favorite,122,108
+Sacramento Kings,2025-11-11,Denver Nuggets,Home,8.5,-14,-5.5,L,Underdog,108,122
+Detroit Pistons,2025-11-09,Philadelphia 76ers,Away,-4.5,3,-1.5,L,Favorite,111,108
+Philadelphia 76ers,2025-11-09,Detroit Pistons,Home,4.5,-3,1.5,W,Underdog,108,111
+Washington Wizards,2025-11-10,Detroit Pistons,Away,11.5,-2,9.5,W,Underdog,135,137
+Detroit Pistons,2025-11-10,Washington Wizards,Home,-11.5,2,-9.5,L,Favorite,137,135
+LA Clippers,2025-11-06,Phoenix Suns,Away,2.5,-13,-10.5,L,Underdog,102,115
+Phoenix Suns,2025-11-06,LA Clippers,Home,-2.5,13,10.5,W,Favorite,115,102
+Detroit Pistons,2025-11-29,Miami Heat,Away,3.5,3,6.5,W,Underdog,138,135
+Miami Heat,2025-11-29,Detroit Pistons,Home,-3.5,-3,-6.5,L,Favorite,135,138
+New Orleans Pelicans,2025-11-21,Dallas Mavericks,Away,3.5,-3,0.5,W,Underdog,115,118
+Dallas Mavericks,2025-11-21,New Orleans Pelicans,Home,-3.5,3,-0.5,L,Favorite,118,115
+Washington Wizards,2025-11-22,Chicago Bulls,Away,12.5,-1,11.5,W,Underdog,120,121
+Chicago Bulls,2025-11-22,Washington Wizards,Home,-12.5,1,-11.5,L,Favorite,121,120
+Washington Wizards,2025-11-19,Minnesota Timberwolves,Away,16.5,-11,5.5,W,Underdog,109,120
+Minnesota Timberwolves,2025-11-19,Washington Wizards,Home,-16.5,11,-5.5,L,Favorite,120,109
+Brooklyn Nets,2025-12-12,Dallas Mavericks,Away,7.5,-8,-0.5,L,Underdog,111,119
+Dallas Mavericks,2025-12-12,Brooklyn Nets,Home,-7.5,8,0.5,W,Favorite,119,111
+Detroit Pistons,2025-11-03,Memphis Grizzlies,Away,-3.5,8,4.5,W,Favorite,114,106
+Memphis Grizzlies,2025-11-03,Detroit Pistons,Home,3.5,-8,-4.5,L,Underdog,106,114
+Charlotte Hornets,2025-10-26,Washington Wizards,Away,1.5,26,27.5,W,Underdog,139,113
+Washington Wizards,2025-10-26,Charlotte Hornets,Home,-1.5,-26,-27.5,L,Favorite,113,139
+Cleveland Cavaliers,2025-12-25,New York Knicks,Away,4.5,-2,2.5,W,Underdog,124,126
+New York Knicks,2025-12-25,Cleveland Cavaliers,Home,-4.5,2,-2.5,L,Favorite,126,124
+Boston Celtics,2025-10-27,New Orleans Pelicans,Away,-4.5,32,27.5,W,Favorite,122,90
+New Orleans Pelicans,2025-10-27,Boston Celtics,Home,4.5,-32,-27.5,L,Underdog,90,122
+Phoenix Suns,2025-10-27,Utah Jazz,Away,1.5,-4,-2.5,L,Underdog,134,138
+Utah Jazz,2025-10-27,Phoenix Suns,Home,-1.5,4,2.5,W,Favorite,138,134
+Portland Trail Blazers,2025-11-24,Milwaukee Bucks,Away,1.5,12,13.5,W,Underdog,115,103
+Milwaukee Bucks,2025-11-24,Portland Trail Blazers,Home,-1.5,-12,-13.5,L,Favorite,103,115
+Orlando Magic,2025-10-27,Philadelphia 76ers,Away,-6.5,-12,-18.5,L,Favorite,124,136
+Philadelphia 76ers,2025-10-27,Orlando Magic,Home,6.5,12,18.5,W,Underdog,136,124
+Milwaukee Bucks,2025-11-03,Indiana Pacers,Away,-6.5,2,-4.5,L,Favorite,117,115
+Indiana Pacers,2025-11-03,Milwaukee Bucks,Home,6.5,-2,4.5,W,Underdog,115,117
+Atlanta Hawks,2025-11-12,Sacramento Kings,Away,-4.5,33,28.5,W,Favorite,133,100
+Sacramento Kings,2025-11-12,Atlanta Hawks,Home,4.5,-33,-28.5,L,Underdog,100,133
+San Antonio Spurs,2025-12-05,Cleveland Cavaliers,Away,5.5,-13,-7.5,L,Underdog,117,130
+Cleveland Cavaliers,2025-12-05,San Antonio Spurs,Home,-5.5,13,7.5,W,Favorite,130,117
+Phoenix Suns,2025-12-08,Minnesota Timberwolves,Away,8.5,3,11.5,W,Underdog,108,105
+Minnesota Timberwolves,2025-12-08,Phoenix Suns,Home,-8.5,-3,-11.5,L,Favorite,105,108
+Detroit Pistons,2025-10-24,Houston Rockets,Away,6.5,4,10.5,W,Underdog,115,111
+Houston Rockets,2025-10-24,Detroit Pistons,Home,-6.5,-4,-10.5,L,Favorite,111,115
+Milwaukee Bucks,2025-12-23,Indiana Pacers,Away,-1.5,17,15.5,W,Favorite,111,94
+Indiana Pacers,2025-12-23,Milwaukee Bucks,Home,1.5,-17,-15.5,L,Underdog,94,111
+Indiana Pacers,2025-10-26,Minnesota Timberwolves,Away,11.5,-4,7.5,W,Underdog,110,114
+Minnesota Timberwolves,2025-10-26,Indiana Pacers,Home,-11.5,4,-7.5,L,Favorite,114,110
+Charlotte Hornets,2026-01-03,Chicago Bulls,Away,1.5,13,14.5,W,Underdog,112,99
+Chicago Bulls,2026-01-03,Charlotte Hornets,Home,-1.5,-13,-14.5,L,Favorite,99,112
+Los Angeles Lakers,2025-12-04,Toronto Raptors,Away,2.5,3,5.5,W,Underdog,123,120
+Toronto Raptors,2025-12-04,Los Angeles Lakers,Home,-2.5,-3,-5.5,L,Favorite,120,123
+Sacramento Kings,2025-12-08,Indiana Pacers,Away,3.5,-11,-7.5,L,Underdog,105,116
+Indiana Pacers,2025-12-08,Sacramento Kings,Home,-3.5,11,7.5,W,Favorite,116,105
+Toronto Raptors,2025-10-27,San Antonio Spurs,Away,4.5,-18,-13.5,L,Underdog,103,121
+San Antonio Spurs,2025-10-27,Toronto Raptors,Home,-4.5,18,13.5,W,Favorite,121,103
+LA Clippers,2025-11-20,Orlando Magic,Away,6.5,-28,-21.5,L,Underdog,101,129
+Orlando Magic,2025-11-20,LA Clippers,Home,-6.5,28,21.5,W,Favorite,129,101
+New Orleans Pelicans,2025-11-30,Los Angeles Lakers,Away,15.5,-12,3.5,W,Underdog,121,133
+Los Angeles Lakers,2025-11-30,New Orleans Pelicans,Home,-15.5,12,-3.5,L,Favorite,133,121
+Toronto Raptors,2025-12-21,Brooklyn Nets,Away,-3.5,-15,-18.5,L,Favorite,81,96
+Brooklyn Nets,2025-12-21,Toronto Raptors,Home,3.5,15,18.5,W,Underdog,96,81
+Portland Trail Blazers,2025-12-02,Toronto Raptors,Away,4.5,-3,1.5,W,Underdog,118,121
+Toronto Raptors,2025-12-02,Portland Trail Blazers,Home,-4.5,3,-1.5,L,Favorite,121,118
+Denver Nuggets,2025-12-05,Atlanta Hawks,Away,-3.5,1,-2.5,L,Favorite,134,133
+Atlanta Hawks,2025-12-05,Denver Nuggets,Home,3.5,-1,2.5,W,Underdog,133,134
+LA Clippers,2025-11-17,Philadelphia 76ers,Away,4.5,-2,2.5,W,Underdog,108,110
+Philadelphia 76ers,2025-11-17,LA Clippers,Home,-4.5,2,-2.5,L,Favorite,110,108
+Denver Nuggets,2025-11-19,New Orleans Pelicans,Away,-13.5,7,-6.5,L,Favorite,125,118
+New Orleans Pelicans,2025-11-19,Denver Nuggets,Home,13.5,-7,6.5,W,Underdog,118,125

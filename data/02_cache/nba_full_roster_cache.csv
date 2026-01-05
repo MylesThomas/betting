@@ -2,7 +2,6 @@ player_name_nba_api,team,player_normalized
 Asa Newell,ATL,Asa Newell
 Caleb Houstan,ATL,Caleb Houstan
 Dyson Daniels,ATL,Dyson Daniels
-Eli John Ndiaye,ATL,Eli John Ndiaye
 Jalen Johnson,ATL,Jalen Johnson
 Keaton Wallace,ATL,Keaton Wallace
 Kristaps Porziņģis,ATL,Kristaps Porzingis
@@ -13,11 +12,13 @@ N'Faly Dante,ATL,N'Faly Dante
 Nickeil Alexander-Walker,ATL,Nickeil Alexander-Walker
 Nikola Đurišić,ATL,Nikola Đurisic
 Onyeka Okongwu,ATL,Onyeka Okongwu
+RayJ Dennis,ATL,Rayj Dennis
 Trae Young,ATL,Trae Young
 Vít Krejčí,ATL,Vit Krejci
 Zaccharie Risacher,ATL,Zaccharie Risacher
 Ben Saraf,BKN,Ben Saraf
 Cam Thomas,BKN,Cam Thomas
+Chaney Johnson,BKN,Chaney Johnson
 Danny Wolf,BKN,Danny Wolf
 Day'Ron Sharpe,BKN,Day'Ron Sharpe
 Drake Powell,BKN,Drake Powell
@@ -190,20 +191,19 @@ Kevin Durant,HOU,Kevin Durant
 Reed Sheppard,HOU,Reed Sheppard
 Steven Adams,HOU,Steven Adams
 Tari Eason,HOU,Tari Eason
-Tyler Smith,HOU,Tyler Smith
+Tristen Newton,HOU,Tristen Newton
 Aaron Nesmith,IND,Aaron Nesmith
 Andrew Nembhard,IND,Andrew Nembhard
 Ben Sheppard,IND,Ben Sheppard
 Bennedict Mathurin,IND,Bennedict Mathurin
 Ethan Thompson,IND,Ethan Thompson
-Garrison Mathews,IND,Garrison Mathews
 Isaiah Jackson,IND,Isaiah Jackson
-James Wiseman,IND,James Wiseman
 Jarace Walker,IND,Jarace Walker
 Jay Huff,IND,Jay Huff
 Jeremiah Robinson-Earl,IND,Jeremiah Robinson-Earl
 Johnny Furphy,IND,Johnny Furphy
 Kam Jones,IND,Kam Jones
+Micah Potter,IND,Micah Potter
 Obi Toppin,IND,Obi Toppin
 Pascal Siakam,IND,Pascal Siakam
 Quenton Jackson,IND,Quenton Jackson
@@ -226,7 +226,7 @@ Kobe Brown,LAC,Kobe Brown
 Kobe Sanders,LAC,Kobe Sanders
 Kris Dunn,LAC,Kris Dunn
 Nicolas Batum,LAC,Nicolas Batum
-RayJ Dennis,LAC,Rayj Dennis
+TyTy Washington Jr.,LAC,Tyty Washington Jr
 Yanic Konan Niederhäuser,LAC,Yanic Konan Niederhauser
 Adou Thiero,LAL,Adou Thiero
 Austin Reaves,LAL,Austin Reaves
@@ -397,6 +397,7 @@ Johni Broome,PHI,Johni Broome
 Justin Edwards,PHI,Justin Edwards
 Kelly Oubre Jr.,PHI,Kelly Oubre Jr
 Kyle Lowry,PHI,Kyle Lowry
+MarJon Beauchamp,PHI,Marjon Beauchamp
 Paul George,PHI,Paul George
 Quentin Grimes,PHI,Quentin Grimes
 Trendon Watford,PHI,Trendon Watford
@@ -486,6 +487,7 @@ Jakob Poeltl,TOR,Jakob Poeltl
 Jamal Shead,TOR,Jamal Shead
 Jamison Battle,TOR,Jamison Battle
 Jonathan Mogbo,TOR,Jonathan Mogbo
+Mo Bamba,TOR,Mo Bamba
 Ochai Agbaji,TOR,Ochai Agbaji
 RJ Barrett,TOR,Rj Barrett
 Sandro Mamukelashvili,TOR,Sandro Mamukelashvili
