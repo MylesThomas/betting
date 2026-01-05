@@ -87,3 +87,13 @@ data/nfl_research/nfl_week*_scraped_*.txt
 lambda_function.zip
 lambda_function.py
 current_policy.json
+
+# Removing from local
+# Shot charts: 456MB (on S3: nba-api-mt bucket)
+data/01_input/nba_api/shot_charts/
+
+# Game lines: 40MB (on S3: the-odds-api-mt bucket)
+data/01_input/the-odds-api/nba/game_lines/
+
+# Historical games: 8.8MB (on S3: nba-api-mt bucket)
+data/01_input/nba_api/historical/
