@@ -335,13 +335,13 @@ def calculate_scorer_type(df_shots, df_games, rim_scorer_pct=50):
     return df_shots_enhanced
 
 
-def join_all_data(season, rim_scorer_pct=50):
+def join_all_data(season, rim_scorer_pct=None):
     """
     Load and join all 4 datasets (props, game logs, shot charts, game lines)
     
     Args:
         season: NBA season (e.g., '2025-26')
-        rim_scorer_pct: Percentage threshold to classify as rim attacker (default: 50)
+        rim_scorer_pct: Percentage threshold to classify as rim attacker (default: None, no classification)
     
     Returns:
         Merged DataFrame
@@ -357,8 +357,17 @@ def join_all_data(season, rim_scorer_pct=50):
     df_lines = load_all_game_lines(season)
     
     # Calculate scorer type classification (rim attacker vs perimeter)
-    if not df_shots.empty and not df_games.empty:
+    if rim_scorer_pct is not None and not df_shots.empty and not df_games.empty:
+        # Full classification with specific threshold
         df_shots = calculate_scorer_type(df_shots, df_games, rim_scorer_pct)
+    elif not df_shots.empty:
+        # Add columns with NULL values to maintain consistent schema
+        print(f"\n🎯 Adding scorer type columns (NULL) for schema consistency...")
+        df_shots['total_pts_season'] = None
+        df_shots['pts_0_6_pct'] = None
+        df_shots['scorer_type'] = None
+        df_shots['rim_scorer_threshold'] = None
+        print(f"   ✅ Schema columns added (values are NULL)")
     
     print(f"\n{'='*80}")
     print(f"JOINING DATA")
@@ -492,12 +501,15 @@ def upload_merged_to_s3(df, season):
     Returns:
         True if successful, False otherwise
     """
-    # Get rim scorer threshold from data (if exists)
+    # Get rim scorer threshold from data (if exists and not NULL)
     rim_threshold = None
     if 'rim_scorer_threshold' in df.columns:
-        rim_threshold = int(df['rim_scorer_threshold'].iloc[0])
+        first_value = df['rim_scorer_threshold'].iloc[0]
+        # Only use threshold if it's not NULL/NaN
+        if first_value is not None and not pd.isna(first_value):
+            rim_threshold = int(first_value)
     
-    # Build filename with threshold suffix if it exists
+    # Build filename with threshold suffix only if threshold was actually used
     if rim_threshold is not None:
         filename = f"player_props_with_actuals_{season}_rim{rim_threshold}.csv"
     else:
@@ -559,8 +571,8 @@ def main():
     parser.add_argument('--season', default='2025-26', help='NBA season (e.g., 2025-26)')
     parser.add_argument('--save', help='Save merged data to local CSV file (provide path)')
     parser.add_argument('--s3', action='store_true', help='Upload merged data to S3')
-    parser.add_argument('--rim-scorer-pct', type=float, default=50.0, 
-                        help='Percentage threshold to classify as rim attacker (default: 50)')
+    parser.add_argument('--rim-scorer-pct', type=float, default=None, 
+                        help='Percentage threshold to classify as rim attacker (optional, e.g., 40 or 50)')
     
     args = parser.parse_args()
     

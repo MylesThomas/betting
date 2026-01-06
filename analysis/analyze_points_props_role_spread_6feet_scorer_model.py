@@ -207,68 +207,56 @@ def bin_team_spread(spread, granularity='standard'):
 
 def categorize_scorer_type(df):
     """
-    Categorize each player as rim attacker (50%+ points within 6 feet) or perimeter player
+    Get scorer type classification (rim vs perimeter) from data.
     
-    This uses the pre-calculated scorer_type column if it exists (from join script),
-    otherwise calculates from scratch.
+    This 3D analysis REQUIRES scorer_type to be pre-calculated in the dataset.
     
     Args:
         df: DataFrame with player game data
     
     Returns:
-        dict: {player_name: 'Rim Attacker (≥50%)' or 'Perimeter (<50%)'}
+        dict: {player_name: 'Rim Attacker (≥X%)' or 'Perimeter (<X%)'}
+    
+    Raises:
+        ValueError: If scorer_type column is missing or all NULL
     """
-    # FIRST: Check if scorer_type already exists (from join script)
-    if 'scorer_type' in df.columns:
-        print("✅ Using pre-calculated scorer_type from data")
-        
-        # Create player -> scorer_type mapping from first occurrence of each player
-        player_scorer = df.groupby('PLAYER_NAME')['scorer_type'].first().to_dict()
-        
-        # Print distribution
-        scorer_values = list(player_scorer.values())
-        rim_attackers = sum(1 for v in scorer_values if 'Rim' in str(v))
-        perimeter = sum(1 for v in scorer_values if 'Perimeter' in str(v))
-        
-        print(f"\nScorer type distribution:")
-        print(f"  Rim Attackers (≥50% within 6ft): {rim_attackers} players")
-        print(f"  Perimeter (<50% within 6ft): {perimeter} players")
-        
-        return player_scorer
+    # Check if scorer_type column exists
+    if 'scorer_type' not in df.columns:
+        raise ValueError(
+            "❌ scorer_type column not found!\n\n"
+            "This 3D analysis requires scorer type classification.\n"
+            "Use a dataset with --rim-scorer-pct:\n"
+            "  python scripts/join_nba_points_props_actuals_charts_gamelines.py \\\n"
+            "    --season 2025-26 --s3 --rim-scorer-pct 40"
+        )
     
-    # SECOND: Try to calculate from pts_0_6_pct if it exists
-    if 'pts_0_6_pct' in df.columns:
-        print("✅ Calculating scorer_type from pts_0_6_pct column")
-        
-        # Get each player's pts_0_6_pct (should be same for all their games)
-        player_pct = df.groupby('PLAYER_NAME')['pts_0_6_pct'].first().to_dict()
-        
-        # Categorize based on 50% threshold
-        scorer_type_map = {}
-        for player, pct in player_pct.items():
-            if pd.notna(pct):
-                if pct >= 50.0:
-                    scorer_type_map[player] = 'Rim Attacker (≥50%)'
-                else:
-                    scorer_type_map[player] = 'Perimeter (<50%)'
-            else:
-                scorer_type_map[player] = 'Unknown'
-        
-        # Print distribution
-        rim_attackers = sum(1 for v in scorer_type_map.values() if 'Rim' in v)
-        perimeter = sum(1 for v in scorer_type_map.values() if 'Perimeter' in v)
-        
-        print(f"\nScorer type distribution:")
-        print(f"  Rim Attackers (≥50% within 6ft): {rim_attackers} players")
-        print(f"  Perimeter (<50% within 6ft): {perimeter} players")
-        
-        return scorer_type_map
+    # Check if entire column is NULL (2D dataset)
+    if df['scorer_type'].isna().all():
+        raise ValueError(
+            "❌ scorer_type column is all NULL!\n\n"
+            "You provided a 2D dataset (no scorer type classification).\n"
+            "This 3D analysis requires 3D data.\n\n"
+            "Use a dataset with --rim-scorer-pct:\n"
+            "  python scripts/join_nba_points_props_actuals_charts_gamelines.py \\\n"
+            "    --season 2025-26 --s3 --rim-scorer-pct 40"
+        )
     
-    # FALLBACK: Try legacy column names (shouldn't reach here with our data)
-    print("⚠️  No scorer_type or pts_0_6_pct columns found!")
-    print(f"Available columns: {sorted([c for c in df.columns if 'PT' in c.upper() or 'scorer' in c.lower()])}")
-    print("Defaulting all players to 'Unknown' scorer type")
-    return {player: 'Unknown' for player in df['PLAYER_NAME'].unique()}
+    # Use the pre-calculated scorer_type
+    print("✅ Using pre-calculated scorer_type from data")
+    
+    # Create player -> scorer_type mapping
+    player_scorer = df.groupby('PLAYER_NAME')['scorer_type'].first().to_dict()
+    
+    # Print distribution
+    scorer_values = list(player_scorer.values())
+    rim_attackers = sum(1 for v in scorer_values if pd.notna(v) and 'Rim' in str(v))
+    perimeter = sum(1 for v in scorer_values if pd.notna(v) and 'Perimeter' in str(v))
+    
+    print(f"\nScorer type distribution:")
+    print(f"  Rim Attackers: {rim_attackers} players")
+    print(f"  Perimeter: {perimeter} players")
+    
+    return player_scorer
 
 
 def print_section(title, emoji=None):
