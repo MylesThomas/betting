@@ -431,6 +431,12 @@ def find_edges(df_clean, baseline_over_rate):
                 under_rate = (subset['under_hit'].sum() / total_non_push) * 100 if total_non_push > 0 else 0
                 push_rate = (subset['push'].sum() / len(subset)) * 100
                 
+                # Calculate strategy ROI at -110 odds
+                # At -110: to win $100 you risk $110, so profit per $1 wagered = 100/110
+                # ROI = (win_rate × profit_per_dollar) - loss_rate
+                over_roi = ((over_rate/100) * (100/110) - (under_rate/100)) * 100
+                under_roi = ((under_rate/100) * (100/110) - (over_rate/100)) * 100
+                
                 results.append({
                     'line_tier': tier,
                     'spread_bin': spread,
@@ -438,6 +444,8 @@ def find_edges(df_clean, baseline_over_rate):
                     'over_rate': over_rate,
                     'under_rate': under_rate,
                     'push_rate': push_rate,
+                    'over_roi': over_roi,
+                    'under_roi': under_roi,
                     'rate_sum': over_rate + under_rate,  # Should be 100%
                     'over_edge': over_rate - baseline_over_rate,
                     'under_edge': under_rate - baseline_under_rate,
@@ -457,13 +465,13 @@ def find_edges(df_clean, baseline_over_rate):
     # Top over opportunities
     print_subsection(f"\n{EMOJI['fire']} TOP 10 OVER OPPORTUNITIES (highest edge vs baseline)")
     top_overs = df_edges.nlargest(10, 'over_edge')
-    cols = ['line_tier', 'spread_bin', 'games', 'over_rate', 'under_rate', 'over_edge', 'push_rate']
+    cols = ['line_tier', 'spread_bin', 'games', 'over_rate', 'under_rate', 'over_edge', 'push_rate', 'over_roi']
     print(top_overs[cols].to_string(index=False))
     
     # Top under opportunities
     print_subsection(f"\n{EMOJI['cold']} TOP 10 UNDER OPPORTUNITIES (highest edge vs baseline)")
     top_unders = df_edges.nlargest(10, 'under_edge')
-    cols = ['line_tier', 'spread_bin', 'games', 'over_rate', 'under_rate', 'under_edge', 'push_rate']
+    cols = ['line_tier', 'spread_bin', 'games', 'over_rate', 'under_rate', 'under_edge', 'push_rate', 'under_roi']
     print(top_unders[cols].to_string(index=False))
     
     # Key insights
@@ -474,19 +482,13 @@ def find_edges(df_clean, baseline_over_rate):
         print(f"Strongest OVER edge: {best_over['line_tier']} + {best_over['spread_bin']}")
         print(f"  {EMOJI['target']} {best_over['over_rate']:.1f}% over / {best_over['under_rate']:.1f}% under (sum={best_over['rate_sum']:.1f}%)")
         print(f"  {EMOJI['target']} +{best_over['over_edge']:.1f}% edge | {int(best_over['games'])} games | {best_over['push_rate']:.1f}% pushes")
-        
-        # Calculate ROI at -110 odds
-        over_roi = ((best_over['over_rate']/100) * 0.909 - (best_over['under_rate']/100)) * 100
-        print(f"  {EMOJI['target']} Expected ROI at -110 odds: {over_roi:+.1f}%")
+        print(f"  {EMOJI['target']} Strategy ROI at -110 odds: {best_over['over_roi']:+.1f}%")
         
         best_under = df_edges.loc[df_edges['under_edge'].idxmax()]
         print(f"\nStrongest UNDER edge: {best_under['line_tier']} + {best_under['spread_bin']}")
         print(f"  {EMOJI['target']} {best_under['under_rate']:.1f}% under / {best_under['over_rate']:.1f}% over (sum={best_under['rate_sum']:.1f}%)")
         print(f"  {EMOJI['target']} +{best_under['under_edge']:.1f}% edge | {int(best_under['games'])} games | {best_under['push_rate']:.1f}% pushes")
-        
-        # Calculate ROI at -110 odds
-        under_roi = ((best_under['under_rate']/100) * 0.909 - (best_under['over_rate']/100)) * 100
-        print(f"  {EMOJI['target']} Expected ROI at -110 odds: {under_roi:+.1f}%")
+        print(f"  {EMOJI['target']} Strategy ROI at -110 odds: {best_under['under_roi']:+.1f}%")
         
         weak_samples = df_edges[df_edges['games'] < 100]
         if len(weak_samples) > 0:
@@ -522,11 +524,12 @@ def drill_down_edge(df_clean, tier, spread_bin, top_n=15, bet_side='over'):
     player_stats = player_stats[player_stats['games'] >= MIN_PLAYER_GAMES]
     
     # Calculate ROI at -110 odds based on which side we're betting
-    # ROI = (win_rate * 0.909) - (loss_rate * 1.0)
+    # At -110: to win $100 you risk $110, so profit per $1 wagered = 100/110
+    # ROI = (win_rate × profit_per_dollar) - loss_rate
     if bet_side == 'under':
-        player_stats['roi'] = ((player_stats['under_rate'] * 0.909) - (player_stats['over_rate'] * 1.0)) * 100
+        player_stats['roi'] = ((player_stats['under_rate'] * (100/110)) - (player_stats['over_rate'] * 1.0)) * 100
     else:
-        player_stats['roi'] = ((player_stats['over_rate'] * 0.909) - (player_stats['under_rate'] * 1.0)) * 100
+        player_stats['roi'] = ((player_stats['over_rate'] * (100/110)) - (player_stats['under_rate'] * 1.0)) * 100
     
     # Binary profitable flag
     player_stats['profitable'] = player_stats['roi'] > 0
