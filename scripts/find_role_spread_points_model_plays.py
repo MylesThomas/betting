@@ -17,9 +17,19 @@ then matches them against pre-defined strategies with proven positive ROI.
 Strategies are hardcoded based on analyze_player_props_matrix.py analysis results.
 
 Usage:
+    # Simple: Auto-loads strategies from S3 for current season
     python scripts/find_role_spread_points_model_plays.py
+    
+    # Specify season
+    python scripts/find_role_spread_points_model_plays.py --season 2025-26
+    
+    # Specific date
     python scripts/find_role_spread_points_model_plays.py --date 2026-01-06
-    python scripts/find_role_spread_points_model_plays.py --granularity coarse
+    
+    # Adjust ROI threshold
+    python scripts/find_role_spread_points_model_plays.py --min-roi 7.0
+    
+    # Show all players (not just plays)
     python scripts/find_role_spread_points_model_plays.py --show-all
 """
 
@@ -48,9 +58,9 @@ from team_utils import TEAM_NAME_TO_ABBR, load_player_team_cache
 # These strategies are based on historical analysis with 50+ game sample sizes
 # Format: (line_tier, spread_bin, bet_side, edge, roi, games)
 
-STRATEGIES_FINE = {
+STRATEGIES_DETAILED = {
     # =========================================================================
-    # OVER STRATEGIES (Top 10 from fine granularity analysis)
+    # OVER STRATEGIES (Top 10 from detailed granularity analysis)
     # =========================================================================
     'high_star_small_dog_over': {
         'line_tier': '25-30 (High Star)',
@@ -144,7 +154,7 @@ STRATEGIES_FINE = {
     },
     
     # =========================================================================
-    # UNDER STRATEGIES (Top 10 from fine granularity analysis)
+    # UNDER STRATEGIES (Top 10 from detailed granularity analysis)
     # =========================================================================
     'bench_pickem_under': {
         'line_tier': '5-10 (Bench)',
@@ -238,9 +248,9 @@ STRATEGIES_FINE = {
     },
 }
 
-STRATEGIES_COARSE = {
-    # TODO: Add coarse strategies when we run coarse analysis
-    # For now, just use fine as default
+STRATEGIES_STANDARD = {
+    # TODO: Add standard strategies when we run standard granularity analysis
+    # For now, just use detailed as default
 }
 
 
@@ -248,12 +258,12 @@ STRATEGIES_COARSE = {
 # BINNING FUNCTIONS (must match analyze_player_props_matrix.py)
 # =============================================================================
 
-def bin_points_line(line, granularity='fine'):
+def bin_points_line(line, granularity='detailed'):
     """Bin player points line into tiers"""
     if pd.isna(line):
         return 'Unknown'
     
-    if granularity == 'coarse':
+    if granularity == 'standard':
         if line < 10:
             return '<10 (Bench)'
         elif line < 20:
@@ -262,7 +272,7 @@ def bin_points_line(line, granularity='fine'):
             return '20-30 (Star)'
         else:
             return '30+ (Superstar)'
-    else:  # fine
+    else:  # detailed
         if line < 5:
             return '<5 (Deep Bench)'
         elif line < 10:
@@ -279,7 +289,7 @@ def bin_points_line(line, granularity='fine'):
             return '30+ (Superstar)'
 
 
-def bin_team_spread(spread, granularity='fine'):
+def bin_team_spread(spread, granularity='detailed'):
     """
     Bin team spread into categories
     
@@ -289,14 +299,14 @@ def bin_team_spread(spread, granularity='fine'):
     if pd.isna(spread):
         return 'Unknown'
     
-    if granularity == 'coarse':
+    if granularity == 'standard':
         if spread < -5:
             return 'Favorite'
         elif spread <= 5:
             return 'Pick\'em'
         else:
             return 'Underdog'
-    else:  # fine
+    else:  # detailed
         if spread < -15:
             return '15+ Fav'
         elif spread < -10:
@@ -321,7 +331,76 @@ def bin_team_spread(spread, granularity='fine'):
 # DATA LOADING
 # =============================================================================
 
-def load_tonights_games(target_date=None):
+def load_strategies(json_file, min_roi=5.0):
+    """
+    Load strategies from JSON file (REQUIRED)
+    
+    Args:
+        json_file: Path to strategies JSON file (REQUIRED)
+        min_roi: Minimum ROI threshold to filter strategies
+    
+    Returns:
+        Dict of strategies {strategy_key: strategy_data}
+    """
+    if not json_file:
+        raise ValueError(
+            "❌ --strategies-json or --season is REQUIRED\n"
+            "   Generate strategies with: python analysis/analyze_points_props_role_spread_model.py --season 2025-26"
+        )
+    
+    # Load from JSON file or S3
+    print(f"📊 Loading strategies from {json_file}...")
+    try:
+        import json
+        
+        # Check if S3 URI
+        if str(json_file).startswith('s3://'):
+            # Parse S3 URI
+            s3_uri = str(json_file)
+            parts = s3_uri.replace('s3://', '').split('/', 1)
+            bucket = parts[0]
+            key = parts[1] if len(parts) > 1 else ''
+            
+            # Load from S3
+            import boto3
+            from io import BytesIO
+            s3 = boto3.client('s3')
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            data = json.loads(obj['Body'].read().decode('utf-8'))
+        else:
+            # Load from local file
+            with open(json_file, 'r') as f:
+                data = json.load(f)
+        
+        all_strategies = data['strategies']
+        print(f"   ✅ Loaded {len(all_strategies)} total strategies")
+        print(f"   📅 Generated: {data.get('generated_at', 'Unknown')}")
+        print(f"   📈 Data through: {data.get('data_through', 'Unknown')}")
+        
+        # Filter by min_roi
+        filtered_strategies = [s for s in all_strategies if s['roi'] >= min_roi]
+        print(f"   🔍 Filtered to {len(filtered_strategies)} strategies with ROI >= {min_roi}%")
+        
+        if len(filtered_strategies) == 0:
+            print(f"   ⚠️  WARNING: No strategies meet ROI threshold of {min_roi}%")
+        
+        # Convert to dict format {strategy_key: strategy_data}
+        strategies = {}
+        for i, strat in enumerate(filtered_strategies):
+            key = f"strat_{i}"
+            strategies[key] = strat
+        
+        return strategies
+        
+    except FileNotFoundError:
+        raise FileNotFoundError(f"❌ Strategies file not found: {json_file}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"❌ Invalid JSON in strategies file: {e}")
+    except Exception as e:
+        raise Exception(f"❌ Error loading strategies: {e}")
+
+
+def load_tonights_games(target_date=None, use_s3=False):
     """
     Load tonight's games with player props and team spreads
     
@@ -359,22 +438,41 @@ def load_tonights_games(target_date=None):
         # Return mock data
         return -99
     
-    # Load player-team mapping from cache using utility function
-    print("📋 Loading player-team mapping from cache...")
+    # Load player-team mapping from cache
+    print(f"📋 Loading player-team mapping from {'S3' if use_s3 else 'local cache'}...")
     try:
-        cache_data = load_player_team_cache()
-        player_team_map = cache_data['mapping']
-        cache_timestamp = cache_data['timestamp']
-        
-        if player_team_map:
-            print(f"   ✅ Loaded {len(player_team_map):,} player-team mappings from cache")
+        if use_s3:
+            # Load from S3
+            import boto3
+            from io import BytesIO
+            s3 = boto3.client('s3')
+            bucket = 'nba-betting-mt'
+            key = 'data/02_cache/player_team_cache.csv'
+            
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            df_cache = pd.read_csv(BytesIO(obj['Body'].read()))
+            
+            player_team_map = dict(zip(df_cache['player_normalized'], df_cache['team']))
+            cache_timestamp = df_cache['timestamp'].iloc[0] if len(df_cache) > 0 else None
+            
+            print(f"   ✅ Loaded {len(player_team_map):,} player-team mappings from S3")
             if cache_timestamp:
                 print(f"   📅 Cache timestamp: {cache_timestamp}\n")
-            else:
-                print()
         else:
-            print(f"   ⚠️  No player-team mapping available in cache")
-            print(f"   Will skip players without known teams\n")
+            # Load from local using utility function
+            cache_data = load_player_team_cache()
+            player_team_map = cache_data['mapping']
+            cache_timestamp = cache_data['timestamp']
+            
+            if player_team_map:
+                print(f"   ✅ Loaded {len(player_team_map):,} player-team mappings from local cache")
+                if cache_timestamp:
+                    print(f"   📅 Cache timestamp: {cache_timestamp}\n")
+                else:
+                    print()
+            else:
+                print(f"   ⚠️  No player-team mapping available in cache")
+                print(f"   Will skip players without known teams\n")
     except Exception as e:
         print(f"   ⚠️  Error loading player-team mapping: {e}")
         print(f"   Will skip players without known teams\n")
@@ -610,17 +708,20 @@ def load_tonights_games(target_date=None):
 # PLAY FINDING
 # =============================================================================
 
-def find_plays(df_games, granularity='fine'):
+def find_plays(df_games, strategies, granularity='detailed'):
     """
     Find betting plays by matching games to strategies
+    
+    Args:
+        df_games: DataFrame with today's player props
+        strategies: Dict of strategies to match against
+        granularity: 'standard' or 'detailed'
     
     Returns:
         DataFrame with plays and reasoning
     """
-    strategies = STRATEGIES_FINE if granularity == 'fine' else STRATEGIES_COARSE
-    
     if not strategies:
-        print(f"No strategies defined for granularity: {granularity}")
+        print(f"No strategies provided")
         return pd.DataFrame()
     
     # Bin each player/team
@@ -666,8 +767,88 @@ def find_plays(df_games, granularity='fine'):
 
 
 # =============================================================================
-# OUTPUT FORMATTING
+# OUTPUT FORMATTING & SAVING
 # =============================================================================
+
+def save_plays_to_s3(df_plays, target_date, season='2025-26'):
+    """
+    Save plays to S3 as CSV for tracking performance
+    
+    Args:
+        df_plays: DataFrame with plays
+        target_date: Date string (YYYY-MM-DD)
+        season: NBA season
+    """
+    if df_plays.empty:
+        print(f"\n💾 No plays to save for {target_date}")
+        return
+    
+    # Prepare CSV columns (use actual column names from find_plays)
+    csv_data = df_plays[[
+        'player', 'team', 'opponent', 'bet_side', 'line', 'spread',
+        'line_tier', 'spread_bin', 'strategy_name', 
+        'strategy_roi', 'strategy_edge', 'strategy_hit_rate', 'strategy_games'
+    ]].copy()
+    
+    # Rename columns for clarity in saved CSV
+    csv_data = csv_data.rename(columns={
+        'strategy_roi': 'expected_roi',
+        'strategy_edge': 'edge_vs_baseline',
+        'strategy_hit_rate': 'hit_rate',
+        'strategy_games': 'games_in_sample'
+    })
+    
+    # Calculate edge vs breakeven (52.38% for -110 odds)
+    csv_data['edge_vs_breakeven'] = csv_data['hit_rate'] - 52.38
+    
+    # Add metadata
+    csv_data.insert(0, 'date', target_date)
+    csv_data.insert(1, 'season', season)
+    
+    # S3 path - save to 2d/ subfolder
+    bucket = 'nba-betting-mt'
+    key = f'data/04_output/plays/role_spread_points_model/2d/{target_date}.csv'
+    backup_key = f'data/04_output/plays/role_spread_points_model/2d/{target_date}_backup.csv'
+    
+    try:
+        import boto3
+        from io import StringIO
+        
+        s3 = boto3.client('s3')
+        
+        # Check if file already exists, if so create backup
+        try:
+            s3.head_object(Bucket=bucket, Key=key)
+            # File exists, copy it to backup
+            s3.copy_object(
+                Bucket=bucket,
+                CopySource={'Bucket': bucket, 'Key': key},
+                Key=backup_key
+            )
+            print(f"\n💾 Created backup: s3://{bucket}/{backup_key}")
+        except s3.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                # File doesn't exist, no backup needed
+                pass
+            else:
+                raise
+        
+        # Save new file
+        csv_buffer = StringIO()
+        csv_data.to_csv(csv_buffer, index=False)
+        
+        s3.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=csv_buffer.getvalue(),
+            ContentType='text/csv'
+        )
+        
+        print(f"💾 Saved {len(csv_data)} plays to S3: s3://{bucket}/{key}")
+        
+    except Exception as e:
+        print(f"\n⚠️  Failed to save plays to S3: {e}")
+
 
 def print_plays(df_plays, all_games_info):
     """Pretty print plays grouped by game, showing ALL games"""
@@ -778,10 +959,8 @@ def print_plays(df_plays, all_games_info):
     print(f"{'='*80}\n")
 
 
-def print_no_plays_reasoning(df_games, granularity='fine'):
+def print_no_plays_reasoning(df_games, strategies, granularity='detailed'):
     """Show why we don't have plays for certain games"""
-    
-    strategies = STRATEGIES_FINE if granularity == 'fine' else STRATEGIES_COARSE
     
     df_games['line_tier'] = df_games['points_line'].apply(lambda x: bin_points_line(x, granularity))
     df_games['spread_bin'] = df_games['team_spread'].apply(lambda x: bin_team_spread(x, granularity))
@@ -820,19 +999,35 @@ def print_no_plays_reasoning(df_games, granularity='fine'):
 
 def main():
     parser = argparse.ArgumentParser(description='Find tonight\'s NBA player prop plays')
+    parser.add_argument('--season', type=str, default='2025-26',
+                       help='NBA season (e.g., 2025-26). Auto-generates S3 path for strategies.')
     parser.add_argument('--date', type=str, help='Target date (YYYY-MM-DD), defaults to today')
-    parser.add_argument('--granularity', choices=['coarse', 'fine'], default='fine',
-                       help='Binning granularity (fine = 7x9 grid, coarse = 4x3 grid)')
+    parser.add_argument('--granularity', choices=['standard', 'detailed'], default='detailed',
+                       help='Binning granularity (detailed = 7x9 grid, standard = 4x6 grid)')
+    parser.add_argument('--strategies-json', type=str, default=None,
+                       help='Path to strategies JSON (local or S3 URI). If not provided, loads from S3 using --season.')
     parser.add_argument('--min-roi', type=float, default=5.0,
                        help='Minimum ROI threshold (default: 5.0%%)')
+    parser.add_argument('--s3', action='store_true',
+                       help='Load player-team cache from S3')
+    parser.add_argument('--save-s3', action='store_true', default=True,
+                       help='Save plays to S3 for tracking (default: True)')
     parser.add_argument('--show-all', action='store_true',
                        help='Show reasoning for all players, not just plays')
     
     args = parser.parse_args()
     
+    # Auto-generate S3 path if strategies-json not provided
+    if not args.strategies_json:
+        args.strategies_json = f's3://nba-betting-mt/data/03_intermediate/points_by_role_gamespread_strategies_{args.season}.json'
+        print(f"💡 Using strategies from: {args.strategies_json}")
+    
+    # Load strategies
+    strategies = load_strategies(args.strategies_json, args.min_roi)
+    
     # Load data
     print(f"\n📊 Loading games for {args.date or 'today'}...")
-    result = load_tonights_games(args.date)
+    result = load_tonights_games(args.date, use_s3=args.s3)
     
     # Unpack result
     if isinstance(result, tuple):
@@ -844,22 +1039,24 @@ def main():
     
     print(f"   Found {len(df_games)} players with props\n")
     
-    # Find plays
-    df_plays = find_plays(df_games, args.granularity)
+    # Find plays using loaded strategies
+    df_plays = find_plays(df_games, strategies, args.granularity)
     
-    # Filter by minimum ROI
-    plays_before_filter = len(df_plays)
-    df_plays = df_plays[df_plays['strategy_roi'] >= args.min_roi]
-    
-    if plays_before_filter > len(df_plays):
-        filtered_count = plays_before_filter - len(df_plays)
-        print(f"🔍 Filtered to ROI >= {args.min_roi}% ({filtered_count} plays below threshold)\n")
+    # Note: ROI filtering already happened in load_strategies()
+    # Show filter info if strategies were filtered
+    if args.strategies_json:
+        print(f"🔍 Using strategies with ROI >= {args.min_roi}%\n")
     
     # Output
     if args.show_all:
-        print_no_plays_reasoning(df_games, args.granularity)
+        print_no_plays_reasoning(df_games, strategies, args.granularity)
     
     print_plays(df_plays, all_games_info)
+    
+    # Save plays to S3 for tracking
+    if args.save_s3:
+        target_date = args.date if args.date else date.today().strftime('%Y-%m-%d')
+        save_plays_to_s3(df_plays, target_date, args.season)
 
 
 if __name__ == '__main__':
