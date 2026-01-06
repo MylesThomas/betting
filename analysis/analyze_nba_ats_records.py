@@ -113,7 +113,7 @@ def load_all_game_lines(season_year):
         DataFrame with all game lines
     """
     season_str = get_season_string(season_year)
-    s3_prefix = f'nba/historical/{season_str}/'
+    s3_prefix = f'nba/historical_game_lines/{season_str}/'
     
     s3 = boto3.client('s3')
     

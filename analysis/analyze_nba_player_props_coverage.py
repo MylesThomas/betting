@@ -191,10 +191,10 @@ def load_all_shot_charts(season):
 
 def load_all_game_lines(season):
     """Load ALL game lines (spreads, moneylines) for the season from S3"""
-    print(f"\n📈 Loading game lines from s3://{S3_BUCKET_PROPS}/nba/historical/{season}/...")
+    print(f"\n📈 Loading game lines from s3://{S3_BUCKET_PROPS}/nba/historical_game_lines/{season}/...")
     
     s3_client = boto3.client('s3')
-    prefix = f"nba/historical/{season}/"
+    prefix = f"nba/historical_game_lines/{season}/"
     
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
     

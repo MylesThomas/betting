@@ -28,17 +28,17 @@ Context:
 
 Usage:
     # Current season (2025-26, default)
-    python scripts/fetch_historical_nba_season_lines.py --season 2025 --prod-run
+    python scripts/fetch_historical_nba_season_lines.py --season 2025-26 --prod-run
     
     # Historical season
-    python scripts/fetch_historical_nba_season_lines.py --season 2024 --prod-run
-    python scripts/fetch_historical_nba_season_lines.py --season 2023 --prod-run
-    python scripts/fetch_historical_nba_season_lines.py --season 2022 --prod-run
-    python scripts/fetch_historical_nba_season_lines.py --season 2021 --prod-run
-    python scripts/fetch_historical_nba_season_lines.py --season 2020 --prod-run
+    python scripts/fetch_historical_nba_season_lines.py --season 2024-25 --prod-run
+    python scripts/fetch_historical_nba_season_lines.py --season 2023-24 --prod-run
+    python scripts/fetch_historical_nba_season_lines.py --season 2022-23 --prod-run
+    python scripts/fetch_historical_nba_season_lines.py --season 2021-22 --prod-run
+    python scripts/fetch_historical_nba_season_lines.py --season 2020-21 --prod-run
     
     # Interactive mode (shows cost estimate first)
-    python scripts/fetch_historical_nba_season_lines.py --season 2024
+    python scripts/fetch_historical_nba_season_lines.py --season 2024-25
     
     # Test single date
     python scripts/fetch_historical_nba_season_lines.py --test-date 2024-10-22
@@ -102,13 +102,12 @@ credits_used = None
 # Season date ranges
 # NBA seasons run Oct-June (regular season ends ~April, playoffs through June)
 SEASON_DATES = {
-    2020: ('2020-12-22', '2021-07-21'),  # COVID delayed season
-    2021: ('2021-10-19', '2022-06-17'),  # Full season + playoffs
-    2022: ('2022-10-18', '2023-06-13'),  # Full season + playoffs
-    2023: ('2023-10-24', '2024-06-18'),  # Full season + playoffs
-    2024: ('2024-10-22', '2025-06-23'),  # Full season + playoffs (estimated)
-    # 2025: ('2025-10-21', '2026-06-22'),  # Current season (estimated)
-    2025: ('2025-10-21', '2026-06-22'),  # Current season (estimated)
+    '2020-21': ('2020-12-22', '2021-07-21'),  # COVID delayed season
+    '2021-22': ('2021-10-19', '2022-06-17'),  # Full season + playoffs
+    '2022-23': ('2022-10-18', '2023-06-13'),  # Full season + playoffs
+    '2023-24': ('2023-10-24', '2024-06-18'),  # Full season + playoffs
+    '2024-25': ('2024-10-22', '2025-06-23'),  # Full season + playoffs (estimated)
+    '2025-26': ('2025-10-21', '2026-06-22'),  # Current season (estimated)
 }
 
 
@@ -818,8 +817,9 @@ def fetch_full_season(season_start, season_end, dry_run=True):
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description='Fetch NBA game lines from The Odds API and save to S3')
-    parser.add_argument('--season', type=int, choices=[2020, 2021, 2022, 2023, 2024, 2025],
-                       help='Season year (e.g., 2024 for 2024-25 season)')
+    parser.add_argument('--season', type=str, 
+                       choices=['2020-21', '2021-22', '2022-23', '2023-24', '2024-25', '2025-26'],
+                       help='Season (e.g., 2024-25 or 2025-26)')
     parser.add_argument('--prod-run', action='store_true',
                        help='Actually fetch data (otherwise just shows cost estimate)')
     parser.add_argument('--test-date', type=str,
@@ -846,11 +846,11 @@ def main():
     
     # Season fetch
     if not args.season:
-        print("Please specify --season (e.g., --season 2024)")
+        print("Please specify --season (e.g., --season 2024-25)")
         return
     
     if args.season not in SEASON_DATES:
-        print(f"Season {args.season} not available. Available: 2020-2025")
+        print(f"Season {args.season} not available. Available: {', '.join(SEASON_DATES.keys())}")
         return
     
     season_start, season_end = SEASON_DATES[args.season]
