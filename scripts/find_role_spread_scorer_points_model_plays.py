@@ -802,6 +802,7 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         opp = row['opponent']
         spread = row['team_spread']
         player_scorer_type = row.get('scorer_type', None) if scorer_map else None
+        game_time = row.get('game_time')  # Get game time if available
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -848,6 +849,10 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                     play_data['scorer_type'] = strat['scorer_type']
                     play_data['reason'] = f"{strat['bet_side']} - {line_tier} + {strat['scorer_type']} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)"
                 
+                # Add game_time if available
+                if game_time is not None:
+                    play_data['game_time'] = game_time
+                
                 plays.append(play_data)
     
     return pd.DataFrame(plays)
@@ -884,6 +889,10 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
         'strategy_name', 'strategy_roi', 'strategy_edge', 
         'strategy_hit_rate', 'strategy_games'
     ])
+    
+    # Add game_time if present
+    if 'game_time' in df_plays.columns:
+        base_columns.append('game_time')
     
     csv_data = df_plays[base_columns].copy()
     

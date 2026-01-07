@@ -742,6 +742,7 @@ def find_plays(df_games, strategies, granularity='detailed'):
         team = row['team_abbr']
         opp = row['opponent']
         spread = row['team_spread']
+        game_time = row.get('game_time')  # Get game time if available
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -749,7 +750,7 @@ def find_plays(df_games, strategies, granularity='detailed'):
                 # Generate strategy display name from bins + bet side
                 strategy_display_name = f"{strat['line_tier']} + {strat['spread_bin']} {strat['bet_side']}"
                 
-                plays.append({
+                play_data = {
                     'player': player,
                     'line': line,
                     'bet_side': strat['bet_side'],
@@ -765,7 +766,13 @@ def find_plays(df_games, strategies, granularity='detailed'):
                     'strategy_hit_rate': strat['hit_rate'],
                     'strategy_games': strat['games'],
                     'reason': f"{strat['bet_side']} - {line_tier} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)"
-                })
+                }
+                
+                # Add game_time if available
+                if game_time is not None:
+                    play_data['game_time'] = game_time
+                
+                plays.append(play_data)
     
     return pd.DataFrame(plays)
 
@@ -788,11 +795,17 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
         return
     
     # Prepare CSV columns (use actual column names from find_plays)
-    csv_data = df_plays[[
+    columns_to_save = [
         'player', 'team', 'opponent', 'bet_side', 'line', 'spread',
         'line_tier', 'spread_bin', 'strategy_name', 
         'strategy_roi', 'strategy_edge', 'strategy_hit_rate', 'strategy_games'
-    ]].copy()
+    ]
+    
+    # Add game_time if it exists
+    if 'game_time' in df_plays.columns:
+        columns_to_save.append('game_time')
+    
+    csv_data = df_plays[columns_to_save].copy()
     
     # Rename columns for clarity in saved CSV
     csv_data = csv_data.rename(columns={

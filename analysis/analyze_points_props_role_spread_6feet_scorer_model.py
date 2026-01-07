@@ -616,6 +616,23 @@ def find_edges(df_clean, baseline_over_rate, min_sample_size=50):
                     over_roi = ((over_rate/100) * (100/110) - (under_rate/100)) * 100
                     under_roi = ((under_rate/100) * (100/110) - (over_rate/100)) * 100
                     
+                    # Calculate rim shot metrics for this strategy cell
+                    avg_rim_shot_pct = 0
+                    avg_rim_fg_pct = 0
+                    avg_pts_0_6_pct = 0
+                    
+                    if 'total_season_shots' in subset.columns and 'rim_season_shots' in subset.columns:
+                        # Calculate rim_shot_pct for games in this cell
+                        valid_shots = subset[subset['total_season_shots'].notna() & (subset['total_season_shots'] > 0)]
+                        if len(valid_shots) > 0:
+                            avg_rim_shot_pct = (valid_shots['rim_season_shots'] / valid_shots['total_season_shots'] * 100).mean()
+                    
+                    if 'rim_fg_pct' in subset.columns:
+                        avg_rim_fg_pct = subset['rim_fg_pct'].mean()
+                    
+                    if 'pts_0_6_pct' in subset.columns:
+                        avg_pts_0_6_pct = subset['pts_0_6_pct'].mean()
+                    
                     results.append({
                         'line_tier': tier,
                         'spread_bin': spread,
@@ -631,7 +648,10 @@ def find_edges(df_clean, baseline_over_rate, min_sample_size=50):
                         'under_edge': under_rate - baseline_under_rate,
                         'avg_line': subset['points_line'].mean(),
                         'avg_pts': subset['PTS'].mean(),
-                        'avg_diff': subset['points_diff'].mean()
+                        'avg_diff': subset['points_diff'].mean(),
+                        'avg_rim_shot_pct': avg_rim_shot_pct,
+                        'avg_rim_fg_pct': avg_rim_fg_pct,
+                        'avg_pts_0_6_pct': avg_pts_0_6_pct
                     })
     
     df_edges = pd.DataFrame(results)
@@ -648,11 +668,23 @@ def find_edges(df_clean, baseline_over_rate, min_sample_size=50):
     cols = ['line_tier', 'spread_bin', 'scorer_type', 'games', 'over_rate', 'under_rate', 'over_edge', 'push_rate', 'over_roi']
     print(top_overs[cols].to_string(index=False))
     
+    # Show rim metrics for top overs
+    if 'avg_rim_fg_pct' in df_edges.columns and top_overs['avg_rim_fg_pct'].notna().any():
+        print_subsection(f"\n{EMOJI['target']} RIM METRICS FOR TOP OVERS")
+        rim_cols = ['line_tier', 'spread_bin', 'scorer_type', 'over_roi', 'avg_rim_shot_pct', 'avg_rim_fg_pct', 'avg_pts_0_6_pct']
+        print(top_overs[rim_cols].to_string(index=False))
+    
     # Top under opportunities (now with scorer type!)
     print_subsection(f"\n{EMOJI['cold']} TOP 10 UNDER OPPORTUNITIES (highest edge vs baseline)")
     top_unders = df_edges.nlargest(10, 'under_edge')
     cols = ['line_tier', 'spread_bin', 'scorer_type', 'games', 'over_rate', 'under_rate', 'under_edge', 'push_rate', 'under_roi']
     print(top_unders[cols].to_string(index=False))
+    
+    # Show rim metrics for top unders
+    if 'avg_rim_fg_pct' in df_edges.columns and top_unders['avg_rim_fg_pct'].notna().any():
+        print_subsection(f"\n{EMOJI['target']} RIM METRICS FOR TOP UNDERS")
+        rim_cols = ['line_tier', 'spread_bin', 'scorer_type', 'under_roi', 'avg_rim_shot_pct', 'avg_rim_fg_pct', 'avg_pts_0_6_pct']
+        print(top_unders[rim_cols].to_string(index=False))
     
     # Key insights
     print_subsection(f"\n{EMOJI['light']} KEY INSIGHTS")
@@ -686,6 +718,31 @@ def find_edges(df_clean, baseline_over_rate, min_sample_size=50):
         print(f"  Perimeter: {len(perim_edges)} combinations with {min_sample_size}+ games")
         if len(perim_edges) > 0:
             print(f"    Best ROI: {perim_edges['over_roi'].max():+.1f}% (OVER), {perim_edges['under_roi'].max():+.1f}% (UNDER)")
+        
+        # Rim metrics correlation analysis
+        if 'avg_rim_fg_pct' in df_edges.columns and df_edges['avg_rim_fg_pct'].notna().any():
+            print(f"\n{EMOJI['light']} RIM METRICS CORRELATION WITH ROI:")
+            
+            # Calculate correlations
+            valid_edges = df_edges[df_edges['avg_rim_fg_pct'].notna()].copy()
+            
+            if len(valid_edges) > 10:
+                corr_rim_fg_over = valid_edges['avg_rim_fg_pct'].corr(valid_edges['over_roi'])
+                corr_rim_fg_under = valid_edges['avg_rim_fg_pct'].corr(valid_edges['under_roi'])
+                corr_rim_shot_over = valid_edges['avg_rim_shot_pct'].corr(valid_edges['over_roi'])
+                
+                print(f"  Rim FG% → Over ROI: {corr_rim_fg_over:+.3f}")
+                print(f"  Rim FG% → Under ROI: {corr_rim_fg_under:+.3f}")
+                print(f"  Rim Shot% → Over ROI: {corr_rim_shot_over:+.3f}")
+                
+                # Find strategies with high rim FG% and good ROI
+                high_rim_fg = valid_edges[valid_edges['avg_rim_fg_pct'] > 62]
+                if len(high_rim_fg) > 0:
+                    best_high_rim = high_rim_fg.nlargest(3, 'over_roi')
+                    print(f"\n  Top 3 strategies with Rim FG% > 62%:")
+                    for _, strat in best_high_rim.iterrows():
+                        print(f"    {strat['line_tier']} + {strat['spread_bin']} + {strat['scorer_type']}: "
+                              f"ROI {strat['over_roi']:+.1f}% | Rim FG {strat['avg_rim_fg_pct']:.1f}%")
     
     return df_edges
 
