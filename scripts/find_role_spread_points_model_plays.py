@@ -808,7 +808,11 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
     # S3 path - save to 2d/ subfolder
     bucket = 'nba-betting-mt'
     key = f'data/04_output/plays/role_spread_points_model/2d/{target_date}.csv'
-    backup_key = f'data/04_output/plays/role_spread_points_model/2d/{target_date}_backup.csv'
+    
+    # Backup filename with timestamp
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_key = f'data/04_output/plays/role_spread_points_model/2d/{target_date}_backup_{timestamp}.csv'
     
     try:
         import boto3

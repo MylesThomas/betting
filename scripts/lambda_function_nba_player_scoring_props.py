@@ -226,7 +226,9 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     # Environment variables for scripts
     env = {
         'ODDS_API_KEY': odds_api_key,
-        'AWS_DEFAULT_REGION': os.environ.get('AWS_REGION_NAME', 'us-east-2')
+        'AWS_DEFAULT_REGION': os.environ.get('AWS_REGION_NAME', 'us-east-2'),
+        'PYTHONPATH': '/opt/python'  # Lambda layer path for pandas, numpy, etc.
+        # Why we need PYTHONPATH: The script needs to access packages in the Lambda layer.
     }
     
     # Step 1: Find today's 2D plays
@@ -239,6 +241,7 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
         '--season', season,
         '--min-roi', '5.0',
         '--granularity', 'detailed',
+        '--date', today,  # Pass ET date explicitly to avoid UTC issues
         '--save-s3'
     ]
     
@@ -262,6 +265,7 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
         '--min-roi', '5.0',
         '--granularity', 'detailed',
         '--rim-scorer-pct', '40',
+        '--date', today,  # Pass ET date explicitly to avoid UTC issues
         '--save-s3'
     ]
     
