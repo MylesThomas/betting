@@ -130,6 +130,29 @@ def probability_to_american_odds(prob_pct):
         return (100 - prob_pct) / prob_pct * 100
 
 
+def implied_probability_to_odds(prob):
+    """
+    Convert implied probability (as decimal) to American odds.
+    
+    Args:
+        prob: Probability as decimal (e.g., 0.5455 for 54.55%)
+    
+    Returns:
+        American odds (negative for favorites, positive for underdogs)
+    
+    Examples:
+        >>> implied_probability_to_odds(0.5238)  # ~-110 odds
+        -110.0
+        >>> implied_probability_to_odds(0.40)  # +150 odds
+        150.0
+        >>> implied_probability_to_odds(0.50)  # Even odds
+        -100.0
+    """
+    # Convert decimal to percentage and use existing function
+    prob_pct = prob * 100
+    return probability_to_american_odds(prob_pct)
+
+
 def calculate_vig(implied_over, implied_under):
     """
     Calculate vig (overround/juice) from implied probabilities.
