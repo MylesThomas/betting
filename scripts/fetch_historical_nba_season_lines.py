@@ -78,10 +78,10 @@ ODDS_FORMAT = 'american'
 
 # S3 Configuration
 S3_BUCKET = 'the-odds-api-mt'
-S3_PREFIX = 'nba/historical'  # S3 path: s3://the-odds-api-mt/nba/historical/YYYY-YY/
+S3_PREFIX = 'nba/historical_game_lines'  # S3 path: s3://the-odds-api-mt/nba/historical_game_lines/YYYY-YY/
 
 # Local backup directory (optional)
-OUTPUT_DIR = 'data/01_input/the-odds-api/nba/game_lines/historical'
+OUTPUT_DIR = 'data/01_input/the-odds-api/nba/game_lines/historical_game_lines'
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -91,7 +91,8 @@ _s3_client = None
 
 # Snapshot times (UTC)
 EVENT_LIST_HOUR = 17  # 12pm ET (5 PM UTC) - for listing games
-ODDS_SNAPSHOT_HOUR = 17  # 12pm ET (5 PM UTC) - safe time before most games start (7-10pm ET)
+# ODDS_SNAPSHOT_HOUR = 17  # 12pm ET (5 PM UTC) - safe time before most games start (7-10pm ET)
+# (ODDS_SNAPSHOT_HOUR is not used, as we fetch lines at the last full hour before tipoff)
 
 RATE_LIMIT_DELAY = 0.5  # seconds between API calls
 

@@ -7,26 +7,26 @@ not just those in tonight's games. The cache includes:
 - team: Current team abbreviation
 - player_normalized: Normalized name for matching (used by all scripts)
 
-USAGE - FULL ORDER OF OPERATIONS:
-==================================
+USAGE:
+======
+    python scripts/build_full_roster_cache.py
 
-Step 1: Run the script to rebuild both cache files
-    $ python scripts/build_full_roster_cache.py
-    
-    This automatically creates BOTH:
+OUTPUT:
+=======
+This automatically creates BOTH files locally AND uploads to S3:
+
+Local:
     - data/02_cache/nba_full_roster_cache.csv (full roster with all name formats)
     - data/02_cache/player_team_cache.csv (simplified for quick lookups)
 
-Step 2: Refresh Streamlit dashboard
-    - Reload the page in your browser
-    - The app will automatically use the updated cache
-
-That's it! No manual conversion needed.
+S3:
+    - s3://nba-betting-mt/data/02_cache/nba_full_roster_cache.csv
+    - s3://nba-betting-mt/data/02_cache/player_team_cache.csv
 
 WHY TWO FILES?
 ==============
-- data/02_cache/nba_full_roster_cache.csv: Complete roster with multiple name formats
-- data/02_cache/player_team_cache.csv: Simplified format optimized for quick lookups
+- nba_full_roster_cache.csv: Complete roster with multiple name formats
+- player_team_cache.csv: Simplified format optimized for quick lookups
 
 Run this weekly or after major trades to keep rosters up to date.
 """
@@ -35,6 +35,8 @@ import pandas as pd
 import sys
 from pathlib import Path
 import time
+import boto3
+from io import StringIO
 
 # Fix SSL certificate issues with NBA API (must be done BEFORE importing nba_api)
 import ssl
@@ -61,6 +63,10 @@ from src.config_loader import get_file_path
 
 # Output file
 OUTPUT_PATH = Path(__file__).parent.parent / get_file_path('nba_full_roster_cache')
+
+# S3 Configuration
+S3_BUCKET = 'nba-betting-mt'
+S3_PREFIX = 'data/02_cache'
 
 
 def get_all_nba_rosters():
@@ -137,6 +143,40 @@ def get_all_nba_rosters():
     except Exception as e:
         print(f"Error fetching rosters: {e}")
         return pd.DataFrame()
+
+
+def upload_to_s3(df, filename):
+    """
+    Upload DataFrame to S3 as CSV.
+    
+    Args:
+        df: DataFrame to upload
+        filename: Name of file (e.g., 'nba_full_roster_cache.csv')
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    s3_key = f"{S3_PREFIX}/{filename}"
+    
+    try:
+        s3_client = boto3.client('s3')
+        
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=s3_key,
+            Body=csv_buffer.getvalue(),
+            ContentType='text/csv'
+        )
+        
+        print(f"✅ Uploaded to S3: s3://{S3_BUCKET}/{s3_key}")
+        return True
+        
+    except Exception as e:
+        print(f"⚠️  S3 upload failed: {e}")
+        return False
 
 
 def add_odds_api_names(roster_df, odds_data_path=None):
@@ -229,10 +269,11 @@ def main():
     # Sort by team, then player name
     roster_df = roster_df.sort_values(['team', 'player_name_nba_api'])
     
-    # Save full roster cache to CSV
-    print(f"\nStep 4: Saving full roster cache to {OUTPUT_PATH}")
+    # Save full roster cache to CSV (local backup)
+    print(f"\nStep 4: Saving full roster cache locally...")
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     roster_df.to_csv(OUTPUT_PATH, index=False)
+    print(f"✅ Saved local backup: {OUTPUT_PATH}")
     
     # Step 5: Automatically create player_team_cache.csv for quick lookups
     print(f"\nStep 5: Creating player_team_cache.csv for quick lookups...")
@@ -248,24 +289,30 @@ def main():
     player_team_cache = player_team_cache.drop_duplicates(subset=['player_normalized'], keep='first')
     player_team_cache = player_team_cache.sort_values('player_normalized')
     
-    # Save to same directory
+    # Save to same directory (local backup)
     cache_path = OUTPUT_PATH.parent / 'player_team_cache.csv'
     player_team_cache.to_csv(cache_path, index=False)
-    print(f"✅ Saved {cache_path}")
+    print(f"✅ Saved local backup: {cache_path}")
+    
+    # Upload both files to S3
+    print(f"\nStep 6: Uploading cache files to S3...")
+    upload_to_s3(roster_df, 'nba_full_roster_cache.csv')
+    upload_to_s3(player_team_cache, 'player_team_cache.csv')
     
     print()
     print("=" * 70)
     print("✅ Full Roster Cache Created!")
     print("=" * 70)
-    print(f"Full roster: {OUTPUT_PATH}")
-    print(f"Quick cache: {cache_path}")
+    print(f"Local full roster: {OUTPUT_PATH}")
+    print(f"Local quick cache: {cache_path}")
+    print(f"S3 bucket: s3://{S3_BUCKET}/{S3_PREFIX}/")
     print(f"Total players: {len(roster_df)}")
     print(f"Teams: {roster_df['team'].nunique()}")
     print()
     print("Sample:")
     print(roster_df.head(10).to_string(index=False))
     print()
-    print("Both cache files are ready to use!")
+    print("Both cache files saved locally and uploaded to S3!")
 
 
 if __name__ == '__main__':

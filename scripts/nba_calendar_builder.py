@@ -8,10 +8,13 @@ This script:
 
 Usage:
     # Build calendar for current season
-    python nba_calendar_builder.py
+    python scripts/nba_calendar_builder.py
     
     # Build for specific season
-    python nba_calendar_builder.py --season 2025-26
+    python scripts/nba_calendar_builder.py --season 2025-26
+
+    # Build for specific season and upload to S3
+    python scripts/nba_calendar_builder.py --season 2025-26 --s3
 
 Note: This calendar only includes Regular Season games from the NBA API.
 Special games like the NBA Cup Championship(e.g., Bucks vs. Thunder on Dec 17, 2024)
@@ -147,7 +150,7 @@ def get_games_for_date(games_df, target_date):
     return date_games[['GAME_ID', 'GAME_DATE', 'MATCHUP', 'TEAM_NAME']].sort_values('GAME_DATE')
 
 
-def save_calendar(unique_dates, games_df, season='2025-26', output_dir=None):
+def save_calendar(unique_dates, games_df, season='2025-26', output_dir=None, upload_s3=False):
     """
     Save game calendar and metadata to files
     
@@ -156,6 +159,7 @@ def save_calendar(unique_dates, games_df, season='2025-26', output_dir=None):
         games_df: DataFrame with all games
         season: Season string (e.g., '2025-26')
         output_dir: Output directory path (defaults to data/01_input/nba_calendar)
+        upload_s3: If True, upload calendar files to S3
     """
     if output_dir is None:
         # Save to data/01_input/nba_calendar
@@ -200,6 +204,45 @@ def save_calendar(unique_dates, games_df, season='2025-26', output_dir=None):
     print(f"   - {csv_file.name} (full game data)")
     print(f"   - {summary_file.name} (games per day)")
     
+    # Upload to S3 if requested
+    if upload_s3:
+        try:
+            import boto3
+            s3 = boto3.client('s3')
+            bucket = 'nba-betting-mt'
+            s3_prefix = f'data/01_input/nba_calendar/{season_underscore}'
+            
+            print(f"\n📤 Uploading to S3 (s3://{bucket}/{s3_prefix}/)...")
+            
+            # Upload JSON
+            s3.upload_file(
+                str(json_file),
+                bucket,
+                f'{s3_prefix}/{json_file.name}'
+            )
+            print(f"   ✅ {json_file.name}")
+            
+            # Upload CSV
+            s3.upload_file(
+                str(csv_file),
+                bucket,
+                f'{s3_prefix}/{csv_file.name}'
+            )
+            print(f"   ✅ {csv_file.name}")
+            
+            # Upload summary
+            s3.upload_file(
+                str(summary_file),
+                bucket,
+                f'{s3_prefix}/{summary_file.name}'
+            )
+            print(f"   ✅ {summary_file.name}")
+            
+            print(f"   📍 Location: s3://{bucket}/{s3_prefix}/")
+            
+        except Exception as e:
+            print(f"   ❌ S3 upload failed: {e}")
+    
     return output_path
 
 
@@ -234,12 +277,13 @@ def estimate_api_costs(num_game_days, avg_games_per_day=12):
     print("="*60 + "\n")
 
 
-def main(season=None):
+def main(season=None, upload_s3=False):
     """
     Main function - builds NBA calendar and prepares for prop fetching
     
     Args:
         season: Season string (e.g., '2025-26'). Defaults to current season.
+        upload_s3: If True, upload calendar files to S3
     """
     if season is None:
         season = CURRENT_NBA_SEASON
@@ -265,7 +309,7 @@ def main(season=None):
         print(f"  {game['MATCHUP']}")
     
     # Save calendar
-    output_path = save_calendar(unique_dates, games_df, season)
+    output_path = save_calendar(unique_dates, games_df, season, upload_s3=upload_s3)
     
     # Show cost estimates
     avg_games = len(games_df) / len(unique_dates)
@@ -307,8 +351,10 @@ Examples:
     
     parser.add_argument('--season', type=str, default=None,
                        help=f'Season to build calendar for (default: {CURRENT_NBA_SEASON})')
+    parser.add_argument('--s3', action='store_true',
+                       help='Upload calendar files to S3 (s3://nba-betting-mt/data/01_input/nba_calendar/)')
     
     args = parser.parse_args()
     
-    unique_dates, games_df, opening_day = main(args.season)
+    unique_dates, games_df, opening_day = main(args.season, upload_s3=args.s3)
 

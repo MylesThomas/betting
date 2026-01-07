@@ -17,16 +17,22 @@ Key Features:
     4. Shows which specific players drive each edge
 
 Usage:
-    # Default (coarse granularity)
-    python analysis/analyze_player_props_matrix.py
+    # Quick: Use season flag (auto-generates S3 paths)
+    python analysis/analyze_points_props_role_spread_model.py --season 2025-26 --granularity detailed --min-roi 5.0
     
-    # Coarse: 4 player tiers × 6 spread bins = 24 combinations
-    python analysis/analyze_player_props_matrix.py --granularity coarse
+    # Explicit input/output (local or S3)
+    python analysis/analyze_points_props_role_spread_model.py \
+        --input s3://nba-betting-mt/data/03_intermediate/player_props_with_actuals_2025-26.csv \
+        --output s3://nba-betting-mt/data/03_intermediate/my_strategies.json \
+        --granularity detailed \
+        --min-roi 5.0
     
-    # Fine: 7 player tiers × 9 spread bins = 63 combinations
-    python analysis/analyze_player_props_matrix.py --granularity fine
-    
-    Optional: Modify DATA_PATH at top of script to point to your merged dataset
+    # Local files
+    python analysis/analyze_points_props_role_spread_model.py \
+        --input data/merged_data.csv \
+        --output strategies.json \
+        --granularity standard \
+        --min-roi 5.0
 
 Output:
     - Console output with all matrices and insights
@@ -40,7 +46,10 @@ import numpy as np
 import os
 import sys
 import argparse
+import json
 from pathlib import Path
+from datetime import datetime
+from io import BytesIO
 
 # =============================================================================
 # CONFIGURATION
@@ -55,7 +64,8 @@ while not (project_root / '.gitignore').exists() and project_root != project_roo
 sys.path.insert(0, str(project_root))
 
 # Data path - modify this to point to your merged dataset
-DATA_PATH = project_root / 'data' / '03_intermediate' / 'merged_data.csv'
+# Note: When using --s3 flag, this path is ignored and data loads from S3
+DATA_PATH = project_root / 'data' / '03_intermediate' / 'player_props_with_actuals_2025-26.csv'
 
 # Emoji map for status/output
 EMOJI = {
@@ -103,19 +113,19 @@ The goal: Find combos with large positive edge and sufficient sample size
 # HELPER FUNCTIONS
 # =============================================================================
 
-def bin_points_line(line, granularity='coarse'):
+def bin_points_line(line, granularity='standard'):
     """
     Categorize player by their points line tier
     
     Args:
         line: Points line value
-        granularity: 'coarse' (4 tiers) or 'fine' (7 tiers)
+        granularity: 'standard' (4 tiers) or 'detailed' (7 tiers)
     """
     if pd.isna(line):
         return 'Unknown'
     
-    if granularity == 'fine':
-        # Fine granularity: 7 tiers
+    if granularity == 'detailed':
+        # Detailed granularity: 7 tiers
         if line >= 30:
             return '30+ (Superstar)'
         elif line >= 25:
@@ -131,7 +141,7 @@ def bin_points_line(line, granularity='coarse'):
         else:
             return '0-5 (Deep Bench)'
     else:
-        # Coarse granularity: 4 tiers (original)
+        # Standard granularity: 4 tiers (original)
         if line >= 30:
             return '30+ (Superstar)'
         elif line >= 20:
@@ -142,19 +152,19 @@ def bin_points_line(line, granularity='coarse'):
             return '<10 (Bench)'
 
 
-def bin_team_spread(spread, granularity='coarse'):
+def bin_team_spread(spread, granularity='standard'):
     """
     Categorize game by team spread
     
     Args:
         spread: Team spread value (positive = favorite, negative = underdog)
-        granularity: 'coarse' (6 bins) or 'fine' (9 bins)
+        granularity: 'standard' (6 bins) or 'detailed' (9 bins)
     """
     if pd.isna(spread):
         return 'Unknown'
     
-    if granularity == 'fine':
-        # Fine granularity: 9 bins
+    if granularity == 'detailed':
+        # Detailed granularity: 9 bins
         if spread >= 15:
             return '15+ Fav'
         elif spread >= 10:
@@ -174,7 +184,7 @@ def bin_team_spread(spread, granularity='coarse'):
         else:
             return '15+ Dog'
     else:
-        # Coarse granularity: 6 bins (original)
+        # Standard granularity: 6 bins (original)
         if spread >= 10:
             return '10+ Fav'
         elif spread >= 5:
@@ -203,9 +213,9 @@ def print_subsection(title):
     print("-" * 80)
 
 
-def get_tier_order(granularity='coarse'):
+def get_tier_order(granularity='standard'):
     """Get the proper ordering for player tiers"""
-    if granularity == 'fine':
+    if granularity == 'detailed':
         return [
             '30+ (Superstar)',
             '25-30 (High Star)',
@@ -226,9 +236,9 @@ def get_tier_order(granularity='coarse'):
         ]
 
 
-def get_spread_order(granularity='coarse'):
+def get_spread_order(granularity='standard'):
     """Get the proper ordering for spread bins"""
-    if granularity == 'fine':
+    if granularity == 'detailed':
         return [
             '15+ Dog',
             '10-15 Dog',
@@ -257,15 +267,44 @@ def get_spread_order(granularity='coarse'):
 # MAIN ANALYSIS FUNCTIONS
 # =============================================================================
 
-def load_data(data_path):
-    """Load and prepare the merged dataset"""
+def load_data(input_path):
+    """
+    Load and prepare the merged dataset from local file or S3
+    
+    Args:
+        input_path: Local file path or S3 URI (s3://bucket/key)
+    """
     print_section("Loading Data", "chart")
     
-    if not data_path.exists():
-        raise FileNotFoundError(f"Data file not found: {data_path}")
+    # Check if S3 URI
+    if str(input_path).startswith('s3://'):
+        # Parse S3 URI
+        s3_uri = str(input_path)
+        parts = s3_uri.replace('s3://', '').split('/', 1)
+        bucket = parts[0]
+        key = parts[1] if len(parts) > 1 else ''
+        
+        print(f"Loading from S3: {s3_uri}")
+        
+        try:
+            import boto3
+            s3 = boto3.client('s3')
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            df = pd.read_csv(BytesIO(obj['Body'].read()))
+            print(f"{EMOJI['success']} Loaded {len(df):,} player-game rows from S3")
+        except Exception as e:
+            print(f"❌ Error loading from S3: {e}")
+            raise
+    else:
+        # Load from local file
+        input_path = Path(input_path)
+        if not input_path.exists():
+            raise FileNotFoundError(f"Data file not found: {input_path}")
+        
+        print(f"Loading from local file: {input_path}")
+        df = pd.read_csv(input_path)
+        print(f"{EMOJI['success']} Loaded {len(df):,} player-game rows from local file")
     
-    df = pd.read_csv(data_path)
-    print(f"{EMOJI['success']} Loaded {len(df):,} player-game rows")
     print(f"Date range: {df['game_date'].min()} to {df['game_date'].max()}")
     print(f"Unique players: {df['PLAYER_NAME'].nunique():,}")
     print(f"Unique games: {df['GAME_ID'].nunique():,}")
@@ -338,7 +377,7 @@ def remove_early_exits(df_bets):
     return df_clean
 
 
-def create_matrix_analysis(df_clean, granularity='coarse'):
+def create_matrix_analysis(df_clean, granularity='standard'):
     """Create and display tier × spread matrix"""
     print_section(f"Matrix Analysis: Player Tier × Team Spread ({granularity.upper()})", "chart")
     
@@ -569,6 +608,334 @@ def show_top_edge_players(df_clean, df_edges):
     drill_down_edge(df_clean, best_under['line_tier'], best_under['spread_bin'], bet_side='under')
 
 
+def compare_strategies(old_strategies, new_strategies, min_roi=5.0):
+    """
+    Compare old and new strategies to identify changes based on ROI threshold
+    
+    Reports:
+    1. Still active: ROI >= threshold in BOTH old and new
+    2. New strategies: ROI >= threshold in new but NOT in old
+    3. Deactivated: ROI >= threshold in old but NOT in new (ROI dropped below threshold)
+    
+    Args:
+        min_roi: Minimum ROI threshold for "active" strategies
+    """
+    # Create lookup keys: (line_tier, spread_bin, bet_side)
+    def get_key(s):
+        return (s['line_tier'], s['spread_bin'], s['bet_side'])
+    
+    # Build dicts for ALL strategies (for comparison)
+    old_dict = {get_key(s): s for s in old_strategies}
+    new_dict = {get_key(s): s for s in new_strategies}
+    
+    # Filter to "active" strategies (ROI >= threshold)
+    old_active = {k: v for k, v in old_dict.items() if v['roi'] >= min_roi}
+    new_active = {k: v for k, v in new_dict.items() if v['roi'] >= min_roi}
+    
+    old_active_keys = set(old_active.keys())
+    new_active_keys = set(new_active.keys())
+    
+    # Categorize strategies
+    still_active_keys = old_active_keys & new_active_keys
+    new_keys_only = new_active_keys - old_active_keys
+    deactivated_keys = old_active_keys - new_active_keys
+    
+    # 1. Still active strategies
+    print(f"\n{EMOJI['success']} STILL ACTIVE STRATEGIES (ROI >= {min_roi}% in both): {len(still_active_keys)}")
+    print("-" * 80)
+    
+    if len(still_active_keys) > 0:
+        print(f"{'Strategy':<50} {'Old ROI':>8} {'New ROI':>8} {'Change':>8} {'Old Games':>10} {'New Games':>10}")
+        print("-" * 80)
+        
+        # Sort by abs(change in ROI) descending
+        active_comparison = []
+        for key in still_active_keys:
+            old = old_active[key]
+            new = new_active[key]
+            change = new['roi'] - old['roi']
+            active_comparison.append({
+                'key': key,
+                'name': f"{key[0]} + {key[1]} {key[2]}",
+                'old_roi': old['roi'],
+                'new_roi': new['roi'],
+                'change': change,
+                'old_games': old['games'],
+                'new_games': new['games']
+            })
+        
+        active_comparison.sort(key=lambda x: abs(x['change']), reverse=True)
+        
+        # Show top 15 biggest changes
+        for item in active_comparison[:15]:
+            name = item['name'][:48]
+            change_emoji = EMOJI['fire'] if item['change'] > 0 else EMOJI['cold']
+            print(f"{name:<50} {item['old_roi']:>7.1f}% {item['new_roi']:>7.1f}% {change_emoji} {item['change']:>6.1f}% {item['old_games']:>10} {item['new_games']:>10}")
+        
+        if len(active_comparison) > 15:
+            print(f"\n   ... and {len(active_comparison) - 15} more stable strategies")
+    
+    # 2. New strategies
+    print(f"\n\n{EMOJI['fire']} NEW STRATEGIES (ROI >= {min_roi}% in new, <{min_roi}% or didn't exist in old): {len(new_keys_only)}")
+    print("-" * 80)
+    
+    if len(new_keys_only) > 0:
+        new_list_data = []
+        for key in new_keys_only:
+            new_strat = new_active[key]
+            old_strat = old_dict.get(key)  # May not exist
+            
+            new_list_data.append({
+                'strat': new_strat,
+                'old_roi': old_strat['roi'] if old_strat else None,
+                'old_games': old_strat['games'] if old_strat else 0
+            })
+        
+        new_list_data.sort(key=lambda x: x['strat']['roi'], reverse=True)
+        
+        print(f"{'Strategy':<50} {'New ROI':>8} {'Old ROI':>8} {'Hit Rate':>10} {'Games':>8}")
+        print("-" * 80)
+        
+        for item in new_list_data[:15]:
+            strat = item['strat']
+            name = f"{strat['line_tier']} + {strat['spread_bin']} {strat['bet_side']}"[:48]
+            old_roi_str = f"{item['old_roi']:>7.1f}%" if item['old_roi'] is not None else "    N/A"
+            print(f"{name:<50} {strat['roi']:>7.1f}% {old_roi_str} {strat['hit_rate']:>9.1f}% {strat['games']:>8}")
+        
+        if len(new_list_data) > 15:
+            print(f"\n   ... and {len(new_list_data) - 15} more new strategies")
+    else:
+        print("   (None)")
+    
+    # 3. Deactivated strategies
+    print(f"\n\n❌ DEACTIVATED STRATEGIES (ROI >= {min_roi}% in old, <{min_roi}% in new): {len(deactivated_keys)}")
+    print("-" * 80)
+    
+    if len(deactivated_keys) > 0:
+        deactivated_list_data = []
+        for key in deactivated_keys:
+            old_strat = old_active[key]
+            new_strat = new_dict.get(key)  # Should exist but may have dropped below threshold
+            
+            deactivated_list_data.append({
+                'strat': old_strat,
+                'new_roi': new_strat['roi'] if new_strat else None,
+                'new_games': new_strat['games'] if new_strat else 0
+            })
+        
+        deactivated_list_data.sort(key=lambda x: x['strat']['roi'], reverse=True)
+        
+        print(f"{'Strategy':<50} {'Old ROI':>8} {'New ROI':>8} {'ROI Drop':>9} {'Old Games':>10} {'New Games':>10}")
+        print("-" * 80)
+        
+        for item in deactivated_list_data[:15]:
+            strat = item['strat']
+            name = f"{strat['line_tier']} + {strat['spread_bin']} {strat['bet_side']}"[:48]
+            new_roi_str = f"{item['new_roi']:>7.1f}%" if item['new_roi'] is not None else "    N/A"
+            drop = (item['new_roi'] - strat['roi']) if item['new_roi'] is not None else 0
+            print(f"{name:<50} {strat['roi']:>7.1f}% {new_roi_str} {drop:>8.1f}% {strat['games']:>10} {item['new_games']:>10}")
+        
+        if len(deactivated_list_data) > 15:
+            print(f"\n   ... and {len(deactivated_list_data) - 15} more deactivated strategies")
+        
+        print(f"\n{EMOJI['warning']} Note: Deactivated means ROI dropped below {min_roi}% threshold")
+    else:
+        print("   (None)")
+    
+    # Summary
+    print(f"\n{'='*80}")
+    print(f"SUMMARY (ROI Threshold = {min_roi}%):")
+    print(f"  Old total strategies: {len(old_strategies)} (all), {len(old_active_keys)} active (>={min_roi}%)")
+    print(f"  New total strategies: {len(new_strategies)} (all), {len(new_active_keys)} active (>={min_roi}%)")
+    print(f"  Still active: {len(still_active_keys)} ({len(still_active_keys)/len(old_active_keys)*100 if len(old_active_keys) > 0 else 0:.1f}% of old active)")
+    print(f"  New: {len(new_keys_only)}")
+    print(f"  Deactivated: {len(deactivated_keys)}")
+    print(f"{'='*80}")
+
+
+def output_strategies_json(df_edges, output_path, df_original, granularity, min_roi=5.0):
+    """
+    Output ALL strategies to JSON (no filtering)
+    
+    This creates a JSON file with all strategies that can be filtered at runtime
+    by the daily plays script based on ROI threshold.
+    
+    Before overwriting, checks if file exists and:
+    1. Creates timestamped backup
+    2. Compares old vs new strategies
+    3. Reports: still active, new, and deactivated strategies
+    
+    Args:
+        output_path: Local file path or S3 URI (s3://bucket/key)
+    """
+    print_section("Exporting Strategies to JSON")
+    
+    # Check if output file already exists and load it for comparison
+    old_strategies_data = None
+    is_s3 = str(output_path).startswith('s3://')
+    
+    if is_s3:
+        # Check S3
+        s3_uri = str(output_path)
+        parts = s3_uri.replace('s3://', '').split('/', 1)
+        bucket = parts[0]
+        key = parts[1] if len(parts) > 1 else ''
+        
+        try:
+            import boto3
+            s3 = boto3.client('s3')
+            
+            # Try to get existing file
+            try:
+                obj = s3.get_object(Bucket=bucket, Key=key)
+                old_strategies_data = json.loads(obj['Body'].read().decode('utf-8'))
+                print(f"\n📋 Found existing strategies file in S3")
+                print(f"   Old file generated: {old_strategies_data.get('generated_at', 'Unknown')}")
+                print(f"   Old data through: {old_strategies_data.get('data_through', 'Unknown')}")
+                print(f"   Old strategies: {len(old_strategies_data.get('strategies', []))}")
+                
+                # Create timestamped backup
+                old_date = old_strategies_data.get('data_through', datetime.now().strftime('%Y-%m-%d')).replace('-', '')
+                backup_key = key.replace('.json', f'_{old_date}.json')
+                
+                print(f"\n💾 Creating backup: s3://{bucket}/{backup_key}")
+                s3.copy_object(
+                    Bucket=bucket,
+                    CopySource={'Bucket': bucket, 'Key': key},
+                    Key=backup_key
+                )
+                print(f"{EMOJI['success']} Backup created")
+                
+            except s3.exceptions.NoSuchKey:
+                print(f"\n📝 No existing strategies file found (first run)")
+                
+        except Exception as e:
+            print(f"⚠️  Error checking S3: {e}")
+    else:
+        # Check local file
+        output_file = Path(output_path)
+        if output_file.exists():
+            try:
+                with open(output_file, 'r') as f:
+                    old_strategies_data = json.load(f)
+                
+                print(f"\n📋 Found existing strategies file locally")
+                print(f"   Old file generated: {old_strategies_data.get('generated_at', 'Unknown')}")
+                print(f"   Old data through: {old_strategies_data.get('data_through', 'Unknown')}")
+                print(f"   Old strategies: {len(old_strategies_data.get('strategies', []))}")
+                
+                # Create timestamped backup
+                old_date = old_strategies_data.get('data_through', datetime.now().strftime('%Y-%m-%d')).replace('-', '')
+                backup_path = output_file.parent / f"{output_file.stem}_{old_date}.json"
+                
+                print(f"\n💾 Creating backup: {backup_path}")
+                import shutil
+                shutil.copy2(output_file, backup_path)
+                print(f"{EMOJI['success']} Backup created")
+                
+            except Exception as e:
+                print(f"⚠️  Error loading old file: {e}")
+        else:
+            print(f"\n📝 No existing strategies file found (first run)")
+    
+    # Create list of all strategies (both over and under for each combo)
+    strategies = []
+    
+    for _, row in df_edges.iterrows():
+        # OVER strategy
+        strategies.append({
+            'line_tier': row['line_tier'],
+            'spread_bin': row['spread_bin'],
+            'bet_side': 'OVER',
+            'games': int(row['games']),
+            'hit_rate': round(float(row['over_rate']), 1),
+            'roi': round(float(row['over_roi']), 1),
+            'edge': round(float(row['over_edge']), 1),
+            'push_rate': round(float(row['push_rate']), 1),
+        })
+        
+        # UNDER strategy
+        strategies.append({
+            'line_tier': row['line_tier'],
+            'spread_bin': row['spread_bin'],
+            'bet_side': 'UNDER',
+            'games': int(row['games']),
+            'hit_rate': round(float(row['under_rate']), 1),
+            'roi': round(float(row['under_roi']), 1),
+            'edge': round(float(row['under_edge']), 1),
+            'push_rate': round(float(row['push_rate']), 1),
+        })
+    
+    # Sort by ROI descending
+    strategies.sort(key=lambda x: x['roi'], reverse=True)
+    
+    # Create output structure
+    output_data = {
+        'generated_at': datetime.now().isoformat(),
+        'data_through': df_original['game_date'].max(),
+        'total_games_analyzed': int(len(df_original)),
+        'granularity': granularity,
+        'min_sample_size': MIN_SAMPLE_SIZE,
+        'min_roi_threshold': min_roi,
+        'total_strategies': len(strategies),
+        'strategies': strategies
+    }
+    
+    # Compare with old strategies if they exist
+    if old_strategies_data:
+        print_section("Strategy Comparison", "target")
+        compare_strategies(old_strategies_data.get('strategies', []), strategies, min_roi=min_roi)
+    
+    # Show top strategies by ROI
+    print(f"\n📊 Top 10 strategies by ROI:")
+    for i, strat in enumerate(strategies[:10], 1):
+        print(f"   {i}. {strat['line_tier']} + {strat['spread_bin']} {strat['bet_side']}: "
+              f"{strat['roi']:+.1f}% ROI ({strat['hit_rate']:.1f}% hit, {strat['games']} games)")
+    
+    # Check if S3 URI
+    if str(output_path).startswith('s3://'):
+        # Parse S3 URI
+        s3_uri = str(output_path)
+        parts = s3_uri.replace('s3://', '').split('/', 1)
+        bucket = parts[0]
+        key = parts[1] if len(parts) > 1 else ''
+        
+        # Save to temp file first
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
+            json.dump(output_data, tmp, indent=2)
+            tmp_path = tmp.name
+        
+        try:
+            import boto3
+            s3 = boto3.client('s3')
+            
+            print(f"\n📤 Uploading to S3: {s3_uri}")
+            s3.upload_file(tmp_path, bucket, key)
+            print(f"{EMOJI['success']} Uploaded {len(strategies)} strategies to S3")
+            print(f"   Generated: {output_data['generated_at']}")
+            print(f"   Data through: {output_data['data_through']}")
+            print(f"   Total strategies: {len(strategies)} ({len(strategies)//2} combos × 2 sides)")
+            
+            # Clean up temp file
+            Path(tmp_path).unlink()
+            
+        except Exception as e:
+            print(f"❌ S3 upload failed: {e}")
+            Path(tmp_path).unlink()
+            raise
+    else:
+        # Save to local file
+        output_path = Path(output_path)
+        with open(output_path, 'w') as f:
+            json.dump(output_data, f, indent=2)
+        
+        print(f"{EMOJI['success']} Saved {len(strategies)} strategies to {output_path}")
+        print(f"   Generated: {output_data['generated_at']}")
+        print(f"   Data through: {output_data['data_through']}")
+        print(f"   Total strategies: {len(strategies)} ({len(strategies)//2} combos × 2 sides)")
+
+
 # =============================================================================
 # MAIN EXECUTION
 # =============================================================================
@@ -580,24 +947,61 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with coarse granularity (4 tiers × 6 spreads = 24 combos)
-  python analysis/analyze_player_props_matrix.py --granularity coarse
+  # Quick: Use season flag (auto-generates S3 paths)
+  python analysis/analyze_points_props_role_spread_model.py --season 2025-26 --granularity detailed
   
-  # Run with fine granularity (7 tiers × 9 spreads = 63 combos)
-  python analysis/analyze_player_props_matrix.py --granularity fine
+  # Explicit: Specify exact input/output paths (local or S3)
+  python analysis/analyze_points_props_role_spread_model.py \
+    --input s3://nba-betting-mt/data/03_intermediate/player_props_with_actuals_2025-26.csv \
+    --output s3://nba-betting-mt/data/03_intermediate/my_strategies.json \
+    --granularity detailed
+  
+  # Local files
+  python analysis/analyze_points_props_role_spread_model.py \
+    --input data/03_intermediate/player_props_with_actuals_2025-26.csv \
+    --output my_strategies.json \
+    --granularity standard
   
 Granularity levels:
-  coarse: <10, 10-20, 20-30, 30+ pts  ×  10+ Dog, 5-10 Dog, 0-5 Dog, 0-5 Fav, 5-10 Fav, 10+ Fav
-  fine:   0-5, 5-10, 10-15, 15-20, 20-25, 25-30, 30+ pts  ×  15+ Dog, 10-15 Dog, ..., Pick'em, ..., 15+ Fav
+  standard:  <10, 10-20, 20-30, 30+ pts  ×  10+ Dog, 5-10 Dog, 0-5 Dog, 0-5 Fav, 5-10 Fav, 10+ Fav
+  detailed:  0-5, 5-10, 10-15, 15-20, 20-25, 25-30, 30+ pts  ×  15+ Dog, 10-15 Dog, ..., Pick'em, ..., 15+ Fav
         """
+    )
+    
+    parser.add_argument(
+        '--season',
+        type=str,
+        default=None,
+        help='NBA season (e.g., 2025-26). Auto-generates S3 input/output paths.'
+    )
+    
+    parser.add_argument(
+        '--input',
+        type=str,
+        default=None,
+        help='Input path: local file or S3 URI (s3://bucket/key). Overrides --season.'
+    )
+    
+    parser.add_argument(
+        '--output',
+        type=str,
+        default=None,
+        help='Output path: local file or S3 URI (s3://bucket/key). Overrides --season.'
     )
     
     parser.add_argument(
         '--granularity',
         type=str,
-        choices=['coarse', 'fine'],
-        default='coarse',
-        help='Level of granularity for bins (default: coarse)'
+        choices=['standard', 'detailed'],
+        default='detailed',
+        help='Level of granularity for bins (default: detailed)'
+    )
+    
+    parser.add_argument(
+        '--min-roi',
+        type=float,
+        default=5.0,
+        help='Minimum ROI threshold for active strategies (default: 5.0%%)'
     )
     
     return parser.parse_args()
@@ -607,14 +1011,31 @@ def main():
     """Run the full analysis pipeline"""
     args = parse_args()
     
-    print_section("NBA Player Props Matrix Analysis - 2025-26 Season", "chart")
-    print(f"Data source: {DATA_PATH}")
+    # Determine input/output paths
+    if args.season:
+        # Auto-generate S3 paths from season
+        if not args.input:
+            args.input = f's3://nba-betting-mt/data/03_intermediate/player_props_with_actuals_{args.season}.csv'
+        if not args.output:
+            args.output = f's3://nba-betting-mt/data/03_intermediate/points_by_role_gamespread_strategies_{args.season}.json'
+    else:
+        # Require explicit input/output if no season provided
+        if not args.input:
+            # Default to local file
+            args.input = DATA_PATH
+        if not args.output:
+            print("⚠️  No output path specified. Use --output or --season flag.")
+            return
+    
+    print_section("NBA Player Props Matrix Analysis", "chart")
+    print(f"Input: {args.input}")
+    print(f"Output: {args.output}")
     print(f"Granularity: {args.granularity.upper()}")
     print(f"Min sample size: {MIN_SAMPLE_SIZE} games")
     print(f"Early exit threshold: {EARLY_EXIT_THRESHOLD*100:.0f}% usual minutes")
     
     # Load data
-    df = load_data(DATA_PATH)
+    df = load_data(args.input)
     
     # Filter to actionable bets
     df_bets = filter_actionable_data(df)
@@ -638,15 +1059,19 @@ def main():
     print(f"Clean games analyzed: {len(df_clean):,}")
     print(f"Tier × Spread combinations with {MIN_SAMPLE_SIZE}+ games: {len(df_edges)}")
     
-    if args.granularity == 'fine':
+    if args.granularity == 'detailed':
         total_combos = 7 * 9
-        print(f"Total possible combinations: {total_combos} (fine: 7 tiers × 9 spreads)")
+        print(f"Total possible combinations: {total_combos} (detailed: 7 tiers × 9 spreads)")
     else:
         total_combos = 4 * 6
-        print(f"Total possible combinations: {total_combos} (coarse: 4 tiers × 6 spreads)")
+        print(f"Total possible combinations: {total_combos} (standard: 4 tiers × 6 spreads)")
     
     coverage_pct = (len(df_edges) / total_combos) * 100
     print(f"Coverage: {coverage_pct:.1f}% of combinations have {MIN_SAMPLE_SIZE}+ games")
+    
+    # Output strategies to JSON (NO filtering - output ALL strategies)
+    if args.output:
+        output_strategies_json(df_edges, args.output, df, args.granularity, min_roi=args.min_roi)
     
     print(f"\nKey variables available in memory:")
     print(f"  • df_clean: Clean dataset ({len(df_clean):,} rows)")

@@ -118,11 +118,22 @@ def validate_team_game_mapping(df: pd.DataFrame) -> list:
 
 
 def invalidate_player_team_cache():
-    """Delete the player team cache file to force a refresh."""
+    """Delete the player team cache from S3 and local to force a refresh."""
+    import boto3
+    
+    # Delete from S3
+    try:
+        s3 = boto3.client('s3')
+        s3.delete_object(Bucket='nba-betting-mt', Key='data/02_cache/player_team_cache.csv')
+        st.info("✅ Player team cache invalidated in S3. Re-fetching from NBA API...")
+    except Exception as e:
+        st.warning(f"⚠️ Could not delete S3 cache: {e}")
+    
+    # Also delete local backup if it exists
     cache_path = Path(__file__).parent.parent.parent / "data" / "02_cache" / "player_team_cache.csv"
     if cache_path.exists():
         cache_path.unlink()
-        st.info("✅ Player team cache invalidated. Re-fetching from NBA API...")
+        st.info("✅ Local cache also removed.")
 
 
 # Page config

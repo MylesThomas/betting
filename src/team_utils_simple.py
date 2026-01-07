@@ -2,46 +2,66 @@
 Simple team utilities - just load cache, no writes.
 
 For Streamlit Cloud where we can't write files.
+Reads player-team cache from S3.
 """
 
 import pandas as pd
 from pathlib import Path
 from typing import Dict
 import sys
+import boto3
+from io import BytesIO
 
 # Add parent to path for imports
 sys.path.append(str(Path(__file__).parent))
 from player_name_utils import normalize_player_name
 
+# S3 Configuration
+S3_BUCKET = 'nba-betting-mt'
+S3_CACHE_KEY = 'data/02_cache/player_team_cache.csv'
+
+# Local fallback path (for dev environments without S3 access)
 try:
     from config_loader import get_file_path
-    PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / get_file_path('player_team_cache')
+    LOCAL_CACHE_PATH = Path(__file__).parent.parent / get_file_path('player_team_cache')
 except:
-    # Fallback if config_loader not available
-    PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / "data" / "02_cache" / "player_team_cache.csv"
+    LOCAL_CACHE_PATH = Path(__file__).parent.parent / "data" / "02_cache" / "player_team_cache.csv"
 
 
 def load_player_teams() -> Dict[str, str]:
     """
-    Load player-to-team mapping from cache file (read-only).
+    Load player-to-team mapping from S3 cache (with local fallback).
     
     Returns:
         Dict mapping normalized player names to team abbreviations
         Returns empty dict if cache doesn't exist
     """
+    # Try S3 first
     try:
-        if not PLAYER_TEAM_CACHE_PATH.exists():
-            print(f"⚠️ Cache file not found: {PLAYER_TEAM_CACHE_PATH}")
-            return {}
-        
-        cache_df = pd.read_csv(PLAYER_TEAM_CACHE_PATH)
+        s3 = boto3.client('s3')
+        obj = s3.get_object(Bucket=S3_BUCKET, Key=S3_CACHE_KEY)
+        cache_df = pd.read_csv(BytesIO(obj['Body'].read()))
         mapping = dict(zip(cache_df['player_normalized'], cache_df['team']))
-        print(f"✅ Loaded {len(mapping)} players from cache")
+        print(f"✅ Loaded {len(mapping)} players from S3 cache")
         return mapping
     
-    except Exception as e:
-        print(f"❌ Error loading cache: {e}")
-        return {}
+    except Exception as s3_error:
+        print(f"⚠️  S3 read failed, trying local fallback: {s3_error}")
+        
+        # Fallback to local file
+        try:
+            if not LOCAL_CACHE_PATH.exists():
+                print(f"❌ Local cache not found: {LOCAL_CACHE_PATH}")
+                return {}
+            
+            cache_df = pd.read_csv(LOCAL_CACHE_PATH)
+            mapping = dict(zip(cache_df['player_normalized'], cache_df['team']))
+            print(f"✅ Loaded {len(mapping)} players from local cache")
+            return mapping
+        
+        except Exception as local_error:
+            print(f"❌ Error loading local cache: {local_error}")
+            return {}
 
 
 def add_team_column_simple(df: pd.DataFrame, player_col: str = 'player') -> pd.DataFrame:

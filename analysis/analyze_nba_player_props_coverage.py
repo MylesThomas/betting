@@ -4,8 +4,17 @@ NBA Player Props Data Loader & Joiner
 Loads and joins player props, game logs, and shot charts from S3.
 
 Usage:
+    # Load and display join stats
     python analysis/analyze_nba_player_props_coverage.py --season 2025-26
-    python analysis/analyze_nba_player_props_coverage.py --season 2025-26 --save merged_data.csv
+    
+    # Save locally
+    python analysis/analyze_nba_player_props_coverage.py --season 2025-26 --save data/merged_props_actuals.csv
+    
+    # Upload to S3 (s3://nba-betting-mt/data/03_intermediate/player_props_with_actuals_2025-26.csv)
+    python analysis/analyze_nba_player_props_coverage.py --season 2025-26 --s3
+    
+    # Both
+    python analysis/analyze_nba_player_props_coverage.py --season 2025-26 --save data/merged.csv --s3
 
 Author: Thomas Myles
 Date: 2026-01-05
@@ -25,6 +34,8 @@ from player_name_utils import normalize_player_name
 # S3 buckets
 S3_BUCKET_PROPS = 'the-odds-api-mt'
 S3_BUCKET_NBA = 'nba-api-mt'
+S3_BUCKET_OUTPUT = 'nba-betting-mt'  # For merged output
+S3_PREFIX_OUTPUT = 'data/03_intermediate'
 
 
 def normalize_team_name(name):
@@ -371,6 +382,43 @@ def join_all_data(season):
     return df_merged
 
 
+def upload_merged_to_s3(df, season):
+    """
+    Upload merged DataFrame to S3.
+    
+    Args:
+        df: Merged DataFrame
+        season: Season string (e.g., '2025-26')
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    filename = f"player_props_with_actuals_{season}.csv"
+    s3_key = f"{S3_PREFIX_OUTPUT}/{filename}"
+    
+    try:
+        s3_client = boto3.client('s3')
+        
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        
+        s3_client.put_object(
+            Bucket=S3_BUCKET_OUTPUT,
+            Key=s3_key,
+            Body=csv_buffer.getvalue(),
+            ContentType='text/csv'
+        )
+        
+        print(f"\n💾 Uploaded merged data to S3: s3://{S3_BUCKET_OUTPUT}/{s3_key}")
+        print(f"   Rows: {len(df):,}")
+        print(f"   Columns: {len(df.columns)}")
+        return True
+        
+    except Exception as e:
+        print(f"\n⚠️  S3 upload failed: {e}")
+        return False
+
+
 def calculate_null_percentages(df):
     """Calculate and display null percentages for all columns"""
     print(f"\n{'='*80}")
@@ -399,6 +447,7 @@ def main():
     parser = argparse.ArgumentParser(description='Load and join NBA player props data')
     parser.add_argument('--season', default='2025-26', help='NBA season (e.g., 2025-26)')
     parser.add_argument('--save', help='Save merged data to local CSV file (provide path)')
+    parser.add_argument('--s3', action='store_true', help='Upload merged data to S3')
     
     args = parser.parse_args()
     
@@ -408,11 +457,15 @@ def main():
     # Show null percentages
     calculate_null_percentages(df_merged)
     
-    # Save if requested
+    # Upload to S3 if requested
+    if args.s3 and not df_merged.empty:
+        upload_merged_to_s3(df_merged, args.season)
+    
+    # Save locally if requested
     if args.save and not df_merged.empty:
         from pathlib import Path
         save_path = Path(args.save).resolve()
-        print(f"\n💾 Saving to {save_path}...")
+        print(f"\n💾 Saving locally to {save_path}...")
         df_merged.to_csv(save_path, index=False)
         print(f"✅ Saved {len(df_merged):,} rows")
         print(f"   Location: {save_path}")

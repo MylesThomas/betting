@@ -37,6 +37,8 @@ from typing import Optional, Dict, List, Set
 from collections import Counter
 from functools import lru_cache
 from datetime import datetime, timedelta
+import boto3
+from io import BytesIO, StringIO
 
 # Add parent to path for imports
 import sys
@@ -50,6 +52,10 @@ from config_loader import get_file_path
 # Constants
 GAME_RESULTS_PATH = Path(__file__).parent.parent / get_file_path('nba_game_results_current')
 PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / get_file_path('player_team_cache')
+
+# S3 Configuration
+S3_BUCKET = 'nba-betting-mt'
+S3_CACHE_KEY = 'data/02_cache/player_team_cache.csv'
 
 
 # Team abbreviation to full name mapping (for NBA teams only)
@@ -156,7 +162,7 @@ def parse_teams_from_game(game_str: str) -> tuple:
 
 def load_player_team_cache() -> Dict[str, Dict]:
     """
-    Load cached player-to-team mapping from CSV file.
+    Load cached player-to-team mapping from S3 (with local fallback).
     
     CSV Format:
         player_normalized,team,timestamp
@@ -167,12 +173,11 @@ def load_player_team_cache() -> Dict[str, Dict]:
         Dict with 'mapping' (player->team) and 'timestamp' (when cached)
         Returns empty dict if cache doesn't exist or is invalid
     """
+    # Try S3 first
     try:
-        if not PLAYER_TEAM_CACHE_PATH.exists():
-            return {'mapping': {}, 'timestamp': None}
-        
-        # Read CSV into DataFrame
-        cache_df = pd.read_csv(PLAYER_TEAM_CACHE_PATH)
+        s3 = boto3.client('s3')
+        obj = s3.get_object(Bucket=S3_BUCKET, Key=S3_CACHE_KEY)
+        cache_df = pd.read_csv(BytesIO(obj['Body'].read()))
         
         # Convert to dict mapping
         mapping = dict(zip(cache_df['player_normalized'], cache_df['team']))
@@ -181,32 +186,63 @@ def load_player_team_cache() -> Dict[str, Dict]:
         timestamp = cache_df['timestamp'].iloc[0] if len(cache_df) > 0 else None
         
         return {'mapping': mapping, 'timestamp': timestamp}
-    except Exception as e:
-        return {'mapping': {}, 'timestamp': None}
+    
+    except Exception as s3_error:
+        # Fallback to local file
+        try:
+            if not PLAYER_TEAM_CACHE_PATH.exists():
+                return {'mapping': {}, 'timestamp': None}
+            
+            # Read CSV into DataFrame
+            cache_df = pd.read_csv(PLAYER_TEAM_CACHE_PATH)
+            
+            # Convert to dict mapping
+            mapping = dict(zip(cache_df['player_normalized'], cache_df['team']))
+            
+            # Get most recent timestamp
+            timestamp = cache_df['timestamp'].iloc[0] if len(cache_df) > 0 else None
+            
+            return {'mapping': mapping, 'timestamp': timestamp}
+        except Exception as local_error:
+            return {'mapping': {}, 'timestamp': None}
 
 
 def save_player_team_cache(mapping: Dict[str, str]) -> None:
     """
-    Save player-to-team mapping to CSV cache file.
+    Save player-to-team mapping to S3 cache (and local backup).
     
     Args:
         mapping: Dict mapping normalized player names to team abbreviations
     """
+    # Create DataFrame
+    timestamp = datetime.now().isoformat()
+    cache_df = pd.DataFrame([
+        {'player_normalized': player, 'team': team, 'timestamp': timestamp}
+        for player, team in mapping.items()
+    ])
+    
+    # Save to S3
     try:
-        # Ensure data directory exists
+        s3 = boto3.client('s3')
+        csv_buffer = StringIO()
+        cache_df.to_csv(csv_buffer, index=False)
+        
+        s3.put_object(
+            Bucket=S3_BUCKET,
+            Key=S3_CACHE_KEY,
+            Body=csv_buffer.getvalue(),
+            ContentType='text/csv'
+        )
+    except Exception as s3_error:
+        # Fail silently - S3 upload is optional
+        pass
+    
+    # Also save local backup
+    try:
         PLAYER_TEAM_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Create DataFrame
-        timestamp = datetime.now().isoformat()
-        cache_df = pd.DataFrame([
-            {'player_normalized': player, 'team': team, 'timestamp': timestamp}
-            for player, team in mapping.items()
-        ])
-        
-        # Save to CSV
         cache_df.to_csv(PLAYER_TEAM_CACHE_PATH, index=False)
-    except Exception as e:
-        # Fail silently - caching is optional
+    except Exception as local_error:
+        # Fail silently - local backup is optional
         pass
 
 
