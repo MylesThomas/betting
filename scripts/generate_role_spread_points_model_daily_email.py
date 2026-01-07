@@ -382,8 +382,34 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
         # Sort by ROI descending
         game_plays = game_plays.sort_values('expected_roi', ascending=False)
         
+        # Format game time if available
+        game_time_str = ""
+        if 'game_time' in game.index and pd.notna(game['game_time']):
+            try:
+                # Parse game_time - it might be a string or datetime
+                if isinstance(game['game_time'], str):
+                    game_time_dt = pd.to_datetime(game['game_time'])
+                else:
+                    game_time_dt = game['game_time']
+                
+                # Ensure it's timezone-aware (ET)
+                if game_time_dt.tzinfo is None:
+                    game_time_dt = game_time_dt.tz_localize(ET_TZ)
+                else:
+                    game_time_dt = game_time_dt.astimezone(ET_TZ)
+                
+                # Format as "6pm ET" (no minutes if on the hour)
+                if game_time_dt.minute == 0:
+                    time_formatted = game_time_dt.strftime('%I%p ET').lstrip('0').lower()
+                else:
+                    time_formatted = game_time_dt.strftime('%I:%M%p ET').lstrip('0').lower()
+                game_time_str = f" ({time_formatted})"
+            except Exception:
+                # If parsing fails, just skip the time
+                pass
+        
         text += f"""{'─'*80}
-{EMOJI['basketball']} GAME {game_num}: {team1} vs {team2}
+{EMOJI['basketball']} GAME {game_num}: {team1} vs {team2}{game_time_str}
 {'─'*80}
 
 """
