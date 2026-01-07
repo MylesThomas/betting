@@ -1,20 +1,20 @@
 """
-Simple script to fetch championship futures from The Odds API.
+Fetch championship futures for NFL, NBA, NCAAF, and NCAAB from The Odds API.
 
 Context:
-Thomas asked to enhance the NFL futures workflow to:
-1. Fetch team records from ESPN NFL API and compare with Unexpected Points data
-   - If there's a discrepancy (e.g., UP data has Rams 11-4 when actually 11-5),
-     use the ESPN API data as the source of truth
-2. Extend the workflow to support NBA championship futures with weekly posts
-3. Create a unified workflow for both NFL and NBA
+Unified futures data fetcher for all major sports championships:
+- NFL Super Bowl
+- NBA Championship
+- NCAA Football (College Football Playoff)
+- NCAA Basketball (March Madness)
+
+Includes team records from ESPN API where available (NFL, NBA).
 
 Purpose:
-- Fetch NFL Super Bowl championship odds
-- Fetch NBA Championship odds  
-- Fetch NCAA Football (CFP) Championship odds
-- Fetch team records from ESPN API for NFL and NBA
+- Fetch championship futures odds for 4 major sports
+- Fetch team records from ESPN API (NFL, NBA only)
 - Save timestamped files to track odds movement over time
+- Support weekly futures analysis workflow
 
 Usage:
     cd /Users/thomasmyles/dev/betting
@@ -24,9 +24,10 @@ Output:
 - data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_YYYYMMDD_HHMMSS.csv
 - data/01_input/the-odds-api/nba/futures/nba_championship_futures_YYYYMMDD_HHMMSS.csv
 - data/01_input/the-odds-api/ncaaf/futures/ncaaf_championship_futures_YYYYMMDD_HHMMSS.csv
+- data/01_input/the-odds-api/ncaab/futures/ncaab_championship_futures_YYYYMMDD_HHMMSS.csv
 
-CSV columns now include:
-- sport, bookmaker, team, odds, implied_prob, record (from ESPN API)
+CSV columns:
+- sport, bookmaker, team, odds, implied_prob, record (from ESPN API when available)
 
 API docs: 
 - The Odds API: https://the-odds-api.com/liveapi/guides/v4/
@@ -54,6 +55,8 @@ sys.path.insert(0, str(repo_root / 'src'))
 
 from odds_utils import odds_to_implied_probability
 from nfl_team_utils import NFL_TEAM_MAPPING, NFL_ABBR_TO_FULL
+from ncaa_team_utils import ESPN_NCAAB_TEAM_IDS, ESPN_NCAAF_TEAM_IDS
+from config_loader import get_config
 
 # Monkey-patch requests to disable SSL verification
 original_request = requests.Session.request
@@ -70,6 +73,10 @@ load_dotenv()
 API_KEY = os.getenv('ODDS_API_KEY')
 BASE_URL = 'https://api.the-odds-api.com/v4'
 ESPN_API_BASE = 'https://sports.core.api.espn.com/v2/sports'
+
+# Load config for season values
+CONFIG = get_config()
+ESPN_SEASONS = CONFIG['espn_seasons']
 
 
 def fetch_futures(sport_key):
@@ -113,7 +120,7 @@ def fetch_nfl_team_records_from_espn():
         'TEN': 10, 'WAS': 28
     }
     
-    current_season = 2024  # 2024-25 NFL season
+    current_season = ESPN_SEASONS['nfl']  # From config: 2025-26 NFL season
     team_records = {}
     
     for abbr, team_id in espn_team_ids.items():
@@ -192,7 +199,7 @@ def fetch_nba_team_records_from_espn():
         'TOR': 'Toronto Raptors', 'UTA': 'Utah Jazz', 'WAS': 'Washington Wizards'
     }
     
-    current_season = 2025  # 2024-25 NBA season
+    current_season = ESPN_SEASONS['nba']  # From config: 2025-26 NBA season
     team_records = {}
     
     for abbr, team_id in espn_nba_team_ids.items():
@@ -229,6 +236,94 @@ def fetch_nba_team_records_from_espn():
             continue
     
     print(f"   ✅ Fetched records for {len(team_records)}/30 teams\n")
+    return team_records
+
+
+def fetch_ncaab_team_records_from_espn():
+    """
+    Fetch NCAAB team records from ESPN API.
+    
+    Note: ESPN team IDs for college basketball are different from other sports.
+    This function includes major teams that typically appear in championship futures.
+    
+    Returns:
+        dict: Team name (The Odds API format with mascots) -> record string (e.g., "25-3")
+    """
+    print("📊 Fetching NCAAB team records from ESPN API...")
+    
+    # Use team IDs from ncaa_team_utils (imported at top of file)
+    # See docs/ESPN_TEAM_IDS.md for more team IDs to add
+    
+    current_season = ESPN_SEASONS['ncaab']  # From config: 2025-26 NCAAB season
+    team_records = {}
+    
+    for team_name, team_id in ESPN_NCAAB_TEAM_IDS.items():
+        try:
+            url = f"{ESPN_API_BASE}/basketball/leagues/mens-college-basketball/seasons/{current_season}/types/2/teams/{team_id}/record"
+            response = requests.get(url, timeout=5, verify=False)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract overall record from items
+                items = data.get('items', [])
+                for item in items:
+                    if item.get('type') == 'total' and item.get('name') == 'overall':
+                        # Use the summary field (e.g., "31-3")
+                        record = item.get('summary', '')
+                        if record:
+                            team_records[team_name] = record
+                            break
+                
+        except Exception as e:
+            # Silently continue - not all teams may have data
+            continue
+    
+    print(f"   ✅ Fetched records for {len(team_records)} NCAA teams\n")
+    return team_records
+
+
+def fetch_ncaaf_team_records_from_espn():
+    """
+    Fetch NCAAF team records from ESPN API.
+    
+    Note: Currently only fetching CFP playoff teams. Expand as needed.
+    TODO 2027: Update team list for next season's playoff teams.
+    
+    Returns:
+        dict: Team name (The Odds API format with mascots) -> record string (e.g., "12-1")
+    """
+    print("📊 Fetching NCAAF team records from ESPN API...")
+    
+    # Use team IDs from ncaa_team_utils (imported at top of file)
+    # Currently only CFP playoff teams - expand as needed
+    
+    current_season = ESPN_SEASONS['ncaaf']  # From config: 2025-26 NCAAF season
+    team_records = {}
+    
+    for team_name, team_id in ESPN_NCAAF_TEAM_IDS.items():
+        try:
+            url = f"{ESPN_API_BASE}/football/leagues/college-football/seasons/{current_season}/types/2/teams/{team_id}/record"
+            response = requests.get(url, timeout=5, verify=False)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract overall record from items
+                items = data.get('items', [])
+                for item in items:
+                    if item.get('type') == 'total' and item.get('name') == 'overall':
+                        # Use the summary field (e.g., "12-1")
+                        record = item.get('summary', '')
+                        if record:
+                            team_records[team_name] = record
+                            break
+                
+        except Exception as e:
+            # Silently continue - not all teams may have data
+            continue
+    
+    print(f"   ✅ Fetched records for {len(team_records)} NCAAF teams\n")
     return team_records
 
 
@@ -292,7 +387,7 @@ def main():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
     print("="*80)
-    print("TESTING FUTURES MARKETS")
+    print("FETCHING CHAMPIONSHIP FUTURES (NFL, NBA, NCAAF, NCAAB)")
     print("="*80)
     print(f"Timestamp: {timestamp}\n")
     
@@ -368,9 +463,10 @@ def main():
     
     # Test NCAA Football Championship futures (College Football Playoff)
     print("\n\n🏈 Fetching NCAA Football Championship futures...")
+    ncaaf_records = fetch_ncaaf_team_records_from_espn()
     try:
         ncaaf_data = fetch_futures('americanfootball_ncaaf_championship_winner')
-        df_ncaaf = parse_futures_to_df(ncaaf_data, 'NCAAF', None)  # No ESPN API for NCAAF yet
+        df_ncaaf = parse_futures_to_df(ncaaf_data, 'NCAAF', ncaaf_records)
         
         if not df_ncaaf.empty:
             print(f"✅ Found {len(df_ncaaf)} odds from {df_ncaaf['bookmaker'].nunique()} bookmakers")
@@ -398,6 +494,41 @@ def main():
     except Exception as e:
         print(f"❌ Error fetching NCAA Football futures: {e}")
     
+    # Test NCAA Basketball Championship futures (March Madness)
+    print("\n\n🏀 Fetching NCAA Basketball Championship futures...")
+    try:
+        # Fetch team records from ESPN API first
+        ncaab_records = fetch_ncaab_team_records_from_espn()
+        
+        ncaab_data = fetch_futures('basketball_ncaab_championship_winner')
+        df_ncaab = parse_futures_to_df(ncaab_data, 'NCAAB', ncaab_records)
+        
+        if not df_ncaab.empty:
+            print(f"✅ Found {len(df_ncaab)} odds from {df_ncaab['bookmaker'].nunique()} bookmakers")
+            
+            # Show top 10 favorites - use best odds per team (highest implied prob = lowest odds)
+            # Get best odds for each team (max odds = most favorable to bettor)
+            best_odds_per_team = df_ncaab.loc[df_ncaab.groupby('team')['odds'].idxmax()]
+            # Sort by implied probability descending (highest prob = biggest favorite)
+            best_odds_per_team = best_odds_per_team.sort_values('implied_prob', ascending=False)
+            
+            print("\nTop 10 March Madness Championship Favorites (Best Available Odds):")
+            print("-" * 75)
+            for i, row in enumerate(best_odds_per_team.head(10).itertuples(), 1):
+                odds_str = f"+{int(row.odds)}" if row.odds > 0 else f"{int(row.odds)}"
+                print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
+            
+            # Save to CSV with timestamp
+            output_file = repo_root / f'data/01_input/the-odds-api/ncaab/futures/ncaab_championship_futures_{timestamp}.csv'
+            os.makedirs(output_file.parent, exist_ok=True)
+            df_ncaab.to_csv(output_file, index=False)
+            print(f"\n💾 Saved to: {output_file}")
+        else:
+            print("⚠️  No NCAA Basketball futures data found")
+            
+    except Exception as e:
+        print(f"❌ Error fetching NCAA Basketball futures: {e}")
+    
     print("\n" + "="*80)
     print("✅ TEST COMPLETE")
     print("="*80)
@@ -406,7 +537,6 @@ def main():
     print("\n📋 Other futures sport keys to try:")
     print("   - baseball_mlb_world_series_winner")
     print("   - icehockey_nhl_championship_winner")
-    print("   - basketball_ncaab_championship_winner")
 
 
 if __name__ == "__main__":
