@@ -1,3 +1,14 @@
+# ESPN API season configuration
+# Note: ESPN uses different year conventions per sport
+# - NFL/NCAAF: year season STARTS (Sept 2025 → Jan 2026 = season 2025)
+# - NBA/NCAAB: year season ENDS (Oct 2025 → June 2026 = season 2026)
+# TODO 2027: Update season values for 2026-27 season
+espn_seasons:
+  nfl: 2025      # 2025-26 NFL season
+  nba: 2026      # 2025-26 NBA season
+  ncaab: 2026    # 2025-26 NCAAB season
+  ncaaf: 2025    # 2025-26 NCAAF season (CFP playoff teams only)
+
 data_directories:
   repo_dir_absolute: /Users/thomasmyles/dev/betting
   data_dir_relative: data
