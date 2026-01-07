@@ -59,6 +59,9 @@ Requirements:
 Usage:
     cd /Users/thomasmyles/dev/betting
     python3 analysis/viz_nfl_futures_gt_single.py
+    
+    # Show only top 15 teams
+    python3 analysis/viz_nfl_futures_gt_single.py --top-n 15
 """
 
 import pandas as pd
@@ -66,6 +69,7 @@ from pathlib import Path
 import sys
 import subprocess
 import platform
+import argparse
 from datetime import datetime
 
 # Add src to path
@@ -90,11 +94,19 @@ CURRENT_NFL_DATE = datetime.now()
 TITLE = "NFL Super Bowl Futures: True Odds vs. What Books Charge"
 # SUBTITLE is generated dynamically in prepare_data_for_visualization() with calculated avg vig
 
-FOOTER_NOTES = """
+def generate_footer_notes(total_teams, top_n):
+    """Generate footer notes with optional filtering message."""
+    base_notes = """
 1. 'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%).  
 2. Color indicates vig level: green = low vig, red = high vig, yellow = negative vig (bettor advantage).  
-3. 19 of 32 teams have odds available — bookmakers no longer offer odds on eliminated/longshot teams.
-"""
+3. 19 of 32 teams have odds available — bookmakers no longer offer odds on eliminated/longshot teams."""
+    
+    if top_n < total_teams:
+        base_notes += f"""  
+4. Filtered to top {top_n} teams by fair probability."""
+    
+    return base_notes
+
 FOOTER_DATA_SOURCE = "The Odds API"
 FOOTER_DATA_DATE = datetime.now().strftime("%B %d, %Y")  # Auto-generate today's date
 
@@ -314,13 +326,15 @@ def prepare_data_for_visualization(df, logo_map):
     return df_display, average_vig_pct
 
 
-def create_gt_table_with_r(df_display, average_vig_pct):
+def create_gt_table_with_r(df_display, average_vig_pct, total_teams, top_n):
     """
     Create a publication-quality table using R's gt package via rpy2.
     
     Args:
         df_display: Prepared dataframe with all display columns
         average_vig_pct: Calculated average vig percentage across all teams
+        total_teams: Total number of teams before filtering
+        top_n: Number of teams to display (for footer note)
         
     Returns:
         Path to saved PNG file
@@ -329,6 +343,9 @@ def create_gt_table_with_r(df_display, average_vig_pct):
     
     # Generate subtitle dynamically with calculated vig
     subtitle = f"Bookmakers charge an *average {average_vig_pct:.1f}% vig* on championship futures (vs. 4-5% on game lines)"
+    
+    # Generate footer notes with optional filtering message
+    FOOTER_NOTES = generate_footer_notes(total_teams, top_n)
     
     try:
         import rpy2.robjects as ro
@@ -594,9 +611,18 @@ def create_gt_table_with_r(df_display, average_vig_pct):
 def main():
     """Main visualization function"""
     
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Create NFL championship futures visualization')
+    parser.add_argument('--top-n', type=int, default=9999,
+                        help='Number of top teams to show (default: 9999 = all teams)')
+    args = parser.parse_args()
+    
     print("="*80)
     print("NFL CHAMPIONSHIP FUTURES - V3 (R + GT PACKAGE)")
     print("="*80 + "\n")
+    
+    if args.top_n < 9999:
+        print(f"📊 Limiting to top {args.top_n} teams\n")
     
     # Read the CSV (same as v2)
     csv_file = repo_root / 'data/04_output/nfl/nfl_championship_fair_odds.csv'
@@ -609,6 +635,14 @@ def main():
     
     print(f"📂 Reading: {csv_file.name}\n")
     df = pd.read_csv(csv_file)
+    
+    # Store total teams before filtering
+    total_teams = len(df)
+    
+    # Limit to top N teams (already sorted by fair_prob descending from analysis script)
+    if args.top_n < total_teams:
+        df = df.head(args.top_n)
+        print(f"   ⚠️  Showing top {args.top_n} of {total_teams} teams")
     
     print(f"   📊 Loaded {len(df)} teams")
     print(f"   📊 Columns: {list(df.columns)}\n")
@@ -632,7 +666,7 @@ def main():
     df_display, _ = prepare_data_for_visualization(df, logo_map)
     
     # Create table using R's gt package with correct vig
-    output_path = create_gt_table_with_r(df_display, avg_vig_pct)
+    output_path = create_gt_table_with_r(df_display, avg_vig_pct, total_teams, args.top_n)
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE!")
