@@ -9,6 +9,7 @@ This Lambda function:
 3. Runs the daily NBA props workflow:
    - Finds today's 2D plays (tier × spread)
    - Finds today's 3D plays (tier × spread × scorer_type)
+   - Fetches yesterday's game results from NBA API
    - Tracks yesterday's performance (BOTH 2D and 3D)
    - Generates daily email (BOTH 2D and 3D)
 4. Sends email via SNS
@@ -192,8 +193,9 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     Steps:
     1. Find today's 2D plays (tier × spread)
     2. Find today's 3D plays (tier × spread × scorer_type)
-    3. Track yesterday's performance (BOTH 2D + 3D)
-    4. Generate daily email (BOTH 2D + 3D)
+    3. Fetch yesterday's game results from NBA API
+    4. Track yesterday's performance (BOTH 2D + 3D)
+    5. Generate daily email (BOTH 2D + 3D)
     
     Args:
         repo_dir: Path to cloned repository
@@ -278,9 +280,31 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     if returncode != 0:
         print(f"⚠️  3D play finder failed (non-fatal, continuing...)")
     
-    # Step 3: Track yesterday's performance (BOTH 2D and 3D)
+    # Step 3: Fetch yesterday's game results
     print(f"\n{'='*80}")
-    print(f"Step 3: Tracking Yesterday's Performance ({yesterday}) - BOTH 2D + 3D")
+    print(f"Step 3: Fetching Yesterday's Game Results ({yesterday})")
+    print(f"{'='*80}\n")
+    
+    cmd = [
+        'python', 'scripts/fetch_nba_player_props.py',
+        '--date', yesterday,
+        '--fetch-games',
+        '--s3',
+        '--season', season
+    ]
+    
+    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+    results['steps']['fetch_games'] = {
+        'success': returncode == 0,
+        'output': stdout
+    }
+    
+    if returncode != 0:
+        print(f"⚠️  Game results fetch failed (non-fatal, continuing...)")
+    
+    # Step 4: Track yesterday's performance (BOTH 2D and 3D)
+    print(f"\n{'='*80}")
+    print(f"Step 4: Tracking Yesterday's Performance ({yesterday}) - BOTH 2D + 3D")
     print(f"{'='*80}\n")
     
     cmd = [
@@ -299,9 +323,9 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     if returncode != 0:
         print(f"⚠️  Performance tracking failed (non-fatal, continuing...)")
     
-    # Step 4: Generate daily email (BOTH 2D and 3D) and send via SNS
+    # Step 5: Generate daily email (BOTH 2D and 3D) and send via SNS
     print(f"\n{'='*80}")
-    print("Step 4: Generating Daily Email - BOTH 2D + 3D")
+    print("Step 5: Generating Daily Email - BOTH 2D + 3D")
     print(f"{'='*80}\n")
     
     sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
@@ -381,6 +405,7 @@ def lambda_handler(event, context):
         print(f"Yesterday: {workflow_results['yesterday']}")
         print(f"2D Plays: {'✅' if workflow_results['steps']['2d_plays']['success'] else '❌'}")
         print(f"3D Plays: {'✅' if workflow_results['steps']['3d_plays']['success'] else '❌'}")
+        print(f"Fetch Games: {'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'}")
         print(f"Tracking: {'✅' if workflow_results['steps']['tracking']['success'] else '❌'}")
         print(f"Email+SNS: {'✅' if email_sent else '❌'}")
         print(f"{'='*80}\n")
@@ -394,6 +419,7 @@ def lambda_handler(event, context):
                     'yesterday': workflow_results['yesterday'],
                     '2d_plays': workflow_results['steps']['2d_plays']['success'],
                     '3d_plays': workflow_results['steps']['3d_plays']['success'],
+                    'fetch_games': workflow_results['steps']['fetch_games']['success'],
                     'tracking': workflow_results['steps']['tracking']['success'],
                     'email_sent_via_sns': email_sent
                 }
