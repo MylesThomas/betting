@@ -49,7 +49,7 @@ from datetime import datetime, date
 
 # Import player name normalization and team mapping
 sys.path.insert(0, str(root / 'src'))
-from player_name_utils import normalize_player_name
+from player_name_utils import normalize_player_name, get_name_mappings
 from team_utils import TEAM_NAME_TO_ABBR, load_player_team_cache
 
 
@@ -644,6 +644,10 @@ def load_tonights_games(target_date=None, use_s3=False):
                                 
                                 # Normalize player name to match cache
                                 player_normalized = normalize_player_name(player)
+                                
+                                # Apply name mappings (Odds API → NBA API)
+                                name_mappings = get_name_mappings()
+                                player_normalized = name_mappings.get(player_normalized, player_normalized)
                                 
                                 # Determine player's team using cache mapping
                                 player_team_abbr = player_team_map.get(player_normalized)
