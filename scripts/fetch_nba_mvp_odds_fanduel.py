@@ -133,6 +133,24 @@ def main():
     print("NBA MVP ODDS FROM FANDUEL (HARDCODED)")
     print("="*80)
     
+    # Confirmation that odds are up-to-date
+    print("\n⚠️  REMINDER: Have you updated the odds from FanDuel?")
+    print("   🔗 https://sportsbook.fanduel.com/navigation/nba?tab=awards")
+    print("\n   Steps:")
+    print("   1. Go to the link above")
+    print("   2. Copy the latest MVP odds")
+    print("   3. Update CURRENT_MVP_ODDS dict in this file")
+    print(f"   4. Update FETCH_DATE to today's date (currently: {FETCH_DATE})")
+    
+    response = input("\n✅ Have you updated the odds? (y/n): ").strip().lower()
+    
+    if response != 'y':
+        print("\n❌ Aborted. Please update the odds first!")
+        print("   Edit this file: scripts/fetch_nba_mvp_odds_fanduel.py")
+        return
+    
+    print("\n" + "="*80)
+    
     print(f"\n📅 Fetch Date: {FETCH_DATE}")
     print(f"📊 Season Ends: {SEASON_END_DATE}")
     print(f"🏀 Total Players: {len(CURRENT_MVP_ODDS)}")

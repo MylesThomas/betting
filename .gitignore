@@ -97,3 +97,6 @@ data/01_input/the-odds-api/nba/game_lines/
 
 # Historical games: 8.8MB (on S3: nba-api-mt bucket)
 data/01_input/nba_api/historical/
+
+# ai summaries
+docs/AI_summaries/
