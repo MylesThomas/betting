@@ -9,6 +9,13 @@ espn_seasons:
   ncaab: 2026    # 2025-26 NCAAB season
   ncaaf: 2025    # 2025-26 NCAAF season (CFP playoff teams only)
 
+# AWS S3 bucket configuration
+aws:
+  buckets:
+    odds_api: the-odds-api-mt      # Historical odds/props from The Odds API
+    nba_api: nba-api-mt             # NBA stats, game logs, shot charts from NBA API
+    nba_betting: nba-betting-mt     # Betting strategies, plays, results, analysis output
+
 data_directories:
   repo_dir_absolute: /Users/thomasmyles/dev/betting
   data_dir_relative: data
