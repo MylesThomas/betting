@@ -109,6 +109,12 @@ from io import StringIO
 import sys
 from nba_api.stats.endpoints import playergamelogs #leaguegamefinder is wrong
 
+# Add src to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root / 'src'))
+
+from season_utils import get_current_nba_season
+
 # Load environment variables
 load_dotenv()
 
@@ -137,10 +143,11 @@ args = parser.parse_args()
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Monkey-patch requests
+# Monkey-patch requests with timeout
 original_request = requests.Session.request
 def patched_request(self, *args, **kwargs):
     kwargs['verify'] = False
+    kwargs.setdefault('timeout', 120)  # 120 second timeout for NBA API
     return original_request(self, *args, **kwargs)
 requests.Session.request = patched_request
 
@@ -380,70 +387,83 @@ def parse_player_props(odds_data):
 # NBA API GAME RESULTS FUNCTIONS
 # ============================================================================
 
-def fetch_games_for_date(date_str):
+def fetch_games_for_date(date_str, max_retries=3):
     """
     Fetch player game results for a specific date from NBA API
     
     Args:
         date_str: Date in YYYY-MM-DD format
+        max_retries: Number of retry attempts on timeout/connection errors
     
     Returns:
         DataFrame with player game logs for that date
     """
     logging.info(f"📡 Fetching NBA game results for {date_str}...")
     
-    try:
-        # Parse date
-        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-        
-        # Fetch player game logs for the season
-        season_str = SEASON  # e.g., '2025-26'
-        
-        game_logs = playergamelogs.PlayerGameLogs(
-            season_nullable=season_str,
-            season_type_nullable='Regular Season',
-            date_from_nullable=date_str,
-            date_to_nullable=date_str
-        )
-        
-        games = game_logs.get_data_frames()[0]
-        
-        if games.empty:
-            logging.info(f"   No games found for {date_str}")
+    # Retry logic for flaky NBA API
+    for attempt in range(max_retries):
+        try:
+            # Parse date
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            
+            # Fetch player game logs for the season
+            season_str = SEASON  # e.g., '2025-26'
+            
+            game_logs = playergamelogs.PlayerGameLogs(
+                season_nullable=season_str,
+                season_type_nullable='Regular Season',
+                date_from_nullable=date_str,
+                date_to_nullable=date_str
+            )
+            
+            games = game_logs.get_data_frames()[0]
+            
+            if games.empty:
+                logging.info(f"   No games found for {date_str}")
+                return pd.DataFrame()
+            
+            # Key columns for our analysis (only keep columns that exist)
+            cols_to_keep = [
+                'SEASON_ID', 'PLAYER_ID', 'PLAYER_NAME', 'TEAM_ID', 'TEAM_NAME',
+                'GAME_ID', 'GAME_DATE', 'MATCHUP', 'WL',
+                'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT',
+                'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT',
+                'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PLUS_MINUS'
+            ]
+            
+            # Only select columns that actually exist in the dataframe
+            available_cols = [col for col in cols_to_keep if col in games.columns]
+            
+            if not available_cols:
+                logging.warning(f"   ⚠️  No expected columns found. Available columns: {list(games.columns)}")
+                # Return all columns if none of our expected ones exist
+                pass
+            else:
+                games = games[available_cols]
+            
+            num_games = games['GAME_ID'].nunique()
+            num_players = len(games)
+            
+            logging.info(f"   ✅ Found {num_games} games with {num_players} player performances")
+            
+            # Rate limiting for NBA API
+            time.sleep(RATE_LIMIT_DELAY)
+            
+            return games
+            
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
+                logging.warning(f"   ⚠️  Request timed out (attempt {attempt + 1}/{max_retries})")
+                logging.warning(f"   Waiting {wait_time} seconds before retry...")
+                time.sleep(wait_time)
+            else:
+                logging.error(f"   ❌ Failed after {max_retries} attempts: {e}", exc_info=True)
+                return pd.DataFrame()
+                
+        except Exception as e:
+            logging.error(f"❌ Error fetching games for {date_str}: {e}", exc_info=True)
             return pd.DataFrame()
-        
-        # Key columns for our analysis (only keep columns that exist)
-        cols_to_keep = [
-            'SEASON_ID', 'PLAYER_ID', 'PLAYER_NAME', 'TEAM_ID', 'TEAM_NAME',
-            'GAME_ID', 'GAME_DATE', 'MATCHUP', 'WL',
-            'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT',
-            'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT',
-            'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PLUS_MINUS'
-        ]
-        
-        # Only select columns that actually exist in the dataframe
-        available_cols = [col for col in cols_to_keep if col in games.columns]
-        
-        if not available_cols:
-            logging.warning(f"   ⚠️  No expected columns found. Available columns: {list(games.columns)}")
-            # Return all columns if none of our expected ones exist
-            pass
-        else:
-            games = games[available_cols]
-        
-        num_games = games['GAME_ID'].nunique()
-        num_players = len(games)
-        
-        logging.info(f"   ✅ Found {num_games} games with {num_players} player performances")
-        
-        # Rate limiting for NBA API
-        time.sleep(RATE_LIMIT_DELAY)
-        
-        return games
-        
-    except Exception as e:
-        logging.error(f"❌ Error fetching games for {date_str}: {e}", exc_info=True)
-        return pd.DataFrame()
 
 
 # ============================================================================
@@ -654,6 +674,47 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
 # FULL SEASON MODE
 # ============================================================================
 
+def check_past_season_complete(season, expected_game_dates):
+    """
+    Check if a past season is already complete in S3.
+    
+    Args:
+        season: NBA season (e.g., "2024-25")
+        expected_game_dates: Number of expected game dates
+    
+    Returns:
+        tuple: (is_complete: bool, props_found: int, gamelogs_found: int)
+    """
+    s3 = boto3.client('s3')
+    
+    # Check player props
+    props_prefix = f"nba/historical_player_props/{season}/"
+    try:
+        response = s3.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=props_prefix)
+        props_files = 0
+        if 'Contents' in response:
+            props_files = len([obj for obj in response['Contents'] if obj['Key'].endswith('.csv')])
+    except Exception as e:
+        logging.warning(f"Error checking props S3: {e}")
+        props_files = 0
+    
+    # Check game logs
+    gamelogs_prefix = f"player_game_logs/{season}/"
+    try:
+        response = s3.list_objects_v2(Bucket=S3_BUCKET_GAMES, Prefix=gamelogs_prefix)
+        gamelogs_files = 0
+        if 'Contents' in response:
+            gamelogs_files = len([obj for obj in response['Contents'] if obj['Key'].endswith('.csv')])
+    except Exception as e:
+        logging.warning(f"Error checking gamelogs S3: {e}")
+        gamelogs_files = 0
+    
+    # Consider complete if both have at least the expected number of files
+    is_complete = props_files >= expected_game_dates and gamelogs_files >= expected_game_dates
+    
+    return is_complete, props_files, gamelogs_files
+
+
 def fetch_full_season(upload_s3=True, fetch_games=False):
     """Fetch props for all dates in season"""
     logging.info("="*80)
@@ -682,6 +743,31 @@ def fetch_full_season(upload_s3=True, fetch_games=False):
     
     logging.info(f"Past dates to fetch: {len(past_dates)}")
     logging.info(f"Future dates: {len(game_dates) - len(past_dates)}")
+    
+    # Check if past season and complete
+    current_season = get_current_nba_season()
+    is_past_season = SEASON < current_season
+    
+    if is_past_season:
+        logging.info(f"\n📅 Checking if past season {SEASON} is already complete...")
+        is_complete, props_found, gamelogs_found = check_past_season_complete(SEASON, len(past_dates))
+        
+        if is_complete:
+            logging.info("="*80)
+            logging.info("✅ PAST SEASON COMPLETE - SKIPPING")
+            logging.info("="*80)
+            logging.info(f"Season: {SEASON}")
+            logging.info(f"Props files: {props_found}/{len(past_dates)} in S3")
+            logging.info(f"Gamelogs files: {gamelogs_found}/{len(past_dates)} in S3")
+            logging.info(f"Props S3: s3://{S3_BUCKET_PROPS}/nba/historical_player_props/{SEASON}/")
+            logging.info(f"Gamelogs S3: s3://{S3_BUCKET_GAMES}/player_game_logs/{SEASON}/")
+            logging.info("\nNo fetch needed - all historical data exists!")
+            logging.info("="*80)
+            return {'skipped': True, 'reason': 'Past season complete', 'props_found': props_found, 'gamelogs_found': gamelogs_found}
+        else:
+            logging.info(f"   Props: {props_found}/{len(past_dates)}, Gamelogs: {gamelogs_found}/{len(past_dates)} - will fetch missing dates")
+    else:
+        logging.info(f"\n🔄 Current season {SEASON} - checking for updates...")
     
     # Track stats
     stats = {
