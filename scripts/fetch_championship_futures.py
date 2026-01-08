@@ -394,11 +394,11 @@ def main():
     # Test NFL Super Bowl futures
     print("\n🏈 Fetching NFL Super Bowl futures...")
     try:
-        # ESPN API disabled for now - using Unexpected Points data instead
-        # nfl_records = fetch_nfl_team_records_from_espn()
+        # Fetch NFL team records from ESPN
+        nfl_records = fetch_nfl_team_records_from_espn()
         
         nfl_data = fetch_futures('americanfootball_nfl_super_bowl_winner')
-        df_nfl = parse_futures_to_df(nfl_data, 'NFL', None)
+        df_nfl = parse_futures_to_df(nfl_data, 'NFL', nfl_records)
         
         if not df_nfl.empty:
             print(f"✅ Found {len(df_nfl)} odds from {df_nfl['bookmaker'].nunique()} bookmakers")

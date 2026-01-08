@@ -1,0 +1,141 @@
+# Championship Futures Visualization Configuration
+# Settings for NFL, NBA, NCAAF, NCAAB futures visualization
+
+sports:
+  nfl:
+    display_name: "NFL"
+    full_name: "NFL Super Bowl"
+    emoji: "🏈"
+    
+    # Data paths
+    input_dir: "data/01_input/the-odds-api/nfl/futures"
+    output_dir: "data/04_output/nfl"
+    viz_dir: "content/viz/nfl"
+    file_prefix: "nfl_super_bowl_futures"
+    output_prefix: "nfl_championship"
+    
+    # Visualization settings
+    title: "NFL Super Bowl Futures: True Odds vs. What Books Charge"
+    viz_filename: "nfl_futures_vig_single.png"
+    logo_source: "espn_cdn"
+    logo_height: 21
+    
+    # Vig color gradient settings (football has lower vig)
+    vig_color_domain_min: 0.0
+    vig_color_domain_max: 5.0
+    
+    # Table dimensions (portrait 9:16 for social media)
+    output_width: 1600
+    output_height: 2844
+    
+  nba:
+    display_name: "NBA"
+    full_name: "NBA Championship"
+    emoji: "🏀"
+    
+    input_dir: "data/01_input/the-odds-api/nba/futures"
+    output_dir: "data/04_output/nba"
+    viz_dir: "content/viz/nba"
+    file_prefix: "nba_championship_futures"
+    output_prefix: "nba_championship"
+    
+    title: "NBA Championship Futures: True Odds vs. What Books Charge"
+    viz_filename: "nba_futures_vig_single.png"
+    logo_source: "espn_cdn"
+    logo_height: 21
+    
+    # Vig color gradient settings (basketball has higher vig)
+    vig_color_domain_min: 0.0
+    vig_color_domain_max: 10.0
+    
+    output_width: 1600
+    output_height: 2844
+    
+  ncaaf:
+    display_name: "NCAAF"
+    full_name: "NCAAF Championship"
+    emoji: "🏈"
+    
+    input_dir: "data/01_input/the-odds-api/ncaaf/futures"
+    output_dir: "data/04_output/ncaaf"
+    viz_dir: "content/viz/ncaaf"
+    file_prefix: "ncaaf_championship_futures"
+    output_prefix: "ncaaf_championship"
+    
+    title: "NCAAF Championship Futures: True Odds vs. What Books Charge"
+    viz_filename: "ncaaf_futures_vig_single.png"
+    logo_source: "local"
+    logo_height: 21
+    
+    # Vig color gradient settings
+    vig_color_domain_min: 0.0
+    vig_color_domain_max: 5.0
+    
+    output_width: 1600
+    output_height: 2844
+    
+  ncaab:
+    display_name: "NCAAB"
+    full_name: "NCAAB Championship"
+    emoji: "🏀"
+    
+    input_dir: "data/01_input/the-odds-api/ncaab/futures"
+    output_dir: "data/04_output/ncaab"
+    viz_dir: "content/viz/ncaab"
+    file_prefix: "ncaab_championship_futures"
+    output_prefix: "ncaab_championship"
+    
+    title: "NCAAB Championship Futures: True Odds vs. What Books Charge"
+    viz_filename: "ncaab_futures_vig_single.png"
+    logo_source: "local"
+    logo_height: 21
+    
+    # Vig color gradient settings (basketball has higher vig)
+    vig_color_domain_min: 0.0
+    vig_color_domain_max: 10.0
+    
+    output_width: 1600
+    output_height: 2844
+
+# Shared visualization settings
+visualization:
+  # Typography
+  font_family: "Arial"
+  title_font_size: 28
+  subtitle_font_size: 16
+  header_font_size: 14
+  body_font_size: 13
+  footer_font_size: 11
+  
+  # Spacing
+  heading_padding_px: 3 # For tight spacing between title and subtitle
+  header_padding_px: 8
+  data_row_padding_px: 1
+  
+  # Column widths (pixels)
+  col_width_rank: 50
+  col_width_team: 200
+  col_width_logo: 45
+  col_width_record: 70
+  col_width_fair_odds: 90
+  col_width_fair_pct: 70
+  col_width_avg_odds: 90
+  col_width_implied_pct: 90
+  col_width_vig_pct: 75
+  col_width_best_book: 110
+  col_width_best_odds: 90
+  col_width_best_vig_pct: 100
+  
+  # Color palette (green -> white -> red for vig)
+  color_palette:
+    - "#90EE90"  # Light green (low vig)
+    - "#ffffff"  # White (medium)
+    - "#ffcccc"  # Light red
+    - "#ff9999"  # Medium red
+    - "#d62728"  # Dark red (high vig)
+  
+  # Negative vig color (bettor advantage)
+  negative_vig_color: "#FFEB3B"  # Yellow
+  
+  # Twitter handle
+  twitter_handle: "@TQSLabs"

@@ -1,2 +1,2 @@
-timestamp,avg_vig_pct,num_teams,num_bookmakers
-2026-01-07 07:35:13.178144,14.571974715874871,14,7
+timestamp,num_bookmakers,num_teams,avg_vig_pct,min_vig_pct,max_vig_pct,best_bookmaker,worst_bookmaker
+2026-01-07 18:11:31,7,14,14.40278188086801,11.977933461575585,16.1658728428278,bovada,fanduel
