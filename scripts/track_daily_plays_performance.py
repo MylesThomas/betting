@@ -154,7 +154,7 @@ def calculate_results(plays_df, results_df):
     # Calculate win/loss
     def determine_result(row):
         if pd.isna(row['PTS']):
-            return 'NO_DATA'
+            return 'DNP'
         
         actual = row['PTS']
         line = row['line']
@@ -181,9 +181,9 @@ def calculate_results(plays_df, results_df):
     # Drop intermediate columns
     df = df.drop(['player_normalized', 'PTS'], axis=1)
     
-    missing_data = (df['result'] == 'NO_DATA').sum()
+    missing_data = (df['result'] == 'DNP').sum()
     if missing_data > 0:
-        print(f"   ⚠️  {missing_data} plays missing actual stats")
+        print(f"   ⚠️  {missing_data} plays with DNP (Did Not Play)")
     
     print(f"   ✅ Calculated results for {len(df)} plays")
     
@@ -225,7 +225,7 @@ def generate_report(df_results):
     wins = (df_results['result'] == 'WIN').sum()
     losses = (df_results['result'] == 'LOSS').sum()
     pushes = (df_results['result'] == 'PUSH').sum()
-    no_data = (df_results['result'] == 'NO_DATA').sum()
+    dnp = (df_results['result'] == 'DNP').sum()
     
     win_pct = (wins / (wins + losses) * 100) if (wins + losses) > 0 else 0
     
@@ -233,8 +233,8 @@ def generate_report(df_results):
     print(f"Wins: {wins} ({wins/total*100:.1f}%)")
     print(f"Losses: {losses} ({losses/total*100:.1f}%)")
     print(f"Pushes: {pushes} ({pushes/total*100:.1f}%)")
-    if no_data > 0:
-        print(f"No Data: {no_data} ({no_data/total*100:.1f}%)")
+    if dnp > 0:
+        print(f"DNP: {dnp} ({dnp/total*100:.1f}%)")
     print()
     print(f"Win Rate (excluding pushes): {win_pct:.1f}%")
     

@@ -238,7 +238,7 @@ This might be your first day, or yesterday had no plays.
     wins = (df_results['result'] == 'WIN').sum()
     losses = (df_results['result'] == 'LOSS').sum()
     pushes = (df_results['result'] == 'PUSH').sum()
-    no_data = (df_results['result'] == 'NO_DATA').sum()
+    dnp = (df_results['result'] == 'DNP').sum()
     
     win_pct = (wins / (wins + losses) * 100) if (wins + losses) > 0 else 0
     
