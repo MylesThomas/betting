@@ -158,10 +158,10 @@ def load_all_shot_charts(season):
     - Rim FG%
     - Total points scored within 6 feet (rim_season_points)
     """
-    print(f"\n🎯 Loading shot charts from s3://{S3_BUCKET_NBA}/player_shot_charts/{season}/...")
+    print(f"\n🎯 Loading shot charts from s3://{S3_BUCKET_NBA}/shot_charts/{season}/...")
     
     s3_client = boto3.client('s3')
-    prefix = f"player_shot_charts/{season}/"
+    prefix = f"shot_charts/{season}/"
     
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
     
@@ -490,24 +490,21 @@ def join_all_data(season, rim_scorer_pct=None):
     return df_merged
 
 
-def upload_merged_to_s3(df, season):
+def upload_merged_to_s3(df, season, rim_scorer_pct=None):
     """
     Upload merged DataFrame to S3.
     
     Args:
         df: Merged DataFrame
         season: Season string (e.g., '2025-26')
+        rim_scorer_pct: Rim scorer percentage threshold (e.g., 40 or 50), optional
     
     Returns:
         True if successful, False otherwise
     """
-    # Get rim scorer threshold from data (if exists and not NULL)
-    rim_threshold = None
-    if 'rim_scorer_threshold' in df.columns:
-        first_value = df['rim_scorer_threshold'].iloc[0]
-        # Only use threshold if it's not NULL/NaN
-        if first_value is not None and not pd.isna(first_value):
-            rim_threshold = int(first_value)
+    # Use the rim scorer threshold parameter that was passed
+    # (not inferred from data, which could be NULL for first row)
+    rim_threshold = int(rim_scorer_pct) if rim_scorer_pct is not None else None
     
     # Build filename with threshold suffix only if threshold was actually used
     if rim_threshold is not None:
@@ -584,7 +581,7 @@ def main():
     
     # Upload to S3 if requested
     if args.s3 and not df_merged.empty:
-        upload_merged_to_s3(df_merged, args.season)
+        upload_merged_to_s3(df_merged, args.season, args.rim_scorer_pct)
     
     # Save locally if requested
     if args.save and not df_merged.empty:
