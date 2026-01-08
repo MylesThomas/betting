@@ -9,6 +9,31 @@ espn_seasons:
   ncaab: 2026    # 2025-26 NCAAB season
   ncaaf: 2025    # 2025-26 NCAAF season (CFP playoff teams only)
 
+# The Odds API configuration
+odds_api:
+  base_url: https://api.the-odds-api.com/v4
+  endpoints:
+    # Forward looking (current/upcoming)
+    sports: /sports
+    odds: /sports/{sport}/odds
+    events: /sports/{sport}/events
+    event_odds: /sports/{sport}/events/{event_id}/odds
+    
+    # Backward looking (historical)
+    historical_events: /historical/sports/{sport}/events
+    historical_odds: /historical/sports/{sport}/events/{event_id}/odds
+  
+  # Common parameters
+  default_params:
+    regions: us
+    oddsFormat: american
+    dateFormat: iso
+  
+  # Markets
+  markets:
+    game_lines: [h2h, spreads, totals]  # Moneyline, spreads, totals
+    player_props: [player_points, player_rebounds, player_assists, player_threes, player_blocks, player_steals] # can add double-double, triple-double, points+rebounds+assists
+
 # AWS S3 bucket configuration
 aws:
   buckets:
