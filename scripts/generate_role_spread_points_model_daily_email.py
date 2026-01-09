@@ -47,6 +47,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
@@ -218,9 +219,145 @@ def load_results_from_s3(date_str, strategy='both', tracking_suffix=''):
     return pd.concat(results, ignore_index=True)
 
 
+def load_season_ytd_results(season, tracking_suffix='_top3'):
+    """
+    Load ALL tracking results for the season to calculate YTD stats.
+    Uses parallel workers for fast loading of 100+ CSV files.
+    
+    Args:
+        season: NBA season (e.g., '2025-26')
+        tracking_suffix: Suffix for tracking files (e.g., '_top3')
+    
+    Returns:
+        dict with overall and per-strategy stats, or None if no data
+    """
+    print(f"📊 Loading season YTD stats (suffix: '{tracking_suffix}')...", file=sys.stderr)
+    
+    s3 = boto3.client('s3')
+    
+    # List all tracking result files for the season
+    all_files = []
+    for dimension in ['2d', '3d']:
+        prefix = f"{S3_PREFIX_RESULTS}/{dimension}/"
+        
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        if 'Contents' in response:
+            files = [
+                obj['Key'] for obj in response['Contents']
+                if obj['Key'].endswith(f'{tracking_suffix}.csv')
+            ]
+            all_files.extend(files)
+    
+    if not all_files:
+        print(f"   ⚠️  No YTD tracking files found", file=sys.stderr)
+        return None
+    
+    print(f"   Found {len(all_files)} tracking files to load", file=sys.stderr)
+    
+    # Parallel load function
+    def load_single_file(key):
+        try:
+            obj = s3.get_object(Bucket=S3_BUCKET, Key=key)
+            df = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')))
+            return df
+        except Exception as e:
+            print(f"   ⚠️  Failed to load {key}: {e}", file=sys.stderr)
+            return None
+    
+    # Load all files in parallel (100 workers for speed)
+    all_data = []
+    with ThreadPoolExecutor(max_workers=100) as executor:
+        futures = {executor.submit(load_single_file, key): key for key in all_files}
+        for future in as_completed(futures):
+            df = future.result()
+            if df is not None and not df.empty:
+                all_data.append(df)
+    
+    if not all_data:
+        print(f"   ⚠️  No valid YTD data loaded", file=sys.stderr)
+        return None
+    
+    # Combine all tracking results
+    df_all = pd.concat(all_data, ignore_index=True)
+    print(f"   ✅ Loaded {len(df_all)} total plays", file=sys.stderr)
+    
+    # Calculate overall stats
+    wins = (df_all['result'] == 'win').sum()
+    losses = (df_all['result'] == 'loss').sum()
+    total = wins + losses
+    win_pct = (wins / total * 100) if total > 0 else 0
+    total_profit = df_all['profit'].sum()
+    
+    overall_stats = {
+        'wins': wins,
+        'losses': losses,
+        'total': total,
+        'win_pct': win_pct,
+        'profit': total_profit
+    }
+    
+    # Calculate per-strategy stats (if strategy_name column exists)
+    strategy_stats = []
+    if 'strategy_name' in df_all.columns:
+        for strategy_name in df_all['strategy_name'].dropna().unique():
+            df_strat = df_all[df_all['strategy_name'] == strategy_name]
+            strat_wins = (df_strat['result'] == 'win').sum()
+            strat_losses = (df_strat['result'] == 'loss').sum()
+            strat_total = strat_wins + strat_losses
+            strat_win_pct = (strat_wins / strat_total * 100) if strat_total > 0 else 0
+            strat_profit = df_strat['profit'].sum()
+            
+            strategy_stats.append({
+                'name': strategy_name,
+                'wins': strat_wins,
+                'losses': strat_losses,
+                'total': strat_total,
+                'win_pct': strat_win_pct,
+                'profit': strat_profit
+            })
+        
+        # Sort by profit descending
+        strategy_stats = sorted(strategy_stats, key=lambda x: x['profit'], reverse=True)
+    
+    print(f"   ✅ YTD: {wins}-{losses} ({win_pct:.1f}%) | ${total_profit:,.2f} profit", file=sys.stderr)
+    
+    return {
+        'overall': overall_stats,
+        'strategies': strategy_stats
+    }
+
+
 # =============================================================================
 # TEXT FORMATTING
 # =============================================================================
+
+def format_ytd_stats(ytd_stats):
+    """Format YTD season stats for email"""
+    if not ytd_stats:
+        return ""
+    
+    overall = ytd_stats['overall']
+    strategies = ytd_stats['strategies']
+    
+    text = f"""
+{'='*80}
+{EMOJI['chart']} 2025-26 SEASON PERFORMANCE (YTD)
+{'='*80}
+
+Overall: {overall['wins']}-{overall['losses']} ({overall['win_pct']:.1f}%) | ${overall['profit']:,.2f} profit
+
+"""
+    
+    if strategies:
+        text += "Strategy Breakdown:\n"
+        for i, strat in enumerate(strategies, 1):
+            text += f"  {i}. {strat['name']:30s} {strat['wins']:3d}-{strat['losses']:2d} ({strat['win_pct']:4.1f}%) | ${strat['profit']:>10,.2f}\n"
+        text += "\n"
+    
+    text += f"{'='*80}\n\n"
+    
+    return text
+
 
 def format_results_text(df_results, date_str):
     """Format yesterday's results as text"""
@@ -429,7 +566,7 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
     return text
 
 
-def generate_email_text(df_results, results_date, df_plays, plays_date, custom_title=None):
+def generate_email_text(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None):
     """Generate complete email body in text format"""
     
     if custom_title:
@@ -447,7 +584,11 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
 {'='*80}
 """
     
-    # Add results first (yesterday's performance)
+    # Add YTD stats first (if provided)
+    if ytd_stats:
+        body += format_ytd_stats(ytd_stats)
+    
+    # Add results (yesterday's performance)
     body += format_results_text(df_results, results_date)
     
     # Add today's plays
@@ -467,11 +608,11 @@ Generated by: /betting/scripts/generate_role_spread_points_model_daily_email.py
 # HTML FORMATTING (Optional)
 # =============================================================================
 
-def generate_email_html(df_results, results_date, df_plays, plays_date, custom_title=None):
+def generate_email_html(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None):
     """Generate complete email body in HTML format"""
     # TODO: Implement HTML formatting if needed
     # For now, just wrap text in <pre> tags
-    subject, text_body = generate_email_text(df_results, results_date, df_plays, plays_date, custom_title)
+    subject, text_body = generate_email_text(df_results, results_date, df_plays, plays_date, custom_title, ytd_stats)
     html_body = f"<html><body><pre>{text_body}</pre></body></html>"
     return subject, html_body
 
@@ -529,6 +670,8 @@ def main():
                        help='Suffix for tracking filename (e.g., "_top3")')
     parser.add_argument('--email-title', type=str, default='NBA Daily Props Report',
                        help='Custom email subject line')
+    parser.add_argument('--load-ytd', action='store_true', default=False,
+                       help='Load and display YTD season stats (default: False)')
     
     args = parser.parse_args()
     
@@ -569,11 +712,16 @@ def main():
     else:
         print(f"{EMOJI['success']} Loaded {len(df_results)} results for {results_date}\n", file=sys.stderr)
     
+    # Load YTD stats if requested
+    ytd_stats = None
+    if args.load_ytd:
+        ytd_stats = load_season_ytd_results(args.season, tracking_suffix=args.tracking_suffix)
+    
     # Generate email
     if args.format == 'html':
-        subject, body = generate_email_html(df_results, results_date, df_plays, plays_date, args.email_title)
+        subject, body = generate_email_html(df_results, results_date, df_plays, plays_date, args.email_title, ytd_stats)
     else:
-        subject, body = generate_email_text(df_results, results_date, df_plays, plays_date, args.email_title)
+        subject, body = generate_email_text(df_results, results_date, df_plays, plays_date, args.email_title, ytd_stats)
     
     # Output
     if args.output:

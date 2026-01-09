@@ -413,13 +413,15 @@ def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dim
     
     assert len(strategies) > 0, f"No {dimension} strategies found in config"
     
-    # Build filter criteria
-    filter_masks = []
+    # Build filter criteria and add strategy_name
+    df_all['strategy_name'] = None  # Initialize column
+    
     for strat in strategies:
         line_tier = strat['line_tier']
         spread_bin = strat['spread_bin']
+        strategy_name = strat['strategy_name']
         
-        print(f"   Filter: {line_tier} + {spread_bin}", end='')
+        print(f"   Filter: {strategy_name} ({line_tier} + {spread_bin}", end='')
         
         # Create boolean mask for this strategy
         mask = (df_all['line_tier'] == line_tier) & (df_all['spread_bin'] == spread_bin)
@@ -428,19 +430,15 @@ def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dim
         if dimension == '3d':
             scorer_type = strat['scorer_type']
             mask = mask & (df_all['scorer_type'] == scorer_type)
-            print(f" + {scorer_type}")
+            print(f" + {scorer_type})")
         else:
-            print()
+            print(")")
         
-        filter_masks.append(mask)
+        # Assign strategy_name to matching rows
+        df_all.loc[mask, 'strategy_name'] = strategy_name
     
-    # Combine all masks with OR logic
-    combined_mask = filter_masks[0]
-    for mask in filter_masks[1:]:
-        combined_mask = combined_mask | mask
-    
-    # Filter and save
-    df_filtered = df_all[combined_mask].copy()
+    # Filter to only rows with a strategy_name assigned
+    df_filtered = df_all[df_all['strategy_name'].notna()].copy()
     filtered_count = len(df_filtered)
     print(f"   ✅ Filtered: {filtered_count} plays (from {original_count})")
     
@@ -571,6 +569,7 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         '--plays-suffix', '_top3',
         '--tracking-suffix', '_top3',
         '--email-title', '🎯 Top 3 Unders Plays',
+        '--load-ytd',  # Load season YTD stats for top3 email
         '--sns-topic', os.environ['SNS_TOPIC_ARN']
     ]
     
