@@ -50,8 +50,14 @@ import json
 import os
 import subprocess
 import boto3
+import sys
+from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
+# Add src to path for season utils
+sys.path.insert(0, '/tmp/betting/src')
+from season_utils import get_current_nba_season
 
 
 def send_email_notification(subject, message, topic_arn=None):
@@ -810,7 +816,11 @@ def lambda_handler(event, context):
     try:
         # Get configuration from environment
         repo_url = os.environ['GITHUB_REPO_URL']
-        season = os.environ['SEASON']
+        season = os.environ.get('SEASON', '2025-26')  # Default to current season
+        
+        # Validate season matches actual current season
+        actual_season = get_current_nba_season()
+        assert season == actual_season, f"SEASON env var '{season}' doesn't match actual current season '{actual_season}'"
         
         # Get secrets
         print("🔐 Fetching secrets...")
