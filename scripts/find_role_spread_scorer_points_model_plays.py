@@ -867,6 +867,7 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         game_time = row['game_time']
         bookmakers = row['bookmakers']
         num_bookmakers = row['num_bookmakers']
+        bookmaker_details = row['bookmaker_details']
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -909,6 +910,7 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                     'game_time': game_time,
                     'bookmakers': bookmakers,
                     'num_bookmakers': num_bookmakers,
+                    'bookmaker_details': bookmaker_details,
                 }
                 
                 # Add scorer_type if present
