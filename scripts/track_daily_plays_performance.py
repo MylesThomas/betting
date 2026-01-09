@@ -59,7 +59,7 @@ S3_BUCKET_GAME_LOGS = 'nba-api-mt'
 S3_PREFIX_GAME_LOGS = 'player_game_logs'
 
 
-def load_plays_from_s3(date_str, season, strategy='both'):
+def load_plays_from_s3(date_str, season, strategy='both', plays_suffix=''):
     """
     Load plays CSV from S3 (supports 2d/, 3d/, or both)
     
@@ -67,11 +67,12 @@ def load_plays_from_s3(date_str, season, strategy='both'):
         date_str: Date string (YYYY-MM-DD)
         season: NBA season
         strategy: '2d', '3d', or 'both'
+        plays_suffix: Suffix for filename (e.g., '_top3')
     
     Returns:
         dict: {'2d': df_2d, '3d': df_3d, 'combined': df_combined}
     """
-    print(f"📥 Loading plays for {date_str} (strategy: {strategy})...")
+    print(f"📥 Loading plays for {date_str} (strategy: {strategy}, suffix: '{plays_suffix}')...")
     
     s3 = boto3.client('s3')
     results = {}
@@ -83,7 +84,7 @@ def load_plays_from_s3(date_str, season, strategy='both'):
         strategies_to_load.append('3d')
     
     for strat in strategies_to_load:
-        key = f"{S3_PREFIX_PLAYS}/{strat}/{date_str}.csv"
+        key = f"{S3_PREFIX_PLAYS}/{strat}/{date_str}{plays_suffix}.csv"
         
         try:
             obj = s3.get_object(Bucket=S3_BUCKET_PLAYS, Key=key)
@@ -301,7 +302,7 @@ def generate_report(df_results):
     }
 
 
-def save_results_to_s3(df_results, date_str, strategy='2d'):
+def save_results_to_s3(df_results, date_str, strategy='2d', output_suffix=''):
     """
     Save results CSV to S3 (in strategy-specific subfolder)
     
@@ -309,11 +310,12 @@ def save_results_to_s3(df_results, date_str, strategy='2d'):
         df_results: DataFrame with tracking results
         date_str: Date string (YYYY-MM-DD)
         strategy: '2d' or '3d' (determines subfolder)
+        output_suffix: Suffix for filename (e.g., '_top3')
     """
-    print(f"💾 Saving {strategy.upper()} results to S3...")
+    print(f"💾 Saving {strategy.upper()} results to S3 (suffix: '{output_suffix}')...")
     
     s3 = boto3.client('s3')
-    key = f"{S3_PREFIX_RESULTS}/{strategy}/{date_str}.csv"
+    key = f"{S3_PREFIX_RESULTS}/{strategy}/{date_str}{output_suffix}.csv"
     
     try:
         csv_buffer = StringIO()
@@ -340,6 +342,10 @@ def main():
                        help='NBA season (e.g., 2025-26)')
     parser.add_argument('--strategy', type=str, default='both', choices=['2d', '3d', 'both'],
                        help='Which strategy to track: 2d, 3d, or both (default: both)')
+    parser.add_argument('--plays-suffix', type=str, default='',
+                       help='Suffix for plays filename (e.g., "_top3" to read {date}_top3.csv)')
+    parser.add_argument('--output-suffix', type=str, default='',
+                       help='Suffix for output filename (e.g., "_top3" to write {date}_top3.csv)')
     
     args = parser.parse_args()
     
@@ -356,7 +362,7 @@ def main():
         print(f"   Current time ET: {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}\n")
     
     # Load plays (returns dict with 2d, 3d, and/or combined)
-    plays_dict = load_plays_from_s3(date_str, args.season, args.strategy)
+    plays_dict = load_plays_from_s3(date_str, args.season, args.strategy, args.plays_suffix)
     
     # Check if we got any plays
     if args.strategy == 'both':
@@ -388,9 +394,9 @@ def main():
         for strat in ['2d', '3d']:
             strat_results = df_results[df_results['strategy_dimension'] == strat]
             if not strat_results.empty:
-                save_results_to_s3(strat_results, date_str, strategy=strat)
+                save_results_to_s3(strat_results, date_str, strategy=strat, output_suffix=args.output_suffix)
     else:
-        save_results_to_s3(df_results, date_str, strategy=args.strategy)
+        save_results_to_s3(df_results, date_str, strategy=args.strategy, output_suffix=args.output_suffix)
     
     # Return summary for programmatic access
     return df_results, summary

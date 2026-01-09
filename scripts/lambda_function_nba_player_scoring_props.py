@@ -349,6 +349,234 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     if returncode != 0:
         print(f"⚠️  Email generation/sending failed")
     
+    # =============================================================================
+    # NEW: Run Top3 Unders workflow (Steps 6-8) - ADDITIVE - 2026-01-08
+    # =============================================================================
+    
+    # Check if all main workflow steps succeeded before running Top3
+    main_steps_success = (
+        results['steps']['2d_plays']['success'] and
+        results['steps']['3d_plays']['success'] and
+        results['steps']['fetch_games']['success'] and
+        results['steps']['tracking']['success'] and
+        results['steps']['email']['success']
+    )
+    
+    if main_steps_success:
+        print(f"\n✅ Main workflow succeeded - running Top3 Unders workflow")
+        top3_results = run_top3_unders_workflow(repo_dir, today, yesterday, season)
+        results['steps']['top3_workflow'] = top3_results
+    else:
+        print(f"\n⚠️  Skipping Top3 Unders workflow - main workflow had failures")
+        results['steps']['top3_workflow'] = {
+            'skipped': True,
+            'reason': 'main_workflow_failed',
+            'main_steps_status': {
+                '2d_plays': results['steps']['2d_plays']['success'],
+                '3d_plays': results['steps']['3d_plays']['success'],
+                'fetch_games': results['steps']['fetch_games']['success'],
+                'tracking': results['steps']['tracking']['success'],
+                'email': results['steps']['email']['success']
+            }
+        }
+    
+    return results
+
+
+def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dimension='2d'):
+    """
+    Filter plays CSV file to only include strategies from config.
+    
+    Args:
+        all_plays_csv_path: Path to full plays CSV
+        config_data: Loaded config dict with strategy definitions
+        output_csv_path: Where to save filtered plays CSV
+        dimension: '2d' or '3d'
+    
+    Returns:
+        int: Number of filtered plays
+    """
+    import pandas as pd
+    
+    print(f"   Filtering {dimension.upper()} plays from CSV...")
+    
+    # Read all plays CSV - fail if missing
+    df_all = pd.read_csv(all_plays_csv_path)
+    original_count = len(df_all)
+    print(f"   Loaded {original_count} plays from CSV")
+    
+    # Extract filter criteria from config strategies - fail if keys missing
+    strategies = [
+        s for s in config_data['strategies'] 
+        if s['strategy_type'] == dimension
+    ]
+    
+    assert len(strategies) > 0, f"No {dimension} strategies found in config"
+    
+    # Build filter criteria
+    filter_masks = []
+    for strat in strategies:
+        line_tier = strat['line_tier']
+        spread_bin = strat['spread_bin']
+        
+        print(f"   Filter: {line_tier} + {spread_bin}", end='')
+        
+        # Create boolean mask for this strategy
+        mask = (df_all['line_tier'] == line_tier) & (df_all['spread_bin'] == spread_bin)
+        
+        # For 3D, also match scorer_type
+        if dimension == '3d':
+            scorer_type = strat['scorer_type']
+            mask = mask & (df_all['scorer_type'] == scorer_type)
+            print(f" + {scorer_type}")
+        else:
+            print()
+        
+        filter_masks.append(mask)
+    
+    # Combine all masks with OR logic
+    combined_mask = filter_masks[0]
+    for mask in filter_masks[1:]:
+        combined_mask = combined_mask | mask
+    
+    # Filter and save
+    df_filtered = df_all[combined_mask].copy()
+    filtered_count = len(df_filtered)
+    print(f"   ✅ Filtered: {filtered_count} plays (from {original_count})")
+    
+    df_filtered.to_csv(output_csv_path, index=False)
+    print(f"   💾 Saved to: {output_csv_path}")
+    
+    return filtered_count
+
+
+def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
+    """
+    Run the Top3 Unders workflow (Steps 6-8).
+    Filters existing plays, tracks separately, sends 2nd email.
+    
+    This is ADDITIVE - doesn't touch the main workflow.
+    
+    Args:
+        repo_dir: Path to cloned repository
+        today: Today's date (YYYY-MM-DD)
+        yesterday: Yesterday's date (YYYY-MM-DD)
+        season: NBA season
+    
+    Returns:
+        dict: Top3 workflow results
+    """
+    print(f"\n{'='*80}")
+    print("🎯 Starting Top3 Unders Workflow (Steps 6-8)")
+    print(f"{'='*80}\n")
+    
+    results = {}
+    
+    # Step 6: Download strategy config from S3 and filter plays
+    print(f"\n{'='*80}")
+    print("Step 6: Filtering Today's Plays (Top3 Unders)")
+    print(f"{'='*80}\n")
+    
+    import boto3
+    import json
+    
+    s3_client = boto3.client('s3', region_name=os.environ['AWS_REGION_NAME'])
+    bucket = 'nba-betting-mt'
+    
+    # Download and load strategy config
+    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props.json'
+    config_local_path = '/tmp/top3_config.json'
+    
+    print(f"   Downloading config from s3://{bucket}/{config_s3_path}")
+    s3_client.download_file(bucket, config_s3_path, config_local_path)
+    
+    with open(config_local_path, 'r') as f:
+        config_data = json.load(f)
+    
+    print(f"   Config: {config_data['name']} - {config_data['description']}")
+    print(f"   Strategies: {len(config_data['strategies'])}")
+    
+    # Validate config structure
+    strategies = config_data['strategies']
+    assert len(strategies) == 3, f"Expected 3 strategies, got {len(strategies)}"
+    
+    count_2d = len([s for s in strategies if s['strategy_type'] == '2d'])
+    count_3d = len([s for s in strategies if s['strategy_type'] == '3d'])
+    assert count_2d == 1, f"Expected 1 2D strategy, got {count_2d}"
+    assert count_3d == 2, f"Expected 2 3D strategies, got {count_3d}"
+    
+    print(f"   ✅ Config validated: {count_2d} x 2D, {count_3d} x 3D")
+    
+    # Download and filter 2D plays CSV
+    plays_2d_all_csv = f'/tmp/{today}_2d.csv'
+    plays_2d_top3_csv = f'/tmp/{today}_2d_top3.csv'
+    s3_2d_path = f'data/04_output/plays/role_spread_points_model/2d/{today}.csv'
+    s3_2d_top3_path = f'data/04_output/plays/role_spread_points_model/2d/{today}_top3.csv'
+    
+    print(f"\n   2D Plays:")
+    s3_client.download_file(bucket, s3_2d_path, plays_2d_all_csv)
+    filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top3_csv, dimension='2d')
+    s3_client.upload_file(plays_2d_top3_csv, bucket, s3_2d_top3_path)
+    print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top3_path}")
+    
+    results['2d_filter'] = {'success': True, 'plays_count': filtered_2d_count}
+    
+    # Download and filter 3D plays CSV
+    plays_3d_all_csv = f'/tmp/{today}_3d.csv'
+    plays_3d_top3_csv = f'/tmp/{today}_3d_top3.csv'
+    s3_3d_path = f'data/04_output/plays/role_spread_points_model/3d/{today}.csv'
+    s3_3d_top3_path = f'data/04_output/plays/role_spread_points_model/3d/{today}_top3.csv'
+    
+    print(f"\n   3D Plays:")
+    s3_client.download_file(bucket, s3_3d_path, plays_3d_all_csv)
+    filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top3_csv, dimension='3d')
+    s3_client.upload_file(plays_3d_top3_csv, bucket, s3_3d_top3_path)
+    print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top3_path}")
+    
+    results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
+    
+    # Step 7: Track yesterday's Top3 performance
+    print(f"\n{'='*80}")
+    print("Step 7: Tracking Yesterday's Top3 Performance")
+    print(f"{'='*80}\n")
+    
+    cmd = [
+        'python', 'scripts/track_daily_plays_performance.py',
+        '--date', yesterday,
+        '--season', season,
+        '--strategy', 'both',
+        '--plays-suffix', '_top3',
+        '--output-suffix', '_top3'
+    ]
+    
+    env = {
+        'AWS_DEFAULT_REGION': os.environ['AWS_REGION_NAME'],
+        'PYTHONPATH': '/opt/python'
+    }
+    
+    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+    results['tracking'] = {'success': returncode == 0, 'output': stdout}
+    
+    # Step 8: Generate Top3 email
+    print(f"\n{'='*80}")
+    print("Step 8: Generating Top3 Unders Email")
+    print(f"{'='*80}\n")
+    
+    cmd = [
+        'python', 'scripts/generate_role_spread_points_model_daily_email.py',
+        '--season', season,
+        '--plays-date', today,
+        '--results-date', yesterday,
+        '--strategy', 'both',
+        '--plays-suffix', '_top3',
+        '--tracking-suffix', '_top3',
+        '--email-title', '🎯 Top 3 Unders Plays',
+        '--sns-topic', os.environ['SNS_TOPIC_ARN']
+    ]
+    
+    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+    results['email'] = {'success': returncode == 0, 'output': stdout, 'email_sent': returncode == 0}
+    
     return results
 
 
@@ -403,12 +631,41 @@ def lambda_handler(event, context):
         print(f"{'='*80}")
         print(f"Today: {workflow_results['today']}")
         print(f"Yesterday: {workflow_results['yesterday']}")
-        print(f"2D Plays: {'✅' if workflow_results['steps']['2d_plays']['success'] else '❌'}")
-        print(f"3D Plays: {'✅' if workflow_results['steps']['3d_plays']['success'] else '❌'}")
-        print(f"Fetch Games: {'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'}")
-        print(f"Tracking: {'✅' if workflow_results['steps']['tracking']['success'] else '❌'}")
-        print(f"Email+SNS: {'✅' if email_sent else '❌'}")
+        print(f"\nMain Workflow (All Strategies):")
+        print(f"  2D Plays: {'✅' if workflow_results['steps']['2d_plays']['success'] else '❌'}")
+        print(f"  3D Plays: {'✅' if workflow_results['steps']['3d_plays']['success'] else '❌'}")
+        print(f"  Fetch Games: {'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'}")
+        print(f"  Tracking: {'✅' if workflow_results['steps']['tracking']['success'] else '❌'}")
+        print(f"  Email+SNS: {'✅' if email_sent else '❌'}")
+        
+        # Top3 workflow summary
+        top3 = workflow_results['steps']['top3_workflow']
+        print(f"\nTop3 Unders Workflow:")
+        if top3.get('skipped'):
+            print(f"  Status: ⏭️  Skipped - {top3['reason']}")
+        else:
+            print(f"  2D Filter: {'✅' if top3['2d_filter']['success'] else '❌'} ({top3['2d_filter']['plays_count']} plays)")
+            print(f"  3D Filter: {'✅' if top3['3d_filter']['success'] else '❌'} ({top3['3d_filter']['plays_count']} plays)")
+            print(f"  Tracking: {'✅' if top3['tracking']['success'] else '❌'}")
+            print(f"  Email+SNS: {'✅' if top3['email']['success'] else '❌'}")
+        
         print(f"{'='*80}\n")
+        
+        # Build Top3 response
+        top3 = workflow_results['steps']['top3_workflow']
+        if top3.get('skipped'):
+            top3_response = {
+                'skipped': True,
+                'reason': top3['reason']
+            }
+        else:
+            top3_response = {
+                'skipped': False,
+                '2d_filter': top3['2d_filter']['success'],
+                '3d_filter': top3['3d_filter']['success'],
+                'tracking': top3['tracking']['success'],
+                'email_sent_via_sns': top3['email']['email_sent']
+            }
         
         return {
             'statusCode': 200,
@@ -417,11 +674,14 @@ def lambda_handler(event, context):
                 'results': {
                     'today': workflow_results['today'],
                     'yesterday': workflow_results['yesterday'],
-                    '2d_plays': workflow_results['steps']['2d_plays']['success'],
-                    '3d_plays': workflow_results['steps']['3d_plays']['success'],
-                    'fetch_games': workflow_results['steps']['fetch_games']['success'],
-                    'tracking': workflow_results['steps']['tracking']['success'],
-                    'email_sent_via_sns': email_sent
+                    'main_workflow': {
+                        '2d_plays': workflow_results['steps']['2d_plays']['success'],
+                        '3d_plays': workflow_results['steps']['3d_plays']['success'],
+                        'fetch_games': workflow_results['steps']['fetch_games']['success'],
+                        'tracking': workflow_results['steps']['tracking']['success'],
+                        'email_sent_via_sns': email_sent
+                    },
+                    'top3_workflow': top3_response
                 }
             })
         }
