@@ -43,16 +43,16 @@ from odds_utils import odds_to_implied_probability
 # =============================================================================
 
 # Date these odds were fetched from FanDuel (update when you update odds)
-FETCH_DATE = "2025-01-07"  # YYYY-MM-DD
+FETCH_DATE = "2026-01-09"  # YYYY-MM-DD
 
 # Current MVP odds from FanDuel
 # Format: {'Player Name': american_odds}
 CURRENT_MVP_ODDS = {
     'Shai Gilgeous-Alexander': -450,
     'Luka Doncic': +750,
-    'Cade Cunningham': +2000,
+    'Cade Cunningham': +1800,
     'Jaylen Brown': +4000,
-    'Jalen Brunson': +5000,
+    'Jalen Brunson': +7500,
     'Anthony Edwards': +10000,
     'Tyrese Maxey': +10000,
     'Donovan Mitchell': +20000,
