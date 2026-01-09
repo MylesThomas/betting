@@ -7,12 +7,16 @@ This Lambda function:
 1. Fetches secrets from AWS Secrets Manager
 2. Clones the GitHub repository
 3. Runs the daily NBA props workflow:
-   - Finds today's 2D plays (tier × spread)
-   - Finds today's 3D plays (tier × spread × scorer_type)
+   - Finds today's 2D plays (tier × spread) with bookmaker details
+   - Finds today's 3D plays (tier × spread × scorer_type) with bookmaker details
    - Fetches yesterday's game results from NBA API
    - Tracks yesterday's performance (BOTH 2D and 3D)
-   - Generates daily email (BOTH 2D and 3D)
+   - Generates daily email (BOTH 2D and 3D) with detailed bookmaker info (line + odds)
 4. Sends email via SNS
+
+New Feature (2026-01-09):
+- Bookmaker details now include specific line and odds for each book
+- Email displays: "Books (2): FanDuel (12.5 @ -110), BetRivers (12.5 @ -105)"
 
 IMPORTANT: Python dependencies are provided via Lambda Layer.
 

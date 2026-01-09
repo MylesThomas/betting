@@ -667,6 +667,9 @@ def load_tonights_games(target_date=None, use_s3=False):
                                     # Get opponent full name
                                     opponent_full = home_team if player_team_abbr == away_abbr else away_team
                                     
+                                    # Get odds (price) - typically in American format (e.g., -110, +120)
+                                    odds = outcome.get('price', -110)  # Default to -110 if missing
+                                    
                                     all_player_data.append({
                                         'PLAYER_NAME': player,
                                         'points_line': line,
@@ -675,6 +678,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                                         'opponent': opponent_abbr,
                                         'game_time': event_time_local,
                                         'bookmaker': bookmaker['title'],  # Track bookmaker
+                                        'odds': odds,  # Store odds for detailed display
                                     })
                                 else:
                                     # Track unmapped player (cache might be outdated or player recently traded)
@@ -727,6 +731,7 @@ def load_tonights_games(target_date=None, use_s3=False):
             """
             Find all bookmakers offering lines within ±0.5 of consensus line.
             This handles cases where median falls between bookmaker lines (e.g., median=12.5 but books offer 12.0 and 13.0)
+            Returns: Comma-separated list of bookmaker names (for backward compatibility)
             """
             player_rows = df[df['PLAYER_NAME'] == player_name]
             # Accept lines within ±0.5 of consensus (e.g., if consensus=12.5, accept 12.0, 12.5, 13.0)
@@ -734,8 +739,37 @@ def load_tonights_games(target_date=None, use_s3=False):
             books = matching_rows['bookmaker'].unique().tolist()
             return ', '.join(sorted(books)) if books else ''
         
+        def get_bookmaker_details_for_consensus(player_name, consensus_line):
+            """
+            Get detailed bookmaker info (name, line, odds) for lines within ±0.5 of consensus.
+            Returns: JSON string with list of {bookmaker, line, odds} dicts
+            """
+            import json
+            player_rows = df[df['PLAYER_NAME'] == player_name]
+            # Accept lines within ±0.5 of consensus
+            matching_rows = player_rows[abs(player_rows['points_line'] - consensus_line) <= 0.5]
+            
+            # Build list of {bookmaker, line, odds}
+            details = []
+            for _, row in matching_rows.iterrows():
+                details.append({
+                    'bookmaker': row['bookmaker'],
+                    'line': row['points_line'],
+                    'odds': row['odds']
+                })
+            
+            # Sort by bookmaker name
+            details = sorted(details, key=lambda x: x['bookmaker'])
+            
+            return json.dumps(details) if details else '[]'
+        
         df_consensus['bookmakers'] = df_consensus.apply(
             lambda row: get_bookmakers_for_consensus(row['PLAYER_NAME'], row['points_line']),
+            axis=1
+        )
+        
+        df_consensus['bookmaker_details'] = df_consensus.apply(
+            lambda row: get_bookmaker_details_for_consensus(row['PLAYER_NAME'], row['points_line']),
             axis=1
         )
         

@@ -599,10 +599,25 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             text += f"   Expected ROI: {play['expected_roi']:+.1f}% | Hit Rate: {play['hit_rate']:.1f}% ({play['games_in_sample']} games)\n"
             text += f"   Edge vs Baseline: {play['edge_vs_baseline']:+.1f}% | Edge vs Breakeven: {play['edge_vs_breakeven']:+.1f}%\n"
             
-            # Show bookmakers offering this line
-            if 'bookmakers' in play.index and pd.notna(play['bookmakers']):
-                num_books = play['num_bookmakers'] if 'num_bookmakers' in play.index else len(play['bookmakers'].split(', '))
-                text += f"   Books ({num_books}): {play['bookmakers']}\n"
+            # Show bookmakers offering this line (detailed format)
+            import json
+            details = json.loads(play['bookmaker_details'])
+            num_books = len(details)
+            text += f"   Books ({num_books}): "
+            
+            # Format each bookmaker with line and odds
+            book_strs = []
+            for book_info in details:
+                bookmaker = book_info['bookmaker']
+                line = book_info['line']
+                odds = book_info['odds']
+                
+                # Format odds with sign (e.g., -110, +120)
+                odds_str = f"{odds:+d}"
+                
+                book_strs.append(f"{bookmaker} ({line} @ {odds_str})")
+            
+            text += ', '.join(book_strs) + "\n"
             
             text += "\n"
         
