@@ -674,10 +674,14 @@ def load_tonights_games(target_date=None, use_s3=False):
             axis=1
         )
         
-        # Count bookmakers (handle empty string case)
+        # Count bookmakers
         df_consensus['num_bookmakers'] = df_consensus['bookmakers'].apply(
-            lambda x: len([b for b in x.split(', ') if b]) if x else 0
+            lambda x: len([b for b in x.split(', ') if b])
         )
+        
+        # Validate: every consensus line must have at least one bookmaker
+        assert (df_consensus['bookmakers'] != '').all(), "Empty bookmakers found - consensus lines must come from bookmakers"
+        assert (df_consensus['num_bookmakers'] > 0).all(), "No bookmakers found for consensus lines"
         
         players_mapped = df_consensus['PLAYER_NAME'].nunique()
         total_props = len(df_consensus)
