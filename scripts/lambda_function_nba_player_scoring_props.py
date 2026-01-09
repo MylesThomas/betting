@@ -428,6 +428,15 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     # =============================================================================
     
     # Check if all main workflow steps succeeded before running Top3
+    print(f"\n{'='*80}")
+    print("Checking Main Workflow Status for Top3 Decision:")
+    print(f"{'='*80}")
+    print(f"  2D Plays: {results['steps']['2d_plays']['success']}")
+    print(f"  3D Plays: {results['steps']['3d_plays']['success']}")
+    print(f"  Fetch Games: {results['steps']['fetch_games']['success']}")
+    print(f"  Tracking: {results['steps']['tracking']['success']}")
+    print(f"  Email: {results['steps']['email']['success']}")
+    
     main_steps_success = (
         results['steps']['2d_plays']['success'] and
         results['steps']['3d_plays']['success'] and
@@ -435,6 +444,8 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
         results['steps']['tracking']['success'] and
         results['steps']['email']['success']
     )
+    
+    print(f"  Overall: {main_steps_success}\n")
     
     if main_steps_success:
         print(f"\n✅ Main workflow succeeded - running Top3 Unders workflow")

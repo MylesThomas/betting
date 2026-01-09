@@ -822,7 +822,9 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         opp = row['opponent']
         spread = row['team_spread']
         player_scorer_type = row.get('scorer_type', None) if scorer_map else None
-        game_time = row.get('game_time')  # Get game time if available
+        game_time = row['game_time']
+        bookmakers = row['bookmakers']
+        num_bookmakers = row['num_bookmakers']
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -861,17 +863,16 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                     'strategy_edge': strat['edge'],
                     'strategy_hit_rate': strat['hit_rate'],
                     'strategy_games': strat['games'],
-                    'reason': f"{strat['bet_side']} - {line_tier} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)"
+                    'reason': f"{strat['bet_side']} - {line_tier} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)",
+                    'game_time': game_time,
+                    'bookmakers': bookmakers,
+                    'num_bookmakers': num_bookmakers,
                 }
                 
                 # Add scorer_type if present
                 if 'scorer_type' in strat:
                     play_data['scorer_type'] = strat['scorer_type']
                     play_data['reason'] = f"{strat['bet_side']} - {line_tier} + {strat['scorer_type']} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)"
-                
-                # Add game_time if available
-                if game_time is not None:
-                    play_data['game_time'] = game_time
                 
                 plays.append(play_data)
     

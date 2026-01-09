@@ -750,7 +750,9 @@ def find_plays(df_games, strategies, granularity='detailed'):
         team = row['team_abbr']
         opp = row['opponent']
         spread = row['team_spread']
-        game_time = row.get('game_time')  # Get game time if available
+        game_time = row['game_time']
+        bookmakers = row['bookmakers']
+        num_bookmakers = row['num_bookmakers']
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -773,12 +775,11 @@ def find_plays(df_games, strategies, granularity='detailed'):
                     'strategy_edge': strat['edge'],
                     'strategy_hit_rate': strat['hit_rate'],
                     'strategy_games': strat['games'],
-                    'reason': f"{strat['bet_side']} - {line_tier} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)"
+                    'reason': f"{strat['bet_side']} - {line_tier} in {spread_bin} games ({strat['edge']:+.1f}% edge, {strat['roi']:+.1f}% ROI, {strat['games']} games)",
+                    'game_time': game_time,
+                    'bookmakers': bookmakers,
+                    'num_bookmakers': num_bookmakers,
                 }
-                
-                # Add game_time if available
-                if game_time is not None:
-                    play_data['game_time'] = game_time
                 
                 plays.append(play_data)
     
