@@ -204,6 +204,7 @@ EMOJI = {
     'basketball': '🏀',
     'test': '🧪',
     'upload': '⬆️',
+    'star': '⭐',
 }
 
 
@@ -352,7 +353,7 @@ def bin_team_spread(spread: float, granularity: str = 'detailed') -> str:
             return '15+ Dog'
 
 
-def apply_strategies_to_data(df: pd.DataFrame, strategies: Dict, granularity: str = 'detailed', strategy_type: str = '2d') -> pd.DataFrame:
+def apply_strategies_to_data(df: pd.DataFrame, strategies: Dict, granularity: str = 'detailed', strategy_type: str = '2d', min_roi: float = 5.0) -> pd.DataFrame:
     """
     Apply strategies to historical data to identify plays.
     
@@ -361,6 +362,7 @@ def apply_strategies_to_data(df: pd.DataFrame, strategies: Dict, granularity: st
         strategies: Strategy dictionary from JSON
         granularity: 'standard' or 'detailed'
         strategy_type: '2d' or '3d'
+        min_roi: Minimum ROI threshold to filter strategies (default: 5.0%)
     
     Returns:
         DataFrame with identified plays and their outcomes
@@ -373,9 +375,26 @@ def apply_strategies_to_data(df: pd.DataFrame, strategies: Dict, granularity: st
     
     # Extract strategies dict (handle nested structure)
     if 'strategies' in strategies:
-        strat_dict = strategies['strategies']
+        strat_list = strategies['strategies']
     else:
-        strat_dict = strategies
+        strat_list = strategies
+    
+    # Convert to list if it's a dict (for uniform iteration)
+    if isinstance(strat_list, dict):
+        strat_list = list(strat_list.values())
+    
+    # Filter to strategies meeting minimum ROI threshold
+    total_strats = len(strat_list)
+    strat_list = [s for s in strat_list if s.get('roi', 0) >= min_roi]
+    filtered_count = total_strats - len(strat_list)
+    
+    if filtered_count > 0:
+        print(f"{EMOJI['info']} Filtered {filtered_count}/{total_strats} strategies below {min_roi}% ROI threshold")
+        print(f"{EMOJI['success']} Using {len(strat_list)} winning strategies (ROI >= {min_roi}%)")
+    
+    if not strat_list:
+        print(f"{EMOJI['warning']} No strategies meet ROI >= {min_roi}% threshold!")
+        return pd.DataFrame()
     
     plays = []
     
@@ -385,7 +404,7 @@ def apply_strategies_to_data(df: pd.DataFrame, strategies: Dict, granularity: st
         scorer_type = row.get('scorer_type', None)
         
         # Try to match against each strategy
-        for strat_key, strat in strat_dict.items():
+        for strat_idx, strat in enumerate(strat_list):
             # Check if this row matches the strategy
             line_match = strat['line_tier'] == line_tier
             spread_match = strat['spread_bin'] == spread_bin
@@ -409,7 +428,7 @@ def apply_strategies_to_data(df: pd.DataFrame, strategies: Dict, granularity: st
                     'line_tier': line_tier,
                     'spread_bin': spread_bin,
                     'scorer_type': scorer_type if strategy_type == '3d' else None,
-                    'strategy_key': strat_key,
+                    'strategy_key': strat_idx,
                     'bet_side': strat['bet_side'],
                     'strategy_roi': strat['roi'],
                     'strategy_edge': strat['edge'],
@@ -488,10 +507,114 @@ def calculate_outcomes(df_plays: pd.DataFrame) -> pd.DataFrame:
     if no_data > 0:
         print(f"   No Data: {no_data} ({no_data/len(df_plays)*100:.1f}%)")
     
+    # Show sample plays for verification
+    print(f"\n{EMOJI['test']} Sample Plays (random 5 for verification):")
+    if len(df_plays) > 0:
+        sample = df_plays.sample(min(5, len(df_plays)), random_state=42)
+        for idx, row in sample.iterrows():
+            bet = row['bet_side']
+            line = row['points_line']
+            actual = row['actual_points']
+            result = row['result']
+            margin = row['margin']
+            print(f"   {row['player_name']:20s} | Bet {bet:5s} {line:4.1f} | Actual: {actual:4.1f} | Margin: {margin:+5.1f} → {result}")
+    
     return df_plays
 
 
-def backtest_season(season: str, strategies: Dict, strategy_type: str, granularity: str = 'detailed') -> Dict:
+def analyze_per_strategy_performance(df_plays: pd.DataFrame, strategies: Dict, strategy_type: str) -> pd.DataFrame:
+    """
+    Break down performance by individual strategy.
+    
+    Args:
+        df_plays: DataFrame with plays and outcomes
+        strategies: Strategy dictionary
+        strategy_type: '2d' or '3d'
+    
+    Returns:
+        DataFrame with per-strategy stats
+    """
+    print(f"\n{EMOJI['chart']} Analyzing per-strategy performance...")
+    
+    # Extract strategies list
+    if 'strategies' in strategies:
+        strat_list = strategies['strategies']
+    else:
+        strat_list = strategies
+    
+    if isinstance(strat_list, dict):
+        strat_list = list(strat_list.values())
+    
+    # Group plays by strategy
+    strategy_stats = []
+    
+    for strat_idx, strat in enumerate(strat_list):
+        strat_plays = df_plays[df_plays['strategy_key'] == strat_idx]
+        
+        if len(strat_plays) == 0:
+            continue
+        
+        wins = (strat_plays['result'] == 'WIN').sum()
+        losses = (strat_plays['result'] == 'LOSS').sum()
+        pushes = (strat_plays['result'] == 'PUSH').sum()
+        total = wins + losses  # Exclude pushes from win rate
+        
+        win_rate = (wins / total * 100) if total > 0 else 0
+        total_profit = strat_plays['profit'].sum()
+        total_staked = len(strat_plays) * 100
+        roi = (total_profit / total_staked * 100) if total_staked > 0 else 0
+        
+        strategy_stats.append({
+            'strategy_idx': strat_idx,
+            'line_tier': strat['line_tier'],
+            'spread_bin': strat['spread_bin'],
+            'scorer_type': strat.get('scorer_type', 'N/A') if strategy_type == '3d' else 'N/A',
+            'bet_side': strat['bet_side'],
+            'training_roi': strat['roi'],
+            'training_hit_rate': strat['hit_rate'],
+            'training_games': strat['games'],
+            'backtest_plays': len(strat_plays),
+            'backtest_wins': wins,
+            'backtest_losses': losses,
+            'backtest_pushes': pushes,
+            'backtest_win_rate': win_rate,
+            'backtest_profit': total_profit,
+            'backtest_roi': roi,
+            'roi_delta': roi - strat['roi']  # How much worse/better than training
+        })
+    
+    df_stats = pd.DataFrame(strategy_stats)
+    
+    # Sort by number of plays (most active strategies first)
+    df_stats = df_stats.sort_values('backtest_plays', ascending=False)
+    
+    # Print top 10 most active strategies
+    print(f"\n{EMOJI['star']} Top 10 Most Active Strategies:")
+    print("="*120)
+    top_10 = df_stats.head(10)
+    for idx, row in top_10.iterrows():
+        print(f"\nStrategy #{row['strategy_idx']}: {row['line_tier']} | {row['spread_bin']} | {row['bet_side']}")
+        if strategy_type == '3d' and row['scorer_type'] != 'N/A':
+            print(f"  Scorer Type: {row['scorer_type']}")
+        print(f"  Training:  {row['training_games']:3.0f} games | {row['training_hit_rate']:5.1f}% hit | {row['training_roi']:+6.1f}% ROI")
+        print(f"  Backtest:  {row['backtest_plays']:3.0f} plays | {row['backtest_win_rate']:5.1f}% win | {row['backtest_roi']:+6.1f}% ROI | Delta: {row['roi_delta']:+6.1f}%")
+        print(f"  Results:   W:{row['backtest_wins']} L:{row['backtest_losses']} P:{row['backtest_pushes']} | Profit: ${row['backtest_profit']:,.2f}")
+    
+    # Show worst performing strategies
+    print(f"\n{EMOJI['warning']} Worst 5 Performing Strategies (by ROI delta):")
+    print("="*120)
+    worst_5 = df_stats.nsmallest(5, 'roi_delta')
+    for idx, row in worst_5.iterrows():
+        print(f"\nStrategy #{row['strategy_idx']}: {row['line_tier']} | {row['spread_bin']} | {row['bet_side']}")
+        if strategy_type == '3d' and row['scorer_type'] != 'N/A':
+            print(f"  Scorer Type: {row['scorer_type']}")
+        print(f"  Training:  {row['training_games']:3.0f} games | {row['training_hit_rate']:5.1f}% hit | {row['training_roi']:+6.1f}% ROI")
+        print(f"  Backtest:  {row['backtest_plays']:3.0f} plays | {row['backtest_win_rate']:5.1f}% win | {row['backtest_roi']:+6.1f}% ROI | Delta: {row['roi_delta']:+6.1f}%")
+    
+    return df_stats
+
+
+def backtest_season(season: str, strategies: Dict, strategy_type: str, granularity: str = 'detailed', min_roi: float = 5.0) -> Dict:
     """
     Backtest strategies on a single season.
     
@@ -500,6 +623,7 @@ def backtest_season(season: str, strategies: Dict, strategy_type: str, granulari
         strategies: Strategy dictionary
         strategy_type: '2d' or '3d'
         granularity: 'standard' or 'detailed'
+        min_roi: Minimum ROI threshold to filter strategies (default: 5.0%)
     
     Returns:
         dict: Season results
@@ -513,13 +637,16 @@ def backtest_season(season: str, strategies: Dict, strategy_type: str, granulari
     if df is None:
         return None
     
-    # Apply strategies
-    df_plays = apply_strategies_to_data(df, strategies, granularity, strategy_type)
+    # Apply strategies (filtering to min_roi threshold)
+    df_plays = apply_strategies_to_data(df, strategies, granularity, strategy_type, min_roi)
     if df_plays.empty:
         return None
     
     # Calculate outcomes
     df_plays = calculate_outcomes(df_plays)
+    
+    # Analyze per-strategy performance
+    df_strategy_stats = analyze_per_strategy_performance(df_plays, strategies, strategy_type)
     
     # Calculate summary statistics
     total_plays = len(df_plays)
@@ -549,7 +676,8 @@ def backtest_season(season: str, strategies: Dict, strategy_type: str, granulari
         'total_profit': total_profit,
         'total_staked': total_staked,
         'roi': roi,
-        'plays_df': df_plays
+        'plays_df': df_plays,
+        'strategy_stats_df': df_strategy_stats
     }
     
     # Print summary
@@ -569,6 +697,9 @@ def backtest_season(season: str, strategies: Dict, strategy_type: str, granulari
 def save_backtest_results(all_results: List[Dict], strategy_type: str, output_dir: str = None, upload_s3: bool = True):
     """
     Save backtest results to CSV and JSON (local + S3).
+    Saves in two formats:
+    1. Timestamped directory (for historical records)
+    2. Per-season directories (for easy analysis)
     
     Args:
         all_results: List of season results
@@ -621,6 +752,20 @@ def save_backtest_results(all_results: List[Dict], strategy_type: str, output_di
         df_all_plays.to_csv(plays_file, index=False)
         print(f"{EMOJI['success']} Saved detailed plays to {plays_file}")
     
+    # Save per-strategy stats CSV
+    all_strategy_stats = []
+    for result in all_results:
+        if result and 'strategy_stats_df' in result:
+            df_stats = result['strategy_stats_df'].copy()
+            df_stats['season'] = result['season']
+            all_strategy_stats.append(df_stats)
+    
+    if all_strategy_stats:
+        df_all_strategy_stats = pd.concat(all_strategy_stats, ignore_index=True)
+        strategy_stats_file = output_dir / f'{strategy_type}_per_strategy_performance.csv'
+        df_all_strategy_stats.to_csv(strategy_stats_file, index=False)
+        print(f"{EMOJI['success']} Saved per-strategy performance to {strategy_stats_file}")
+    
     # Calculate aggregate statistics
     total_plays = df_summary['total_plays'].sum()
     total_wins = df_summary['wins'].sum()
@@ -645,11 +790,52 @@ def save_backtest_results(all_results: List[Dict], strategy_type: str, output_di
         json.dump(aggregate, f, indent=2)
     print(f"{EMOJI['success']} Saved aggregate stats to {aggregate_file}")
     
+    # Also save per-season files in a structured format for easy analysis
+    print(f"\n{EMOJI['info']} Saving per-season results in structured format...")
+    base_dir = PROJECT_ROOT / 'data' / '04_output' / 'backtests' / strategy_type
+    
+    for result in all_results:
+        if result is None:
+            continue
+        
+        season = result['season']
+        season_dir = base_dir / season
+        season_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save season summary
+        season_summary = pd.DataFrame([{
+            'season': result['season'],
+            'strategy_type': result['strategy_type'],
+            'total_plays': result['total_plays'],
+            'wins': result['wins'],
+            'losses': result['losses'],
+            'pushes': result['pushes'],
+            'no_data': result['no_data'],
+            'win_rate': result['win_rate'],
+            'total_profit': result['total_profit'],
+            'total_staked': result['total_staked'],
+            'roi': result['roi']
+        }])
+        season_summary_file = season_dir / 'summary.csv'
+        season_summary.to_csv(season_summary_file, index=False)
+        
+        # Save season plays
+        if 'plays_df' in result and result['plays_df'] is not None and len(result['plays_df']) > 0:
+            season_plays_file = season_dir / 'plays.csv'
+            result['plays_df'].to_csv(season_plays_file, index=False)
+        
+        # Save per-strategy stats for this season
+        if 'strategy_stats_df' in result and result['strategy_stats_df'] is not None:
+            season_stats_file = season_dir / 'per_strategy.csv'
+            result['strategy_stats_df'].to_csv(season_stats_file, index=False)
+        
+        print(f"   {EMOJI['success']} Saved {season} results to {season_dir}")
+    
     # Upload to S3
     if upload_s3:
         print(f"\n{EMOJI['upload']} Uploading backtest results to S3...")
         
-        # Use relative path from data/04_output/
+        # Upload timestamped directory
         relative_path = output_dir.relative_to(PROJECT_ROOT / 'data' / '04_output')
         s3_prefix = f"data/04_output/{relative_path}"
         
@@ -661,6 +847,9 @@ def save_backtest_results(all_results: List[Dict], strategy_type: str, output_di
         if all_plays:
             files_to_upload.append((plays_file, f"{s3_prefix}/{strategy_type}_strategy_all_plays.csv"))
         
+        if all_strategy_stats:
+            files_to_upload.append((strategy_stats_file, f"{s3_prefix}/{strategy_type}_per_strategy_performance.csv"))
+        
         for local_file, s3_key in files_to_upload:
             try:
                 s3_client.upload_file(str(local_file), S3_BUCKET_OUTPUT, s3_key)
@@ -668,7 +857,44 @@ def save_backtest_results(all_results: List[Dict], strategy_type: str, output_di
             except Exception as e:
                 print(f"   {EMOJI['warning']} Failed to upload {local_file.name}: {e}")
         
-        print(f"{EMOJI['success']} Backtest results uploaded to S3!")
+        # Upload per-season files
+        print(f"\n{EMOJI['upload']} Uploading per-season results...")
+        for result in all_results:
+            if result is None:
+                continue
+            
+            season = result['season']
+            season_dir = base_dir / season
+            s3_season_prefix = f"data/04_output/backtests/{strategy_type}/{season}"
+            
+            # Upload summary
+            summary_path = season_dir / 'summary.csv'
+            if summary_path.exists():
+                try:
+                    s3_client.upload_file(str(summary_path), S3_BUCKET_OUTPUT, f"{s3_season_prefix}/summary.csv")
+                    print(f"   {EMOJI['success']} Uploaded {season} summary")
+                except Exception as e:
+                    print(f"   {EMOJI['warning']} Failed to upload {season} summary: {e}")
+            
+            # Upload plays
+            plays_path = season_dir / 'plays.csv'
+            if plays_path.exists():
+                try:
+                    s3_client.upload_file(str(plays_path), S3_BUCKET_OUTPUT, f"{s3_season_prefix}/plays.csv")
+                    print(f"   {EMOJI['success']} Uploaded {season} plays")
+                except Exception as e:
+                    print(f"   {EMOJI['warning']} Failed to upload {season} plays: {e}")
+            
+            # Upload per-strategy stats
+            stats_path = season_dir / 'per_strategy.csv'
+            if stats_path.exists():
+                try:
+                    s3_client.upload_file(str(stats_path), S3_BUCKET_OUTPUT, f"{s3_season_prefix}/per_strategy.csv")
+                    print(f"   {EMOJI['success']} Uploaded {season} per-strategy stats")
+                except Exception as e:
+                    print(f"   {EMOJI['warning']} Failed to upload {season} per-strategy stats: {e}")
+        
+        print(f"{EMOJI['success']} All backtest results uploaded to S3!")
     
     return output_dir, aggregate
 
@@ -743,7 +969,7 @@ def main():
         # Backtest each season
         season_results = []
         for season in args.seasons:
-            result = backtest_season(season, strategies, strategy_type, args.granularity)
+            result = backtest_season(season, strategies, strategy_type, args.granularity, args.min_roi)
             if result:
                 season_results.append(result)
         
