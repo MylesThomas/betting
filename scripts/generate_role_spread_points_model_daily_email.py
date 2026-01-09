@@ -602,6 +602,8 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             # Show bookmakers offering this line (detailed format)
             import json
             details = json.loads(play['bookmaker_details'])
+            
+            # bookmaker_details now only contains the correct side (filtered at play-finding time)
             num_books = len(details)
             text += f"   Books ({num_books}): "
             

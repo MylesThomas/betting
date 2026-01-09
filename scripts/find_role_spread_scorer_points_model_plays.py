@@ -669,6 +669,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                                     
                                     # Get odds (price) - typically in American format (e.g., -110, +120)
                                     odds = outcome.get('price', -110)  # Default to -110 if missing
+                                    bet_side = outcome.get('name', 'Unknown')  # 'Over' or 'Under'
                                     
                                     all_player_data.append({
                                         'PLAYER_NAME': player,
@@ -679,6 +680,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                                         'game_time': event_time_local,
                                         'bookmaker': bookmaker['title'],  # Track bookmaker
                                         'odds': odds,  # Store odds for detailed display
+                                        'bet_side': bet_side,  # 'Over' or 'Under'
                                     })
                                 else:
                                     # Track unmapped player (cache might be outdated or player recently traded)
@@ -739,15 +741,22 @@ def load_tonights_games(target_date=None, use_s3=False):
             books = matching_rows['bookmaker'].unique().tolist()
             return ', '.join(sorted(books)) if books else ''
         
-        def get_bookmaker_details_for_consensus(player_name, consensus_line):
+        def get_bookmaker_details_for_side(player_name, consensus_line, side):
             """
-            Get detailed bookmaker info (name, line, odds) for lines within ±0.5 of consensus.
+            Get detailed bookmaker info (name, line, odds) for ONE side only.
+            
+            Args:
+                player_name: Player name
+                consensus_line: Median line
+                side: 'Over' or 'Under'
+            
             Returns: JSON string with list of {bookmaker, line, odds} dicts
             """
             import json
             player_rows = df[df['PLAYER_NAME'] == player_name]
-            # Accept lines within ±0.5 of consensus
-            matching_rows = player_rows[abs(player_rows['points_line'] - consensus_line) <= 0.5]
+            # Filter by side FIRST, then check line proximity
+            side_rows = player_rows[player_rows['bet_side'].str.upper() == side.upper()]
+            matching_rows = side_rows[abs(side_rows['points_line'] - consensus_line) <= 0.5]
             
             # Build list of {bookmaker, line, odds}
             details = []
@@ -768,8 +777,14 @@ def load_tonights_games(target_date=None, use_s3=False):
             axis=1
         )
         
-        df_consensus['bookmaker_details'] = df_consensus.apply(
-            lambda row: get_bookmaker_details_for_consensus(row['PLAYER_NAME'], row['points_line']),
+        # Create separate columns for Over and Under odds
+        df_consensus['bookmaker_details_over'] = df_consensus.apply(
+            lambda row: get_bookmaker_details_for_side(row['PLAYER_NAME'], row['points_line'], 'Over'),
+            axis=1
+        )
+        
+        df_consensus['bookmaker_details_under'] = df_consensus.apply(
+            lambda row: get_bookmaker_details_for_side(row['PLAYER_NAME'], row['points_line'], 'Under'),
             axis=1
         )
         
@@ -867,7 +882,8 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         game_time = row['game_time']
         bookmakers = row['bookmakers']
         num_bookmakers = row['num_bookmakers']
-        bookmaker_details = row['bookmaker_details']
+        bookmaker_details_over = row['bookmaker_details_over']
+        bookmaker_details_under = row['bookmaker_details_under']
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -890,6 +906,12 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                     strategy_display_name = f"{strat['line_tier']} + {strat['spread_bin']} + {strat['scorer_type']} {strat['bet_side']}"
                 else:
                     strategy_display_name = f"{strat['line_tier']} + {strat['spread_bin']} {strat['bet_side']}"
+                
+                # Select correct bookmaker_details based on bet side
+                if strat['bet_side'] == 'OVER':
+                    bookmaker_details = bookmaker_details_over
+                else:
+                    bookmaker_details = bookmaker_details_under
                 
                 play_data = {
                     'player': player,
