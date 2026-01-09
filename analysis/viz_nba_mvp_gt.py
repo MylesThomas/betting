@@ -44,6 +44,16 @@ from pathlib import Path
 from datetime import datetime
 import glob
 import platform
+import requests
+import base64
+from io import BytesIO
+from PIL import Image
+import ssl
+import urllib3
+
+# Fix SSL certificate issues
+ssl._create_default_https_context = ssl._create_unverified_context
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Add src to path
 repo_root = Path(__file__).parent.parent
@@ -68,10 +78,10 @@ TITLE = "NBA MVP Odds: True Odds vs. What FanDuel Charges"
 
 FOOTER_NOTES = """
 1. 'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%).  
-2. Color indicates vig level: green = low vig (bettor advantage), red = high vig (house edge).
+2. 'Vig %' shows the bookmaker's edge in percentage points. Color indicates vig level: green = low vig (bettor advantage), red = high vig (house edge).
 """
 FOOTER_DATA_SOURCE = "FanDuel Sportsbook"
-FOOTER_DATA_DATE = "January 7, 2025"  # Update when you update odds
+# FOOTER_DATA_DATE is now generated dynamically from the CSV file
 
 # -----------------------------------------------------------------------------
 # Output Settings (Image Dimensions & Quality)
@@ -87,9 +97,10 @@ OUTPUT_DPI = 300
 # Color Palette (Vig % Gradient)
 # -----------------------------------------------------------------------------
 # Green -> White -> Red gradient for vig
+# Now using absolute difference (percentage points) like championship futures
 COLOR_PALETTE = ["#4CAF50", "#90EE90", "#ffffff", "#ffcccc", "#d62728"]  # green -> white -> red
-VIG_COLOR_DOMAIN_MIN = 0.0    # Start gradient at 0%
-VIG_COLOR_DOMAIN_MAX = 10.0   # End gradient at 10%
+VIG_COLOR_DOMAIN_MIN = 0.0    # Start gradient at 0 percentage points
+VIG_COLOR_DOMAIN_MAX = 5.0    # End gradient at 5 percentage points (MVPs have lower vig than futures)
 
 # -----------------------------------------------------------------------------
 # Typography
@@ -104,20 +115,50 @@ FOOTER_FONT_SIZE = 10
 # -----------------------------------------------------------------------------
 # Spacing & Padding
 # -----------------------------------------------------------------------------
-HEADER_PADDING_PX = 8
-DATA_ROW_PADDING_PX = 6
-HEADING_PADDING_PX = 10
+HEADER_PADDING_PX = 1      # Padding around column headers (match futures viz)
+DATA_ROW_PADDING_PX = 1    # Padding around data rows (smaller = more compact, sharper images)
+HEADING_PADDING_PX = 3     # Padding around title/subtitle
 
 # -----------------------------------------------------------------------------
 # Column Widths (pixels)
 # -----------------------------------------------------------------------------
 COL_WIDTH_RANK = 70
-COL_WIDTH_PLAYER = 250
+COL_WIDTH_HEADSHOT = 45
+COL_WIDTH_PLAYER = 220
 COL_WIDTH_FANDUEL_ODDS = 120
 COL_WIDTH_IMPLIED_PCT = 110
 COL_WIDTH_FAIR_ODDS = 120
 COL_WIDTH_FAIR_PCT = 100
 COL_WIDTH_VIG_PCT = 100
+
+HEADSHOT_HEIGHT = 25  # Height of player headshots in pixels (smaller = sharper with tight padding)
+
+# -----------------------------------------------------------------------------
+# Player ID Mapping (for headshots)
+# -----------------------------------------------------------------------------
+# Map player names to NBA PLAYER_IDs for headshot URLs
+PLAYER_ID_MAP = {
+    'Shai Gilgeous-Alexander': 1628983,
+    'Luka Doncic': 1629029,
+    'Cade Cunningham': 1630595,
+    'Jaylen Brown': 1627759,
+    'Jalen Brunson': 1628973,
+    'Anthony Edwards': 1630162,
+    'Tyrese Maxey': 1630178,
+    'Donovan Mitchell': 1628378,
+    'Kawhi Leonard': 202695,
+    'Stephen Curry': 201939,
+    'Alperen Sengun': 1630578,
+    'Kevin Durant': 201142,
+    'Nikola Jokic': 203999,
+    'Giannis Antetokounmpo': 203507,
+    'LeBron James': 2544,
+    'Joel Embiid': 203954,
+    'Damian Lillard': 203081,
+    'Devin Booker': 1626164,
+    'Trae Young': 1629027,
+    'Jayson Tatum': 1628369,
+}
 
 
 # =============================================================================
@@ -147,7 +188,80 @@ def load_latest_fair_odds():
     print(f"📂 Loading: {latest_file.name}")
     
     df = pd.read_csv(latest_file)
-    return df, latest_file
+    
+    # Extract fetch_date from the CSV for timestamp
+    fetch_date = None
+    if 'fetch_date' in df.columns:
+        fetch_date = df['fetch_date'].iloc[0]
+    
+    return df, latest_file, fetch_date
+
+
+def download_and_convert_to_base64(url, max_size=(100, 100)):
+    """
+    Download image and convert to base64 data URI.
+    
+    Args:
+        url: Image URL
+        max_size: Tuple of (width, height) to resize to
+        
+    Returns:
+        base64 data URI string or None if failed
+    """
+    try:
+        response = requests.get(url, verify=False, timeout=10)
+        if response.status_code != 200:
+            return None
+        
+        img = Image.open(BytesIO(response.content))
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        img_bytes = buffer.getvalue()
+        
+        img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+        data_uri = f"data:image/png;base64,{img_base64}"
+        
+        return data_uri
+    except:
+        return None
+
+
+def add_player_headshots(df):
+    """
+    Add player headshot data URIs to dataframe.
+    
+    Downloads images from NBA CDN and converts to base64 data URIs.
+    This avoids HTTPS loading issues in webshot2/R rendering.
+    
+    Args:
+        df: DataFrame with 'player' column
+        
+    Returns:
+        DataFrame with headshot_url column added (as base64 data URI)
+    """
+    print("   🖼️  Converting player headshots to base64 data URIs...")
+    
+    # Placeholder transparent pixel for missing headshots
+    placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    
+    def get_headshot_data_uri(player_name):
+        player_id = PLAYER_ID_MAP.get(player_name)
+        if not player_id:
+            print(f"      ⚠️  No PLAYER_ID for {player_name}")
+            return placeholder
+        
+        url = f'https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png'
+        data_uri = download_and_convert_to_base64(url, max_size=(100, 100))
+        return data_uri if data_uri else placeholder
+    
+    df['headshot_url'] = df['player'].apply(get_headshot_data_uri)
+    
+    success_count = df['headshot_url'].apply(lambda x: len(x) > 200).sum()
+    print(f"      ✅ Converted {success_count}/{len(df)} headshots successfully\n")
+    
+    return df
 
 
 def prepare_data_for_visualization(df):
@@ -166,6 +280,9 @@ def prepare_data_for_visualization(df):
     
     # Add rank column
     df_display['rank'] = range(1, len(df_display) + 1)
+    
+    # Add player headshots
+    df_display = add_player_headshots(df_display)
     
     # Format odds as strings with + sign for positive
     df_display['fanduel_odds_str'] = df_display['fanduel_odds'].apply(
@@ -195,32 +312,52 @@ def prepare_data_for_visualization(df):
     return df_display, average_vig_pct
 
 
-def create_gt_table_with_r(df_display, average_vig_pct):
+def create_gt_table_with_r(df_display, average_vig_pct, fetch_date):
     """
     Create a publication-quality table using R's gt package.
     
     Args:
         df_display: Prepared dataframe with all display columns
         average_vig_pct: Calculated average vig percentage
+        fetch_date: Date when odds were fetched (YYYY-MM-DD format)
         
     Returns:
         Path to saved PNG file
     """
     print("🎨 Creating table with R's gt package...\n")
     
-    # Generate subtitle dynamically with calculated vig
-    subtitle = f"FanDuel charges {average_vig_pct:.1f}% vig on the MVP market (vs. 4-5% on game lines)"
+    # Generate subtitle dynamically with market vig
+    # Calculate total market vig from sum of implied probabilities
+    if 'fanduel_implied_prob' in df_display.columns:
+        total_implied = df_display['fanduel_implied_prob'].sum()
+        market_vig_pct = (total_implied - 1.0) * 100
+    else:
+        # Fallback if column not found
+        market_vig_pct = 5.5
     
-    # Select columns for display
+    subtitle = f"FanDuel charges {market_vig_pct:.1f}% vig on the MVP market (vs. 4-5% on game lines)"
+    
+    # Format fetch_date for display (convert YYYY-MM-DD to "Month DD, YYYY")
+    if fetch_date:
+        try:
+            date_obj = datetime.strptime(fetch_date, '%Y-%m-%d')
+            footer_date = date_obj.strftime('%B %d, %Y')
+        except:
+            footer_date = fetch_date
+    else:
+        footer_date = datetime.now().strftime('%B %d, %Y')
+    
+    # Select columns for display (including headshot)
+    # Note: Keep vig_pct as numeric for gradient coloring (will format in R)
     table_df = df_display[[
-        'rank', 'player', 'fanduel_odds_str', 'implied_pct_str',
-        'fair_odds_str', 'fair_pct_str', 'vig_pct', 'vig_pct_str'
+        'rank', 'headshot_url', 'player', 'fanduel_odds_str', 'implied_pct_str',
+        'fair_odds_str', 'fair_pct_str', 'vig_pct'
     ]].copy()
     
     # Rename columns for display
     table_df.columns = [
-        'Rank', 'Player', 'FanDuel Odds', 'Implied %',
-        'Fair Odds', 'Fair %', 'vig_pct_num', 'Vig %'
+        'Rank', 'headshot_url', 'Player', 'FanDuel Odds', 'Implied %',
+        'Fair Odds', 'Fair %', 'Vig %'
     ]
     
     print(f"   📋 Table dimensions: {table_df.shape}")
@@ -243,18 +380,19 @@ def create_gt_table_with_r(df_display, average_vig_pct):
     .libPaths(c("~/R/library", .libPaths()))
     
     library(gt)
+    library(gtExtras)
     library(dplyr)
     
     # Read data (check.names=FALSE preserves column names, stringsAsFactors=FALSE keeps strings as strings)
     mvp_data <- read.csv("{str(temp_csv)}", check.names=FALSE, stringsAsFactors=FALSE, colClasses=c(
       "Rank"="integer",
+      "headshot_url"="character",
       "Player"="character",
       "FanDuel Odds"="character",
       "Implied %"="character",
       "Fair Odds"="character",
       "Fair %"="character",
-      "vig_pct_num"="numeric",
-      "Vig %"="character"
+      "Vig %"="numeric"
     ))
     
     # Create gt table with 538-style formatting
@@ -267,8 +405,16 @@ def create_gt_table_with_r(df_display, average_vig_pct):
         subtitle = md("{subtitle}")
       ) %>%
       
-      # Hide numeric vig column (used for coloring only)
-      cols_hide(columns = c(vig_pct_num)) %>%
+      # Add player headshots using gtExtras
+      gt_img_rows(columns = headshot_url, height = {HEADSHOT_HEIGHT}) %>%
+      
+      # Format Vig % column as percentage with + sign
+      fmt_number(
+        columns = `Vig %`,
+        decimals = 1,
+        pattern = "{{x}}%",
+        force_sign = TRUE
+      ) %>%
       
       # Column alignment
       cols_align(
@@ -280,15 +426,21 @@ def create_gt_table_with_r(df_display, average_vig_pct):
         columns = c(Player)
       ) %>%
       
-      # Column widths
+      # Column widths (headshot between Rank and Player)
       cols_width(
         Rank ~ px({COL_WIDTH_RANK}),
+        headshot_url ~ px({COL_WIDTH_HEADSHOT}),
         Player ~ px({COL_WIDTH_PLAYER}),
         `FanDuel Odds` ~ px({COL_WIDTH_FANDUEL_ODDS}),
         `Implied %` ~ px({COL_WIDTH_IMPLIED_PCT}),
         `Fair Odds` ~ px({COL_WIDTH_FAIR_ODDS}),
         `Fair %` ~ px({COL_WIDTH_FAIR_PCT}),
         `Vig %` ~ px({COL_WIDTH_VIG_PCT})
+      ) %>%
+      
+      # Rename headshot_url column header to empty
+      cols_label(
+        headshot_url = ""
       ) %>%
       
       # Style headers
@@ -321,13 +473,23 @@ def create_gt_table_with_r(df_display, average_vig_pct):
         locations = cells_title(groups = "subtitle")
       ) %>%
       
-      # Conditional formatting for Vig % column
+      # Conditional formatting for Vig % column (BEFORE formatting as text)
+      # Green -> White -> Red gradient (low vig = green = good, high vig = red = bad)
       data_color(
         columns = `Vig %`,
         method = "numeric",
         palette = c({', '.join([f'"{c}"' for c in COLOR_PALETTE])}),
         domain = c({VIG_COLOR_DOMAIN_MIN}, {VIG_COLOR_DOMAIN_MAX}),
         na_color = "#e8e8e8"
+      ) %>%
+      
+      # Override negative vig values with YELLOW (bettor advantage!)
+      tab_style(
+        style = cell_fill(color = "#ffeb3b"),
+        locations = cells_body(
+          columns = `Vig %`,
+          rows = `Vig %` < 0
+        )
       ) %>%
       
       # Make rank column bold
@@ -373,7 +535,7 @@ def create_gt_table_with_r(df_display, average_vig_pct):
         source_note = md("{FOOTER_NOTES}")
       ) %>%
       tab_source_note(
-        source_note = md("**Data:** {FOOTER_DATA_SOURCE} ({FOOTER_DATA_DATE}) | **Analysis:** {TWITTER_HANDLE}")
+        source_note = md("**Data:** {FOOTER_DATA_SOURCE} ({footer_date}) | **Analysis:** {TWITTER_HANDLE}")
       )
     
     # Save as PNG
@@ -433,8 +595,12 @@ def main():
     print("1️⃣ Loading fair odds data...")
     
     try:
-        df, source_file = load_latest_fair_odds()
-        print(f"   ✅ Loaded {len(df)} players from {source_file.name}\n")
+        df, source_file, fetch_date = load_latest_fair_odds()
+        print(f"   ✅ Loaded {len(df)} players from {source_file.name}")
+        if fetch_date:
+            print(f"   ✅ Fetch date: {fetch_date}\n")
+        else:
+            print(f"   ⚠️  No fetch_date found in CSV\n")
     except FileNotFoundError as e:
         print(f"\n❌ ERROR: {e}")
         print("\nRun analyze_nba_mvp_vig.py first!")
@@ -444,7 +610,7 @@ def main():
     df_display, average_vig_pct = prepare_data_for_visualization(df)
     
     # Create table using R's gt package
-    output_path = create_gt_table_with_r(df_display, average_vig_pct)
+    output_path = create_gt_table_with_r(df_display, average_vig_pct, fetch_date)
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE!")
