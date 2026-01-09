@@ -1,0 +1,17 @@
+sport,bookmaker,team,odds,implied_prob,record
+NCAAF,draftkings,Indiana Hoosiers,125,0.4444444444444444,13-0
+NCAAF,draftkings,Miami Hurricanes,310,0.24390243902439024,10-2
+NCAAF,draftkings,Oregon Ducks,330,0.23255813953488372,11-1
+NCAAF,draftkings,Ole Miss Rebels,600,0.14285714285714285,11-1
+NCAAF,betonlineag,Indiana Hoosiers,125,0.4444444444444444,13-0
+NCAAF,betonlineag,Miami Hurricanes,300,0.25,10-2
+NCAAF,betonlineag,Oregon Ducks,310,0.24390243902439024,11-1
+NCAAF,betonlineag,Ole Miss Rebels,575,0.14814814814814814,11-1
+NCAAF,fanduel,Indiana Hoosiers,126,0.4424778761061947,13-0
+NCAAF,fanduel,Oregon Ducks,300,0.25,11-1
+NCAAF,fanduel,Miami Hurricanes,350,0.2222222222222222,10-2
+NCAAF,fanduel,Ole Miss Rebels,570,0.14925373134328357,11-1
+NCAAF,betmgm,Indiana Hoosiers,130,0.43478260869565216,13-0
+NCAAF,betmgm,Oregon Ducks,300,0.25,11-1
+NCAAF,betmgm,Miami Hurricanes,300,0.25,10-2
+NCAAF,betmgm,Ole Miss Rebels,600,0.14285714285714285,11-1
