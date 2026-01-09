@@ -646,7 +646,8 @@ def load_tonights_games(target_date=None, use_s3=False):
         df = pd.DataFrame(all_player_data)
         
         # Remove duplicates (same player might appear in multiple bookmaker markets)
-        df = df.drop_duplicates(subset=['PLAYER_NAME', 'points_line', 'team_abbr'])
+        # Include bet_side since we now track Over/Under separately
+        df = df.drop_duplicates(subset=['PLAYER_NAME', 'points_line', 'team_abbr', 'bet_side'])
         
         total_props_before_consensus = len(df)
         total_players_before_consensus = df['PLAYER_NAME'].nunique()
