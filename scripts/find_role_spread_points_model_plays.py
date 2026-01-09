@@ -38,6 +38,7 @@ from pathlib import Path
 
 # Add project root to path
 import os
+import json
 root = Path(__file__).parent.parent
 sys.path.insert(0, str(root))
 
@@ -548,6 +549,32 @@ def load_tonights_games(target_date=None, use_s3=False):
                 response = requests.get(url, params=params, verify=False)
                 response.raise_for_status()
                 odds_data = response.json()
+                
+                # Save raw API response to S3 for debugging/review
+                try:
+                    import boto3
+                    from io import StringIO
+                    
+                    s3 = boto3.client('s3')
+                    bucket = 'the-odds-api-mt'
+                    
+                    # Create timestamp in ET for filename
+                    et_tz = ZoneInfo('America/New_York')
+                    timestamp = datetime.now(et_tz).strftime('%Y%m%d_%H%M%S')
+                    
+                    # Save to live_game_odds/ with timestamp and game info
+                    game_slug = f"{away_team.replace(' ', '_')}_at_{home_team.replace(' ', '_')}"
+                    key = f"nba/live_game_odds/{timestamp}_{game_slug}.json"
+                    
+                    s3.put_object(
+                        Bucket=bucket,
+                        Key=key,
+                        Body=json.dumps(odds_data, indent=2),
+                        ContentType='application/json'
+                    )
+                    print(f"   💾 Saved raw odds to s3://{bucket}/{key}")
+                except Exception as e:
+                    print(f"   ⚠️  Failed to save raw odds to S3: {e}")
                 
                 # Extract spreads first (to map teams to spreads)
                 team_spreads = {}
