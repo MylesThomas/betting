@@ -597,7 +597,14 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             text += f"   Team: {play['team']} (Spread: {play['spread']:+.1f})\n"
             text += f"   Strategy: {play['strategy_name']}\n"
             text += f"   Expected ROI: {play['expected_roi']:+.1f}% | Hit Rate: {play['hit_rate']:.1f}% ({play['games_in_sample']} games)\n"
-            text += f"   Edge vs Baseline: {play['edge_vs_baseline']:+.1f}% | Edge vs Breakeven: {play['edge_vs_breakeven']:+.1f}%\n\n"
+            text += f"   Edge vs Baseline: {play['edge_vs_baseline']:+.1f}% | Edge vs Breakeven: {play['edge_vs_breakeven']:+.1f}%\n"
+            
+            # Show bookmakers offering this line
+            if 'bookmakers' in play.index and pd.notna(play['bookmakers']):
+                num_books = play['num_bookmakers'] if 'num_bookmakers' in play.index else len(play['bookmakers'].split(', '))
+                text += f"   Books ({num_books}): {play['bookmakers']}\n"
+            
+            text += "\n"
         
         game_num += 1
     

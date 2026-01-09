@@ -674,6 +674,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                                         'team_spread': spread,
                                         'opponent': opponent_abbr,
                                         'game_time': event_time_local,
+                                        'bookmaker': bookmaker['title'],  # Track bookmaker
                                     })
                                 else:
                                     # Track unmapped player (cache might be outdated or player recently traded)
@@ -719,6 +720,25 @@ def load_tonights_games(target_date=None, use_s3=False):
             'opponent': 'first',
             'game_time': 'first',
         })
+        
+        # For each consensus line, find which bookmakers offer that exact line
+        # This helps users know where to actually place the bet
+        def get_bookmakers_for_consensus(player_name, consensus_line):
+            """Find all bookmakers offering the consensus line for this player"""
+            player_rows = df[df['PLAYER_NAME'] == player_name]
+            matching_rows = player_rows[player_rows['points_line'] == consensus_line]
+            books = matching_rows['bookmaker'].unique().tolist()
+            return ', '.join(sorted(books))
+        
+        df_consensus['bookmakers'] = df_consensus.apply(
+            lambda row: get_bookmakers_for_consensus(row['PLAYER_NAME'], row['points_line']),
+            axis=1
+        )
+        
+        # Count number of bookmakers offering consensus line
+        df_consensus['num_bookmakers'] = df_consensus['bookmakers'].apply(
+            lambda x: len(x.split(', '))
+        )
         
         players_mapped = df_consensus['PLAYER_NAME'].nunique()
         total_props = len(df_consensus)
@@ -890,9 +910,8 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
         'strategy_hit_rate', 'strategy_games'
     ])
     
-    # Add game_time if present
-    if 'game_time' in df_plays.columns:
-        base_columns.append('game_time')
+    # Add game_time, bookmakers (always present from API fetch)
+    base_columns.extend(['game_time', 'bookmakers', 'num_bookmakers'])
     
     csv_data = df_plays[base_columns].copy()
     

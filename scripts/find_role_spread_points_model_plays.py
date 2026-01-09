@@ -551,42 +551,35 @@ def load_tonights_games(target_date=None, use_s3=False):
                 
                 # Extract spreads first (to map teams to spreads)
                 team_spreads = {}
-                for bookmaker in odds_data.get('bookmakers', []):
-                    for market in bookmaker.get('markets', []):
+                for bookmaker in odds_data['bookmakers']:
+                    for market in bookmaker['markets']:
                         if market['key'] == 'spreads':
-                            for outcome in market.get('outcomes', []):
+                            for outcome in market['outcomes']:
                                 team_name = outcome['name']
-                                spread = outcome.get('point', 0)
+                                spread = outcome['point']
                                 # Use first spread found for each team
                                 if team_name not in team_spreads:
                                     team_spreads[team_name] = spread
                 
                 # Store game info for later use
-                away_abbr_temp = TEAM_NAME_TO_ABBR.get(away_team, away_team)
-                home_abbr_temp = TEAM_NAME_TO_ABBR.get(home_team, home_team)
+                away_abbr_temp = TEAM_NAME_TO_ABBR[away_team]
+                home_abbr_temp = TEAM_NAME_TO_ABBR[home_team]
                 game_info.append({
                     'away_team': away_abbr_temp,
                     'home_team': home_abbr_temp,
-                    'away_spread': team_spreads.get(away_team, 0),
-                    'home_spread': team_spreads.get(home_team, 0),
+                    'away_spread': team_spreads[away_team],
+                    'home_spread': team_spreads[home_team],
                     'game_time': event_time_local,
                 })
                 
                 # Extract player props
-                for bookmaker in odds_data.get('bookmakers', []):
-                    for market in bookmaker.get('markets', []):
+                for bookmaker in odds_data['bookmakers']:
+                    bookmaker_name = bookmaker['title']
+                    for market in bookmaker['markets']:
                         if market['key'] == 'player_points':
-                            # Group by (player, line) to deduplicate
-                            player_lines_seen = set()
-                            
-                            for outcome in market.get('outcomes', []):
-                                player = outcome.get('description', 'Unknown')
-                                line = outcome.get('point')
-                                
-                                key = (player, line)
-                                if key in player_lines_seen:
-                                    continue
-                                player_lines_seen.add(key)
+                            for outcome in market['outcomes']:
+                                player = outcome['description']
+                                line = outcome['point']
                                 
                                 # Normalize player name to match cache
                                 player_normalized = normalize_player_name(player)
@@ -596,22 +589,19 @@ def load_tonights_games(target_date=None, use_s3=False):
                                 player_normalized = name_mappings.get(player_normalized, player_normalized)
                                 
                                 # Determine player's team using cache mapping
-                                player_team_abbr = player_team_map.get(player_normalized)
+                                player_team_abbr = player_team_map[player_normalized]
                                 
-                                # Convert API's full team names to abbreviations for comparison
-                                away_abbr = TEAM_NAME_TO_ABBR.get(away_team, away_team)
-                                home_abbr = TEAM_NAME_TO_ABBR.get(home_team, home_team)
+                                # Convert API's full team names to abbreviations
+                                away_abbr = TEAM_NAME_TO_ABBR[away_team]
+                                home_abbr = TEAM_NAME_TO_ABBR[home_team]
                                 
-                                if player_team_abbr and player_team_abbr in [away_abbr, home_abbr]:
+                                if player_team_abbr in [away_abbr, home_abbr]:
                                     # We know the team from cache
                                     opponent_abbr = home_abbr if player_team_abbr == away_abbr else away_abbr
                                     
-                                    # Get spread for player's team (API returns spreads with full names)
+                                    # Get spread for player's team
                                     player_team_full = away_team if player_team_abbr == away_abbr else home_team
-                                    spread = team_spreads.get(player_team_full, 0)
-                                    
-                                    # Get opponent full name
-                                    opponent_full = home_team if player_team_abbr == away_abbr else away_team
+                                    spread = team_spreads[player_team_full]
                                     
                                     all_player_data.append({
                                         'PLAYER_NAME': player,
@@ -620,6 +610,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                                         'team_spread': spread,
                                         'opponent': opponent_abbr,
                                         'game_time': event_time_local,
+                                        'bookmaker': bookmaker_name,
                                     })
                                 else:
                                     # Track unmapped player (cache might be outdated or player recently traded)
@@ -665,6 +656,23 @@ def load_tonights_games(target_date=None, use_s3=False):
             'opponent': 'first',
             'game_time': 'first',
         })
+        
+        # For each consensus line, find which bookmakers offer that exact line
+        def get_bookmakers_for_consensus(player_name, consensus_line):
+            """Find all bookmakers offering the consensus line for this player"""
+            player_rows = df[df['PLAYER_NAME'] == player_name]
+            matching_rows = player_rows[player_rows['points_line'] == consensus_line]
+            books = matching_rows['bookmaker'].unique().tolist()
+            return ', '.join(sorted(books))
+        
+        df_consensus['bookmakers'] = df_consensus.apply(
+            lambda row: get_bookmakers_for_consensus(row['PLAYER_NAME'], row['points_line']),
+            axis=1
+        )
+        
+        df_consensus['num_bookmakers'] = df_consensus['bookmakers'].apply(
+            lambda x: len(x.split(', '))
+        )
         
         players_mapped = df_consensus['PLAYER_NAME'].nunique()
         total_props = len(df_consensus)
@@ -798,12 +806,9 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
     columns_to_save = [
         'player', 'team', 'opponent', 'bet_side', 'line', 'spread',
         'line_tier', 'spread_bin', 'strategy_name', 
-        'strategy_roi', 'strategy_edge', 'strategy_hit_rate', 'strategy_games'
+        'strategy_roi', 'strategy_edge', 'strategy_hit_rate', 'strategy_games',
+        'game_time', 'bookmakers', 'num_bookmakers'
     ]
-    
-    # Add game_time if it exists
-    if 'game_time' in df_plays.columns:
-        columns_to_save.append('game_time')
     
     csv_data = df_plays[columns_to_save].copy()
     
