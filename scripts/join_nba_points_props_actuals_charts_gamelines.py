@@ -158,10 +158,10 @@ def load_all_shot_charts(season):
     - Rim FG%
     - Total points scored within 6 feet (rim_season_points)
     """
-    print(f"\n🎯 Loading shot charts from s3://{S3_BUCKET_NBA}/shot_charts/{season}/...")
+    print(f"\n🎯 Loading shot charts from s3://{S3_BUCKET_NBA}/player_shot_charts/{season}/...")
     
     s3_client = boto3.client('s3')
-    prefix = f"shot_charts/{season}/"
+    prefix = f"player_shot_charts/{season}/"
     
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
     
@@ -432,8 +432,9 @@ def join_all_data(season, rim_scorer_pct=None):
         # Combine
         team_lines = pd.concat([away_lines, home_lines], ignore_index=True)
         
-        # Add is_favorite flag (negative spread or moneyline means favorite)
-        team_lines['is_favorite'] = (team_lines['team_spread'] < 0) | (team_lines['team_moneyline'] < 0)
+        # Add is_favorite flag (negative spread means favorite)
+        # Note: Only use spread, not moneyline, as spread is the reliable indicator
+        team_lines['is_favorite'] = team_lines['team_spread'] < 0
         
         # Join to merged data
         df_merged = df_merged.merge(

@@ -8,7 +8,8 @@ Purpose:
 - Handle rate limiting and errors gracefully
 
 Output:
-- One CSV per player in data/01_input/nba_api/shot_charts/2024_25/
+- One CSV per player in data/01_input/nba_api/shot_charts/2024_25/ (local)
+- Uploaded to s3://nba-api-mt/player_shot_charts/2024-25/ (S3, default enabled)
 - Progress log to track which players are complete
 - Summary statistics file
 
@@ -27,7 +28,7 @@ Runtime:
 - All seasons (2014-15 to 2025-26): ~1-2 hours
 
 Usage:
-    # Fetch current season only (2025-26)
+    # Fetch current season only (2025-26), uploads to S3 by default
     python scripts/fetch_all_nba_shot_charts.py --auto
     
     # Fetch all available seasons (2014-15 to 2025-26)
@@ -35,6 +36,9 @@ Usage:
     
     # Fetch specific seasons
     python scripts/fetch_all_nba_shot_charts.py --auto --seasons 2023-24,2024-25,2025-26
+    
+    # Local files only (skip S3 upload)
+    python scripts/fetch_all_nba_shot_charts.py --auto --no-s3
     
     # Interactive mode (prompts for confirmation)
     python scripts/fetch_all_nba_shot_charts.py
@@ -48,6 +52,14 @@ import ssl
 import urllib3
 import requests
 import json
+import sys
+from pathlib import Path
+
+# Add src to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root / 'src'))
+
+from season_utils import get_current_nba_season
 
 # Fix SSL certificate issues on macOS
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -78,9 +90,16 @@ AVAILABLE_SEASONS = [
     "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"
 ]
 
-DEFAULT_SEASON = "2025-26"
+DEFAULT_SEASON = get_current_nba_season()
 SEASON_TYPE = "Regular Season"
 SHOT_CHARTS_BASE_DIR = os.path.join(REPO_ROOT, "data/01_input/nba_api/shot_charts")
+
+# S3 Configuration
+S3_BUCKET = 'nba-api-mt'
+S3_PREFIX = 'player_shot_charts'  # s3://nba-api-mt/player_shot_charts/YYYY-YY/PlayerName_12345.csv
+
+# S3 client (lazy initialization)
+_s3_client = None
 RATE_LIMIT_DELAY = 0.6  # seconds between API calls
 ERROR_RETRY_DELAY = 2.0  # seconds to wait before retrying on error
 
@@ -203,21 +222,72 @@ def get_player_shot_chart(player_id, player_name, season):
         return None
 
 
-def save_player_shot_chart(shots_df, player_name, player_id, output_dir):
+def get_s3_client():
+    """Get or create S3 client (lazy initialization)"""
+    global _s3_client
+    if _s3_client is None:
+        import boto3
+        _s3_client = boto3.client('s3')
+    return _s3_client
+
+
+def upload_to_s3(filepath, player_name, player_id, season):
     """
-    Save player shot chart to CSV
+    Upload player shot chart to S3
+    
+    Args:
+        filepath: Local file path
+        player_name: Player name
+        player_id: Player ID
+        season: NBA season (e.g., "2025-26")
+    
+    Returns:
+        S3 key if successful, None otherwise
+    """
+    try:
+        s3_client = get_s3_client()
+        
+        # Clean player name for S3 key
+        clean_name = player_name.replace(' ', '_').replace('.', '').replace("'", '')
+        filename = f"{clean_name}_{player_id}.csv"
+        s3_key = f"{S3_PREFIX}/{season}/{filename}"
+        
+        # Upload file
+        s3_client.upload_file(filepath, S3_BUCKET, s3_key)
+        
+        return s3_key
+    except Exception as e:
+        print(f"      ⚠️  S3 upload failed: {e}")
+        return None
+
+
+def check_s3_file_exists(s3_key):
+    """Check if a file exists in S3"""
+    try:
+        s3_client = get_s3_client()
+        s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
+        return True
+    except:
+        return False
+
+
+def save_player_shot_chart(shots_df, player_name, player_id, output_dir, season, upload_s3=True):
+    """
+    Save player shot chart to CSV (local + S3)
     
     Args:
         shots_df: DataFrame with shot data
         player_name: Player name
         player_id: Player ID
         output_dir: Directory to save to
+        season: NBA season (e.g., "2025-26")
+        upload_s3: If True, also upload to S3
     
     Returns:
-        Filepath where data was saved
+        Tuple: (local_filepath, s3_key)
     """
     if shots_df is None or shots_df.empty:
-        return None
+        return None, None
     
     os.makedirs(output_dir, exist_ok=True)
     
@@ -226,8 +296,15 @@ def save_player_shot_chart(shots_df, player_name, player_id, output_dir):
     filename = f"{clean_name}_{player_id}.csv"
     filepath = os.path.join(output_dir, filename)
     
+    # Save locally
     shots_df.to_csv(filepath, index=False)
-    return filepath
+    
+    # Upload to S3
+    s3_key = None
+    if upload_s3:
+        s3_key = upload_to_s3(filepath, player_name, player_id, season)
+    
+    return filepath, s3_key
 
 
 def analyze_player_shots(shots_df):
@@ -274,13 +351,48 @@ def analyze_player_shots(shots_df):
 # MAIN SCRIPT
 # =============================================================================
 
-def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
+def check_past_season_complete(season, expected_player_count=500):
+    """
+    Check if a past season's shot charts are already complete in S3.
+    
+    Args:
+        season: NBA season (e.g., "2024-25")
+        expected_player_count: Minimum number of player files expected
+    
+    Returns:
+        tuple: (is_complete: bool, files_found: int)
+    """
+    try:
+        s3_client = get_s3_client()
+        prefix = f"{S3_PREFIX}/{season}/"
+        
+        response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        
+        if 'Contents' not in response:
+            return False, 0
+        
+        # Count CSV files
+        csv_files = [obj for obj in response['Contents'] if obj['Key'].endswith('.csv')]
+        files_found = len(csv_files)
+        
+        # Consider complete if we have at least expected_player_count files
+        # (typical NBA season has 450-550 players who log minutes)
+        is_complete = files_found >= expected_player_count
+        
+        return is_complete, files_found
+    except Exception as e:
+        print(f"      ⚠️  Error checking S3: {e}")
+        return False, 0
+
+
+def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=True):
     """
     Fetch shot chart data for all active NBA players for a specific season
     
     Args:
         season: NBA season (e.g., "2024-25")
         resume: If True, skip players already completed
+        upload_s3: If True, upload to S3 (default: True)
     """
     print("="*80)
     print(f"FETCHING SHOT CHARTS FOR ALL NBA PLAYERS - {season}")
@@ -293,7 +405,28 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
     summary_file = paths['summary_file']
     
     # Check if this is a past season (not current)
-    is_past_season = season != DEFAULT_SEASON
+    current_season = get_current_nba_season()
+    is_past_season = season < current_season
+    
+    # Check if past season and complete
+    if is_past_season:
+        print(f"\n📅 Checking if past season {season} is already complete...")
+        is_complete, files_found = check_past_season_complete(season)
+        
+        if is_complete:
+            print(f"\n{'='*80}")
+            print(f"✅ PAST SEASON COMPLETE - SKIPPING")
+            print(f"{'='*80}")
+            print(f"Season: {season}")
+            print(f"Found: {files_found} player shot chart files in S3")
+            print(f"S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
+            print(f"\nNo fetch needed - all historical data exists!")
+            print(f"{'='*80}\n")
+            return None
+        else:
+            print(f"   Found {files_found} files - will fetch missing players")
+    else:
+        print(f"\n🔄 Current season {season} - checking for updates...")
     
     print(f"\nSeason: {season}")
     print(f"Season Type: {SEASON_TYPE}")
@@ -338,14 +471,14 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
         
         print(f"[{idx}/{len(all_players)}] {player_name} (ID: {player_id})")
         
-        # For past seasons, check if file already exists and skip
+        # For past seasons, check if file already exists in S3 and skip
         if is_past_season:
             clean_name = player_name.replace(' ', '_').replace('.', '').replace("'", '')
             filename = f"{clean_name}_{player_id}.csv"
-            filepath = os.path.join(output_dir, filename)
+            s3_key = f"{S3_PREFIX}/{season}/{filename}"
             
-            if os.path.exists(filepath):
-                print(f"      ⏭️  File exists - skipping (past season data complete)")
+            if check_s3_file_exists(s3_key):
+                print(f"      ⏭️  File exists in S3 - skipping (past season data complete)")
                 skipped_count += 1
                 progress['completed_players'].append(player_id)
                 save_progress(progress, progress_file)
@@ -355,13 +488,17 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
         shots_df = get_player_shot_chart(player_id, player_name, season)
         
         if shots_df is not None and not shots_df.empty:
-            # Save to file
-            filepath = save_player_shot_chart(shots_df, player_name, player_id, output_dir)
+            # Save to file (local + S3)
+            filepath, s3_key = save_player_shot_chart(shots_df, player_name, player_id, output_dir, season, upload_s3=upload_s3)
             
             # Analyze shots
             stats = analyze_player_shots(shots_df)
             
             print(f"      ✅ Saved {len(shots_df)} shots")
+            if upload_s3 and s3_key:
+                print(f"      📤 Uploaded to S3: s3://{S3_BUCKET}/{s3_key}")
+            elif upload_s3 and not s3_key:
+                print(f"      ⚠️  S3 upload failed (saved locally)")
             print(f"      📊 FG%: {stats['fg_pct']:.1f}% | Close Range: {stats['close_range_fg_pct']:.1f}% | 3PT: {stats['three_pct']:.1f}%")
             
             # Add to summary
@@ -377,6 +514,7 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
                 'three_attempts': stats['three_attempts'],
                 'three_pct': round(stats['three_pct'], 1),
                 'filepath': filepath,
+                's3_key': s3_key,
                 'fetched_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
             
@@ -419,6 +557,8 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
         summary_df = summary_df.sort_values('total_shots', ascending=False)
         summary_df.to_csv(summary_file, index=False)
         print(f"\n💾 Summary saved to: {summary_file}")
+        if upload_s3:
+            print(f"📤 S3 Location: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
         
         # Show top 10 players by shot volume
         print("\n📊 Top 10 Players by Shot Volume:")
@@ -427,13 +567,14 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True):
     return summary_df
 
 
-def fetch_multiple_seasons(seasons, resume=True):
+def fetch_multiple_seasons(seasons, resume=True, upload_s3=True):
     """
     Fetch shot chart data for multiple seasons
     
     Args:
         seasons: List of season strings (e.g., ["2023-24", "2024-25"])
         resume: If True, resume from previous progress
+        upload_s3: If True, upload to S3 (default: True)
     """
     print("="*80)
     print("MULTI-SEASON SHOT CHART DATA COLLECTION")
@@ -451,7 +592,7 @@ def fetch_multiple_seasons(seasons, resume=True):
         print(f"{'='*80}\n")
         
         try:
-            summary_df = fetch_all_player_shot_charts(season=season, resume=resume)
+            summary_df = fetch_all_player_shot_charts(season=season, resume=resume, upload_s3=upload_s3)
             
             if summary_df is not None and not summary_df.empty:
                 season_summaries.append({
@@ -524,35 +665,37 @@ def analyze_summary_stats(summary_df):
 
 
 if __name__ == "__main__":
-    import sys
+    import argparse
     
     print("="*80)
     print("NBA SHOT CHART DATA COLLECTION")
     print("="*80)
     
     # Parse command line arguments
-    args = sys.argv[1:]
-    auto_run = '--auto' in args
-    all_seasons = '--all-seasons' in args
+    parser = argparse.ArgumentParser(description='Fetch NBA shot chart data from NBA API')
+    parser.add_argument('--auto', action='store_true',
+                       help='Run automatically without confirmation prompt')
+    parser.add_argument('--all-seasons', action='store_true',
+                       help='Fetch all available seasons (2014-15 to current)')
+    parser.add_argument('--seasons', type=str,
+                       help='Comma-separated list of seasons (e.g., "2023-24,2024-25")')
+    parser.add_argument('--s3', action='store_true', default=True,
+                       help='Upload to S3 (default: True)')
+    parser.add_argument('--no-s3', action='store_true',
+                       help='Skip S3 upload (local files only)')
     
-    # Parse specific seasons if provided
+    args = parser.parse_args()
+    
+    # Determine S3 upload setting
+    upload_s3 = not args.no_s3
+    
+    # Parse seasons
     seasons_to_fetch = []
-    i = 0
-    while i < len(args):
-        arg = args[i]
-        if arg.startswith('--seasons='):
-            # Format: --seasons=2023-24,2024-25
-            seasons_str = arg.split('=')[1]
-            seasons_to_fetch = [s.strip() for s in seasons_str.split(',')]
-        elif arg == '--seasons' and i + 1 < len(args):
-            # Format: --seasons 2023-24 or --seasons 2023-24,2024-25
-            seasons_str = args[i + 1]
-            seasons_to_fetch = [s.strip() for s in seasons_str.split(',')]
-            i += 1  # Skip next arg since we used it
-        i += 1
+    if args.seasons:
+        seasons_to_fetch = [s.strip() for s in args.seasons.split(',')]
     
     # Determine which seasons to fetch
-    if all_seasons:
+    if args.all_seasons:
         seasons_to_fetch = AVAILABLE_SEASONS
         print(f"\n🌐 Fetching ALL available seasons ({len(AVAILABLE_SEASONS)} total)")
         print(f"   Seasons: {', '.join(AVAILABLE_SEASONS)}")
@@ -570,10 +713,13 @@ if __name__ == "__main__":
         print(f"\n📅 Fetching current season: {DEFAULT_SEASON}")
         print(f"   (Use --all-seasons to fetch all available seasons)")
     
+    print(f"\n📤 S3 Upload: {'✅ Enabled' if upload_s3 else '❌ Disabled (local only)'}")
+    if upload_s3:
+        print(f"   S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/")
     print("\nYou can safely interrupt (Ctrl+C) and resume later with the same command.")
     
     # Check if auto-run or prompt user
-    if auto_run:
+    if args.auto:
         print("\n🤖 Running in automatic mode (--auto flag detected)\n")
         run_script = True
     else:
@@ -586,8 +732,8 @@ if __name__ == "__main__":
             print(f"\nExamples:")
             print(f"  python scripts/fetch_all_nba_shot_charts.py --auto")
             print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --all-seasons")
-            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --seasons 2023-24")
-            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --seasons=2023-24,2024-25")
+            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --seasons 2023-24,2024-25")
+            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --no-s3  # local only")
             run_script = False
     
     if run_script:
@@ -595,7 +741,7 @@ if __name__ == "__main__":
         if len(seasons_to_fetch) == 1:
             # Single season
             season = seasons_to_fetch[0]
-            summary_df = fetch_all_player_shot_charts(season=season, resume=True)
+            summary_df = fetch_all_player_shot_charts(season=season, resume=True, upload_s3=upload_s3)
             
             if summary_df is not None and not summary_df.empty:
                 analyze_summary_stats(summary_df)
@@ -605,17 +751,21 @@ if __name__ == "__main__":
                 print("✅ ALL DONE!")
                 print("="*80)
                 print(f"\nShot chart files saved to: {paths['output_dir']}")
+                if upload_s3:
+                    print(f"S3 location: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
                 print(f"Summary file: {paths['summary_file']}")
                 print(f"\nYou can now analyze close-range shooting (0-6 feet) for any player!")
         else:
             # Multiple seasons
-            season_summaries = fetch_multiple_seasons(seasons_to_fetch, resume=True)
+            season_summaries = fetch_multiple_seasons(seasons_to_fetch, resume=True, upload_s3=upload_s3)
             
             if season_summaries:
                 print("\n" + "="*80)
                 print("✅ ALL DONE!")
                 print("="*80)
                 print(f"\nShot chart files saved to: {SHOT_CHARTS_BASE_DIR}")
+                if upload_s3:
+                    print(f"S3 location: s3://{S3_BUCKET}/{S3_PREFIX}/")
                 print(f"\nYou can now analyze shot distance data across multiple seasons!")
     else:
         print("\n❌ Cancelled by user")

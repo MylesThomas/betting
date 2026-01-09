@@ -57,6 +57,14 @@ from zoneinfo import ZoneInfo
 import argparse
 import boto3
 from io import StringIO
+import sys
+from pathlib import Path
+
+# Add src to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root / 'src'))
+
+from season_utils import get_current_nba_season
 
 # =============================================================================
 # GLOBAL CONFIG
@@ -737,6 +745,52 @@ def fetch_date_lines(date_str, save=True, local_backup=True):
     return df
 
 
+def check_past_season_complete(season_start, season_end):
+    """
+    Check if a past season is already complete in S3.
+    
+    Args:
+        season_start: Start date (YYYY-MM-DD)
+        season_end: End date (YYYY-MM-DD)
+    
+    Returns:
+        tuple: (is_complete: bool, total_dates: int, files_found: int)
+    """
+    s3 = get_s3_client()
+    
+    # Determine season from dates
+    start_year = int(season_start.split('-')[0])
+    end_year = int(season_end.split('-')[0])
+    if end_year > start_year:
+        season = f"{start_year}-{str(end_year)[-2:]}"
+    else:
+        season = f"{start_year}-{str(start_year + 1)[-2:]}"
+    
+    # Count expected dates
+    start_date = datetime.strptime(season_start, '%Y-%m-%d')
+    end_date = datetime.strptime(season_end, '%Y-%m-%d')
+    
+    # Don't count future dates
+    today = datetime.today()
+    if end_date > today:
+        end_date = today
+    
+    expected_dates = (end_date - start_date).days + 1
+    
+    # Count files in S3
+    prefix = f"{S3_PREFIX}/{season}/"
+    try:
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        if 'Contents' not in response:
+            return False, expected_dates, 0
+        
+        csv_files = [obj for obj in response['Contents'] if obj['Key'].endswith('.csv')]
+        return len(csv_files) >= expected_dates, expected_dates, len(csv_files)
+    except Exception as e:
+        print(f"⚠️  Error checking S3: {e}")
+        return False, expected_dates, 0
+
+
 def fetch_full_season(season_start, season_end, dry_run=True):
     """
     Fetch all game lines for a full season
@@ -751,6 +805,37 @@ def fetch_full_season(season_start, season_end, dry_run=True):
     """
     start_date = datetime.strptime(season_start, '%Y-%m-%d')
     end_date = datetime.strptime(season_end, '%Y-%m-%d')
+    
+    # Determine season
+    start_year = int(season_start.split('-')[0])
+    end_year = int(season_end.split('-')[0])
+    if end_year > start_year:
+        season = f"{start_year}-{str(end_year)[-2:]}"
+    else:
+        season = f"{start_year}-{str(start_year + 1)[-2:]}"
+    
+    # Check if past season and complete
+    current_season = get_current_nba_season()
+    is_past_season = season < current_season
+    
+    if is_past_season:
+        print(f"\n📅 Checking if past season {season} is already complete...")
+        is_complete, expected_dates, files_found = check_past_season_complete(season_start, season_end)
+        
+        if is_complete:
+            print(f"\n{'='*80}")
+            print(f"✅ PAST SEASON COMPLETE - SKIPPING")
+            print(f"{'='*80}")
+            print(f"Season: {season}")
+            print(f"Found: {files_found}/{expected_dates} files in S3")
+            print(f"S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
+            print(f"\nNo fetch needed - all historical data exists!")
+            print(f"{'='*80}\n")
+            return {'skipped': True, 'reason': 'Past season complete', 'files_found': files_found}
+        else:
+            print(f"   Found {files_found}/{expected_dates} files - will fetch missing dates")
+    else:
+        print(f"\n🔄 Current season {season} - checking for updates...")
     
     # Don't fetch data for future dates
     today = datetime.today()

@@ -901,8 +901,11 @@ def main():
         upload_s3 = args.s3 if args.s3 is not None else True  # Default to True for full season
         stats = fetch_full_season(upload_s3=upload_s3, fetch_games=args.fetch_games)
         
-        if stats and stats['successful'] > 0:
-            logging.info("\n✅ Full season fetch completed!")
+        if stats:
+            if stats.get('skipped'):
+                logging.info(f"\n✅ Season {SEASON} already complete - skipped fetching")
+            elif stats.get('successful', 0) > 0:
+                logging.info("\n✅ Full season fetch completed!")
 
 
 if __name__ == "__main__":
