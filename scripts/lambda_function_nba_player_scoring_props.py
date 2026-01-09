@@ -300,7 +300,7 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     }
     
     if returncode != 0:
-        print(f"⚠️  Game results fetch failed (non-fatal, continuing...)")
+        print(f"❌ Game results fetch failed (critical failure)")
     
     # Step 4: Track yesterday's performance (BOTH 2D and 3D)
     print(f"\n{'='*80}")
@@ -348,6 +348,74 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     
     if returncode != 0:
         print(f"⚠️  Email generation/sending failed")
+    
+    # =============================================================================
+    # CHECK CRITICAL FAILURES & SEND STATUS EMAIL
+    # =============================================================================
+    
+    # Check if critical steps failed (fetch_games is critical)
+    critical_failures = []
+    
+    if not results['steps']['fetch_games']['success']:
+        critical_failures.append(f"Step 3: Game results fetch failed for {yesterday}")
+    
+    # Build status email regardless of success/failure
+    status_lines = [
+        "="*80,
+        "🏀 NBA PROPS DAILY WORKFLOW - EXECUTION SUMMARY",
+        "="*80,
+        f"📅 Today: {today}",
+        f"📅 Yesterday: {yesterday}",
+        "",
+        "MAIN WORKFLOW STEPS:",
+        "────────────────────────────────────────────────────────────────────────────────",
+    ]
+    
+    step_statuses = [
+        ("Step 1: Find 2D Plays", results['steps']['2d_plays']['success']),
+        ("Step 2: Find 3D Plays", results['steps']['3d_plays']['success']),
+        ("Step 3: Fetch Game Results", results['steps']['fetch_games']['success']),
+        ("Step 4: Track Performance", results['steps']['tracking']['success']),
+        ("Step 5: Generate Email", results['steps']['email']['success'])
+    ]
+    
+    for step_name, success in step_statuses:
+        status_emoji = "✅" if success else "❌"
+        status_lines.append(f"{status_emoji} {step_name}")
+    
+    status_lines.extend([
+        "",
+        "="*80
+    ])
+    
+    if critical_failures:
+        status_lines.extend([
+            "",
+            "🚨 CRITICAL FAILURES DETECTED:",
+            "────────────────────────────────────────────────────────────────────────────────"
+        ])
+        for failure in critical_failures:
+            status_lines.append(f"  • {failure}")
+        status_lines.extend([
+            "",
+            "⚠️  Workflow terminated due to critical failures.",
+            "Check CloudWatch logs for detailed error messages:",
+            f"Log Group: /aws/lambda/nba-player-scoring-props-daily-workflow",
+            "",
+            "="*80
+        ])
+        
+        status_email = "\n".join(status_lines)
+        
+        # Send failure email
+        send_email_notification(
+            subject=f"❌ NBA Props Workflow FAILED - {today}",
+            message=status_email
+        )
+        
+        error_msg = "❌ Critical workflow failures:\n" + "\n".join(f"  - {f}" for f in critical_failures)
+        print(f"\n{error_msg}\n")
+        raise RuntimeError(error_msg)
     
     # =============================================================================
     # NEW: Run Top3 Unders workflow (Steps 6-8) - ADDITIVE - 2026-01-08
@@ -649,6 +717,48 @@ def lambda_handler(event, context):
             print(f"  Email+SNS: {'✅' if top3['email']['success'] else '❌'}")
         
         print(f"{'='*80}\n")
+        
+        # Send success summary email
+        success_lines = [
+            "="*80,
+            "✅ NBA PROPS DAILY WORKFLOW - COMPLETED SUCCESSFULLY",
+            "="*80,
+            f"📅 Today: {workflow_results['today']}",
+            f"📅 Yesterday: {workflow_results['yesterday']}",
+            "",
+            "MAIN WORKFLOW STEPS:",
+            "────────────────────────────────────────────────────────────────────────────────",
+            f"✅ Step 1: Find 2D Plays",
+            f"✅ Step 2: Find 3D Plays",
+            f"✅ Step 3: Fetch Game Results",
+            f"✅ Step 4: Track Performance",
+            f"✅ Step 5: Generate & Send Main Email",
+            "",
+            "TOP3 UNDERS WORKFLOW:",
+            "────────────────────────────────────────────────────────────────────────────────"
+        ]
+        
+        if top3.get('skipped'):
+            success_lines.append(f"⏭️  Skipped: {top3['reason']}")
+        else:
+            success_lines.extend([
+                f"✅ Step 6: Filter Top3 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)",
+                f"✅ Step 7: Track Top3 Performance",
+                f"✅ Step 8: Generate & Send Top3 Email"
+            ])
+        
+        success_lines.extend([
+            "",
+            "="*80,
+            "📧 All emails sent successfully via SNS",
+            f"🔍 CloudWatch Logs: /aws/lambda/nba-player-scoring-props-daily-workflow",
+            "="*80
+        ])
+        
+        send_email_notification(
+            subject=f"✅ NBA Props Workflow SUCCESS - {workflow_results['today']}",
+            message="\n".join(success_lines)
+        )
         
         # Build Top3 response
         top3 = workflow_results['steps']['top3_workflow']
