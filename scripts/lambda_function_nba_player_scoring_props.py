@@ -50,14 +50,26 @@ import json
 import os
 import subprocess
 import boto3
-import sys
-from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-# Add src to path for season utils
-sys.path.insert(0, '/tmp/betting/src')
-from season_utils import get_current_nba_season
+
+def get_current_nba_season():
+    """
+    Get current NBA season based on today's date.
+    
+    NBA seasons run from October to June:
+    - Oct-Dec: Current year is start year (Oct 2025 → '2025-26')
+    - Jan-Sep: Previous year is start year (Jan 2026 → '2025-26')
+    
+    Returns:
+        str: Season in format 'YYYY-YY' (e.g., '2025-26')
+    """
+    today = datetime.now()
+    if today.month >= 10:  # Oct-Dec
+        return f"{today.year}-{str(today.year + 1)[-2:]}"
+    else:  # Jan-Sep
+        return f"{today.year - 1}-{str(today.year)[-2:]}"
 
 
 def send_email_notification(subject, message, topic_arn=None):
