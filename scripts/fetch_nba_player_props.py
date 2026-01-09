@@ -665,7 +665,11 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
                 else:
                     logging.info("⚠️  Skipping game results S3 upload")
             else:
-                logging.info("   No game results to save")
+                error_msg = f"❌ CRITICAL: Game fetch returned 0 rows for {date_str}"
+                logging.error(error_msg)
+                logging.error(f"Expected games file: s3://{S3_BUCKET_GAMES}/{games_s3_key}")
+                # Exit with error code to signal failure to Lambda
+                sys.exit(1)
     
     return df, games_df
 
