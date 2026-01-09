@@ -953,8 +953,8 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
         'strategy_hit_rate', 'strategy_games'
     ])
     
-    # Add game_time, bookmakers (always present from API fetch)
-    base_columns.extend(['game_time', 'bookmakers', 'num_bookmakers'])
+    # Add game_time, bookmakers, bookmaker_details (always present from API fetch)
+    base_columns.extend(['game_time', 'bookmakers', 'num_bookmakers', 'bookmaker_details'])
     
     csv_data = df_plays[base_columns].copy()
     

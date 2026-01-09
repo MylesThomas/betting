@@ -850,7 +850,7 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
         'player', 'team', 'opponent', 'bet_side', 'line', 'spread',
         'line_tier', 'spread_bin', 'strategy_name', 
         'strategy_roi', 'strategy_edge', 'strategy_hit_rate', 'strategy_games',
-        'game_time', 'bookmakers', 'num_bookmakers'
+        'game_time', 'bookmakers', 'num_bookmakers', 'bookmaker_details'
     ]
     
     csv_data = df_plays[columns_to_save].copy()
