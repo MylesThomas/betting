@@ -468,86 +468,6 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     return results
 
 
-def validate_player_team_assignments(df_plays, date_str):
-    """
-    Validate that players are assigned to correct teams/games.
-    Downloads game data from S3 and cross-references player teams.
-    
-    Args:
-        df_plays: DataFrame with plays (must have: player, team, opponent columns)
-        date_str: Date string (YYYY-MM-DD)
-    
-    Returns:
-        dict: Validation results with warnings and errors
-    """
-    import boto3
-    import pandas as pd
-    from io import StringIO
-    
-    print(f"\n   🔍 Validating player-team assignments...")
-    
-    validation_results = {
-        'total_plays': len(df_plays),
-        'warnings': [],
-        'errors': [],
-        'games_with_plays': set(),
-        'all_games_for_date': []
-    }
-    
-    # Download game data from S3 to get actual team rosters
-    s3 = boto3.client('s3', region_name=os.environ['AWS_REGION_NAME'])
-    bucket = 'nba-betting-mt'
-    
-    # Load game results for this date (has player-team info)
-    game_results_key = f'data/03_nba_stats/games/{date_str}.csv'
-    
-    obj = s3.get_object(Bucket=bucket, Key=game_results_key)
-    df_games = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')))
-    
-    # Get all games for this date
-    games_today = df_games.groupby(['home_team', 'away_team']).size().reset_index()[['home_team', 'away_team']]
-    validation_results['all_games_for_date'] = [
-        f"{row['away_team']} @ {row['home_team']}" 
-        for _, row in games_today.iterrows()
-    ]
-    print(f"   📅 Found {len(games_today)} total games for {date_str}")
-    
-    # Build player-team mapping from game data
-    player_team_map = {}
-    for _, row in df_games.iterrows():
-        player_team_map[row['player']] = row['team']
-    
-    print(f"   📋 Loaded {len(player_team_map)} player-team mappings")
-    
-    # Validate each play
-    for idx, play in df_plays.iterrows():
-        player = play['player']
-        claimed_team = play['team']
-        opponent = play['opponent']
-        
-        # Track games with plays
-        game_key = tuple(sorted([claimed_team, opponent]))
-        validation_results['games_with_plays'].add(game_key)
-        
-        # Check if player's actual team matches claimed team
-        actual_team = player_team_map[player]
-        if actual_team != claimed_team:
-            error_msg = (
-                f"❌ TEAM MISMATCH: {player} is on {actual_team}, "
-                f"not {claimed_team} (claimed in {claimed_team} vs {opponent})"
-            )
-            validation_results['errors'].append(error_msg)
-            print(f"   {error_msg}")
-    
-    # Summary
-    print(f"   ✅ Validation complete:")
-    print(f"      - {len(validation_results['errors'])} errors found")
-    print(f"      - {len(validation_results['warnings'])} warnings")
-    print(f"      - {len(validation_results['games_with_plays'])} games have plays (out of {len(games_today)} total)")
-    
-    return validation_results
-
-
 def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dimension='2d'):
     """
     Filter plays CSV file to only include strategies from config.
@@ -698,78 +618,6 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
     
-    # Validate player-team assignments for filtered plays
-    print(f"\n{'='*80}")
-    print("Step 6b: Validating Player-Team Assignments")
-    print(f"{'='*80}\n")
-    
-    import pandas as pd
-    
-    # Load filtered plays for validation
-    df_2d_filtered = pd.read_csv(plays_2d_top3_csv)
-    df_3d_filtered = pd.read_csv(plays_3d_top3_csv)
-    df_all_filtered = pd.concat([df_2d_filtered, df_3d_filtered], ignore_index=True)
-    
-    validation_results = validate_player_team_assignments(df_all_filtered, today)
-    results['validation'] = validation_results
-    
-    # Check for critical validation errors
-    if validation_results['errors']:
-        print(f"\n⚠️  WARNING: {len(validation_results['errors'])} validation errors detected")
-        print(f"   These plays may have incorrect team assignments!\n")
-        
-        # Send warning email with validation errors
-        error_lines = [
-            "="*80,
-            f"⚠️  NBA TOP3 PLAYS VALIDATION WARNINGS - {today}",
-            "="*80,
-            f"📅 Date: {today}",
-            f"🔍 Validation Status: {len(validation_results['errors'])} ERRORS, {len(validation_results['warnings'])} WARNINGS",
-            "",
-            "VALIDATION ERRORS (Player-Team Mismatches):",
-            "────────────────────────────────────────────────────────────────────────────────"
-        ]
-        
-        for error in validation_results['errors']:
-            error_lines.append(f"  • {error}")
-        
-        if validation_results['warnings']:
-            error_lines.extend([
-                "",
-                "WARNINGS:",
-                "────────────────────────────────────────────────────────────────────────────────"
-            ])
-            for warning in validation_results['warnings']:
-                error_lines.append(f"  • {warning}")
-        
-        # Show games breakdown
-        if validation_results['all_games_for_date']:
-            error_lines.extend([
-                "",
-                f"GAMES FOR {today}:",
-                "────────────────────────────────────────────────────────────────────────────────",
-                f"Total games: {len(validation_results['all_games_for_date'])}",
-                f"Games with Top3 plays: {len(validation_results['games_with_plays'])}",
-                "",
-                "All games:"
-            ])
-            for game in validation_results['all_games_for_date']:
-                has_plays = "✅" if any(game_team in str(validation_results['games_with_plays']) for game_team in game.split(' @ ')) else "❌"
-                error_lines.append(f"  {has_plays} {game}")
-        
-        error_lines.extend([
-            "",
-            "⚠️  These errors may cause issues when placing bets.",
-            "Please verify player teams manually before betting.",
-            "",
-            "="*80
-        ])
-        
-        send_email_notification(
-            subject=f"⚠️  NBA Top3 Plays - Validation Warnings - {today}",
-            message="\n".join(error_lines)
-        )
-    
     # Step 7: Track yesterday's Top3 performance
     print(f"\n{'='*80}")
     print("Step 7: Tracking Yesterday's Top3 Performance")
@@ -883,18 +731,6 @@ def lambda_handler(event, context):
         else:
             print(f"  2D Filter: {'✅' if top3['2d_filter']['success'] else '❌'} ({top3['2d_filter']['plays_count']} plays)")
             print(f"  3D Filter: {'✅' if top3['3d_filter']['success'] else '❌'} ({top3['3d_filter']['plays_count']} plays)")
-            
-            # Show validation summary
-            if 'validation' in top3:
-                val = top3['validation']
-                errors = len(val['errors'])
-                warnings = len(val['warnings'])
-                status = '❌' if errors > 0 else '✅'
-                print(f"  Validation: {status} ({errors} errors, {warnings} warnings)")
-                total_games = len(val['all_games_for_date'])
-                games_with_plays = len(val['games_with_plays'])
-                print(f"  Games: {games_with_plays}/{total_games} games have Top3 plays")
-            
             print(f"  Tracking: {'✅' if top3['tracking']['success'] else '❌'}")
             print(f"  Email+SNS: {'✅' if top3['email']['success'] else '❌'}")
         
@@ -924,25 +760,7 @@ def lambda_handler(event, context):
             success_lines.append(f"⏭️  Skipped: {top3['reason']}")
         else:
             success_lines.extend([
-                f"✅ Step 6: Filter Top3 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)"
-            ])
-            
-            # Add validation results
-            if 'validation' in top3:
-                val = top3['validation']
-                errors = len(val['errors'])
-                warnings = len(val['warnings'])
-                total_games = len(val['all_games_for_date'])
-                games_with_plays = len(val['games_with_plays'])
-                
-                if errors > 0:
-                    success_lines.append(f"⚠️  Step 6b: Validation - {errors} ERRORS, {warnings} warnings (separate email sent)")
-                    success_lines.append(f"         Games: {games_with_plays}/{total_games} have Top3 plays")
-                else:
-                    success_lines.append(f"✅ Step 6b: Validation - No errors ({warnings} warnings)")
-                    success_lines.append(f"         Games: {games_with_plays}/{total_games} have Top3 plays")
-            
-            success_lines.extend([
+                f"✅ Step 6: Filter Top3 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)",
                 f"✅ Step 7: Track Top3 Performance",
                 f"✅ Step 8: Generate & Send Top3 Email"
             ])
