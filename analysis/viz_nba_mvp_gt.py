@@ -197,13 +197,14 @@ def load_latest_fair_odds():
     return df, latest_file, fetch_date
 
 
-def download_and_convert_to_base64(url, max_size=(100, 100)):
+def download_and_convert_to_base64(url):
     """
-    Download image and convert to base64 data URI.
+    Download image at FULL RESOLUTION and convert to base64 data URI.
+    
+    DO NOT thumbnail/resize in Python - let R/gtExtras handle scaling for best quality.
     
     Args:
         url: Image URL
-        max_size: Tuple of (width, height) to resize to
         
     Returns:
         base64 data URI string or None if failed
@@ -213,14 +214,9 @@ def download_and_convert_to_base64(url, max_size=(100, 100)):
         if response.status_code != 200:
             return None
         
-        img = Image.open(BytesIO(response.content))
-        img.thumbnail(max_size, Image.Resampling.LANCZOS)
-        
-        buffer = BytesIO()
-        img.save(buffer, format='PNG')
-        img_bytes = buffer.getvalue()
-        
-        img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+        # Convert directly to base64 WITHOUT resizing
+        # This preserves maximum quality - R will scale it down
+        img_base64 = base64.b64encode(response.content).decode('utf-8')
         data_uri = f"data:image/png;base64,{img_base64}"
         
         return data_uri
@@ -252,8 +248,11 @@ def add_player_headshots(df):
             print(f"      ⚠️  No PLAYER_ID for {player_name}")
             return placeholder
         
-        url = f'https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png'
-        data_uri = download_and_convert_to_base64(url, max_size=(100, 100))
+        # Use NBA CDN 1040x760 (highest quality, 100% success rate)
+        # Download at FULL RESOLUTION and let R/gtExtras scale for best quality
+        nba_url = f'https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png'
+        data_uri = download_and_convert_to_base64(nba_url)
+        
         return data_uri if data_uri else placeholder
     
     df['headshot_url'] = df['player'].apply(get_headshot_data_uri)

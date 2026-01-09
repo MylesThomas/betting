@@ -139,3 +139,35 @@ visualization:
   
   # Twitter handle
   twitter_handle: "@TQSLabs"
+
+# Player headshots configuration
+# For player-specific visualizations (MVP odds, player props, etc.)
+headshots:
+  # Best practices for sharp headshots:
+  # 1. Download at FULL RESOLUTION - do NOT thumbnail in Python
+  # 2. Convert directly to base64 without resizing
+  # 3. Let R/gtExtras handle scaling for maximum sharpness
+  # 4. Smaller display size (20-25px) = sharper appearance
+  
+  # NBA players
+  nba:
+    source: "nba_cdn_1040x760"
+    url_pattern: "https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png"
+    resolution: "1040x760"
+    display_height_px: 25
+    col_width_px: 45
+    notes: "1040x760 is highest quality NBA source (100% success rate, 790K pixels)"
+  
+  # NFL players (if needed in future)
+  nfl:
+    source: "espn_full"
+    url_pattern: "https://a.espncdn.com/i/headshots/nfl/players/full/{player_id}.png"
+    notes: "ESPN is primary source for NFL player headshots"
+  
+  # NCAAB players (if needed in future)
+  ncaab:
+    notes: "College player headshots vary by source - test before implementing"
+  
+  # NCAAF players (if needed in future)
+  ncaaf:
+    notes: "College player headshots vary by source - test before implementing"
