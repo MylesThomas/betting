@@ -82,9 +82,10 @@ def calculate_fair_odds(df):
     # Convert fair probability back to American odds
     df['fair_odds'] = df['fair_prob'].apply(implied_probability_to_odds)
     
-    # Calculate vig % for each player
-    # vig_pct = (implied_prob - fair_prob) / fair_prob * 100
-    df['vig_pct'] = ((df['implied_prob'] - df['fair_prob']) / df['fair_prob']) * 100
+    # Calculate vig % for each player (absolute difference in probability points)
+    # This matches the calculation in championship futures analysis
+    # vig_pct = (implied_prob - fair_prob) * 100
+    df['vig_pct'] = (df['implied_prob'] - df['fair_prob']) * 100
     
     return df
 
