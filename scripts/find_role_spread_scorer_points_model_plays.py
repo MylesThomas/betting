@@ -724,20 +724,24 @@ def load_tonights_games(target_date=None, use_s3=False):
         # For each consensus line, find which bookmakers offer that exact line
         # This helps users know where to actually place the bet
         def get_bookmakers_for_consensus(player_name, consensus_line):
-            """Find all bookmakers offering the consensus line for this player"""
+            """
+            Find all bookmakers offering lines within ±0.5 of consensus line.
+            This handles cases where median falls between bookmaker lines (e.g., median=12.5 but books offer 12.0 and 13.0)
+            """
             player_rows = df[df['PLAYER_NAME'] == player_name]
-            matching_rows = player_rows[player_rows['points_line'] == consensus_line]
+            # Accept lines within ±0.5 of consensus (e.g., if consensus=12.5, accept 12.0, 12.5, 13.0)
+            matching_rows = player_rows[abs(player_rows['points_line'] - consensus_line) <= 0.5]
             books = matching_rows['bookmaker'].unique().tolist()
-            return ', '.join(sorted(books))
+            return ', '.join(sorted(books)) if books else ''
         
         df_consensus['bookmakers'] = df_consensus.apply(
             lambda row: get_bookmakers_for_consensus(row['PLAYER_NAME'], row['points_line']),
             axis=1
         )
         
-        # Count number of bookmakers offering consensus line
+        # Count bookmakers (handle empty string case)
         df_consensus['num_bookmakers'] = df_consensus['bookmakers'].apply(
-            lambda x: len(x.split(', '))
+            lambda x: len([b for b in x.split(', ') if b]) if x else 0
         )
         
         players_mapped = df_consensus['PLAYER_NAME'].nunique()

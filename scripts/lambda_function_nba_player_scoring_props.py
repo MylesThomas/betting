@@ -53,6 +53,9 @@ import boto3
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+# Configuration
+FULL_LOGGING = os.environ.get('FULL_LOGGING', 'false').lower() == 'true'
+
 
 def get_current_nba_season():
     """
@@ -146,8 +149,11 @@ def run_command(command, cwd=None, env=None):
         text=True
     )
     
-    if result.stdout:
+    # Only print stdout if FULL_LOGGING is enabled
+    if FULL_LOGGING and result.stdout:
         print(result.stdout)
+    
+    # Always print stderr for debugging
     if result.stderr:
         print(f"stderr: {result.stderr}")
     
