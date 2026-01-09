@@ -216,7 +216,24 @@ def load_results_from_s3(date_str, strategy='both', tracking_suffix=''):
         return None
     
     # Combine all results
-    return pd.concat(results, ignore_index=True)
+    df_combined = pd.concat(results, ignore_index=True)
+    
+    # Calculate profit if not already present
+    # Standard -110 odds: Stake $110 to win $100
+    # WIN: +$100 profit
+    # LOSS: -$110 (lose stake)
+    # PUSH: $0
+    if 'result' in df_combined.columns and 'profit' not in df_combined.columns:
+        df_combined['profit'] = df_combined['result'].str.upper().map({
+            'WIN': 100.0,    # Stake $110, win $100 profit
+            'LOSS': -110.0,  # Lose your $110 stake
+            'PUSH': 0.0,     # Get your money back
+            'DNP': 0.0       # Did not play
+        })
+        # Handle any unexpected values
+        df_combined['profit'] = df_combined['profit'].fillna(0.0)
+    
+    return df_combined
 
 
 def load_season_ytd_results(season, tracking_suffix='_top3'):
@@ -281,9 +298,30 @@ def load_season_ytd_results(season, tracking_suffix='_top3'):
     df_all = pd.concat(all_data, ignore_index=True)
     print(f"   ✅ Loaded {len(df_all)} total plays", file=sys.stderr)
     
-    # Calculate overall stats
-    wins = (df_all['result'] == 'win').sum()
-    losses = (df_all['result'] == 'loss').sum()
+    # Check if we have any results yet
+    if 'result' not in df_all.columns:
+        print(f"   ⚠️  No results found in YTD tracking files (suffix: '{tracking_suffix}')", file=sys.stderr)
+        return None
+    
+    # Calculate profit if not already present
+    # Standard -110 odds: Stake $110 to win $100
+    # WIN: +$100 profit
+    # LOSS: -$110 (lose stake)
+    # PUSH: $0
+    if 'profit' not in df_all.columns:
+        print(f"   💰 Calculating profit column...", file=sys.stderr)
+        df_all['profit'] = df_all['result'].str.upper().map({
+            'WIN': 100.0,    # Stake $110, win $100 profit
+            'LOSS': -110.0,  # Lose your $110 stake
+            'PUSH': 0.0,     # Get your money back
+            'DNP': 0.0       # Did not play
+        })
+        # Handle any unexpected values
+        df_all['profit'] = df_all['profit'].fillna(0.0)
+    
+    # Calculate overall stats (use uppercase for result values)
+    wins = (df_all['result'].str.upper() == 'WIN').sum()
+    losses = (df_all['result'].str.upper() == 'LOSS').sum()
     total = wins + losses
     win_pct = (wins / total * 100) if total > 0 else 0
     total_profit = df_all['profit'].sum()
@@ -301,8 +339,8 @@ def load_season_ytd_results(season, tracking_suffix='_top3'):
     if 'strategy_name' in df_all.columns:
         for strategy_name in df_all['strategy_name'].dropna().unique():
             df_strat = df_all[df_all['strategy_name'] == strategy_name]
-            strat_wins = (df_strat['result'] == 'win').sum()
-            strat_losses = (df_strat['result'] == 'loss').sum()
+            strat_wins = (df_strat['result'].str.upper() == 'WIN').sum()
+            strat_losses = (df_strat['result'].str.upper() == 'LOSS').sum()
             strat_total = strat_wins + strat_losses
             strat_win_pct = (strat_wins / strat_total * 100) if strat_total > 0 else 0
             strat_profit = df_strat['profit'].sum()
@@ -381,9 +419,9 @@ This might be your first day, or yesterday had no plays.
     
     win_pct = (wins / (wins + losses) * 100) if (wins + losses) > 0 else 0
     
-    # Calculate ROI
-    total_wagered = (wins + losses) * 110
-    profit = (wins * 100) - (losses * 110)
+    # Calculate ROI using profit column
+    total_wagered = (wins + losses) * 110  # Total amount staked (standard -110 odds)
+    profit = df_results['profit'].sum()
     actual_roi = (profit / total_wagered * 100) if total_wagered > 0 else 0
     expected_roi = df_results['expected_roi'].mean()
     
@@ -415,7 +453,7 @@ Win Rate: {win_pct:.1f}% | Actual ROI: {actual_roi:+.1f}% | Expected ROI: {expec
                 dim_wins = (dim_data['result'] == 'WIN').sum()
                 dim_losses = (dim_data['result'] == 'LOSS').sum()
                 dim_win_pct = (dim_wins / (dim_wins + dim_losses) * 100) if (dim_wins + dim_losses) > 0 else 0
-                dim_profit = (dim_wins * 100) - (dim_losses * 110)
+                dim_profit = dim_data['profit'].sum()
                 
                 text += f"{dim} Strategy: {dim_wins}-{dim_losses} ({dim_win_pct:.1f}%) | Profit: ${dim_profit:+.2f}\n"
             
