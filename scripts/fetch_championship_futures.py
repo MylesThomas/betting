@@ -48,6 +48,8 @@ import sys
 from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
+import boto3
+from io import StringIO
 
 # Add src to path for odds_utils
 repo_root = Path(__file__).parent.parent
@@ -77,6 +79,10 @@ ESPN_API_BASE = 'https://sports.core.api.espn.com/v2/sports'
 # Load config for season values
 CONFIG = get_config()
 ESPN_SEASONS = CONFIG['espn_seasons']
+
+# S3 Configuration
+S3_BUCKET = 'the-odds-api-mt'
+AWS_REGION = os.getenv('AWS_REGION_NAME', 'us-east-2')
 
 
 def fetch_futures(sport_key):
@@ -375,6 +381,69 @@ def parse_futures_to_df(data, sport_name, team_records=None):
     return pd.DataFrame(futures_list)
 
 
+def get_s3_key(sport: str, timestamp: datetime) -> str:
+    """
+    Generate S3 key for futures data.
+    
+    Args:
+        sport: 'nfl', 'nba', 'ncaaf', 'ncaab'
+        timestamp: Datetime for filename
+    
+    Returns:
+        S3 key like: nfl/futures/2026-01-10/nfl_super_bowl_futures_20260110_143052.csv
+    """
+    date_str = timestamp.strftime('%Y-%m-%d')
+    timestamp_str = timestamp.strftime('%Y%m%d_%H%M%S')
+    
+    sport_filename_map = {
+        'nfl': f'nfl_super_bowl_futures_{timestamp_str}.csv',
+        'nba': f'nba_championship_futures_{timestamp_str}.csv',
+        'ncaaf': f'ncaaf_championship_futures_{timestamp_str}.csv',
+        'ncaab': f'ncaab_championship_futures_{timestamp_str}.csv'
+    }
+    
+    filename = sport_filename_map[sport.lower()]
+    return f"{sport}/futures/{date_str}/{filename}"
+
+
+def save_to_s3(df: pd.DataFrame, sport: str, timestamp: datetime) -> str:
+    """
+    Save DataFrame to S3 as CSV.
+    
+    Args:
+        df: DataFrame with futures data
+        sport: 'nfl', 'nba', 'ncaaf', 'ncaab'
+        timestamp: Datetime for filename
+    
+    Returns:
+        S3 key where file was saved
+    """
+    s3_key = get_s3_key(sport, timestamp)
+    
+    # Convert DataFrame to CSV string
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer, index=False)
+    
+    # Upload to S3
+    s3_client = boto3.client('s3', region_name=AWS_REGION)
+    
+    try:
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=s3_key,
+            Body=csv_buffer.getvalue(),
+            ContentType='text/csv'
+        )
+        
+        print(f"☁️  Saved to s3://{S3_BUCKET}/{s3_key}")
+        return s3_key
+        
+    except Exception as e:
+        print(f"⚠️  S3 upload failed: {e}")
+        print("   (Local file still saved)")
+        return None
+
+
 def main():
     """Main test function"""
     
@@ -419,7 +488,10 @@ def main():
             output_file = repo_root / f'data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_{timestamp}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_nfl.to_csv(output_file, index=False)
-            print(f"\n💾 Saved to: {output_file}")
+            print(f"\n💾 Saved locally: {output_file}")
+            
+            # Upload to S3
+            save_to_s3(df_nfl, sport='nfl', timestamp=datetime.now())
         else:
             print("⚠️  No NFL futures data found")
             
@@ -454,7 +526,10 @@ def main():
             output_file = repo_root / f'data/01_input/the-odds-api/nba/futures/nba_championship_futures_{timestamp}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_nba.to_csv(output_file, index=False)
-            print(f"\n💾 Saved to: {output_file}")
+            print(f"\n💾 Saved locally: {output_file}")
+            
+            # Upload to S3
+            save_to_s3(df_nba, sport='nba', timestamp=datetime.now())
         else:
             print("⚠️  No NBA futures data found")
             
@@ -487,7 +562,10 @@ def main():
             output_file = repo_root / f'data/01_input/the-odds-api/ncaaf/futures/ncaaf_championship_futures_{timestamp}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_ncaaf.to_csv(output_file, index=False)
-            print(f"\n💾 Saved to: {output_file}")
+            print(f"\n💾 Saved locally: {output_file}")
+            
+            # Upload to S3
+            save_to_s3(df_ncaaf, sport='ncaaf', timestamp=datetime.now())
         else:
             print("⚠️  No NCAA Football futures data found")
             
@@ -522,7 +600,10 @@ def main():
             output_file = repo_root / f'data/01_input/the-odds-api/ncaab/futures/ncaab_championship_futures_{timestamp}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_ncaab.to_csv(output_file, index=False)
-            print(f"\n💾 Saved to: {output_file}")
+            print(f"\n💾 Saved locally: {output_file}")
+            
+            # Upload to S3
+            save_to_s3(df_ncaab, sport='ncaab', timestamp=datetime.now())
         else:
             print("⚠️  No NCAA Basketball futures data found")
             
