@@ -804,13 +804,14 @@ def load_tonights_games(target_date=None, use_s3=False):
             matching_rows = side_rows[abs(side_rows['points_line'] - consensus_line) <= 0.5]
             
             # Debug for players with no bookmakers
-            if matching_rows.empty and 'Dunn' in player_name:
+            if matching_rows.empty:
                 print(f"   🐛 DEBUG {player_name} {side} {consensus_line}:")
                 print(f"      Total player rows: {len(player_rows)}")
                 print(f"      After side filter ({side}): {len(side_rows)}")
                 if not side_rows.empty:
                     print(f"      Lines available: {sorted(side_rows['points_line'].unique())}")
                     print(f"      Checking: abs(line - {consensus_line}) <= 0.5")
+                print(f"      Result: {len(matching_rows)} matching rows")
             
             # Build list of {bookmaker, line, odds}
             details = []
