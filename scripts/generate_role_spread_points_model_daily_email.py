@@ -548,6 +548,10 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
     # Get unique games and their first occurrence for sorting
     games = df_plays.groupby('game_key').first().reset_index()
     
+    # Sort games by game_time (chronological order)
+    games['game_time_parsed'] = pd.to_datetime(games['game_time'])
+    games = games.sort_values('game_time_parsed')
+    
     game_num = 1
     for _, game in games.iterrows():
         game_teams = game['game_key']
@@ -607,19 +611,22 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             num_books = len(details)
             text += f"   Books ({num_books}): "
             
-            # Format each bookmaker with line and odds
-            book_strs = []
-            for book_info in details:
-                bookmaker = book_info['bookmaker']
-                line = book_info['line']
-                odds = book_info['odds']
+            if num_books == 0:
+                text += "⚠️  GAME MAY HAVE STARTED - Lines pulled\n"
+            else:
+                # Format each bookmaker with line and odds
+                book_strs = []
+                for book_info in details:
+                    bookmaker = book_info['bookmaker']
+                    line = book_info['line']
+                    odds = book_info['odds']
+                    
+                    # Format odds with sign (e.g., -110, +120)
+                    odds_str = f"{odds:+d}"
+                    
+                    book_strs.append(f"{bookmaker} ({line} @ {odds_str})")
                 
-                # Format odds with sign (e.g., -110, +120)
-                odds_str = f"{odds:+d}"
-                
-                book_strs.append(f"{bookmaker} ({line} @ {odds_str})")
-            
-            text += ', '.join(book_strs) + "\n"
+                text += ', '.join(book_strs) + "\n"
             
             text += "\n"
         
