@@ -511,14 +511,14 @@ def load_tonights_games(target_date=None, use_s3=False):
         
         if not todays_events:
             print("❌ No NBA games found for today")
-            print("⚠️  Using mock data...\n")
-            return pd.DataFrame({
-                'PLAYER_NAME': ['Jalen Brunson', 'Karl-Anthony Towns'],
-                'points_line': [28.5, 23.5],
-                'team_abbr': ['NYK', 'NYK'],
-                'team_spread': [3.0, 3.0],
-                'opponent': ['BOS', 'BOS'],
-            })
+            print("⏭️  Returning empty DataFrame - no plays to find\n")
+            # Return empty DataFrame with all required columns
+            empty_df = pd.DataFrame(columns=[
+                'PLAYER_NAME', 'points_line', 'team_abbr', 'team_spread', 'opponent',
+                'game_time', 'bookmakers', 'num_bookmakers', 
+                'bookmaker_details_over', 'bookmaker_details_under'
+            ])
+            return empty_df, []  # Return (df, game_info)
         
         print(f"✅ Found {len(todays_events)} games today\n")
         
