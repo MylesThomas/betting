@@ -484,12 +484,12 @@ def calculate_outcomes(df_plays: pd.DataFrame) -> pd.DataFrame:
     df_plays['result'] = df_plays.apply(determine_result, axis=1)
     df_plays['margin'] = df_plays['actual_points'] - df_plays['points_line']
     
-    # Calculate profit (assuming -110 odds, $100 bet)
+    # Calculate profit (standard -110 odds: stake $110 to win $100)
     def calculate_profit(result):
         if result == 'WIN':
-            return 90.91  # Win $90.91 on $100 bet at -110
+            return 100.0  # Win $100 (risking $110)
         elif result == 'LOSS':
-            return -100.0
+            return -110.0  # Lose $110 stake
         else:  # PUSH or NO_DATA
             return 0.0
     
@@ -561,7 +561,7 @@ def analyze_per_strategy_performance(df_plays: pd.DataFrame, strategies: Dict, s
         
         win_rate = (wins / total * 100) if total > 0 else 0
         total_profit = strat_plays['profit'].sum()
-        total_staked = len(strat_plays) * 100
+        total_staked = len(strat_plays) * 110  # $110 stake per bet (to win $100)
         roi = (total_profit / total_staked * 100) if total_staked > 0 else 0
         
         strategy_stats.append({
@@ -661,7 +661,7 @@ def backtest_season(season: str, strategies: Dict, strategy_type: str, granulari
     
     # Calculate profit and ROI
     total_profit = df_plays['profit'].sum()
-    total_staked = decided_plays * 100  # $100 per bet
+    total_staked = decided_plays * 110  # $110 stake per bet (to win $100)
     roi = (total_profit / total_staked * 100) if total_staked > 0 else 0.0
     
     results = {
