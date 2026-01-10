@@ -100,3 +100,6 @@ data/01_input/nba_api/historical/
 
 # ai summaries
 docs/AI_summaries/
+
+# Content directory (tweets, writing, viz)
+content/
