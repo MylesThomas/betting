@@ -892,6 +892,10 @@ def find_plays(df_games, strategies, granularity='detailed'):
                 else:
                     bookmaker_details = bookmaker_details_under
                 
+                # Skip play if no bookmakers offer this specific side
+                if bookmaker_details == '[]':
+                    print(f"   🐛 DEBUG {player} {strat['bet_side']} {line}: No bookmakers offering {strat['bet_side']} at this line")
+                
                 play_data = {
                     'player': player,
                     'line': line,
@@ -911,7 +915,8 @@ def find_plays(df_games, strategies, granularity='detailed'):
                     'game_time': game_time,
                     'bookmakers': bookmakers,
                     'num_bookmakers': num_bookmakers,
-                    'bookmaker_details': bookmaker_details,
+                    'bookmaker_details_over': bookmaker_details_over,
+                    'bookmaker_details_under': bookmaker_details_under,
                 }
                 
                 plays.append(play_data)
@@ -941,7 +946,8 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
         'player', 'team', 'opponent', 'bet_side', 'line', 'spread',
         'line_tier', 'spread_bin', 'strategy_name', 
         'strategy_roi', 'strategy_edge', 'strategy_hit_rate', 'strategy_games',
-        'game_time', 'bookmakers', 'num_bookmakers', 'bookmaker_details'
+        'game_time', 'bookmakers', 'num_bookmakers', 
+        'bookmaker_details_over', 'bookmaker_details_under'
     ]
     
     csv_data = df_plays[columns_to_save].copy()

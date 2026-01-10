@@ -980,6 +980,10 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                 else:
                     bookmaker_details = bookmaker_details_under
                 
+                # Skip play if no bookmakers offer this specific side
+                if bookmaker_details == '[]':
+                    print(f"   🐛 DEBUG {player} {strat['bet_side']} {line}: No bookmakers offering {strat['bet_side']} at this line")
+                
                 play_data = {
                     'player': player,
                     'line': line,
@@ -999,7 +1003,8 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                     'game_time': game_time,
                     'bookmakers': bookmakers,
                     'num_bookmakers': num_bookmakers,
-                    'bookmaker_details': bookmaker_details,
+                    'bookmaker_details_over': bookmaker_details_over,
+                    'bookmaker_details_under': bookmaker_details_under,
                 }
                 
                 # Add scorer_type if present
@@ -1045,7 +1050,7 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
     ])
     
     # Add game_time, bookmakers, bookmaker_details (always present from API fetch)
-    base_columns.extend(['game_time', 'bookmakers', 'num_bookmakers', 'bookmaker_details'])
+    base_columns.extend(['game_time', 'bookmakers', 'num_bookmakers', 'bookmaker_details_over', 'bookmaker_details_under'])
     
     csv_data = df_plays[base_columns].copy()
     

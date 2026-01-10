@@ -603,30 +603,46 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             text += f"   Expected ROI: {play['expected_roi']:+.1f}% | Hit Rate: {play['hit_rate']:.1f}% ({play['games_in_sample']} games)\n"
             text += f"   Edge vs Baseline: {play['edge_vs_baseline']:+.1f}% | Edge vs Breakeven: {play['edge_vs_breakeven']:+.1f}%\n"
             
-            # Show bookmakers offering this line (detailed format)
+            # Show bookmakers offering this line (detailed format with BOTH sides for context)
             import json
-            details = json.loads(play['bookmaker_details'])
+            details_over = json.loads(play['bookmaker_details_over'])
+            details_under = json.loads(play['bookmaker_details_under'])
             
-            # bookmaker_details now only contains the correct side (filtered at play-finding time)
-            num_books = len(details)
+            # Show the side we're betting
+            bet_side = play['bet_side']
+            details_bet_side = details_over if bet_side == 'OVER' else details_under
+            details_other_side = details_under if bet_side == 'OVER' else details_over
+            other_side_name = 'UNDER' if bet_side == 'OVER' else 'OVER'
+            
+            num_books = len(details_bet_side)
             text += f"   Books ({num_books}): "
             
             if num_books == 0:
-                text += "⚠️  GAME MAY HAVE STARTED - Lines pulled\n"
+                text += f"⚠️  No books offering {bet_side} at this line\n"
             else:
-                # Format each bookmaker with line and odds
+                # Format bookmakers for our bet side
                 book_strs = []
-                for book_info in details:
+                for book_info in details_bet_side:
                     bookmaker = book_info['bookmaker']
                     line = book_info['line']
                     odds = book_info['odds']
-                    
-                    # Format odds with sign (e.g., -110, +120)
                     odds_str = f"{odds:+d}"
-                    
                     book_strs.append(f"{bookmaker} ({line} @ {odds_str})")
-                
                 text += ', '.join(book_strs) + "\n"
+            
+            # Show other side for context (if available)
+            if details_other_side:
+                text += f"   {other_side_name} available at: "
+                other_book_strs = []
+                for book_info in details_other_side[:3]:  # Show first 3 for brevity
+                    bookmaker = book_info['bookmaker']
+                    line = book_info['line']
+                    odds = book_info['odds']
+                    odds_str = f"{odds:+d}"
+                    other_book_strs.append(f"{bookmaker} ({line} @ {odds_str})")
+                if len(details_other_side) > 3:
+                    other_book_strs.append(f"... +{len(details_other_side) - 3} more")
+                text += ', '.join(other_book_strs) + "\n"
             
             text += "\n"
         
