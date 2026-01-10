@@ -737,9 +737,26 @@ def load_tonights_games(target_date=None, use_s3=False):
         
         df = pd.DataFrame(all_player_data)
         
-        # Remove duplicates (same player might appear in multiple bookmaker markets)
-        # Include bet_side since we now track Over/Under separately
-        df = df.drop_duplicates(subset=['PLAYER_NAME', 'points_line', 'team_abbr', 'bet_side'])
+        print(f"   📊 Extracted {len(df)} prop rows from API")
+        
+        # Check for TRUE duplicates (same player, line, book, side, odds - which would be an API glitch)
+        dup_check = df.duplicated(subset=['PLAYER_NAME', 'points_line', 'team_abbr', 'bet_side', 'bookmaker', 'odds'], keep=False)
+        if dup_check.any():
+            num_dups = dup_check.sum()
+            print(f"   ⚠️  WARNING: Found {num_dups} TRUE duplicate rows (API returned same data twice)")
+            # Show sample duplicates
+            dup_samples = df[dup_check].head(5)
+            print(f"   Sample duplicates:\n{dup_samples[['PLAYER_NAME', 'points_line', 'bookmaker', 'bet_side', 'odds']]}")
+            # Remove only TRUE duplicates
+            df = df.drop_duplicates(subset=['PLAYER_NAME', 'points_line', 'team_abbr', 'bet_side', 'bookmaker', 'odds'])
+            print(f"   Removed duplicates, now have {len(df)} rows")
+        else:
+            print(f"   ✅ No duplicate rows (clean data)")
+        
+        # Show sample of how many rows per player (to see multiple lines from same book)
+        sample_player = df[df['PLAYER_NAME'].str.contains('Dunn', case=False, na=False)]
+        if not sample_player.empty:
+            print(f"   📊 Sample - Ryan Dunn: {len(sample_player)} rows (each bookmaker can offer multiple lines)")
         
         total_props_before_consensus = len(df)
         total_players_before_consensus = df['PLAYER_NAME'].nunique()
@@ -785,6 +802,15 @@ def load_tonights_games(target_date=None, use_s3=False):
             # Filter by side FIRST, then check line proximity
             side_rows = player_rows[player_rows['bet_side'].str.upper() == side.upper()]
             matching_rows = side_rows[abs(side_rows['points_line'] - consensus_line) <= 0.5]
+            
+            # Debug for players with no bookmakers
+            if matching_rows.empty and 'Dunn' in player_name:
+                print(f"   🐛 DEBUG {player_name} {side} {consensus_line}:")
+                print(f"      Total player rows: {len(player_rows)}")
+                print(f"      After side filter ({side}): {len(side_rows)}")
+                if not side_rows.empty:
+                    print(f"      Lines available: {sorted(side_rows['points_line'].unique())}")
+                    print(f"      Checking: abs(line - {consensus_line}) <= 0.5")
             
             # Build list of {bookmaker, line, odds}
             details = []
