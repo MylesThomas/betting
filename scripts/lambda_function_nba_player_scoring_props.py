@@ -153,8 +153,8 @@ def run_command(command, cwd=None, env=None):
         text=True
     )
     
-    # Always print stdout for debugging (TODO: revert after fixing bookmaker odds)
-    if result.stdout:
+    # Only print stdout if FULL_LOGGING is enabled
+    if FULL_LOGGING and result.stdout:
         print(result.stdout)
     
     # Always print stderr for debugging
