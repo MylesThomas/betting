@@ -758,6 +758,18 @@ def load_tonights_games(target_date=None, use_s3=False):
         if not sample_player.empty:
             print(f"   📊 Sample - Ryan Dunn: {len(sample_player)} rows (each bookmaker can offer multiple lines)")
         
+        # Show Dyson Daniels specifically for debugging
+        daniels = df[df['PLAYER_NAME'].str.contains('Daniels', case=False, na=False)]
+        if not daniels.empty:
+            print(f"   📊 Sample - Dyson Daniels: {len(daniels)} rows")
+            print(f"      Lines: {sorted(daniels['points_line'].unique())}")
+            print(f"      Sides: {daniels['bet_side'].unique()}")
+            daniels_12_5 = daniels[daniels['points_line'] == 12.5]
+            if not daniels_12_5.empty:
+                print(f"      At 12.5: {len(daniels_12_5)} rows")
+                print(f"         Books: {daniels_12_5['bookmaker'].unique()}")
+                print(f"         Sides: {daniels_12_5['bet_side'].unique()}")
+        
         total_props_before_consensus = len(df)
         total_players_before_consensus = df['PLAYER_NAME'].nunique()
         print(f"   Raw props before consensus: {total_props_before_consensus} props for {total_players_before_consensus} players")
