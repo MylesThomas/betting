@@ -35,17 +35,13 @@ from odds_utils import odds_to_implied_probability
 
 
 def load_configs():
-    """Load both main config and viz config."""
-    config_path = repo_root / 'config' / 'config.yaml'
-    viz_config_path = repo_root / 'config' / 'viz_config.yaml'
+    """Load futures config."""
+    futures_config_path = repo_root / 'config' / 'futures_config.yaml'
     
-    with open(config_path) as f:
-        main_config = yaml.safe_load(f)
+    with open(futures_config_path) as f:
+        futures_config = yaml.safe_load(f)
     
-    with open(viz_config_path) as f:
-        viz_config = yaml.safe_load(f)
-    
-    return main_config, viz_config
+    return futures_config
 
 
 def main():
@@ -64,8 +60,8 @@ def main():
     sport = args.sport.lower()
     
     # Load configs
-    main_config, viz_config = load_configs()
-    sport_config = viz_config['sports'][sport]
+    futures_config = load_configs()
+    sport_config = futures_config['sports'][sport]
     
     # Print header
     emoji = sport_config['emoji']
@@ -77,14 +73,15 @@ def main():
     # Get most recent futures file
     input_dir = repo_root / sport_config['input_dir']
     file_prefix = sport_config['file_prefix']
+    s3_bucket_base = futures_config.get('s3_bucket_base')
     
     try:
-        futures_file = get_most_recent_futures_file(input_dir, file_prefix)
+        futures_file = get_most_recent_futures_file(input_dir, file_prefix, s3_bucket=s3_bucket_base)
         print(f"📁 Reading: {futures_file.name}\n")
     except FileNotFoundError as e:
         print(f"❌ Error: {e}")
         print(f"\n💡 Tip: Run fetch script first:")
-        print(f"   python3 scripts/fetch_nfl_nba_championship_futures.py")
+        print(f"   python3 scripts/fetch_championship_futures.py")
         sys.exit(1)
     
     # Read CSV
@@ -199,12 +196,21 @@ def main():
     output_dir = repo_root / sport_config['output_dir']
     output_prefix = sport_config['output_prefix']
     
+    # Get save settings from config
+    save_locally = futures_config.get('save_locally', False)
+    s3_bucket = sport_config.get('s3_output_bucket')
+    s3_path = sport_config.get('s3_analysis_path')
+    
     team_avg_file, metadata_file = save_analysis_outputs(
-        team_avg, vig_df, output_dir, output_prefix
+        team_avg, vig_df, output_dir, output_prefix,
+        save_locally=save_locally,
+        s3_bucket=s3_bucket,
+        s3_path=s3_path
     )
     
-    print(f"\n💾 Saved team averages to: {team_avg_file}")
-    print(f"💾 Saved metadata to: {metadata_file}")
+    if save_locally:
+        print(f"\n💾 Saved team averages to: {team_avg_file}")
+        print(f"💾 Saved metadata to: {metadata_file}")
 
 
 if __name__ == '__main__':

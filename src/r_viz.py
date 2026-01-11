@@ -24,6 +24,7 @@ Usage:
 """
 
 import sys
+import boto3
 from pathlib import Path
 from typing import Dict, Any
 
@@ -85,7 +86,10 @@ def create_futures_table(
     viz_config: Dict[str, Any],
     average_vig_pct: float,
     total_teams: int,
-    top_n: int
+    top_n: int,
+    save_locally: bool = False,
+    s3_bucket: str = None,
+    s3_path: str = None
 ) -> Path:
     """
     Create a publication-quality futures table using R's gt package.
@@ -100,9 +104,12 @@ def create_futures_table(
         average_vig_pct: Average vig percentage across bookmakers
         total_teams: Total teams before filtering (for footer note)
         top_n: Number of teams displayed (for footer note)
+        save_locally: If True, save to local filesystem
+        s3_bucket: S3 bucket name for output (e.g., "nfl-betting-mt")
+        s3_path: S3 path prefix (e.g., "viz")
         
     Returns:
-        Path to saved PNG file
+        Path to saved PNG file (local or temp path if S3-only)
     """
     print("🎨 Creating table with R's gt package...\n")
     
@@ -381,6 +388,31 @@ def create_futures_table(
     try:
         ro.r(r_code)
         print(f"\n   ✅ Table created and saved!\n")
+        
+        # Upload to S3 if requested
+        if s3_bucket and s3_path:
+            try:
+                s3_client = boto3.client('s3')
+                viz_filename = sport_config['viz_filename']
+                s3_key = f"{s3_path}/{viz_filename}"
+                
+                with open(output_path, 'rb') as f:
+                    s3_client.put_object(
+                        Bucket=s3_bucket,
+                        Key=s3_key,
+                        Body=f.read(),
+                        ContentType='image/png'
+                    )
+                print(f"☁️  Uploaded to s3://{s3_bucket}/{s3_key}\n")
+                
+            except Exception as e:
+                print(f"⚠️  S3 upload failed: {e}\n")
+        
+        # Remove local file if not saving locally
+        if not save_locally and output_path.exists():
+            output_path.unlink()
+            print(f"🗑️  Removed local file (S3-only mode)\n")
+        
         return output_path
         
     except Exception as e:

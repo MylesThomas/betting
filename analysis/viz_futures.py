@@ -30,17 +30,17 @@ from r_viz import create_futures_table
 
 
 def load_configs():
-    """Load both main config and viz config."""
-    config_path = repo_root / 'config' / 'config.yaml'
+    """Load futures and viz configs."""
+    futures_config_path = repo_root / 'config' / 'futures_config.yaml'
     viz_config_path = repo_root / 'config' / 'viz_config.yaml'
     
-    with open(config_path) as f:
-        main_config = yaml.safe_load(f)
+    with open(futures_config_path) as f:
+        futures_config = yaml.safe_load(f)
     
     with open(viz_config_path) as f:
         viz_config = yaml.safe_load(f)
     
-    return main_config, viz_config
+    return futures_config, viz_config
 
 
 def get_team_logos_espn_nfl(team_names):
@@ -194,8 +194,8 @@ def main():
     sport = args.sport.lower()
     
     # Load configs
-    main_config, viz_config = load_configs()
-    sport_config = viz_config['sports'][sport]
+    futures_config, viz_config = load_configs()
+    sport_config = futures_config['sports'][sport]
     viz_settings = viz_config['visualization']
     
     # Print header
@@ -208,11 +208,36 @@ def main():
     if args.top_n < 99999:
         print(f"📊 Limiting to top {args.top_n} teams\n")
     
-    # Read the analysis CSV
+    # Read the analysis CSV (from S3 if not saving locally)
     output_dir = repo_root / sport_config['output_dir']
     output_prefix = sport_config['output_prefix']
     csv_file = output_dir / f'{output_prefix}_fair_odds.csv'
     metadata_file = output_dir / f'{output_prefix}_metadata.csv'
+    
+    # Download from S3 if not saving locally
+    save_locally = futures_config.get('save_locally', False)
+    if not save_locally:
+        try:
+            import boto3
+            s3_client = boto3.client('s3')
+            s3_bucket = sport_config.get('s3_output_bucket')
+            s3_analysis_path = sport_config.get('s3_analysis_path')
+            
+            # Download analysis CSV
+            output_dir.mkdir(parents=True, exist_ok=True)
+            s3_key = f"{s3_analysis_path}/{output_prefix}_fair_odds.csv"
+            print(f"📥 Downloading from s3://{s3_bucket}/{s3_key}")
+            s3_client.download_file(s3_bucket, s3_key, str(csv_file))
+            
+            # Download metadata
+            metadata_s3_key = f"{s3_analysis_path}/{output_prefix}_metadata.csv"
+            s3_client.download_file(s3_bucket, metadata_s3_key, str(metadata_file))
+            print(f"   ✅ Downloaded analysis files\n")
+            
+        except Exception as e:
+            print(f"❌ Failed to download from S3: {e}")
+            print(f"💡 Run analysis first: python3 analysis/analyze_futures.py --sport {sport}")
+            sys.exit(1)
     
     if not csv_file.exists():
         print(f"❌ CSV file not found: {csv_file}")
@@ -267,6 +292,11 @@ def main():
     # Prepare data
     df_display = prepare_data_for_visualization(df, logo_map)
     
+    # Get save settings from config
+    save_locally = futures_config.get('save_locally', False)
+    s3_bucket = sport_config.get('s3_output_bucket')
+    s3_path = sport_config.get('s3_viz_path')
+    
     # Create table
     output_path = create_futures_table(
         df_display=df_display,
@@ -275,25 +305,31 @@ def main():
         viz_config=viz_settings,
         average_vig_pct=avg_vig_pct,
         total_teams=total_teams,
-        top_n=args.top_n
+        top_n=args.top_n,
+        save_locally=save_locally,
+        s3_bucket=s3_bucket,
+        s3_path=s3_path
     )
     
     print("\n" + "=" * 80)
     print("✅ VISUALIZATION COMPLETE!")
     print("=" * 80)
-    print(f"\n🖼️  Output: {output_path}\n")
     
-    # Auto-open
-    try:
-        if platform.system() == 'Darwin':
-            subprocess.run(['open', str(output_path)])
-            print("📂 Opening PNG...\n")
-        elif platform.system() == 'Windows':
-            subprocess.run(['start', str(output_path)], shell=True)
-        else:
-            subprocess.run(['xdg-open', str(output_path)])
-    except Exception as e:
-        print(f"⚠️  Could not auto-open: {e}")
+    if save_locally:
+        print(f"\n🖼️  Output: {output_path}\n")
+    
+    # Auto-open only if saved locally
+    if save_locally:
+        try:
+            if platform.system() == 'Darwin':
+                subprocess.run(['open', str(output_path)])
+                print("📂 Opening PNG...\n")
+            elif platform.system() == 'Windows':
+                subprocess.run(['start', str(output_path)], shell=True)
+            else:
+                subprocess.run(['xdg-open', str(output_path)])
+        except Exception as e:
+            print(f"⚠️  Could not auto-open: {e}")
 
 
 if __name__ == "__main__":

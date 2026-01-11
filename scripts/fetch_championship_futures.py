@@ -109,10 +109,10 @@ def fetch_futures(sport_key):
 
 def fetch_nfl_team_records_from_espn():
     """
-    Fetch NFL team records from ESPN API.
+    Fetch NFL team records from ESPN API (regular season + playoffs combined).
     
     Returns:
-        dict: Team name (full) -> record string (e.g., "11-5")
+        dict: Team name (full) -> record string (e.g., "12-6" for 11-6 reg season + 1-0 playoffs)
     """
     print("📊 Fetching NFL team records from ESPN API...")
     
@@ -131,45 +131,68 @@ def fetch_nfl_team_records_from_espn():
     
     for abbr, team_id in espn_team_ids.items():
         try:
-            url = f"{ESPN_API_BASE}/football/leagues/nfl/seasons/{current_season}/types/2/teams/{team_id}/record"
-            response = requests.get(url, timeout=5, verify=False)
+            # Fetch regular season record (types/2)
+            reg_season_url = f"{ESPN_API_BASE}/football/leagues/nfl/seasons/{current_season}/types/2/teams/{team_id}/record"
+            response = requests.get(reg_season_url, timeout=5, verify=False)
+            
+            reg_wins = 0
+            reg_losses = 0
+            reg_ties = 0
             
             if response.status_code == 200:
                 data = response.json()
-                
-                # Extract wins and losses from the API response
                 items = data.get('items', [])
-                wins = 0
-                losses = 0
-                ties = 0
                 
                 for item in items:
-                    stat_type = item.get('type', '')
-                    if stat_type == 'total':
+                    if item.get('type') == 'total':
                         stats = item.get('stats', [])
                         for stat in stats:
                             if stat.get('name') == 'wins':
-                                wins = int(stat.get('value', 0))
+                                reg_wins = int(stat.get('value', 0))
                             elif stat.get('name') == 'losses':
-                                losses = int(stat.get('value', 0))
+                                reg_losses = int(stat.get('value', 0))
                             elif stat.get('name') == 'ties':
-                                ties = int(stat.get('value', 0))
+                                reg_ties = int(stat.get('value', 0))
+            
+            # Fetch playoff record (types/3)
+            playoff_url = f"{ESPN_API_BASE}/football/leagues/nfl/seasons/{current_season}/types/3/teams/{team_id}/record"
+            playoff_response = requests.get(playoff_url, timeout=5, verify=False)
+            
+            playoff_wins = 0
+            playoff_losses = 0
+            
+            if playoff_response.status_code == 200:
+                playoff_data = playoff_response.json()
+                playoff_items = playoff_data.get('items', [])
                 
-                # Format record string
-                if ties > 0:
-                    record = f"{wins}-{losses}-{ties}"
-                else:
-                    record = f"{wins}-{losses}"
-                
-                # Get full team name
-                full_name = NFL_ABBR_TO_FULL[abbr]
-                team_records[full_name] = record
-                
+                for item in playoff_items:
+                    if item.get('type') == 'total':
+                        stats = item.get('stats', [])
+                        for stat in stats:
+                            if stat.get('name') == 'wins':
+                                playoff_wins = int(stat.get('value', 0))
+                            elif stat.get('name') == 'losses':
+                                playoff_losses = int(stat.get('value', 0))
+            
+            # Combine regular season + playoffs
+            total_wins = reg_wins + playoff_wins
+            total_losses = reg_losses + playoff_losses
+            
+            # Format record string
+            if reg_ties > 0:
+                record = f"{total_wins}-{total_losses}-{reg_ties}"
+            else:
+                record = f"{total_wins}-{total_losses}"
+            
+            # Get full team name
+            full_name = NFL_ABBR_TO_FULL[abbr]
+            team_records[full_name] = record
+            
         except Exception as e:
             print(f"   ⚠️  Error fetching {abbr}: {e}")
             continue
     
-    print(f"   ✅ Fetched records for {len(team_records)}/32 teams\n")
+    print(f"   ✅ Fetched records for {len(team_records)}/32 teams (regular season + playoffs)\n")
     return team_records
 
 

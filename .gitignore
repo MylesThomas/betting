@@ -95,6 +95,18 @@ data/01_input/nba_api/shot_charts/
 # Game lines: 40MB (on S3: the-odds-api-mt bucket)
 data/01_input/the-odds-api/nba/game_lines/
 
+# Futures data: Temporary downloads from S3 (on S3: the-odds-api-mt bucket)
+data/01_input/the-odds-api/nfl/futures/*.csv
+data/01_input/the-odds-api/nba/futures/*.csv
+data/01_input/the-odds-api/ncaaf/futures/*.csv
+data/01_input/the-odds-api/ncaab/futures/*.csv
+
+# Futures analysis outputs: Temporary downloads from S3 (on S3: sport-specific buckets)
+data/04_output/nfl/nfl_championship_*.csv
+data/04_output/nba/nba_championship_*.csv
+data/04_output/ncaaf/ncaaf_championship_*.csv
+data/04_output/ncaab/ncaab_championship_*.csv
+
 # Historical games: 8.8MB (on S3: nba-api-mt bucket)
 data/01_input/nba_api/historical/
 

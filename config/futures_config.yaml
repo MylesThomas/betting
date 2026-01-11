@@ -1,6 +1,10 @@
 # Championship Futures Configuration
 # Configuration for NFL, NBA, NCAAF, NCAAB futures analysis and visualization
 
+# Global settings
+save_locally: false  # Set to false to skip local saves (S3 only)
+s3_bucket_base: "the-odds-api-mt"  # Base S3 bucket for input data from The Odds API
+
 sports:
   nfl:
     display_name: "NFL"
@@ -14,6 +18,16 @@ sports:
     file_prefix: "nfl_super_bowl_futures"
     output_prefix: "nfl_championship"
     
+    # S3 paths
+    s3_output_bucket: "nfl-betting-mt"
+    s3_analysis_path: "analysis"
+    s3_viz_path: "viz"
+    s3_data_paths:
+      - input_dir: "data/01_input/"
+      - cache_dir: "data/02_cache/"
+      - intermediate_dir: "data/03_intermediate/"
+      - output_dir: "data/04_output/"
+  
     # Visualization settings
     title: "NFL Super Bowl Futures: True Odds vs. What Books Charge"
     viz_filename: "nfl_futures_vig_single.png"
@@ -38,6 +52,16 @@ sports:
     file_prefix: "nba_championship_futures"
     output_prefix: "nba_championship"
     
+    # S3 paths
+    s3_output_bucket: "nba-betting-mt"
+    s3_analysis_path: "analysis"
+    s3_viz_path: "viz"
+    s3_data_paths:
+      - input_dir: "data/01_input/"
+      - cache_dir: "data/02_cache/"
+      - intermediate_dir: "data/03_intermediate/"
+      - output_dir: "data/04_output/"
+    
     title: "NBA Championship Futures: True Odds vs. What Books Charge"
     viz_filename: "nba_futures_vig_single.png"
     logo_source: "espn_cdn"
@@ -60,6 +84,16 @@ sports:
     file_prefix: "ncaaf_championship_futures"
     output_prefix: "ncaaf_championship"
     
+    # S3 paths
+    s3_output_bucket: "ncaaf-betting-mt"
+    s3_analysis_path: "analysis"
+    s3_viz_path: "viz"
+    s3_data_paths:
+      - input_dir: "data/01_input/"
+      - cache_dir: "data/02_cache/"
+      - intermediate_dir: "data/03_intermediate/"
+      - output_dir: "data/04_output/"
+    
     title: "NCAAF Championship Futures: True Odds vs. What Books Charge"
     viz_filename: "ncaaf_futures_vig_single.png"
     logo_source: "local"  # Uses local logo files via ncaa_team_utils
@@ -81,6 +115,16 @@ sports:
     viz_dir: "content/viz/ncaab"
     file_prefix: "ncaab_championship_futures"
     output_prefix: "ncaab_championship"
+    
+    # S3 paths
+    s3_output_bucket: "ncaab-betting-mt"
+    s3_analysis_path: "analysis"
+    s3_viz_path: "viz"
+    s3_data_paths:
+      - input_dir: "data/01_input/"
+      - cache_dir: "data/02_cache/"
+      - intermediate_dir: "data/03_intermediate/"
+      - output_dir: "data/04_output/"
     
     title: "NCAAB Championship Futures: True Odds vs. What Books Charge"
     viz_filename: "ncaab_futures_vig_single.png"

@@ -21,6 +21,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
+import boto3
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Tuple, Optional
@@ -31,20 +32,75 @@ sys.path.insert(0, str(Path(__file__).parent))
 from odds_utils import odds_to_implied_probability, probability_to_american_odds
 
 
-def get_most_recent_futures_file(input_dir: Path, file_prefix: str) -> Path:
+def get_most_recent_futures_file(input_dir: Path, file_prefix: str, s3_bucket: str = None) -> Path:
     """
-    Find the most recently created futures file in a directory.
+    Find the most recently created futures file in a directory or S3.
     
     Args:
         input_dir: Directory to search (e.g., data/01_input/the-odds-api/nfl/futures)
         file_prefix: Prefix of files to match (e.g., "nfl_super_bowl_futures")
+        s3_bucket: Optional S3 bucket to check (e.g., "the-odds-api-mt")
         
     Returns:
-        Path to most recent file
+        Path to most recent file (downloaded from S3 if needed)
         
     Raises:
         FileNotFoundError: If no matching files found
     """
+    # If S3 bucket provided, download from S3
+    if s3_bucket:
+        try:
+            s3_client = boto3.client('s3')
+            
+            # Determine sport from file prefix
+            if 'nfl' in file_prefix or 'super_bowl' in file_prefix:
+                s3_prefix = 'nfl/futures/'
+            elif 'nba' in file_prefix:
+                s3_prefix = 'nba/futures/'
+            elif 'ncaaf' in file_prefix:
+                s3_prefix = 'ncaaf/futures/'
+            elif 'ncaab' in file_prefix:
+                s3_prefix = 'ncaab/futures/'
+            else:
+                raise ValueError(f"Cannot determine sport from file_prefix: {file_prefix}")
+            
+            # List all files in S3 with the prefix
+            response = s3_client.list_objects_v2(
+                Bucket=s3_bucket,
+                Prefix=s3_prefix
+            )
+            
+            if 'Contents' not in response:
+                raise FileNotFoundError(f"No files found in s3://{s3_bucket}/{s3_prefix}")
+            
+            # Filter for files matching the prefix pattern and get most recent
+            matching_files = [
+                obj for obj in response['Contents']
+                if file_prefix in obj['Key'] and obj['Key'].endswith('.csv')
+            ]
+            
+            if not matching_files:
+                raise FileNotFoundError(f"No files matching '{file_prefix}' found in s3://{s3_bucket}/{s3_prefix}")
+            
+            # Sort by last modified (most recent first)
+            matching_files.sort(key=lambda x: x['LastModified'], reverse=True)
+            most_recent = matching_files[0]
+            
+            # Download to local temp location
+            input_dir.mkdir(parents=True, exist_ok=True)
+            local_file = input_dir / Path(most_recent['Key']).name
+            
+            print(f"📥 Downloading from s3://{s3_bucket}/{most_recent['Key']}")
+            s3_client.download_file(s3_bucket, most_recent['Key'], str(local_file))
+            print(f"   ✅ Downloaded to {local_file.name}\n")
+            
+            return local_file
+            
+        except Exception as e:
+            print(f"⚠️  S3 download failed: {e}")
+            print(f"   Falling back to local files...\n")
+    
+    # Check local files
     futures_files = list(input_dir.glob(f'{file_prefix}_*.csv'))
     
     if not futures_files:
@@ -206,28 +262,28 @@ def save_analysis_outputs(
     team_avg: pd.DataFrame, 
     vig_df: pd.DataFrame,
     output_dir: Path,
-    output_prefix: str
+    output_prefix: str,
+    save_locally: bool = False,
+    s3_bucket: str = None,
+    s3_path: str = None
 ) -> Tuple[Path, Path]:
     """
-    Save analysis results to CSV files.
+    Save analysis results to CSV files (local and/or S3).
     
     Args:
         team_avg: Team averages DataFrame
         vig_df: Bookmaker vig DataFrame
         output_dir: Directory to save files (e.g., data/04_output/nfl)
         output_prefix: Prefix for output files (e.g., "nfl_championship")
+        save_locally: If True, save to local filesystem
+        s3_bucket: S3 bucket name for output (e.g., "nfl-betting-mt")
+        s3_path: S3 path prefix (e.g., "analysis")
         
     Returns:
         Tuple of (team_averages_path, metadata_path)
     """
-    # Create output directory if it doesn't exist
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Save team averages
+    # Prepare files
     team_avg_file = output_dir / f'{output_prefix}_fair_odds.csv'
-    team_avg.to_csv(team_avg_file, index=False)
-    
-    # Save metadata (bookmaker vig info)
     metadata_file = output_dir / f'{output_prefix}_metadata.csv'
     
     # Calculate average vig across bookmakers
@@ -244,7 +300,41 @@ def save_analysis_outputs(
         'worst_bookmaker': vig_df.iloc[0]['bookmaker'],  # First = highest vig
     }])
     
-    metadata.to_csv(metadata_file, index=False)
+    # Save locally if requested
+    if save_locally:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        team_avg.to_csv(team_avg_file, index=False)
+        metadata.to_csv(metadata_file, index=False)
+    
+    # Save to S3 if bucket provided
+    if s3_bucket and s3_path:
+        try:
+            s3_client = boto3.client('s3')
+            
+            # Upload team averages
+            team_avg_s3_key = f"{s3_path}/{output_prefix}_fair_odds.csv"
+            team_avg_csv = team_avg.to_csv(index=False)
+            s3_client.put_object(
+                Bucket=s3_bucket,
+                Key=team_avg_s3_key,
+                Body=team_avg_csv,
+                ContentType='text/csv'
+            )
+            print(f"☁️  Uploaded to s3://{s3_bucket}/{team_avg_s3_key}")
+            
+            # Upload metadata
+            metadata_s3_key = f"{s3_path}/{output_prefix}_metadata.csv"
+            metadata_csv = metadata.to_csv(index=False)
+            s3_client.put_object(
+                Bucket=s3_bucket,
+                Key=metadata_s3_key,
+                Body=metadata_csv,
+                ContentType='text/csv'
+            )
+            print(f"☁️  Uploaded to s3://{s3_bucket}/{metadata_s3_key}")
+            
+        except Exception as e:
+            print(f"⚠️  S3 upload failed: {e}")
     
     return team_avg_file, metadata_file
 
