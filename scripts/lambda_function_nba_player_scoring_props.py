@@ -352,6 +352,7 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
         '--plays-date', today,
         '--results-date', yesterday,
         '--strategy', 'both',  # Include both strategies in email
+        '--load-ytd',  # Load season YTD stats for main email
         '--sns-topic', sns_topic_arn  # Send via SNS directly
     ]
     
