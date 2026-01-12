@@ -138,3 +138,38 @@ git add scripts/kalshi_order_book_tracker.py
 git commit -m "kalshi: add health check tracking with CLI flag"
 ```
 
+12. organize helper functions in the order they are used (execution flow order)
+- helper functions should appear in the same order they're called in the main function
+- if a helper function uses another helper, put the dependency first
+- reasoning: improves readability - readers can follow the code flow top-to-bottom
+- example (good order):
+
+```py
+# Main function calls: get_yesterday_et() → clone_repo() → send_sns()
+# clone_repo() internally uses run_cmd()
+
+def get_yesterday_et():
+    """First thing called in main."""
+    ...
+
+def run_cmd(cmd, cwd=None):
+    """Helper used by clone_repo."""
+    ...
+
+def clone_repo(token):
+    """Uses run_cmd, called after get_yesterday_et."""
+    result = run_cmd(['git', 'clone', ...])
+    ...
+
+def send_sns(subject, message):
+    """Called at end for notifications."""
+    ...
+
+def main():
+    yesterday = get_yesterday_et()
+    repo = clone_repo(token)
+    send_sns("Done", "Success")
+```
+
+- bad: functions organized alphabetically or randomly - forces reader to jump around
+
