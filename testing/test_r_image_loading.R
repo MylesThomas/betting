@@ -30,3 +30,4 @@ print("✅ Test table saved to content/viz/nba/test_headshots.png")
 print("Check the file to see if images loaded properly")
 
 
+
