@@ -748,20 +748,32 @@ def lambda_handler(event, context):
         print(f"{'='*80}\n")
         
         # Send success summary email
+        # Check if all main steps succeeded for subject line
+        all_main_steps_success = all([
+            workflow_results['steps']['2d_plays']['success'],
+            workflow_results['steps']['3d_plays']['success'],
+            workflow_results['steps']['fetch_games']['success'],
+            workflow_results['steps']['tracking']['success'],
+            workflow_results['steps']['email']['success']
+        ])
+        
+        success_emoji = "✅" if all_main_steps_success else "⚠️"
+        success_status = "COMPLETED SUCCESSFULLY" if all_main_steps_success else "COMPLETED WITH WARNINGS"
+        
         success_lines = [
             "="*80,
-            "✅ NBA PROPS DAILY WORKFLOW - COMPLETED SUCCESSFULLY",
+            f"{success_emoji} NBA PROPS DAILY WORKFLOW - {success_status}",
             "="*80,
             f"📅 Today: {workflow_results['today']}",
             f"📅 Yesterday: {workflow_results['yesterday']}",
             "",
             "MAIN WORKFLOW STEPS:",
             "────────────────────────────────────────────────────────────────────────────────",
-            f"✅ Step 1: Find 2D Plays",
-            f"✅ Step 2: Find 3D Plays",
-            f"✅ Step 3: Fetch Game Results",
-            f"✅ Step 4: Track Performance",
-            f"✅ Step 5: Generate & Send Main Email",
+            f"{'✅' if workflow_results['steps']['2d_plays']['success'] else '❌'} Step 1: Find 2D Plays",
+            f"{'✅' if workflow_results['steps']['3d_plays']['success'] else '❌'} Step 2: Find 3D Plays",
+            f"{'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'} Step 3: Fetch Game Results",
+            f"{'✅' if workflow_results['steps']['tracking']['success'] else '❌'} Step 4: Track Performance",
+            f"{'✅' if workflow_results['steps']['email']['success'] else '❌'} Step 5: Generate & Send Main Email",
             "",
             "TOP3 UNDERS WORKFLOW:",
             "────────────────────────────────────────────────────────────────────────────────"
@@ -784,8 +796,9 @@ def lambda_handler(event, context):
             "="*80
         ])
         
+        subject_status = "SUCCESS" if all_main_steps_success else "WARNING"
         send_email_notification(
-            subject=f"✅ NBA Props Workflow SUCCESS - {workflow_results['today']}",
+            subject=f"{success_emoji} NBA Props Workflow {subject_status} - {workflow_results['today']}",
             message="\n".join(success_lines)
         )
         
