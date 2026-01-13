@@ -62,3 +62,6 @@ data_directories:
   # Output subdirectories (final results)
   # output_nba_arbs: data/04_output/nba/arbs
   # input_nba_all_markets: data/01_input/the-odds-api/nba/all_markets
+
+# Note: File path mappings (via get_file_path()) are optional
+# If not configured, code will use S3 paths as fallback

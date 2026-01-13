@@ -49,9 +49,16 @@ from config import PLAYER_TEAM_CACHE_MAX_AGE_HOURS
 from config_loader import get_file_path
 
 
-# Constants
-GAME_RESULTS_PATH = Path(__file__).parent.parent / get_file_path('nba_game_results_current')
-PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / get_file_path('player_team_cache')
+# Constants - use try/except since these may not be configured in all environments
+try:
+    GAME_RESULTS_PATH = Path(__file__).parent.parent / get_file_path('nba_game_results_current')
+except (KeyError, FileNotFoundError):
+    GAME_RESULTS_PATH = None  # Fallback will be skipped if path not configured
+
+try:
+    PLAYER_TEAM_CACHE_PATH = Path(__file__).parent.parent / get_file_path('player_team_cache')
+except (KeyError, FileNotFoundError):
+    PLAYER_TEAM_CACHE_PATH = None  # S3 cache will be used instead
 
 # S3 Configuration
 S3_BUCKET = 'nba-betting-mt'
@@ -105,7 +112,7 @@ def load_historical_team_mapping() -> Dict[str, str]:
         Dict mapping normalized player names to team abbreviations
         Based on most recent game each player played
     """
-    if not GAME_RESULTS_PATH.exists():
+    if GAME_RESULTS_PATH is None or not GAME_RESULTS_PATH.exists():
         return {}
     
     try:
@@ -190,7 +197,7 @@ def load_player_team_cache() -> Dict[str, Dict]:
     except Exception as s3_error:
         # Fallback to local file
         try:
-            if not PLAYER_TEAM_CACHE_PATH.exists():
+            if PLAYER_TEAM_CACHE_PATH is None or not PLAYER_TEAM_CACHE_PATH.exists():
                 return {'mapping': {}, 'timestamp': None}
             
             # Read CSV into DataFrame
@@ -237,10 +244,11 @@ def save_player_team_cache(mapping: Dict[str, str]) -> None:
         # Fail silently - S3 upload is optional
         pass
     
-    # Also save local backup
+    # Also save local backup (if path is configured)
     try:
-        PLAYER_TEAM_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        cache_df.to_csv(PLAYER_TEAM_CACHE_PATH, index=False)
+        if PLAYER_TEAM_CACHE_PATH is not None:
+            PLAYER_TEAM_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            cache_df.to_csv(PLAYER_TEAM_CACHE_PATH, index=False)
     except Exception as local_error:
         # Fail silently - local backup is optional
         pass
