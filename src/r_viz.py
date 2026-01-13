@@ -153,7 +153,10 @@ def create_futures_table(
     ]
     
     print(f"   📋 Table dimensions: {table_df.shape}")
-    print(f"   📋 Columns: {list(table_df.columns)}\n")
+    print(f"   📋 Columns: {list(table_df.columns)}")
+    print(f"   📋 Vig % column type: {table_df['Vig %'].dtype}")
+    print(f"   📋 Vig % min/max: {table_df['Vig %'].min():.2f} to {table_df['Vig %'].max():.2f}")
+    print(f"   📋 Best Vig % min/max: {table_df['Best Vig %'].min():.2f} to {table_df['Best Vig %'].max():.2f}\n")
     
     # Convert pandas DataFrame to R dataframe
     with localconverter(ro.default_converter + pandas2ri.converter):
@@ -208,6 +211,10 @@ def create_futures_table(
     vig_color_max = sport_config.get('vig_color_domain_max', 5.0)
     negative_vig_color = viz_config['negative_vig_color']
     
+    # Debug: Print color config
+    print(f"   🎨 Color domain: {vig_color_min} to {vig_color_max}")
+    print(f"   🎨 Color palette: {viz_config['color_palette']}")
+    print(f"   🎨 Number of colors: {len(viz_config['color_palette'])}\n")
     # Footer
     data_source = "The Odds API"
     twitter_handle = viz_config['twitter_handle']
@@ -242,7 +249,28 @@ def create_futures_table(
       cols_align(align = "center", columns = everything()) %>%
       cols_align(align = "left", columns = c(Team)) %>%
       
-      # Format Vig % columns
+      # ==========================================================================
+      # CRITICAL: Color application order for Vig % columns
+      # ==========================================================================
+      # Step 1: Format columns first (fmt)
+      #   - Converts numeric values to strings with formatting ("+6.5%")
+      #   - Must happen BEFORE data_color() so the numeric values are preserved
+      #
+      # Step 2: Apply color gradient (data_color)
+      #   - Reads the NUMERIC values (not the formatted strings)
+      #   - Applies green -> white -> red gradient based on domain (0-10%)
+      #   - Works even though fmt() already formatted them (gt magic!)
+      #
+      # Step 3: Override negative values with yellow (tab_style)
+      #   - Applies AFTER data_color to override negative vig with yellow
+      #   - Yellow = bettor advantage (bookmaker offering better than fair odds)
+      #
+      # Why this order matters:
+      #   - If data_color comes before fmt: R treats formatted strings as NA (gray)
+      #   - If tab_style comes before data_color: yellow gets overwritten by gradient
+      # ==========================================================================
+      
+      # Step 1: Format Vig % columns (numeric → "+X.X%" strings)
       fmt(
         columns = `Vig %`,
         fns = function(x) {{
@@ -309,7 +337,7 @@ def create_futures_table(
         locations = cells_title(groups = "subtitle")
       ) %>%
       
-      # Color Vig % columns
+      # Step 2: Apply color gradient to Vig % columns (reads numeric values)
       data_color(
         columns = `Vig %`,
         method = "numeric",
@@ -325,7 +353,7 @@ def create_futures_table(
         na_color = "#e8e8e8"
       ) %>%
       
-      # Highlight negative vig (yellow = bettor advantage)
+      # Step 3: Override negative vig with yellow (bettor advantage)
       tab_style(
         style = cell_fill(color = "{negative_vig_color}"),
         locations = cells_body(columns = `Vig %`, rows = `Vig %` < 0)
