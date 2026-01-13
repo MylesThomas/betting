@@ -1,190 +1,190 @@
-# Championship Futures Configuration
-# Configuration for NFL, NBA, NCAAF, NCAAB futures analysis and visualization
+# # Championship Futures Configuration
+# # Configuration for NFL, NBA, NCAAF, NCAAB futures analysis and visualization
 
-# Global settings
-save_locally: false  # Set to false to skip local saves (S3 only)
-s3_bucket_base: "the-odds-api-mt"  # Base S3 bucket for input data from The Odds API
+# # Global settings
+# save_locally: false  # Set to false to skip local saves (S3 only)
+# s3_bucket_base: "the-odds-api-mt"  # Base S3 bucket for input data from The Odds API
 
-sports:
-  nfl:
-    display_name: "NFL"
-    full_name: "NFL Super Bowl"
-    emoji: "🏈"
+# sports:
+#   nfl:
+#     display_name: "NFL"
+#     full_name: "NFL Super Bowl"
+#     emoji: "🏈"
     
-    # Data paths
-    input_dir: "data/01_input/the-odds-api/nfl/futures"
-    output_dir: "data/04_output/nfl"
-    viz_dir: "content/viz/nfl"
-    file_prefix: "nfl_super_bowl_futures"
-    output_prefix: "nfl_championship"
+#     # Data paths
+#     input_dir: "data/01_input/the-odds-api/nfl/futures"
+#     output_dir: "data/04_output/nfl"
+#     viz_dir: "content/viz/nfl"
+#     file_prefix: "nfl_super_bowl_futures"
+#     output_prefix: "nfl_championship"
     
-    # S3 paths
-    s3_output_bucket: "nfl-betting-mt"
-    s3_analysis_path: "analysis"
-    s3_viz_path: "viz"
-    s3_data_paths:
-      - input_dir: "data/01_input/"
-      - cache_dir: "data/02_cache/"
-      - intermediate_dir: "data/03_intermediate/"
-      - output_dir: "data/04_output/"
+#     # S3 paths
+#     s3_output_bucket: "nfl-betting-mt"
+#     s3_analysis_path: "analysis"
+#     s3_viz_path: "viz"
+#     s3_data_paths:
+#       - input_dir: "data/01_input/"
+#       - cache_dir: "data/02_cache/"
+#       - intermediate_dir: "data/03_intermediate/"
+#       - output_dir: "data/04_output/"
   
-    # Visualization settings
-    title: "NFL Super Bowl Futures: True Odds vs. What Books Charge"
-    viz_filename: "nfl_futures_vig_single.png"
-    logo_source: "espn_cdn"  # Uses ESPN CDN URLs
-    logo_height: 21
+#     # Visualization settings
+#     title: "NFL Super Bowl Futures: True Odds vs. What Books Charge"
+#     viz_filename: "nfl_futures_vig_single.png"
+#     logo_source: "espn_cdn"  # Uses ESPN CDN URLs
+#     logo_height: 21
     
-    # Sport-specific notes
-    footer_note_3: "19 of 32 teams have odds available — bookmakers no longer offer odds on eliminated/longshot teams."
+#     # Sport-specific notes
+#     footer_note_3: "19 of 32 teams have odds available — bookmakers no longer offer odds on eliminated/longshot teams."
     
-    # Table dimensions (portrait 9:16 for social media)
-    output_width: 1600
-    output_height: 2844  # 1600 * (16/9) = portrait ratio
+#     # Table dimensions (portrait 9:16 for social media)
+#     output_width: 1600
+#     output_height: 2844  # 1600 * (16/9) = portrait ratio
     
-  nba:
-    display_name: "NBA"
-    full_name: "NBA Championship"
-    emoji: "🏀"
+#   nba:
+#     display_name: "NBA"
+#     full_name: "NBA Championship"
+#     emoji: "🏀"
     
-    input_dir: "data/01_input/the-odds-api/nba/futures"
-    output_dir: "data/04_output/nba"
-    viz_dir: "content/viz/nba"
-    file_prefix: "nba_championship_futures"
-    output_prefix: "nba_championship"
+#     input_dir: "data/01_input/the-odds-api/nba/futures"
+#     output_dir: "data/04_output/nba"
+#     viz_dir: "content/viz/nba"
+#     file_prefix: "nba_championship_futures"
+#     output_prefix: "nba_championship"
     
-    # S3 paths
-    s3_output_bucket: "nba-betting-mt"
-    s3_analysis_path: "analysis"
-    s3_viz_path: "viz"
-    s3_data_paths:
-      - input_dir: "data/01_input/"
-      - cache_dir: "data/02_cache/"
-      - intermediate_dir: "data/03_intermediate/"
-      - output_dir: "data/04_output/"
+#     # S3 paths
+#     s3_output_bucket: "nba-betting-mt"
+#     s3_analysis_path: "analysis"
+#     s3_viz_path: "viz"
+#     s3_data_paths:
+#       - input_dir: "data/01_input/"
+#       - cache_dir: "data/02_cache/"
+#       - intermediate_dir: "data/03_intermediate/"
+#       - output_dir: "data/04_output/"
     
-    title: "NBA Championship Futures: True Odds vs. What Books Charge"
-    viz_filename: "nba_futures_vig_single.png"
-    logo_source: "espn_cdn"
-    logo_height: 30
+#     title: "NBA Championship Futures: True Odds vs. What Books Charge"
+#     viz_filename: "nba_futures_vig_single.png"
+#     logo_source: "espn_cdn"
+#     logo_height: 30
     
-    footer_note_3: "All 30 NBA teams shown — some may have very long odds due to poor season performance."
+#     footer_note_3: "All 30 NBA teams shown — some may have very long odds due to poor season performance."
     
-    # Table dimensions (portrait 9:16 for social media)
-    output_width: 1600
-    output_height: 2844  # 1600 * (16/9) = portrait ratio
+#     # Table dimensions (portrait 9:16 for social media)
+#     output_width: 1600
+#     output_height: 2844  # 1600 * (16/9) = portrait ratio
     
-  ncaaf:
-    display_name: "NCAAF"
-    full_name: "NCAAF Championship"
-    emoji: "🏈"
+#   ncaaf:
+#     display_name: "NCAAF"
+#     full_name: "NCAAF Championship"
+#     emoji: "🏈"
     
-    input_dir: "data/01_input/the-odds-api/ncaaf/futures"
-    output_dir: "data/04_output/ncaaf"
-    viz_dir: "content/viz/ncaaf"
-    file_prefix: "ncaaf_championship_futures"
-    output_prefix: "ncaaf_championship"
+#     input_dir: "data/01_input/the-odds-api/ncaaf/futures"
+#     output_dir: "data/04_output/ncaaf"
+#     viz_dir: "content/viz/ncaaf"
+#     file_prefix: "ncaaf_championship_futures"
+#     output_prefix: "ncaaf_championship"
     
-    # S3 paths
-    s3_output_bucket: "ncaaf-betting-mt"
-    s3_analysis_path: "analysis"
-    s3_viz_path: "viz"
-    s3_data_paths:
-      - input_dir: "data/01_input/"
-      - cache_dir: "data/02_cache/"
-      - intermediate_dir: "data/03_intermediate/"
-      - output_dir: "data/04_output/"
+#     # S3 paths
+#     s3_output_bucket: "ncaaf-betting-mt"
+#     s3_analysis_path: "analysis"
+#     s3_viz_path: "viz"
+#     s3_data_paths:
+#       - input_dir: "data/01_input/"
+#       - cache_dir: "data/02_cache/"
+#       - intermediate_dir: "data/03_intermediate/"
+#       - output_dir: "data/04_output/"
     
-    title: "NCAAF Championship Futures: True Odds vs. What Books Charge"
-    viz_filename: "ncaaf_futures_vig_single.png"
-    logo_source: "local"  # Uses local logo files via ncaa_team_utils
-    logo_height: 21
+#     title: "NCAAF Championship Futures: True Odds vs. What Books Charge"
+#     viz_filename: "ncaaf_futures_vig_single.png"
+#     logo_source: "local"  # Uses local logo files via ncaa_team_utils
+#     logo_height: 21
     
-    footer_note_3: "College Football Playoff futures — only teams with championship odds shown."
+#     footer_note_3: "College Football Playoff futures — only teams with championship odds shown."
     
-    # Table dimensions (portrait 9:16 for social media)
-    output_width: 1600
-    output_height: 2844  # 1600 * (16/9) = portrait ratio
+#     # Table dimensions (portrait 9:16 for social media)
+#     output_width: 1600
+#     output_height: 2844  # 1600 * (16/9) = portrait ratio
     
-  ncaab:
-    display_name: "NCAAB"
-    full_name: "NCAAB Championship"
-    emoji: "🏀"
+#   ncaab:
+#     display_name: "NCAAB"
+#     full_name: "NCAAB Championship"
+#     emoji: "🏀"
     
-    input_dir: "data/01_input/the-odds-api/ncaab/futures"
-    output_dir: "data/04_output/ncaab"
-    viz_dir: "content/viz/ncaab"
-    file_prefix: "ncaab_championship_futures"
-    output_prefix: "ncaab_championship"
+#     input_dir: "data/01_input/the-odds-api/ncaab/futures"
+#     output_dir: "data/04_output/ncaab"
+#     viz_dir: "content/viz/ncaab"
+#     file_prefix: "ncaab_championship_futures"
+#     output_prefix: "ncaab_championship"
     
-    # S3 paths
-    s3_output_bucket: "ncaab-betting-mt"
-    s3_analysis_path: "analysis"
-    s3_viz_path: "viz"
-    s3_data_paths:
-      - input_dir: "data/01_input/"
-      - cache_dir: "data/02_cache/"
-      - intermediate_dir: "data/03_intermediate/"
-      - output_dir: "data/04_output/"
+#     # S3 paths
+#     s3_output_bucket: "ncaab-betting-mt"
+#     s3_analysis_path: "analysis"
+#     s3_viz_path: "viz"
+#     s3_data_paths:
+#       - input_dir: "data/01_input/"
+#       - cache_dir: "data/02_cache/"
+#       - intermediate_dir: "data/03_intermediate/"
+#       - output_dir: "data/04_output/"
     
-    title: "NCAAB Championship Futures: True Odds vs. What Books Charge"
-    viz_filename: "ncaab_futures_vig_single.png"
-    logo_source: "local"
-    logo_height: 30
+#     title: "NCAAB Championship Futures: True Odds vs. What Books Charge"
+#     viz_filename: "ncaab_futures_vig_single.png"
+#     logo_source: "local"
+#     logo_height: 30
     
-    footer_note_3: "March Madness futures — only teams with championship odds shown."
+#     footer_note_3: "March Madness futures — only teams with championship odds shown."
     
-    # Table dimensions (portrait 9:16 for social media)
-    output_width: 1600
-    output_height: 2844  # 1600 * (16/9) = portrait ratio
+#     # Table dimensions (portrait 9:16 for social media)
+#     output_width: 1600
+#     output_height: 2844  # 1600 * (16/9) = portrait ratio
 
-# Shared visualization settings
-visualization:
-  # Typography
-  font_family: "Arial"
-  title_font_size: 28
-  subtitle_font_size: 16
-  header_font_size: 14
-  body_font_size: 13
-  footer_font_size: 11
+# # Shared visualization settings
+# visualization:
+#   # Typography
+#   font_family: "Arial"
+#   title_font_size: 28
+#   subtitle_font_size: 16
+#   header_font_size: 14
+#   body_font_size: 13
+#   footer_font_size: 11
   
-  # Spacing
-  heading_padding_px: 3  # Tight spacing between title and subtitle
-  header_padding_px: 8
-  data_row_padding_px: 1
+#   # Spacing
+#   heading_padding_px: 3  # Tight spacing between title and subtitle
+#   header_padding_px: 8
+#   data_row_padding_px: 1
   
-  # Column widths (pixels)
-  col_width_rank: 50
-  col_width_team: 200
-  col_width_logo: 45
-  col_width_record: 70
-  col_width_fair_odds: 90
-  col_width_fair_pct: 70
-  col_width_avg_odds: 90
-  col_width_implied_pct: 90
-  col_width_vig_pct: 75
-  col_width_best_book: 110
-  col_width_best_odds: 90
-  col_width_best_vig_pct: 100
+#   # Column widths (pixels)
+#   col_width_rank: 50
+#   col_width_team: 200
+#   col_width_logo: 45
+#   col_width_record: 70
+#   col_width_fair_odds: 90
+#   col_width_fair_pct: 70
+#   col_width_avg_odds: 90
+#   col_width_implied_pct: 90
+#   col_width_vig_pct: 75
+#   col_width_best_book: 110
+#   col_width_best_odds: 90
+#   col_width_best_vig_pct: 100
   
-  # Color palette (green -> white -> red for vig)
-  color_palette:
-    - "#90EE90"  # Light green (low vig)
-    - "#ffffff"  # White (medium)
-    - "#ffcccc"  # Light red
-    - "#ff9999"  # Medium red
-    - "#d62728"  # Dark red (high vig)
+#   # Color palette (green -> white -> red for vig)
+#   color_palette:
+#     - "#90EE90"  # Light green (low vig)
+#     - "#ffffff"  # White (medium)
+#     - "#ffcccc"  # Light red
+#     - "#ff9999"  # Medium red
+#     - "#d62728"  # Dark red (high vig)
   
-  # Vig color domain (for gradient mapping)
-  vig_color_domain_min: 0.0
-  vig_color_domain_max: 5.0
+#   # Vig color domain (for gradient mapping)
+#   vig_color_domain_min: 0.0
+#   vig_color_domain_max: 10.0
   
-  # Negative vig color (bettor advantage)
-  negative_vig_color: "#FFEB3B"  # Yellow
+#   # Negative vig color (bettor advantage)
+#   negative_vig_color: "#FFEB3B"  # Yellow
   
-  # Footer notes (shared across all sports)
-  footer_note_1: "'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%)."
-  footer_note_2: "Color indicates vig level: green = low vig, red = high vig, yellow = negative vig (bettor advantage)."
+#   # Footer notes (shared across all sports)
+#   footer_note_1: "'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%)."
+#   footer_note_2: "Color indicates vig level: green = low vig, red = high vig, yellow = negative vig (bettor advantage)."
   
-  # Twitter handle
-  twitter_handle: "@TQSLabs"
+#   # Twitter handle
+#   twitter_handle: "@TQSLabs"
 

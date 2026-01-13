@@ -188,7 +188,7 @@ def get_team_logos():
         'Golden State Warriors': 'https://a.espncdn.com/i/teamlogos/nba/500/gs.png',
         'Houston Rockets': 'https://a.espncdn.com/i/teamlogos/nba/500/hou.png',
         'Indiana Pacers': 'https://a.espncdn.com/i/teamlogos/nba/500/ind.png',
-        'Los Angeles Clippers': 'https://a.espncdn.com/i/teamlogos/nba/500/lac.png',
+        'Los Angeles Clippers': 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/lac.png',
         'Los Angeles Lakers': 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png',
         'Memphis Grizzlies': 'https://a.espncdn.com/i/teamlogos/nba/500/mem.png',
         'Miami Heat': 'https://a.espncdn.com/i/teamlogos/nba/500/mia.png',
