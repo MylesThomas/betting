@@ -4,6 +4,18 @@ Fetch NBA Player Props (All Markets)
 Fetches historical player props from The Odds API for all available markets.
 Data is saved to S3 for later analysis.
 
+CRITICAL TIMING NOTE - NBA API Data Delay:
+When using --fetch-games flag, be aware of NBA API publishing delays:
+  ✅ Props (The Odds API): Available immediately for historical dates
+  ❌ Player game logs (NBA API): Takes 12+ HOURS after games finish
+  
+Example: Games ending at 1am ET on 2026-01-12
+  - Props available: Immediately (anytime on 2026-01-12 or later)
+  - Game logs available: After 2pm ET on 2026-01-12 (12+ hours later)
+  
+If you run this script too early, the NBA API will return empty/invalid JSON
+and cause timeouts on retries. This is EXPECTED - wait 14+ hours after games finish.
+
 ═══════════════════════════════════════════════════════════════════════════════
 WORKFLOW: 2025-26 Season Setup
 ═══════════════════════════════════════════════════════════════════════════════
@@ -391,6 +403,10 @@ def fetch_games_for_date(date_str, max_retries=3):
     """
     Fetch player game results for a specific date from NBA API
     
+    IMPORTANT: NBA API player game logs have a 12+ HOUR publishing delay!
+    If games ended at 1am ET, data won't be available until ~2pm ET same day.
+    Running this too early will result in JSONDecodeError or empty results.
+    
     Args:
         date_str: Date in YYYY-MM-DD format
         max_retries: Number of retry attempts on timeout/connection errors
@@ -650,11 +666,15 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         # Check if game logs already exist in S3
         games_s3_key = f"{S3_PREFIX_GAMES}/{date_str}.csv"
         if skip_if_exists and upload_s3 and check_s3_file_exists(S3_BUCKET_GAMES, games_s3_key):
-            logging.info(f"\n⏭️  Game results already exist in S3 for {date_str}")
+            logging.info("")
+            logging.info("="*80)
+            logging.info(f"⏭️  GAME RESULTS ALREADY EXIST FOR {date_str} - SKIPPING GAME FETCH")
+            logging.info("="*80)
         else:
-            logging.info(f"\n{'='*80}")
+            logging.info("")
+            logging.info("="*80)
             logging.info(f"FETCHING GAME RESULTS FOR {date_str}")
-            logging.info(f"{'='*80}")
+            logging.info("="*80)
             
             games_df = fetch_games_for_date(date_str)
             
