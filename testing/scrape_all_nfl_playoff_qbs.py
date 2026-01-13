@@ -7,10 +7,11 @@ Strategy:
    - Find all players who appeared in playoff stats
    - Build master list: {player_id: {'name': str, 'seasons': [...]}}
    
-2. Scraping Phase (scrapes FULL history for each player):
-   - For each player found, scrape ALL years (2001-2024)
-   - NOT just the discovery years - we get their complete playoff history
-   - Example: Find Mahomes in 2023-2024, but scrape his 2018-2024 playoff games
+2. Scraping Phase (scrapes history for each player):
+   - For each player found, scrape years specified by --scrape-start/--scrape-end
+   - By default, scrapes same years as discovery (--start-year/--end-year)
+   - Example: --start-year 2025 --end-year 2026 scrapes only 2025-2026 games
+   - To get full history: add --scrape-start 2001 to scrape back to 2001
    
 3. Filtering Phase:
    - Only keep games with 10+ passing attempts (starters only)
@@ -41,19 +42,19 @@ Filter:
   Only includes games where QB threw 10+ passes (excludes backup/garbage time appearances)
 
 Usage:
-    # Quick test: Find ~20 2024 QBs, scrape only 2023-2024 history (~1 min, ~42 requests)
-    python3 testing/scrape_all_nfl_playoff_qbs.py --start-year 2024 --end-year 2024 --scrape-start 2023 --scrape-end 2024 --export --test-mode
+    # Quick test: Find 2025-2026 playoff QBs, scrape only their 2025-2026 games (~1 min, ~24 requests)
+    python3 testing/scrape_all_nfl_playoff_qbs.py --start-year 2025 --end-year 2026 --export --test-mode
     
-    # Find ~20 2024 QBs, get their FULL history back to 2001 (~5 min, ~500 requests)
-    python3 testing/scrape_all_nfl_playoff_qbs.py --start-year 2024 --end-year 2024 --export --test-mode
+    # Find 2025-2026 playoff QBs, get their FULL history back to 2001 (~5 min, ~300 requests)
+    python3 testing/scrape_all_nfl_playoff_qbs.py --start-year 2025 --end-year 2026 --scrape-start 2001 --export --test-mode
     
-    # Full historical: Find ALL ~500+ QBs from 2001-2024, complete history (~60+ min, ~12,000 requests)
-    python3 testing/scrape_all_nfl_playoff_qbs.py --start-year 2001 --end-year 2024 --export
+    # Full historical: Find ALL ~500+ QBs from 2001-2026, complete history (~60+ min, ~12,000 requests)
+    python3 testing/scrape_all_nfl_playoff_qbs.py --start-year 2001 --end-year 2026 --export
 
 Flags:
   --start-year/--end-year: Discovery range (which years to find QBs from)
   --scrape-start/--scrape-end: History range (which years to scrape for each QB)
-    - If not specified, defaults to 2001-2024 (full history)
+    - If not specified, defaults to same as --start-year/--end-year
   --export: Save files
   --test-mode: Save to ~/Downloads/tmp (for testing)
   --local-only: Save locally instead of S3
@@ -380,28 +381,26 @@ def scrape_qb_playoff_gamelogs(athlete_id, athlete_name, year):
 
 def scrape_all_qbs(qbs_dict, start_year, end_year, playoff_schedule=None):
     """
-    Scrape FULL playoff history for all QBs.
+    Scrape playoff history for all QBs.
     
     Strategy:
-    - For each QB found, scrape ALL years (2001-2024)
-    - Not just the years they were discovered in
-    - This ensures we get complete playoff history for each QB
+    - For each QB found, scrape years specified by start_year to end_year
+    - By default, uses same years as discovery (can be overridden with --scrape-start/--scrape-end)
     - Adds playoff_round column using schedule mapping
     
     Args:
         qbs_dict: Dict from find_all_playoff_qbs()
-        start_year: Earliest year to scrape (usually 2001)
-        end_year: Latest year to scrape (usually 2024)
+        start_year: Earliest year to scrape
+        end_year: Latest year to scrape
         playoff_schedule: Optional schedule mapping for rounds
         
     Returns:
         pd.DataFrame: All playoff games for all QBs
     """
     print(f"\n{'='*80}")
-    print(f"SCRAPING FULL PLAYOFF HISTORY FOR {len(qbs_dict)} PLAYERS")
+    print(f"SCRAPING PLAYOFF HISTORY FOR {len(qbs_dict)} PLAYERS")
     print(f"{'='*80}")
     print(f"Year range: {start_year}-{end_year}")
-    print(f"Note: Scraping ALL years for each player, not just discovery years")
     
     all_games = []
     total_qbs = len(qbs_dict)
@@ -692,9 +691,9 @@ def main():
     )
     
     parser.add_argument('--start-year', type=int, default=2001, help='Start year for QB discovery')
-    parser.add_argument('--end-year', type=int, default=2024, help='End year for QB discovery')
-    parser.add_argument('--scrape-start', type=int, help='Start year for scraping history (default: 2001)')
-    parser.add_argument('--scrape-end', type=int, help='End year for scraping history (default: 2024)')
+    parser.add_argument('--end-year', type=int, default=2026, help='End year for QB discovery')
+    parser.add_argument('--scrape-start', type=int, help='Start year for scraping history (default: same as --start-year)')
+    parser.add_argument('--scrape-end', type=int, help='End year for scraping history (default: same as --end-year)')
     parser.add_argument('--export', action='store_true', help='Export to CSV')
     parser.add_argument('--test-mode', action='store_true', help='Test mode: save to ~/Downloads/tmp')
     parser.add_argument('--local-only', action='store_true', help='Save local instead of S3')
@@ -758,16 +757,16 @@ def main():
         return
     
     # Step 2: Determine scraping year range
-    SCRAPE_START_YEAR = args.scrape_start if args.scrape_start else 2001
-    SCRAPE_END_YEAR = args.scrape_end if args.scrape_end else 2024
+    SCRAPE_START_YEAR = args.scrape_start if args.scrape_start else args.start_year
+    SCRAPE_END_YEAR = args.scrape_end if args.scrape_end else args.end_year
     
     print(f"\n{'='*80}")
     print(f"SCRAPING CONFIGURATION")
     print(f"{'='*80}")
     print(f"Discovery years: {args.start_year}-{args.end_year} ({len(qbs_dict)} players found)")
-    print(f"  Note: More players exist overall, but only finding from discovery years")
-    print(f"  Example: --start-year 2024 finds ~20 QBs, --start-year 2001 finds ~500+ QBs")
     print(f"Scraping years: {SCRAPE_START_YEAR}-{SCRAPE_END_YEAR} ({SCRAPE_END_YEAR - SCRAPE_START_YEAR + 1} years per player)")
+    print(f"  Note: By default, scraping years match discovery years")
+    print(f"  Use --scrape-start 2001 to get full playoff history for each QB")
     print(f"Total requests: ~{len(qbs_dict)} players × {SCRAPE_END_YEAR - SCRAPE_START_YEAR + 1} years = {len(qbs_dict) * (SCRAPE_END_YEAR - SCRAPE_START_YEAR + 1)} requests")
     print(f"Estimated time: ~{int(len(qbs_dict) * (SCRAPE_END_YEAR - SCRAPE_START_YEAR + 1) * 0.5 / 60)} minutes")
     print(f"{'='*80}")

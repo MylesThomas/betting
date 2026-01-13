@@ -465,18 +465,37 @@ def fetch_date_market_props(date_str, market, season, save=True, skip_if_exists=
         print(f"  ℹ️  No games on {date_str} (or no historical data available)")
         return pd.DataFrame()
     
-    print(f"  🏈 Found {len(all_events)} games")
+    # Filter to only games on this specific date (in ET timezone)
+    et_tz = ZoneInfo('America/New_York')
+    target_date = date_obj.date()
+    
+    filtered_events = []
+    for event in all_events:
+        # Parse commence_time and convert to ET
+        commence_time_str = event.get('commence_time')
+        if commence_time_str:
+            commence_time = datetime.fromisoformat(commence_time_str.replace('Z', '+00:00'))
+            commence_time_et = commence_time.astimezone(et_tz).date()
+            
+            if commence_time_et == target_date:
+                filtered_events.append(event)
+    
+    if not filtered_events:
+        print(f"  ℹ️  No games actually on {date_str} (found {len(all_events)} future games)")
+        return pd.DataFrame()
+    
+    print(f"  🏈 Found {len(filtered_events)} games on {date_str} (filtered from {len(all_events)} total)")
     
     # Fetch props for each event
     all_props = []
     credits_for_date = 1  # Started with 1 for events list
     
-    for i, event in enumerate(all_events, 1):
+    for i, event in enumerate(filtered_events, 1):
         event_id = event.get('id')
         away_team = event.get('away_team', 'Unknown')
         home_team = event.get('home_team', 'Unknown')
         
-        print(f"  📡 API CALL {i}/{len(all_events)}: {away_team} @ {home_team}... ", end="")
+        print(f"  📡 API CALL {i}/{len(filtered_events)}: {away_team} @ {home_team}... ", end="")
         
         props_result = get_historical_event_props(event_id, date_str, market)
         credits_for_date += 1
