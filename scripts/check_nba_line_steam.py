@@ -85,6 +85,7 @@ def normalize_team_name(team_name):
 def load_line_movement_snapshots(days_back=3):
     """
     Load recent hourly line movement snapshots from S3.
+    Only loads snapshot files from the last X days (efficient filtering by filename date).
     
     Args:
         days_back: Only load snapshots from the last X days (default 3)
@@ -98,6 +99,12 @@ def load_line_movement_snapshots(days_back=3):
     
     s3 = boto3.client('s3')
     
+    # Calculate cutoff date FIRST (in UTC to match S3 file timestamps)
+    from datetime import timedelta, timezone
+    cutoff_datetime = datetime.now(timezone.utc) - timedelta(days=days_back)
+    cutoff_date_str = cutoff_datetime.strftime('%Y-%m-%d')
+    print(f"   Cutoff date: {cutoff_date_str} (only loading files >= this date)")
+    
     try:
         response = s3.list_objects_v2(Bucket=S3_BUCKET_SNAPSHOTS, Prefix=s3_prefix)
     except Exception as e:
@@ -107,15 +114,37 @@ def load_line_movement_snapshots(days_back=3):
     if 'Contents' not in response:
         raise ValueError(f"No snapshots found in S3")
     
-    all_dfs = []
+    # Filter S3 objects by date BEFORE loading
+    files_to_load = []
+    total_files = 0
     
     for obj in response.get('Contents', []):
         key = obj['Key']
+        total_files += 1
         
         # Only process snapshot CSV files
         if not key.endswith('.csv') or 'snapshot_' not in key:
             continue
         
+        # Extract date from filename (e.g., snapshot_2026-01-14_16-00-46.csv)
+        try:
+            filename = key.split('/')[-1]  # Get just the filename
+            if filename.startswith('snapshot_'):
+                # Parse date from filename: snapshot_YYYY-MM-DD_HH-MM-SS.csv
+                date_part = filename.split('_')[1]  # Get YYYY-MM-DD part
+                
+                # Compare filename date to cutoff
+                if date_part >= cutoff_date_str:
+                    files_to_load.append(key)
+        except Exception as e:
+            print(f"⚠️  Could not parse date from filename {key}: {e}")
+            continue
+    
+    print(f"   Found {len(files_to_load)} snapshot files to load (out of {total_files} total files)")
+    
+    # Now load ONLY the filtered files
+    all_dfs = []
+    for key in files_to_load:
         try:
             response_obj = s3.get_object(Bucket=S3_BUCKET_SNAPSHOTS, Key=key)
             df = pd.read_csv(BytesIO(response_obj['Body'].read()))
@@ -134,18 +163,10 @@ def load_line_movement_snapshots(days_back=3):
     df['fetched_at'] = pd.to_datetime(df['fetched_at'])
     
     print(f"   Loaded {len(df):,} line records from {len(all_dfs)} snapshot files")
+    print(f"   Date range: {df['fetched_at'].min()} to {df['fetched_at'].max()}")
+    print(f"✅ Unique games: {df['game_id'].nunique():,}")
     
-    # Filter to only recent snapshots (last X days)
-    et_tz = ZoneInfo('America/New_York')
-    cutoff_date = datetime.now(et_tz) - pd.Timedelta(days=days_back)
-    
-    df_filtered = df[df['fetched_at'] >= cutoff_date].copy()
-    
-    print(f"   Filtered to last {days_back} days: {len(df_filtered):,} records ({len(df) - len(df_filtered):,} dropped)")
-    print(f"   Date range: {df_filtered['fetched_at'].min()} to {df_filtered['fetched_at'].max()}")
-    print(f"✅ Unique games: {df_filtered['game_id'].nunique():,}")
-    
-    return df_filtered
+    return df
 
 
 def calculate_consensus_movements(snapshots_df):
