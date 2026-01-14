@@ -635,9 +635,9 @@ def add_derived_features(df):
     
     # Opening spread size buckets (use absolute value of favorite's spread)
     df['opening_spread_size'] = df['opening_favorite_spread'].abs()
-    df['spread_bucket'] = pd.cut(
+    df['opening_spread_bucket'] = pd.cut(
         df['opening_spread_size'], 
-        bins=[0, 3, 6, 10, 30],
+        bins=[0, 2, 5, 8, 30],
         labels=['close_game', 'small_spread', 'medium_spread', 'blowout']
     )
     
@@ -779,14 +779,14 @@ def analyze_spread_context(df):
         print("\n3+ Point Steam by Opening Spread:")
         
         bucket_definitions = {
-            'close_game': ('[0-3 pts]', 'CLOSE GAME'),
-            'small_spread': ('[3-6 pts]', 'SMALL SPREAD'),
-            'medium_spread': ('[6-10 pts]', 'MEDIUM SPREAD'),
-            'blowout': ('[10+ pts]', 'BLOWOUT')
+            'close_game': ('[0-2 pts]', 'CLOSE GAME'),
+            'small_spread': ('[2-5 pts]', 'SMALL SPREAD'),
+            'medium_spread': ('[5-8 pts]', 'MEDIUM SPREAD'),
+            'blowout': ('[8+ pts]', 'BLOWOUT')
         }
         
         for bucket_key, (range_label, name_label) in bucket_definitions.items():
-            bucket_subset = subset[(subset['spread_bucket'] == bucket_key) & (subset['steam_team_covered'].notna())]
+            bucket_subset = subset[(subset['opening_spread_bucket'] == bucket_key) & (subset['steam_team_covered'].notna())]
             if len(bucket_subset) > 0:
                 wins = int(bucket_subset['steam_team_covered'].sum())
                 losses = int((~bucket_subset['steam_team_covered']).sum())
