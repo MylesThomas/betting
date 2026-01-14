@@ -71,7 +71,8 @@ PROJECT_ROOT = find_project_root()
 sys.path.insert(0, str(PROJECT_ROOT / 'src'))
 
 # Constants
-S3_BUCKET_SNAPSHOTS = 'betting-line-movement-snapshots'
+S3_BUCKET_SNAPSHOTS = 'betting-line-movement-snapshots'  # Line movement tracking snapshots
+S3_BUCKET_PLAYS = 'nba-betting-mt'  # Bucket for saving plays
 TEAM_NAME_MAP = {
     'Los Angeles Clippers': 'LA Clippers',
 }
@@ -292,9 +293,114 @@ def log_individual_games(movements_df, target_date_str, threshold=2.0):
     print(f"\n{'='*80}")
 
 
+def save_plays_to_s3(steam_games, target_date_str, season, threshold):
+    """
+    Save detected steam plays to S3.
+    Appends all detections (no deduplication) to track steam evolution over time.
+    
+    Strategy:
+    - PLAYS: Append every detection (tracks all signals throughout day)
+    - RESULTS: Dedupe at (game_id, steam_direction) keeping largest steam magnitude
+    
+    Same game can have multiple rows in plays file:
+    - Different steam directions (toward dog in AM, toward fav in PM)
+    - Same direction but different magnitudes (2.5pts at 9am, 2.0pts at 11am, 3.0pts at 1pm)
+    
+    Results calculation will dedupe and use strongest signal for YTD tracking.
+    
+    Args:
+        steam_games: DataFrame with games that have steam
+        target_date_str: Date string in ET timezone (YYYY-MM-DD)
+        season: NBA season (e.g., '2025-26')
+        threshold: Steam threshold used (stored in CSV, not in path)
+    
+    S3 Location: s3://nba-betting-mt/data/04_output/plays/line-steam/{date_ET}.csv
+    """
+    print(f"\n💾 [save_plays_to_s3] Starting...")
+    print(f"   Received {len(steam_games) if steam_games is not None else 0} steam games")
+    print(f"   Target date: {target_date_str}")
+    print(f"   Season: {season}")
+    print(f"   Threshold: {threshold}")
+    
+    if steam_games is None or len(steam_games) == 0:
+        print("💾 No plays to save")
+        return
+    
+    # S3 path: threshold stored in CSV column, not in folder structure
+    s3_key = f"data/04_output/plays/line-steam/{target_date_str}.csv"
+    print(f"   S3 key: s3://{S3_BUCKET_PLAYS}/{s3_key}")
+    s3 = boto3.client('s3')
+    
+    # Try to load existing plays for today
+    existing_plays = None
+    try:
+        response = s3.get_object(Bucket=S3_BUCKET_PLAYS, Key=s3_key)
+        existing_plays = pd.read_csv(BytesIO(response['Body'].read()))
+        print(f"\n💾 Loaded {len(existing_plays)} existing plays from S3")
+    except s3.exceptions.NoSuchKey:
+        print(f"\n💾 No existing plays file - creating new one")
+    except Exception as e:
+        print(f"\n⚠️  Error loading existing plays: {e}")
+    
+    # Format current detections as play records
+    et_tz = ZoneInfo('America/New_York')
+    detected_at = datetime.now(et_tz).strftime('%Y-%m-%d %H:%M:%S')
+    
+    plays = []
+    for _, game in steam_games.iterrows():
+        game_time_et = game['game_time'].tz_convert(et_tz)
+        
+        play = {
+            'detected_at': detected_at,
+            'game_id': game['game_id'],
+            'game_date': game_time_et.strftime('%Y-%m-%d'),
+            'game_time': game_time_et.strftime('%Y-%m-%d %H:%M:%S'),
+            'season': season,
+            'opening_favorite': game['opening_favorite'],
+            'opening_underdog': game['opening_underdog'],
+            'opening_favorite_spread': game['opening_favorite_spread_open'],
+            'current_favorite_spread': game['opening_favorite_spread_current'],
+            'steam_magnitude': game['steam_magnitude'],
+            'steam_direction': 'opening_underdog' if game['steam_toward_opening_underdog'] else 'opening_favorite',
+            'steamed_team': game['opening_underdog'] if game['steam_toward_opening_underdog'] else game['opening_favorite'],
+            'threshold': threshold,
+            'play_team': game['opening_underdog'] if game['steam_toward_opening_underdog'] else game['opening_favorite'],
+            'play_spread': -game['opening_favorite_spread_current'] if game['steam_toward_opening_underdog'] else game['opening_favorite_spread_current'],
+            'status': 'pending',
+            'actual_margin': None,
+            'cover_margin': None,
+        }
+        plays.append(play)
+    
+    new_plays_df = pd.DataFrame(plays)
+    
+    # Append all detections (no deduplication - keep steam evolution over time)
+    # Same game can have multiple detections as steam magnitude changes throughout day
+    # Can dedupe later during analysis if needed
+    if existing_plays is not None:
+        combined_plays = pd.concat([existing_plays, new_plays_df], ignore_index=True)
+        print(f"💾 Appended {len(new_plays_df)} new detections (total: {len(combined_plays)})")
+    else:
+        combined_plays = new_plays_df
+        print(f"💾 Created {len(combined_plays)} new detections")
+    
+    # Save to S3
+    from io import StringIO
+    csv_buffer = StringIO()
+    combined_plays.to_csv(csv_buffer, index=False)
+    
+    s3.put_object(
+        Bucket=S3_BUCKET_PLAYS,
+        Key=s3_key,
+        Body=csv_buffer.getvalue()
+    )
+    
+    print(f"✅ Saved plays to s3://{S3_BUCKET_PLAYS}/{s3_key}")
+
+
 def check_for_steam(movements_df, target_date_str, threshold=2.0):
     """
-    Check if any of today's games have threshold+ point steam toward opening underdog.
+    Check if any of today's games have threshold+ point steam (both directions).
     
     Args:
         movements_df: DataFrame with consensus movements
@@ -304,7 +410,7 @@ def check_for_steam(movements_df, target_date_str, threshold=2.0):
     Returns:
         tuple: (steam_detected: bool, steam_games: DataFrame or None)
     """
-    print(f"\n🔍 Checking for {threshold}+ point steam toward opening underdog...")
+    print(f"\n🔍 Checking for {threshold}+ point steam (both directions)...")
     print(f"   Target date: {target_date_str} (ET timezone)")
     
     # Parse target date in ET timezone
@@ -323,13 +429,18 @@ def check_for_steam(movements_df, target_date_str, threshold=2.0):
         print("\nSTEAM_DETECTED: NO")
         return False, None
     
-    # Filter to games with threshold+ movement toward opening underdog
+    # Filter to ALL games with threshold+ movement (both directions)
     steam_games = today_games[
-        (today_games['steam_toward_opening_underdog']) & 
         (today_games['steam_magnitude'] >= threshold)
     ].copy()
     
-    print(f"   Games with {threshold}+ pt steam toward opening underdog: {len(steam_games)}")
+    # Separate by direction for logging
+    underdog_steam = steam_games[steam_games['steam_toward_opening_underdog']]
+    favorite_steam = steam_games[~steam_games['steam_toward_opening_underdog']]
+    
+    print(f"   Games with {threshold}+ pt steam: {len(steam_games)} total")
+    print(f"   - Toward opening underdog: {len(underdog_steam)}")
+    print(f"   - Toward opening favorite: {len(favorite_steam)}")
     
     if len(steam_games) == 0:
         # Show largest movement for context
@@ -345,23 +456,48 @@ def check_for_steam(movements_df, target_date_str, threshold=2.0):
     
     # Steam detected!
     print(f"\n🚨 STEAM_DETECTED: YES")
-    print(f"   {len(steam_games)} game(s) with {threshold}+ point steam toward opening underdog\n")
+    print(f"   {len(steam_games)} game(s) with {threshold}+ point steam\n")
     
-    # Format output
+    # Sort by steam magnitude (highest first)
     steam_games = steam_games.sort_values('steam_magnitude', ascending=False)
     
-    for idx, row in steam_games.iterrows():
-        game_time_et = row['game_time'].tz_convert(et_tz)
+    # Output underdog steam games first
+    if len(underdog_steam) > 0:
+        print(f"{'='*80}")
+        print(f"TOWARD OPENING UNDERDOG ({len(underdog_steam)} game{'s' if len(underdog_steam) != 1 else ''})")
+        print(f"{'='*80}\n")
         
-        print(f"Game {idx+1}: {row['opening_favorite']} vs {row['opening_underdog']}")
-        print(f"  Opening: {row['opening_favorite']} {row['opening_favorite_spread_open']:+.1f} | "
-              f"{row['opening_underdog']} {-row['opening_favorite_spread_open']:+.1f}")
-        print(f"  Current: {row['opening_favorite']} {row['opening_favorite_spread_current']:+.1f} | "
-              f"{row['opening_underdog']} {-row['opening_favorite_spread_current']:+.1f}")
-        print(f"  Steam: {row['steam_magnitude']:.1f} points toward opening underdog {row['opening_underdog']}")
-        print(f"  Game time: {game_time_et.strftime('%I:%M %p ET')}")
-        print(f"  Snapshots tracked: {(row['current_time'] - row['open_time']).total_seconds() / 3600:.1f} hours")
-        print()
+        for idx, (_, row) in enumerate(underdog_steam.sort_values('steam_magnitude', ascending=False).iterrows(), 1):
+            game_time_et = row['game_time'].tz_convert(et_tz)
+            
+            print(f"Game {idx}: {row['opening_favorite']} vs {row['opening_underdog']}")
+            print(f"  Opening: {row['opening_favorite']} {row['opening_favorite_spread_open']:+.1f} | "
+                  f"{row['opening_underdog']} {-row['opening_favorite_spread_open']:+.1f}")
+            print(f"  Current: {row['opening_favorite']} {row['opening_favorite_spread_current']:+.1f} | "
+                  f"{row['opening_underdog']} {-row['opening_favorite_spread_current']:+.1f}")
+            print(f"  Steam: {row['steam_magnitude']:.1f} points toward opening underdog {row['opening_underdog']}")
+            print(f"  Game time: {game_time_et.strftime('%I:%M %p ET')}")
+            print(f"  Snapshots tracked: {(row['current_time'] - row['open_time']).total_seconds() / 3600:.1f} hours")
+            print()
+    
+    # Output favorite steam games
+    if len(favorite_steam) > 0:
+        print(f"{'='*80}")
+        print(f"TOWARD OPENING FAVORITE ({len(favorite_steam)} game{'s' if len(favorite_steam) != 1 else ''})")
+        print(f"{'='*80}\n")
+        
+        for idx, (_, row) in enumerate(favorite_steam.sort_values('steam_magnitude', ascending=False).iterrows(), 1):
+            game_time_et = row['game_time'].tz_convert(et_tz)
+            
+            print(f"Game {idx}: {row['opening_favorite']} vs {row['opening_underdog']}")
+            print(f"  Opening: {row['opening_favorite']} {row['opening_favorite_spread_open']:+.1f} | "
+                  f"{row['opening_underdog']} {-row['opening_favorite_spread_open']:+.1f}")
+            print(f"  Current: {row['opening_favorite']} {row['opening_favorite_spread_current']:+.1f} | "
+                  f"{row['opening_underdog']} {-row['opening_favorite_spread_current']:+.1f}")
+            print(f"  Steam: {row['steam_magnitude']:.1f} points toward opening favorite {row['opening_favorite']}")
+            print(f"  Game time: {game_time_et.strftime('%I:%M %p ET')}")
+            print(f"  Snapshots tracked: {(row['current_time'] - row['open_time']).total_seconds() / 3600:.1f} hours")
+            print()
     
     print("STEAM_DETECTED: YES")
     return True, steam_games
@@ -375,7 +511,15 @@ def main():
     parser.add_argument('--days-back', type=int, default=3, help='Only load snapshots from last X days (default: 3)')
     parser.add_argument('--log-individual-games', action='store_true', 
                        help='Log detailed breakdown of ALL games today (sorted by start time)')
+    parser.add_argument('--save-plays', action='store_true',
+                       help='Save detected steam plays to S3 (s3://nba-betting-mt/data/04_output/plays/)')
+    parser.add_argument('--season', type=str, help='NBA season (e.g., 2025-26) - required if --save-plays is used')
     args = parser.parse_args()
+    
+    # Validate args
+    if args.save_plays and not args.season:
+        print("❌ ERROR: --season is required when using --save-plays")
+        sys.exit(1)
     
     try:
         # Load snapshots
@@ -390,6 +534,25 @@ def main():
         
         # Check for steam
         steam_detected, steam_games = check_for_steam(movements_df, args.date, args.threshold)
+        
+        # Save plays to S3 if requested and steam detected
+        if args.save_plays:
+            print(f"\n💾 --save-plays flag detected")
+            print(f"   Steam detected: {steam_detected}")
+            print(f"   Steam games: {steam_games is not None}")
+            if steam_games is not None:
+                print(f"   Number of steam games: {len(steam_games)}")
+            
+            if steam_detected and steam_games is not None:
+                print(f"   Calling save_plays_to_s3...")
+                try:
+                    save_plays_to_s3(steam_games, args.date, args.season, args.threshold)
+                except Exception as e:
+                    print(f"   ❌ Save failed: {e}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print(f"   Skipping save (no steam or no games)")
         
         # Exit code: 0 = success (steam or no steam), 1 = error
         sys.exit(0)
