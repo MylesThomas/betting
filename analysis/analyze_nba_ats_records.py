@@ -1,5 +1,5 @@
 """
-NBA Against The Spread (ATS) Analysis for 2025-26 Season
+NBA Against The Spread (ATS) Analysis
 
 Analyzes which teams are performing well ATS, especially focusing on teams 
 that might have losing records but cover spreads frequently. These teams 
@@ -14,16 +14,16 @@ Key metrics:
 - As favorite vs underdog ATS performance
 
 Usage:
-    # Run analysis only (console output + CSV)
-    python analysis/analyze_nba_ats_records.py --season 2025
+    # Use current season (auto-detected)
+    python analysis/analyze_nba_ats_records.py --plot
     
-    # Run analysis + create R visualization
-    python analysis/analyze_nba_ats_records.py --season 2025 --plot
+    # Specify season in YYYY-YY format
+    python analysis/analyze_nba_ats_records.py --season 2025-26 --plot
 
 Output:
-    - CSV: data/04_output/nba_ats_analysis/nba_ats_rankings_YYYY_MM_YYYYMMDD.csv
-    - CSV: data/04_output/nba_ats_analysis/nba_ats_game_results_YYYY_MM_YYYYMMDD.csv
-    - PNG: content/viz/nba/nba_ats_rankings_YYYY_MM.png (if --plot flag used)
+    - CSV: data/04_output/nba_ats_analysis/nba_ats_rankings_YYYY_YY_YYYYMMDD.csv
+    - CSV: data/04_output/nba_ats_analysis/nba_ats_game_results_YYYY_YY_YYYYMMDD.csv
+    - PNG: content/viz/nba/nba_ats_rankings_YYYY_YY.png (if --plot flag used)
 
 Data Sources:
     - Betting lines: The Odds API (DraftKings) via S3 bucket 'the-odds-api-mt'
@@ -38,7 +38,7 @@ Key Insights from Recent Analysis (2025-26 through Jan 4):
     - Pelicans: Bad team (8-28) but 21-15 ATS (58.3%) - market overcorrected
 
 Author: Thomas Myles
-Date: 2026-01-04
+Date: 2026-01-14
 """
 
 import pandas as pd
@@ -55,12 +55,15 @@ from pathlib import Path
 # Add src to path for config
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 from config_loader import get_config
+from season_utils import get_current_nba_season, parse_season_to_years, season_to_underscore
 
 CONFIG = get_config()
 
 # Constants
 RATE_LIMIT_DELAY = 0.6  # NBA API rate limit
-S3_BUCKET = 'the-odds-api-mt'
+S3_BUCKET_ODDS = 'the-odds-api-mt'
+S3_BUCKET_NBA_API = 'nba-api-mt'
+S3_BUCKET_BETTING = 'nba-betting-mt'
 
 # Team name mapping (Odds API → nba_api)
 TEAM_NAME_MAP = {
@@ -69,17 +72,24 @@ TEAM_NAME_MAP = {
 }
 
 
-def get_season_string(season_year):
+def validate_season_format(season):
     """
-    Convert season year to string format
+    Validate season format (must be 'YYYY-YY' format)
     
     Args:
-        season_year: Year season starts (e.g., 2025 for 2025-26)
+        season: Season string (e.g., '2025-26')
     
     Returns:
         String like "2025-26"
+    
+    Raises:
+        ValueError if invalid format
     """
-    return f"{season_year}-{str(season_year + 1)[-2:]}"
+    try:
+        parse_season_to_years(season)
+        return season
+    except (ValueError, AttributeError):
+        raise ValueError(f"Invalid season format: {season}. Expected 'YYYY-YY' (e.g., '2025-26')")
 
 
 def normalize_team_name(team_name, reverse=False):
@@ -102,23 +112,22 @@ def normalize_team_name(team_name, reverse=False):
         return TEAM_NAME_MAP.get(team_name, team_name)
 
 
-def load_all_game_lines(season_year):
+def load_all_game_lines(season):
     """
     Load all NBA game lines for specified season from S3
     
     Args:
-        season_year: Year season starts (e.g., 2025 for 2025-26)
+        season: Season string (e.g., '2025-26')
     
     Returns:
         DataFrame with all game lines
     """
-    season_str = get_season_string(season_year)
-    s3_prefix = f'nba/historical_game_lines/{season_str}/'
+    s3_prefix = f'nba/historical_game_lines/{season}/'
     
     s3 = boto3.client('s3')
     
     # List all CSV files for the season
-    response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=s3_prefix)
+    response = s3.list_objects_v2(Bucket=S3_BUCKET_ODDS, Prefix=s3_prefix)
     
     all_dfs = []
     
@@ -131,7 +140,7 @@ def load_all_game_lines(season_year):
         
         # Read CSV from S3
         try:
-            response = s3.get_object(Bucket=S3_BUCKET, Key=key)
+            response = s3.get_object(Bucket=S3_BUCKET_ODDS, Key=key)
             df = pd.read_csv(BytesIO(response['Body'].read()))
             all_dfs.append(df)
         except Exception as e:
@@ -150,34 +159,68 @@ def load_all_game_lines(season_year):
     return df
 
 
-def get_nba_scores(season_year):
+def get_nba_scores(season):
     """
-    Load NBA game scores from nba-api data
+    Load NBA game scores from S3 player game logs and aggregate to team level
     
     Args:
-        season_year: Year season starts (e.g., 2025 for 2025-26)
+        season: Season string (e.g., '2025-26')
     
     Returns:
-        DataFrame with game results (team, opponent, points, opp_points, date)
+        DataFrame with game results (team, game_date, matchup, win_loss, points)
     """
-    season_str = get_season_string(season_year).replace('-', '_')
-    scores_path = Path(__file__).parent.parent / 'data' / '01_input' / 'nba_api' / 'historical' / f'nba_games_{season_str}.csv'
+    s3_prefix = f'player_game_logs/{season}/'
     
-    if not scores_path.exists():
-        raise ValueError(f"NBA scores file not found: {scores_path}\n" 
-                        f"Run: python scripts/fetch_nba_team_game_results.py --season {season_year}")
+    s3 = boto3.client('s3')
     
-    # Load data
-    scores = pd.read_csv(scores_path)
+    # List all CSV files for the season
+    print(f"   📂 Looking for player game logs: s3://{S3_BUCKET_NBA_API}/{s3_prefix}")
+    response = s3.list_objects_v2(Bucket=S3_BUCKET_NBA_API, Prefix=s3_prefix)
     
-    # Convert game date
-    scores['GAME_DATE'] = pd.to_datetime(scores['GAME_DATE'])
+    if 'Contents' not in response:
+        raise ValueError(f"No player game logs found in S3: s3://{S3_BUCKET_NBA_API}/{s3_prefix}")
     
-    # Keep only what we need
-    scores = scores[['TEAM_NAME', 'GAME_DATE', 'MATCHUP', 'WL', 'PTS']].copy()
-    scores.columns = ['team', 'game_date', 'matchup', 'win_loss', 'points']
+    all_dfs = []
+    file_count = 0
     
-    return scores
+    for obj in response.get('Contents', []):
+        key = obj['Key']
+        
+        # Skip non-CSV files
+        if not key.endswith('.csv'):
+            continue
+        
+        # Read CSV from S3
+        try:
+            obj_response = s3.get_object(Bucket=S3_BUCKET_NBA_API, Key=key)
+            df = pd.read_csv(BytesIO(obj_response['Body'].read()))
+            all_dfs.append(df)
+            file_count += 1
+        except Exception as e:
+            print(f"⚠️  Error reading {key}: {e}")
+    
+    if not all_dfs:
+        raise ValueError(f"No valid player game logs found in S3 for season {season}")
+    
+    print(f"   ✅ Loaded {file_count} daily player game log files")
+    
+    # Combine all dataframes
+    results_df = pd.concat(all_dfs, ignore_index=True)
+    
+    # Convert game date to datetime
+    results_df['GAME_DATE'] = pd.to_datetime(results_df['GAME_DATE'])
+    
+    # Aggregate player stats to team level
+    print(f"   🔄 Aggregating {len(results_df):,} player game logs to team level...")
+    team_games = results_df.groupby(['GAME_DATE', 'TEAM_NAME', 'MATCHUP', 'WL']).agg({
+        'PTS': 'sum'
+    }).reset_index()
+    
+    # Keep only what we need (TEAM_NAME already has full names from NBA API)
+    team_games = team_games[['TEAM_NAME', 'GAME_DATE', 'MATCHUP', 'WL', 'PTS']].copy()
+    team_games.columns = ['team', 'game_date', 'matchup', 'win_loss', 'points']
+    
+    return team_games
 
 
 def calculate_ats_records(lines_df, scores_df):
@@ -414,18 +457,17 @@ def summarize_ats_records(ats_df):
     return summary_df
 
 
-def print_ats_rankings(summary_df, season_year):
+def print_ats_rankings(summary_df, season):
     """
     Print formatted ATS rankings
     
     Args:
         summary_df: DataFrame with team ATS summaries
-        season_year: Year season starts
+        season: Season string (e.g., '2025-26')
     """
-    season_str = get_season_string(season_year)
     
     print(f"\n{'='*180}")
-    print(f"🏀 NBA {season_str} SEASON - AGAINST THE SPREAD (ATS) RANKINGS")
+    print(f"🏀 NBA {season} SEASON - AGAINST THE SPREAD (ATS) RANKINGS")
     print(f"{'='*180}")
     print(f"As of: {datetime.now().strftime('%Y-%m-%d %I:%M %p ET')}")
     print(f"{'='*180}\n")
@@ -496,30 +538,65 @@ def print_ats_rankings(summary_df, season_year):
 
 
 
-def save_results(summary_df, ats_df, season_year):
+def save_results(summary_df, ats_df, season):
     """
-    Save ATS analysis results to CSV
+    Save ATS analysis results to S3 (with fallback to ~/Downloads/tmp)
     
     Args:
         summary_df: Team-level ATS summaries
         ats_df: Game-level ATS results
-        season_year: Year season starts
+        season: Season string (e.g., '2025-26')
     """
-    season_str = get_season_string(season_year).replace('-', '_')
-    output_dir = Path(__file__).parent.parent / 'data' / '04_output' / 'nba_ats_analysis'
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
+    season_str = season_to_underscore(season)
     date_str = datetime.now().strftime('%Y%m%d')
     
-    # Save team summaries
-    summary_path = output_dir / f'nba_ats_rankings_{season_str}_{date_str}.csv'
-    summary_df.to_csv(summary_path, index=False)
-    print(f"\n💾 Saved team ATS summaries: {summary_path}")
+    # S3 keys
+    s3_summary_key = f'data/04_output/ats_analysis/nba_ats_rankings_{season_str}_{date_str}.csv'
+    s3_games_key = f'data/04_output/ats_analysis/nba_ats_game_results_{season_str}_{date_str}.csv'
     
-    # Save game-level results
-    games_path = output_dir / f'nba_ats_game_results_{season_str}_{date_str}.csv'
-    ats_df.to_csv(games_path, index=False)
-    print(f"💾 Saved game-level ATS results: {games_path}")
+    s3 = boto3.client('s3')
+    
+    # Try to save to S3
+    try:
+        from io import StringIO
+        
+        # Save team summaries to S3
+        summary_buffer = StringIO()
+        summary_df.to_csv(summary_buffer, index=False)
+        s3.put_object(
+            Bucket=S3_BUCKET_BETTING,
+            Key=s3_summary_key,
+            Body=summary_buffer.getvalue()
+        )
+        print(f"\n✅ Saved team ATS summaries: s3://{S3_BUCKET_BETTING}/{s3_summary_key}")
+        
+        # Save game-level results to S3
+        games_buffer = StringIO()
+        ats_df.to_csv(games_buffer, index=False)
+        s3.put_object(
+            Bucket=S3_BUCKET_BETTING,
+            Key=s3_games_key,
+            Body=games_buffer.getvalue()
+        )
+        print(f"✅ Saved game-level ATS results: s3://{S3_BUCKET_BETTING}/{s3_games_key}")
+        
+    except Exception as e:
+        # Fallback to local save
+        print(f"\n⚠️  S3 save failed: {e}")
+        print(f"   Falling back to local save...\n")
+        
+        fallback_dir = Path.home() / 'Downloads' / 'tmp'
+        fallback_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save team summaries locally
+        summary_path = fallback_dir / f'nba_ats_rankings_{season_str}_{date_str}.csv'
+        summary_df.to_csv(summary_path, index=False)
+        print(f"💾 Saved team ATS summaries: {summary_path}")
+        
+        # Save game-level results locally
+        games_path = fallback_dir / f'nba_ats_game_results_{season_str}_{date_str}.csv'
+        ats_df.to_csv(games_path, index=False)
+        print(f"💾 Saved game-level ATS results: {games_path}")
 
 
 
@@ -561,13 +638,13 @@ def get_team_logos():
     return logo_map
 
 
-def create_ats_visualization(summary_df, season_year):
+def create_ats_visualization(summary_df, season):
     """
     Create publication-quality ATS table using R's gt package
     
     Args:
         summary_df: DataFrame with team ATS summaries
-        season_year: Year season starts
+        season: Season string (e.g., '2025-26')
     """
     try:
         import rpy2.robjects as ro
@@ -584,7 +661,6 @@ def create_ats_visualization(summary_df, season_year):
         print(f"   Also ensure R is installed: brew install r")
         return
     
-    season_str = get_season_string(season_year)
     logo_map = get_team_logos()
     
     # Prepare display dataframe
@@ -672,7 +748,7 @@ def create_ats_visualization(summary_df, season_year):
     # Output path
     output_dir = Path(__file__).parent.parent / 'content/viz/nba'
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f'nba_ats_rankings_{season_str.replace("-", "_")}.png'
+    output_path = output_dir / f'nba_ats_rankings_{season_to_underscore(season)}.png'
     
     print(f"   💾 Output: {output_path.name}\n")
     
@@ -714,7 +790,7 @@ def create_ats_visualization(summary_df, season_year):
       
       # Title
       tab_header(
-        title = md("**NBA {season_str} Against The Spread (ATS) Rankings**"),
+        title = md("**NBA {season} Against The Spread (ATS) Rankings**"),
         subtitle = md("**Game Margin** = avg margin of victory/defeat | **Spread Margin** = avg pts beat/miss spread by")
       ) %>%
       
@@ -951,13 +1027,22 @@ def main():
     """Main analysis pipeline"""
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='Analyze NBA team performance against the spread (ATS)'
+        description='Analyze NBA team performance against the spread (ATS)',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Use current season (auto-detected)
+  python analysis/analyze_nba_ats_records.py --plot
+  
+  # Specify season in YYYY-YY format
+  python analysis/analyze_nba_ats_records.py --season 2025-26 --plot
+        """
     )
     parser.add_argument(
         '--season',
-        type=int,
-        default=2025,
-        help='Season start year (e.g., 2025 for 2025-26 season). Default: 2025'
+        type=str,
+        default=None,
+        help="Season to analyze in 'YYYY-YY' format (e.g., '2025-26'). Default: current season"
     )
     parser.add_argument(
         '--plot',
@@ -966,21 +1051,26 @@ def main():
     )
     
     args = parser.parse_args()
-    season_year = args.season
-    season_str = get_season_string(season_year)
+    
+    # Get season (use current if not specified)
+    if args.season is None:
+        season = get_current_nba_season()
+        print(f"ℹ️  No season specified, using current season: {season}")
+    else:
+        season = validate_season_format(args.season)
     
     print(f"\n{'='*100}")
-    print(f"🏀 LOADING NBA {season_str} BETTING LINES AND RESULTS")
+    print(f"🏀 LOADING NBA {season} BETTING LINES AND RESULTS")
     print(f"{'='*100}")
     
     # Load betting lines from S3
     print("\n📥 Loading betting lines from S3...")
-    lines_df = load_all_game_lines(season_year)
+    lines_df = load_all_game_lines(season)
     print(f"✅ Loaded {len(lines_df):,} betting lines from {lines_df['game_id'].nunique()} games")
     
     # Load game results
     print("\n📥 Loading game results from nba-api...")
-    scores_df = get_nba_scores(season_year)
+    scores_df = get_nba_scores(season)
     print(f"✅ Loaded results for {len(scores_df):,} team-games")
     
     # Calculate ATS records
@@ -993,17 +1083,17 @@ def main():
     summary_df = summarize_ats_records(ats_df)
     
     # Print rankings
-    print_ats_rankings(summary_df, season_year)
+    print_ats_rankings(summary_df, season)
     
     # Save results
-    save_results(summary_df, ats_df, season_year)
+    save_results(summary_df, ats_df, season)
     
     # Create visualization if requested
     if args.plot:
         print(f"\n{'='*100}")
         print(f"🎨 CREATING R VISUALIZATION")
         print(f"{'='*100}\n")
-        create_ats_visualization(summary_df, season_year)
+        create_ats_visualization(summary_df, season)
     
     print(f"\n{'='*100}")
     print(f"✅ ANALYSIS COMPLETE")
