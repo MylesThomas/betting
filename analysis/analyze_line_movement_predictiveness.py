@@ -1,5 +1,5 @@
 """
-NFL/NBA Line Movement vs Game Outcome Analysis
+NBA/NFL/NCAAF/NCAAB Line Movement vs Game Outcome Analysis
 
 Analyzes whether line movements of specific magnitudes (2, 3, 4, 5 points) are 
 predictive of game outcomes. Tests the hypothesis: "Does betting with line 
@@ -37,30 +37,41 @@ But does the data actually support this?
 Usage:
     # First run (fetches from S3 and builds cache):
     cd betting
-    python analysis/analyze_line_movement_predictiveness.py
+    python analysis/analyze_line_movement_predictiveness.py --league nba
+    python analysis/analyze_line_movement_predictiveness.py --league nfl
+    python analysis/analyze_line_movement_predictiveness.py --league ncaaf
+    python analysis/analyze_line_movement_predictiveness.py --league ncaab
     
     # Subsequent runs (uses cached parquet files - 50x faster!):
-    python analysis/analyze_line_movement_predictiveness.py --use-cache
+    python analysis/analyze_line_movement_predictiveness.py --league nba --use-cache
+    python analysis/analyze_line_movement_predictiveness.py --league nfl --use-cache
     
     # Log individual game details (sorted by date, start of season → now):
-    python analysis/analyze_line_movement_predictiveness.py --use-cache --log-individual-games
+    python analysis/analyze_line_movement_predictiveness.py --league nba --use-cache --log-individual-games
+    
+    # With custom steam threshold:
+    python analysis/analyze_line_movement_predictiveness.py --league nba --use-cache --steam-threshold 2.0 --summary
     
     # In notebook (returns dataframes):
     %run analysis/analyze_line_movement_predictiveness.py
     # Access: df, cover_analysis, movements_all, game_results
 
 Output Files (saved to ~/Downloads/tmp/):
-    - line_movement_cover_analysis_NBA_YYYYMMDD.csv  # Cover analysis with all bookmaker combos
-    - line_movements_all_NBA_YYYYMMDD.csv           # All movements (opening → closing)
+    - line_movement_cover_analysis_LEAGUE_YYYYMMDD.csv  # Cover analysis with all bookmaker combos
+    - line_movements_all_LEAGUE_YYYYMMDD.csv           # All movements (opening → closing)
     - Cache files (parquet):
-      • snapshots_nba_YYYYMMDD.parquet
-      • movements_nba_YYYYMMDD.parquet
-      • hourly_steam_nba_YYYYMMDD.parquet
-      • game_results_nba_YYYYMMDD.parquet
+      • snapshots_LEAGUE_YYYYMMDD.parquet
+      • movements_LEAGUE_YYYYMMDD.parquet
+      • hourly_steam_LEAGUE_YYYYMMDD.parquet
+      • game_results_LEAGUE_YYYYMMDD.parquet
 
 Data Sources:
     - Line movements: S3 betting-line-movement-snapshots (hourly snapshots)
-    - Game results: S3 nba-api-mt (player game logs aggregated to team level)
+    - Game results: League-specific S3 buckets:
+      • NBA: nba-api-mt/player_game_logs/ (from NBA API)
+      • NFL: nfl-betting-mt/data/01_input/historical_game_results/ (from ESPN API)
+      • NCAAF: ncaaf-betting-mt/data/01_input/historical_game_results/ (from ESPN API)
+      • NCAAB: ncaab-betting-mt/data/01_input/historical_game_results/ (from ESPN API)
     - Opening line: First hourly snapshot per game/bookmaker
     - Closing line: Last hourly snapshot before game start
 
@@ -68,7 +79,7 @@ Expected Insights:
     - Are 2pt movements meaningful or just market noise?
     - At what threshold does line movement become predictive?
     - Is there a difference between favorite vs underdog line movement?
-    - Does sport (NFL vs NBA) affect the predictiveness?
+    - Does league (NBA vs NFL vs NCAAF vs NCAAB) affect the predictiveness?
 
 Author: Thomas Myles
 Date: 2026-01-13
@@ -78,7 +89,7 @@ the line movement or not"
 
     
 Cache Location:
-    ~/Downloads/tmp/snapshots_nba_20260113.parquet (and related files)
+    ~/Downloads/tmp/snapshots_LEAGUE_YYYYMMDD.parquet (and related files)
     Cache is dated, automatically creates new cache each day
 """
 
@@ -116,13 +127,16 @@ CONFIG = get_config()
 S3_BUCKET_SNAPSHOTS = 'betting-line-movement-snapshots'  # Line movement tracking snapshots
 OUTPUT_DIR = Path.home() / 'Downloads' / 'tmp'
 
-# Team name normalization (Odds API → NBA API)
+# Team name normalization (Odds API → League API)
 TEAM_NAME_MAP = {
     'Los Angeles Clippers': 'LA Clippers',
 }
 
+# Steam analysis thresholds (in points)
+STEAM_THRESHOLDS = [1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0]
+
 def normalize_team_name(team_name):
-    """Normalize team names from Odds API to match NBA API format."""
+    """Normalize team names from Odds API to match league API format."""
     return TEAM_NAME_MAP.get(team_name, team_name)
 
 
@@ -133,7 +147,7 @@ def load_all_line_movement_snapshots(sport='nba'):
     These are the hourly snapshots created by track_game_line_movements.py
     
     Args:
-        sport: 'nba' or 'nfl' (just the short name)
+        sport: 'nba', 'nfl', 'ncaaf', or 'ncaab' (just the short name)
     
     Returns:
         DataFrame with all snapshots including fetched_at timestamp
@@ -358,8 +372,11 @@ def calculate_consensus_hourly_steam(snapshots_df):
     steam_df = pd.DataFrame(results)
     
     print(f"✅ Calculated hourly steam for {len(steam_df)} games")
-    print(f"   Avg max 1-hour steam: {steam_df['max_1hr_steam_magnitude'].mean():.2f} pts")
-    print(f"   Max 1-hour steam seen: {steam_df['max_1hr_steam_magnitude'].max():.1f} pts")
+    if len(steam_df) > 0:
+        print(f"   Avg max 1-hour steam: {steam_df['max_1hr_steam_magnitude'].mean():.2f} pts")
+        print(f"   Max 1-hour steam seen: {steam_df['max_1hr_steam_magnitude'].max():.1f} pts")
+    else:
+        print(f"   ⚠️  No games with multiple snapshots - cannot calculate hourly steam")
     
     return steam_df
 
@@ -469,18 +486,34 @@ def calculate_line_movements(snapshots_df):
     return movements
 
 
-def load_nba_game_results():
+def load_game_results(league='nba'):
     """
-    Load NBA game results from S3 player game logs and aggregate to team level.
+    Load NBA/NFL/NCAAF/NCAAB game results from S3.
+    All leagues now use ESPN API game-level format.
+    
+    Args:
+        league: 'nba', 'nfl', 'ncaaf', or 'ncaab'
     
     Returns:
         DataFrame with team-level game results (team scores)
     """
-    print("\n📥 Loading NBA game results from S3...")
+    print(f"\n📥 Loading {league.upper()} game results from S3...")
     
-    # Load from nba-api-mt bucket (player game logs, aggregate to team)
-    bucket = 'nba-api-mt'
-    s3_prefix = 'player_game_logs/2025-26/'
+    # All leagues now use ESPN API format from {sport}-betting-mt buckets
+    if league == 'nba':
+        bucket = 'nba-betting-mt'
+        s3_prefix = 'data/01_input/historical_game_results/'
+    elif league == 'nfl':
+        bucket = 'nfl-betting-mt'
+        s3_prefix = 'data/01_input/historical_game_results/'
+    elif league == 'ncaaf':
+        bucket = 'ncaaf-betting-mt'
+        s3_prefix = 'data/01_input/historical_game_results/'
+    elif league == 'ncaab':
+        bucket = 'ncaab-betting-mt'
+        s3_prefix = 'data/01_input/historical_game_results/'
+    else:
+        raise ValueError(f"Unsupported league: {league}")
     
     s3 = boto3.client('s3')
     
@@ -505,6 +538,11 @@ def load_nba_game_results():
         try:
             response_obj = s3.get_object(Bucket=bucket, Key=key)
             df = pd.read_csv(BytesIO(response_obj['Body'].read()))
+            
+            # Skip empty files (headers only)
+            if len(df) == 0:
+                continue
+                
             all_dfs.append(df)
         except Exception as e:
             print(f"⚠️  Error reading {key}: {e}")
@@ -513,16 +551,25 @@ def load_nba_game_results():
         print(f"❌ No valid game result files found")
         return None
     
-    # Combine all player game logs
+    # Combine all data
     df = pd.concat(all_dfs, ignore_index=True)
     df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE'])
     
-    # Aggregate to team level (sum points for each team per game)
-    team_games = df.groupby(['GAME_DATE', 'TEAM_NAME', 'MATCHUP', 'WL']).agg({
-        'PTS': 'sum'  # Sum all player points for the team
-    }).reset_index()
+    # All leagues use ESPN API game-level format
+    # Convert to team-level (2 rows per game)
+    home_rows = df[['GAME_DATE', 'HOME_TEAM', 'HOME_SCORE', 'HOME_WL', 'HOME_ABBR', 'AWAY_ABBR']].copy()
+    home_rows.columns = ['GAME_DATE', 'TEAM_NAME', 'PTS', 'WL', 'TEAM_ABBR', 'OPP_ABBR']
+    home_rows['MATCHUP'] = home_rows['TEAM_ABBR'] + ' vs. ' + home_rows['OPP_ABBR']
     
-    print(f"✅ Loaded {len(team_games):,} team-game records from player logs")
+    away_rows = df[['GAME_DATE', 'AWAY_TEAM', 'AWAY_SCORE', 'AWAY_WL', 'AWAY_ABBR', 'HOME_ABBR']].copy()
+    away_rows.columns = ['GAME_DATE', 'TEAM_NAME', 'PTS', 'WL', 'TEAM_ABBR', 'OPP_ABBR']
+    away_rows['MATCHUP'] = away_rows['TEAM_ABBR'] + ' @ ' + away_rows['OPP_ABBR']
+    
+    team_games = pd.concat([home_rows, away_rows], ignore_index=True)
+    team_games = team_games[['GAME_DATE', 'TEAM_NAME', 'PTS', 'WL', 'MATCHUP']].copy()
+    team_games = team_games.sort_values(['GAME_DATE', 'TEAM_NAME']).reset_index(drop=True)
+    
+    print(f"✅ Loaded {len(team_games):,} team-game records ({len(df):,} games)")
     print(f"   Date range: {team_games['GAME_DATE'].min()} to {team_games['GAME_DATE'].max()}")
     
     return team_games
@@ -635,9 +682,9 @@ def add_derived_features(df):
     
     # Opening spread size buckets (use absolute value of favorite's spread)
     df['opening_spread_size'] = df['opening_favorite_spread'].abs()
-    df['opening_spread_bucket'] = pd.cut(
+    df['spread_bucket'] = pd.cut(
         df['opening_spread_size'], 
-        bins=[0, 2, 5, 8, 30],
+        bins=[0, 3, 6, 10, 30],
         labels=['close_game', 'small_spread', 'medium_spread', 'blowout']
     )
     
@@ -657,12 +704,15 @@ def add_derived_features(df):
     return df
 
 
-def analyze_favorite_underdog_splits(df):
+def analyze_favorite_underdog_splits(df, min_threshold=2.0):
     """Analyze cover rates split by favorite vs underdog movement."""
     print("\n📊 FAVORITE vs UNDERDOG STEAM ANALYSIS")
     print("=" * 80)
     
-    for threshold in [2.0, 3.0, 4.0, 5.0]:
+    # Generate thresholds starting from min_threshold
+    thresholds = [t for t in STEAM_THRESHOLDS if t >= min_threshold]
+    
+    for threshold in thresholds:
         subset = df[df['steam_magnitude'] >= threshold]
         if len(subset) == 0:
             continue
@@ -674,7 +724,7 @@ def analyze_favorite_underdog_splits(df):
         if len(fav_subset) > 0:
             wins = int(fav_subset['steam_team_covered'].sum())
             losses = int((~fav_subset['steam_team_covered']).sum())
-            ties = 0  # NBA has no ties
+            ties = 0  # Ties handled separately if needed
             fav_rate = fav_subset['steam_team_covered'].mean() * 100
             fav_margin = fav_subset['steam_team_cover_margin'].mean()
             print(f"  OPENING FAVORITE: {fav_rate:.1f}% cover ({wins}-{losses}-{ties}) | {fav_margin:+.1f} avg margin | N={len(fav_subset)}")
@@ -684,7 +734,7 @@ def analyze_favorite_underdog_splits(df):
         if len(dog_subset) > 0:
             wins = int(dog_subset['steam_team_covered'].sum())
             losses = int((~dog_subset['steam_team_covered']).sum())
-            ties = 0
+            ties = 0  # Ties handled separately if needed
             dog_rate = dog_subset['steam_team_covered'].mean() * 100
             dog_margin = dog_subset['steam_team_cover_margin'].mean()
             print(f"  OPENING UNDERDOG: {dog_rate:.1f}% cover ({wins}-{losses}-{ties}) | {dog_margin:+.1f} avg margin | N={len(dog_subset)}")
@@ -700,20 +750,29 @@ def analyze_line_crossing(df):
     
     print(f"\nGames where line CROSSED ZERO: {len(crossed)}")
     if len(crossed) > 0:
-        cross_rate = crossed['steam_team_covered'].mean() * 100
-        cross_margin = crossed['steam_team_cover_margin'].mean()
+        # Steam team performance
+        cross_rate_steam = crossed['steam_team_covered'].mean() * 100
+        cross_margin_steam = crossed['steam_team_cover_margin'].mean()
+        
+        # Opening favorite performance
+        cross_rate_fav = crossed['opening_favorite_covered'].mean() * 100
+        cross_margin_fav = crossed['opening_favorite_cover_margin'].mean()
+        
         avg_movement = crossed['steam_magnitude'].mean()
-        print(f"  Cover rate (steam team): {cross_rate:.1f}%")
-        print(f"  Avg margin: {cross_margin:+.1f}")
+        
+        print(f"  Cover rate (STEAM TEAM): {cross_rate_steam:.1f}%")
+        print(f"  Cover rate (OPENING FAVORITE): {cross_rate_fav:.1f}%")
         print(f"  Avg steam: {avg_movement:.1f} pts")
         
-        # Show examples
+        # Show examples with BOTH perspectives
         print(f"\n  Examples (top 3 by steam):")
         for _, row in crossed.nlargest(3, 'steam_magnitude').iterrows():
-            print(f"    {row['opening_favorite']} (open fav) vs {row['opening_underdog']} (open dog)")
+            game_date = row['game_date'].strftime('%Y-%m-%d') if hasattr(row['game_date'], 'strftime') else str(row['game_date'])
+            print(f"    [{game_date}] {row['opening_favorite']} (open fav) vs {row['opening_underdog']} (open dog)")
             print(f"      Open: {row['opening_favorite_spread']:+.1f} → Close: {row['closing_favorite_spread']:+.1f}")
             print(f"      Steam: {row['steam_direction']} got {row['steam_magnitude']:.1f} pts")
-            print(f"      Covered: {row['steam_team_covered']} | Margin: {row['steam_team_cover_margin']:+.1f}")
+            print(f"      OPENING FAV covered: {row['opening_favorite_covered']} (margin: {row['opening_favorite_cover_margin']:+.1f})")
+            print(f"      STEAM TEAM covered: {row['steam_team_covered']} (margin: {row['steam_team_cover_margin']:+.1f})")
     
     print(f"\nGames where line DID NOT CROSS: {len(not_crossed)}")
     if len(not_crossed) > 0:
@@ -723,31 +782,6 @@ def analyze_line_crossing(df):
         print(f"  Avg margin: {no_cross_margin:+.1f}")
 
 
-def analyze_home_away_splits(df):
-    """Analyze cover rates split by home vs away."""
-    print("\n🏠 HOME vs AWAY MOVEMENT ANALYSIS")
-    print("=" * 80)
-    
-    for threshold in [2.0, 3.0, 4.0, 5.0]:
-        subset = df[df['steam_magnitude'] >= threshold]
-        if len(subset) == 0:
-            continue
-            
-        print(f"\n{threshold}+ Point Movements:")
-        
-        # Home team
-        home_subset = subset[subset['favorable_side'] == 'home']
-        if len(home_subset) > 0:
-            home_rate = home_subset['covered'].mean() * 100
-            home_margin = home_subset['cover_margin'].mean()
-            print(f"  HOME team: {home_rate:.1f}% cover | {home_margin:+.1f} avg margin | N={len(home_subset)}")
-        
-        # Away team
-        away_subset = subset[subset['favorable_side'] == 'away']
-        if len(away_subset) > 0:
-            away_rate = away_subset['covered'].mean() * 100
-            away_margin = away_subset['cover_margin'].mean()
-            print(f"  AWAY team: {away_rate:.1f}% cover | {away_margin:+.1f} avg margin | N={len(away_subset)}")
 
 
 def analyze_movement_speed(df):
@@ -779,14 +813,14 @@ def analyze_spread_context(df):
         print("\n3+ Point Steam by Opening Spread:")
         
         bucket_definitions = {
-            'close_game': ('[0-2 pts]', 'CLOSE GAME'),
-            'small_spread': ('[2-5 pts]', 'SMALL SPREAD'),
-            'medium_spread': ('[5-8 pts]', 'MEDIUM SPREAD'),
-            'blowout': ('[8+ pts]', 'BLOWOUT')
+            'close_game': ('[0-3 pts]', 'CLOSE GAME'),
+            'small_spread': ('[3-6 pts]', 'SMALL SPREAD'),
+            'medium_spread': ('[6-10 pts]', 'MEDIUM SPREAD'),
+            'blowout': ('[10+ pts]', 'BLOWOUT')
         }
         
         for bucket_key, (range_label, name_label) in bucket_definitions.items():
-            bucket_subset = subset[(subset['opening_spread_bucket'] == bucket_key) & (subset['steam_team_covered'].notna())]
+            bucket_subset = subset[(subset['spread_bucket'] == bucket_key) & (subset['steam_team_covered'].notna())]
             if len(bucket_subset) > 0:
                 wins = int(bucket_subset['steam_team_covered'].sum())
                 losses = int((~bucket_subset['steam_team_covered']).sum())
@@ -818,7 +852,7 @@ def analyze_hourly_steam(df):
     
     # Analyze by 1-hour steam magnitude
     print("\n📊 Cover Rate by Max 1-Hour Steam:")
-    for threshold in [1.0, 1.5, 2.0, 2.5, 3.0]:
+    for threshold in STEAM_THRESHOLDS:
         subset = with_steam[with_steam['max_1hr_steam_magnitude'] >= threshold]
         if len(subset) >= 3:
             cover_rate = subset['steam_team_covered'].mean() * 100
@@ -836,23 +870,26 @@ def analyze_hourly_steam(df):
             print(f"  Toward {direction.upper()}: {cover_rate:.1f}% cover | {avg_margin:+.1f} avg margin | {avg_steam:.2f} avg 1hr steam | N={len(subset)}")
 
 
-def analyze_fade_strategy(df):
+def analyze_fade_strategy(df, min_threshold=2.0):
     """Analyze what happens if you FADE (bet against) line movements."""
     print("\n🔄 FADE STRATEGY ANALYSIS (Bet AGAINST line movement)")
     print("=" * 80)
     
+    # Generate thresholds starting from min_threshold
+    thresholds = [t for t in STEAM_THRESHOLDS if t >= min_threshold]
+    
     print("\nFading Steam (Betting AGAINST the steam):")
-    for threshold in [2.0, 3.0, 4.0, 5.0]:
+    for threshold in thresholds:
         subset = df[(df['steam_magnitude'] >= threshold) & (df['fade_covered'].notna())]
         if len(subset) > 0:
             wins = int(subset['fade_covered'].sum())
-            losses = int((~subset['fade_covered']).sum())
+            losses = len(subset) - wins
             fade_rate = subset['fade_covered'].mean() * 100
             fade_margin = subset['fade_margin'].mean()
             print(f"  {threshold}+ pts: {fade_rate:.1f}% cover ({wins}-{losses}-0) | {fade_margin:+.1f} avg margin | N={len(subset)}")
 
 
-def calculate_cover_rates(movements_df, game_results_df, movement_threshold=4.0):
+def calculate_cover_rates(movements_df, game_results_df, movement_threshold=4.0, print_stats=True):
     """
     Calculate cover rates for teams that received favorable line movement.
     
@@ -860,6 +897,7 @@ def calculate_cover_rates(movements_df, game_results_df, movement_threshold=4.0)
         movements_df: DataFrame with line movements
         game_results_df: DataFrame with game results
         movement_threshold: Threshold for "large" movement (default 4.0 points)
+        print_stats: Whether to print statistics (default True)
     
     Returns:
         DataFrame with cover analysis
@@ -886,7 +924,7 @@ def calculate_cover_rates(movements_df, game_results_df, movement_threshold=4.0)
     
     for _, row in large_moves.iterrows():
         game_time_utc = pd.to_datetime(row['game_time'])
-        # Convert to ET timezone for date matching (NBA games use ET dates)
+        # Convert to ET timezone for date matching (games use ET dates)
         game_time_et = game_time_utc.tz_convert(ZoneInfo('America/New_York'))
         game_time = game_time_et  # Use ET time for display
         away_team = row['away_team']
@@ -930,7 +968,7 @@ def calculate_cover_rates(movements_df, game_results_df, movement_threshold=4.0)
         # Find game result
         game_date = game_time.date()
         
-        # Normalize team names to match NBA API format
+        # Normalize team names to match league API format
         away_team_normalized = normalize_team_name(away_team)
         home_team_normalized = normalize_team_name(home_team)
         
@@ -1031,41 +1069,48 @@ def calculate_cover_rates(movements_df, game_results_df, movement_threshold=4.0)
     
     results_df = pd.DataFrame(results)
     
-    # Show diagnostic info
-    print(f"\n4️⃣  Results matching:")
-    print(f"    Games with {movement_threshold}+ pt movements: {len(large_moves)} combos ({large_moves['game_id'].nunique()} unique games)")
-    print(f"    Games WITHOUT results: {games_without_results} combos")
-    print(f"    Games WITH results: {len(results_df)} combos ({results_df['game_id'].nunique() if not results_df.empty else 0} unique games)")
-    
     if results_df.empty:
-        print(f"❌ No completed games with {movement_threshold}+ point movements")
+        if print_stats:
+            print(f"❌ No completed games with {movement_threshold}+ point movements")
         return None
     
-    # Calculate cover rate (for team that got steam)
-    cover_rate = results_df['steam_team_covered'].mean()
-    total_games = len(results_df)
-    covered_count = results_df['steam_team_covered'].sum()
-    
-    # Calculate mean cover margin (positive = covered by X, negative = missed by X)
-    mean_margin = results_df['steam_team_cover_margin'].mean()
-    
-    print(f"\n✅ Cover Rate Analysis (Team That Got Steam):")
-    print(f"   Games analyzed: {total_games}")
-    print(f"   Covered: {covered_count}")
-    print(f"   Did not cover: {total_games - covered_count}")
-    print(f"   Cover rate: {cover_rate*100:.1f}%")
-    print(f"   Mean cover margin: {mean_margin:+.1f} pts (avg miss by {abs(mean_margin):.1f} pts)")
-    
-    # Break down by steam magnitude
-    print(f"\n📈 Cover Rate by Steam Size:")
-    for threshold in [2.0, 3.0, 4.0, 5.0]:
-        subset = results_df[(results_df['steam_magnitude'] >= threshold) & (results_df['steam_team_covered'].notna())]
-        if len(subset) > 0:
-            wins = int(subset['steam_team_covered'].sum())
-            losses = int((~subset['steam_team_covered']).sum())
-            subset_rate = subset['steam_team_covered'].mean()
-            subset_margin = subset['steam_team_cover_margin'].mean()
-            print(f"   {threshold}+ points: {subset_rate*100:.1f}% ({wins}-{losses}-0) | Avg margin: {subset_margin:+.1f} pts | N={len(subset)}")
+    if print_stats:
+        # Show diagnostic info
+        print(f"\n4️⃣  Results matching:")
+        print(f"    Games with {movement_threshold}+ pt movements: {len(large_moves)} combos ({large_moves['game_id'].nunique()} unique games)")
+        print(f"    Games WITHOUT results: {games_without_results} combos")
+        print(f"    Games WITH results: {len(results_df)} combos ({results_df['game_id'].nunique() if not results_df.empty else 0} unique games)")
+        
+        # Calculate cover rate (for team that got steam)
+        cover_rate = results_df['steam_team_covered'].mean()
+        total_games = len(results_df)
+        covered_count = results_df['steam_team_covered'].sum()
+        
+        # Calculate mean cover margin (positive = covered by X, negative = missed by X)
+        mean_margin = results_df['steam_team_cover_margin'].mean()
+        
+        print(f"\n✅ Cover Rate Analysis (Team That Got Steam):")
+        print(f"   Games analyzed: {total_games}")
+        print(f"   Covered: {covered_count}")
+        print(f"   Did not cover: {total_games - covered_count}")
+        print(f"   Cover rate: {cover_rate*100:.1f}%")
+        print(f"   Mean cover margin: {mean_margin:+.1f} pts (avg miss by {abs(mean_margin):.1f} pts)")
+        
+        # Break down by steam magnitude
+        # Generate thresholds starting from movement_threshold
+        thresholds = [t for t in STEAM_THRESHOLDS if t >= movement_threshold]
+        
+        print(f"\n📈 Cover Rate by Steam Size:")
+        for threshold in thresholds:
+            subset = results_df[(results_df['steam_magnitude'] >= threshold) & (results_df['steam_team_covered'].notna())]
+            if len(subset) > 0:
+                # Count True values explicitly (handles object dtype with mixed True/np.True_/False)
+                wins = int((subset['steam_team_covered'] == True).sum())
+                losses = int((subset['steam_team_covered'] == False).sum())
+                total = wins + losses
+                subset_rate = (wins / total * 100) if total > 0 else 0
+                subset_margin = subset['steam_team_cover_margin'].mean()
+                print(f"   {threshold}+ points: {subset_rate:.1f}% ({wins}-{losses}-0) | Avg margin: {subset_margin:+.1f} pts | N={len(subset)}")
     
     return results_df
 
@@ -1089,11 +1134,20 @@ def calculate_roi_at_110(wins, losses):
     return net_profit, roi_percent
 
 
-def log_individual_games(df, show_summary=False, steam_threshold=1.0):
+def log_individual_games(df, show_summary=False, steam_threshold=1.0, league='nba'):
     """Log detailed breakdown for each individual game."""
     print("\n" + "=" * 80)
     print("📋 INDIVIDUAL GAME BREAKDOWN (Sorted by Date)")
     print("=" * 80)
+    
+    # League emoji
+    league_emojis = {
+        'nba': '🏀',
+        'nfl': '🏈',
+        'ncaaf': '🏈',
+        'ncaab': '🏀'
+    }
+    league_emoji = league_emojis.get(league, '🏆')
     
     # Sort by date
     df_sorted = df.sort_values('game_date')
@@ -1114,7 +1168,7 @@ def log_individual_games(df, show_summary=False, steam_threshold=1.0):
             steam_closing_spread = 0
         
         # Matchup and lines
-        print(f"🏀 {row['opening_favorite']} (fav) vs {row['opening_underdog']} (dog)")
+        print(f"{league_emoji} {row['opening_favorite']} (fav) vs {row['opening_underdog']} (dog)")
         print(f"📊 Open: {row['opening_favorite_spread']:+.1f} → Close: {row['closing_favorite_spread']:+.1f} | Movement: {row['opening_favorite_movement']:+.1f}")
         print(f"🔥 Steam: {row['steam_direction'].replace('_', ' ').upper()} ({row['steam_magnitude']:.1f} pts) → {steam_team} {steam_closing_spread:+.1f}")
         
@@ -1241,15 +1295,16 @@ def log_individual_games(df, show_summary=False, steam_threshold=1.0):
             print()  # Blank line between thresholds
 
 
-def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, steam_threshold=1.0):
+def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, steam_threshold=1.0, league='nba'):
     """Main analysis"""
     print("=" * 80)
     print("LINE MOVEMENT PREDICTIVENESS ANALYSIS")
     print("=" * 80)
+    print(f"League: {league.upper()}")
     print(f"Steam Threshold: {steam_threshold}+ points")
     
-    # Load NBA hourly snapshots
-    sport = 'nba'
+    # Load hourly snapshots
+    sport = league.lower()
     today = datetime.now().strftime('%Y%m%d')
     
     # Cache file paths
@@ -1279,7 +1334,7 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
         movements_df = calculate_line_movements(snapshots_df)
         
         # Load game results
-        game_results_df = load_nba_game_results()
+        game_results_df = load_game_results(league=sport)
         
         # Save to cache
         print(f"\n💾 Saving to cache for future runs...")
@@ -1299,16 +1354,17 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
     print("\n" + "=" * 80)
     print("🔍 DIAGNOSTIC: DATA FILTERING FUNNEL")
     print("=" * 80)
-    print(f"\n1️⃣  Total game/bookmaker combos in movements_df: {len(movements_df):,}")
+    print(f"\n1️⃣  Line movement data:")
+    print(f"    Total bookmaker combos: {len(movements_df):,}")
     print(f"    Unique games: {movements_df['game_id'].nunique():,}")
     
-    # Show movement distribution
-    print(f"\n2️⃣  Movement magnitude distribution:")
+    # Show movement distribution (deduplicated by max movement per game)
+    print(f"\n2️⃣  Movement magnitude distribution (deduplicated by max movement per game):")
+    movements_deduped = movements_df.sort_values('movement_magnitude', ascending=False).drop_duplicates(subset=['game_id'], keep='first')
     for threshold in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0]:
-        count = (movements_df['movement_magnitude'] >= threshold).sum()
-        pct = count / len(movements_df) * 100
-        unique_games = movements_df[movements_df['movement_magnitude'] >= threshold]['game_id'].nunique()
-        print(f"    {threshold:3.1f}+ pts: {count:4,} combos ({pct:4.1f}%) | {unique_games:3,} unique games")
+        count = (movements_deduped['movement_magnitude'] >= threshold).sum()
+        pct = count / len(movements_deduped) * 100
+        print(f"    {threshold:3.1f}+ pts: {count:3,} games ({pct:5.1f}%)")
     
     # Calculate cover rates for teams with favorable line movement
     if game_results_df is not None:
@@ -1318,20 +1374,28 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
         print(f"    Date range: {game_results_df['GAME_DATE'].min().date()} to {game_results_df['GAME_DATE'].max().date()}")
         print(f"    Unique game dates: {game_results_df['GAME_DATE'].dt.date.nunique():,}")
         
-        # Get ALL games (no threshold filter) for df_raw
+        # Get ALL games (no threshold filter) for df_raw (suppress printing, we'll print after deduping)
         print(f"\n   Calculating cover rates for ALL games (threshold=0.0)...")
-        cover_analysis_df_raw = calculate_cover_rates(movements_df, game_results_df, movement_threshold=0.0)
+        cover_analysis_df_raw = calculate_cover_rates(movements_df, game_results_df, movement_threshold=0.0, print_stats=False)
         
-        # Get filtered version based on steam_threshold
-        cover_analysis_df = calculate_cover_rates(movements_df, game_results_df, movement_threshold=steam_threshold)
+        # Get filtered version based on steam_threshold (suppress printing, we'll print after deduping)
+        print(f"\n   Calculating cover rates for {steam_threshold}+ point movements...")
+        cover_analysis_df = calculate_cover_rates(movements_df, game_results_df, movement_threshold=steam_threshold, print_stats=False)
         
         # Process raw data (same as filtered data)
         if cover_analysis_df_raw is not None:
-            cover_analysis_df_raw = cover_analysis_df_raw.merge(
-                hourly_steam_df[['game_id', 'max_1hr_steam_magnitude', 'max_1hr_steam_direction_team']],
-                on='game_id',
-                how='left'
-            )
+            # Only merge hourly steam if available
+            if len(hourly_steam_df) > 0:
+                cover_analysis_df_raw = cover_analysis_df_raw.merge(
+                    hourly_steam_df[['game_id', 'max_1hr_steam_magnitude', 'max_1hr_steam_direction_team']],
+                    on='game_id',
+                    how='left'
+                )
+            else:
+                # Add empty columns if no hourly steam data
+                cover_analysis_df_raw['max_1hr_steam_magnitude'] = None
+                cover_analysis_df_raw['max_1hr_steam_direction_team'] = None
+                
             cover_analysis_df_raw = add_derived_features(cover_analysis_df_raw)
             cover_analysis_df_raw['max_1hr_steam_direction_fav_dog_at_open'] = cover_analysis_df_raw.apply(
                 lambda row: 'opening_favorite' if row['max_1hr_steam_direction_team'] == row['opening_favorite'] 
@@ -1345,12 +1409,17 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
             )
         
         if cover_analysis_df is not None:
-            # Merge hourly steam data
-            cover_analysis_df = cover_analysis_df.merge(
-                hourly_steam_df[['game_id', 'max_1hr_steam_magnitude', 'max_1hr_steam_direction_team']],
-                on='game_id',
-                how='left'
-            )
+            # Merge hourly steam data (only if available)
+            if len(hourly_steam_df) > 0:
+                cover_analysis_df = cover_analysis_df.merge(
+                    hourly_steam_df[['game_id', 'max_1hr_steam_magnitude', 'max_1hr_steam_direction_team']],
+                    on='game_id',
+                    how='left'
+                )
+            else:
+                # Add empty columns if no hourly steam data
+                cover_analysis_df['max_1hr_steam_magnitude'] = None
+                cover_analysis_df['max_1hr_steam_direction_team'] = None
             
             # Add derived features for deeper analysis
             cover_analysis_df = add_derived_features(cover_analysis_df)
@@ -1392,6 +1461,32 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
             print(f"    Lost:   {len(cover_analysis_df) - len(cover_analysis_df_deduped):,} duplicate game_ids")
             print("=" * 80)
             
+            # Print cover rate analysis for DEDUPLICATED data
+            print(f"\n✅ Cover Rate Analysis (Team That Got Steam) - DEDUPLICATED:")
+            wins = int((cover_analysis_df_deduped['steam_team_covered'] == True).sum())
+            losses = int((cover_analysis_df_deduped['steam_team_covered'] == False).sum())
+            total = wins + losses
+            cover_rate = (wins / total * 100) if total > 0 else 0
+            mean_margin = cover_analysis_df_deduped['steam_team_cover_margin'].mean()
+            print(f"   Games analyzed: {len(cover_analysis_df_deduped)}")
+            print(f"   Covered: {wins}")
+            print(f"   Did not cover: {losses}")
+            print(f"   Cover rate: {cover_rate:.1f}%")
+            print(f"   Mean cover margin: {mean_margin:+.1f} pts")
+            
+            # Break down by steam magnitude for deduplicated data
+            print(f"\n📈 Cover Rate by Steam Size (DEDUPLICATED):")
+            for threshold in [t for t in STEAM_THRESHOLDS if t >= steam_threshold]:
+                subset = cover_analysis_df_deduped[(cover_analysis_df_deduped['steam_magnitude'] >= threshold) & (cover_analysis_df_deduped['steam_team_covered'].notna())]
+                if len(subset) > 0:
+                    wins = int((subset['steam_team_covered'] == True).sum())
+                    losses = int((subset['steam_team_covered'] == False).sum())
+                    total = wins + losses
+                    subset_rate = (wins / total * 100) if total > 0 else 0
+                    subset_margin = subset['steam_team_cover_margin'].mean()
+                    print(f"   {threshold}+ points: {subset_rate:.1f}% ({wins}-{losses}-0) | Avg margin: {subset_margin:+.1f} pts | N={len(subset)}")
+            
+            print(f"\n📋 Sample Games (sorted by movement magnitude):")
             display_cols = ['game_date', 'bookmaker',
                            'opening_favorite', 'opening_underdog',
                            'opening_favorite_spread', 'closing_favorite_spread',
@@ -1402,16 +1497,16 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
             print(cover_analysis_df_deduped[display_cols].head(10).to_string(index=False))
             
             # Run deeper analysis
-            analyze_favorite_underdog_splits(cover_analysis_df_deduped)
+            analyze_favorite_underdog_splits(cover_analysis_df_deduped, min_threshold=steam_threshold)
             analyze_line_crossing(cover_analysis_df_deduped)
             analyze_hourly_steam(cover_analysis_df_deduped)
             analyze_movement_speed(cover_analysis_df_deduped)
             analyze_spread_context(cover_analysis_df_deduped)
-            analyze_fade_strategy(cover_analysis_df_deduped)
+            analyze_fade_strategy(cover_analysis_df_deduped, min_threshold=steam_threshold)
             
             # Log individual games if requested
             if log_individual_games_flag:
-                log_individual_games(cover_analysis_df_deduped, show_summary=summary_flag, steam_threshold=steam_threshold)
+                log_individual_games(cover_analysis_df_deduped, show_summary=summary_flag, steam_threshold=steam_threshold, league=sport)
     else:
         print("\n⚠️  No game results available - saving movement data only")
     
@@ -1447,7 +1542,9 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
 
 if __name__ == '__main__':
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Analyze NBA line movement predictiveness')
+    parser = argparse.ArgumentParser(description='Analyze NBA/NFL/NCAAF/NCAAB line movement predictiveness')
+    parser.add_argument('--league', type=str, default='nba', choices=['nba', 'nfl', 'ncaaf', 'ncaab'],
+                       help='League to analyze: nba, nfl, ncaaf, or ncaab (default: nba)')
     parser.add_argument('--use-cache', action='store_true', 
                        help='Use cached data from ~/Downloads/tmp/ instead of fetching from S3')
     parser.add_argument('--log-individual-games', action='store_true',
@@ -1463,7 +1560,8 @@ if __name__ == '__main__':
         use_cache=args.use_cache, 
         log_individual_games_flag=args.log_individual_games,
         summary_flag=args.summary,
-        steam_threshold=args.steam_threshold
+        steam_threshold=args.steam_threshold,
+        league=args.league
     )
     
     # Make dataframes available for notebook use
