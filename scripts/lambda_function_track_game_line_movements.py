@@ -1,5 +1,5 @@
 """
-Track Betting Line Movement for NBA/NFL Spreads
+Track Betting Line Movement for NBA/NFL/NCAAB/NCAAF Spreads
 
 PURPOSE:
 Automated line movement detection that runs hourly to capture spread changes
@@ -18,8 +18,7 @@ Line movement signals:
 CORE FUNCTIONALITY:
 1. Fetch current spreads from The Odds API every hour
 2. Iterate through: League -> Game -> Bookmaker
-   - For each NBA game, get line from FanDuel, DraftKings, BetMGM, etc.
-   - For each NFL game, get line from FanDuel, DraftKings, BetMGM, etc.
+   - For each game (NBA/NFL/NCAAB/NCAAF), get line from FanDuel, DraftKings, BetMGM, etc.
    - Store each bookmaker's line as a separate row (NOT consensus/average)
 3. Calculate vig-adjusted spread score for each bookmaker's line
 4. Compare against snapshots from 1 hour ago and 24 hours ago
@@ -865,8 +864,11 @@ REQUIRED SETUP FOR SES:
    EXISTING (keep these):
    - ODDS_API_KEY=<from Secrets Manager>
    - S3_BUCKET=betting-line-movement-snapshots
-   - MOVEMENT_THRESHOLD_NBA=0.5
-   - MOVEMENT_THRESHOLD_NFL=0.5
+   - DEFAULT_MOVEMENT_THRESHOLD=2.0 (optional, override per sport if needed)
+   - MOVEMENT_THRESHOLD_NBA=2.0 (optional, falls back to DEFAULT)
+   - MOVEMENT_THRESHOLD_NFL=2.0 (optional, falls back to DEFAULT)
+   - MOVEMENT_THRESHOLD_NCAAB=2.0 (optional, falls back to DEFAULT)
+   - MOVEMENT_THRESHOLD_NCAAF=2.0 (optional, falls back to DEFAULT)
    - AWS_REGION_NAME=us-east-2
    
    DEPRECATED (can remove after testing):
@@ -1199,18 +1201,24 @@ ODDS_API_FORMAT = 'american'
 # Sports
 SPORT_NBA = 'basketball_nba'
 SPORT_NFL = 'americanfootball_nfl'
-SUPPORTED_SPORTS = [SPORT_NBA, SPORT_NFL]
+SPORT_NCAAB = 'basketball_ncaab'
+SPORT_NCAAF = 'americanfootball_ncaaf'
+SUPPORTED_SPORTS = [SPORT_NBA, SPORT_NFL, SPORT_NCAAB, SPORT_NCAAF]
 
 # Sport display names (for emails/logging)
 SPORT_DISPLAY_NAMES = {
     SPORT_NBA: 'NBA',
-    SPORT_NFL: 'NFL'
+    SPORT_NFL: 'NFL',
+    SPORT_NCAAB: 'NCAAB',
+    SPORT_NCAAF: 'NCAAF'
 }
 
 # Reverse mapping: Display name -> API sport key
 DISPLAY_NAME_TO_SPORT_KEY = {
     'NBA': SPORT_NBA,
-    'NFL': SPORT_NFL
+    'NFL': SPORT_NFL,
+    'NCAAB': SPORT_NCAAB,
+    'NCAAF': SPORT_NCAAF
 }
 
 # Time windows
@@ -1240,21 +1248,26 @@ VIG_THRESHOLD_CENTS = 3.0  # Beyond this, use steeper curve
 VIG_LINEAR_FACTOR = 0.015  # Normal range adjustment per dime
 VIG_EXTREME_FACTOR = 0.025  # Extreme range adjustment per dime
 
-# Movement detection - sport-specific thresholds
-MOVEMENT_THRESHOLD_NBA = float(os.getenv('MOVEMENT_THRESHOLD_NBA', '2.0'))  # NBA moves more
-MOVEMENT_THRESHOLD_NFL = float(os.getenv('MOVEMENT_THRESHOLD_NFL', '1.0'))  # NFL more stable
+# Movement detection thresholds
+# Global default (can override per sport via env vars)
+DEFAULT_MOVEMENT_THRESHOLD = float(os.getenv('DEFAULT_MOVEMENT_THRESHOLD', '2.0'))
+
+# Sport-specific thresholds (falls back to default if not set)
+# Steam moves are detected using median consensus across all books
+MOVEMENT_THRESHOLDS = {
+    SPORT_NBA: float(os.getenv('MOVEMENT_THRESHOLD_NBA', str(DEFAULT_MOVEMENT_THRESHOLD))),
+    SPORT_NFL: float(os.getenv('MOVEMENT_THRESHOLD_NFL', str(DEFAULT_MOVEMENT_THRESHOLD))),
+    SPORT_NCAAB: float(os.getenv('MOVEMENT_THRESHOLD_NCAAB', str(DEFAULT_MOVEMENT_THRESHOLD))),
+    SPORT_NCAAF: float(os.getenv('MOVEMENT_THRESHOLD_NCAAF', str(DEFAULT_MOVEMENT_THRESHOLD)))
+}
+
+# Steam move detection
 STEAM_MOVE_MIN_BOOKS = 3  # Min books moving same direction to flag steam move
 
 # Bookmakers to exclude from analysis
 # Can be set via EXCLUDED_BOOKMAKERS env var (comma-separated), defaults to ['bovada', 'example_bad_book']
 EXCLUDED_BOOKMAKERS_STR = os.getenv('EXCLUDED_BOOKMAKERS', 'bovada,example_bad_book')
 EXCLUDED_BOOKMAKERS = [b.strip().lower() for b in EXCLUDED_BOOKMAKERS_STR.split(',') if b.strip()]
-
-# Map sports to thresholds
-MOVEMENT_THRESHOLDS = {
-    SPORT_NBA: MOVEMENT_THRESHOLD_NBA,
-    SPORT_NFL: MOVEMENT_THRESHOLD_NFL
-}
 
 # Timestamp format for filenames
 TIMESTAMP_FORMAT = '%Y%m%d_%H%M%S'
@@ -1565,30 +1578,32 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
     opening_str = f"{away_team} {opening_consensus:+.1f}".replace('.0', '') if opening_consensus != 0 else "Pick'em"
     current_str = f"{away_team} {current_consensus:+.1f}".replace('.0', '') if current_consensus != 0 else "Pick'em"
     
-    # Calculate movement and determine direction
+    # Calculate movement and determine direction (anchor on opening favorite)
     movement = current_consensus - opening_consensus
     
     if abs(movement) >= 0.1:
-        # Determine which team the line is moving toward
-        if opening_consensus < 0:  # Away team is favorite
-            toward_favorite = movement < 0  # More negative = toward favorite
-        else:  # Away team is underdog
-            toward_favorite = movement > 0  # More positive = toward favorite (home team)
-        
-        if toward_favorite:
-            # Determine which team is the favorite
-            if current_consensus < 0:
-                fav_team = away_team
-            else:
-                fav_team = home_team
-            movement_str = f" ({abs(movement):.1f}pt steam toward {fav_team})"
+        # Determine opening favorite
+        if opening_consensus < 0:
+            # Away team was opening favorite
+            opening_favorite = away_team
+            opening_underdog = home_team
+            toward_opening_fav = movement < 0
+        elif opening_consensus > 0:
+            # Home team was opening favorite
+            opening_favorite = home_team
+            opening_underdog = away_team
+            toward_opening_fav = movement > 0
         else:
-            # Determine which team is the underdog
-            if current_consensus > 0:
-                dog_team = away_team
-            else:
-                dog_team = home_team
-            movement_str = f" ({abs(movement):.1f}pt steam toward {dog_team})"
+            # Pick'em - default to away/home
+            opening_favorite = away_team
+            opening_underdog = home_team
+            toward_opening_fav = movement < 0
+        
+        # Format movement string
+        if toward_opening_fav:
+            movement_str = f" ({abs(movement):.1f}pt steam toward {opening_favorite})"
+        else:
+            movement_str = f" ({abs(movement):.1f}pt steam toward {opening_underdog})"
     else:
         movement_str = ""
     
@@ -1792,41 +1807,42 @@ def create_line_movement_chart_for_email(df: pd.DataFrame, title: str = None) ->
         # Calculate movement
         movement = current_consensus - opening_consensus
         
-        # Determine if movement is toward favorite or underdog
-        # Logic: 
-        # - If opening is negative (away fav): more negative = toward favorite
-        # - If opening is positive (away dog): more positive = toward favorite
-        # In both cases: opening and movement same sign = toward favorite
+        # Determine opening favorite to anchor movement
+        if opening_consensus < 0:
+            # Away team was opening favorite
+            opening_favorite = away_team
+            opening_underdog = home_team
+            # Negative movement = toward opening favorite (away)
+            # Positive movement = away from opening favorite (toward home)
+            toward_opening_fav = movement < 0
+        elif opening_consensus > 0:
+            # Home team was opening favorite
+            opening_favorite = home_team
+            opening_underdog = away_team
+            # Negative movement = away from opening favorite (toward away)
+            # Positive movement = toward opening favorite (home)
+            toward_opening_fav = movement > 0
+        else:
+            # Pick'em - just use away/home
+            opening_favorite = away_team
+            opening_underdog = home_team
+            toward_opening_fav = movement < 0
+        
+        # Format movement text
         if abs(movement) < 0.1:
             arrow = "→"
             movement_color = "#666"
             movement_text = "No change"
-            toward_favorite = False
+        elif toward_opening_fav:
+            # Movement toward opening favorite
+            arrow = "⬇"
+            movement_color = "darkgreen"
+            movement_text = f"Moved {abs(movement):.1f}pts toward {opening_favorite}"
         else:
-            # Check if movement is toward favorite
-            if opening_consensus < 0:  # Away team is favorite
-                toward_favorite = movement < 0  # More negative = toward favorite
-            else:  # Away team is underdog
-                toward_favorite = movement > 0  # More positive = toward favorite (home team)
-            
-            if toward_favorite:
-                arrow = "⬇"
-                movement_color = "darkgreen"
-                # Determine which team is the favorite
-                if current_consensus < 0:
-                    fav_team = away_team
-                else:
-                    fav_team = home_team
-                movement_text = f"Moved {abs(movement):.1f}pts toward {fav_team}"
-            else:
-                arrow = "⬆"
-                movement_color = "darkred"
-                # Determine which team is the underdog
-                if current_consensus > 0:
-                    dog_team = away_team
-                else:
-                    dog_team = home_team
-                movement_text = f"Moved {abs(movement):.1f}pts toward {dog_team}"
+            # Movement away from opening favorite (toward underdog)
+            arrow = "⬆"
+            movement_color = "darkred"
+            movement_text = f"Moved {abs(movement):.1f}pts toward {opening_underdog}"
         
         # Format spreads (remove .0 for whole numbers)
         opening_str = f"{opening_consensus:+.1f}".replace('.0', '') if opening_consensus != 0 else "PK"
@@ -2927,10 +2943,10 @@ def parse_api_response_to_dataframe(api_data: list, fetched_at: str) -> pd.DataF
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Track betting line movement for NBA/NFL spreads'
+        description='Track betting line movement for NBA/NFL/NCAAB/NCAAF spreads'
     )
-    parser.add_argument('--sport', type=str, choices=['nba', 'nfl', 'both'],
-                       default='both', help='Sport to track (default: both)')
+    parser.add_argument('--sport', type=str, choices=['nba', 'nfl', 'ncaab', 'ncaaf', 'all'],
+                       default='all', help='Sport to track (default: all)')
     parser.add_argument('--prod-run', action='store_true',
                        help='Production mode (no prompts)')
     parser.add_argument('--report-only', action='store_true',
@@ -2940,7 +2956,7 @@ def main():
     # Deprecated: kept for backwards compatibility but not used
     parser.add_argument('--movement-threshold', type=float, 
                        default=None,
-                       help='(Deprecated) Use MOVEMENT_THRESHOLD_NBA and MOVEMENT_THRESHOLD_NFL env vars')
+                       help='(Deprecated) Use DEFAULT_MOVEMENT_THRESHOLD or sport-specific env vars')
     
     args = parser.parse_args()
     
@@ -2952,12 +2968,16 @@ def main():
         sys.exit(1)
     
     # Determine which sports to process
-    if args.sport == 'both':
-        sports = [SPORT_NBA, SPORT_NFL]
+    if args.sport == 'all':
+        sports = [SPORT_NBA, SPORT_NFL, SPORT_NCAAB, SPORT_NCAAF]
     elif args.sport == 'nba':
         sports = [SPORT_NBA]
     elif args.sport == 'nfl':
         sports = [SPORT_NFL]
+    elif args.sport == 'ncaab':
+        sports = [SPORT_NCAAB]
+    elif args.sport == 'ncaaf':
+        sports = [SPORT_NCAAF]
     
     current_time = datetime.now(timezone.utc)
     fetched_at = current_time.isoformat()
@@ -3211,8 +3231,8 @@ def main():
         
         # Build sport thresholds dict for email
         sport_thresholds = {
-            'NBA': MOVEMENT_THRESHOLD_NBA,
-            'NFL': MOVEMENT_THRESHOLD_NFL
+            sport_display: MOVEMENT_THRESHOLDS[sport_key]
+            for sport_display, sport_key in DISPLAY_NAME_TO_SPORT_KEY.items()
         }
         
         # Generate email with ET timestamp
