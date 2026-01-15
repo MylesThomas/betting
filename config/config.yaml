@@ -47,7 +47,7 @@ data_directories:
   
   # Organized data folder structure
   input: data/01_input
-  cache: data/02_cache
+  cache: data/02_cache  # NBA roster cache files (nba_full_roster_cache.csv, player_team_cache.csv) go straight to s3://nba-betting-mt/data/02_cache/ without config mapping
   intermediate: data/03_intermediate
   output: data/04_output
   temp: data/99_tmp

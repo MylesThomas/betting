@@ -59,10 +59,9 @@ requests.Session.request = patched_request
 sys.path.append(str(Path(__file__).parent.parent))
 from src.player_name_utils import normalize_player_name
 from src.config import CURRENT_NBA_SEASON
-from src.config_loader import get_file_path
 
-# Output file
-OUTPUT_PATH = Path(__file__).parent.parent / get_file_path('nba_full_roster_cache')
+# Output file (local backup - primary storage is S3)
+OUTPUT_PATH = Path(__file__).parent.parent / 'data' / '02_cache' / 'nba_full_roster_cache.csv'
 
 # S3 Configuration
 S3_BUCKET = 'nba-betting-mt'
