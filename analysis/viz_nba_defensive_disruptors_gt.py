@@ -188,7 +188,7 @@ COL_WIDTH_HEADSHOT = 55  # Width for player headshot column
 HEADSHOT_HEIGHT = 35      # Height of player headshots in pixels (smaller for compact rows)
 
 
-def download_and_convert_to_base64(url, max_size=(60, 60)):
+def download_and_convert_to_base64(url, max_size=(300, 300)):
     """
     Download image and convert to base64 data URI.
     
@@ -236,7 +236,7 @@ def add_player_headshots(df):
     
     def get_headshot_data_uri(player_id):
         url = f'https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png'
-        data_uri = download_and_convert_to_base64(url, max_size=(60, 60))
+        data_uri = download_and_convert_to_base64(url, max_size=(300, 300))
         # Return placeholder if conversion fails
         return data_uri if data_uri else "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
     
