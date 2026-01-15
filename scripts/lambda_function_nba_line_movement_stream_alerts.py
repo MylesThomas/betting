@@ -543,6 +543,12 @@ def generate_ytd_report(today, season, threshold):
         Formatted report string with W-L-T, ROI, breakdown
         Shows separate stats for underdog steam, favorite steam, and combined
     """
+    import pandas as pd
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+    
+    et_tz = ZoneInfo('America/New_York')
+    
     print(f"\n📊 Generating YTD report for threshold {threshold}...")
     
     s3 = boto3.client('s3')
@@ -575,7 +581,6 @@ def generate_ytd_report(today, season, threshold):
         return f"📊 No results files found"
     
     # Combine all results
-    import pandas as pd
     results_df = pd.concat(all_results, ignore_index=True)
     
     # Filter to specified threshold
@@ -697,6 +702,30 @@ THRESHOLD: {threshold}+ points
   Avg Steam: {s['avg_steam']:.2f} pts
   Avg Cover Margin: {s['avg_cover_margin']:+.2f} pts
   Total Plays: {s['total']}
+
+"""
+    
+    # Yesterday's results (in tipoff order)
+    yesterday = (datetime.now(et_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
+    yesterday_games = completed[completed['game_date'] == yesterday].copy()
+    
+    if len(yesterday_games) > 0:
+        # Convert game_time string to datetime for sorting
+        yesterday_games['game_time_dt'] = pd.to_datetime(yesterday_games['game_time'])
+        yesterday_games = yesterday_games.sort_values('game_time_dt')
+        
+        report += f"""{'─'*80}
+YESTERDAY'S RESULTS ({yesterday}) - {len(yesterday_games)} plays:
+
+"""
+        for idx, (_, game) in enumerate(yesterday_games.iterrows(), 1):
+            result_emoji = '✅' if game['status'] == 'won' else '❌'
+            steam_dir = 'underdog' if game['steam_direction'] == 'opening_underdog' else 'favorite'
+            game_time_str = pd.to_datetime(game['game_time']).strftime('%I:%M %p ET')
+            
+            report += f"""{idx}. {result_emoji} {game['play_team']} {game['play_spread']:+.1f} ({game_time_str})
+   {game['opening_favorite']} vs {game['opening_underdog']}
+   Result: {game['status'].upper()} by {game['cover_margin']:+.1f} pts | Steam: {game['steam_magnitude']:.1f} pts ({steam_dir})
 
 """
     
@@ -822,6 +851,11 @@ def lambda_handler(event, context):
             # Generate YTD report
             import pandas as pd
             ytd_report = generate_ytd_report(today, season, threshold)
+            
+            # Print report to CloudWatch logs
+            print("\n" + "="*80)
+            print(ytd_report)
+            print("="*80 + "\n")
             
             # Send YTD report email
             timing_summary = format_timing_summary()
