@@ -1,0 +1,21 @@
+player,player_id,total_fga,total_fg_pct,paint_fga,paint_fgm,paint_fg_pct,paint_rate,paint_ppg,games,top_shot_types,height,note,rank
+Luka Doncic,1629029,694,46.4,116,84,72.4,16.7,6.0,28,"{'Driving Layup Shot': 45, 'Driving Floating Jump Shot': 22, 'Driving Floating Bank Jump Shot': 10}","6'7""",Jumbo Guard,1
+Anthony Edwards,1630162,658,50.0,215,147,68.4,32.7,8.9,33,"{'Driving Layup Shot': 79, 'Running Layup Shot': 22, 'Driving Finger Roll Layup Shot': 17}","6'4""",Big Athletic Guard,2
+Payton Pritchard,1630202,553,44.8,79,53,67.1,14.3,3.0,35,"{'Driving Layup Shot': 33, 'Running Layup Shot': 13, 'Driving Finger Roll Layup Shot': 5}","6'1""",Target Player,3
+Shai Gilgeous-Alexander,1628983,778,54.5,252,164,65.1,32.4,8.4,39,"{'Driving Layup Shot': 84, 'Driving Finger Roll Layup Shot': 40, 'Running Layup Shot': 29}","6'6""",Star Guard,4
+Tyler Herro,1629639,166,48.8,43,28,65.1,25.9,5.6,10,"{'Driving Layup Shot': 12, 'Driving Floating Jump Shot': 8, 'Running Layup Shot': 7}","6'5""",Scoring Guard,5
+Stephen Curry,201939,611,46.6,139,90,64.7,22.7,6.0,30,"{'Driving Layup Shot': 31, 'Driving Finger Roll Layup Shot': 25, 'Cutting Layup Shot': 23}","6'2""",All-Time Great,6
+Collin Sexton,1629012,324,48.5,134,86,64.2,41.4,5.7,30,"{'Driving Layup Shot': 51, 'Running Layup Shot': 22, 'Driving Finger Roll Layup Shot': 16}","6'1""",Athletic Guard,7
+Donovan Mitchell,1628378,774,49.2,219,137,62.6,28.3,7.4,37,"{'Driving Layup Shot': 61, 'Driving Finger Roll Layup Shot': 39, 'Running Layup Shot': 28}","6'3""",Star Guard,8
+Devin Booker,1626164,674,45.4,156,94,60.3,23.1,5.2,36,"{'Driving Layup Shot': 63, 'Running Layup Shot': 25, 'Driving Finger Roll Layup Shot': 8}","6'5""",Star Guard,9
+De'Aaron Fox,1628368,500,46.6,146,87,59.6,29.2,5.6,31,"{'Driving Layup Shot': 41, 'Running Layup Shot': 23, 'Driving Floating Jump Shot': 19}","6'3""",Athletic Guard,10
+Immanuel Quickley,1630193,541,42.3,106,63,59.4,19.6,3.4,37,"{'Running Layup Shot': 23, 'Driving Floating Jump Shot': 18, 'Driving Layup Shot': 18}","6'3""",Athletic Guard,11
+Tyrese Maxey,1630178,807,48.0,303,179,59.1,37.5,9.9,36,"{'Driving Finger Roll Layup Shot': 80, 'Driving Layup Shot': 64, 'Driving Floating Jump Shot': 49}","6'2""",Explosive Small Guard,12
+Jalen Brunson,1628973,770,48.1,191,108,56.5,24.8,6.2,35,"{'Driving Layup Shot': 50, 'Driving Floating Jump Shot': 44, 'Driving Finger Roll Layup Shot': 25}","6'2""",Small Guard Star,13
+Cade Cunningham,1630595,658,46.5,267,148,55.4,40.6,9.2,32,"{'Driving Layup Shot': 109, 'Driving Floating Jump Shot': 29, 'Running Layup Shot': 27}","6'6""",Jumbo Guard,14
+Ja Morant,1629630,294,40.1,107,59,55.1,36.4,6.6,18,"{'Driving Finger Roll Layup Shot': 23, 'Driving Layup Shot': 22, 'Running Layup Shot': 12}","6'3""",Elite Finisher,15
+LaMelo Ball,1630163,508,41.5,129,71,55.0,25.4,4.9,29,"{'Driving Layup Shot': 43, 'Driving Floating Jump Shot': 31, 'Driving Finger Roll Layup Shot': 14}","6'7""",Jumbo Guard,16
+Jamal Murray,1627750,677,48.2,186,102,54.8,27.5,5.8,35,"{'Driving Layup Shot': 79, 'Driving Finger Roll Layup Shot': 36, 'Driving Floating Jump Shot': 14}","6'3""",Star Guard,17
+Anfernee Simons,1629014,426,43.9,66,36,54.5,15.5,2.5,29,"{'Driving Layup Shot': 25, 'Driving Finger Roll Layup Shot': 14, 'Running Layup Shot': 5}","6'3""",Athletic Guard,18
+Trae Young,1629027,135,41.5,36,19,52.8,26.7,3.8,10,"{'Driving Layup Shot': 12, 'Driving Floating Jump Shot': 7, 'Driving Finger Roll Layup Shot': 4}","6'1""",Small Guard Star,19
+CJ McCollum,203468,566,45.2,128,67,52.3,22.6,3.6,37,"{'Driving Layup Shot': 40, 'Driving Floating Jump Shot': 23, 'Running Layup Shot': 10}","6'3""",Scoring Guard,20

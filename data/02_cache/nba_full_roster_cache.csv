@@ -1,19 +1,19 @@
 player_name_nba_api,team,player_normalized
 Asa Newell,ATL,Asa Newell
+CJ McCollum,ATL,Cj Mccollum
 Caleb Houstan,ATL,Caleb Houstan
+Corey Kispert,ATL,Corey Kispert
 Dyson Daniels,ATL,Dyson Daniels
 Jalen Johnson,ATL,Jalen Johnson
 Keaton Wallace,ATL,Keaton Wallace
 Kristaps Porziņģis,ATL,Kristaps Porzingis
 Luke Kennard,ATL,Luke Kennard
-Malik Williams,ATL,Malik Williams
 Mouhamed Gueye,ATL,Mouhamed Gueye
 N'Faly Dante,ATL,N'Faly Dante
 Nickeil Alexander-Walker,ATL,Nickeil Alexander-Walker
 Nikola Đurišić,ATL,Nikola Đurisic
 Onyeka Okongwu,ATL,Onyeka Okongwu
 RayJ Dennis,ATL,Rayj Dennis
-Trae Young,ATL,Trae Young
 Vít Krejčí,ATL,Vit Krejci
 Zaccharie Risacher,ATL,Zaccharie Risacher
 Ben Saraf,BKN,Ben Saraf
@@ -85,7 +85,7 @@ Nikola Vučević,CHI,Nikola Vucevic
 Noa Essengue,CHI,Noa Essengue
 Patrick Williams,CHI,Patrick Williams
 Tre Jones,CHI,Tre Jones
-Trentyn Flowers,CHI,Trentyn Flowers
+Yuki Kawamura,CHI,Yuki Kawamura
 Zach Collins,CHI,Zach Collins
 Chris Livingston,CLE,Chris Livingston
 Craig Porter Jr.,CLE,Craig Porter Jr
@@ -209,6 +209,7 @@ Pascal Siakam,IND,Pascal Siakam
 Quenton Jackson,IND,Quenton Jackson
 T.J. McConnell,IND,Tj Mcconnell
 Taelon Peter,IND,Taelon Peter
+Tony Bradley,IND,Tony Bradley
 Tyrese Haliburton,IND,Tyrese Haliburton
 Bogdan Bogdanović,LAC,Bogdan Bogdanovic
 Bradley Beal,LAC,Bradley Beal
@@ -238,6 +239,7 @@ Gabe Vincent,LAL,Gabe Vincent
 Jake LaRavia,LAL,Jake Laravia
 Jarred Vanderbilt,LAL,Jarred Vanderbilt
 Jaxson Hayes,LAL,Jaxson Hayes
+Kobe Bufkin,LAL,Kobe Bufkin
 LeBron James,LAL,Lebron James
 Luka Dončić,LAL,Luka Doncic
 Marcus Smart,LAL,Marcus Smart
@@ -247,7 +249,6 @@ Rui Hachimura,LAL,Rui Hachimura
 Brandon Clarke,MEM,Brandon Clarke
 Cam Spencer,MEM,Cam Spencer
 Cedric Coward,MEM,Cedric Coward
-Christian Koloko,MEM,Christian Koloko
 GG Jackson,MEM,Gg Jackson
 Ja Morant,MEM,Ja Morant
 Jahmai Mashack,MEM,Jahmai Mashack
@@ -292,7 +293,6 @@ Giannis Antetokounmpo,MIL,Giannis Antetokounmpo
 Jericho Sims,MIL,Jericho Sims
 Kevin Porter Jr.,MIL,Kevin Porter Jr
 Kyle Kuzma,MIL,Kyle Kuzma
-Mark Sears,MIL,Mark Sears
 Myles Turner,MIL,Myles Turner
 Pete Nance,MIL,Pete Nance
 Ryan Rollins,MIL,Ryan Rollins
@@ -347,7 +347,6 @@ Mitchell Robinson,NYK,Mitchell Robinson
 Mohamed Diawara,NYK,Mohamed Diawara
 OG Anunoby,NYK,Og Anunoby
 Pacôme Dadiet,NYK,Pacome Dadiet
-Tosan Evbuomwan,NYK,Tosan Evbuomwan
 Trey Jemison III,NYK,Trey Jemison
 Tyler Kolek,NYK,Tyler Kolek
 Aaron Wiggins,OKC,Aaron Wiggins
@@ -486,7 +485,6 @@ Jakob Poeltl,TOR,Jakob Poeltl
 Jamal Shead,TOR,Jamal Shead
 Jamison Battle,TOR,Jamison Battle
 Jonathan Mogbo,TOR,Jonathan Mogbo
-Mo Bamba,TOR,Mo Bamba
 Ochai Agbaji,TOR,Ochai Agbaji
 RJ Barrett,TOR,Rj Barrett
 Sandro Mamukelashvili,TOR,Sandro Mamukelashvili
@@ -514,9 +512,7 @@ Alex Sarr,WAS,Alex Sarr
 Anthony Gill,WAS,Anthony Gill
 Bilal Coulibaly,WAS,Bilal Coulibaly
 Bub Carrington,WAS,Bub Carrington
-CJ McCollum,WAS,Cj Mccollum
 Cam Whitmore,WAS,Cam Whitmore
-Corey Kispert,WAS,Corey Kispert
 Jamir Watkins,WAS,Jamir Watkins
 Justin Champagnie,WAS,Justin Champagnie
 Khris Middleton,WAS,Khris Middleton
@@ -524,6 +520,7 @@ Kyshawn George,WAS,Kyshawn George
 Malaki Branham,WAS,Malaki Branham
 Marvin Bagley III,WAS,Marvin Bagley
 Sharife Cooper,WAS,Sharife Cooper
+Trae Young,WAS,Trae Young
 Tre Johnson,WAS,Tre Johnson
 Tristan Vukcevic,WAS,Tristan Vukcevic
 Will Riley,WAS,Will Riley
