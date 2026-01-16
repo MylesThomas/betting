@@ -1,6 +1,8 @@
 """
 Track Betting Line Movement for NBA/NFL/NCAAB/NCAAF Spreads
 
+lambda function name: track-line-movement-hourly
+
 PURPOSE:
 Automated line movement detection that runs hourly to capture spread changes
 at the game/market/bookmaker level. Tracks both short-term (1-hour) and 
@@ -1227,6 +1229,15 @@ LOOKBACK_WINDOW_24H = timedelta(hours=24)
 SNAPSHOT_TIME_TOLERANCE = timedelta(minutes=5)  # Allow 5min variance when finding snapshots
 GAME_WINDOW_DAYS = 14  # Fetch games within next 14 days
 
+# Alert Configuration
+# Control which time windows trigger email alerts
+# Note: Data is ALWAYS collected for both windows (used for charts/context)
+# These flags only control whether movements in each window trigger ALERTS
+ALERT_ON_1H_MOVEMENTS = True   # Alert on movements detected in last 1 hour (active/recent moves)
+ALERT_ON_24H_MOVEMENTS = False  # Alert on movements detected in last 24 hours (historical context only)
+SEND_EMAIL_IF_NO_MOVEMENTS = False  # Send email even when no significant movements detected
+DISPLAY_24H_IN_ALERTS = True  # Show "24h ago" row in movement details (only relevant if ALERT_ON_24H_MOVEMENTS=False)
+
 # Display timezone
 DISPLAY_TIMEZONE = 'America/New_York'  # Eastern Time for logging
 
@@ -2021,18 +2032,41 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
     time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
     time_str = time_et.strftime('%b %d, %Y %I:%M %p ET')
     
-    # Collect unique game IDs that have movements
+    # Collect unique game IDs that have movements (filtered by alert config)
     games_with_movements = {}
     for sport_name, df in all_movements.items():
         if df is not None and not df.empty:
-            game_ids = df['game_id'].unique()
+            # Filter movements based on alert configuration
+            filtered_df = df.copy()
+            
+            # Build filter conditions based on alert config
+            if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+                # Show all movements (1h or 24h)
+                mask = (filtered_df['significant_hourly'] | filtered_df['significant_daily'] | 
+                       filtered_df['crossed_zero_1h'] | filtered_df['crossed_zero_24h'])
+            elif ALERT_ON_1H_MOVEMENTS:
+                # Only show 1h movements
+                mask = (filtered_df['significant_hourly'] | filtered_df['crossed_zero_1h'])
+            elif ALERT_ON_24H_MOVEMENTS:
+                # Only show 24h movements
+                mask = (filtered_df['significant_daily'] | filtered_df['crossed_zero_24h'])
+            else:
+                # No alerts enabled - skip
+                continue
+            
+            filtered_df = filtered_df[mask]
+            
+            if filtered_df.empty:
+                continue
+            
+            game_ids = filtered_df['game_id'].unique()
             for game_id in game_ids:
                 if game_id not in games_with_movements:
                     games_with_movements[game_id] = {
                         'sport_name': sport_name,
                         'sport_key': sport_to_api_key.get(sport_name, ''),
-                        'away_team': df[df['game_id'] == game_id]['away_team'].iloc[0],
-                        'home_team': df[df['game_id'] == game_id]['home_team'].iloc[0]
+                        'away_team': filtered_df[filtered_df['game_id'] == game_id]['away_team'].iloc[0],
+                        'home_team': filtered_df[filtered_df['game_id'] == game_id]['home_team'].iloc[0]
                     }
     
     # Generate charts for games with movements
@@ -2157,15 +2191,33 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
         html_parts.append(f"<p><strong>{sport_name}:</strong> {summary['num_games']} games tracked | {unique_games_with_moves} games with moves | {unique_games_crossed_zero} games crossed zero</p>")
     html_parts.append('</div>')
     
-    # Process movements and add charts
+    # Process movements and add charts (filtered by alert config)
     for sport_name in all_movements.keys():
         df = all_movements[sport_name]
         if df is None or df.empty:
             continue
         
+        # Filter movements based on alert configuration
+        if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+            # Show all movements (1h or 24h)
+            filtered_df = df[(df['significant_hourly'] | df['significant_daily'] | 
+                            df['crossed_zero_1h'] | df['crossed_zero_24h'])]
+        elif ALERT_ON_1H_MOVEMENTS:
+            # Only show 1h movements
+            filtered_df = df[(df['significant_hourly'] | df['crossed_zero_1h'])]
+        elif ALERT_ON_24H_MOVEMENTS:
+            # Only show 24h movements
+            filtered_df = df[(df['significant_daily'] | df['crossed_zero_24h'])]
+        else:
+            # No alerts enabled - skip
+            continue
+        
+        if filtered_df.empty:
+            continue
+        
         # Group by game
-        for game_id in df['game_id'].unique():
-            game_df = df[df['game_id'] == game_id]
+        for game_id in filtered_df['game_id'].unique():
+            game_df = filtered_df[filtered_df['game_id'] == game_id]
             first_row = game_df.iloc[0]
             
             html_parts.append(f"""
@@ -2297,7 +2349,8 @@ def format_movements_text_for_game(df: pd.DataFrame) -> str:
         price_now = display_row['current_price']
         
         lines.append(f"\nBook: {bookmaker}")
-        lines.append(f"24h ago: {team_display} {spread_24h}/{price_24h}")
+        if DISPLAY_24H_IN_ALERTS:
+            lines.append(f"24h ago: {team_display} {spread_24h}/{price_24h}")
         lines.append(f"1h ago:  {team_display} {spread_1h}/{price_1h}")
         lines.append(f"Now:     {team_display} {spread_now}/{price_now}")
     
@@ -2352,124 +2405,128 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
     # SECTION 1: 1-HOUR MOVEMENTS (URGENT - AT TOP)
     # =========================================================================
     
-    # First: Crossed Zero in Last Hour
     has_crossed_zero_1h = False
-    for sport_name in all_movements.keys():
-        df = all_movements[sport_name]
-        if df is None or df.empty:
-            continue
-        
-        crossed_zero_1h = df[df['crossed_zero_1h'] == True]
-        
-        if not crossed_zero_1h.empty:
-            unique_games = crossed_zero_1h['game_id'].nunique()
-            
-            if not has_crossed_zero_1h:
-                lines.append("=" * 80)
-                lines.append("🚨 CROSSED ZERO (Last Hour) - Favorite/Underdog Flip")
-                lines.append("=" * 80)
-                has_crossed_zero_1h = True
-                has_any_significant = True
-            
-            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
-            lines.append("-" * 80)
-            lines.extend(format_movements_text(crossed_zero_1h))
-    
-    # Second: Large moves in Last Hour
     has_large_moves_1h = False
-    for sport_name in all_movements.keys():
-        df = all_movements[sport_name]
-        if df is None or df.empty:
-            continue
-        
-        # Large 1h moves that didn't cross zero in 1h
-        large_moves_1h = df[
-            (df['significant_hourly'] == True) &
-            (df['crossed_zero_1h'] == False)
-        ]
-        
-        if not large_moves_1h.empty:
-            unique_games = large_moves_1h['game_id'].nunique()
+    
+    if ALERT_ON_1H_MOVEMENTS:
+        # First: Crossed Zero in Last Hour
+        for sport_name in all_movements.keys():
+            df = all_movements[sport_name]
+            if df is None or df.empty:
+                continue
             
-            if not has_large_moves_1h:
-                if has_crossed_zero_1h:
-                    lines.append("")
-                lines.append("=" * 80)
-                lines.append(f"📊 LARGE MOVES (Last Hour) - NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts")
-                lines.append("=" * 80)
-                has_large_moves_1h = True
-                has_any_significant = True
+            crossed_zero_1h = df[df['crossed_zero_1h'] == True]
             
-            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
-            lines.append("-" * 80)
-            lines.extend(format_movements_text(large_moves_1h))
+            if not crossed_zero_1h.empty:
+                unique_games = crossed_zero_1h['game_id'].nunique()
+                
+                if not has_crossed_zero_1h:
+                    lines.append("=" * 80)
+                    lines.append("🚨 CROSSED ZERO (Last Hour) - Favorite/Underdog Flip")
+                    lines.append("=" * 80)
+                    has_crossed_zero_1h = True
+                    has_any_significant = True
+                
+                lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
+                lines.append("-" * 80)
+                lines.extend(format_movements_text(crossed_zero_1h))
+        
+        # Second: Large moves in Last Hour
+        for sport_name in all_movements.keys():
+            df = all_movements[sport_name]
+            if df is None or df.empty:
+                continue
+            
+            # Large 1h moves that didn't cross zero in 1h
+            large_moves_1h = df[
+                (df['significant_hourly'] == True) &
+                (df['crossed_zero_1h'] == False)
+            ]
+            
+            if not large_moves_1h.empty:
+                unique_games = large_moves_1h['game_id'].nunique()
+                
+                if not has_large_moves_1h:
+                    if has_crossed_zero_1h:
+                        lines.append("")
+                    lines.append("=" * 80)
+                    lines.append(f"📊 LARGE MOVES (Last Hour) - NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts")
+                    lines.append("=" * 80)
+                    has_large_moves_1h = True
+                    has_any_significant = True
+                
+                lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
+                lines.append("-" * 80)
+                lines.extend(format_movements_text(large_moves_1h))
     
     # =========================================================================
     # SECTION 2: 24-HOUR MOVEMENTS (CONTEXT - AT BOTTOM)
     # =========================================================================
     
-    # Third: Crossed Zero in 24h (but NOT in last hour)
     has_crossed_zero_24h = False
-    for sport_name in all_movements.keys():
-        df = all_movements[sport_name]
-        if df is None or df.empty:
-            continue
-        
-        # Crossed zero in 24h window but NOT in the last hour
-        crossed_zero_24h_only = df[
-            (df['crossed_zero_24h'] == True) &
-            (df['crossed_zero_1h'] == False)
-        ]
-        
-        if not crossed_zero_24h_only.empty:
-            unique_games = crossed_zero_24h_only['game_id'].nunique()
-            
-            if not has_crossed_zero_24h:
-                if has_crossed_zero_1h or has_large_moves_1h:
-                    lines.append("")
-                lines.append("=" * 80)
-                lines.append("⏰ CROSSED ZERO (24h Window) - Longer-Term Trend")
-                lines.append("=" * 80)
-                has_crossed_zero_24h = True
-                has_any_significant = True
-            
-            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
-            lines.append("-" * 80)
-            lines.extend(format_movements_text(crossed_zero_24h_only))
-    
-    # Fourth: Large moves in 24h (but NOT in last hour and didn't cross zero)
     has_large_moves_24h = False
-    for sport_name in all_movements.keys():
-        df = all_movements[sport_name]
-        if df is None or df.empty:
-            continue
-        
-        # Large 24h moves that:
-        # - Are significant in 24h window
-        # - Did NOT cross zero in 1h or 24h
-        # - Are NOT already flagged as significant in 1h
-        large_moves_24h_only = df[
-            (df['significant_daily'] == True) &
-            (df['significant_hourly'] == False) &
-            (df['crossed_zero_1h'] == False) &
-            (df['crossed_zero_24h'] == False)
-        ]
-        
-        if not large_moves_24h_only.empty:
-            unique_games = large_moves_24h_only['game_id'].nunique()
+    
+    if ALERT_ON_24H_MOVEMENTS:
+        # Third: Crossed Zero in 24h (but NOT in last hour)
+        for sport_name in all_movements.keys():
+            df = all_movements[sport_name]
+            if df is None or df.empty:
+                continue
             
-            if not has_large_moves_24h:
-                if has_crossed_zero_1h or has_large_moves_1h or has_crossed_zero_24h:
-                    lines.append("")
-                lines.append("=" * 80)
-                lines.append(f"📈 LARGE MOVES (24h Window) - NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts")
-                lines.append("=" * 80)
-                has_large_moves_24h = True
-                has_any_significant = True
+            # Crossed zero in 24h window but NOT in the last hour
+            crossed_zero_24h_only = df[
+                (df['crossed_zero_24h'] == True) &
+                (df['crossed_zero_1h'] == False)
+            ]
             
-            lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
-            lines.append("-" * 80)
-            lines.extend(format_movements_text(large_moves_24h_only))
+            if not crossed_zero_24h_only.empty:
+                unique_games = crossed_zero_24h_only['game_id'].nunique()
+                
+                if not has_crossed_zero_24h:
+                    if has_crossed_zero_1h or has_large_moves_1h:
+                        lines.append("")
+                    lines.append("=" * 80)
+                    lines.append("⏰ CROSSED ZERO (24h Window) - Longer-Term Trend")
+                    lines.append("=" * 80)
+                    has_crossed_zero_24h = True
+                    has_any_significant = True
+                
+                lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
+                lines.append("-" * 80)
+                lines.extend(format_movements_text(crossed_zero_24h_only))
+        
+        # Fourth: Large moves in 24h (but NOT in last hour and didn't cross zero)
+        for sport_name in all_movements.keys():
+            df = all_movements[sport_name]
+            if df is None or df.empty:
+                continue
+            
+            # Large 24h moves that:
+            # - Are significant in 24h window
+            # - Did NOT cross zero in 1h or 24h
+            # - Are NOT already flagged as significant in 1h
+            large_moves_24h_only = df[
+                (df['significant_daily'] == True) &
+                (df['significant_hourly'] == False) &
+                (df['crossed_zero_1h'] == False) &
+                (df['crossed_zero_24h'] == False)
+            ]
+            
+            if not large_moves_24h_only.empty:
+                unique_games = large_moves_24h_only['game_id'].nunique()
+                
+                if not has_large_moves_24h:
+                    if has_crossed_zero_1h or has_large_moves_1h or has_crossed_zero_24h:
+                        lines.append("")
+                    lines.append("=" * 80)
+                    lines.append(f"📈 LARGE MOVES (24h Window) - NBA ≥{sport_thresholds.get('NBA', 2.0)}pts, NFL ≥{sport_thresholds.get('NFL', 1.0)}pts")
+                    lines.append("=" * 80)
+                    has_large_moves_24h = True
+                    has_any_significant = True
+                
+                lines.append(f"\n{sport_name} ({unique_games} {'game' if unique_games == 1 else 'games'}):")
+                lines.append("-" * 80)
+                lines.extend(format_movements_text(large_moves_24h_only))
     
     if not has_any_significant:
         lines.append("=" * 80)
@@ -2644,7 +2701,8 @@ def format_movements_text(df: pd.DataFrame) -> List[str]:
             price_now = display_row['current_price']
             
             lines.append(f"    Book: {bookmaker}")
-            lines.append(f"    24h ago: {team_display} {spread_24h}/{price_24h}")
+            if DISPLAY_24H_IN_ALERTS:
+                lines.append(f"    24h ago: {team_display} {spread_24h}/{price_24h}")
             lines.append(f"    1h ago:  {team_display} {spread_1h}/{price_1h}")
             lines.append(f"    Now:     {team_display} {spread_now}/{price_now}")
             lines.append("")
@@ -3220,51 +3278,58 @@ def main():
             for sport_name, df in saved_movements:
                 print(f"      {sport_name}: {len(df)} movements")
     
-    # Send email if running in Lambda (always send, even if no movements)
+    # Send email if running in Lambda
     if IS_LAMBDA:
-        print(f"\n📧 Sending email alert...")
+        # Check if we should send email
+        has_movements = len(saved_movements) > 0
+        should_send_email = has_movements or SEND_EMAIL_IF_NO_MOVEMENTS
         
-        # Convert saved_movements list to dict
-        movements_dict = {}
-        for sport_name, df in saved_movements:
-            movements_dict[sport_name] = df
-        
-        # Build sport thresholds dict for email
-        sport_thresholds = {
-            sport_display: MOVEMENT_THRESHOLDS[sport_key]
-            for sport_display, sport_key in DISPLAY_NAME_TO_SPORT_KEY.items()
-        }
-        
-        # Generate email with ET timestamp
-        current_time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
-        time_str_et = current_time_et.strftime('%b %d, %Y %I:%M %p ET')
-        
-        if saved_movements:
-            subject = f"🚨 Line Movement Alert - {time_str_et}"
+        if should_send_email:
+            print(f"\n📧 Sending email alert...")
+            
+            # Convert saved_movements list to dict
+            movements_dict = {}
+            for sport_name, df in saved_movements:
+                movements_dict[sport_name] = df
+            
+            # Build sport thresholds dict for email
+            sport_thresholds = {
+                sport_display: MOVEMENT_THRESHOLDS[sport_key]
+                for sport_display, sport_key in DISPLAY_NAME_TO_SPORT_KEY.items()
+            }
+            
+            # Generate email with ET timestamp
+            current_time_et = current_time.astimezone(ZoneInfo(DISPLAY_TIMEZONE))
+            time_str_et = current_time_et.strftime('%b %d, %Y %I:%M %p ET')
+            
+            if saved_movements:
+                subject = f"🚨 Line Movement Alert - {time_str_et}"
+            else:
+                subject = f"✅ Line Movement Check - No Significant Changes - {time_str_et}"
+            
+            # Generate HTML email with charts
+            html_body = format_movement_email_html(
+                sport_summaries, 
+                movements_dict, 
+                sport_thresholds, 
+                current_time,
+                DISPLAY_NAME_TO_SPORT_KEY,
+                current_snapshots
+            )
+            
+            # Generate plain text fallback
+            text_body = format_movement_email(
+                sport_summaries, 
+                movements_dict, 
+                sport_thresholds, 
+                current_time, 
+                current_snapshots
+            )
+            
+            # Send via SES with HTML and inline images
+            send_email_via_ses(subject, html_body, text_body)
         else:
-            subject = f"✅ Line Movement Check - No Significant Changes - {time_str_et}"
-        
-        # Generate HTML email with charts
-        html_body = format_movement_email_html(
-            sport_summaries, 
-            movements_dict, 
-            sport_thresholds, 
-            current_time,
-            DISPLAY_NAME_TO_SPORT_KEY,
-            current_snapshots
-        )
-        
-        # Generate plain text fallback
-        text_body = format_movement_email(
-            sport_summaries, 
-            movements_dict, 
-            sport_thresholds, 
-            current_time, 
-            current_snapshots
-        )
-        
-        # Send via SES with HTML and inline images
-        send_email_via_ses(subject, html_body, text_body)
+            print(f"\n🔕 No movements detected and SEND_EMAIL_IF_NO_MOVEMENTS=False - Skipping email")
     else:
         print(f"\n💻 Local run complete - email only sent when running in Lambda")
     
