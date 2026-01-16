@@ -32,6 +32,8 @@ import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 import argparse
+import boto3
+from io import StringIO
 
 # =============================================================================
 # GLOBAL CONFIG
@@ -51,12 +53,17 @@ MARKETS = 'spreads'  # Only spreads (not moneyline aka h2h)
 REGIONS = 'us'
 ODDS_FORMAT = 'american'
 
-# Output directory - save each date as separate CSV
+# Output directory - save each date as separate CSV (local backup)
 OUTPUT_DIR = 'data/01_input/the-odds-api/nfl/game_lines/historical'
+
+# S3 configuration (primary storage)
+S3_BUCKET = 'the-odds-api-mt'
+S3_BASE_PATH = 'nfl/historical_game_lines'
+AWS_REGION = 'us-east-2'
 
 # Season dates will be set based on --season argument
 
-# Create output directory
+# Create output directory for local backups
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Snapshot times (UTC)
@@ -81,6 +88,80 @@ def check_api_key():
         print("Make sure ODDS_API_KEY is set in your .env file")
         return False
     return True
+
+
+def get_s3_client():
+    """Get S3 client."""
+    return boto3.client('s3', region_name=AWS_REGION)
+
+
+def determine_season_from_date(date_str: str) -> int:
+    """
+    Determine NFL season from game date.
+    NFL season spans Sept-Feb, so games in Sept-Dec are current year,
+    games in Jan-Feb are previous year's season.
+    """
+    date = pd.to_datetime(date_str)
+    year = date.year
+    month = date.month
+    
+    # Jan-Feb games belong to previous year's season
+    if month <= 2:
+        return year - 1
+    # Sept-Dec games belong to current year's season
+    else:
+        return year
+
+
+def get_s3_key(season: int, date_str: str) -> str:
+    """Generate S3 key for a game lines file."""
+    return f"{S3_BASE_PATH}/{season}/nfl_game_lines_{date_str}.csv"
+
+
+def file_exists_in_s3(season: int, date_str: str) -> bool:
+    """Check if file exists in S3."""
+    s3_client = get_s3_client()
+    s3_key = get_s3_key(season, date_str)
+    
+    try:
+        s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
+        return True
+    except:
+        return False
+
+
+def save_df_to_s3(df: pd.DataFrame, season: int, date_str: str) -> bool:
+    """
+    Save DataFrame to S3 as CSV.
+    
+    Args:
+        df: DataFrame to save
+        season: NFL season (2020-2025)
+        date_str: Date in YYYY-MM-DD format
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    s3_key = get_s3_key(season, date_str)
+    
+    try:
+        # Convert DataFrame to CSV in memory
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        
+        # Upload to S3
+        s3_client = get_s3_client()
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=s3_key,
+            Body=csv_buffer.getvalue(),
+            ContentType='text/csv'
+        )
+        
+        return True
+    except Exception as e:
+        print(f"  ❌ S3 upload failed: {e}")
+        return False
 
 
 def get_historical_nfl_events(date_str):
@@ -264,13 +345,15 @@ def parse_game_lines(games):
     return df
 
 
-def fetch_date_lines(date_str, save=True):
+def fetch_date_lines(date_str, season, save=True, local_backup=False):
     """
     Fetch all game lines for a specific date
     
     Args:
         date_str: Date in YYYY-MM-DD format
-        save: Save results to file
+        season: NFL season (2020-2025)
+        save: Save results to S3
+        local_backup: Also save local backup
     
     Returns:
         DataFrame with all lines for that date
@@ -295,14 +378,13 @@ def fetch_date_lines(date_str, save=True):
     
     if not all_events:
         print(f"  ℹ️  No games found on this date")
-        # Save empty file so we don't check this date again
+        # Save empty file to S3 so we don't check this date again
         if save:
-            filename = f"nfl_game_lines_{date_str}.csv"
-            filepath = os.path.join(OUTPUT_DIR, filename)
-            pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 'bookmaker', 
-                                 'bookmaker_key', 'last_update', 'market', 'away_spread', 
-                                 'away_odds', 'home_spread', 'home_odds']).to_csv(filepath, index=False)
-            print(f"  💾 Saved empty file → next run will SKIP this date (0 credits)")
+            empty_df = pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 'bookmaker', 
+                                             'bookmaker_key', 'last_update', 'market', 'away_spread', 
+                                             'away_odds', 'home_spread', 'home_odds'])
+            if save_df_to_s3(empty_df, season, date_str):
+                print(f"  💾 Saved empty file to S3 → next run will SKIP this date (0 credits)")
         return pd.DataFrame()
     
     # Filter to only games that START on this specific date (in ET timezone)
@@ -326,14 +408,13 @@ def fetch_date_lines(date_str, save=True):
     if not events:
         filtered_count = len(all_events)
         print(f"  ℹ️  Found {filtered_count} events in API, but none start on {date_str} (all future games)")
-        # Save empty file so we don't check this date again
+        # Save empty file to S3 so we don't check this date again
         if save:
-            filename = f"nfl_game_lines_{date_str}.csv"
-            filepath = os.path.join(OUTPUT_DIR, filename)
-            pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 'bookmaker', 
-                                 'bookmaker_key', 'last_update', 'market', 'away_spread', 
-                                 'away_odds', 'home_spread', 'home_odds']).to_csv(filepath, index=False)
-            print(f"  💾 Saved empty file → next run will SKIP this date (0 credits)")
+            empty_df = pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 'bookmaker', 
+                                             'bookmaker_key', 'last_update', 'market', 'away_spread', 
+                                             'away_odds', 'home_spread', 'home_odds'])
+            if save_df_to_s3(empty_df, season, date_str):
+                print(f"  💾 Saved empty file to S3 → next run will SKIP this date (0 credits)")
         return pd.DataFrame()
     
     print(f"  ✓ Found {len(events)} games starting on {date_str}:")
@@ -373,14 +454,21 @@ def fetch_date_lines(date_str, save=True):
         return df
     
     if save:
-        filename = f"nfl_game_lines_{date_str}.csv"
-        filepath = os.path.join(OUTPUT_DIR, filename)
-        df.to_csv(filepath, index=False)
+        # Save to S3 (primary storage)
+        if save_df_to_s3(df, season, date_str):
+            num_games = df['game_id'].nunique()
+            s3_key = get_s3_key(season, date_str)
+            print(f"\n  💾 Saved {num_games} games to S3")
+            print(f"     s3://{S3_BUCKET}/{s3_key}")
+            print(f"     Total lines: {len(df)} (spread lines only)")
+            print(f"     Bookmakers: {df['bookmaker'].nunique()}")
         
-        num_games = df['game_id'].nunique()
-        print(f"\n  💾 Saved {num_games} games to {filename}")
-        print(f"     Total lines: {len(df)} (spread lines only)")
-        print(f"     Bookmakers: {df['bookmaker'].nunique()}")
+        # Optional local backup
+        if local_backup:
+            filename = f"nfl_game_lines_{date_str}.csv"
+            filepath = os.path.join(OUTPUT_DIR, filename)
+            df.to_csv(filepath, index=False)
+            print(f"     Local backup: {filepath}")
     
     return df
 
@@ -479,7 +567,7 @@ def fetch_full_season(season_start, season_end):
         
         # Fetch lines for this date
         try:
-            df = fetch_date_lines(date_str, save=True)
+            df = fetch_date_lines(date_str, season=season, save=True, local_backup=False)
             
             # Log starting credits after first API call
             if first_fetch and credits_remaining is not None:
@@ -788,7 +876,10 @@ if __name__ == "__main__":
         print(f"\nFetching {test_date}...")
         print("This will use approximately 1 + (num_games × 10) credits")
         
-        df = fetch_date_lines(test_date, save=True)
+        # Determine season from test date
+        test_season = determine_season_from_date(test_date)
+        
+        df = fetch_date_lines(test_date, season=test_season, save=True, local_backup=False)
         
         if not df.empty:
             print(f"\n✅ Test successful!")

@@ -8,15 +8,20 @@ import pandas as pd
 from pathlib import Path
 import glob
 from typing import Optional, Dict, List
+import boto3
+from io import StringIO
 
 from nfl_team_utils import add_team_abbr_columns, normalize_unexpected_points_abbr
 from config import DATA_ROOT, NFL_2020_BYE_WEEKS, NFL_2021_BYE_WEEKS, NFL_2022_BYE_WEEKS, NFL_2023_BYE_WEEKS, NFL_2024_BYE_WEEKS, NFL_2025_BYE_WEEKS
 
 # =============================================================================
-# PATHS
+# PATHS & S3 CONFIG
 # =============================================================================
 
-NFL_LINES_DIR = DATA_ROOT / "01_input/the-odds-api/nfl/game_lines/historical"
+# S3 bucket for historical lines
+S3_BUCKET_ODDS = 'the-odds-api-mt'
+
+# Local paths
 NFL_LINES_UPCOMING_DIR = DATA_ROOT / "01_input/the-odds-api/nfl/game_lines/upcoming"
 UNEXPECTED_POINTS_DIR = DATA_ROOT / "01_input/unexpected_points"
 INTERMEDIATE_DIR = DATA_ROOT / "03_intermediate"
@@ -122,53 +127,59 @@ def calculate_roi(win_pct: float, odds: int = -110) -> float:
 
 def load_nfl_betting_lines(include_upcoming: bool = False, season: int = 2025) -> pd.DataFrame:
     """
-    Load all NFL betting lines from historical dir.
+    Load NFL betting lines from S3.
     
     Args:
-        include_upcoming: Include upcoming games dir. Default: False.
-        season: Season to filter (2020-2025). Default: 2025.
+        include_upcoming: Include upcoming games from local dir. Default: False.
+        season: Season to load (2020-2025). Default: 2025.
+    
+    Returns:
+        DataFrame with all betting lines for the season
     """
-    csv_files = sorted(glob.glob(str(NFL_LINES_DIR / "nfl_game_lines_*.csv")))
+    s3_client = boto3.client('s3')
+    prefix = f"nfl/historical_game_lines/{season}/"
     
-    # Add season-specific London games
-    london_file = NFL_LINES_DIR / f"{season}_game_lines_london.csv"
-    if london_file.exists():
-        csv_files.append(str(london_file))
+    # Load all historical files from S3 for this season
+    try:
+        response = s3_client.list_objects_v2(Bucket=S3_BUCKET_ODDS, Prefix=prefix)
+    except Exception as e:
+        print(f"❌ Error accessing S3: {e}")
+        return pd.DataFrame()
     
+    if 'Contents' not in response:
+        print(f"❌ No game line files found for season {season}")
+        return pd.DataFrame()
+    
+    # Load each CSV from S3
+    all_lines = []
+    for obj in response['Contents']:
+        if obj['Key'].endswith('.csv'):
+            try:
+                obj_data = s3_client.get_object(Bucket=S3_BUCKET_ODDS, Key=obj['Key'])
+                df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                all_lines.append(df)
+            except Exception as e:
+                print(f"  ⚠️  Error loading {obj['Key']}: {e}")
+    
+    if not all_lines:
+        print(f"❌ No data loaded from S3")
+        return pd.DataFrame()
+    
+    df = pd.concat(all_lines, ignore_index=True)
+    
+    # Add upcoming games from local (if requested)
     if include_upcoming and NFL_LINES_UPCOMING_DIR.exists():
-        csv_files.extend(glob.glob(str(NFL_LINES_UPCOMING_DIR / "nfl_game_lines_*.csv")))
+        upcoming_files = glob.glob(str(NFL_LINES_UPCOMING_DIR / "nfl_game_lines_*.csv"))
+        if upcoming_files:
+            upcoming_dfs = [pd.read_csv(f) for f in upcoming_files]
+            df = pd.concat([df] + upcoming_dfs, ignore_index=True)
     
-    dfs = [pd.read_csv(f) for f in csv_files if Path(f).exists()]
-    df = pd.concat(dfs, ignore_index=True)
-    
+    # Standardize timestamps
     df['game_time'] = pd.to_datetime(df['game_time'])
     if df['game_time'].dt.tz is None:
         df['game_time'] = df['game_time'].dt.tz_localize('UTC')
     
-    # Filter to specified season
-    if season == 2020:
-        season_start = pd.Timestamp('2020-09-01', tz='UTC')
-        season_end = pd.Timestamp('2021-02-28', tz='UTC')
-        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
-    elif season == 2021:
-        season_start = pd.Timestamp('2021-09-01', tz='UTC')
-        season_end = pd.Timestamp('2022-02-28', tz='UTC')
-        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
-    elif season == 2022:
-        season_start = pd.Timestamp('2022-09-01', tz='UTC')
-        season_end = pd.Timestamp('2023-02-28', tz='UTC')
-        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
-    elif season == 2023:
-        season_start = pd.Timestamp('2023-09-01', tz='UTC')
-        season_end = pd.Timestamp('2024-02-28', tz='UTC')
-        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
-    elif season == 2024:
-        season_start = pd.Timestamp('2024-09-01', tz='UTC')
-        season_end = pd.Timestamp('2025-02-28', tz='UTC')
-        return df[(df['game_time'] >= season_start) & (df['game_time'] <= season_end)].copy()
-    else:  # 2025
-        season_start = pd.Timestamp('2025-09-01', tz='UTC')
-        return df[df['game_time'] >= season_start].copy()
+    return df
 
 
 def calculate_consensus_lines(df_lines: pd.DataFrame) -> pd.DataFrame:
