@@ -183,8 +183,14 @@ def fetch_espn_scoreboard(sport, date_str):
     url = f"{ESPN_SCOREBOARD_BASE}/{espn_sport}/{espn_league}/scoreboard"
     params = {
         'dates': date_str,
-        'limit': 300  # Get all games for the date
+        'limit': 500  # Increased from 300 to ensure we get all games
     }
+    
+    # For NCAAB, add groups=50 to get ALL games (not just featured game)
+    # Testing showed this increases coverage from 1 game/day to 100+ games/day
+    # ESPN with groups=50 returns MORE games than The Odds API (106-117% coverage)
+    if sport == 'ncaab':
+        params['groups'] = '50'
     
     try:
         response = requests.get(url, params=params, timeout=10, verify=False)
@@ -694,10 +700,17 @@ def main():
                        help='Upload results to S3')
     parser.add_argument('--skip-existing', action='store_true',
                        help='Skip dates that already exist in S3 (useful for resuming large backfills)')
+    parser.add_argument('--overwrite', action='store_true',
+                       help='Overwrite existing files in S3 (opposite of --skip-existing)')
     parser.add_argument('--test', action='store_true',
                        help='Save results locally to ~/Downloads/tmp for review')
     
     args = parser.parse_args()
+    
+    # Handle conflicting flags
+    if args.skip_existing and args.overwrite:
+        print("❌ Error: Cannot use both --skip-existing and --overwrite")
+        return None
     
     # Determine season
     if args.season:
@@ -712,7 +725,15 @@ def main():
     print(f"Sport: {args.sport.upper()}")
     print(f"Season: {season}")
     print(f"S3 Upload: {'✅ Enabled' if args.s3 else '❌ Disabled'}")
-    print(f"Skip Existing: {'✅ Enabled' if args.skip_existing else '❌ Disabled'}")
+    
+    # Determine skip/overwrite behavior
+    if args.skip_existing:
+        print(f"Mode: Skip existing files (no overwrite)")
+    elif args.overwrite:
+        print(f"Mode: Overwrite existing files")
+    else:
+        print(f"Mode: Overwrite existing files (default)")
+    
     print(f"Test Mode: {'✅ Enabled (saving to ~/Downloads/tmp)' if args.test else '❌ Disabled'}")
     
     # Determine mode: backfill (date range) or single date

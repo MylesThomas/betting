@@ -9,6 +9,19 @@ espn_seasons:
   ncaab: 2026    # 2025-26 NCAAB season
   ncaaf: 2025    # 2025-26 NCAAF season (CFP playoff teams only)
 
+# Non-D1 teams to exclude (D2/D3/NAIA/exhibition opponents)
+# These teams may have multiple games but are not Division I
+ncaab_non_d1_teams:
+  - Bethesda University Flames
+  - Champion Christian Tigers
+  - College Of Biblical Studies Ambassadors
+  - East-West University Phantoms
+  - Florida Tech Panthers
+  - La Sierra Golden Eagles
+  - Life Pacific Warriors
+  - St. Andrews Knights
+  - Virginia-Lynchburg Dragons
+
 # The Odds API configuration
 odds_api:
   base_url: https://api.the-odds-api.com/v4
