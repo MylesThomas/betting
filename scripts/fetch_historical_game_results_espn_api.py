@@ -529,6 +529,17 @@ def fetch_single_date(sport, date_str, upload_s3=False, test_mode=False, skip_ex
     Returns:
         pd.DataFrame with game results (or None if skipped)
     """
+    # Check if date is in the past (not today)
+    # Only save results for completed days to avoid saving incomplete game data
+    date_obj = datetime.strptime(date_str, '%Y%m%d').date()
+    today = datetime.now(ZoneInfo('America/New_York')).date()
+    
+    if date_obj >= today:
+        print(f"\n⚠️  Skipping {date_str} - date is today or in the future (games may not be complete)")
+        print(f"   Today: {today}, Requested: {date_obj}")
+        print(f"   💡 This script only saves data for dates in the past to ensure completeness")
+        return None
+    
     # Check if already exists and should skip
     if skip_existing and upload_s3:
         if check_s3_file_exists(sport, date_str):
