@@ -31,8 +31,14 @@ Usage:
     # Walk-forward validation for single team (expanding window, all history)
     python analysis/ml_pricing_ncaab_games_v2.py --season 2024-25 --use-cache --single-team "Wisconsin Badgers" --walk-forward --use-all-history
     
-    # Compare rolling vs expanding window across ALL D1 teams
+    # Compare rolling vs expanding window - per-team models (282 separate models)
     python analysis/ml_pricing_ncaab_games_v2.py --season 2024-25 --use-cache --compare-x1-methods
+    
+    # Compare rolling vs expanding window - pooled model (ONE model, walk-forward by date)
+    python analysis/ml_pricing_ncaab_games_v2.py --season 2024-25 --use-cache --compare-x1-methods --pooled
+    
+    # Compare model snapshots - train model at each date, test on all future games
+    python analysis/ml_pricing_ncaab_games_v2.py --season 2024-25 --use-cache --compare-snapshots --use-all-history
     
     # Train model on full dataset
     python analysis/ml_pricing_ncaab_games_v2.py --season 2024-25 --train --log-examples 10
@@ -692,9 +698,511 @@ def analyze_single_team(joined_df, team_name):
     print(f"{'='*80}\n")
 
 
+def compare_x1_methods_pooled(joined_df):
+    """
+    Compare rolling window vs expanding window using POOLED walk-forward validation.
+    
+    Instead of training separate models per team, we:
+    1. Train ONE model on all teams' games up to date D
+    2. Predict all games happening on date D
+    3. Repeat for each date in the season
+    
+    This is more realistic and stable (uses cross-team patterns).
+    """
+    print("="*80)
+    print("COMPARING X1 METHODS: POOLED WALK-FORWARD VALIDATION")
+    print("="*80)
+    print()
+    print("Method: Train on ALL teams' past games, predict today's games")
+    print("Method 1: Rolling Window (last 10 games)")
+    print("Method 2: Expanding Window (all available history)")
+    print()
+    
+    # Build team-level rows for all teams
+    print("🔨 Building team-level rows for all teams...")
+    team_df = build_team_game_rows(joined_df)
+    print(f"✅ Built {len(team_df)} team-game rows")
+    print(f"   Teams: {team_df['team'].nunique()}")
+    print(f"   Date range: {team_df['game_date'].min()} to {team_df['game_date'].max()}")
+    print()
+    
+    # Get unique dates sorted
+    dates = sorted(team_df['game_date'].unique())
+    print(f"📅 Found {len(dates)} unique game dates")
+    print()
+    
+    # Test both methods
+    methods = {
+        'rolling': {'name': 'Rolling Window (last 10)', 'predictions': [], 'actuals': [], 'market_preds': []},
+        'expanding': {'name': 'Expanding Window (all)', 'predictions': [], 'actuals': [], 'market_preds': []}
+    }
+    
+    for method_name, method_data in methods.items():
+        print(f"{'='*80}")
+        print(f"TESTING: {method_data['name']}")
+        print(f"{'='*80}")
+        print()
+        
+        games_predicted = 0
+        
+        for date_idx, current_date in enumerate(dates):
+            # Get training data (all games before this date)
+            train_df = team_df[team_df['game_date'] < current_date].copy()
+            
+            # Get test data (games on this date)
+            test_df = team_df[team_df['game_date'] == current_date].copy()
+            
+            if len(test_df) == 0:
+                continue
+            
+            # Impute missing implied scores for both train and test
+            train_df = impute_missing_implied_scores(train_df)
+            test_df = impute_missing_implied_scores(test_df)
+            
+            # Calculate features for each team in test set
+            test_with_features = []
+            
+            for _, test_game in test_df.iterrows():
+                team = test_game['team']
+                
+                # Get this team's historical games (from train_df)
+                team_history = train_df[train_df['team'] == team].copy()
+                
+                if len(team_history) == 0:
+                    # No history - skip this game
+                    continue
+                
+                # Calculate x1 based on method
+                if method_name == 'rolling':
+                    # Last N games
+                    x1_val = team_history['implied_score_filled'].tail(MIN_GAMES_FOR_AVG).mean()
+                else:  # expanding
+                    # All available history
+                    x1_val = team_history['implied_score_filled'].mean()
+                
+                if pd.isna(x1_val):
+                    continue
+                
+                # Add features to test game
+                test_game_copy = test_game.copy()
+                test_game_copy['x1_avg_last_n'] = x1_val
+                test_game_copy['x2_implied'] = test_game_copy['implied_score_filled']
+                test_game_copy['x3_conf'] = float(test_game_copy['is_conference_game'])
+                
+                test_with_features.append(test_game_copy)
+            
+            if len(test_with_features) == 0:
+                continue
+            
+            test_with_features_df = pd.DataFrame(test_with_features)
+            
+            # Prepare training data with features
+            train_with_features = []
+            for team in train_df['team'].unique():
+                team_games = train_df[train_df['team'] == team].sort_values('game_date').copy()
+                
+                # Calculate x1 for each game
+                for idx in range(len(team_games)):
+                    if idx == 0:
+                        continue  # Skip first game (no history)
+                    
+                    # Get history up to this game
+                    history = team_games.iloc[:idx]
+                    
+                    if method_name == 'rolling':
+                        x1_val = history['implied_score_filled'].tail(MIN_GAMES_FOR_AVG).mean()
+                    else:
+                        x1_val = history['implied_score_filled'].mean()
+                    
+                    if pd.isna(x1_val):
+                        continue
+                    
+                    game_copy = team_games.iloc[idx].copy()
+                    game_copy['x1_avg_last_n'] = x1_val
+                    game_copy['x2_implied'] = game_copy['implied_score_filled']
+                    game_copy['x3_conf'] = float(game_copy['is_conference_game'])
+                    
+                    train_with_features.append(game_copy)
+            
+            if len(train_with_features) == 0:
+                # Early season - no training data yet
+                continue
+            
+            train_with_features_df = pd.DataFrame(train_with_features)
+            
+            # Drop any rows with NaN in features
+            train_with_features_df = train_with_features_df.dropna(subset=['x1_avg_last_n', 'x2_implied', 'x3_conf', 'actual_score'])
+            test_with_features_df = test_with_features_df.dropna(subset=['x1_avg_last_n', 'x2_implied', 'x3_conf', 'actual_score'])
+            
+            if len(train_with_features_df) == 0 or len(test_with_features_df) == 0:
+                continue
+            
+            # Train model
+            X_train = train_with_features_df[['x1_avg_last_n', 'x2_implied', 'x3_conf']].values
+            y_train = train_with_features_df['actual_score'].values
+            
+            coefficients = train_linear_regression(X_train, y_train)
+            
+            # Make predictions
+            X_test = test_with_features_df[['x1_avg_last_n', 'x2_implied', 'x3_conf']].values
+            predictions = predict_linear_regression(X_test, coefficients)
+            
+            # Store results
+            method_data['predictions'].extend(predictions)
+            method_data['actuals'].extend(test_with_features_df['actual_score'].values)
+            method_data['market_preds'].extend(test_with_features_df['x2_implied'].values)
+            
+            games_predicted += len(predictions)
+            
+            # Progress update
+            if (date_idx + 1) % 20 == 0 or date_idx == len(dates) - 1:
+                print(f"   Processed {date_idx + 1}/{len(dates)} dates, {games_predicted} games predicted")
+        
+        print(f"✅ Total predictions: {games_predicted}")
+        print()
+    
+    # Calculate and compare results
+    print("="*80)
+    print("AGGREGATE RESULTS")
+    print("="*80)
+    print()
+    
+    for method_name, method_data in methods.items():
+        predictions = np.array(method_data['predictions'])
+        actuals = np.array(method_data['actuals'])
+        market_preds = np.array(method_data['market_preds'])
+        
+        model_errors = np.abs(predictions - actuals)
+        market_errors = np.abs(market_preds - actuals)
+        
+        model_mae = np.mean(model_errors)
+        market_mae = np.mean(market_errors)
+        model_rmse = np.sqrt(np.mean(model_errors ** 2))
+        market_rmse = np.sqrt(np.mean(market_errors ** 2))
+        
+        model_wins = np.sum(model_errors < market_errors)
+        market_wins = np.sum(model_errors > market_errors)
+        ties = np.sum(model_errors == market_errors)
+        
+        print(f"{method_data['name']}:")
+        print(f"   Total predictions: {len(predictions)}")
+        print(f"   Model MAE: {model_mae:.2f} points")
+        print(f"   Market MAE: {market_mae:.2f} points")
+        print(f"   Model RMSE: {model_rmse:.2f} points")
+        print(f"   Market RMSE: {market_rmse:.2f} points")
+        print(f"   Model vs Market: {model_wins} wins, {market_wins} losses, {ties} ties ({100*model_wins/len(predictions):.1f}% win rate)")
+        print()
+    
+    # Direct comparison
+    rolling_preds = np.array(methods['rolling']['predictions'])
+    expanding_preds = np.array(methods['expanding']['predictions'])
+    actuals = np.array(methods['rolling']['actuals'])
+    
+    rolling_errors = np.abs(rolling_preds - actuals)
+    expanding_errors = np.abs(expanding_preds - actuals)
+    
+    rolling_mae = np.mean(rolling_errors)
+    expanding_mae = np.mean(expanding_errors)
+    rolling_rmse = np.sqrt(np.mean(rolling_errors ** 2))
+    expanding_rmse = np.sqrt(np.mean(expanding_errors ** 2))
+    
+    print("="*80)
+    print("ROLLING vs EXPANDING COMPARISON")
+    print("="*80)
+    print()
+    print(f"MAE:")
+    print(f"   Rolling:   {rolling_mae:.2f} points")
+    print(f"   Expanding: {expanding_mae:.2f} points")
+    if expanding_mae < rolling_mae:
+        print(f"   ✅ Expanding better by {rolling_mae - expanding_mae:.2f} points")
+    else:
+        print(f"   ❌ Rolling better by {expanding_mae - rolling_mae:.2f} points")
+    print()
+    print(f"RMSE:")
+    print(f"   Rolling:   {rolling_rmse:.2f} points")
+    print(f"   Expanding: {expanding_rmse:.2f} points")
+    if expanding_rmse < rolling_rmse:
+        print(f"   ✅ Expanding better by {rolling_rmse - expanding_rmse:.2f} points")
+    else:
+        print(f"   ❌ Rolling better by {expanding_rmse - rolling_rmse:.2f} points")
+    print()
+    
+    # Game-by-game comparison
+    expanding_better = np.sum(expanding_errors < rolling_errors)
+    rolling_better = np.sum(expanding_errors > rolling_errors)
+    ties = np.sum(expanding_errors == rolling_errors)
+    
+    print(f"Head-to-Head (game-by-game):")
+    print(f"   Expanding better: {expanding_better} games ({100*expanding_better/len(actuals):.1f}%)")
+    print(f"   Rolling better:   {rolling_better} games ({100*rolling_better/len(actuals):.1f}%)")
+    print(f"   Ties:             {ties} games ({100*ties/len(actuals):.1f}%)")
+    print()
+    print("="*80)
+    print()
+
+
+def compare_model_snapshots(joined_df, x1_window_type='all'):
+    """
+    Train a model for each date in the season and test each model on all future games.
+    
+    Goal: Find which point in the season produces the best model.
+    - Early models: May underfit (not enough data)
+    - Mid-season models: Might be optimal balance
+    - Late models: May overfit to this season's quirks
+    
+    Args:
+        joined_df: DataFrame from load_and_prepare_data
+        x1_window_type: 'rolling' or 'all' for x1 calculation
+    
+    Returns:
+        DataFrame with model performance for each training date
+    """
+    print("="*80)
+    print("MODEL SNAPSHOT COMPARISON")
+    print("="*80)
+    print()
+    print(f"Strategy: Train a model for each date, test on all future games")
+    print(f"x1 method: {x1_window_type}")
+    print()
+    
+    # Build team-level rows
+    print("🔨 Building team-level rows...")
+    team_df = build_team_game_rows(joined_df)
+    print(f"✅ Built {len(team_df)} team-game rows")
+    print(f"   Teams: {team_df['team'].nunique()}")
+    print(f"   Date range: {team_df['game_date'].min()} to {team_df['game_date'].max()}")
+    print()
+    
+    # Get unique dates
+    dates = sorted(team_df['game_date'].unique())
+    print(f"📅 Found {len(dates)} unique game dates")
+    print()
+    
+    # Impute missing scores for all data upfront
+    team_df = impute_missing_implied_scores(team_df)
+    
+    results = []
+    
+    print("🔄 Training models for each date...")
+    print()
+    
+    for date_idx, train_cutoff_date in enumerate(dates):
+        # Skip very early dates (need at least 100 training games)
+        train_df = team_df[team_df['game_date'] < train_cutoff_date].copy()
+        
+        if len(train_df) < 100:
+            continue
+        
+        # Prepare training data with features
+        train_with_features = []
+        for team in train_df['team'].unique():
+            team_games = train_df[train_df['team'] == team].sort_values('game_date').copy()
+            
+            for idx in range(len(team_games)):
+                if idx == 0:
+                    continue  # Skip first game
+                
+                history = team_games.iloc[:idx]
+                
+                if x1_window_type == 'rolling':
+                    x1_val = history['implied_score_filled'].tail(MIN_GAMES_FOR_AVG).mean()
+                else:
+                    x1_val = history['implied_score_filled'].mean()
+                
+                if pd.isna(x1_val):
+                    continue
+                
+                game_copy = team_games.iloc[idx].copy()
+                game_copy['x1_avg_last_n'] = x1_val
+                game_copy['x2_implied'] = game_copy['implied_score_filled']
+                game_copy['x3_conf'] = float(game_copy['is_conference_game'])
+                
+                train_with_features.append(game_copy)
+        
+        if len(train_with_features) == 0:
+            continue
+        
+        train_features_df = pd.DataFrame(train_with_features)
+        train_features_df = train_features_df.dropna(subset=['x1_avg_last_n', 'x2_implied', 'x3_conf', 'actual_score'])
+        
+        if len(train_features_df) < 50:
+            continue
+        
+        # Train model
+        X_train = train_features_df[['x1_avg_last_n', 'x2_implied', 'x3_conf']].values
+        y_train = train_features_df['actual_score'].values
+        
+        coefficients = train_linear_regression(X_train, y_train)
+        
+        # Calculate training metrics
+        train_preds = predict_linear_regression(X_train, coefficients)
+        train_errors = np.abs(train_preds - y_train)
+        train_mae = np.mean(train_errors)
+        train_rmse = np.sqrt(np.mean(train_errors ** 2))
+        
+        # Market metrics on training set
+        train_market_errors = np.abs(train_features_df['x2_implied'].values - y_train)
+        train_market_mae = np.mean(train_market_errors)
+        train_market_rmse = np.sqrt(np.mean(train_market_errors ** 2))
+        
+        # Test on all future games
+        test_df = team_df[team_df['game_date'] >= train_cutoff_date].copy()
+        
+        if len(test_df) == 0:
+            continue
+        
+        # Prepare test data with features
+        test_with_features = []
+        for team in test_df['team'].unique():
+            team_games = team_df[team_df['team'] == team].sort_values('game_date').copy()
+            
+            for idx, game in team_games.iterrows():
+                if game['game_date'] < train_cutoff_date:
+                    continue
+                
+                # Get history up to this game
+                history = team_games[team_games['game_date'] < game['game_date']]
+                
+                if len(history) == 0:
+                    continue
+                
+                if x1_window_type == 'rolling':
+                    x1_val = history['implied_score_filled'].tail(MIN_GAMES_FOR_AVG).mean()
+                else:
+                    x1_val = history['implied_score_filled'].mean()
+                
+                if pd.isna(x1_val):
+                    continue
+                
+                game_copy = game.copy()
+                game_copy['x1_avg_last_n'] = x1_val
+                game_copy['x2_implied'] = game_copy['implied_score_filled']
+                game_copy['x3_conf'] = float(game_copy['is_conference_game'])
+                
+                test_with_features.append(game_copy)
+        
+        if len(test_with_features) == 0:
+            continue
+        
+        test_features_df = pd.DataFrame(test_with_features)
+        test_features_df = test_features_df.dropna(subset=['x1_avg_last_n', 'x2_implied', 'x3_conf', 'actual_score'])
+        
+        if len(test_features_df) == 0:
+            continue
+        
+        # Make predictions on test set
+        X_test = test_features_df[['x1_avg_last_n', 'x2_implied', 'x3_conf']].values
+        y_test = test_features_df['actual_score'].values
+        
+        test_preds = predict_linear_regression(X_test, coefficients)
+        test_errors = np.abs(test_preds - y_test)
+        test_mae = np.mean(test_errors)
+        test_rmse = np.sqrt(np.mean(test_errors ** 2))
+        
+        # Market metrics on test set
+        test_market_errors = np.abs(test_features_df['x2_implied'].values - y_test)
+        test_market_mae = np.mean(test_market_errors)
+        test_market_rmse = np.sqrt(np.mean(test_market_errors ** 2))
+        
+        # Model vs Market wins
+        train_model_wins = np.sum(train_errors < train_market_errors)
+        train_market_wins = np.sum(train_errors > train_market_errors)
+        test_model_wins = np.sum(test_errors < test_market_errors)
+        test_market_wins = np.sum(test_errors > test_market_errors)
+        
+        results.append({
+            'model_date': train_cutoff_date,
+            'n_train': len(train_features_df),
+            'n_test': len(test_features_df),
+            'train_mae': train_mae,
+            'train_rmse': train_rmse,
+            'train_market_mae': train_market_mae,
+            'train_market_rmse': train_market_rmse,
+            'train_model_wins': train_model_wins,
+            'train_market_wins': train_market_wins,
+            'test_mae': test_mae,
+            'test_rmse': test_rmse,
+            'test_market_mae': test_market_mae,
+            'test_market_rmse': test_market_rmse,
+            'test_model_wins': test_model_wins,
+            'test_market_wins': test_market_wins,
+            'intercept': coefficients[0],
+            'coef_x1': coefficients[1],
+            'coef_x2': coefficients[2],
+            'coef_x3': coefficients[3]
+        })
+        
+        if (date_idx + 1) % 20 == 0:
+            print(f"   Processed {date_idx + 1}/{len(dates)} dates, {len(results)} models trained")
+    
+    print(f"✅ Trained {len(results)} models")
+    print()
+    
+    # Convert to DataFrame
+    results_df = pd.DataFrame(results)
+    
+    # Calculate overfit metric (test_mae - train_mae)
+    results_df['overfit'] = results_df['test_mae'] - results_df['train_mae']
+    results_df['test_mae_improvement'] = results_df['test_market_mae'] - results_df['test_mae']
+    
+    # Print summary
+    print("="*80)
+    print("SUMMARY STATISTICS")
+    print("="*80)
+    print()
+    
+    print(f"Best model by TEST MAE:")
+    best_idx = results_df['test_mae'].idxmin()
+    best = results_df.iloc[best_idx]
+    print(f"   Date: {best['model_date']}")
+    print(f"   Training games: {best['n_train']:.0f}")
+    print(f"   Test games: {best['n_test']:.0f}")
+    print(f"   Test MAE: {best['test_mae']:.2f} (Market: {best['test_market_mae']:.2f})")
+    print(f"   Test RMSE: {best['test_rmse']:.2f} (Market: {best['test_market_rmse']:.2f})")
+    print()
+    
+    print(f"Worst model by TEST MAE:")
+    worst_idx = results_df['test_mae'].idxmax()
+    worst = results_df.iloc[worst_idx]
+    print(f"   Date: {worst['model_date']}")
+    print(f"   Training games: {worst['n_train']:.0f}")
+    print(f"   Test games: {worst['n_test']:.0f}")
+    print(f"   Test MAE: {worst['test_mae']:.2f} (Market: {worst['test_market_mae']:.2f})")
+    print(f"   Test RMSE: {worst['test_rmse']:.2f} (Market: {worst['test_market_rmse']:.2f})")
+    print()
+    
+    print(f"Model with most overfitting (test MAE - train MAE):")
+    overfit_idx = results_df['overfit'].idxmax()
+    overfit = results_df.iloc[overfit_idx]
+    print(f"   Date: {overfit['model_date']}")
+    print(f"   Training games: {overfit['n_train']:.0f}")
+    print(f"   Train MAE: {overfit['train_mae']:.2f}")
+    print(f"   Test MAE: {overfit['test_mae']:.2f}")
+    print(f"   Overfit: {overfit['overfit']:.2f} points")
+    print()
+    
+    print(f"Overall metrics across all models:")
+    print(f"   Average test MAE: {results_df['test_mae'].mean():.2f} ± {results_df['test_mae'].std():.2f}")
+    print(f"   Average market MAE: {results_df['test_market_mae'].mean():.2f} ± {results_df['test_market_mae'].std():.2f}")
+    print(f"   Average overfit: {results_df['overfit'].mean():.2f} ± {results_df['overfit'].std():.2f}")
+    print()
+    
+    # Save results
+    output_path = Path.home() / 'Downloads' / 'tmp' / f'model_snapshot_comparison_{x1_window_type}.csv'
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    results_df.to_csv(output_path, index=False)
+    print(f"💾 Results saved to: {output_path}")
+    print()
+    print("="*80)
+    print()
+    
+    return results_df
+
+
 def compare_x1_methods_all_teams(joined_df):
     """
     Compare rolling window vs expanding window for x1 across all D1 teams.
+    Uses SEPARATE models per team (old approach).
     Returns summary statistics for both methods.
     """
     print("="*80)
@@ -889,6 +1397,10 @@ def main():
                        help='Use all available game history for x1 instead of last 10 games')
     parser.add_argument('--compare-x1-methods', action='store_true',
                        help='Compare rolling vs expanding window for x1 across all teams')
+    parser.add_argument('--pooled', action='store_true',
+                       help='Use pooled model (train on all teams together) instead of per-team models')
+    parser.add_argument('--compare-snapshots', action='store_true',
+                       help='Train a model for each date and compare performance on future games')
     parser.add_argument('--train', action='store_true',
                        help='Train model and evaluate')
     parser.add_argument('--log-examples', type=int, default=0,
@@ -901,9 +1413,18 @@ def main():
     # Load data
     joined_df = load_and_prepare_data(season=args.season, use_cache=args.use_cache)
     
+    # Compare model snapshots (train model at each date, test on future)
+    if args.compare_snapshots:
+        x1_window = 'all' if args.use_all_history else 'rolling'
+        compare_model_snapshots(joined_df, x1_window_type=x1_window)
+        return
+    
     # Compare x1 methods across all teams
     if args.compare_x1_methods:
-        compare_x1_methods_all_teams(joined_df)
+        if args.pooled:
+            compare_x1_methods_pooled(joined_df)
+        else:
+            compare_x1_methods_all_teams(joined_df)
         return
     
     # Single team analysis
