@@ -648,10 +648,6 @@ def generate_ytd_report(today, season, threshold):
     favorite_stats = calc_stats(favorite_plays, 'FAVORITE STEAM')
     combined_stats = calc_stats(completed, 'COMBINED')
     
-    # Best/worst plays (overall)
-    best_play = completed.loc[completed['cover_margin'].idxmax()]
-    worst_play = completed.loc[completed['cover_margin'].idxmin()]
-    
     # Format report
     report = f"""
 📊 NBA LINE STEAM YTD REPORT - {today}
@@ -728,9 +724,12 @@ YESTERDAY'S RESULTS ({yesterday}) - {len(yesterday_games)} plays:
    Result: {game['status'].upper()} by {game['cover_margin']:+.1f} pts | Steam: {game['steam_magnitude']:.1f} pts ({steam_dir})
 
 """
-    
-    # Best/worst plays
-    report += f"""{'─'*80}
+        
+        # Best/worst plays from yesterday only
+        best_play = yesterday_games.loc[yesterday_games['cover_margin'].idxmax()]
+        worst_play = yesterday_games.loc[yesterday_games['cover_margin'].idxmin()]
+        
+        report += f"""{'─'*80}
 BEST PLAY:
   {best_play['play_team']} {best_play['play_spread']:+.1f} on {best_play['game_date']}
   Result: {best_play['status'].upper()} by {best_play['cover_margin']:+.1f} pts
@@ -741,7 +740,14 @@ WORST PLAY:
   Result: {worst_play['status'].upper()} by {worst_play['cover_margin']:+.1f} pts
   Steam: {worst_play['steam_magnitude']:.1f} pts toward {worst_play['steamed_team']}
 
-{'─'*80}
+"""
+    else:
+        report += f"""{'─'*80}
+YESTERDAY'S RESULTS ({yesterday}) - No plays
+
+"""
+    
+    report += f"""{'─'*80}
 BREAKDOWN BY STEAM SIZE (Combined):
 """
     
