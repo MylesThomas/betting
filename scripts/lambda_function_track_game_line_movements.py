@@ -2186,8 +2186,35 @@ def format_movement_email_html(sport_summaries: Dict, all_movements: Dict[str, p
     html_parts.append('<div class="summary"><h2>Summary</h2>')
     for sport_name, summary in sport_summaries.items():
         df = all_movements.get(sport_name, pd.DataFrame())
-        unique_games_with_moves = df['game_id'].nunique() if not df.empty else 0
-        unique_games_crossed_zero = df[df['crossed_zero_1h'] | df['crossed_zero_24h']]['game_id'].nunique() if not df.empty else 0
+        
+        if not df.empty:
+            # Filter movements based on alert configuration (same logic as main sections)
+            if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+                mask = (df['significant_hourly'] | df['significant_daily'] | 
+                       df['crossed_zero_1h'] | df['crossed_zero_24h'])
+            elif ALERT_ON_1H_MOVEMENTS:
+                mask = (df['significant_hourly'] | df['crossed_zero_1h'])
+            elif ALERT_ON_24H_MOVEMENTS:
+                mask = (df['significant_daily'] | df['crossed_zero_24h'])
+            else:
+                mask = pd.Series([False] * len(df))
+            
+            filtered_df = df[mask]
+            unique_games_with_moves = filtered_df['game_id'].nunique()
+            
+            # Crossed zero counts should also respect alert config
+            if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+                unique_games_crossed_zero = filtered_df[filtered_df['crossed_zero_1h'] | filtered_df['crossed_zero_24h']]['game_id'].nunique()
+            elif ALERT_ON_1H_MOVEMENTS:
+                unique_games_crossed_zero = filtered_df[filtered_df['crossed_zero_1h']]['game_id'].nunique()
+            elif ALERT_ON_24H_MOVEMENTS:
+                unique_games_crossed_zero = filtered_df[filtered_df['crossed_zero_24h']]['game_id'].nunique()
+            else:
+                unique_games_crossed_zero = 0
+        else:
+            unique_games_with_moves = 0
+            unique_games_crossed_zero = 0
+        
         html_parts.append(f"<p><strong>{sport_name}:</strong> {summary['num_games']} games tracked | {unique_games_with_moves} games with moves | {unique_games_crossed_zero} games crossed zero</p>")
     html_parts.append('</div>')
     
@@ -2391,8 +2418,34 @@ def format_movement_email(sport_summaries: Dict, all_movements: Dict[str, pd.Dat
     lines.append("-" * 80)
     for sport_name, summary in sport_summaries.items():
         df = all_movements.get(sport_name, pd.DataFrame())
-        unique_games_with_moves = df['game_id'].nunique() if not df.empty else 0
-        unique_games_crossed_zero = df[df['crossed_zero_1h'] | df['crossed_zero_24h']]['game_id'].nunique() if not df.empty else 0
+        
+        if not df.empty:
+            # Filter movements based on alert configuration (same logic as main sections)
+            if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+                mask = (df['significant_hourly'] | df['significant_daily'] | 
+                       df['crossed_zero_1h'] | df['crossed_zero_24h'])
+            elif ALERT_ON_1H_MOVEMENTS:
+                mask = (df['significant_hourly'] | df['crossed_zero_1h'])
+            elif ALERT_ON_24H_MOVEMENTS:
+                mask = (df['significant_daily'] | df['crossed_zero_24h'])
+            else:
+                mask = pd.Series([False] * len(df))
+            
+            filtered_df = df[mask]
+            unique_games_with_moves = filtered_df['game_id'].nunique()
+            
+            # Crossed zero counts should also respect alert config
+            if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+                unique_games_crossed_zero = filtered_df[filtered_df['crossed_zero_1h'] | filtered_df['crossed_zero_24h']]['game_id'].nunique()
+            elif ALERT_ON_1H_MOVEMENTS:
+                unique_games_crossed_zero = filtered_df[filtered_df['crossed_zero_1h']]['game_id'].nunique()
+            elif ALERT_ON_24H_MOVEMENTS:
+                unique_games_crossed_zero = filtered_df[filtered_df['crossed_zero_24h']]['game_id'].nunique()
+            else:
+                unique_games_crossed_zero = 0
+        else:
+            unique_games_with_moves = 0
+            unique_games_crossed_zero = 0
         
         lines.append(f"{sport_name}: {summary['num_games']} games tracked | {unique_games_with_moves} games with moves | {unique_games_crossed_zero} games crossed zero")
     lines.append("")
@@ -3281,7 +3334,26 @@ def main():
     # Send email if running in Lambda
     if IS_LAMBDA:
         # Check if we should send email
-        has_movements = len(saved_movements) > 0
+        # Apply same filtering logic as email formatting to count actual alertable movements
+        has_movements = False
+        if saved_movements:
+            for sport_name, df in saved_movements:
+                if df is not None and not df.empty:
+                    # Filter movements based on alert configuration (same logic as email)
+                    if ALERT_ON_1H_MOVEMENTS and ALERT_ON_24H_MOVEMENTS:
+                        mask = (df['significant_hourly'] | df['significant_daily'] | 
+                               df['crossed_zero_1h'] | df['crossed_zero_24h'])
+                    elif ALERT_ON_1H_MOVEMENTS:
+                        mask = (df['significant_hourly'] | df['crossed_zero_1h'])
+                    elif ALERT_ON_24H_MOVEMENTS:
+                        mask = (df['significant_daily'] | df['crossed_zero_24h'])
+                    else:
+                        mask = pd.Series([False] * len(df))
+                    
+                    if mask.any():
+                        has_movements = True
+                        break
+        
         should_send_email = has_movements or SEND_EMAIL_IF_NO_MOVEMENTS
         
         if should_send_email:
