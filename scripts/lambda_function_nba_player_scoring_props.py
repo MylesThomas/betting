@@ -578,7 +578,7 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     bucket = 'nba-betting-mt'
     
     # Download and load strategy config
-    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props.json'
+    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props_v2.json' # Updated: 2026-01-17
     config_local_path = '/tmp/top3_config.json'
     
     print(f"   Downloading config from s3://{bucket}/{config_s3_path}")
@@ -592,12 +592,12 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     # Validate config structure
     strategies = config_data['strategies']
-    assert len(strategies) == 3, f"Expected 3 strategies, got {len(strategies)}"
+    assert len(strategies) == 4, f"Expected 4 strategies, got {len(strategies)}"
     
     count_2d = len([s for s in strategies if s['strategy_type'] == '2d'])
     count_3d = len([s for s in strategies if s['strategy_type'] == '3d'])
     assert count_2d == 1, f"Expected 1 2D strategy, got {count_2d}"
-    assert count_3d == 2, f"Expected 2 3D strategies, got {count_3d}"
+    assert count_3d == 3, f"Expected 3 3D strategies, got {count_3d}"
     
     print(f"   ✅ Config validated: {count_2d} x 2D, {count_3d} x 3D")
     

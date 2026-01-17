@@ -473,7 +473,12 @@ Win Rate: {win_pct:.1f}% | Actual ROI: {actual_roi:+.1f}% | Expected ROI: {expec
         else:
             emoji = EMOJI['unknown']
         
-        strat_label = f"[{row['strategy_dimension']}]" if 'strategy_dimension' in row else ""
+        # Format strategy label with dimension and strategy name
+        if 'strategy_dimension' in row:
+            strat_name = row.get('strategy_name', '')
+            strat_label = f"[{row['strategy_dimension']} - {strat_name}]"
+        else:
+            strat_label = ""
         text += f"{emoji} {row['result']} {strat_label}: {row['player']} {row['bet_side']} {row['line']} pts\n"
         text += f"   Actual: {row['actual_pts']:.0f} pts | Margin: {row['margin']:+.1f}\n"
         text += f"   {row['team']} vs {row['opponent']} | Expected ROI: {row['expected_roi']:+.1f}%\n\n"
@@ -596,7 +601,12 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
 """
         
         for _, play in game_plays.iterrows():
-            strat_label = f"[{play['strategy_dimension']}]" if 'strategy_dimension' in play else ""
+            # Format strategy label with dimension and strategy name
+            if 'strategy_dimension' in play:
+                strat_name = play.get('strategy_name', '')
+                strat_label = f"[{play['strategy_dimension']} - {strat_name}]"
+            else:
+                strat_label = ""
             text += f"{EMOJI['fire']} {strat_label} {play['bet_side']}: {play['player']} {play['line']} pts\n"
             text += f"   Team: {play['team']} (Spread: {play['spread']:+.1f})\n"
             text += f"   Strategy: {play['strategy_name']}\n"
