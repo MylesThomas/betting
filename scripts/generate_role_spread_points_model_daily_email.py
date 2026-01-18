@@ -516,7 +516,7 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
     if 'strategy_dimension' in df_plays.columns:
         dimensions = df_plays['strategy_dimension'].unique()
         if len(dimensions) > 1 or '2D AND 3D' in dimensions:
-            text += "BREAKDOWN BY STRATEGY:\n"
+            text += "BREAKDOWN BY DIMENSION:\n"
             text += "─" * 80 + "\n"
             
             # Show 2D Only, 3D Only, and Both separately
@@ -543,6 +543,22 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             text += f"Total Unique: {total_unique} plays\n"
             
             text += "\n"
+    
+    # Strategy breakdown (by strategy_name if available)
+    if 'strategy_name' in df_plays.columns:
+        text += "BREAKDOWN BY STRATEGY:\n"
+        text += "─" * 80 + "\n"
+        
+        # Get unique strategy names and their stats
+        for strategy_name in sorted(df_plays['strategy_name'].unique()):
+            strat_plays = df_plays[df_plays['strategy_name'] == strategy_name]
+            strat_count = len(strat_plays)
+            strat_avg_roi = strat_plays['expected_roi'].mean()
+            text += f"{strategy_name}: {strat_count} {'play' if strat_count == 1 else 'plays'} | Avg Expected ROI: {strat_avg_roi:+.1f}%\n"
+        
+        text += "─" * 80 + "\n"
+        text += f"Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%\n"
+        text += "\n"
     
     # Group plays by game (team + opponent)
     # Create a sortable game identifier
