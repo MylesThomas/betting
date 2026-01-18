@@ -459,11 +459,11 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     print(f"  Overall: {main_steps_success}\n")
     
     if main_steps_success:
-        print(f"\n✅ Main workflow succeeded - running Top3 Unders workflow")
+        print(f"\n✅ Main workflow succeeded - running Top5 Unders workflow")
         top3_results = run_top3_unders_workflow(repo_dir, today, yesterday, season)
         results['steps']['top3_workflow'] = top3_results
     else:
-        print(f"\n⚠️  Skipping Top3 Unders workflow - main workflow had failures")
+        print(f"\n⚠️  Skipping Top5 Unders workflow - main workflow had failures")
         results['steps']['top3_workflow'] = {
             'skipped': True,
             'reason': 'main_workflow_failed',
@@ -546,7 +546,7 @@ def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dim
 
 def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     """
-    Run the Top3 Unders workflow (Steps 6-8).
+    Run the Top5 Unders workflow (Steps 6-8).
     Filters existing plays, tracks separately, sends 2nd email.
     
     This is ADDITIVE - doesn't touch the main workflow.
@@ -558,17 +558,17 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         season: NBA season
     
     Returns:
-        dict: Top3 workflow results
+        dict: Top5 workflow results
     """
     print(f"\n{'='*80}")
-    print("🎯 Starting Top3 Unders Workflow (Steps 6-8)")
+    print("🎯 Starting Top5 Unders Workflow (Steps 6-8)")
     print(f"{'='*80}\n")
     
     results = {}
     
     # Step 6: Download strategy config from S3 and filter plays
     print(f"\n{'='*80}")
-    print("Step 6: Filtering Today's Plays (Top3 Unders)")
+    print("Step 6: Filtering Today's Plays (Top5 Unders)")
     print(f"{'='*80}\n")
     
     import boto3
@@ -578,7 +578,7 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     bucket = 'nba-betting-mt'
     
     # Download and load strategy config
-    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props_v2.json' # Updated: 2026-01-17
+    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props_v3.json' # Updated: 2026-01-18
     config_local_path = '/tmp/top3_config.json'
     
     print(f"   Downloading config from s3://{bucket}/{config_s3_path}")
@@ -592,46 +592,46 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     # Validate config structure
     strategies = config_data['strategies']
-    assert len(strategies) == 4, f"Expected 4 strategies, got {len(strategies)}"
+    assert len(strategies) == 5, f"Expected 5 strategies, got {len(strategies)}"
     
     count_2d = len([s for s in strategies if s['strategy_type'] == '2d'])
     count_3d = len([s for s in strategies if s['strategy_type'] == '3d'])
-    assert count_2d == 1, f"Expected 1 2D strategy, got {count_2d}"
+    assert count_2d == 2, f"Expected 2 2D strategies, got {count_2d}"
     assert count_3d == 3, f"Expected 3 3D strategies, got {count_3d}"
     
     print(f"   ✅ Config validated: {count_2d} x 2D, {count_3d} x 3D")
     
     # Download and filter 2D plays CSV
     plays_2d_all_csv = f'/tmp/{today}_2d.csv'
-    plays_2d_top3_csv = f'/tmp/{today}_2d_top3.csv'
+    plays_2d_top5_csv = f'/tmp/{today}_2d_top5.csv'
     s3_2d_path = f'data/04_output/plays/role_spread_points_model/2d/{today}.csv'
-    s3_2d_top3_path = f'data/04_output/plays/role_spread_points_model/2d/{today}_top3.csv'
+    s3_2d_top5_path = f'data/04_output/plays/role_spread_points_model/2d/{today}_top5.csv'
     
     print(f"\n   2D Plays:")
     s3_client.download_file(bucket, s3_2d_path, plays_2d_all_csv)
-    filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top3_csv, dimension='2d')
-    s3_client.upload_file(plays_2d_top3_csv, bucket, s3_2d_top3_path)
-    print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top3_path}")
+    filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top5_csv, dimension='2d')
+    s3_client.upload_file(plays_2d_top5_csv, bucket, s3_2d_top5_path)
+    print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top5_path}")
     
     results['2d_filter'] = {'success': True, 'plays_count': filtered_2d_count}
     
     # Download and filter 3D plays CSV
     plays_3d_all_csv = f'/tmp/{today}_3d.csv'
-    plays_3d_top3_csv = f'/tmp/{today}_3d_top3.csv'
+    plays_3d_top5_csv = f'/tmp/{today}_3d_top5.csv'
     s3_3d_path = f'data/04_output/plays/role_spread_points_model/3d/{today}.csv'
-    s3_3d_top3_path = f'data/04_output/plays/role_spread_points_model/3d/{today}_top3.csv'
+    s3_3d_top5_path = f'data/04_output/plays/role_spread_points_model/3d/{today}_top5.csv'
     
     print(f"\n   3D Plays:")
     s3_client.download_file(bucket, s3_3d_path, plays_3d_all_csv)
-    filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top3_csv, dimension='3d')
-    s3_client.upload_file(plays_3d_top3_csv, bucket, s3_3d_top3_path)
-    print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top3_path}")
+    filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top5_csv, dimension='3d')
+    s3_client.upload_file(plays_3d_top5_csv, bucket, s3_3d_top5_path)
+    print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top5_path}")
     
     results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
     
-    # Step 7: Track yesterday's Top3 performance
+    # Step 7: Track yesterday's Top5 performance
     print(f"\n{'='*80}")
-    print("Step 7: Tracking Yesterday's Top3 Performance")
+    print("Step 7: Tracking Yesterday's Top5 Performance")
     print(f"{'='*80}\n")
     
     cmd = [
@@ -639,8 +639,8 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         '--date', yesterday,
         '--season', season,
         '--strategy', 'both',
-        '--plays-suffix', '_top3',
-        '--output-suffix', '_top3'
+        '--plays-suffix', '_top5',
+        '--output-suffix', '_top5'
     ]
     
     env = {
@@ -651,9 +651,9 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
     results['tracking'] = {'success': returncode == 0, 'output': stdout}
     
-    # Step 8: Generate Top3 email
+    # Step 8: Generate Top5 email
     print(f"\n{'='*80}")
-    print("Step 8: Generating Top3 Unders Email")
+    print("Step 8: Generating Top5 Unders Email")
     print(f"{'='*80}\n")
     
     cmd = [
@@ -662,10 +662,10 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         '--plays-date', today,
         '--results-date', yesterday,
         '--strategy', 'both',
-        '--plays-suffix', '_top3',
-        '--tracking-suffix', '_top3',
-        '--email-title', '🎯 Top 3 Unders Plays',
-        '--load-ytd',  # Load season YTD stats for top3 email
+        '--plays-suffix', '_top5',
+        '--tracking-suffix', '_top5',
+        '--email-title', '🎯 Top 5 Unders Plays',
+        '--load-ytd',  # Load season YTD stats for top5 email
         '--sns-topic', os.environ['SNS_TOPIC_ARN']
     ]
     
@@ -783,9 +783,9 @@ def lambda_handler(event, context):
             success_lines.append(f"⏭️  Skipped: {top3['reason']}")
         else:
             success_lines.extend([
-                f"✅ Step 6: Filter Top3 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)",
-                f"✅ Step 7: Track Top3 Performance",
-                f"✅ Step 8: Generate & Send Top3 Email"
+                f"✅ Step 6: Filter Top5 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)",
+                f"✅ Step 7: Track Top5 Performance",
+                f"✅ Step 8: Generate & Send Top5 Email"
             ])
         
         success_lines.extend([
