@@ -603,35 +603,35 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     # Download and filter 2D plays CSV
     plays_2d_all_csv = f'/tmp/{today}_2d.csv'
-    plays_2d_top5_csv = f'/tmp/{today}_2d_top5.csv'
+    plays_2d_top3_csv = f'/tmp/{today}_2d_top3.csv'
     s3_2d_path = f'data/04_output/plays/role_spread_points_model/2d/{today}.csv'
-    s3_2d_top5_path = f'data/04_output/plays/role_spread_points_model/2d/{today}_top5.csv'
+    s3_2d_top3_path = f'data/04_output/plays/role_spread_points_model/2d/{today}_top3.csv'
     
     print(f"\n   2D Plays:")
     s3_client.download_file(bucket, s3_2d_path, plays_2d_all_csv)
-    filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top5_csv, dimension='2d')
-    s3_client.upload_file(plays_2d_top5_csv, bucket, s3_2d_top5_path)
-    print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top5_path}")
+    filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top3_csv, dimension='2d')
+    s3_client.upload_file(plays_2d_top3_csv, bucket, s3_2d_top3_path)
+    print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top3_path}")
     
     results['2d_filter'] = {'success': True, 'plays_count': filtered_2d_count}
     
     # Download and filter 3D plays CSV
     plays_3d_all_csv = f'/tmp/{today}_3d.csv'
-    plays_3d_top5_csv = f'/tmp/{today}_3d_top5.csv'
+    plays_3d_top3_csv = f'/tmp/{today}_3d_top3.csv'
     s3_3d_path = f'data/04_output/plays/role_spread_points_model/3d/{today}.csv'
-    s3_3d_top5_path = f'data/04_output/plays/role_spread_points_model/3d/{today}_top5.csv'
+    s3_3d_top3_path = f'data/04_output/plays/role_spread_points_model/3d/{today}_top3.csv'
     
     print(f"\n   3D Plays:")
     s3_client.download_file(bucket, s3_3d_path, plays_3d_all_csv)
-    filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top5_csv, dimension='3d')
-    s3_client.upload_file(plays_3d_top5_csv, bucket, s3_3d_top5_path)
-    print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top5_path}")
+    filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top3_csv, dimension='3d')
+    s3_client.upload_file(plays_3d_top3_csv, bucket, s3_3d_top3_path)
+    print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top3_path}")
     
     results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
     
-    # Step 7: Track yesterday's Top5 performance
+    # Step 7: Track yesterday's Top3 performance
     print(f"\n{'='*80}")
-    print("Step 7: Tracking Yesterday's Top5 Performance")
+    print("Step 7: Tracking Yesterday's Top3 Performance")
     print(f"{'='*80}\n")
     
     cmd = [
@@ -639,8 +639,8 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         '--date', yesterday,
         '--season', season,
         '--strategy', 'both',
-        '--plays-suffix', '_top5',
-        '--output-suffix', '_top5'
+        '--plays-suffix', '_top3',
+        '--output-suffix', '_top3'
     ]
     
     env = {
@@ -651,9 +651,9 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
     results['tracking'] = {'success': returncode == 0, 'output': stdout}
     
-    # Step 8: Generate Top5 email
+    # Step 8: Generate Top3 email
     print(f"\n{'='*80}")
-    print("Step 8: Generating Top5 Unders Email")
+    print("Step 8: Generating Top3 Unders Email")
     print(f"{'='*80}\n")
     
     cmd = [
@@ -662,10 +662,10 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         '--plays-date', today,
         '--results-date', yesterday,
         '--strategy', 'both',
-        '--plays-suffix', '_top5',
-        '--tracking-suffix', '_top5',
-        '--email-title', '🎯 Top 5 Unders Plays',
-        '--load-ytd',  # Load season YTD stats for top5 email
+        '--plays-suffix', '_top3',
+        '--tracking-suffix', '_top3',
+        '--email-title', '🎯 Top 3 Unders Plays',
+        '--load-ytd',  # Load season YTD stats for top3 email
         '--sns-topic', os.environ['SNS_TOPIC_ARN']
     ]
     
