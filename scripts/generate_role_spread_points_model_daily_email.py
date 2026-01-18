@@ -441,11 +441,36 @@ Win Rate: {win_pct:.1f}% | Actual ROI: {actual_roi:+.1f}% | Expected ROI: {expec
 
 """
     
+    # Per-strategy breakdown (individual strategy names)
+    if 'strategy_name' in df_results.columns:
+        text += "BREAKDOWN BY STRATEGY:\n"
+        text += "─" * 80 + "\n"
+        
+        strategy_summary = df_results.groupby('strategy_name').apply(
+            lambda x: pd.Series({
+                'wins': (x['result'] == 'WIN').sum(),
+                'losses': (x['result'] == 'LOSS').sum(),
+                'profit': x['profit'].sum()
+            })
+        ).reset_index()
+        
+        # Calculate win percentage and sort by total plays
+        strategy_summary['total_plays'] = strategy_summary['wins'] + strategy_summary['losses']
+        strategy_summary['win_pct'] = (
+            strategy_summary['wins'] / strategy_summary['total_plays'] * 100
+        ).fillna(0)
+        strategy_summary = strategy_summary.sort_values('total_plays', ascending=False)
+        
+        for _, row in strategy_summary.iterrows():
+            text += f"{row['strategy_name']:30s}: {int(row['wins'])}-{int(row['losses'])} ({row['win_pct']:.1f}%) | Profit: ${row['profit']:+.2f}\n"
+        
+        text += "\n"
+    
     # Strategy dimension breakdown (if both 2D and 3D present)
     if 'strategy_dimension' in df_results.columns:
         dimensions = df_results['strategy_dimension'].unique()
         if len(dimensions) > 1:
-            text += "BREAKDOWN BY STRATEGY:\n"
+            text += "BREAKDOWN BY DIMENSION:\n"
             text += "─" * 80 + "\n"
             
             for dim in sorted(dimensions):
