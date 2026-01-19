@@ -53,8 +53,9 @@ import json
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-# Import Kelly Criterion calculator
+# Import Kelly Criterion calculator and odds utilities
 from kelly_criterion import calculate_kelly_criterion, kelly_bet_size
+from odds_utils import odds_to_implied_probability
 
 # =============================================================================
 # EMOJI MAP
