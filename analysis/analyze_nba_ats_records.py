@@ -457,17 +457,23 @@ def summarize_ats_records(ats_df):
     return summary_df
 
 
-def print_ats_rankings(summary_df, season):
+def print_ats_rankings(summary_df, season, start_date=None, end_date=None):
     """
     Print formatted ATS rankings
     
     Args:
         summary_df: DataFrame with team ATS summaries
         season: Season string (e.g., '2025-26')
+        start_date: Optional start date filter (str)
+        end_date: Optional end date filter (str)
     """
     
     print(f"\n{'='*180}")
     print(f"🏀 NBA {season} SEASON - AGAINST THE SPREAD (ATS) RANKINGS")
+    if start_date or end_date:
+        date_range = f"Date Range: {start_date or 'Season Start'} to {end_date or 'Season End'}"
+        print(f"{'='*180}")
+        print(f"{date_range}")
     print(f"{'='*180}")
     print(f"As of: {datetime.now().strftime('%Y-%m-%d %I:%M %p ET')}")
     print(f"{'='*180}\n")
@@ -1035,7 +1041,13 @@ Examples:
   python analysis/analyze_nba_ats_records.py --plot
   
   # Specify season in YYYY-YY format
-  python analysis/analyze_nba_ats_records.py --season 2025-26 --plot
+  python analysis/analyze_nba_ats_records.py --season 2024-25 --plot
+  
+  # Filter by date range (regular season only)
+  python analysis/analyze_nba_ats_records.py --season 2024-25 --start-date 2024-10-24 --end-date 2025-04-13
+  
+  # Filter by date range (playoffs only)
+  python analysis/analyze_nba_ats_records.py --season 2024-25 --start-date 2025-04-19 --end-date 2025-06-22
         """
     )
     parser.add_argument(
@@ -1043,6 +1055,18 @@ Examples:
         type=str,
         default=None,
         help="Season to analyze in 'YYYY-YY' format (e.g., '2025-26'). Default: current season"
+    )
+    parser.add_argument(
+        '--start-date',
+        type=str,
+        default=None,
+        help="Filter games from this date onwards (YYYY-MM-DD format, e.g., '2024-10-24')"
+    )
+    parser.add_argument(
+        '--end-date',
+        type=str,
+        default=None,
+        help="Filter games up to this date (YYYY-MM-DD format, e.g., '2025-06-22')"
     )
     parser.add_argument(
         '--plot',
@@ -1078,12 +1102,29 @@ Examples:
     ats_df = calculate_ats_records(lines_df, scores_df)
     print(f"✅ Calculated ATS results for {len(ats_df):,} team-games")
     
+    # Filter by date range if specified
+    if args.start_date or args.end_date:
+        original_count = len(ats_df)
+        
+        if args.start_date:
+            start_date = pd.to_datetime(args.start_date).date()
+            ats_df = ats_df[ats_df['game_date'] >= start_date]
+            print(f"   🗓️  Filtered to games from {args.start_date} onwards")
+        
+        if args.end_date:
+            end_date = pd.to_datetime(args.end_date).date()
+            ats_df = ats_df[ats_df['game_date'] <= end_date]
+            print(f"   🗓️  Filtered to games up to {args.end_date}")
+        
+        filtered_count = len(ats_df)
+        print(f"   📊 {filtered_count:,} team-games remain after date filtering (removed {original_count - filtered_count:,})")
+    
     # Summarize by team
     print("\n📈 Summarizing by team...")
     summary_df = summarize_ats_records(ats_df)
     
     # Print rankings
-    print_ats_rankings(summary_df, season)
+    print_ats_rankings(summary_df, season, args.start_date, args.end_date)
     
     # Save results
     save_results(summary_df, ats_df, season)
