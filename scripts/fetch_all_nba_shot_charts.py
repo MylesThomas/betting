@@ -215,6 +215,14 @@ def get_player_shot_chart(player_id, player_name, season):
         if shots_df.empty:
             return None
         
+        # Normalize player name in the data (remove accents like é → e)
+        import sys
+        sys.path.insert(0, str(project_root / 'src'))
+        from player_name_utils import normalize_player_name
+        
+        if 'PLAYER_NAME' in shots_df.columns:
+            shots_df['PLAYER_NAME'] = shots_df['PLAYER_NAME'].apply(normalize_player_name)
+        
         return shots_df
         
     except Exception as e:
@@ -247,8 +255,14 @@ def upload_to_s3(filepath, player_name, player_id, season):
     try:
         s3_client = get_s3_client()
         
+        # Normalize player name (remove accents like é → e)
+        import sys
+        sys.path.insert(0, str(project_root / 'src'))
+        from player_name_utils import normalize_player_name
+        player_name_normalized = normalize_player_name(player_name)
+        
         # Clean player name for S3 key
-        clean_name = player_name.replace(' ', '_').replace('.', '').replace("'", '')
+        clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
         filename = f"{clean_name}_{player_id}.csv"
         s3_key = f"{S3_PREFIX}/{season}/{filename}"
         
@@ -291,8 +305,14 @@ def save_player_shot_chart(shots_df, player_name, player_id, output_dir, season,
     
     os.makedirs(output_dir, exist_ok=True)
     
+    # Normalize player name (remove accents like é → e)
+    import sys
+    sys.path.insert(0, str(project_root / 'src'))
+    from player_name_utils import normalize_player_name
+    player_name_normalized = normalize_player_name(player_name)
+    
     # Clean player name for filename
-    clean_name = player_name.replace(' ', '_').replace('.', '').replace("'", '')
+    clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
     filename = f"{clean_name}_{player_id}.csv"
     filepath = os.path.join(output_dir, filename)
     
@@ -338,11 +358,14 @@ def analyze_player_shots(shots_df):
     
     return {
         'total_shots': total_shots,
+        'total_makes': int(makes),
         'fg_pct': fg_pct,
         'avg_distance': avg_distance,
         'close_range_attempts': close_range_attempts,
+        'close_range_makes': int(close_range_makes),
         'close_range_fg_pct': close_range_pct,
         'three_attempts': three_attempts,
+        'three_makes': int(three_makes),
         'three_pct': three_pct
     }
 
@@ -449,10 +472,15 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     # Get players who were active in this specific season
     all_players = get_players_for_season(season)
     
-    # Filter out already completed players if resuming
-    if resume:
+    # Filter out already completed players if resuming (ONLY for past seasons)
+    # For current season, we want to re-fetch everyone for latest data
+    if resume and is_past_season:
         all_players = [p for p in all_players if p['id'] not in progress['completed_players']]
         print(f"\n🎯 Players remaining: {len(all_players)}")
+    elif not is_past_season:
+        print(f"\n🎯 Total players to fetch: {len(all_players)} (will update all for current season)")
+    else:
+        print(f"\n🎯 Total players: {len(all_players)}")
     
     # Summary data
     summary_data = []
@@ -473,7 +501,12 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
         
         # For past seasons, check if file already exists in S3 and skip
         if is_past_season:
-            clean_name = player_name.replace(' ', '_').replace('.', '').replace("'", '')
+            import sys
+            sys.path.insert(0, str(project_root / 'src'))
+            from player_name_utils import normalize_player_name
+            player_name_normalized = normalize_player_name(player_name)
+            
+            clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
             filename = f"{clean_name}_{player_id}.csv"
             s3_key = f"{S3_PREFIX}/{season}/{filename}"
             
@@ -494,12 +527,13 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
             # Analyze shots
             stats = analyze_player_shots(shots_df)
             
-            print(f"      ✅ Saved {len(shots_df)} shots")
+            print(f"      ✅ Saved n={len(shots_df)} shots")
             if upload_s3 and s3_key:
                 print(f"      📤 Uploaded to S3: s3://{S3_BUCKET}/{s3_key}")
             elif upload_s3 and not s3_key:
                 print(f"      ⚠️  S3 upload failed (saved locally)")
-            print(f"      📊 FG%: {stats['fg_pct']:.1f}% | Close Range: {stats['close_range_fg_pct']:.1f}% | 3PT: {stats['three_pct']:.1f}%")
+            print(f"      📊 FG: {stats['fg_pct']:.1f}% ({stats['total_makes']}-{stats['total_shots']}) | Close Range: {stats['close_range_fg_pct']:.1f}% ({stats['close_range_makes']}-{stats['close_range_attempts']}) | 3PT: {stats['three_pct']:.1f}% ({stats['three_makes']}-{stats['three_attempts']})")
+
             
             # Add to summary
             summary_data.append({

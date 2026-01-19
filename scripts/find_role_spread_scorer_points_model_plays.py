@@ -436,8 +436,12 @@ def load_player_scorer_types(season='2025-26', rim_scorer_pct=40):
             print(f"   ⚠️  WARNING: scorer_type column not found in data")
             return {}
         
+        # Normalize player names before creating mapping
+        from player_name_utils import normalize_player_name
+        df['PLAYER_NAME_NORMALIZED'] = df['PLAYER_NAME'].apply(normalize_player_name)
+        
         # Create mapping (take most recent scorer_type for each player)
-        scorer_map = df[['PLAYER_NAME', 'scorer_type']].dropna().drop_duplicates('PLAYER_NAME').set_index('PLAYER_NAME')['scorer_type'].to_dict()
+        scorer_map = df[['PLAYER_NAME_NORMALIZED', 'scorer_type']].dropna().drop_duplicates('PLAYER_NAME_NORMALIZED').set_index('PLAYER_NAME_NORMALIZED')['scorer_type'].to_dict()
         
         # Count by type
         rim_count = sum(1 for v in scorer_map.values() if 'Rim' in str(v))
@@ -933,7 +937,9 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
     
     # Add scorer_type to df_games if scorer_map is provided
     if scorer_map:
-        df_games['scorer_type'] = df_games['PLAYER_NAME'].map(scorer_map)
+        from player_name_utils import normalize_player_name
+        df_games['PLAYER_NAME_NORMALIZED'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
+        df_games['scorer_type'] = df_games['PLAYER_NAME_NORMALIZED'].map(scorer_map)
     
     plays = []
     
@@ -1284,6 +1290,8 @@ def main():
                        help='Save plays to S3 for tracking (default: True)')
     parser.add_argument('--show-all', action='store_true',
                        help='Show reasoning for all players, not just plays')
+    parser.add_argument('--debug-unclassified', action='store_true',
+                       help='Show players without scorer_type classification')
     
     args = parser.parse_args()
     
@@ -1314,6 +1322,46 @@ def main():
     
     # Find plays using loaded strategies (with scorer_type matching)
     df_plays = find_plays(df_games, strategies, scorer_map=scorer_map, granularity=args.granularity)
+    
+    # Debug: Show players without scorer_type classification
+    if args.debug_unclassified:
+        print(f"\n{'='*80}")
+        print("🔍 DEBUG: Players WITHOUT scorer_type classification")
+        print(f"{'='*80}\n")
+        
+        # Add scorer_type to df_games for debugging
+        from player_name_utils import normalize_player_name
+        df_games['PLAYER_NAME_NORMALIZED'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
+        df_games['scorer_type'] = df_games['PLAYER_NAME_NORMALIZED'].map(scorer_map)
+        
+        # Find players without scorer_type
+        unclassified = df_games[df_games['scorer_type'].isna()].copy()
+        
+        if len(unclassified) > 0:
+            # Add bins for analysis
+            unclassified['line_tier'] = unclassified['points_line'].apply(lambda x: bin_points_line(x, args.granularity))
+            unclassified['spread_bin'] = unclassified['team_spread'].apply(lambda x: bin_team_spread(x, args.granularity))
+            
+            print(f"Found {len(unclassified)} players without scorer_type:\n")
+            
+            # Group by line_tier and spread_bin to show distribution
+            distribution = unclassified.groupby(['line_tier', 'spread_bin']).size().reset_index(name='count')
+            distribution = distribution.sort_values('count', ascending=False)
+            
+            print("Distribution by line_tier and spread_bin:")
+            print("─" * 80)
+            for _, row in distribution.iterrows():
+                print(f"  {row['line_tier']:20s} + {row['spread_bin']:20s}: {row['count']:2d} players")
+            
+            print("\nDetailed player list:")
+            print("─" * 80)
+            cols_to_show = ['PLAYER_NAME', 'team_abbr', 'points_line', 'team_spread', 'line_tier', 'spread_bin']
+            for _, row in unclassified[cols_to_show].iterrows():
+                print(f"  {row['PLAYER_NAME']:25s} | {row['team_abbr']:3s} | Line: {row['points_line']:4.1f} ({row['line_tier']:20s}) | Spread: {row['team_spread']:+5.1f} ({row['spread_bin']:20s})")
+            
+            print(f"\n{'='*80}\n")
+        else:
+            print("✅ All players have scorer_type classification\n")
     
     # Note: ROI filtering already happened in load_strategies()
     # Show filter info if strategies were filtered
