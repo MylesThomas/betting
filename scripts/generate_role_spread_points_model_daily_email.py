@@ -81,9 +81,10 @@ EMOJI = {
 # KELLY CRITERION CONSTANTS
 # =============================================================================
 
-DEFAULT_BANKROLL = 10000  # $10,000 default bankroll
+DEFAULT_BANKROLL = 10000  # $10,000 default bankroll (fallback if S3 config not available)
 FRACTIONAL_KELLY = 1.0    # 1.0 = full Kelly, 0.5 = half Kelly, 0.25 = quarter Kelly
 MAX_KELLY = 0.10          # Cap Kelly at 10% max single bet
+S3_KELLY_CONFIG_PATH = 'config/kelly_bankroll_tracker.json'
 
 # =============================================================================
 # S3 PATHS
@@ -95,6 +96,28 @@ S3_PREFIX_PLAYS = f'data/04_output/plays/{STRATEGY_NAME}'
 S3_PREFIX_RESULTS = f'data/04_output/results/{STRATEGY_NAME}'
 
 ET_TZ = ZoneInfo('America/New_York')
+
+
+# =============================================================================
+# KELLY BANKROLL LOADING
+# =============================================================================
+
+def load_current_bankroll_from_s3():
+    """
+    Load current bankroll from Kelly tracker config in S3.
+    Falls back to DEFAULT_BANKROLL if config not found.
+    """
+    s3_client = boto3.client('s3')
+    
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=S3_KELLY_CONFIG_PATH)
+        config = json.loads(response['Body'].read().decode('utf-8'))
+        bankroll = config['current_bankroll']
+        print(f"✅ Loaded current bankroll from S3: ${bankroll:,.2f}")
+        return bankroll
+    except Exception as e:
+        print(f"⚠️  Could not load bankroll from S3 (using default ${DEFAULT_BANKROLL:,}): {e}")
+        return DEFAULT_BANKROLL
 
 
 # =============================================================================
@@ -566,8 +589,12 @@ def get_best_odds_from_bookmakers(bookmaker_details_json, default_odds=-110):
         return default_odds
 
 
-def format_plays_text(df_plays, date_str):
+def format_plays_text(df_plays, date_str, bankroll=None):
     """Format today's plays as text"""
+    # Use provided bankroll or load from S3
+    if bankroll is None:
+        bankroll = load_current_bankroll_from_s3()
+    
     if df_plays is None or df_plays.empty:
         return f"""
 {'='*80}
@@ -726,7 +753,7 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             kelly_result = calculate_kelly_criterion(win_prob, best_odds, max_kelly=MAX_KELLY)
             kelly_pct = kelly_result['kelly_pct']
             kelly_pct_display = kelly_result['kelly_pct_display']
-            kelly_dollars = kelly_bet_size(kelly_pct, DEFAULT_BANKROLL)
+            kelly_dollars = kelly_bet_size(kelly_pct, bankroll)
             is_capped = kelly_result['capped']
             
             # Store Kelly data for summary
@@ -737,9 +764,16 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
                 'odds': best_odds
             })
             
-            # Display Kelly info
+            # Display Kelly info with explanation
             capped_warning = f" {EMOJI['warning']} CAPPED" if is_capped else ""
-            text += f"   {EMOJI['moneybag']} Kelly Bet Size: {kelly_pct_display:.1f}% of bankroll | ${kelly_dollars:.0f} on ${DEFAULT_BANKROLL:,} bankroll | Based on {play['hit_rate']:.1f}% win prob @ {best_odds:+d} odds{capped_warning}\n"
+            
+            # Calculate implied probability for comparison
+            from odds_utils import odds_to_implied_probability
+            implied_prob = odds_to_implied_probability(best_odds) * 100
+            edge_over_implied = play['hit_rate'] - implied_prob
+            
+            text += f"   {EMOJI['moneybag']} Kelly Bet Size: {kelly_pct_display:.1f}% of bankroll | ${kelly_dollars:.0f} on ${bankroll:,.0f} bankroll{capped_warning}\n"
+            text += f"      └─ Win Prob: {play['hit_rate']:.1f}% | Implied Prob @ {best_odds:+d}: {implied_prob:.1f}% | Edge: {edge_over_implied:+.1f}%\n"
             
             # Show bookmakers offering this line (detailed format with BOTH sides for context)
             details_over = json.loads(play['bookmaker_details_over'])
@@ -794,11 +828,12 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
         
         kelly_summary = f"""KELLY CRITERION BETTING SUMMARY:
 {'─'*80}
+{EMOJI['moneybag']} Current Bankroll: ${bankroll:,.2f}
 {EMOJI['moneybag']} Total Kelly: {total_kelly_pct*100:.1f}% of bankroll (Sum of all {len(kelly_data)} plays)
 {EMOJI['chart']} Avg Kelly per play: {avg_kelly_pct*100:.1f}% of bankroll
 {EMOJI['fire']} Max single Kelly: {max_kelly_play['kelly_pct']*100:.1f}% ({max_kelly_play['player']})
 
-Sample Bankroll Sizing (for ${DEFAULT_BANKROLL:,} bankroll):
+Sample Bankroll Sizing (for ${bankroll:,.0f} bankroll):
   • Full Kelly (aggressive): ${total_kelly_dollars:.0f} total across {len(kelly_data)} bets
   • Half Kelly (moderate): ${total_kelly_dollars/2:.0f} total across {len(kelly_data)} bets
   • Quarter Kelly (conservative): ${total_kelly_dollars/4:.0f} total across {len(kelly_data)} bets
@@ -842,6 +877,9 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
 {'='*80}
 """
     
+    # Load current bankroll for Kelly calculations
+    bankroll = load_current_bankroll_from_s3()
+    
     # Add YTD stats first (if provided)
     if ytd_stats:
         body += format_ytd_stats(ytd_stats)
@@ -849,8 +887,8 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
     # Add results (yesterday's performance)
     body += format_results_text(df_results, results_date)
     
-    # Add today's plays
-    body += format_plays_text(df_plays, plays_date)
+    # Add today's plays (with current bankroll)
+    body += format_plays_text(df_plays, plays_date, bankroll=bankroll)
     
     body += f"""
 {'='*80}
