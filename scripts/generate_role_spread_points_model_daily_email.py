@@ -48,9 +48,13 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+# Import Kelly Criterion calculator
+from kelly_criterion import calculate_kelly_criterion, kelly_bet_size
 
 # =============================================================================
 # EMOJI MAP
@@ -69,7 +73,17 @@ EMOJI = {
     'basketball': '🏀',
     'arrow_up': '📈',
     'arrow_down': '📉',
+    'moneybag': '💰',
+    'warning': '⚠️',
 }
+
+# =============================================================================
+# KELLY CRITERION CONSTANTS
+# =============================================================================
+
+DEFAULT_BANKROLL = 10000  # $10,000 default bankroll
+FRACTIONAL_KELLY = 1.0    # 1.0 = full Kelly, 0.5 = half Kelly, 0.25 = quarter Kelly
+MAX_KELLY = 0.10          # Cap Kelly at 10% max single bet
 
 # =============================================================================
 # S3 PATHS
@@ -511,6 +525,47 @@ Win Rate: {win_pct:.1f}% | Actual ROI: {actual_roi:+.1f}% | Expected ROI: {expec
     return text
 
 
+def get_best_odds_from_bookmakers(bookmaker_details_json, default_odds=-110):
+    """
+    Extract best odds from bookmaker details JSON.
+    
+    "Best" means most favorable for the bettor:
+    - For positive odds: highest value (e.g., +150 > +120)
+    - For negative odds: closest to 0 (e.g., -105 > -110)
+    
+    Args:
+        bookmaker_details_json: JSON string with bookmaker details
+        default_odds: Default odds if no bookmakers available (default -110)
+    
+    Returns:
+        Best American odds as integer
+    """
+    try:
+        details = json.loads(bookmaker_details_json)
+        if not details:
+            return default_odds
+        
+        # Extract all odds
+        all_odds = [book['odds'] for book in details]
+        
+        # Find best odds for bettor
+        # Positive odds: higher is better (+150 > +120)
+        # Negative odds: closer to 0 is better (-105 > -110)
+        positive_odds = [o for o in all_odds if o > 0]
+        negative_odds = [o for o in all_odds if o < 0]
+        
+        if positive_odds:
+            # If any positive odds, take the highest
+            return max(positive_odds)
+        elif negative_odds:
+            # All negative, take closest to 0 (least negative)
+            return max(negative_odds)
+        else:
+            return default_odds
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return default_odds
+
+
 def format_plays_text(df_plays, date_str):
     """Format today's plays as text"""
     if df_plays is None or df_plays.empty:
@@ -527,6 +582,9 @@ Either no games match our strategies, or plays haven't been generated yet.
     # Calculate summary
     total = len(df_plays)
     avg_roi = df_plays['expected_roi'].mean()
+    
+    # Track Kelly data for summary
+    kelly_data = []
     
     text = f"""
 {'='*80}
@@ -584,6 +642,11 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
         text += "─" * 80 + "\n"
         text += f"Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%\n"
         text += "\n"
+    
+    # Kelly Criterion Summary (will be populated as we process plays)
+    # This will be added after we've calculated all Kelly values
+    kelly_summary_placeholder = "KELLY_SUMMARY_PLACEHOLDER"
+    text += kelly_summary_placeholder + "\n"
     
     # Group plays by game (team + opponent)
     # Create a sortable game identifier
@@ -654,8 +717,31 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             text += f"   Expected ROI: {play['expected_roi']:+.1f}% | Hit Rate: {play['hit_rate']:.1f}% ({play['games_in_sample']} games)\n"
             text += f"   Edge vs Baseline: {play['edge_vs_baseline']:+.1f}% | Edge vs Breakeven: {play['edge_vs_breakeven']:+.1f}%\n"
             
+            # Calculate Kelly Criterion
+            win_prob = play['hit_rate'] / 100  # Convert to decimal
+            bet_side = play['bet_side']
+            bookmaker_details = play['bookmaker_details_over'] if bet_side == 'OVER' else play['bookmaker_details_under']
+            best_odds = get_best_odds_from_bookmakers(bookmaker_details)
+            
+            kelly_result = calculate_kelly_criterion(win_prob, best_odds, max_kelly=MAX_KELLY)
+            kelly_pct = kelly_result['kelly_pct']
+            kelly_pct_display = kelly_result['kelly_pct_display']
+            kelly_dollars = kelly_bet_size(kelly_pct, DEFAULT_BANKROLL)
+            is_capped = kelly_result['capped']
+            
+            # Store Kelly data for summary
+            kelly_data.append({
+                'player': play['player'],
+                'kelly_pct': kelly_pct,
+                'kelly_dollars': kelly_dollars,
+                'odds': best_odds
+            })
+            
+            # Display Kelly info
+            capped_warning = f" {EMOJI['warning']} CAPPED" if is_capped else ""
+            text += f"   {EMOJI['moneybag']} Kelly Bet Size: {kelly_pct_display:.1f}% of bankroll | ${kelly_dollars:.0f} on ${DEFAULT_BANKROLL:,} bankroll | Based on {play['hit_rate']:.1f}% win prob @ {best_odds:+d} odds{capped_warning}\n"
+            
             # Show bookmakers offering this line (detailed format with BOTH sides for context)
-            import json
             details_over = json.loads(play['bookmaker_details_over'])
             details_under = json.loads(play['bookmaker_details_under'])
             
@@ -698,6 +784,42 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             text += "\n"
         
         game_num += 1
+    
+    # Generate Kelly Criterion Summary
+    if kelly_data:
+        total_kelly_pct = sum([k['kelly_pct'] for k in kelly_data])
+        avg_kelly_pct = total_kelly_pct / len(kelly_data) if kelly_data else 0
+        max_kelly_play = max(kelly_data, key=lambda k: k['kelly_pct'])
+        total_kelly_dollars = sum([k['kelly_dollars'] for k in kelly_data])
+        
+        kelly_summary = f"""KELLY CRITERION BETTING SUMMARY:
+{'─'*80}
+{EMOJI['moneybag']} Total Kelly: {total_kelly_pct*100:.1f}% of bankroll (Sum of all {len(kelly_data)} plays)
+{EMOJI['chart']} Avg Kelly per play: {avg_kelly_pct*100:.1f}% of bankroll
+{EMOJI['fire']} Max single Kelly: {max_kelly_play['kelly_pct']*100:.1f}% ({max_kelly_play['player']})
+
+Sample Bankroll Sizing (for ${DEFAULT_BANKROLL:,} bankroll):
+  • Full Kelly (aggressive): ${total_kelly_dollars:.0f} total across {len(kelly_data)} bets
+  • Half Kelly (moderate): ${total_kelly_dollars/2:.0f} total across {len(kelly_data)} bets
+  • Quarter Kelly (conservative): ${total_kelly_dollars/4:.0f} total across {len(kelly_data)} bets
+
+Standard Approach Comparison:
+  • Fixed $110 per bet: ${110 * len(kelly_data):,.0f} total risked across {len(kelly_data)} bets
+  • Kelly Approach: ${total_kelly_dollars:.0f} total risked (full Kelly)
+"""
+        
+        # Add warning if total Kelly > 100%
+        if total_kelly_pct > 1.0:
+            kelly_summary += f"\n{EMOJI['warning']} WARNING: Total Kelly ({total_kelly_pct*100:.1f}%) > 100% suggests correlation between bets.\n"
+            kelly_summary += f"   Consider reducing bet sizes or using fractional Kelly to manage risk.\n"
+        
+        kelly_summary += "\n"
+        
+        # Replace placeholder with actual summary
+        text = text.replace(kelly_summary_placeholder + "\n", kelly_summary)
+    else:
+        # Remove placeholder if no Kelly data
+        text = text.replace(kelly_summary_placeholder + "\n", "")
     
     return text
 
