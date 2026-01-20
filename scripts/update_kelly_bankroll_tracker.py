@@ -130,19 +130,46 @@ def load_top3_plays_from_s3(date_str):
 
 
 def load_top3_tracking_from_s3(date_str):
-    """Load Top3 tracking results CSV from S3 for a given date"""
+    """Load Top3 tracking results CSV from S3 for a given date (both 2D and 3D)"""
     s3_client = boto3.client('s3')
     
-    s3_path = f'data/04_output/results/role_spread_points_model/{date_str}_top3.csv'
+    results_2d = []
+    results_3d = []
     
+    # Load 2D tracking results
     try:
-        response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_path)
-        df_tracking = pd.read_csv(response['Body'])
-        print(f"✅ Loaded {len(df_tracking)} tracking results from s3://{S3_BUCKET}/{s3_path}")
-        return df_tracking
+        s3_path_2d = f'data/04_output/results/role_spread_points_model/2d/{date_str}_top3.csv'
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_path_2d)
+        df_2d = pd.read_csv(response['Body'])
+        df_2d['dimension'] = '2D'
+        results_2d.append(df_2d)
+        print(f"✅ Loaded {len(df_2d)} 2D tracking results from s3://{S3_BUCKET}/{s3_path_2d}")
     except s3_client.exceptions.NoSuchKey:
-        print(f"⚠️  No tracking results found for {date_str}")
+        print(f"⚠️  No 2D tracking results found for {date_str}")
+    
+    # Load 3D tracking results
+    try:
+        s3_path_3d = f'data/04_output/results/role_spread_points_model/3d/{date_str}_top3.csv'
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_path_3d)
+        df_3d = pd.read_csv(response['Body'])
+        df_3d['dimension'] = '3D'
+        results_3d.append(df_3d)
+        print(f"✅ Loaded {len(df_3d)} 3D tracking results from s3://{S3_BUCKET}/{s3_path_3d}")
+    except s3_client.exceptions.NoSuchKey:
+        print(f"⚠️  No 3D tracking results found for {date_str}")
+    
+    if not results_2d and not results_3d:
+        print(f"❌ No tracking results found for {date_str} (checked both 2D and 3D)")
         return None
+    
+    # Combine and dedupe (some plays appear in both 2D and 3D)
+    df_tracking = pd.concat(results_2d + results_3d, ignore_index=True)
+    
+    # Dedupe by player + line + bet_side (keep first occurrence)
+    df_tracking = df_tracking.drop_duplicates(subset=['player', 'line', 'bet_side'], keep='first')
+    
+    print(f"✅ Total unique tracking results: {len(df_tracking)}")
+    return df_tracking
 
 
 # =============================================================================
@@ -293,7 +320,7 @@ def update_bankroll(date_str, dry_run=False):
     
     # Merge plays with results
     df_merged = df_plays.merge(
-        df_tracking[['player', 'line', 'bet_side', 'result', 'actual_points']],
+        df_tracking[['player', 'line', 'bet_side', 'result', 'actual_pts']],
         on=['player', 'line', 'bet_side'],
         how='left'
     )
