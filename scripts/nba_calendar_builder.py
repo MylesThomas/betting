@@ -7,7 +7,7 @@ This script:
 3. Saves game dates and event IDs for historical prop fetching
 
 Usage:
-    # Build calendar for current season
+    # Build calendar for current season (regular season only)
     python scripts/nba_calendar_builder.py
     
     # Build for specific season
@@ -15,8 +15,12 @@ Usage:
 
     # Build for specific season and upload to S3
     python scripts/nba_calendar_builder.py --season 2025-26 --s3
+    
+    # Build calendar including playoffs
+    python scripts/nba_calendar_builder.py --season 2024-25 --include-playoffs --s3
 
-Note: This calendar only includes Regular Season games from the NBA API.
+Note: By default, this calendar only includes Regular Season games from the NBA API.
+Use --include-playoffs to also fetch Playoff games.
 Special games like the NBA Cup Championship(e.g., Bucks vs. Thunder on Dec 17, 2024)
 are not included as they fall under a different season type.
 """
@@ -30,6 +34,7 @@ import urllib3
 import requests
 import argparse
 import sys
+import yaml
 
 # SSL fix for NBA API
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -60,49 +65,178 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.config import CURRENT_NBA_SEASON
 
 
-def get_all_nba_games(season='2025-26', max_retries=3):
+def get_all_nba_games(season='2025-26', include_playoffs=False, max_retries=3):
     """
     Fetch all NBA games from specified season
     
     Args:
         season: Season string (e.g., '2025-26')
+        include_playoffs: If True, fetch both Regular Season and Playoffs
         max_retries: Number of times to retry on timeout
     
     Returns:
-        DataFrame with game dates and info
+        DataFrame with game dates and info (includes 'SEASON_TYPE' column)
     """
-    print(f"🏀 Fetching all NBA games for {season} season...")
+    season_types = ['Regular Season']
+    if include_playoffs:
+        season_types.append('Playoffs')
+    
+    print(f"🏀 Fetching NBA games for {season} season...")
+    if include_playoffs:
+        print(f"   Season types: Regular Season + Playoffs")
+    else:
+        print(f"   Season type: Regular Season only")
     print("⏳ This may take a moment...\n")
     
-    # Retry logic for flaky NBA API
-    for attempt in range(max_retries):
-        try:
-            # Get all games for specified season
-            gamefinder = leaguegamefinder.LeagueGameFinder(
-                season_nullable=season,
-                season_type_nullable='Regular Season',
-                league_id_nullable='00'
-            )
-            
-            games = gamefinder.get_data_frames()[0]
-            
-            # Each game appears twice (once for each team), so we need to deduplicate
-            # Use GAME_ID to get unique games
-            unique_games = games.drop_duplicates(subset=['GAME_ID']).copy()
-            
-            print(f"✅ Found {len(unique_games)} unique games")
-            
-            return unique_games
-            
-        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-            if attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
-                print(f"⚠️  Request timed out (attempt {attempt + 1}/{max_retries})")
-                print(f"   Waiting {wait_time} seconds before retry...\n")
-                time.sleep(wait_time)
-            else:
-                print(f"❌ Failed after {max_retries} attempts")
-                raise
+    all_games = []
+    
+    for season_type in season_types:
+        print(f"   Fetching {season_type}...")
+        
+        # Retry logic for flaky NBA API
+        for attempt in range(max_retries):
+            try:
+                # Get all games for specified season and type
+                gamefinder = leaguegamefinder.LeagueGameFinder(
+                    season_nullable=season,
+                    season_type_nullable=season_type,
+                    league_id_nullable='00'
+                )
+                
+                games = gamefinder.get_data_frames()[0]
+                
+                # Add season type column
+                games['SEASON_TYPE'] = season_type
+                
+                # Each game appears twice (once for each team), so we need to deduplicate
+                # Use GAME_ID to get unique games
+                unique_games = games.drop_duplicates(subset=['GAME_ID']).copy()
+                
+                all_games.append(unique_games)
+                
+                print(f"   ✅ {season_type}: {len(unique_games)} games")
+                
+                # Small delay between API calls
+                if season_type != season_types[-1]:
+                    time.sleep(1)
+                
+                break
+                
+            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
+                    print(f"   ⚠️  Request timed out (attempt {attempt + 1}/{max_retries})")
+                    print(f"      Waiting {wait_time} seconds before retry...\n")
+                    time.sleep(wait_time)
+                else:
+                    print(f"   ❌ Failed after {max_retries} attempts")
+                    raise
+    
+    # Combine all games
+    combined_games = pd.concat(all_games, ignore_index=True)
+    
+    print(f"\n✅ Total games fetched: {len(combined_games)}")
+    
+    return combined_games
+
+
+def load_season_dates_config():
+    """
+    Load season dates from YAML config file.
+    
+    Returns:
+        Dict with season dates, or None if file not found
+    """
+    try:
+        # Add parent dir to path
+        project_root = Path(__file__).parent.parent
+        config_path = project_root / 'config' / 'season_dates.yaml'
+        
+        if not config_path.exists():
+            return None
+        
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        return config.get('nba', {})
+    
+    except Exception as e:
+        print(f"⚠️  Warning: Could not load season_dates.yaml: {e}")
+        return None
+
+
+def validate_against_config(season, opening_day, playoff_start_actual=None, playoff_end_actual=None):
+    """
+    Validate fetched dates against season_dates.yaml config.
+    
+    Args:
+        season: Season string (e.g., '2023-24')
+        opening_day: Opening day date from NBA API
+        playoff_start_actual: First playoff date from NBA API (if available)
+        playoff_end_actual: Last playoff date from NBA API (if available)
+    """
+    print("\n" + "="*60)
+    print("🔍 VALIDATING AGAINST CONFIG")
+    print("="*60)
+    
+    config = load_season_dates_config()
+    
+    if config is None:
+        print("⚠️  No season_dates.yaml config found - skipping validation")
+        return
+    
+    season_config = config.get(season)
+    
+    if season_config is None:
+        print(f"⚠️  Season {season} not found in config - skipping validation")
+        return
+    
+    # Convert dates to comparable format
+    from datetime import date
+    
+    # Validate opening day (season_start)
+    config_start = datetime.strptime(season_config['season_start'], '%Y-%m-%d').date()
+    
+    print(f"\n📅 Season Start (Opening Day):")
+    print(f"   Config:    {config_start}")
+    print(f"   NBA API:   {opening_day}")
+    
+    if config_start == opening_day:
+        print("   ✅ MATCH")
+    else:
+        diff = abs((opening_day - config_start).days)
+        print(f"   ⚠️  MISMATCH by {diff} days")
+        print(f"   Consider updating config/season_dates.yaml")
+    
+    # Validate playoff dates if available
+    if playoff_start_actual and 'playoff_start' in season_config:
+        config_playoff_start = datetime.strptime(season_config['playoff_start'], '%Y-%m-%d').date()
+        
+        print(f"\n🏆 Playoff Start:")
+        print(f"   Config:    {config_playoff_start}")
+        print(f"   NBA API:   {playoff_start_actual}")
+        
+        if config_playoff_start == playoff_start_actual:
+            print("   ✅ MATCH")
+        else:
+            diff = abs((playoff_start_actual - config_playoff_start).days)
+            print(f"   ⚠️  MISMATCH by {diff} days")
+    
+    if playoff_end_actual and 'playoff_end' in season_config:
+        config_playoff_end = datetime.strptime(season_config['playoff_end'], '%Y-%m-%d').date()
+        
+        print(f"\n🏆 Playoff End:")
+        print(f"   Config:    {config_playoff_end}")
+        print(f"   NBA API:   {playoff_end_actual}")
+        
+        if config_playoff_end == playoff_end_actual:
+            print("   ✅ MATCH")
+        else:
+            diff = abs((playoff_end_actual - config_playoff_end).days)
+            print(f"   ⚠️  MISMATCH by {diff} days")
+            print(f"   (Note: Playoff end depends on series length)")
+    
+    print("\n" + "="*60)
 
 
 def create_game_calendar(games_df):
@@ -121,18 +255,35 @@ def create_game_calendar(games_df):
     
     # Get opening day
     opening_day = unique_dates[0]
+    last_day = unique_dates[-1]
     
     # Count games per date
     games_per_date = games_df.groupby('DATE_ONLY').size().reset_index(name='num_games')
     
+    # Check if we have playoff data
+    has_playoffs = 'SEASON_TYPE' in games_df.columns and 'Playoffs' in games_df['SEASON_TYPE'].values
+    
     print(f"🎯 Season Stats:")
     print(f"   Opening Day: {opening_day}")
+    print(f"   Last Day: {last_day}")
     print(f"   Total Game Days: {len(unique_dates)}")
     print(f"   Total Games: {len(games_df)}")
     print(f"   Average Games per Day: {len(games_df) / len(unique_dates):.1f}")
-    print(f"   Date Range: {unique_dates[0]} to {unique_dates[-1]}")
     
-    return unique_dates, games_per_date, opening_day
+    if has_playoffs:
+        regular_season = games_df[games_df['SEASON_TYPE'] == 'Regular Season']
+        playoffs = games_df[games_df['SEASON_TYPE'] == 'Playoffs']
+        print(f"\n   Regular Season: {len(regular_season)} games")
+        print(f"   Playoffs: {len(playoffs)} games")
+        
+        if not playoffs.empty:
+            playoff_dates = sorted(playoffs['DATE_ONLY'].unique())
+            playoff_start = playoff_dates[0]
+            playoff_end = playoff_dates[-1]
+            print(f"   Playoff dates: {playoff_start} to {playoff_end}")
+            return unique_dates, games_per_date, opening_day, playoff_start, playoff_end
+    
+    return unique_dates, games_per_date, opening_day, None, None
 
 
 def get_games_for_date(games_df, target_date):
@@ -140,9 +291,11 @@ def get_games_for_date(games_df, target_date):
     Get all games for a specific date
     Returns DataFrame with game info
     """
-    games_df['DATE_ONLY'] = pd.to_datetime(games_df['GAME_DATE']).dt.date
+    # Create a copy to avoid SettingWithCopyWarning
+    df = games_df.copy()
+    df['DATE_ONLY'] = pd.to_datetime(df['GAME_DATE']).dt.date
     
-    date_games = games_df[games_df['DATE_ONLY'] == target_date].copy()
+    date_games = df[df['DATE_ONLY'] == target_date].copy()
     
     # Keep only unique games (deduplicate by GAME_ID)
     date_games = date_games.drop_duplicates(subset=['GAME_ID'])
@@ -277,26 +430,34 @@ def estimate_api_costs(num_game_days, avg_games_per_day=12):
     print("="*60 + "\n")
 
 
-def main(season=None, upload_s3=False):
+def main(season=None, upload_s3=False, include_playoffs=False):
     """
     Main function - builds NBA calendar and prepares for prop fetching
     
     Args:
         season: Season string (e.g., '2025-26'). Defaults to current season.
         upload_s3: If True, upload calendar files to S3
+        include_playoffs: If True, include playoff games in addition to regular season
     """
     if season is None:
         season = CURRENT_NBA_SEASON
     
     print("="*60)
     print(f"NBA GAME CALENDAR BUILDER - {season} SEASON")
+    if include_playoffs:
+        print("Including: Regular Season + Playoffs")
+    else:
+        print("Including: Regular Season only")
     print("="*60 + "\n")
     
     # Fetch all games
-    games_df = get_all_nba_games(season)
+    games_df = get_all_nba_games(season, include_playoffs=include_playoffs)
     
     # Create calendar
-    unique_dates, games_per_date, opening_day = create_game_calendar(games_df)
+    unique_dates, games_per_date, opening_day, playoff_start, playoff_end = create_game_calendar(games_df)
+    
+    # Validate against config
+    validate_against_config(season, opening_day, playoff_start, playoff_end)
     
     # Show opening day games
     print("\n" + "="*60)
@@ -307,6 +468,35 @@ def main(season=None, upload_s3=False):
     print(f"\nGames on opening day ({len(opening_games)}):")
     for idx, game in opening_games.iterrows():
         print(f"  {game['MATCHUP']}")
+    
+    # Show playoff info if available
+    if include_playoffs and 'SEASON_TYPE' in games_df.columns:
+        playoffs_df = games_df[games_df['SEASON_TYPE'] == 'Playoffs']
+        
+        if not playoffs_df.empty:
+            playoff_dates = sorted(playoffs_df['DATE_ONLY'].unique())
+            first_playoff_date = playoff_dates[0]
+            last_playoff_date = playoff_dates[-1]
+            
+            # First day of playoffs
+            print("\n" + "="*60)
+            print(f"🏆 FIRST DAY OF PLAYOFFS: {first_playoff_date}")
+            print("="*60)
+            
+            first_playoff_games = get_games_for_date(playoffs_df, first_playoff_date)
+            print(f"\nGames on first playoff day ({len(first_playoff_games)}):")
+            for idx, game in first_playoff_games.iterrows():
+                print(f"  {game['MATCHUP']}")
+            
+            # Last day of playoffs
+            print("\n" + "="*60)
+            print(f"🏆 LAST DAY OF PLAYOFFS: {last_playoff_date}")
+            print("="*60)
+            
+            last_playoff_games = get_games_for_date(playoffs_df, last_playoff_date)
+            print(f"\nGames on last playoff day ({len(last_playoff_games)}):")
+            for idx, game in last_playoff_games.iterrows():
+                print(f"  {game['MATCHUP']}")
     
     # Save calendar
     output_path = save_calendar(unique_dates, games_df, season, upload_s3=upload_s3)
@@ -341,11 +531,14 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Build current season calendar
+  # Build current season calendar (regular season only)
   python nba_calendar_builder.py
   
   # Build specific season
   python nba_calendar_builder.py --season 2025-26
+  
+  # Build with playoffs and upload to S3
+  python nba_calendar_builder.py --season 2024-25 --include-playoffs --s3
         """
     )
     
@@ -353,8 +546,10 @@ Examples:
                        help=f'Season to build calendar for (default: {CURRENT_NBA_SEASON})')
     parser.add_argument('--s3', action='store_true',
                        help='Upload calendar files to S3 (s3://nba-betting-mt/data/01_input/nba_calendar/)')
+    parser.add_argument('--include-playoffs', action='store_true',
+                       help='Include playoff games in addition to regular season')
     
     args = parser.parse_args()
     
-    unique_dates, games_df, opening_day = main(args.season, upload_s3=args.s3)
+    unique_dates, games_df, opening_day = main(args.season, upload_s3=args.s3, include_playoffs=args.include_playoffs)
 

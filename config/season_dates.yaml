@@ -1,0 +1,167 @@
+# Central Season Dates Configuration
+# All dates in YYYY-MM-DD format
+# Used by: betting line fetchers, ATS analysis, calendar builders, etc.
+
+nba:
+  2020-21:
+    season_start: '2020-12-22'  # COVID delayed season
+    regular_season_end: '2021-05-16'
+    playoff_start: '2021-05-18'  # Play-in tournament
+    playoff_end: '2021-07-21'  # NBA Finals Game 6
+  
+  2021-22:
+    season_start: '2021-10-19'
+    regular_season_end: '2022-04-10'
+    playoff_start: '2022-04-12'
+    playoff_end: '2022-06-17'  # NBA Finals Game 6
+  
+  2022-23:
+    season_start: '2022-10-18'
+    regular_season_end: '2023-04-09'
+    playoff_start: '2023-04-11'
+    playoff_end: '2023-06-13'  # NBA Finals Game 5
+  
+  2023-24:
+    season_start: '2023-10-24'
+    regular_season_end: '2024-04-14'
+    playoff_start: '2024-04-20'  # Updated from API (was 2024-04-16)
+    playoff_end: '2024-06-17'  # Updated from API (was 2024-06-18) - BOS vs DAL Finals Game 5
+  
+  2024-25:
+    season_start: '2024-10-22'
+    regular_season_end: '2025-04-13'
+    playoff_start: '2025-04-19'  # Updated from API (was 2025-04-15) - Play-in tournament starts
+    playoff_end: '2025-06-22'  # IND @ OKC Finals (series still in progress)
+  
+  2025-26:
+    season_start: '2025-10-21'
+    regular_season_end: '2026-04-12'  # Estimated
+    playoff_start: '2026-04-14'  # Estimated
+    playoff_end: '2026-06-21'  # Estimated
+
+nfl:
+  2020:
+    season_start: '2020-09-10'
+    regular_season_end: '2021-01-03'
+    playoff_start: '2021-01-09'  # Wild Card Round
+    playoff_end: '2021-02-07'  # Super Bowl LV
+  
+  2021:
+    season_start: '2021-09-09'
+    regular_season_end: '2022-01-09'
+    playoff_start: '2022-01-15'
+    playoff_end: '2022-02-13'  # Super Bowl LVI
+  
+  2022:
+    season_start: '2022-09-08'
+    regular_season_end: '2023-01-08'
+    playoff_start: '2023-01-14'
+    playoff_end: '2023-02-12'  # Super Bowl LVII
+  
+  2023:
+    season_start: '2023-09-07'
+    regular_season_end: '2024-01-07'
+    playoff_start: '2024-01-13'
+    playoff_end: '2024-02-11'  # Super Bowl LVIII
+  
+  2024:
+    season_start: '2024-09-05'
+    regular_season_end: '2025-01-05'
+    playoff_start: '2025-01-11'
+    playoff_end: '2025-02-09'  # Super Bowl LIX
+  
+  2025:
+    season_start: '2025-09-04'  # Estimated (first Thursday of Sept)
+    regular_season_end: '2026-01-04'  # Estimated
+    playoff_start: '2026-01-10'  # Estimated
+    playoff_end: '2026-02-08'  # Estimated
+
+ncaab:
+  2020-21:
+    season_start: '2020-11-25'  # COVID delayed
+    regular_season_end: '2021-03-14'
+    tournament_start: '2021-03-18'  # March Madness First Four
+    tournament_end: '2021-04-05'  # National Championship
+  
+  2021-22:
+    season_start: '2021-11-09'
+    regular_season_end: '2022-03-13'
+    tournament_start: '2022-03-15'
+    tournament_end: '2022-04-04'
+  
+  2022-23:
+    season_start: '2022-11-07'
+    regular_season_end: '2023-03-12'
+    tournament_start: '2023-03-14'
+    tournament_end: '2023-04-03'
+  
+  2023-24:
+    season_start: '2023-11-06'
+    regular_season_end: '2024-03-17'
+    tournament_start: '2024-03-19'
+    tournament_end: '2024-04-08'
+  
+  2024-25:
+    season_start: '2024-11-03'
+    regular_season_end: '2025-03-16'
+    tournament_start: '2025-03-18'
+    tournament_end: '2025-04-07'
+  
+  2025-26:
+    season_start: '2025-11-03'  # Estimated
+    regular_season_end: '2026-03-15'  # Estimated
+    tournament_start: '2026-03-17'  # Estimated
+    tournament_end: '2026-04-06'  # Estimated
+
+ncaaf:
+  2020:
+    season_start: '2020-09-03'  # COVID impacted
+    regular_season_end: '2020-12-19'
+    playoff_start: '2021-01-01'  # CFP Semifinals
+    playoff_end: '2021-01-11'  # National Championship
+  
+  2021:
+    season_start: '2021-08-28'  # Week 0
+    regular_season_end: '2021-12-04'
+    playoff_start: '2021-12-31'
+    playoff_end: '2022-01-10'
+  
+  2022:
+    season_start: '2022-08-27'
+    regular_season_end: '2022-12-03'
+    playoff_start: '2022-12-31'
+    playoff_end: '2023-01-09'
+  
+  2023:
+    season_start: '2023-08-26'
+    regular_season_end: '2023-12-02'
+    playoff_start: '2023-12-31'
+    playoff_end: '2024-01-08'
+  
+  2024:
+    season_start: '2024-08-24'
+    regular_season_end: '2024-12-07'
+    playoff_start: '2024-12-20'  # First CFP 12-team playoff
+    playoff_end: '2025-01-20'  # National Championship
+  
+  2025:
+    season_start: '2025-08-23'  # Estimated
+    regular_season_end: '2025-12-06'  # Estimated
+    playoff_start: '2025-12-19'  # Estimated
+    playoff_end: '2026-01-19'  # CFP National Championship
+
+# Notes:
+# - NBA: Regular season is ~82 games (Oct-April), followed by play-in tournament (2 days), 
+#        then playoffs (April-June). Finals are best-of-7.
+# - NFL: 18-week regular season (Sept-Jan), followed by Wild Card, Divisional, Conference 
+#        Championships, and Super Bowl (early Feb).
+# - NCAAB: Season starts early Nov, conference tournaments in March, NCAA Tournament 
+#          (March Madness) is 3 weeks in March-April.
+# - NCAAF: Season starts late Aug (Week 0), regular season through early Dec, 
+#          bowl games and CFP in Dec-Jan. Now 12-team playoff format (since 2024).
+
+# Sites used to find season dates:
+# - NBA: https://www.basketball-reference.com/
+# - NFL: https://www.pro-football-reference.com/
+# - NCAAB: https://www.sports-reference.com/cbb/; https://en.wikipedia.org/wiki/2025_NCAA_Division_I_men%27s_basketball_championship_game
+# - NCAAF: https://www.sports-reference.com/cfb/; https://en.wikipedia.org/wiki/College_Football_Playoff_National_Championship
