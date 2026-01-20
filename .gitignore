@@ -110,6 +110,9 @@ data/04_output/ncaab/ncaab_championship_*.csv
 # Historical games: 8.8MB (on S3: nba-api-mt bucket)
 data/01_input/nba_api/historical/
 
+# NBA calendar files (on S3: nba-betting-mt bucket)
+data/01_input/nba_calendar/
+
 # ai summaries
 docs/AI_summaries/
 
