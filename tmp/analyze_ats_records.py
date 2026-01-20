@@ -56,7 +56,7 @@ def normalize_team_name(team_name, reverse=False):
 
 
 def load_all_game_lines(season):
-    """Load all NBA game lines for specified season from S3"""
+    """Load all NBA game lines for specified season from S3 (S3: the-odds-api-mt/nba/historical_game_lines/{season}/)"""
     s3_prefix = f'nba/historical_game_lines/{season}/'
     
     s3 = boto3.client('s3')
@@ -89,16 +89,18 @@ def load_all_game_lines(season):
 
 
 def get_nba_scores(season):
-    """Load NBA game scores from S3 player game logs"""
-    s3_prefix = f'player_game_logs/{season}/'
+    """Load NBA game scores from S3 ESPN game results"""
+    # ESPN API stores game results in a different format
+    s3_prefix = 'data/01_input/historical_game_results/'
+    s3_bucket = 'nba-betting-mt'
     
     s3 = boto3.client('s3')
     
-    print(f"   📂 Looking for player game logs: s3://{S3_BUCKET_NBA_API}/{s3_prefix}")
-    response = s3.list_objects_v2(Bucket=S3_BUCKET_NBA_API, Prefix=s3_prefix)
+    print(f"   📂 Looking for ESPN game results: s3://{s3_bucket}/{s3_prefix}")
+    response = s3.list_objects_v2(Bucket=s3_bucket, Prefix=s3_prefix)
     
     if 'Contents' not in response:
-        raise ValueError(f"No player game logs found in S3")
+        raise ValueError(f"No game results found in S3")
     
     all_dfs = []
     file_count = 0
@@ -110,29 +112,52 @@ def get_nba_scores(season):
             continue
         
         try:
-            obj_response = s3.get_object(Bucket=S3_BUCKET_NBA_API, Key=key)
+            obj_response = s3.get_object(Bucket=s3_bucket, Key=key)
             df = pd.read_csv(BytesIO(obj_response['Body'].read()))
+            
+            # Skip empty files (no games on that date)
+            if df.empty:
+                continue
+                
             all_dfs.append(df)
             file_count += 1
         except Exception as e:
             print(f"⚠️  Error reading {key}: {e}")
     
     if not all_dfs:
-        raise ValueError(f"No valid player game logs found")
+        raise ValueError(f"No valid game results found")
     
-    print(f"   ✅ Loaded {file_count} daily player game log files")
+    print(f"   ✅ Loaded {file_count} daily ESPN game result files")
     
+    # Combine all ESPN data
     results_df = pd.concat(all_dfs, ignore_index=True)
     results_df['GAME_DATE'] = pd.to_datetime(results_df['GAME_DATE'])
     
-    team_games = results_df.groupby(['GAME_DATE', 'TEAM_NAME', 'MATCHUP', 'WL']).agg({
-        'PTS': 'sum'
-    }).reset_index()
+    # Convert ESPN format to our expected format
+    # Need to create records for both home and away teams
+    team_games = []
     
-    team_games = team_games[['TEAM_NAME', 'GAME_DATE', 'MATCHUP', 'WL', 'PTS']].copy()
-    team_games.columns = ['team', 'game_date', 'matchup', 'win_loss', 'points']
+    for _, row in results_df.iterrows():
+        # Home team record
+        team_games.append({
+            'team': row['HOME_TEAM'],
+            'game_date': row['GAME_DATE'],
+            'matchup': f"vs {row['AWAY_TEAM']}",  # Home game
+            'win_loss': row['HOME_WL'],
+            'points': row['HOME_SCORE']
+        })
+        
+        # Away team record
+        team_games.append({
+            'team': row['AWAY_TEAM'],
+            'game_date': row['GAME_DATE'],
+            'matchup': f"@ {row['HOME_TEAM']}",  # Away game
+            'win_loss': row['AWAY_WL'],
+            'points': row['AWAY_SCORE']
+        })
     
-    return team_games
+    team_games_df = pd.DataFrame(team_games)
+    return team_games_df
 
 
 def calculate_team_ats_records(lines_df, scores_df, team_name):
@@ -360,12 +385,12 @@ Examples:
     print(f"{'='*100}")
     
     # Load betting lines from S3
-    print("\n📥 Loading betting lines from S3...")
+    print("\n📥 Loading betting lines from S3... (S3: the-odds-api-mt/nba/historical_game_lines/{season}/)")
     lines_df = load_all_game_lines(args.season)
     print(f"✅ Loaded {len(lines_df):,} betting lines")
     
     # Load game results
-    print("\n📥 Loading game results from nba-api...")
+    print("\n📥 Loading game results from ESPN API... (S3: nba-betting-mt/data/01_input/historical_game_results/)")
     scores_df = get_nba_scores(args.season)
     print(f"✅ Loaded results for {len(scores_df):,} team-games")
     
