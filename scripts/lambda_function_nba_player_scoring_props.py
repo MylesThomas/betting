@@ -629,23 +629,7 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
     
-    # Step 6.5: Update Kelly Bankroll (based on yesterday's Top3 results)
-    print(f"\n{'='*80}")
-    print("Step 6.5: Updating Kelly Bankroll Tracker")
-    print(f"{'='*80}\n")
-    
-    cmd = [
-        'python', 'scripts/update_kelly_bankroll_tracker.py',
-        '--date', today
-    ]
-    
-    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
-    results['kelly_update'] = {'success': returncode == 0, 'output': stdout}
-    
-    if returncode != 0:
-        print(f"⚠️  Kelly bankroll update failed (non-fatal, continuing...)")
-    
-    # Step 7: Track yesterday's Top3 performance
+    # Step 7: Track yesterday's Top3 performance (MUST run before Kelly update)
     print(f"\n{'='*80}")
     print("Step 7: Tracking Yesterday's Top3 Performance")
     print(f"{'='*80}\n")
@@ -666,6 +650,22 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
     results['tracking'] = {'success': returncode == 0, 'output': stdout}
+    
+    # Step 7.5: Update Kelly Bankroll (based on yesterday's Top3 results from Step 7)
+    print(f"\n{'='*80}")
+    print("Step 7.5: Updating Kelly Bankroll Tracker")
+    print(f"{'='*80}\n")
+    
+    cmd = [
+        'python', 'scripts/update_kelly_bankroll_tracker.py',
+        '--date', today
+    ]
+    
+    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+    results['kelly_update'] = {'success': returncode == 0, 'output': stdout}
+    
+    if returncode != 0:
+        print(f"⚠️  Kelly bankroll update failed (non-fatal, continuing...)")
     
     # Step 8: Generate Top3 email
     print(f"\n{'='*80}")
