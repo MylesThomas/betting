@@ -791,7 +791,7 @@ def check_past_season_complete(season_start, season_end):
         return False, expected_dates, 0
 
 
-def fetch_full_season(season_start, season_end, dry_run=True):
+def fetch_full_season(season_start, season_end, dry_run=True, force=False):
     """
     Fetch all game lines for a full season
     
@@ -799,6 +799,7 @@ def fetch_full_season(season_start, season_end, dry_run=True):
         season_start: Start date (YYYY-MM-DD)
         season_end: End date (YYYY-MM-DD)
         dry_run: If True, only estimate costs without fetching
+        force: If True, skip "season complete" check and fetch missing dates
     
     Returns:
         Summary dict with stats
@@ -814,11 +815,11 @@ def fetch_full_season(season_start, season_end, dry_run=True):
     else:
         season = f"{start_year}-{str(start_year + 1)[-2:]}"
     
-    # Check if past season and complete
+    # Check if past season and complete (unless --force is used)
     current_season = get_current_nba_season()
     is_past_season = season < current_season
     
-    if is_past_season:
+    if is_past_season and not force:
         print(f"\n📅 Checking if past season {season} is already complete...")
         is_complete, expected_dates, files_found = check_past_season_complete(season_start, season_end)
         
@@ -830,10 +831,13 @@ def fetch_full_season(season_start, season_end, dry_run=True):
             print(f"Found: {files_found}/{expected_dates} files in S3")
             print(f"S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
             print(f"\nNo fetch needed - all historical data exists!")
+            print(f"\n💡 TIP: Use --force to re-check and fetch any missing dates")
             print(f"{'='*80}\n")
             return {'skipped': True, 'reason': 'Past season complete', 'files_found': files_found}
         else:
             print(f"   Found {files_found}/{expected_dates} files - will fetch missing dates")
+    elif is_past_season and force:
+        print(f"\n🔄 Force mode enabled - will check all dates for {season} season")
     else:
         print(f"\n🔄 Current season {season} - checking for updates...")
     
@@ -912,6 +916,8 @@ def main():
                        help='Test single date (YYYY-MM-DD format)')
     parser.add_argument('--no-local-backup', action='store_true',
                        help='Skip local backup (S3 only)')
+    parser.add_argument('--force', action='store_true',
+                       help='Force fetch even if past season appears complete (useful for adding playoff data)')
     
     args = parser.parse_args()
     
@@ -941,7 +947,7 @@ def main():
     
     season_start, season_end = SEASON_DATES[args.season]
     
-    fetch_full_season(season_start, season_end, dry_run=not args.prod_run)
+    fetch_full_season(season_start, season_end, dry_run=not args.prod_run, force=args.force)
 
 
 if __name__ == '__main__':
