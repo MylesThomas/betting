@@ -107,6 +107,10 @@ data/04_output/nba/nba_championship_*.csv
 data/04_output/ncaaf/ncaaf_championship_*.csv
 data/04_output/ncaab/ncaab_championship_*.csv
 
+# MVP odds data: Stored in S3 (nba-betting-mt bucket)
+data/01_input/fanduel/nba/mvp/
+data/04_output/nba/mvp/
+
 # Historical games: 8.8MB (on S3: nba-api-mt bucket)
 data/01_input/nba_api/historical/
 

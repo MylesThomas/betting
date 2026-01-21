@@ -36,27 +36,24 @@ repo_root = Path(__file__).parent.parent
 sys.path.insert(0, str(repo_root / 'src'))
 
 from odds_utils import odds_to_implied_probability, implied_probability_to_odds
+from s3_utils import get_latest_file_from_s3, read_df_from_s3, upload_df_to_s3
 
 
 def load_latest_mvp_odds():
-    """Load the most recent MVP odds CSV"""
-    input_dir = repo_root / 'data/01_input/fanduel/nba/mvp'
-    
-    if not input_dir.exists():
-        raise FileNotFoundError(f"Input directory not found: {input_dir}")
-    
-    # Get all MVP odds files
-    csv_files = list(input_dir.glob('nba_mvp_odds_*.csv'))
-    
-    if not csv_files:
-        raise FileNotFoundError(f"No MVP odds files found in {input_dir}")
+    """Load the most recent MVP odds CSV from S3"""
+    bucket = 'nba-betting-mt'
+    prefix = 'data/01_input/fanduel/nba/mvp/'
     
     # Get most recent file
-    latest_file = max(csv_files, key=os.path.getmtime)
+    latest_key = get_latest_file_from_s3(bucket, prefix)
     
-    print(f"📂 Loading: {latest_file.name}")
+    if not latest_key:
+        raise FileNotFoundError(f"No MVP odds files found in s3://{bucket}/{prefix}")
     
-    df = pd.read_csv(latest_file)
+    filename = latest_key.split('/')[-1]
+    print(f"📂 Loading from S3: {filename}")
+    
+    df = read_df_from_s3(bucket, latest_key)
     return df
 
 
@@ -65,6 +62,7 @@ def calculate_fair_odds(df):
     Calculate fair odds by removing market vig (proportional method).
     
     Same method used for championship futures analysis.
+    Only calculates for players currently on the board (odds not None).
     
     Args:
         df: DataFrame with columns [player, odds, implied_prob]
@@ -72,20 +70,25 @@ def calculate_fair_odds(df):
     Returns:
         DataFrame with added columns [fair_prob, fair_odds, vig_pct]
     """
-    # Calculate total market probability (includes vig)
-    total_market_prob = df['implied_prob'].sum()
+    # Only calculate for players currently on the board
+    on_board_mask = df['odds'].notna()
     
-    # Fair probability = remove vig proportionally
-    # fair_prob = implied_prob / total_market_prob
-    df['fair_prob'] = df['implied_prob'] / total_market_prob
+    # Calculate total market probability (includes vig) - only for players on board
+    total_market_prob = df.loc[on_board_mask, 'implied_prob'].sum()
     
-    # Convert fair probability back to American odds
-    df['fair_odds'] = df['fair_prob'].apply(implied_probability_to_odds)
+    # Fair probability = remove vig proportionally (only for players on board)
+    df.loc[on_board_mask, 'fair_prob'] = df.loc[on_board_mask, 'implied_prob'] / total_market_prob
     
-    # Calculate vig % for each player (absolute difference in probability points)
-    # This matches the calculation in championship futures analysis
-    # vig_pct = (implied_prob - fair_prob) * 100
-    df['vig_pct'] = (df['implied_prob'] - df['fair_prob']) * 100
+    # Convert fair probability back to American odds (only for players on board)
+    df.loc[on_board_mask, 'fair_odds'] = df.loc[on_board_mask, 'fair_prob'].apply(implied_probability_to_odds)
+    
+    # Calculate vig % for each player (only for players on board)
+    df.loc[on_board_mask, 'vig_pct'] = (df.loc[on_board_mask, 'implied_prob'] - df.loc[on_board_mask, 'fair_prob']) * 100
+    
+    # For players not on board, set fair_prob, fair_odds, vig_pct to None
+    df.loc[~on_board_mask, 'fair_prob'] = None
+    df.loc[~on_board_mask, 'fair_odds'] = None
+    df.loc[~on_board_mask, 'vig_pct'] = None
     
     return df
 
@@ -106,10 +109,11 @@ def main():
     print("\n2️⃣ Calculating fair odds (removing vig)...")
     df = calculate_fair_odds(df)
     
-    # Calculate market vig
-    total_market_prob = df['implied_prob'].sum()
+    # Calculate market vig (only for players on board)
+    on_board_mask = df['odds'].notna()
+    total_market_prob = df.loc[on_board_mask, 'implied_prob'].sum()
     market_vig_pct = (total_market_prob - 1.0) * 100
-    average_vig_pct = df['vig_pct'].mean()
+    average_vig_pct = df.loc[on_board_mask, 'vig_pct'].mean()
     
     print(f"   ✅ Market Vig: {market_vig_pct:.1f}%")
     print(f"   ✅ Average Vig per Player: {average_vig_pct:.1f}%")
@@ -122,10 +126,10 @@ def main():
     print(f"\n{'Player':<30}{'FanDuel':<12}{'Fair Odds':<12}{'Vig %':<10}")
     print("-" * 64)
     
-    for row in df.head(10).itertuples():
-        fd_odds_str = f"{int(row.odds):+d}"
-        fair_odds_str = f"{int(row.fair_odds):+d}"
-        vig_str = f"{row.vig_pct:+.1f}%"
+    for row in df.head(20).itertuples():  # Show more rows to include removed players
+        fd_odds_str = f"{int(row.odds):+d}" if pd.notna(row.odds) else "-"
+        fair_odds_str = f"{int(row.fair_odds):+d}" if pd.notna(row.fair_odds) else "-"
+        vig_str = f"{row.vig_pct:+.1f}%" if pd.notna(row.vig_pct) else "-"
         
         print(f"{row.player:<30}{fd_odds_str:<12}{fair_odds_str:<12}{vig_str:<10}")
     
@@ -138,8 +142,8 @@ def main():
         'implied_prob': 'fanduel_implied_prob'
     })
     
-    # Reorder columns
-    df_output = df_output[[
+    # Reorder columns (include season_start columns if they exist)
+    output_columns = [
         'player',
         'fanduel_odds',
         'fanduel_implied_prob',
@@ -147,39 +151,58 @@ def main():
         'fair_odds',
         'vig_pct',
         'fetch_date'
-    ]]
+    ]
     
-    # Save
-    output_dir = repo_root / 'data/04_output/nba/mvp'
-    os.makedirs(output_dir, exist_ok=True)
+    # Add season start columns if they exist in the dataframe
+    if 'season_start_odds' in df_output.columns:
+        output_columns.insert(2, 'season_start_odds')
+    if 'season_start_date' in df_output.columns:
+        output_columns.insert(3, 'season_start_date')
     
+    df_output = df_output[output_columns]
+    
+    # Save to S3
+    bucket = 'nba-betting-mt'
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = output_dir / f'nba_mvp_fair_odds_{timestamp}.csv'
+    s3_key = f'data/04_output/nba/mvp/nba_mvp_fair_odds_{timestamp}.csv'
     
-    df_output.to_csv(output_file, index=False)
+    s3_uri = upload_df_to_s3(df_output, bucket, s3_key)
     
-    print(f"   ✅ Saved to: {output_file}")
+    print(f"   ✅ Saved to S3: {s3_uri}")
     
     # Summary
     print("\n" + "="*80)
     print("SUMMARY")
     print("="*80)
     
+    on_board_df = df[df['odds'].notna()]
+    removed_df = df[df['odds'].isna()]
+    
     print(f"\nMarket Vig: {market_vig_pct:.1f}%")
-    print(f"Players: {len(df)}")
-    print(f"Favorite: {df.iloc[0]['player']} ({df.iloc[0]['odds']:+d})")
-    print(f"Longshot: {df.iloc[-1]['player']} ({df.iloc[-1]['odds']:+d})")
+    print(f"Players on Board: {len(on_board_df)}")
+    print(f"Players Removed: {len(removed_df)}")
+    print(f"Total Tracked: {len(df)}")
+    
+    if len(on_board_df) > 0:
+        print(f"Favorite: {on_board_df.iloc[0]['player']} ({int(on_board_df.iloc[0]['odds']):+d})")
+        print(f"Longshot: {on_board_df.iloc[-1]['player']} ({int(on_board_df.iloc[-1]['odds']):+d})")
     
     print("\nKey Insights:")
     print(f"- FanDuel charges {market_vig_pct:.1f}% vig on MVP market")
     print(f"- Average vig per player: {average_vig_pct:.1f}%")
     
-    # Find best and worst vig
-    best_vig_player = df.loc[df['vig_pct'].idxmin()]
-    worst_vig_player = df.loc[df['vig_pct'].idxmax()]
+    # Find best and worst vig (only among players on board)
+    if len(on_board_df) > 0:
+        best_vig_player = on_board_df.loc[on_board_df['vig_pct'].idxmin()]
+        worst_vig_player = on_board_df.loc[on_board_df['vig_pct'].idxmax()]
+        
+        print(f"- Lowest vig: {best_vig_player['player']} ({best_vig_player['vig_pct']:+.1f}%)")
+        print(f"- Highest vig: {worst_vig_player['player']} ({worst_vig_player['vig_pct']:+.1f}%)")
     
-    print(f"- Lowest vig: {best_vig_player['player']} ({best_vig_player['vig_pct']:+.1f}%)")
-    print(f"- Highest vig: {worst_vig_player['player']} ({worst_vig_player['vig_pct']:+.1f}%)")
+    if len(removed_df) > 0:
+        print(f"\n- Removed from board since season start:")
+        for player in removed_df['player'].head(5):
+            print(f"    • {player}")
     
     print("\n" + "="*80)
     print("NEXT STEP")
