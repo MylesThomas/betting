@@ -459,11 +459,11 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     print(f"  Overall: {main_steps_success}\n")
     
     if main_steps_success:
-        print(f"\n✅ Main workflow succeeded - running Top5 Unders workflow")
+        print(f"\n✅ Main workflow succeeded - running Top3 Unders workflow")
         top3_results = run_top3_unders_workflow(repo_dir, today, yesterday, season)
         results['steps']['top3_workflow'] = top3_results
     else:
-        print(f"\n⚠️  Skipping Top5 Unders workflow - main workflow had failures")
+        print(f"\n⚠️  Skipping Top3 Unders workflow - main workflow had failures")
         results['steps']['top3_workflow'] = {
             'skipped': True,
             'reason': 'main_workflow_failed',
@@ -546,7 +546,7 @@ def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dim
 
 def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     """
-    Run the Top5 Unders workflow (Steps 6-8).
+    Run the Top3 Unders workflow (Steps 6-8).
     Filters existing plays, tracks separately, sends 2nd email.
     
     This is ADDITIVE - doesn't touch the main workflow.
@@ -558,17 +558,17 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
         season: NBA season
     
     Returns:
-        dict: Top5 workflow results
+        dict: Top3 workflow results
     """
     print(f"\n{'='*80}")
-    print("🎯 Starting Top5 Unders Workflow (Steps 6-8)")
+    print("🎯 Starting Top3 Unders Workflow (Steps 6-8)")
     print(f"{'='*80}\n")
     
     results = {}
     
     # Step 6: Download strategy config from S3 and filter plays
     print(f"\n{'='*80}")
-    print("Step 6: Filtering Today's Plays (Top5 Unders)")
+    print("Step 6: Filtering Today's Plays (Top3 Unders)")
     print(f"{'='*80}\n")
     
     import boto3
@@ -578,7 +578,7 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     bucket = 'nba-betting-mt'
     
     # Download and load strategy config
-    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props_v3.json' # Updated: 2026-01-18
+    config_s3_path = 'strategies/top3_unders_strategies_nba_points_props_v4.json' # Updated: 2026-01-22
     config_local_path = '/tmp/top3_config.json'
     
     print(f"   Downloading config from s3://{bucket}/{config_s3_path}")
@@ -592,12 +592,12 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     
     # Validate config structure
     strategies = config_data['strategies']
-    assert len(strategies) == 5, f"Expected 5 strategies, got {len(strategies)}"
+    assert len(strategies) == 3, f"Expected 3 strategies, got {len(strategies)}"
     
     count_2d = len([s for s in strategies if s['strategy_type'] == '2d'])
     count_3d = len([s for s in strategies if s['strategy_type'] == '3d'])
-    assert count_2d == 2, f"Expected 2 2D strategies, got {count_2d}"
-    assert count_3d == 3, f"Expected 3 3D strategies, got {count_3d}"
+    assert count_2d == 1, f"Expected 1 2D strategy, got {count_2d}"
+    assert count_3d == 2, f"Expected 2 3D strategies, got {count_3d}"
     
     print(f"   ✅ Config validated: {count_2d} x 2D, {count_3d} x 3D")
     
@@ -800,9 +800,9 @@ def lambda_handler(event, context):
             success_lines.append(f"⏭️  Skipped: {top3['reason']}")
         else:
             success_lines.extend([
-                f"✅ Step 6: Filter Top5 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)",
-                f"✅ Step 7: Track Top5 Performance",
-                f"✅ Step 8: Generate & Send Top5 Email"
+                f"✅ Step 6: Filter Top3 Plays ({top3['2d_filter']['plays_count']} 2D + {top3['3d_filter']['plays_count']} 3D)",
+                f"✅ Step 7: Track Top3 Performance",
+                f"✅ Step 8: Generate & Send Top3 Email"
             ])
         
         success_lines.extend([

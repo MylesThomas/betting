@@ -1,0 +1,104 @@
+{
+  "name": "top3_unders",
+  "description": "Top 3 most resilient under strategies - consistently profitable across all seasons",
+  "last_updated": "2026-01-22",
+  "version": "v4",
+  "selection_criteria": "Profitable in ALL backtest seasons (2023-24, 2024-25, 2025-26), or 2 out of 3 backtest seasons",
+  "changes_from_v3": "Removed bench_pickem_under (2D) and bench_pickem_perimeter_under (3D) - both underperforming",
+  
+  "strategies": [
+    {
+      "strategy_name": "star_narrow_under",
+      "strategy_type": "2d",
+      "line_tier": "20-25 (Star)",
+      "spread_bin": "2-6 Fav",
+      "bet_side": "UNDER",
+      "scorer_type": "N/A",
+      "training_roi": 9.3,
+      "backtest_2023_24": {
+        "profit": 3454.71,
+        "plays": 311,
+        "profitable": true
+      },
+      "backtest_2024_25": {
+        "profit": 1654.73,
+        "plays": 371,
+        "profitable": true
+      },
+      "backtest_2025_26": {
+        "profit": 1036.44,
+        "plays": 150,
+        "profitable": true
+      },
+      "overall": {
+        "total_profit": 6145.88,
+        "total_plays": 832,
+        "win_rate": 56.2,
+        "profitable_seasons": "3/3"
+      },
+      "notes": "Profitable ALL 3 seasons. Most consistent strategy. Star players on favored teams tend to be overvalued."
+    },
+    {
+      "strategy_name": "role_pickem_rim_under",
+      "strategy_type": "3d",
+      "line_tier": "10-15 (Role Player)",
+      "spread_bin": "Pick'em (-2 to +2)",
+      "bet_side": "UNDER",
+      "scorer_type": "Rim Attacker (≥40.0%)",
+      "training_roi": 10.1,
+      "backtest_2023_24": {
+        "profit": 863.71,
+        "plays": 146,
+        "profitable": true
+      },
+      "backtest_2024_25": {
+        "profit": 581.90,
+        "plays": 167,
+        "profitable": true
+      },
+      "backtest_2025_26": {
+        "profit": 945.50,
+        "plays": 86,
+        "profitable": true
+      },
+      "overall": {
+        "total_profit": 2391.11,
+        "total_plays": 399,
+        "win_rate": 55.5,
+        "profitable_seasons": "3/3"
+      },
+      "notes": "Profitable ALL 3 seasons. Role player rim attackers get less usage in pick'em games. Market doesn't adjust enough."
+    },
+    {
+      "strategy_name": "bench_pickem_rim_under",
+      "strategy_type": "3d",
+      "line_tier": "5-10 (Bench)",
+      "spread_bin": "Pick'em (-2 to +2)",
+      "bet_side": "UNDER",
+      "scorer_type": "Rim Attacker (≥40.0%)",
+      "training_roi": 26.0,
+      "backtest_2023_24": {
+        "profit": -272.69,
+        "plays": 81,
+        "profitable": false
+      },
+      "backtest_2024_25": {
+        "profit": 990.96,
+        "plays": 97,
+        "profitable": true
+      },
+      "backtest_2025_26": {
+        "profit": 2163.69,
+        "plays": 91,
+        "profitable": true
+      },
+      "overall": {
+        "total_profit": 2881.96,
+        "total_plays": 269,
+        "win_rate": 58.0,
+        "profitable_seasons": "2/3"
+      },
+      "notes": "HIGHEST training ROI (26.0%). Explosive 2025-26 performance. Reverse pattern suggests edge is growing. Best current season performer."
+    }
+  ]
+}
