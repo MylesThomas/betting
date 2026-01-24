@@ -66,8 +66,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import sys
 import boto3
-from io import StringIO
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -78,6 +76,7 @@ from src.config import NBA_TEAMS
 # Add utils to path for shared formatters
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.formatters import format_large_number
+from utils.arb_cache import load_all_arbs_with_cache
 
 # S3 Configuration
 S3_BUCKET = os.getenv('S3_BUCKET_NAME', 'betting-nba-arbs')
@@ -305,63 +304,27 @@ st.markdown("""
 # Dashboard now reads directly from S3 bucket
 
 
-# Helper functions
-def load_single_s3_file(s3_key: str) -> pd.DataFrame:
-    """
-    Load a single S3 file (used for parallel processing).
-    
-    Args:
-        s3_key: S3 key to load
-    
-    Returns:
-        DataFrame with file metadata added, or None if failed
-    """
-    try:
-        # Download file from S3
-        obj = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
-        csv_content = obj['Body'].read().decode('utf-8')
-        df = pd.read_csv(StringIO(csv_content))
-        
-        # Skip empty files
-        if len(df) == 0:
-            return None
-        
-        # Extract date from S3 key: nba/arbs/2025-12-24/arb_output_20251224_180000.csv
-        parts = s3_key.split('/')
-        if len(parts) >= 4:
-            file_date = parts[2]  # YYYY-MM-DD
-            filename = parts[-1]  # arb_output_20251224_180000.csv
-            
-            # Extract time from filename
-            filename_parts = filename.replace('.csv', '').split('_')
-            if len(filename_parts) >= 3:
-                date_str = filename_parts[-2]  # YYYYMMDD
-                time_str = filename_parts[-1]  # HHMMSS
-                
-                file_datetime_utc = datetime.strptime(f"{date_str}_{time_str}", '%Y%m%d_%H%M%S')
-                # Convert UTC to ET for display
-                file_datetime_utc = file_datetime_utc.replace(tzinfo=ZoneInfo('UTC'))
-                file_datetime_et = file_datetime_utc.astimezone(ZoneInfo('America/New_York'))
-                
-                df['file_date'] = file_date
-                df['file_datetime'] = file_datetime_et
-                df['source_file'] = filename
-        
-        return df
-    except Exception as e:
-        # Silently skip failed files (will be logged if needed)
-        return None
+# Helper functions (most moved to utils/arb_cache.py for reusability)
 
 
 @st.cache_data(ttl=60)
 def load_all_arbs(max_workers: int = 100):
     """
-    Load all arbitrage opportunities from S3 (parallel loading for speed).
+    Load all arbitrage opportunities using persistent cache + incremental updates.
     
-    PARALLEL LOADING:
-    - Uses ThreadPoolExecutor with 100 workers by default
-    - Loads 4904+ files ~20-50x faster than sequential loading
-    - Each worker downloads and parses one file independently
+    CACHE STRATEGY (FAST!):
+    - Loads pre-built cache from S3 (~1-2 seconds)
+    - Only downloads NEW files since last cache rebuild
+    - Merges cache + new files and deduplicates
+    - Cache rebuilt daily via scripts/build_arb_cache.py
+    
+    BEFORE CACHE:
+    - Load 4904+ files every time (~20-50 seconds)
+    - High S3 bandwidth and costs
+    
+    AFTER CACHE:
+    - Load 1 cache file + ~10-100 new files (~1-2 seconds)
+    - 10-50x faster, 10-50x less bandwidth
     
     DEDUPLICATION STRATEGY:
     - Multiple files may exist per day (Lambda runs every 15 min)
@@ -377,73 +340,21 @@ def load_all_arbs(max_workers: int = 100):
         DataFrame with deduped arbs, keeping best expected_profit_pct per player/market/line/day
     """
     try:
-        # List all files in S3 under nba/arbs/ (with pagination for >1000 files)
-        # IMPORTANT: list_objects_v2() has a hard limit of 1000 objects per call
-        # With 4904+ historical files, we need paginator to get ALL files
-        # Without this, dashboard would only show first 1000 files (wrong metrics!)
-        arb_files = []
-        paginator = s3_client.get_paginator('list_objects_v2')
-        page_iterator = paginator.paginate(
-            Bucket=S3_BUCKET,
-            Prefix='nba/arbs/'
-        )
-        
-        for page in page_iterator:
-            if 'Contents' in page:
-                # Filter for CSV files
-                arb_files.extend([obj['Key'] for obj in page['Contents'] if obj['Key'].endswith('.csv')])
-        
-        if not arb_files:
-            return None
-        
-        # Load files in parallel with ThreadPoolExecutor
-        all_dfs = []
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all tasks
-            future_to_key = {executor.submit(load_single_s3_file, s3_key): s3_key for s3_key in arb_files}
-            
-            # Collect results as they complete
-            for future in as_completed(future_to_key):
-                df = future.result()
-                if df is not None:
-                    all_dfs.append(df)
-        
-        if not all_dfs:
-            return None
-        
-        combined_df = pd.concat(all_dfs, ignore_index=True)
-        
-        # Deduplicate: for each (file_date, player, market, line), keep the row with best expected_profit_pct
-        # NOTE: S3 files ONLY contain rows where is_arb=True (Lambda only saves profitable arbs)
-        if len(combined_df) > 0 and 'expected_profit_pct' in combined_df.columns:
-            # Sort by expected_profit_pct descending, then take first per group
-            combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
-            combined_df = combined_df.drop_duplicates(
-                subset=['file_date', 'player', 'market', 'line'],
-                keep='first'
-            )
-            # Re-sort by file_date (desc) then expected_profit_pct (desc)
-            combined_df = combined_df.sort_values(
-                ['file_date', 'expected_profit_pct'], 
-                ascending=[False, False]
-            )
-        
-        return combined_df
-        
+        df = load_all_arbs_with_cache('nba', max_workers=max_workers)
+        return df
     except Exception as e:
-        st.error(f"Error loading from S3: {e}")
+        st.error(f"Error loading arb data: {e}")
         return None
 
 
 @st.cache_data(ttl=60)
 def get_arb_history(max_workers: int = 100):
     """
-    Get historical summary by DATE (not by file) from S3.
+    Get historical summary by DATE (not by file).
     
+    Uses the same cached data as load_all_arbs() for speed.
     Multiple files may exist per day (Lambda runs every 15 min).
     This function groups by date and shows deduped metrics.
-    
-    OPTIMIZATION: Uses parallel loading with ThreadPoolExecutor for speed.
     
     Args:
         max_workers: Number of parallel download threads (default: 100)
@@ -452,81 +363,20 @@ def get_arb_history(max_workers: int = 100):
         List of dictionaries with daily metrics
     """
     try:
-        # List all files in S3 (with pagination for >1000 files)
-        arb_files = []
-        paginator = s3_client.get_paginator('list_objects_v2')
-        page_iterator = paginator.paginate(
-            Bucket=S3_BUCKET,
-            Prefix='nba/arbs/'
-        )
+        # Reuse the cached load function
+        df = load_all_arbs(max_workers=max_workers)
         
-        for page in page_iterator:
-            if 'Contents' in page:
-                arb_files.extend([obj['Key'] for obj in page['Contents'] if obj['Key'].endswith('.csv')])
-        
-        if not arb_files:
+        if df is None or len(df) == 0:
             return []
         
-        # Group files by date
-        files_by_date = {}
-        for s3_key in arb_files:
-            try:
-                parts = s3_key.split('/')
-                if len(parts) >= 3:
-                    file_date = parts[2]  # YYYY-MM-DD from path structure
-                    
-                    if file_date not in files_by_date:
-                        files_by_date[file_date] = []
-                    files_by_date[file_date].append(s3_key)
-            except:
-                continue
-        
-        # Load ALL files in parallel first (reuse load_single_s3_file helper)
-        all_dfs_with_dates = []
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_key = {executor.submit(load_single_s3_file, s3_key): s3_key for s3_key in arb_files}
-            
-            for future in as_completed(future_to_key):
-                s3_key = future_to_key[future]
-                df = future.result()
-                if df is not None:
-                    # Extract date from key
-                    parts = s3_key.split('/')
-                    if len(parts) >= 3:
-                        file_date = parts[2]
-                        all_dfs_with_dates.append((file_date, df))
-        
-        # Group loaded DataFrames by date
-        dfs_by_date = {}
-        for file_date, df in all_dfs_with_dates:
-            if file_date not in dfs_by_date:
-                dfs_by_date[file_date] = []
-            dfs_by_date[file_date].append(df)
-        
-        # Calculate metrics for each date
+        # Group by date
         history = []
-        for file_date, day_dfs in sorted(dfs_by_date.items(), reverse=True):
+        for file_date in sorted(df['file_date'].unique(), reverse=True):
             try:
-                if not day_dfs:
-                    continue
+                day_df = df[df['file_date'] == file_date]
                 
-                combined = pd.concat(day_dfs, ignore_index=True)
-                
-                # Dedupe by player/market/line, keep best expected_profit_pct
-                if 'expected_profit_pct' in combined.columns:
-                    combined = combined.sort_values('expected_profit_pct', ascending=False)
-                    deduped = combined.drop_duplicates(
-                        subset=['player', 'market', 'line'],
-                        keep='first'
-                    )
-                else:
-                    deduped = combined.drop_duplicates(
-                        subset=['player', 'market', 'line'],
-                        keep='first'
-                    )
-                
-                # Calculate metrics on deduped data
-                arbs_df = deduped[deduped['is_arb'] == True] # Past iterations had is_arb=False rows in the output, so filtering those
+                # Calculate metrics on deduped data (already deduped by load_all_arbs)
+                arbs_df = day_df[day_df['is_arb'] == True] if 'is_arb' in day_df.columns else day_df
                 
                 total_wagered = 0
                 total_profit = 0
@@ -542,8 +392,8 @@ def get_arb_history(max_workers: int = 100):
                         avg_profit_pct = arbs_df['expected_profit_pct'].mean()
                         max_profit_pct = arbs_df['expected_profit_pct'].max()
                 
-                num_games = deduped['game'].nunique() if 'game' in deduped.columns else 0
-                num_snapshots = len([d for d in day_dfs])
+                num_games = day_df['game'].nunique() if 'game' in day_df.columns else 0
+                num_snapshots = day_df['source_file'].nunique() if 'source_file' in day_df.columns else 0
                 
                 history.append({
                     'date': file_date,
@@ -561,7 +411,7 @@ def get_arb_history(max_workers: int = 100):
         return history
         
     except Exception as e:
-        st.error(f"Error loading history from S3: {e}")
+        st.error(f"Error calculating history: {e}")
         return []
 
 
@@ -891,7 +741,7 @@ def main():
         
         # Format file_datetime to ET string
         if 'file_datetime' in display_df.columns:
-            display_df['file_datetime'] = pd.to_datetime(display_df['file_datetime']).dt.strftime('%Y-%m-%d %I:%M:%S %p ET')
+            display_df['file_datetime'] = pd.to_datetime(display_df['file_datetime'], utc=True).dt.tz_convert('America/New_York').dt.strftime('%Y-%m-%d %I:%M:%S %p ET')
         
         cols_to_drop = ['game_time_et', 'game_date_et', 'file_date', 'source_file']
         for col in cols_to_drop:
