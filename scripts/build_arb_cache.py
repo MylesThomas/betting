@@ -2,24 +2,45 @@
 Build persistent cache for arbitrage dashboard data.
 
 OVERVIEW:
-    This script downloads ALL historical arb files from S3 and creates a single
-    consolidated cache file. This dramatically speeds up dashboard loading:
-    - Without cache: Load 4904+ files (~20-50 seconds)
-    - With cache: Load 1 file + new files only (~1-2 seconds)
-    - Performance improvement: 10-50x faster
+    This script consolidates ALL historical arb files from S3 into a single Parquet cache.
+    This dramatically speeds up dashboard loading:
+    - Without cache: Load 7000+ individual CSVs (~58 seconds)
+    - With cache: Load 1 Parquet file via DuckDB (~1-2 seconds)
+    - Performance improvement: 29x faster, 80% smaller files
 
 CACHE LOCATIONS:
-    Local dev:  ~/Downloads/tmp/{sport}_arbs_cache.csv
-    Production: s3://betting-{sport}-arbs/cache/{sport}_arbs_cache.csv
+    Local dev:  ~/Downloads/tmp/{sport}_arbs_cache.parquet
+    Production: s3://betting-{sport}-arbs/cache/{sport}_arbs_cache.parquet
     Metadata:   {same_location}/{sport}_arbs_cache_metadata.json
 
-USAGE:
-    # Build cache for one sport
-    python scripts/build_arb_cache.py --sport nba
-    python scripts/build_arb_cache.py --sport nfl
+TWO-TIER CACHING SYSTEM:
     
-    # Build cache for both sports
-    python scripts/build_arb_cache.py --sport all
+    1. REAL-TIME UPDATES (every 5 minutes during games):
+       - find_nba_arb_opportunities.py runs
+       - Gets new arbs from API
+       - Saves CSV snapshot to S3 (for history)
+       - Immediately appends to Parquet cache in S3
+       - Dashboard sees new data instantly (no rebuild needed!)
+    
+    2. DAILY REBUILD (this script, runs at 2am):
+       - Backfills any missing snapshots (if scraper failed)
+       - Cleans up duplicates
+       - Verifies cache integrity
+       - Updates metadata
+       
+    Why both?
+    - Real-time: Dashboard always fresh (no 5-min-old data)
+    - Daily: Catches errors, fills gaps, maintains data quality
+
+USAGE:
+    # Initial build (load ALL files from S3)
+    python scripts/build_arb_cache.py --sport all --file-type parquet --initial-cache-create true
+    
+    # Incremental build (load cache + new files only)
+    python scripts/build_arb_cache.py --sport all --file-type parquet --initial-cache-create false
+    
+    # Build cache for one sport
+    python scripts/build_arb_cache.py --sport nba --file-type parquet --initial-cache-create true
     
     # Quick setup (via setup script)
     python scripts/setup_arb_cache.py

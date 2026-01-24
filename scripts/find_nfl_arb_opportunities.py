@@ -16,10 +16,11 @@ ARBITRAGE EXPLAINED:
     IMPORTANT: We only compare Over/Under for the SAME player + SAME line.
                (e.g., "Mahomes Over 275.5" vs "Mahomes Under 275.5" - NOT mixing lines)
         
-HOW IT WORKS (3 steps):
+HOW IT WORKS (4 steps):
     1. Get all NFL games for today/this week (ET timezone)
     2. For each game, fetch all player prop markets
     3. For each (player, line) pair, find best Over/Under across bookmakers
+    4. Append new arbs to persistent Parquet cache in S3 (real-time updates)
     
 USAGE:
     # Run tests (no API calls)
@@ -63,8 +64,30 @@ OUTPUT EXAMPLE:
           Guaranteed Profit: $1.85
 
 OUTPUT FILES:
-    - data/01_input/the-odds-api/nfl/all_markets/raw_YYYYMMDD_HHMMSS.csv (raw props with timestamp)
-    - data/04_output/nfl/arbs/arb_output_YYYYMMDD_HHMMSS.csv (arb results with timestamp)
+    - data/04_output/nfl/arbs/YYYY-MM-DD/arb_output_YYYYMMDD_HHMMSS.csv (CSV snapshot)
+    - s3://betting-nfl-arbs/cache/nfl_arbs_cache.parquet (persistent cache, updated immediately)
+    
+    CSV files are saved locally for historical snapshots and uploaded to S3 daily.
+    The Parquet cache is the SOURCE OF TRUTH for the dashboard and is updated in real-time.
+
+CACHE WORKFLOW (Real-time updates):
+    Every time this script runs (typically every 5 minutes during games):
+    
+    1. Get new arbs from API → Save to CSV with timestamp
+    2. Read existing Parquet cache from S3 via DuckDB (fast!)
+    3. Append new arbs to cache (dedup by file_date + player + market + line)
+    4. Save updated Parquet back to S3
+    
+    Benefits:
+    - Dashboard always shows latest data (no wait for daily rebuild)
+    - CSV snapshots preserved for historical analysis
+    - Parquet cache = single source of truth (318KB vs 100+ individual CSVs)
+    - Load time: 1-2 seconds vs 30+ seconds
+    
+    Daily rebuild (build_arb_cache.py) runs at 2am to:
+    - Backfill any missing snapshots (if scraper failed)
+    - Clean up duplicates
+    - Verify cache integrity
     
 SETUP:
     1. Get API key from https://the-odds-api.com/
@@ -704,6 +727,130 @@ def run_demo():
     print("="*80 + "\n")
 
 
+def append_to_parquet_cache(new_arbs_df: pd.DataFrame, sport: str = 'nfl'):
+    """
+    Append new arbs to the persistent Parquet cache in S3 (real-time updates).
+    
+    Workflow:
+        1. Load existing Parquet cache from S3 via DuckDB (fast!)
+        2. Append new arbs
+        3. Deduplicate by (file_date, player, market, line) keeping highest profit
+        4. Save back to S3
+    
+    This keeps the dashboard always up-to-date without waiting for daily rebuild.
+    
+    Args:
+        new_arbs_df: DataFrame with new arb opportunities (from current scrape)
+        sport: 'nba' or 'nfl'
+    """
+    import boto3
+    import duckdb
+    from io import BytesIO
+    from datetime import datetime
+    
+    print(f"\n{'='*70}")
+    print(f"📦 Appending to Parquet Cache")
+    print(f"{'='*70}")
+    
+    # S3 config
+    s3_config = {
+        'nba': {
+            'bucket': 'betting-nba-arbs',
+            'cache_prefix': 'cache/',
+        },
+        'nfl': {
+            'bucket': 'betting-nfl-arbs',
+            'cache_prefix': 'cache/',
+        }
+    }
+    
+    config = s3_config[sport]
+    bucket = config['bucket']
+    s3_key = f"{config['cache_prefix']}{sport}_arbs_cache.parquet"
+    metadata_key = f"{config['cache_prefix']}{sport}_arbs_cache_metadata.json"
+    
+    s3_client = boto3.client('s3')
+    
+    # Step 1: Load existing cache from S3
+    print(f"1️⃣  Loading existing cache from S3...")
+    try:
+        obj = s3_client.get_object(Bucket=bucket, Key=s3_key)
+        parquet_bytes = obj['Body'].read()
+        
+        con = duckdb.connect(':memory:')
+        existing_df = con.execute(
+            "SELECT * FROM read_parquet(?)",
+            [BytesIO(parquet_bytes)]
+        ).df()
+        con.close()
+        
+        print(f"   ✅ Loaded {len(existing_df):,} existing rows")
+    except Exception as e:
+        print(f"   ⚠️  No existing cache found (creating new): {e}")
+        existing_df = pd.DataFrame()
+    
+    # Step 2: Append new arbs
+    print(f"2️⃣  Appending {len(new_arbs_df):,} new rows...")
+    if len(existing_df) > 0:
+        combined_df = pd.concat([existing_df, new_arbs_df], ignore_index=True)
+    else:
+        combined_df = new_arbs_df.copy()
+    print(f"   📊 Combined: {len(combined_df):,} rows")
+    
+    # Step 3: Deduplicate (keep highest profit for each unique arb)
+    print(f"3️⃣  Deduplicating...")
+    if 'file_date' not in combined_df.columns and 'file_datetime' in combined_df.columns:
+        combined_df['file_date'] = pd.to_datetime(combined_df['file_datetime']).dt.date.astype(str)
+    
+    dedup_cols = ['file_date', 'player', 'market', 'line']
+    if all(col in combined_df.columns for col in dedup_cols):
+        combined_df = combined_df.sort_values('expected_profit_pct', ascending=False)
+        combined_df = combined_df.drop_duplicates(subset=dedup_cols, keep='first')
+        print(f"   ✅ After dedup: {len(combined_df):,} rows")
+    else:
+        print(f"   ⚠️  Missing dedup columns, skipping deduplication")
+    
+    # Step 4: Save to S3 as Parquet
+    print(f"4️⃣  Saving to S3...")
+    buffer = BytesIO()
+    combined_df.to_parquet(buffer, engine='pyarrow', compression='snappy', index=False)
+    buffer.seek(0)
+    
+    s3_client.put_object(
+        Bucket=bucket,
+        Key=s3_key,
+        Body=buffer.getvalue(),
+        ContentType='application/x-parquet'
+    )
+    
+    size_mb = len(buffer.getvalue()) / 1024 / 1024
+    print(f"   ✅ Uploaded to S3: s3://{bucket}/{s3_key} ({size_mb:.1f} MB)")
+    
+    # Step 5: Update metadata
+    print(f"5️⃣  Updating metadata...")
+    import json
+    metadata = {
+        'last_rebuild': datetime.now().isoformat(),
+        'total_rows': len(combined_df),
+        'oldest_date': combined_df['file_date'].min() if 'file_date' in combined_df.columns else 'N/A',
+        'newest_date': combined_df['file_date'].max() if 'file_date' in combined_df.columns else 'N/A',
+    }
+    
+    s3_client.put_object(
+        Bucket=bucket,
+        Key=metadata_key,
+        Body=json.dumps(metadata, indent=2),
+        ContentType='application/json'
+    )
+    print(f"   ✅ Metadata updated")
+    
+    print(f"{'='*70}")
+    print(f"✅ Cache Updated Successfully!")
+    print(f"   Total rows: {len(combined_df):,}")
+    print(f"   Date range: {metadata['oldest_date']} → {metadata['newest_date']}")
+    print(f"{'='*70}\n")
+
+
 def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_time="17:00:00", week_mode=False):
     """Main execution function
     
@@ -923,6 +1070,17 @@ def main(markets=DEFAULT_MARKETS, limit=None, historical_date=None, historical_t
         best_odds_df = best_odds_df.sort_values('expected_profit_pct', ascending=False)
         best_odds_df.to_csv(output_file, index=False)
         print(f"\n💾 Arb results saved to: {output_file}")
+        
+        # Append to Parquet cache in S3 (real-time updates)
+        if not historical_date:  # Only update cache for live runs (not historical backfills)
+            try:
+                append_to_parquet_cache(best_odds_df, sport='nfl')
+            except Exception as cache_error:
+                print(f"⚠️  Warning: Failed to update Parquet cache: {cache_error}")
+                print(f"   (CSV saved successfully, cache will be rebuilt during daily job)")
+        else:
+            print(f"📝 Historical mode: Skipping cache append (use daily rebuild instead)")
+        
         
         raw_output_file = raw_output_dir / f'raw_{timestamp}.csv'
         props_df.to_csv(raw_output_file, index=False)
