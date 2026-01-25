@@ -1,0 +1,72 @@
+# Line Steam Alert Configuration
+# Central config for multi-sport line movement steam detection
+# Used by: check_line_steam.py, calculate_line_steam_results.py, lambda_function_line_steam_alerts.py
+
+sports:
+  nba:
+    name: "NBA"
+    icon: "🏀"
+    api_key: "basketball_nba"
+    threshold: 1.0  # Minimum line movement in points to trigger alert
+    days_back: 7  # How many days of snapshots to load for analysis
+    s3_bucket_snapshots: "betting-line-movement-snapshots"
+    s3_bucket_plays: "nba-betting-mt"
+    s3_bucket_results: "nba-api-mt"
+    result_source: "nba_api"  # Uses NBA API for game results
+    sns_topic_arn: "arn:aws:sns:us-east-2:232692785472:nba-props-alerts"
+    
+  nfl:
+    name: "NFL"
+    icon: "🏈"
+    api_key: "americanfootball_nfl"
+    threshold: 1.0
+    days_back: 7
+    s3_bucket_snapshots: "betting-line-movement-snapshots"
+    s3_bucket_plays: "nfl-betting-mt"
+    s3_bucket_results: "nfl-betting-mt"
+    result_source: "espn_api"  # Uses ESPN API for game results
+    sns_topic_arn: "arn:aws:sns:us-east-2:232692785472:nba-props-alerts"
+    
+  ncaab:
+    name: "NCAAB"
+    icon: "🏀"
+    api_key: "basketball_ncaab"
+    threshold: 1.0  # Easy to change to 2.0 if needed (more games = higher threshold)
+    days_back: 7
+    s3_bucket_snapshots: "betting-line-movement-snapshots"
+    s3_bucket_plays: "ncaab-betting-mt"
+    s3_bucket_results: "ncaab-betting-mt"
+    result_source: "espn_api"
+    sns_topic_arn: "arn:aws:sns:us-east-2:232692785472:nba-props-alerts"
+    
+  ncaaf:
+    name: "NCAAF"
+    icon: "🏈"
+    api_key: "americanfootball_ncaaf"
+    threshold: 1.0
+    days_back: 7
+    s3_bucket_snapshots: "betting-line-movement-snapshots"
+    s3_bucket_plays: "ncaaf-betting-mt"
+    s3_bucket_results: "ncaaf-betting-mt"
+    result_source: "espn_api"
+    sns_topic_arn: "arn:aws:sns:us-east-2:232692785472:nba-props-alerts"
+
+# Team name normalization (Odds API → Result APIs)
+# Add mappings here when team names don't match between APIs
+team_name_mappings:
+  nba:
+    "Los Angeles Clippers": "LA Clippers"
+  nfl: {}
+  ncaab: {}  # Will populate as we discover mismatches
+  ncaaf: {}
+
+# Daily report timing (all times in ET)
+daily_report:
+  hour_et: 13  # 1:00 PM ET
+  minute_window_et: 10  # Run if within first 10 minutes of hour (1:00-1:10 PM)
+  
+# Notes:
+# - Threshold can be overridden via command line: --threshold 2.0
+# - SNS topic is the same for all sports (same email, different subjects)
+# - S3 snapshots bucket is shared (line tracking Lambda stores all sports there)
+# - Results buckets are sport-specific (game results are stored separately)

@@ -173,3 +173,97 @@ def season_to_dash(season):
     """
     return season.replace('_', '-')
 
+
+def get_current_nfl_season():
+    """
+    Get the current NFL season string based on today's date.
+    
+    NFL seasons run from September to February of the following year.
+    - Sep-Dec: Current year is the season (e.g., Sep 2025 → '2025')
+    - Jan-Aug: Previous year is the season (e.g., Jan 2026 → '2025')
+    
+    Returns:
+        str: Season string in format 'YYYY' (e.g., '2025')
+    
+    Examples:
+        >>> # If today is Sep 10, 2025
+        >>> get_current_nfl_season()
+        '2025'
+        
+        >>> # If today is Jan 15, 2026 (Super Bowl)
+        >>> get_current_nfl_season()
+        '2025'
+        
+        >>> # If today is Aug 20, 2026 (preseason)
+        >>> get_current_nfl_season()
+        '2025'
+    """
+    today = datetime.now()
+    if today.month >= 9:  # Sep-Dec
+        return str(today.year)
+    else:  # Jan-Aug
+        return str(today.year - 1)
+
+
+def get_current_ncaab_season():
+    """
+    Get the current NCAAB season string based on today's date.
+    
+    NCAAB seasons run from November to April of the following year.
+    - Nov-Dec: Current year is the start year (e.g., Nov 2025 → '2025-26')
+    - Jan-Sep: Previous year is the start year (e.g., Jan 2026 → '2025-26')
+    - Oct: Previous year (e.g., Oct 2026 → '2025-26' until season starts)
+    
+    Returns:
+        str: Season string in format 'YYYY-YY' (e.g., '2025-26')
+    
+    Examples:
+        >>> # If today is Nov 10, 2025 (season start)
+        >>> get_current_ncaab_season()
+        '2025-26'
+        
+        >>> # If today is Mar 15, 2026 (March Madness)
+        >>> get_current_ncaab_season()
+        '2025-26'
+        
+        >>> # If today is Sep 20, 2026 (off-season)
+        >>> get_current_ncaab_season()
+        '2025-26'
+    """
+    today = datetime.now()
+    if today.month >= 11:  # Nov-Dec
+        return f"{today.year}-{str(today.year + 1)[-2:]}"
+    else:  # Jan-Oct
+        return f"{today.year - 1}-{str(today.year)[-2:]}"
+
+
+def get_current_ncaaf_season():
+    """
+    Get the current NCAAF season string based on today's date.
+    
+    NCAAF seasons run from August to January of the following year.
+    - Aug-Dec: Current year is the season (e.g., Aug 2025 → '2025')
+    - Jan-Jul: Previous year is the season (e.g., Jan 2026 → '2025')
+    
+    Returns:
+        str: Season string in format 'YYYY' (e.g., '2025')
+    
+    Examples:
+        >>> # If today is Aug 25, 2025 (Week 0)
+        >>> get_current_ncaaf_season()
+        '2025'
+        
+        >>> # If today is Jan 10, 2026 (CFP National Championship)
+        >>> get_current_ncaaf_season()
+        '2025'
+        
+        >>> # If today is Jul 15, 2026 (off-season)
+        >>> get_current_ncaaf_season()
+        '2025'
+    """
+    today = datetime.now()
+    if today.month >= 8:  # Aug-Dec
+        return str(today.year)
+    else:  # Jan-Jul
+        return str(today.year - 1)
+
