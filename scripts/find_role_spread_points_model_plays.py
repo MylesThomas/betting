@@ -895,6 +895,7 @@ def find_plays(df_games, strategies, granularity='detailed'):
                 # Skip play if no bookmakers offer this specific side
                 if bookmaker_details == '[]':
                     print(f"   🐛 DEBUG {player} {strat['bet_side']} {line}: No bookmakers offering {strat['bet_side']} at this line")
+                    continue  # Skip this play - can't bet it!
                 
                 play_data = {
                     'player': player,
