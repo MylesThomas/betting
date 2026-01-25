@@ -523,8 +523,36 @@ SPORT_ICONS = {
 DEFAULT_ACTIVE_SPORTS = ['nba', 'ncaab']
 
 
-def get_active_sports():
-    """Get list of active sports from environment variable or default."""
+def get_active_sports(event=None):
+    """
+    Get list of active sports from event payload, environment variable, or default.
+    
+    Priority:
+    1. event['active_sports'] (payload override)
+    2. ACTIVE_SPORTS env var
+    3. DEFAULT_ACTIVE_SPORTS constant
+    
+    Args:
+        event: Lambda event dict (optional)
+    
+    Returns:
+        list: List of sport strings (e.g., ['nba', 'ncaab'])
+    
+    Examples:
+        get_active_sports({'active_sports': 'nba'}) → ['nba']
+        get_active_sports({'active_sports': ['nba', 'nfl']}) → ['nba', 'nfl']
+        get_active_sports() → from env var or default
+    """
+    # Priority 1: Event payload override
+    if event and 'active_sports' in event:
+        sports = event['active_sports']
+        # Handle both string ("nba,ncaab") and list (["nba", "ncaab"]) formats
+        if isinstance(sports, str):
+            return [sport.strip() for sport in sports.split(',')]
+        elif isinstance(sports, list):
+            return [sport.strip() for sport in sports]
+    
+    # Priority 2: Environment variable
     active_sports_str = os.getenv('ACTIVE_SPORTS', ','.join(DEFAULT_ACTIVE_SPORTS))
     return [sport.strip() for sport in active_sports_str.split(',')]
 
@@ -555,8 +583,8 @@ def lambda_handler(event, context):
     today = get_today_et()
     print(f"📅 Today: {today}\n")
     
-    # Get active sports
-    active_sports = get_active_sports()
+    # Get active sports (from event payload, env var, or default)
+    active_sports = get_active_sports(event)
     print(f"🎯 Active sports: {', '.join([s.upper() for s in active_sports])}\n")
     
     # Check if we should run daily report
