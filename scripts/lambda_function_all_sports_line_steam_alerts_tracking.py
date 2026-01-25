@@ -1,6 +1,7 @@
 """
 AWS Lambda Function - All Sports Line Steam Alerts Tracking
 
+Python script: scripts/lambda_function_all_sports_line_steam_alerts_tracking.py
 Lambda function name: line-steam-alerts
 Handler: lambda_function_all_sports_line_steam_alerts_tracking.lambda_handler
 
@@ -37,7 +38,8 @@ MODE 2 - DAILY REPORT (1:05pm ET):
    - Calculate yesterday's results (match plays to game outcomes)
    - Save results to S3: s3://{sport}-betting-mt/data/04_output/results/line-steam/{date}.csv
    - Generate YTD report (W-L-T, ROI, breakdowns)
-   - Send email: "📊 {SPORT} Line Steam YTD Report - {date}"
+   - Send email: "📊 {SPORT} Line Steam Daily Report - {date}"
+   - Email includes: results summary, S3 path, YTD stats
 
 ================================================================================
 S3 DATA STRUCTURE
@@ -69,7 +71,7 @@ Output (Results - Sport-Specific Buckets):
 EMAIL ALERTS
 ================================================================================
 
-Separate email per sport when steam detected:
+STEAM DETECTION EMAILS (Hourly when steam detected):
 
 Subject: "🚨 NBA Line Steam Alert - 2026-01-23"
 Subject: "🚨 NCAAB Line Steam Alert - 2026-01-23"
@@ -95,6 +97,22 @@ Body format:
   [... more games ...]
 
 No email sent if no steam detected (silent success, check CloudWatch logs).
+
+DAILY REPORT EMAILS (1:05pm ET daily):
+
+Subject: "📊 NBA Line Steam Daily Report - 2026-01-24"
+Subject: "📊 NCAAB Line Steam Daily Report - 2026-01-24"
+
+Body format:
+  🏀 NCAAB LINE STEAM DAILY REPORT - 2026-01-24
+  
+  Results calculated for 2026-01-24
+  
+  [Script output: W-L-T record, ROI, game-by-game results]
+  
+  Results saved to: s3://ncaab-betting-mt/data/04_output/results/line-steam/2026-01-24.csv
+
+Email sent even if no plays (shows "No plays found" message).
 
 ================================================================================
 AWS LAMBDA SETUP
@@ -702,14 +720,28 @@ def lambda_handler(event, context):
                     
                     if code != 0:
                         print(f"⚠️  Results calculation had issues: {stderr}")
+                        all_results.append({
+                            'sport': sport,
+                            'mode': 'daily_report',
+                            'status': 'error',
+                            'error': stderr
+                        })
+                        continue
                     
-                    # TODO: Generate YTD report
-                    print(f"✅ {sport_upper} daily report complete\n")
+                    # Send daily report email
+                    report_msg = (
+                        f"{sport_icon} {sport_upper} LINE STEAM DAILY REPORT - {yesterday}\n\n"
+                        f"Results calculated for {yesterday}\n\n"
+                        f"{stdout}\n\n"
+                        f"Results saved to: s3://{sport}-betting-mt/data/04_output/results/line-steam/{yesterday}.csv"
+                    )
+                    send_sns(f"📊 {sport_upper} Line Steam Daily Report - {yesterday}", report_msg)
+                    print(f"📧 {sport_upper} daily report email sent!\n")
                     
                     all_results.append({
                         'sport': sport,
                         'mode': 'daily_report',
-                        'status': 'success' if code == 0 else 'error'
+                        'status': 'success'
                     })
                     
                     continue
@@ -795,12 +827,15 @@ def lambda_handler(event, context):
             print(f"{status_icon} {result['sport'].upper()}: {result['status']}{steam_text}")
         print(f"{'='*80}\n")
         
+        # Round timing data to 2 decimal places for readability
+        timing_rounded = {k: round(v, 2) for k, v in TIMING_DATA.items()}
+        
         return {
             'statusCode': 200,
             'body': json.dumps({
                 'date': today,
                 'results': all_results,
-                'timing': TIMING_DATA
+                'timing': timing_rounded
             })
         }
         
