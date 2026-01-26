@@ -193,7 +193,9 @@ def load_cache_from_s3(sport: str, s3_client) -> pd.DataFrame:
         
         return df
     except Exception as e:
-        print(f"   ⚠️  S3 cache not found: {e}")
+        import traceback
+        print(f"   ❌ S3 cache load failed: {e}")
+        print(f"   Traceback: {traceback.format_exc()}")
         return None
 
 
@@ -414,12 +416,19 @@ def load_all_arbs_with_cache(sport: str, max_workers: int = 100) -> pd.DataFrame
     if cache_df is not None:
         print(f"✅ Cache loaded: {len(cache_df):,} rows")
     else:
-        # No fallback - if S3 cache fails, we fail
-        print(f"❌ S3 cache not found - cannot proceed")
-        raise FileNotFoundError(
-            f"S3 cache not found for {sport}. "
-            f"Run 'python scripts/build_arb_cache.py --sport {sport}' to create cache."
+        # Show helpful error message
+        error_msg = (
+            f"❌ Failed to load S3 cache for {sport}.\n\n"
+            f"Possible causes:\n"
+            f"1. AWS credentials not configured in Streamlit Cloud Secrets\n"
+            f"2. Cache file doesn't exist: s3://{S3_CONFIG[sport]['bucket']}/cache/{sport}_arbs_cache.parquet\n"
+            f"3. Insufficient S3 permissions\n\n"
+            f"To fix:\n"
+            f"- Add AWS credentials to Streamlit Cloud → Settings → Secrets\n"
+            f"- Or run: python scripts/build_arb_cache.py --sport {sport}\n"
         )
+        print(error_msg)
+        raise FileNotFoundError(error_msg)
     
     # Step 2: Get cache metadata to find last rebuild date
     with timed_section("Get cache metadata"):

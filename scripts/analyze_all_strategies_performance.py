@@ -827,26 +827,8 @@ def create_visualizations(df_all_plays: pd.DataFrame, df_strategies: pd.DataFram
             print(f"   {'Play':<6} {'RunWR%':<8} {'Kelly%':<8} {'BetSize':<10} {'Result':<7} {'Bankroll':<12} {'Paper?':<7}")
             print(f"   {'-'*76}")
             
-            # Show first 10, middle 5, and last 10 plays
-            total_plays = len(strategy_plays)
-            if total_plays <= 25:
-                rows_to_show = strategy_plays.iterrows()
-            else:
-                # First 10
-                first_10 = list(strategy_plays.head(10).iterrows())
-                # Middle 5
-                mid_start = total_plays // 2 - 2
-                mid_5 = list(strategy_plays.iloc[mid_start:mid_start+5].iterrows())
-                # Last 10
-                last_10 = list(strategy_plays.tail(10).iterrows())
-                
-                rows_to_show = first_10 + [('...', None)] + mid_5 + [('...', None)] + last_10
-            
-            for idx, row in rows_to_show:
-                if row is None:
-                    print(f"   {'...':<6} {'...':<8} {'...':<8} {'...':<10} {'...':<7} {'...':<12} {'...':<7}")
-                    continue
-                
+            # Log ALL plays (no sampling)
+            for idx, row in strategy_plays.iterrows():
                 play_num = int(row['play_number'])
                 run_wr = row['running_win_rate'] * 100
                 kelly_pct = row['kelly_fraction_used'] * 100
