@@ -79,12 +79,12 @@ EMOJI = {
 }
 
 # =============================================================================
-# KELLY CRITERION CONSTANTS
+# KELLY CRITERION CONSTANTS (defaults - will be overridden by S3 config)
 # =============================================================================
 
 DEFAULT_BANKROLL = 10000  # $10,000 default bankroll (fallback if S3 config not available)
-FRACTIONAL_KELLY = 1.0    # 1.0 = full Kelly, 0.5 = half Kelly, 0.25 = quarter Kelly
-MAX_KELLY = 0.10          # Cap Kelly at 10% max single bet
+DEFAULT_FRACTIONAL_KELLY = 1.0    # 1.0 = full Kelly, 0.5 = half Kelly, 0.25 = quarter Kelly
+DEFAULT_MAX_KELLY = 0.10          # Cap Kelly at 10% max single bet
 S3_KELLY_CONFIG_PATH = 'config/kelly_bankroll_tracker.json'
 
 # =============================================================================
@@ -103,22 +103,53 @@ ET_TZ = ZoneInfo('America/New_York')
 # KELLY BANKROLL LOADING
 # =============================================================================
 
-def load_current_bankroll_from_s3():
+def load_kelly_config_from_s3():
     """
-    Load current bankroll from Kelly tracker config in S3.
-    Falls back to DEFAULT_BANKROLL if config not found.
+    Load Kelly configuration from S3 including bankroll, fractional_kelly, and max_kelly.
+    Falls back to defaults if config not found.
+    
+    Returns:
+        dict with keys: bankroll, fractional_kelly, max_kelly
     """
     s3_client = boto3.client('s3')
     
     try:
         response = s3_client.get_object(Bucket=S3_BUCKET, Key=S3_KELLY_CONFIG_PATH)
         config = json.loads(response['Body'].read().decode('utf-8'))
-        bankroll = config['current_bankroll']
-        print(f"✅ Loaded current bankroll from S3: ${bankroll:,.2f}")
-        return bankroll
+        
+        bankroll = config.get('current_bankroll', DEFAULT_BANKROLL)
+        fractional_kelly = config.get('fractional_kelly', DEFAULT_FRACTIONAL_KELLY)
+        max_kelly = config.get('max_kelly', DEFAULT_MAX_KELLY)
+        
+        print(f"✅ Loaded Kelly config from S3:")
+        print(f"   Bankroll: ${bankroll:,.2f}")
+        print(f"   Fractional Kelly: {fractional_kelly*100:.0f}% ({_kelly_label(fractional_kelly)})")
+        print(f"   Max Kelly Cap: {max_kelly*100:.0f}%")
+        
+        return {
+            'bankroll': bankroll,
+            'fractional_kelly': fractional_kelly,
+            'max_kelly': max_kelly
+        }
     except Exception as e:
-        print(f"⚠️  Could not load bankroll from S3 (using default ${DEFAULT_BANKROLL:,}): {e}")
-        return DEFAULT_BANKROLL
+        print(f"⚠️  Could not load Kelly config from S3 (using defaults): {e}")
+        return {
+            'bankroll': DEFAULT_BANKROLL,
+            'fractional_kelly': DEFAULT_FRACTIONAL_KELLY,
+            'max_kelly': DEFAULT_MAX_KELLY
+        }
+
+
+def _kelly_label(fractional_kelly):
+    """Return human-readable label for fractional Kelly value"""
+    if fractional_kelly == 1.0:
+        return "Full Kelly"
+    elif fractional_kelly == 0.5:
+        return "Half Kelly"
+    elif fractional_kelly == 0.25:
+        return "Quarter Kelly"
+    else:
+        return f"{fractional_kelly:.2f}x Kelly"
 
 
 # =============================================================================
@@ -590,11 +621,15 @@ def get_best_odds_from_bookmakers(bookmaker_details_json, default_odds=-110):
         return default_odds
 
 
-def format_plays_text(df_plays, date_str, bankroll=None):
+def format_plays_text(df_plays, date_str, kelly_config=None):
     """Format today's plays as text"""
-    # Use provided bankroll or load from S3
-    if bankroll is None:
-        bankroll = load_current_bankroll_from_s3()
+    # Use provided kelly_config or load from S3
+    if kelly_config is None:
+        kelly_config = load_kelly_config_from_s3()
+    
+    bankroll = kelly_config['bankroll']
+    fractional_kelly = kelly_config['fractional_kelly']
+    max_kelly = kelly_config['max_kelly']
     
     if df_plays is None or df_plays.empty:
         return f"""
@@ -751,30 +786,52 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
             bookmaker_details = play['bookmaker_details_over'] if bet_side == 'OVER' else play['bookmaker_details_under']
             best_odds = get_best_odds_from_bookmakers(bookmaker_details)
             
-            kelly_result = calculate_kelly_criterion(win_prob, best_odds, max_kelly=MAX_KELLY)
+            kelly_result = calculate_kelly_criterion(win_prob, best_odds, max_kelly=max_kelly)
             kelly_pct = kelly_result['kelly_pct']
-            kelly_pct_display = kelly_result['kelly_pct_display']
-            kelly_dollars = kelly_bet_size(kelly_pct, bankroll)
+            
+            # Apply fractional Kelly
+            fractional_kelly_pct = kelly_pct * fractional_kelly
+            kelly_pct_display = fractional_kelly_pct  # Display the fractional Kelly value
+            kelly_dollars = kelly_bet_size(fractional_kelly_pct, bankroll)
             is_capped = kelly_result['capped']
             
             # Store Kelly data for summary
             kelly_data.append({
                 'player': play['player'],
-                'kelly_pct': kelly_pct,
+                'kelly_pct': fractional_kelly_pct,  # Store fractional Kelly for summary
                 'kelly_dollars': kelly_dollars,
                 'odds': best_odds
             })
             
-            # Display Kelly info with explanation
+            # Calculate implied probability and edge for display
+            from odds_utils import odds_to_implied_probability
+            implied_prob = odds_to_implied_probability(best_odds)
+            breakeven_prob = 0.5238  # 52.38% breakeven for -110 odds
+            edge_vs_breakeven = win_prob - breakeven_prob
+            edge_vs_implied = win_prob - implied_prob
+            
+            # Calculate b (net profit per dollar) for Kelly formula explanation
+            if best_odds > 0:
+                b = best_odds / 100  # Positive odds: profit per $1
+            else:
+                b = 100 / abs(best_odds)  # Negative odds: profit per $1
+            
+            # Kelly formula components
+            q = 1 - win_prob  # Lose probability
+            kelly_numerator = (b * win_prob) - q
+            kelly_before_cap = kelly_numerator / b if b > 0 else 0
+            
+            # Display Kelly info with detailed breakdown
             capped_warning = f" {EMOJI['warning']} CAPPED" if is_capped else ""
             
-            # Calculate implied probability for comparison
-            from odds_utils import odds_to_implied_probability
-            implied_prob = odds_to_implied_probability(best_odds) * 100
-            edge_over_implied = play['hit_rate'] - implied_prob
-            
-            text += f"   {EMOJI['moneybag']} Kelly Bet Size: {kelly_pct_display:.1f}% of bankroll | ${kelly_dollars:.0f} on ${bankroll:,.0f} bankroll{capped_warning}\n"
-            text += f"      └─ Win Prob: {play['hit_rate']:.1f}% | Implied Prob @ {best_odds:+d}: {implied_prob:.1f}% | Edge: {edge_over_implied:+.1f}%\n"
+            text += f"   {EMOJI['moneybag']} Kelly Analysis:\n"
+            text += f"      Win Prob: {win_prob*100:.1f}% | Implied Prob @ {best_odds:+d}: {implied_prob*100:.1f}% | Edge: {edge_vs_implied*100:+.1f}%\n"
+            text += f"      Kelly Formula: ({b:.3f} × {win_prob:.3f} - {q:.3f}) / {b:.3f} = {kelly_before_cap*100:.1f}%\n"
+            if is_capped:
+                text += f"      Full Kelly: {kelly_before_cap*100:.1f}% → Capped at {max_kelly*100:.0f}% = {kelly_pct*100:.1f}%\n"
+            if fractional_kelly < 1.0:
+                text += f"      Fractional ({fractional_kelly*100:.0f}%): {kelly_pct*100:.1f}% × {fractional_kelly:.2f} = {fractional_kelly_pct*100:.1f}%\n"
+            text += f"      → Bet Size: {fractional_kelly_pct*100:.1f}% of bankroll = ${kelly_dollars:.0f}{capped_warning}\n"
             
             # Show bookmakers offering this line (detailed format with BOTH sides for context)
             details_over = json.loads(play['bookmaker_details_over'])
@@ -827,27 +884,36 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
         max_kelly_play = max(kelly_data, key=lambda k: k['kelly_pct'])
         total_kelly_dollars = sum([k['kelly_dollars'] for k in kelly_data])
         
-        kelly_summary = f"""KELLY CRITERION BETTING SUMMARY:
+        # Calculate what full Kelly would be (for comparison)
+        total_full_kelly_dollars = total_kelly_dollars / fractional_kelly if fractional_kelly > 0 else total_kelly_dollars
+        
+        kelly_label = _kelly_label(fractional_kelly)
+        
+        kelly_summary = f"""KELLY CRITERION BETTING SUMMARY ({kelly_label}):
 {'─'*80}
 {EMOJI['moneybag']} Current Bankroll: ${bankroll:,.2f}
+{EMOJI['chart']} Using: {fractional_kelly*100:.0f}% Kelly ({kelly_label})
 {EMOJI['moneybag']} Total Kelly: {total_kelly_pct*100:.1f}% of bankroll (Sum of all {len(kelly_data)} plays)
 {EMOJI['chart']} Avg Kelly per play: {avg_kelly_pct*100:.1f}% of bankroll
 {EMOJI['fire']} Max single Kelly: {max_kelly_play['kelly_pct']*100:.1f}% ({max_kelly_play['player']})
 
-Sample Bankroll Sizing (for ${bankroll:,.0f} bankroll):
-  • Full Kelly (aggressive): ${total_kelly_dollars:.0f} total across {len(kelly_data)} bets
-  • Half Kelly (moderate): ${total_kelly_dollars/2:.0f} total across {len(kelly_data)} bets
-  • Quarter Kelly (conservative): ${total_kelly_dollars/4:.0f} total across {len(kelly_data)} bets
+Recommended Total Risk (using {kelly_label}):
+  • ${total_kelly_dollars:.0f} total across {len(kelly_data)} bets
 
-Standard Approach Comparison:
-  • Fixed $110 per bet: ${110 * len(kelly_data):,.0f} total risked across {len(kelly_data)} bets
-  • Kelly Approach: ${total_kelly_dollars:.0f} total risked (full Kelly)
+Comparison by Kelly Fraction:
+  • Full Kelly (100%): ${total_full_kelly_dollars:.0f} total
+  • Half Kelly (50%): ${total_full_kelly_dollars/2:.0f} total
+  • Quarter Kelly (25%): ${total_full_kelly_dollars/4:.0f} total
+  • Current ({fractional_kelly*100:.0f}%): ${total_kelly_dollars:.0f} total ← YOU ARE HERE
+
+Standard Fixed-Size Comparison:
+  • Fixed $110 per bet: ${110 * len(kelly_data):,.0f} total risked
 """
         
         # Add warning if total Kelly > 100%
         if total_kelly_pct > 1.0:
             kelly_summary += f"\n{EMOJI['warning']} WARNING: Total Kelly ({total_kelly_pct*100:.1f}%) > 100% suggests correlation between bets.\n"
-            kelly_summary += f"   Consider reducing bet sizes or using fractional Kelly to manage risk.\n"
+            kelly_summary += f"   Consider reducing fractional Kelly (currently {fractional_kelly*100:.0f}%) to manage risk.\n"
         
         kelly_summary += "\n"
         
@@ -878,8 +944,8 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
 {'='*80}
 """
     
-    # Load current bankroll for Kelly calculations
-    bankroll = load_current_bankroll_from_s3()
+    # Load Kelly config (includes bankroll, fractional_kelly, max_kelly)
+    kelly_config = load_kelly_config_from_s3()
     
     # Add YTD stats first (if provided)
     if ytd_stats:
@@ -888,10 +954,44 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
     # Add results (yesterday's performance)
     body += format_results_text(df_results, results_date)
     
-    # Add today's plays (with current bankroll)
-    body += format_plays_text(df_plays, plays_date, bankroll=bankroll)
+    # Add today's plays (with Kelly config)
+    body += format_plays_text(df_plays, plays_date, kelly_config=kelly_config)
     
+    # Add Kelly explanation footnote
     body += f"""
+{'='*80}
+📚 KELLY CRITERION EXPLAINED
+{'='*80}
+
+The Kelly Criterion calculates optimal bet size based on your edge and the odds.
+
+Formula: Kelly% = (bp - q) / b
+
+Where:
+  • b = net profit per dollar wagered
+       At -110 odds: You risk $110 to win $100
+       So b = 100/110 = 0.909 (profit per dollar risked)
+  
+  • p = win probability (from our model's historical hit rate)
+       Example: 57.2% = 0.572
+  
+  • q = lose probability (1 - p)
+       Example: 1 - 0.572 = 0.428
+
+Example Calculation (57.2% win rate @ -110 odds):
+  Kelly = (0.909 × 0.572 - 0.428) / 0.909
+        = (0.520 - 0.428) / 0.909
+        = 0.092 / 0.909
+        = 10.1% of bankroll
+
+Fractional Kelly:
+  Most bettors use fractional Kelly to reduce variance:
+  • Quarter Kelly (0.25x): 10.1% → 2.5% bet size (conservative)
+  • Half Kelly (0.50x): 10.1% → 5.1% bet size (moderate)
+  • Full Kelly (1.00x): 10.1% bet size (aggressive)
+
+Current Setting: {kelly_config['fractional_kelly']*100:.0f}% Kelly ({_kelly_label(kelly_config['fractional_kelly'])})
+
 {'='*80}
 Strategy: Role-Spread Points Model (Detailed Granularity)
 Generated by: /betting/scripts/generate_role_spread_points_model_daily_email.py
