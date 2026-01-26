@@ -660,15 +660,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                 print(f"   ❌ Error: {e}")
         
         if not all_player_data:
-            print("\n❌ No player props found with team mapping")
-            print("⚠️  Using mock data...\n")
-            return pd.DataFrame({
-                'PLAYER_NAME': ['Jalen Brunson', 'Karl-Anthony Towns'],
-                'points_line': [28.5, 23.5],
-                'team_abbr': ['NYK', 'NYK'],
-                'team_spread': [3.0, 3.0],
-                'opponent': ['BOS', 'BOS'],
-            })
+            raise ValueError("❌ No player props found with team mapping - cannot continue")
         
         df = pd.DataFrame(all_player_data)
         
@@ -794,9 +786,40 @@ def load_tonights_games(target_date=None, use_s3=False):
             lambda x: len([b for b in x.split(', ') if b])
         )
         
-        # Validate: every consensus line must have at least one bookmaker
-        assert (df_consensus['bookmakers'] != '').all(), "Empty bookmakers found - consensus lines must come from bookmakers"
-        assert (df_consensus['num_bookmakers'] > 0).all(), "No bookmakers found for consensus lines"
+        # Filter out players with no bookmakers offering lines near consensus
+        skipped_players = []  # Track for return value
+        empty_bookmakers = df_consensus[df_consensus['bookmakers'] == '']
+        if not empty_bookmakers.empty:
+            print(f"\n⚠️  {len(empty_bookmakers)} players have no bookmakers offering consensus line (skipping):")
+            for _, row in empty_bookmakers.head(10).iterrows():
+                player_name = row['PLAYER_NAME']
+                consensus = row['points_line']
+                
+                # Show which lines bookmakers ARE offering for this player
+                player_lines = df[df['PLAYER_NAME'] == player_name]['points_line'].unique()
+                player_books = df[df['PLAYER_NAME'] == player_name]['bookmaker'].unique()
+                
+                print(f"   - {player_name}:")
+                print(f"       Consensus (median): {consensus}")
+                print(f"       Bookmakers offering: {', '.join(sorted(player_books))}")
+                print(f"       Lines offered: {sorted(player_lines)}")
+                print(f"       Problem: No bookmaker within ±0.5 of consensus {consensus}")
+                
+                skipped_players.append({
+                    'player': player_name,
+                    'reason': 'no_bookmakers_at_consensus',
+                    'consensus_line': consensus,
+                    'lines_offered': sorted(player_lines),
+                    'bookmakers': sorted(player_books)
+                })
+            if len(empty_bookmakers) > 10:
+                print(f"   ... and {len(empty_bookmakers) - 10} more")
+            df_consensus = df_consensus[df_consensus['bookmakers'] != ''].copy()
+            print(f"   Remaining: {len(df_consensus)} players with bookmakers")
+        
+        # Verify we have at least some players left
+        if df_consensus.empty:
+            raise ValueError("❌ No players remaining after filtering - all consensus lines lack bookmakers")
         
         players_mapped = df_consensus['PLAYER_NAME'].nunique()
         total_props = len(df_consensus)
@@ -824,20 +847,14 @@ def load_tonights_games(target_date=None, use_s3=False):
         
         print()
         
-        return df_consensus, game_info
+        # Return skipped players info for summary display
+        return df_consensus, game_info, skipped_players
         
     except Exception as e:
         print(f"\n❌ Error loading games: {e}")
-        print("⚠️  Using mock data...\n")
         import traceback
         traceback.print_exc()
-        return pd.DataFrame({
-            'PLAYER_NAME': ['Jalen Brunson', 'Karl-Anthony Towns'],
-            'points_line': [28.5, 23.5],
-            'team_abbr': ['NYK', 'NYK'],
-            'team_spread': [3.0, 3.0],
-            'opponent': ['BOS', 'BOS'],
-        })
+        raise
 
 
 # =============================================================================
@@ -1196,13 +1213,8 @@ def main():
     print(f"\n📊 Loading games for {args.date or 'today'}...")
     result = load_tonights_games(args.date, use_s3=args.s3)
     
-    # Unpack result
-    if isinstance(result, tuple):
-        df_games, all_games_info = result
-    else:
-        # Fallback for mock data (doesn't return game info)
-        df_games = result
-        all_games_info = []
+    # Unpack result - expect (df_games, game_info, skipped_players)
+    df_games, all_games_info, skipped_players = result
     
     print(f"   Found {len(df_games)} players with props\n")
     
@@ -1224,6 +1236,23 @@ def main():
     if args.save_s3:
         target_date = args.date if args.date else date.today().strftime('%Y-%m-%d')
         save_plays_to_s3(df_plays, target_date, args.season)
+    
+    # Print warning summary at end (shows up in lambda stdout AND CloudWatch)
+    if skipped_players:
+        print(f"\n{'='*80}")
+        print(f"⚠️  DATA QUALITY WARNING")
+        print(f"{'='*80}")
+        print(f"\n{len(skipped_players)} players were skipped due to no bookmakers offering lines")
+        print(f"near their consensus (median) line. This may indicate:")
+        print(f"  1. Bookmakers offering very different lines (wide spread)")
+        print(f"  2. Limited market availability for these players")
+        print(f"  3. Potential arbitrage opportunities (check manually)")
+        print(f"\nSkipped players:")
+        for p in skipped_players[:15]:  # Show first 15
+            print(f"  - {p['player']} (consensus: {p['consensus_line']})")
+        if len(skipped_players) > 15:
+            print(f"  ... and {len(skipped_players) - 15} more (see CloudWatch logs for full list)")
+        print()
 
 
 if __name__ == '__main__':
