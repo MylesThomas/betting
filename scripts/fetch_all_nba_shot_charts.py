@@ -203,7 +203,7 @@ def get_players_for_season(season):
         return get_all_active_players()
 
 
-def get_player_shot_chart(player_id, player_name, season):
+def get_player_shot_chart(player_id, player_name, season, timeout=15):
     """
     Get shot chart data for a specific player
     
@@ -211,9 +211,11 @@ def get_player_shot_chart(player_id, player_name, season):
         player_id: NBA player ID
         player_name: Player name (for logging)
         season: NBA season (e.g., "2024-25")
+        timeout: Request timeout in seconds (default: 15)
     
     Returns:
-        DataFrame with shot data, or None if error/no data
+        tuple: (DataFrame with shot data or None, error_type: str or None)
+        error_type values: None (success), 'timeout', 'other_error'
     """
     try:
         shot_chart = shotchartdetail.ShotChartDetail(
@@ -222,13 +224,13 @@ def get_player_shot_chart(player_id, player_name, season):
             season_nullable=season,
             season_type_all_star=SEASON_TYPE,
             context_measure_simple='FGA',
-            timeout=3  # 3 second timeout for faster failure
+            timeout=timeout
         )
         
         shots_df = shot_chart.get_data_frames()[0]
         
         if shots_df.empty:
-            return None
+            return None, None  # Success but no data (player hasn't played)
         
         # Normalize player name in the data (remove accents like é → e)
         import sys
@@ -238,11 +240,18 @@ def get_player_shot_chart(player_id, player_name, season):
         if 'PLAYER_NAME' in shots_df.columns:
             shots_df['PLAYER_NAME'] = shots_df['PLAYER_NAME'].apply(normalize_player_name)
         
-        return shots_df
+        return shots_df, None  # Success with data
         
     except Exception as e:
-        print(f"      ❌ Error: {e}")
-        return None
+        error_str = str(e)
+        
+        # Detect timeout errors specifically
+        if 'timed out' in error_str.lower() or 'timeout' in error_str.lower():
+            print(f"      ❌ Timeout: {e}")
+            return None, 'timeout'
+        else:
+            print(f"      ❌ Error: {e}")
+            return None, 'other_error'
 
 
 def get_s3_client():
@@ -326,6 +335,24 @@ def get_s3_file_age_hours(s3_key):
         return None
 
 
+def get_s3_file_size(s3_key):
+    """
+    Get the size of an S3 file in bytes
+    
+    Args:
+        s3_key: S3 key to check
+    
+    Returns:
+        int: File size in bytes, or None if file doesn't exist
+    """
+    try:
+        s3_client = get_s3_client()
+        response = s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
+        return response['ContentLength']
+    except:
+        return None
+
+
 def needs_update(player_name, player_id, season, max_age_hours=24):
     """
     Check if a player's shot chart needs updating
@@ -351,7 +378,18 @@ def needs_update(player_name, player_id, season, max_age_hours=24):
     
     if age_hours is None:
         return True, "file_not_found", None
-    elif age_hours > max_age_hours:
+    
+    # Check if it's an empty marker file (< 200 bytes = header only or empty)
+    file_size = get_s3_file_size(s3_key)
+    if file_size is not None and file_size < 200:
+        # Empty marker file - only re-check after 7 days
+        if age_hours > (7 * 24):  # 7 days
+            return True, f"empty_marker_stale_{age_hours:.1f}h", age_hours
+        else:
+            return False, f"empty_marker_recent_{age_hours:.1f}h", age_hours
+    
+    # Regular file with data
+    if age_hours > max_age_hours:
         return True, f"stale_data_{age_hours:.1f}h", age_hours
     else:
         return False, f"recent_data_{age_hours:.1f}h", age_hours
@@ -362,7 +400,7 @@ def save_player_shot_chart(shots_df, player_name, player_id, output_dir, season,
     Save player shot chart to CSV (local + S3)
     
     Args:
-        shots_df: DataFrame with shot data
+        shots_df: DataFrame with shot data (must have data)
         player_name: Player name
         player_id: Player ID
         output_dir: Directory to save to
@@ -370,8 +408,9 @@ def save_player_shot_chart(shots_df, player_name, player_id, output_dir, season,
         upload_s3: If True, also upload to S3
     
     Returns:
-        Tuple: (local_filepath, s3_key)
+        Tuple: (local_filepath, s3_key) or (None, None) if no data
     """
+    # Return None if no data
     if shots_df is None or shots_df.empty:
         return None, None
     
@@ -388,7 +427,7 @@ def save_player_shot_chart(shots_df, player_name, player_id, output_dir, season,
     filename = f"{clean_name}_{player_id}.csv"
     filepath = os.path.join(output_dir, filename)
     
-    # Save locally
+    # Save locally (only files with actual shot data)
     shots_df.to_csv(filepath, index=False)
     
     # Upload to S3
@@ -481,7 +520,7 @@ def check_past_season_complete(season, expected_player_count=500):
 
 
 def process_single_player(player, idx, total, season, output_dir, upload_s3, progress, progress_file, 
-                         summary_data, is_past_season, rate_limit_delay, no_data_list, error_list, skipped_list):
+                         summary_data, is_past_season, rate_limit_delay, no_data_list, error_list, skipped_list, timeout=15):
     """
     Process a single player's shot chart data (used for parallel processing)
     
@@ -500,10 +539,11 @@ def process_single_player(player, idx, total, season, output_dir, upload_s3, pro
         no_data_list: List to track players with no data
         error_list: List to track players with errors
         skipped_list: List to track players skipped (file updated recently)
+        timeout: API timeout in seconds
     
     Returns:
         tuple: (status: str, skipped: bool)
-        status values: 'success', 'no_data', 'error', 'skipped'
+        status values: 'success', 'no_data', 'error', 'skipped', 'timeout'
     """
     player_id = player['id']
     player_name = player['full_name']
@@ -533,20 +573,53 @@ def process_single_player(player, idx, total, season, output_dir, upload_s3, pro
                 return 'success', True
         
         # Fetch shot chart data
-        shots_df = get_player_shot_chart(player_id, player_name, season)
+        shots_df, error_type = get_player_shot_chart(player_id, player_name, season, timeout=timeout)
+        
+        # Handle timeout errors - don't save, retry next time
+        if error_type == 'timeout':
+            with _print_lock:
+                print(f"      ⏱️  Request timed out - will retry next run")
+            
+            with _progress_lock:
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': 'Request timeout'
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+            
+            return 'timeout', False
+        
+        # Handle other errors
+        if error_type == 'other_error':
+            error_msg = "API error"
+            with _print_lock:
+                print(f"      ❌ API error - will retry next run")
+            
+            with _progress_lock:
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': error_msg
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+            
+            return 'error', False
         
         # Check if we got valid data
         if shots_df is None or shots_df.empty:
-            # No shot data (player hasn't played this season)
+            # No shot data (player genuinely hasn't played) - just track it, don't save file
             with _print_lock:
-                print(f"      ⚠️  No shot data (likely hasn't played this season)")
+                print(f"      ⚠️  No shot data (player hasn't played yet)")
             
             with _progress_lock:
                 no_data_list.append({
                     'player_name': player_name,
                     'player_id': player_id
                 })
-                progress['failed_players'].append(player_id)
+                progress['completed_players'].append(player_id)
                 save_progress(progress, progress_file)
             
             return 'no_data', False
@@ -639,7 +712,7 @@ def process_single_player(player, idx, total, season, output_dir, upload_s3, pro
         return 'error', False
 
 
-def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=True, max_workers=1, skip_age_hours=24):
+def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=True, max_workers=1, skip_age_hours=24, timeout=15):
     """
     Fetch shot chart data for all active NBA players for a specific season
     
@@ -649,6 +722,7 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
         upload_s3: If True, upload to S3 (default: True)
         max_workers: Number of parallel workers (default: 1 for sequential processing)
         skip_age_hours: For current season, skip files updated within this many hours (default: 24). None = always fetch
+        timeout: API request timeout in seconds (default: 15)
     """
     print("="*80)
     print(f"FETCHING SHOT CHARTS FOR ALL NBA PLAYERS - {season}")
@@ -825,16 +899,44 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
                     continue
             
             # Fetch shot chart data
-            shots_df = get_player_shot_chart(player_id, player_name, season)
+            shots_df, error_type = get_player_shot_chart(player_id, player_name, season, timeout=timeout)
+            
+            # Handle timeout errors - don't save, retry next time
+            if error_type == 'timeout':
+                print(f"      ⏱️  Request timed out - will retry next run")
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': 'Request timeout'
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+                time.sleep(RATE_LIMIT_DELAY)
+                continue
+            
+            # Handle other errors
+            if error_type == 'other_error':
+                print(f"      ❌ API error - will retry next run")
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': 'API error'
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+                time.sleep(RATE_LIMIT_DELAY)
+                continue
             
             # Check if we got valid data
             if shots_df is None or shots_df.empty:
-                print(f"      ⚠️  No shot data (likely hasn't played this season)")
+                print(f"      ⚠️  No shot data (player hasn't played yet)")
+                
+                # Just track it, don't save file
                 no_data_list.append({
                     'player_name': player_name,
                     'player_id': player_id
                 })
-                progress['failed_players'].append(player_id)
+                progress['completed_players'].append(player_id)
                 save_progress(progress, progress_file)
                 time.sleep(RATE_LIMIT_DELAY)
                 continue
@@ -908,7 +1010,7 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
                     process_single_player,
                     player, idx, len(players_to_fetch), season, output_dir, upload_s3,
                     progress, progress_file, summary_data, is_past_season, RATE_LIMIT_DELAY,
-                    no_data_list, error_list, skipped_players if not is_past_season else []
+                    no_data_list, error_list, skipped_players if not is_past_season else [], timeout
                 ): (player, idx)
                 for idx, player in enumerate(players_to_fetch, 1)
             }
@@ -988,11 +1090,12 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     print(f"\nTotal players processed: {len(all_players)}")
     print(f"Players with shot data: {len(summary_data)}")
     print(f"Players with no data: {len(progress['failed_players'])}")
-    if skipped_count > 0:
-        print(f"Players skipped (file exists): {skipped_count}")
+    if len(skipped_players) > 0:
+        print(f"Players skipped (file exists): {len(skipped_players)}")
     print(f"Total time: {duration/60:.1f} minutes")
     
     # Save final summary
+    summary_df = None
     if summary_data:
         summary_df = pd.DataFrame(summary_data)
         summary_df = summary_df.sort_values('total_shots', ascending=False)
@@ -1008,7 +1111,7 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     return summary_df
 
 
-def fetch_multiple_seasons(seasons, resume=True, upload_s3=True, max_workers=1, skip_age_hours=24):
+def fetch_multiple_seasons(seasons, resume=True, upload_s3=True, max_workers=1, skip_age_hours=24, timeout=15):
     """
     Fetch shot chart data for multiple seasons
     
@@ -1018,6 +1121,7 @@ def fetch_multiple_seasons(seasons, resume=True, upload_s3=True, max_workers=1, 
         upload_s3: If True, upload to S3 (default: True)
         max_workers: Number of parallel workers (default: 1 for sequential processing)
         skip_age_hours: For current season, skip files updated within this many hours (default: 24). None = always fetch
+        timeout: API request timeout in seconds (default: 15)
     """
     print("="*80)
     print("MULTI-SEASON SHOT CHART DATA COLLECTION")
@@ -1040,7 +1144,8 @@ def fetch_multiple_seasons(seasons, resume=True, upload_s3=True, max_workers=1, 
                 resume=resume, 
                 upload_s3=upload_s3, 
                 max_workers=max_workers,
-                skip_age_hours=skip_age_hours
+                skip_age_hours=skip_age_hours,
+                timeout=timeout
             )
             
             if summary_df is not None and not summary_df.empty:
@@ -1170,6 +1275,8 @@ if __name__ == "__main__":
                        help='Number of parallel workers for faster processing (default: 1, recommended: 10-100)')
     parser.add_argument('--skip-conditions', type=str, default='24h',
                        help='Skip files updated within this timeframe for current season (e.g., "24h", "12h", "1d", "never"). Default: 24h')
+    parser.add_argument('--timeout', type=int, default=15,
+                       help='API request timeout in seconds (default: 15)')
     
     args = parser.parse_args()
     
@@ -1264,7 +1371,8 @@ if __name__ == "__main__":
                 resume=True, 
                 upload_s3=upload_s3, 
                 max_workers=max_workers,
-                skip_age_hours=skip_age_hours
+                skip_age_hours=skip_age_hours,
+                timeout=args.timeout
             )
             
             if summary_df is not None and not summary_df.empty:
@@ -1286,7 +1394,8 @@ if __name__ == "__main__":
                 resume=True, 
                 upload_s3=upload_s3, 
                 max_workers=max_workers,
-                skip_age_hours=skip_age_hours
+                skip_age_hours=skip_age_hours,
+                timeout=args.timeout
             )
             
             if season_summaries:
