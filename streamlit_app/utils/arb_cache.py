@@ -147,6 +147,9 @@ def load_cache_from_s3(sport: str, s3_client) -> pd.DataFrame:
     """
     Load cache file from S3 using DuckDB for fast Parquet reading.
     
+    Downloads to temp file first, then uses DuckDB to stream from disk.
+    This is faster and more memory-efficient than loading into memory.
+    
     Args:
         sport: 'nba' or 'nfl'
         s3_client: Boto3 S3 client
@@ -156,24 +159,37 @@ def load_cache_from_s3(sport: str, s3_client) -> pd.DataFrame:
     """
     try:
         import duckdb
+        import tempfile
         
         config = S3_CONFIG[sport]
         bucket = config['bucket']
         s3_key = f"{config['cache_prefix']}{sport}_arbs_cache.parquet"
         
-        with timed_section("S3: get_object call"):
-            obj = s3_client.get_object(Bucket=bucket, Key=s3_key)
+        with timed_section("S3: download to temp file"):
+            # Download to temp file (cleaned up automatically)
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.parquet') as tmp_file:
+                tmp_path = tmp_file.name
+                s3_client.download_fileobj(
+                    Bucket=bucket,
+                    Key=s3_key,
+                    Fileobj=tmp_file
+                )
+                file_size = Path(tmp_path).stat().st_size
+                print(f"   📦 Downloaded {file_size:,} bytes ({file_size/1024/1024:.1f} MB) to {tmp_path}")
         
-        with timed_section("S3: read bytes from stream"):
-            parquet_bytes = obj['Body'].read()
-            print(f"   📦 Downloaded {len(parquet_bytes):,} bytes ({len(parquet_bytes)/1024/1024:.1f} MB)")
-        
-        with timed_section("DuckDB: read Parquet into DataFrame"):
-            # DuckDB can't read from BytesIO, so use pandas
-            from io import BytesIO
-            df = pd.read_parquet(BytesIO(parquet_bytes))
+        with timed_section("DuckDB: read Parquet from temp file"):
+            # Use DuckDB to read from disk (faster than pandas!)
+            con = duckdb.connect(':memory:')
+            df = con.execute(
+                "SELECT * FROM read_parquet(?)",
+                [tmp_path]
+            ).df()
+            con.close()
             
-            print(f"   📊 Loaded {len(df):,} rows with pandas")
+            print(f"   📊 Loaded {len(df):,} rows with DuckDB")
+        
+        # Clean up temp file
+        Path(tmp_path).unlink()
         
         return df
     except Exception as e:
@@ -391,20 +407,19 @@ def load_all_arbs_with_cache(sport: str, max_workers: int = 100) -> pd.DataFrame
         s3_client = boto3.client('s3')
         config = S3_CONFIG[sport]
     
-    # Step 1: Try S3 cache first (PRODUCTION BEHAVIOR)
+    # Step 1: Load cache from S3 (PRODUCTION - NO FALLBACK)
     with timed_section("Load cache from S3"):
         cache_df = load_cache_from_s3(sport, s3_client)
-    
-    # Fall back to local if S3 cache doesn't exist
-    if cache_df is None:
-        print(f"⚠️  S3 cache not found, trying local...")
-        with timed_section("Load cache from local (S3 failed)"):
-            cache_df = load_cache_from_local(sport)
     
     if cache_df is not None:
         print(f"✅ Cache loaded: {len(cache_df):,} rows")
     else:
-        print(f"⚠️  No cache found - will load all files from S3")
+        # No fallback - if S3 cache fails, we fail
+        print(f"❌ S3 cache not found - cannot proceed")
+        raise FileNotFoundError(
+            f"S3 cache not found for {sport}. "
+            f"Run 'python scripts/build_arb_cache.py --sport {sport}' to create cache."
+        )
     
     # Step 2: Get cache metadata to find last rebuild date
     with timed_section("Get cache metadata"):
@@ -424,10 +439,8 @@ def load_all_arbs_with_cache(sport: str, max_workers: int = 100) -> pd.DataFrame
     
     print(f"📂 New files found: {len(new_files):,}")
     
-    # Step 4: If no cache and no new files, return empty
-    if cache_df is None and not new_files:
-        print(f"❌ No cache and no files found")
-        return None
+    # Step 4: If cache failed to load, we already raised exception above
+    # No need to check again here
     
     # Step 5: Load new files if they exist
     if new_files:
@@ -437,13 +450,10 @@ def load_all_arbs_with_cache(sport: str, max_workers: int = 100) -> pd.DataFrame
         if new_df is not None:
             print(f"✅ New files loaded: {len(new_df):,} rows")
             
-            # Merge with cache
+            # Merge with cache (cache is guaranteed to exist at this point)
             with timed_section("Merge cache + new files"):
-                if cache_df is not None:
-                    combined_df = pd.concat([cache_df, new_df], ignore_index=True)
-                    print(f"📊 Combined: {len(combined_df):,} rows")
-                else:
-                    combined_df = new_df
+                combined_df = pd.concat([cache_df, new_df], ignore_index=True)
+                print(f"📊 Combined: {len(combined_df):,} rows")
             
             # Deduplicate
             with timed_section("Deduplicate arbs"):

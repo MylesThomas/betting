@@ -1,15 +1,16 @@
 """
-Fetch Shot Chart Data for All NBA Players - 2024-25 Season
+Fetch Shot Chart Data for All NBA Players - 2025-26 Season
 
 Purpose:
-- Fetch detailed shot-by-shot data for every active NBA player in 2024-25 season
+- Fetch detailed shot-by-shot data for every active NBA player in 2025-26 season
 - Save individual CSV files per player with all shot data
 - Track progress and allow resuming if interrupted
 - Handle rate limiting and errors gracefully
+- Support parallel processing for faster data collection
+- Smart skipping: only update files older than specified age (default: 24h)
 
 Output:
-- One CSV per player in data/01_input/nba_api/shot_charts/2024_25/ (local)
-- Uploaded to s3://nba-api-mt/player_shot_charts/2024-25/ (S3, default enabled)
+- Uploaded to s3://nba-api-mt/player_shot_charts/2025-26/ (S3, default)
 - Progress log to track which players are complete
 - Summary statistics file
 
@@ -23,19 +24,25 @@ Data includes for each shot:
 
 Runtime:
 - Approximately 500+ active players per season
-- ~0.6 second delay per player
-- Single season: ~5-10 minutes
-- All seasons (2014-15 to 2025-26): ~1-2 hours
+- Sequential (--max-workers 1): ~5-10 minutes per season
+- Parallel (--max-workers 100): ~30-60 seconds per season (up to 10x speedup)
+- All seasons (2014-15 to 2025-26): Sequential ~1-2 hours, Parallel ~10-20 minutes
 
 Usage:
-    # Fetch current season only (2025-26), uploads to S3 by default
-    python scripts/fetch_all_nba_shot_charts.py --auto
+    # Fetch current season (2025-26), skip files updated within 24h
+    python scripts/fetch_all_nba_shot_charts.py --auto --max-workers 100 --skip-conditions 24h
     
-    # Fetch all available seasons (2014-15 to 2025-26)
-    python scripts/fetch_all_nba_shot_charts.py --auto --all-seasons
+    # Fetch current season, always update all files (no skipping)
+    python scripts/fetch_all_nba_shot_charts.py --auto --max-workers 100 --skip-conditions never
     
-    # Fetch specific seasons
-    python scripts/fetch_all_nba_shot_charts.py --auto --seasons 2023-24,2024-25,2025-26
+    # Fetch current season, skip files updated within 12 hours
+    python scripts/fetch_all_nba_shot_charts.py --auto --max-workers 100 --skip-conditions 12h
+    
+    # Fetch all available seasons (2014-15 to 2025-26) with parallel processing
+    python scripts/fetch_all_nba_shot_charts.py --auto --all-seasons --max-workers 100
+    
+    # Fetch specific seasons with parallel processing
+    python scripts/fetch_all_nba_shot_charts.py --auto --seasons 2023-24,2024-25,2025-26 --max-workers 50
     
     # Local files only (skip S3 upload)
     python scripts/fetch_all_nba_shot_charts.py --auto --no-s3
@@ -54,6 +61,8 @@ import requests
 import json
 import sys
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
 # Add src to path
 project_root = Path(__file__).parent.parent
@@ -103,6 +112,10 @@ _s3_client = None
 RATE_LIMIT_DELAY = 0.6  # seconds between API calls
 ERROR_RETRY_DELAY = 2.0  # seconds to wait before retrying on error
 
+# Thread safety for parallel processing
+_progress_lock = Lock()
+_print_lock = Lock()
+
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
@@ -126,10 +139,11 @@ def load_progress(progress_file):
 
 
 def save_progress(progress, progress_file):
-    """Save progress to resume later"""
-    os.makedirs(os.path.dirname(progress_file), exist_ok=True)
-    with open(progress_file, 'w') as f:
-        json.dump(progress, f, indent=2)
+    """Save progress to resume later (thread-safe)"""
+    with _progress_lock:
+        os.makedirs(os.path.dirname(progress_file), exist_ok=True)
+        with open(progress_file, 'w') as f:
+            json.dump(progress, f, indent=2)
 
 
 def get_all_active_players():
@@ -207,7 +221,8 @@ def get_player_shot_chart(player_id, player_name, season):
             player_id=player_id,
             season_nullable=season,
             season_type_all_star=SEASON_TYPE,
-            context_measure_simple='FGA'
+            context_measure_simple='FGA',
+            timeout=3  # 3 second timeout for faster failure
         )
         
         shots_df = shot_chart.get_data_frames()[0]
@@ -283,6 +298,63 @@ def check_s3_file_exists(s3_key):
         return True
     except:
         return False
+
+
+def get_s3_file_age_hours(s3_key):
+    """
+    Get the age of an S3 file in hours
+    
+    Args:
+        s3_key: S3 key to check
+    
+    Returns:
+        float: Age in hours, or None if file doesn't exist
+    """
+    try:
+        s3_client = get_s3_client()
+        response = s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
+        last_modified = response['LastModified']
+        
+        # Calculate age in hours
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        age_seconds = (now - last_modified).total_seconds()
+        age_hours = age_seconds / 3600
+        
+        return age_hours
+    except:
+        return None
+
+
+def needs_update(player_name, player_id, season, max_age_hours=24):
+    """
+    Check if a player's shot chart needs updating
+    
+    Args:
+        player_name: Player name
+        player_id: Player ID
+        season: NBA season
+        max_age_hours: Maximum age in hours before needing update (default: 24)
+    
+    Returns:
+        tuple: (needs_update: bool, reason: str, age_hours: float or None)
+    """
+    sys.path.insert(0, str(project_root / 'src'))
+    from player_name_utils import normalize_player_name
+    player_name_normalized = normalize_player_name(player_name)
+    
+    clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
+    filename = f"{clean_name}_{player_id}.csv"
+    s3_key = f"{S3_PREFIX}/{season}/{filename}"
+    
+    age_hours = get_s3_file_age_hours(s3_key)
+    
+    if age_hours is None:
+        return True, "file_not_found", None
+    elif age_hours > max_age_hours:
+        return True, f"stale_data_{age_hours:.1f}h", age_hours
+    else:
+        return False, f"recent_data_{age_hours:.1f}h", age_hours
 
 
 def save_player_shot_chart(shots_df, player_name, player_id, output_dir, season, upload_s3=True):
@@ -408,7 +480,166 @@ def check_past_season_complete(season, expected_player_count=500):
         return False, 0
 
 
-def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=True):
+def process_single_player(player, idx, total, season, output_dir, upload_s3, progress, progress_file, 
+                         summary_data, is_past_season, rate_limit_delay, no_data_list, error_list, skipped_list):
+    """
+    Process a single player's shot chart data (used for parallel processing)
+    
+    Args:
+        player: Player dict with 'id' and 'full_name'
+        idx: Player index (for logging)
+        total: Total number of players
+        season: NBA season
+        output_dir: Directory to save files
+        upload_s3: Whether to upload to S3
+        progress: Progress tracking dict
+        progress_file: Path to progress file
+        summary_data: List to append summary stats to
+        is_past_season: Whether this is a past season
+        rate_limit_delay: Seconds to wait between requests
+        no_data_list: List to track players with no data
+        error_list: List to track players with errors
+        skipped_list: List to track players skipped (file updated recently)
+    
+    Returns:
+        tuple: (status: str, skipped: bool)
+        status values: 'success', 'no_data', 'error', 'skipped'
+    """
+    player_id = player['id']
+    player_name = player['full_name']
+    
+    with _print_lock:
+        print(f"[{idx}/{total}] {player_name} (ID: {player_id})")
+    
+    try:
+        # For past seasons, check if file already exists in S3 and skip
+        if is_past_season:
+            sys.path.insert(0, str(project_root / 'src'))
+            from player_name_utils import normalize_player_name
+            player_name_normalized = normalize_player_name(player_name)
+            
+            clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
+            filename = f"{clean_name}_{player_id}.csv"
+            s3_key = f"{S3_PREFIX}/{season}/{filename}"
+            
+            if check_s3_file_exists(s3_key):
+                with _print_lock:
+                    print(f"      ⏭️  File exists in S3 - skipping (past season data complete)")
+                
+                with _progress_lock:
+                    progress['completed_players'].append(player_id)
+                    save_progress(progress, progress_file)
+                
+                return 'success', True
+        
+        # Fetch shot chart data
+        shots_df = get_player_shot_chart(player_id, player_name, season)
+        
+        # Check if we got valid data
+        if shots_df is None or shots_df.empty:
+            # No shot data (player hasn't played this season)
+            with _print_lock:
+                print(f"      ⚠️  No shot data (likely hasn't played this season)")
+            
+            with _progress_lock:
+                no_data_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+            
+            return 'no_data', False
+        
+        # We have valid data - save to file (local + S3)
+        filepath, s3_key = save_player_shot_chart(shots_df, player_name, player_id, output_dir, season, upload_s3=upload_s3)
+        
+        # Check if save failed
+        if not filepath:
+            error_msg = "Failed to save file"
+            with _print_lock:
+                print(f"      ❌ Error ({player_name} ID:{player_id}): {error_msg}")
+            
+            with _progress_lock:
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': error_msg
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+            
+            return 'error', False
+        
+        # Check if S3 upload failed (this is an error since everything should go to S3)
+        if upload_s3 and not s3_key:
+            error_msg = "S3 upload failed"
+            with _print_lock:
+                print(f"      ❌ Error ({player_name} ID:{player_id}): {error_msg}")
+            
+            with _progress_lock:
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': error_msg
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+            
+            return 'error', False
+        
+        # Analyze shots
+        stats = analyze_player_shots(shots_df)
+        
+        with _print_lock:
+            print(f"      ✅ Saved n={len(shots_df)} shots")
+            if upload_s3 and s3_key:
+                print(f"      📤 Uploaded to S3: s3://{S3_BUCKET}/{s3_key}")
+            print(f"      📊 FG: {stats['fg_pct']:.1f}% ({stats['total_makes']}-{stats['total_shots']}) | Close Range: {stats['close_range_fg_pct']:.1f}% ({stats['close_range_makes']}-{stats['close_range_attempts']}) | 3PT: {stats['three_pct']:.1f}% ({stats['three_makes']}-{stats['three_attempts']})")
+        
+        # Add to summary
+        summary_entry = {
+            'season': season,
+            'player_id': player_id,
+            'player_name': player_name,
+            'total_shots': stats['total_shots'],
+            'fg_pct': round(stats['fg_pct'], 1),
+            'avg_shot_distance': round(stats['avg_distance'], 1),
+            'close_range_attempts': stats['close_range_attempts'],
+            'close_range_fg_pct': round(stats['close_range_fg_pct'], 1),
+            'three_attempts': stats['three_attempts'],
+            'three_pct': round(stats['three_pct'], 1),
+            'filepath': filepath,
+            's3_key': s3_key,
+            'fetched_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        with _progress_lock:
+            summary_data.append(summary_entry)
+            progress['completed_players'].append(player_id)
+            save_progress(progress, progress_file)
+        
+        return 'success', False
+    
+    except Exception as e:
+        # Actual error during processing
+        error_msg = str(e)
+        with _print_lock:
+            print(f"      ❌ Error ({player_name} ID:{player_id}): {error_msg}")
+        
+        with _progress_lock:
+            error_list.append({
+                'player_name': player_name,
+                'player_id': player_id,
+                'error': error_msg
+            })
+            progress['failed_players'].append(player_id)
+            save_progress(progress, progress_file)
+        
+        return 'error', False
+
+
+def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=True, max_workers=1, skip_age_hours=24):
     """
     Fetch shot chart data for all active NBA players for a specific season
     
@@ -416,6 +647,8 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
         season: NBA season (e.g., "2024-25")
         resume: If True, skip players already completed
         upload_s3: If True, upload to S3 (default: True)
+        max_workers: Number of parallel workers (default: 1 for sequential processing)
+        skip_age_hours: For current season, skip files updated within this many hours (default: 24). None = always fetch
     """
     print("="*80)
     print(f"FETCHING SHOT CHARTS FOR ALL NBA PLAYERS - {season}")
@@ -453,7 +686,8 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     
     print(f"\nSeason: {season}")
     print(f"Season Type: {SEASON_TYPE}")
-    print(f"Output Directory: {output_dir}")
+    print(f"S3 Destination: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
+    print(f"Parallel Workers: {max_workers}")
     print(f"Rate Limit Delay: {RATE_LIMIT_DELAY}s per player")
     
     if is_past_season:
@@ -461,30 +695,97 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     else:
         print(f"🔄 Current season - fetching all players for latest data")
     
-    # Load progress if resuming
-    progress = load_progress(progress_file) if resume else {'completed_players': [], 'failed_players': []}
-    
-    if resume and progress['completed_players']:
-        print(f"\n📋 Resuming from previous run:")
-        print(f"   Already completed: {len(progress['completed_players'])} players")
-        print(f"   Previously failed: {len(progress['failed_players'])} players")
+    # For current season, always start fresh (don't use stale local progress file)
+    # For past seasons, load progress to resume where we left off
+    if is_past_season:
+        progress = load_progress(progress_file) if resume else {'completed_players': [], 'failed_players': []}
+        
+        if resume and progress['completed_players']:
+            print(f"\n📋 Resuming from previous run:")
+            print(f"   Already completed: {len(progress['completed_players'])} players")
+            print(f"   Previously failed: {len(progress['failed_players'])} players")
+    else:
+        # Current season: ignore local progress, always fetch fresh
+        progress = {'completed_players': [], 'failed_players': []}
     
     # Get players who were active in this specific season
     all_players = get_players_for_season(season)
     
-    # Filter out already completed players if resuming (ONLY for past seasons)
-    # For current season, we want to re-fetch everyone for latest data
-    if resume and is_past_season:
-        all_players = [p for p in all_players if p['id'] not in progress['completed_players']]
-        print(f"\n🎯 Players remaining: {len(all_players)}")
-    elif not is_past_season:
-        print(f"\n🎯 Total players to fetch: {len(all_players)} (will update all for current season)")
+    print(f"\n🏀 Found {len(all_players)} active players for {season}")
+    
+    # For current season, check which players need updates based on S3 file age
+    players_to_fetch = []
+    skipped_players = []
+    
+    if not is_past_season:
+        # For current season, skip if None (always fetch), otherwise check file age
+        if skip_age_hours is None:
+            print(f"\n🔄 Skip conditions disabled - will fetch all players")
+            players_to_fetch = all_players
+        else:
+            print(f"\n🔍 Checking S3 for files needing updates (>{skip_age_hours:.0f}h old)...")
+            
+            # Parallelize S3 checking for speed
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            
+            def check_player_needs_update(player):
+                """Check if single player needs update"""
+                needs_update_flag, reason, age_hours = needs_update(
+                    player['full_name'], 
+                    player['id'], 
+                    season, 
+                    max_age_hours=skip_age_hours
+                )
+                return player, needs_update_flag, reason, age_hours
+            
+            # Use max_workers for S3 checking too
+            check_workers = min(max_workers, 50)  # Cap at 50 for S3 checks
+            with ThreadPoolExecutor(max_workers=check_workers) as executor:
+                futures = [executor.submit(check_player_needs_update, player) for player in all_players]
+                
+                for future in as_completed(futures):
+                    player, needs_update_flag, reason, age_hours = future.result()
+                    
+                    if needs_update_flag:
+                        players_to_fetch.append(player)
+                    else:
+                        skipped_players.append({
+                            'player_name': player['full_name'],
+                            'player_id': player['id'],
+                            'reason': reason,
+                            'age_hours': age_hours
+                        })
+            
+            print(f"\n📊 Update check results:")
+            print(f"   ✅ Up-to-date (skipped): {len(skipped_players)} players")
+            print(f"   🔄 Needs update: {len(players_to_fetch)} players")
+            
+            if skipped_players:
+                skip_label = f"{skip_age_hours:.0f}h" if skip_age_hours < 24 else f"{skip_age_hours/24:.0f}d"
+                print(f"\n⏭️  SKIPPED PLAYERS (file updated within {skip_label}):")
+                for entry in sorted(skipped_players, key=lambda x: x['player_name'])[:10]:  # Show first 10
+                    print(f"      {entry['player_name']} (ID: {entry['player_id']}) - {entry['reason']}")
+                if len(skipped_players) > 10:
+                    print(f"      ... and {len(skipped_players) - 10} more")
     else:
-        print(f"\n🎯 Total players: {len(all_players)}")
+        # Past seasons: filter by local progress
+        if resume:
+            progress = load_progress(progress_file)
+            players_to_fetch = [p for p in all_players if p['id'] not in progress['completed_players']]
+            
+            if progress['completed_players']:
+                print(f"\n📋 Resuming from previous run:")
+                print(f"   Already completed: {len(progress['completed_players'])} players")
+                print(f"   Previously failed: {len(progress['failed_players'])} players")
+                print(f"   Remaining: {len(players_to_fetch)} players")
+        else:
+            players_to_fetch = all_players
+            progress = {'completed_players': [], 'failed_players': []}
+    
+    print(f"\n🎯 Total players to process: {len(players_to_fetch)}")
     
     # Summary data
     summary_data = []
-    skipped_count = 0
     
     # Process each player
     print(f"\n{'='*80}")
@@ -493,36 +794,67 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     
     start_time = datetime.now()
     
-    for idx, player in enumerate(all_players, 1):
-        player_id = player['id']
-        player_name = player['full_name']
-        
-        print(f"[{idx}/{len(all_players)}] {player_name} (ID: {player_id})")
-        
-        # For past seasons, check if file already exists in S3 and skip
-        if is_past_season:
-            import sys
-            sys.path.insert(0, str(project_root / 'src'))
-            from player_name_utils import normalize_player_name
-            player_name_normalized = normalize_player_name(player_name)
+    # Track separate lists for detailed reporting
+    no_data_list = []
+    error_list = []
+    success_count = 0
+    
+    if max_workers == 1:
+        # Sequential processing
+        for idx, player in enumerate(players_to_fetch, 1):
+            player_id = player['id']
+            player_name = player['full_name']
             
-            clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
-            filename = f"{clean_name}_{player_id}.csv"
-            s3_key = f"{S3_PREFIX}/{season}/{filename}"
+            print(f"[{idx}/{len(players_to_fetch)}] {player_name} (ID: {player_id})")
             
-            if check_s3_file_exists(s3_key):
-                print(f"      ⏭️  File exists in S3 - skipping (past season data complete)")
-                skipped_count += 1
-                progress['completed_players'].append(player_id)
+            # For past seasons, check if file already exists in S3 and skip
+            if is_past_season:
+                sys.path.insert(0, str(project_root / 'src'))
+                from player_name_utils import normalize_player_name
+                player_name_normalized = normalize_player_name(player_name)
+                
+                clean_name = player_name_normalized.replace(' ', '_').replace('.', '').replace("'", '')
+                filename = f"{clean_name}_{player_id}.csv"
+                s3_key = f"{S3_PREFIX}/{season}/{filename}"
+                
+                if check_s3_file_exists(s3_key):
+                    print(f"      ⏭️  File exists in S3 - skipping (past season data complete)")
+                    progress['completed_players'].append(player_id)
+                    save_progress(progress, progress_file)
+                    success_count += 1
+                    continue
+            
+            # Fetch shot chart data
+            shots_df = get_player_shot_chart(player_id, player_name, season)
+            
+            # Check if we got valid data
+            if shots_df is None or shots_df.empty:
+                print(f"      ⚠️  No shot data (likely hasn't played this season)")
+                no_data_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id
+                })
+                progress['failed_players'].append(player_id)
                 save_progress(progress, progress_file)
+                time.sleep(RATE_LIMIT_DELAY)
                 continue
-        
-        # For current season, always fetch (will overwrite with latest data)
-        shots_df = get_player_shot_chart(player_id, player_name, season)
-        
-        if shots_df is not None and not shots_df.empty:
-            # Save to file (local + S3)
+            
+            # Save to file (local + S3) - only if we have data
             filepath, s3_key = save_player_shot_chart(shots_df, player_name, player_id, output_dir, season, upload_s3=upload_s3)
+            
+            # Check if save failed
+            if not filepath or (upload_s3 and not s3_key):
+                error_msg = "Failed to save file" if not filepath else "S3 upload failed"
+                print(f"      ❌ Error: {error_msg}")
+                error_list.append({
+                    'player_name': player_name,
+                    'player_id': player_id,
+                    'error': error_msg
+                })
+                progress['failed_players'].append(player_id)
+                save_progress(progress, progress_file)
+                time.sleep(RATE_LIMIT_DELAY)
+                continue
             
             # Analyze shots
             stats = analyze_player_shots(shots_df)
@@ -530,10 +862,7 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
             print(f"      ✅ Saved n={len(shots_df)} shots")
             if upload_s3 and s3_key:
                 print(f"      📤 Uploaded to S3: s3://{S3_BUCKET}/{s3_key}")
-            elif upload_s3 and not s3_key:
-                print(f"      ⚠️  S3 upload failed (saved locally)")
             print(f"      📊 FG: {stats['fg_pct']:.1f}% ({stats['total_makes']}-{stats['total_shots']}) | Close Range: {stats['close_range_fg_pct']:.1f}% ({stats['close_range_makes']}-{stats['close_range_attempts']}) | 3PT: {stats['three_pct']:.1f}% ({stats['three_makes']}-{stats['three_attempts']})")
-
             
             # Add to summary
             summary_data.append({
@@ -554,22 +883,100 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
             
             # Mark as completed
             progress['completed_players'].append(player_id)
+            success_count += 1
             
-        else:
-            print(f"      ⚠️  No shot data (likely hasn't played this season)")
-            progress['failed_players'].append(player_id)
+            # Save progress after each player
+            save_progress(progress, progress_file)
+            
+            # Rate limiting
+            time.sleep(RATE_LIMIT_DELAY)
+            
+            # Save summary every 50 players
+            if idx % 50 == 0:
+                summary_df = pd.DataFrame(summary_data)
+                summary_df.to_csv(summary_file, index=False)
+                print(f"\n      💾 Progress saved ({idx} players processed)\n")
+    
+    else:
+        # Parallel processing with ThreadPoolExecutor
+        print(f"🚀 Using {max_workers} parallel workers for faster processing\n")
         
-        # Save progress after each player
-        save_progress(progress, progress_file)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_player = {
+                executor.submit(
+                    process_single_player,
+                    player, idx, len(players_to_fetch), season, output_dir, upload_s3,
+                    progress, progress_file, summary_data, is_past_season, RATE_LIMIT_DELAY,
+                    no_data_list, error_list, skipped_players if not is_past_season else []
+                ): (player, idx)
+                for idx, player in enumerate(players_to_fetch, 1)
+            }
+            
+            # Process completed tasks
+            completed = 0
+            for future in as_completed(future_to_player):
+                player, idx = future_to_player[future]
+                completed += 1
+                
+                try:
+                    status, skipped = future.result()
+                    if skipped or status == 'success':
+                        success_count += 1
+                    
+                    # Save summary periodically
+                    if completed % 50 == 0:
+                        with _progress_lock:
+                            if summary_data:
+                                summary_df = pd.DataFrame(summary_data)
+                                summary_df.to_csv(summary_file, index=False)
+                        with _print_lock:
+                            print(f"\n      💾 Progress saved ({completed} players processed)\n")
+                
+                except Exception as e:
+                    with _print_lock:
+                        print(f"      ❌ Unexpected error processing {player['full_name']} (ID:{player['id']}): {e}")
+                    with _progress_lock:
+                        error_list.append({
+                            'player_name': player['full_name'],
+                            'player_id': player['id'],
+                            'error': f"Unexpected error: {str(e)}"
+                        })
         
-        # Rate limiting
-        time.sleep(RATE_LIMIT_DELAY)
-        
-        # Save summary every 50 players
-        if idx % 50 == 0:
-            summary_df = pd.DataFrame(summary_data)
-            summary_df.to_csv(summary_file, index=False)
-            print(f"\n      💾 Progress saved ({idx} players processed)\n")
+    # Print detailed summary
+    print("\n" + "="*80)
+    print("📊 DETAILED PROCESSING SUMMARY")
+    print("="*80)
+    print(f"\n✅ Success: {success_count}")
+    if not is_past_season and skipped_players:
+        print(f"⏭️  Skipped (up-to-date): {len(skipped_players)}")
+    print(f"⚠️  No Data: {len(no_data_list)}")
+    print(f"❌ Errors: {len(error_list)}")
+    
+    # Print players with no data
+    if no_data_list:
+        print(f"\n{'='*80}")
+        print("⚠️  PLAYERS WITH NO SHOT DATA")
+        print(f"{'='*80}")
+        print(f"Total: {len(no_data_list)} players (likely haven't played this season)\n")
+        for entry in sorted(no_data_list, key=lambda x: x['player_name'])[:20]:
+            print(f"  - {entry['player_name']} (ID: {entry['player_id']})")
+        if len(no_data_list) > 20:
+            print(f"  ... and {len(no_data_list) - 20} more")
+    
+    # Print players with errors
+    if error_list:
+        print(f"\n{'='*80}")
+        print("❌ PLAYERS WITH ERRORS")
+        print(f"{'='*80}")
+        print(f"Total: {len(error_list)} players\n")
+        for entry in sorted(error_list, key=lambda x: x['player_name'])[:20]:
+            print(f"  - {entry['player_name']} (ID: {entry['player_id']})")
+            print(f"    Error: {entry['error']}")
+        if len(error_list) > 20:
+            print(f"  ... and {len(error_list) - 20} more")
+    else:
+        print(f"\n✅ No errors encountered!")
     
     # Final summary
     end_time = datetime.now()
@@ -601,7 +1008,7 @@ def fetch_all_player_shot_charts(season=DEFAULT_SEASON, resume=True, upload_s3=T
     return summary_df
 
 
-def fetch_multiple_seasons(seasons, resume=True, upload_s3=True):
+def fetch_multiple_seasons(seasons, resume=True, upload_s3=True, max_workers=1, skip_age_hours=24):
     """
     Fetch shot chart data for multiple seasons
     
@@ -609,6 +1016,8 @@ def fetch_multiple_seasons(seasons, resume=True, upload_s3=True):
         seasons: List of season strings (e.g., ["2023-24", "2024-25"])
         resume: If True, resume from previous progress
         upload_s3: If True, upload to S3 (default: True)
+        max_workers: Number of parallel workers (default: 1 for sequential processing)
+        skip_age_hours: For current season, skip files updated within this many hours (default: 24). None = always fetch
     """
     print("="*80)
     print("MULTI-SEASON SHOT CHART DATA COLLECTION")
@@ -626,7 +1035,13 @@ def fetch_multiple_seasons(seasons, resume=True, upload_s3=True):
         print(f"{'='*80}\n")
         
         try:
-            summary_df = fetch_all_player_shot_charts(season=season, resume=resume, upload_s3=upload_s3)
+            summary_df = fetch_all_player_shot_charts(
+                season=season, 
+                resume=resume, 
+                upload_s3=upload_s3, 
+                max_workers=max_workers,
+                skip_age_hours=skip_age_hours
+            )
             
             if summary_df is not None and not summary_df.empty:
                 season_summaries.append({
@@ -659,6 +1074,40 @@ def fetch_multiple_seasons(seasons, resume=True, upload_s3=True):
         print("\n⚠️  No data collected")
     
     return season_summaries
+
+
+def parse_skip_condition(skip_str):
+    """
+    Parse skip condition string into hours
+    
+    Args:
+        skip_str: String like "24h", "12h", "1d", "2d"
+    
+    Returns:
+        float: Hours, or None if 'never'
+    
+    Examples:
+        "24h" -> 24.0
+        "12h" -> 12.0
+        "1d" -> 24.0
+        "2d" -> 48.0
+        "never" -> None (always fetch)
+    """
+    if skip_str is None or skip_str.lower() == 'never':
+        return None
+    
+    skip_str = skip_str.lower().strip()
+    
+    # Parse hours
+    if skip_str.endswith('h'):
+        return float(skip_str[:-1])
+    
+    # Parse days
+    elif skip_str.endswith('d'):
+        return float(skip_str[:-1]) * 24
+    
+    else:
+        raise ValueError(f"Invalid skip condition format: {skip_str}. Use format like '24h', '1d', or 'never'")
 
 
 def analyze_summary_stats(summary_df):
@@ -717,11 +1166,31 @@ if __name__ == "__main__":
                        help='Upload to S3 (default: True)')
     parser.add_argument('--no-s3', action='store_true',
                        help='Skip S3 upload (local files only)')
+    parser.add_argument('--max-workers', type=int, default=1,
+                       help='Number of parallel workers for faster processing (default: 1, recommended: 10-100)')
+    parser.add_argument('--skip-conditions', type=str, default='24h',
+                       help='Skip files updated within this timeframe for current season (e.g., "24h", "12h", "1d", "never"). Default: 24h')
     
     args = parser.parse_args()
     
     # Determine S3 upload setting
     upload_s3 = not args.no_s3
+    
+    # Validate max_workers
+    max_workers = args.max_workers
+    if max_workers < 1:
+        print(f"\n❌ Error: --max-workers must be >= 1")
+        sys.exit(1)
+    if max_workers > 200:
+        print(f"\n⚠️  Warning: --max-workers={max_workers} is very high and may hit rate limits")
+        print(f"   Recommended: 10-100 workers")
+    
+    # Parse skip conditions
+    try:
+        skip_age_hours = parse_skip_condition(args.skip_conditions)
+    except ValueError as e:
+        print(f"\n❌ Error: {e}")
+        sys.exit(1)
     
     # Parse seasons
     seasons_to_fetch = []
@@ -747,6 +1216,18 @@ if __name__ == "__main__":
         print(f"\n📅 Fetching current season: {DEFAULT_SEASON}")
         print(f"   (Use --all-seasons to fetch all available seasons)")
     
+    print(f"\n🚀 Parallel Workers: {max_workers}")
+    if max_workers > 1:
+        print(f"   Expected speedup: ~{max_workers}x faster (subject to rate limits)")
+    
+    print(f"\n⏭️  Skip Conditions: ", end='')
+    if skip_age_hours is None:
+        print("Never (always fetch)")
+    elif skip_age_hours >= 24:
+        print(f"{skip_age_hours/24:.0f}d (skip files updated within {skip_age_hours/24:.0f} days)")
+    else:
+        print(f"{skip_age_hours:.0f}h (skip files updated within {skip_age_hours:.0f} hours)")
+    
     print(f"\n📤 S3 Upload: {'✅ Enabled' if upload_s3 else '❌ Disabled (local only)'}")
     if upload_s3:
         print(f"   S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/")
@@ -765,9 +1246,12 @@ if __name__ == "__main__":
             print("💡 Use '--auto' flag to run without prompting")
             print(f"\nExamples:")
             print(f"  python scripts/fetch_all_nba_shot_charts.py --auto")
+            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --skip-conditions 12h")
+            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --skip-conditions never")
             print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --all-seasons")
             print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --seasons 2023-24,2024-25")
             print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --no-s3  # local only")
+            print(f"  python scripts/fetch_all_nba_shot_charts.py --auto --max-workers 100 --skip-conditions 24h")
             run_script = False
     
     if run_script:
@@ -775,7 +1259,13 @@ if __name__ == "__main__":
         if len(seasons_to_fetch) == 1:
             # Single season
             season = seasons_to_fetch[0]
-            summary_df = fetch_all_player_shot_charts(season=season, resume=True, upload_s3=upload_s3)
+            summary_df = fetch_all_player_shot_charts(
+                season=season, 
+                resume=True, 
+                upload_s3=upload_s3, 
+                max_workers=max_workers,
+                skip_age_hours=skip_age_hours
+            )
             
             if summary_df is not None and not summary_df.empty:
                 analyze_summary_stats(summary_df)
@@ -791,7 +1281,13 @@ if __name__ == "__main__":
                 print(f"\nYou can now analyze close-range shooting (0-6 feet) for any player!")
         else:
             # Multiple seasons
-            season_summaries = fetch_multiple_seasons(seasons_to_fetch, resume=True, upload_s3=upload_s3)
+            season_summaries = fetch_multiple_seasons(
+                seasons_to_fetch, 
+                resume=True, 
+                upload_s3=upload_s3, 
+                max_workers=max_workers,
+                skip_age_hours=skip_age_hours
+            )
             
             if season_summaries:
                 print("\n" + "="*80)
