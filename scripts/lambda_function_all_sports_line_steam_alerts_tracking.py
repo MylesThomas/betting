@@ -525,6 +525,244 @@ def send_sns(subject, message):
     )
 
 
+def generate_ytd_report(sport, today, season, threshold):
+    """
+    Generate YTD report by reading all results from S3.
+    Dedupes at (game_id, steam_direction) level, keeping largest steam magnitude.
+    
+    Args:
+        sport: Sport name (nba, ncaab, nfl, ncaaf)
+        today: Today's date string (ET timezone)
+        season: Season string (e.g., '2025-26')
+        threshold: Steam threshold to filter by (reads from 'threshold' column in CSV)
+    
+    Returns:
+        Formatted report string with W-L-T, ROI, breakdown
+        Shows separate stats for underdog steam, favorite steam, and combined
+    """
+    import pandas as pd
+    
+    et_tz = ZoneInfo('America/New_York')
+    sport_upper = sport.upper()
+    sport_icon = SPORT_ICONS.get(sport, '🏀')
+    
+    print(f"\n📊 Generating YTD report for {sport_upper} threshold {threshold}...")
+    
+    s3 = boto3.client('s3')
+    s3_bucket = f"{sport}-betting-mt"
+    results_prefix = "data/04_output/results/line-steam/"
+    
+    # List all results files
+    try:
+        response = s3.list_objects_v2(Bucket=s3_bucket, Prefix=results_prefix)
+    except Exception as e:
+        return f"❌ Error loading results from S3: {e}"
+    
+    if 'Contents' not in response:
+        return f"📊 No results found yet"
+    
+    # Load all results files
+    all_results = []
+    for obj in response.get('Contents', []):
+        key = obj['Key']
+        if not key.endswith('.csv'):
+            continue
+        
+        try:
+            result_obj = s3.get_object(Bucket=s3_bucket, Key=key)
+            df = pd.read_csv(BytesIO(result_obj['Body'].read()))
+            all_results.append(df)
+        except Exception as e:
+            print(f"⚠️  Error reading {key}: {e}")
+    
+    if not all_results:
+        return f"📊 No results files found"
+    
+    # Combine all results
+    results_df = pd.concat(all_results, ignore_index=True)
+    
+    # Filter to specified threshold
+    results_df = results_df[results_df['threshold'] == threshold]
+    
+    if len(results_df) == 0:
+        return f"📊 No results found for threshold {threshold}"
+    
+    # Dedupe: keep detection with largest steam magnitude per (game_id, steam_direction)
+    original_count = len(results_df)
+    results_df = results_df.sort_values('steam_magnitude', ascending=False).drop_duplicates(
+        subset=['game_id', 'steam_direction'],
+        keep='first'
+    )
+    deduped_count = len(results_df)
+    print(f"   Deduped results: {original_count} detections → {deduped_count} unique plays")
+    
+    # Filter to completed games only
+    completed = results_df[results_df['status'] != 'pending']
+    
+    if len(completed) == 0:
+        return f"📊 No completed games yet for threshold {threshold}"
+    
+    # Split by steam direction
+    underdog_plays = completed[completed['steam_direction'] == 'opening_underdog']
+    favorite_plays = completed[completed['steam_direction'] == 'opening_favorite']
+    
+    def calc_stats(df, label):
+        """Calculate stats for a subset of plays."""
+        if len(df) == 0:
+            return None
+        
+        wins = (df['status'] == 'won').sum()
+        losses = (df['status'] == 'lost').sum()
+        pushes = (df['status'] == 'push').sum()
+        total = len(df)
+        win_pct = wins / total * 100 if total > 0 else 0
+        
+        profit_from_wins = wins * 100
+        loss_from_losses = losses * 110
+        net_profit = profit_from_wins - loss_from_losses
+        total_risked = total * 110
+        roi_pct = (net_profit / total_risked * 100) if total_risked > 0 else 0
+        
+        avg_cover_margin = df['cover_margin'].mean()
+        avg_steam = df['steam_magnitude'].mean()
+        
+        return {
+            'label': label,
+            'wins': wins,
+            'losses': losses,
+            'pushes': pushes,
+            'total': total,
+            'win_pct': win_pct,
+            'net_profit': net_profit,
+            'roi_pct': roi_pct,
+            'avg_cover_margin': avg_cover_margin,
+            'avg_steam': avg_steam,
+            'df': df
+        }
+    
+    # Calculate stats for each subset
+    underdog_stats = calc_stats(underdog_plays, 'UNDERDOG STEAM')
+    favorite_stats = calc_stats(favorite_plays, 'FAVORITE STEAM')
+    combined_stats = calc_stats(completed, 'COMBINED')
+    
+    # Format report
+    report = f"""
+{sport_icon} {sport_upper} LINE STEAM YTD REPORT - {today}
+{'='*80}
+
+SEASON: {season}
+THRESHOLD: {threshold}+ points
+
+"""
+    
+    # Underdog section
+    if underdog_stats:
+        s = underdog_stats
+        report += f"""{'─'*80}
+{s['label']} (Sharp Money Indicator):
+  Record: {s['wins']}-{s['losses']}-{s['pushes']} ({s['win_pct']:.1f}%)
+  ROI: {s['roi_pct']:+.1f}%
+  Net Profit: ${s['net_profit']:+,.0f}
+  Avg Steam: {s['avg_steam']:.2f} pts
+  Avg Cover Margin: {s['avg_cover_margin']:+.2f} pts
+  Total Plays: {s['total']}
+
+"""
+    
+    # Favorite section
+    if favorite_stats:
+        s = favorite_stats
+        report += f"""{'─'*80}
+{s['label']} (Fade the Public):
+  Record: {s['wins']}-{s['losses']}-{s['pushes']} ({s['win_pct']:.1f}%)
+  ROI: {s['roi_pct']:+.1f}%
+  Net Profit: ${s['net_profit']:+,.0f}
+  Avg Steam: {s['avg_steam']:.2f} pts
+  Avg Cover Margin: {s['avg_cover_margin']:+.2f} pts
+  Total Plays: {s['total']}
+
+"""
+    
+    # Combined section
+    if combined_stats:
+        s = combined_stats
+        report += f"""{'─'*80}
+{s['label']} (All Steam Plays):
+  Record: {s['wins']}-{s['losses']}-{s['pushes']} ({s['win_pct']:.1f}%)
+  ROI: {s['roi_pct']:+.1f}%
+  Net Profit: ${s['net_profit']:+,.0f}
+  Units: {s['net_profit']/110:+.2f} units (flat $110 bets)
+  Avg Steam: {s['avg_steam']:.2f} pts
+  Avg Cover Margin: {s['avg_cover_margin']:+.2f} pts
+  Total Plays: {s['total']}
+
+"""
+    
+    # Yesterday's results (in tipoff order)
+    yesterday = (datetime.now(et_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
+    yesterday_games = completed[completed['game_date'] == yesterday].copy()
+    
+    if len(yesterday_games) > 0:
+        # Convert game_time string to datetime for sorting
+        yesterday_games['game_time_dt'] = pd.to_datetime(yesterday_games['game_time'])
+        yesterday_games = yesterday_games.sort_values('game_time_dt')
+        
+        report += f"""{'─'*80}
+YESTERDAY'S RESULTS ({yesterday}) - {len(yesterday_games)} plays:
+
+"""
+        for idx, (_, game) in enumerate(yesterday_games.iterrows(), 1):
+            result_emoji = '✅' if game['status'] == 'won' else '❌' if game['status'] == 'lost' else '➖'
+            steam_dir = 'underdog' if game['steam_direction'] == 'opening_underdog' else 'favorite'
+            game_time_str = pd.to_datetime(game['game_time']).strftime('%I:%M %p ET')
+            
+            report += f"""{idx}. {result_emoji} {game['play_team']} {game['play_spread']:+.1f} ({game_time_str})
+   {game['opening_favorite']} vs {game['opening_underdog']}
+   Result: {game['status'].upper()} by {game['cover_margin']:+.1f} pts | Steam: {game['steam_magnitude']:.1f} pts ({steam_dir})
+
+"""
+        
+        # Best/worst plays from yesterday only
+        best_play = yesterday_games.loc[yesterday_games['cover_margin'].idxmax()]
+        worst_play = yesterday_games.loc[yesterday_games['cover_margin'].idxmin()]
+        
+        report += f"""{'─'*80}
+BEST PLAY:
+  {best_play['play_team']} {best_play['play_spread']:+.1f} on {best_play['game_date']}
+  Result: {best_play['status'].upper()} by {best_play['cover_margin']:+.1f} pts
+  Steam: {best_play['steam_magnitude']:.1f} pts toward {best_play['steamed_team']}
+
+WORST PLAY:
+  {worst_play['play_team']} {worst_play['play_spread']:+.1f} on {worst_play['game_date']}
+  Result: {worst_play['status'].upper()} by {worst_play['cover_margin']:+.1f} pts
+  Steam: {worst_play['steam_magnitude']:.1f} pts toward {worst_play['steamed_team']}
+
+"""
+    else:
+        report += f"""{'─'*80}
+YESTERDAY'S RESULTS ({yesterday}) - No plays
+
+"""
+    
+    report += f"""{'─'*80}
+BREAKDOWN BY STEAM SIZE (Combined):
+"""
+    
+    # Breakdown by steam size (combined)
+    for min_steam, max_steam in [(1.0, 1.9), (2.0, 2.9), (3.0, 3.9), (4.0, 10.0)]:
+        subset = completed[(completed['steam_magnitude'] >= min_steam) & (completed['steam_magnitude'] < max_steam)]
+        if len(subset) > 0:
+            sub_wins = (subset['status'] == 'won').sum()
+            sub_losses = (subset['status'] == 'lost').sum()
+            sub_pushes = (subset['status'] == 'push').sum()
+            sub_pct = sub_wins / len(subset) * 100
+            report += f"  {min_steam:.1f}-{max_steam:.1f} pts: {sub_wins}-{sub_losses}-{sub_pushes} ({sub_pct:.1f}%) | N={len(subset)}\n"
+    
+    report += f"\n{'='*80}"
+    
+    return report
+
+
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
@@ -706,6 +944,7 @@ def lambda_handler(event, context):
                     yesterday = (datetime.now(et_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
                     print(f"📅 Yesterday: {yesterday}")
                     
+                    # Calculate yesterday's results
                     calc_cmd = [
                         'python3', 'scripts/calculate_line_steam_results.py',
                         '--sport', sport,
@@ -728,15 +967,21 @@ def lambda_handler(event, context):
                         })
                         continue
                     
-                    # Send daily report email
-                    report_msg = (
-                        f"{sport_icon} {sport_upper} LINE STEAM DAILY REPORT - {yesterday}\n\n"
-                        f"Results calculated for {yesterday}\n\n"
-                        f"{stdout}\n\n"
-                        f"Results saved to: s3://{sport}-betting-mt/data/04_output/results/line-steam/{yesterday}.csv"
-                    )
-                    send_sns(f"📊 {sport_upper} Line Steam Daily Report - {yesterday}", report_msg)
-                    print(f"📧 {sport_upper} daily report email sent!\n")
+                    # Generate YTD report
+                    import pandas as pd
+                    ytd_report = generate_ytd_report(sport, today, season, threshold)
+                    
+                    # Print report to CloudWatch logs
+                    print("\n" + "="*80)
+                    print(ytd_report)
+                    print("="*80 + "\n")
+                    
+                    # Send YTD report email
+                    timing_summary = format_timing_summary()
+                    report_msg = f"{ytd_report}\n\n{timing_summary}"
+                    send_sns(f"📊 {sport_upper} Line Steam YTD Report - {today}", report_msg)
+                    
+                    print(f"✅ {sport_upper} daily report sent!")
                     
                     all_results.append({
                         'sport': sport,
