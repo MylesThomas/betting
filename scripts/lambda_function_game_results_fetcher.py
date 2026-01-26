@@ -637,21 +637,39 @@ def lambda_handler(event, context):
             print(f"{status_icon} {result['sport'].upper()}: {result['status']}")
         print(f"{'='*80}\n")
         
-        # Send success notification with timing
-        success_msg = [
+        # Determine overall status
+        success_count = sum(1 for r in all_results if r['status'] == 'success')
+        error_count = sum(1 for r in all_results if r['status'] == 'error')
+        total_count = len(all_results)
+        
+        # Choose appropriate subject and emoji
+        if success_count == total_count:
+            subject = f"✅ Game Results Fetched - {yesterday}"
+        elif success_count > 0:
+            subject = f"⚠️ Partial Success - Game Results - {yesterday}"
+        else:
+            subject = f"❌ Game Results Fetch Failed - {yesterday}"
+        
+        # Build notification message
+        msg = [
             f"Date: {yesterday}\n",
             timing_summary,
             "\n\nResults:"
         ]
         for result in all_results:
-            success_msg.append(f"\n{result['sport'].upper()}: {result['status']}")
+            msg.append(f"\n{result['sport'].upper()}: {result['status']}")
             if result['status'] == 'success':
                 if 's3_props' in result:
-                    success_msg.append(f"  Props: {result['s3_props']}")
+                    msg.append(f"  Props: ✅ Uploaded to {result['s3_props']}")
                 if 's3_games' in result:
-                    success_msg.append(f"  Games: {result['s3_games']}")
+                    msg.append(f"  Games: ✅ Uploaded to {result['s3_games']}")
+            elif result['status'] == 'error':
+                if 'error' in result:
+                    # Truncate long errors for email readability
+                    error_preview = result['error'][:200] + '...' if len(result['error']) > 200 else result['error']
+                    msg.append(f"  Error: {error_preview}")
         
-        send_sns(f"✅ Game Results Fetched - {yesterday}", '\n'.join(success_msg))
+        send_sns(subject, '\n'.join(msg))
         
         # Round timing data for JSON response
         timing_rounded = {k: round(v, 2) for k, v in TIMING_DATA.items()}
