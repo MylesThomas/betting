@@ -946,6 +946,48 @@ def find_plays(df_games, strategies, granularity='detailed'):
 # OUTPUT FORMATTING & SAVING
 # =============================================================================
 
+def save_skipped_players_to_s3(skipped_players, target_date, strategy_dim='2d'):
+    """
+    Save skipped players metadata to S3 as JSON for email inclusion
+    
+    Args:
+        skipped_players: List of dicts with player info
+        target_date: Date string (YYYY-MM-DD)
+        strategy_dim: '2d' or '3d'
+    """
+    if not skipped_players:
+        return  # Nothing to save
+    
+    import boto3
+    import json
+    
+    bucket = 'nba-betting-mt'
+    key = f'data/04_output/metadata/role_spread_points_model/{strategy_dim}/{target_date}_skipped.json'
+    
+    try:
+        s3 = boto3.client('s3')
+        
+        # Convert to JSON with metadata
+        data = {
+            'date': target_date,
+            'strategy': strategy_dim,
+            'count': len(skipped_players),
+            'skipped_players': skipped_players
+        }
+        
+        s3.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=json.dumps(data, indent=2),
+            ContentType='application/json'
+        )
+        
+        print(f"💾 Saved {len(skipped_players)} skipped players to S3: s3://{bucket}/{key}")
+        
+    except Exception as e:
+        print(f"\n⚠️  Failed to save skipped players to S3: {e}")
+
+
 def save_plays_to_s3(df_plays, target_date, season='2025-26'):
     """
     Save plays to S3 as CSV for tracking performance
@@ -1236,6 +1278,8 @@ def main():
     if args.save_s3:
         target_date = args.date if args.date else date.today().strftime('%Y-%m-%d')
         save_plays_to_s3(df_plays, target_date, args.season)
+        # Also save skipped players metadata for email inclusion
+        save_skipped_players_to_s3(skipped_players, target_date, strategy_dim='2d')
     
     # Print warning summary at end (shows up in lambda stdout AND CloudWatch)
     if skipped_players:
