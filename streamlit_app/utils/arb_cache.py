@@ -169,17 +169,11 @@ def load_cache_from_s3(sport: str, s3_client) -> pd.DataFrame:
             print(f"   📦 Downloaded {len(parquet_bytes):,} bytes ({len(parquet_bytes)/1024/1024:.1f} MB)")
         
         with timed_section("DuckDB: read Parquet into DataFrame"):
+            # DuckDB can't read from BytesIO, so use pandas
             from io import BytesIO
+            df = pd.read_parquet(BytesIO(parquet_bytes))
             
-            # Use DuckDB to read Parquet (SUPER FAST!)
-            con = duckdb.connect(':memory:')
-            df = con.execute(
-                "SELECT * FROM read_parquet(?)",
-                [BytesIO(parquet_bytes)]
-            ).df()
-            con.close()
-            
-            print(f"   📊 Loaded {len(df):,} rows with DuckDB")
+            print(f"   📊 Loaded {len(df):,} rows with pandas")
         
         return df
     except Exception as e:
