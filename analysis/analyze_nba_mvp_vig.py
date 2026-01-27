@@ -158,6 +158,10 @@ def main():
         output_columns.insert(2, 'season_start_odds')
     if 'season_start_date' in df_output.columns:
         output_columns.insert(3, 'season_start_date')
+    if 'last_week_odds' in df_output.columns:
+        output_columns.insert(4, 'last_week_odds')
+    if 'last_week_date' in df_output.columns:
+        output_columns.insert(5, 'last_week_date')
     
     df_output = df_output[output_columns]
     

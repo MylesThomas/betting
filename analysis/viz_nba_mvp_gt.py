@@ -81,7 +81,7 @@ TITLE = "NBA MVP Odds: Preseason to Now"
 
 FOOTER_NOTES = """
 1. 'Fair Odds' = true odds with vig removed. 'Vig %' = FanDuel's edge (green = low, red = high).  
-2. 'Difference' = change in implied probability from preseason to now (green = improved, red = worsened). Players with '-' = removed from board.
+2. 'Difference' columns show change in implied probability (green = improved, red = worsened). Players with '-' = removed from board.
 """
 FOOTER_DATA_SOURCE = "FanDuel Sportsbook"
 # FOOTER_DATA_DATE is now generated dynamically from the CSV file
@@ -91,8 +91,8 @@ FOOTER_DATA_SOURCE = "FanDuel Sportsbook"
 # -----------------------------------------------------------------------------
 OUTPUT_FILENAME = "nba_mvp_vig.png"
 
-# Larger table now (showing all ~20 players + more columns)
-OUTPUT_WIDTH = 1600   # pixels (increased for more columns)
+# Larger table now (showing all ~20 players + more columns including Last Week and 2 Difference columns)
+OUTPUT_WIDTH = 2000   # pixels (increased for 2 Difference columns)
 OUTPUT_HEIGHT = 1800  # pixels (increased for more rows)
 OUTPUT_DPI = 300
 
@@ -101,8 +101,7 @@ OUTPUT_DPI = 300
 # -----------------------------------------------------------------------------
 # Difference column: Green = positive change (improved), Red = negative change (worsened)
 DIFF_COLOR_PALETTE = ["#d62728", "#ffcccc", "#ffffff", "#90EE90", "#4CAF50"]  # red -> white -> green
-DIFF_COLOR_DOMAIN_MIN = -50.0   # Large negative change (red)
-DIFF_COLOR_DOMAIN_MAX = 50.0    # Large positive change (green)
+# Domain will be calculated dynamically based on actual data (symmetric around 0)
 
 # Vig % column: Green = low vig (good), Red = high vig (bad)
 VIG_COLOR_PALETTE = ["#4CAF50", "#90EE90", "#ffffff", "#ffcccc", "#d62728"]  # green -> white -> red
@@ -131,14 +130,17 @@ HEADING_PADDING_PX = 3     # Padding around title/subtitle
 # -----------------------------------------------------------------------------
 COL_WIDTH_RANK = 60
 COL_WIDTH_HEADSHOT = 40
-COL_WIDTH_PLAYER = 150
+COL_WIDTH_PLAYER = 190 # Need wider for SGA
 COL_WIDTH_PRESEASON = 95
 COL_WIDTH_PRESEASON_IMPLIED = 115
+COL_WIDTH_LAST_WEEK = 95
+COL_WIDTH_LAST_WEEK_IMPLIED = 115
 COL_WIDTH_CURRENT = 85
 COL_WIDTH_CURRENT_IMPLIED = 105
 COL_WIDTH_FAIR_ODDS = 90
+COL_WIDTH_DIFF_PRESEASON = 135 # Needed wider for 'Pre-Season -> Current'
+COL_WIDTH_DIFF_LAST_WEEK = 135 # Needed wider for 'Last Week -> Current'
 COL_WIDTH_VIG_PCT = 75
-COL_WIDTH_DIFFERENCE = 90
 
 HEADSHOT_HEIGHT = 25  # Height of player headshots in pixels (smaller = sharper with tight padding)
 
@@ -281,7 +283,8 @@ def prepare_data_for_visualization(df):
         df: Raw dataframe from nba_mvp_fair_odds.csv
         
     Returns:
-        tuple: (DataFrame ready for visualization, average_vig_pct, season_start_date)
+        tuple: (DataFrame ready for visualization, average_vig_pct, season_start_date, 
+                last_week_date, diff_domain_max)
     """
     print("📊 Preparing data for visualization...\n")
     
@@ -311,6 +314,24 @@ def prepare_data_for_visualization(df):
         df_display['preseason_implied_str'] = "N/A"
         season_start_date = None
     
+    # Format last week odds
+    if 'last_week_odds' in df_display.columns:
+        df_display['last_week_odds_str'] = df_display['last_week_odds'].apply(
+            lambda x: f"{int(x):+d}" if pd.notna(x) else "-"
+        )
+        # Calculate last week implied probability
+        df_display['last_week_implied_prob'] = df_display['last_week_odds'].apply(
+            lambda x: odds_to_implied_probability(x) if pd.notna(x) else None
+        )
+        df_display['last_week_implied_str'] = df_display['last_week_implied_prob'].apply(
+            lambda x: f"{x*100:.1f}%" if pd.notna(x) else "-"
+        )
+        last_week_date = df_display['last_week_date'].iloc[0] if 'last_week_date' in df_display.columns else None
+    else:
+        df_display['last_week_odds_str'] = "N/A"
+        df_display['last_week_implied_str'] = "N/A"
+        last_week_date = None
+    
     # Format current odds
     df_display['current_odds_str'] = df_display['fanduel_odds'].apply(
         lambda x: f"{int(x):+d}" if pd.notna(x) else "-"
@@ -322,14 +343,35 @@ def prepare_data_for_visualization(df):
     )
     
     # Calculate difference in implied probability (percentage points)
-    # For ALL players (including removed ones where current = 0.0%)
+    # Difference 1: Pre-Season -> Current
     if 'preseason_implied_prob' in df_display.columns:
-        df_display['difference'] = df_display.apply(
+        df_display['diff_preseason'] = df_display.apply(
             lambda row: (row['fanduel_implied_prob'] - row['preseason_implied_prob']) * 100 
             if pd.notna(row['preseason_implied_prob'])
             else None,
             axis=1
         )
+    
+    # Difference 2: Last Week -> Current
+    if 'last_week_implied_prob' in df_display.columns:
+        df_display['diff_last_week'] = df_display.apply(
+            lambda row: (row['fanduel_implied_prob'] - row['last_week_implied_prob']) * 100 
+            if pd.notna(row['last_week_implied_prob'])
+            else None,
+            axis=1
+        )
+    
+    # Calculate dynamic domain for difference gradients (symmetric around 0)
+    # Use the max of both difference columns
+    max_abs_diff_preseason = df_display['diff_preseason'].abs().max() if 'diff_preseason' in df_display.columns else 0
+    max_abs_diff_last_week = df_display['diff_last_week'].abs().max() if 'diff_last_week' in df_display.columns else 0
+    max_abs_diff = max(max_abs_diff_preseason, max_abs_diff_last_week)
+    
+    if pd.isna(max_abs_diff) or max_abs_diff == 0:
+        diff_domain_max = 50.0  # fallback
+    else:
+        # Round up to nearest 10 for cleaner visualization
+        diff_domain_max = max(50.0, round(max_abs_diff / 10) * 10 + 10)
     
     # Format fair odds and percentages
     df_display['fair_odds_str'] = df_display['fair_odds'].apply(
@@ -346,12 +388,13 @@ def prepare_data_for_visualization(df):
     average_vig_pct = df_display['vig_pct'].mean()
     
     print(f"   ✅ Prepared {len(df_display)} players")
-    print(f"   ✅ Average vig: {average_vig_pct:.1f}%\n")
+    print(f"   ✅ Average vig: {average_vig_pct:.1f}%")
+    print(f"   ✅ Difference gradient domain: [-{diff_domain_max:.0f}, +{diff_domain_max:.0f}]\n")
     
-    return df_display, average_vig_pct, season_start_date
+    return df_display, average_vig_pct, season_start_date, last_week_date, diff_domain_max
 
 
-def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start_date):
+def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start_date, last_week_date, diff_domain_max):
     """
     Create a publication-quality table using R's gt package.
     
@@ -360,6 +403,8 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         average_vig_pct: Calculated average vig percentage
         fetch_date: Date when odds were fetched (YYYY-MM-DD format)
         season_start_date: Date of season start odds (YYYY-MM-DD format)
+        last_week_date: Date of last week odds (YYYY-MM-DD format)
+        diff_domain_max: Maximum value for difference gradient domain (symmetric)
         
     Returns:
         Path to saved PNG file
@@ -371,7 +416,10 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
     on_board_count = df_display['fanduel_odds'].notna().sum()
     removed_count = df_display['fanduel_odds'].isna().sum()
     
-    subtitle = f"{on_board_count} players currently on FanDuel's board"
+    # Count players with 5% or better chance
+    players_5pct_or_better = (df_display['fanduel_implied_prob'] >= 0.05).sum()
+    
+    subtitle = f"{on_board_count} players currently on FanDuel's board, only {players_5pct_or_better} players with 5% chance or better"
     
     # Format fetch_date for display (convert YYYY-MM-DD to "Month DD, YYYY")
     if fetch_date:
@@ -383,33 +431,41 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
     else:
         footer_date = datetime.now().strftime('%B %d, %Y')
     
-    # Select columns for display - preseason comparison + vig metrics
-    # Keep difference and vig_pct as numeric for gradient coloring
-    # Move Vig % to the far right (after Difference)
+    # Select columns for display - preseason / last week / current comparison + vig metrics
+    # Keep difference columns and vig_pct as numeric for gradient coloring
+    # Move Vig % to the far right
     columns_to_include = ['rank', 'headshot_url', 'player', 
                           'preseason_odds_str', 'preseason_implied_str',
+                          'last_week_odds_str', 'last_week_implied_str',
                           'current_odds_str', 'current_implied_str', 
-                          'fair_odds_str', 'difference', 'vig_pct']
+                          'fair_odds_str', 'diff_preseason', 'diff_last_week', 'vig_pct']
     
     table_df = df_display[columns_to_include].copy()
     
-    # Rename columns for display
+    # Rename columns for display (use <br> for line breaks in headers)
     column_names = ['Rank', 'headshot_url', 'Player', 
                     'Preseason', 'Preseason Implied',
+                    'Last Week', 'Last Week Implied',
                     'Current', 'Current Implied', 
-                    'Fair Odds', 'Difference', 'Vig %']
+                    'Fair Odds', 'Difference<br>(PS → Current)', 'Difference<br>(LW → Current)', 'Vig %']
     
     table_df.columns = column_names
     
     print(f"   📋 Table dimensions: {table_df.shape}")
     print(f"   📋 Columns: {list(table_df.columns)}\n")
     
-    # Output path
+    # Output paths
     output_path = repo_root / 'content/viz/nba' / OUTPUT_FILENAME
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path_str = str(output_path)
     
+    # Also save to ~/Downloads/tmp
+    downloads_path = Path.home() / 'Downloads' / 'tmp' / OUTPUT_FILENAME
+    downloads_path.parent.mkdir(parents=True, exist_ok=True)
+    downloads_path_str = str(downloads_path)
+    
     print(f"   💾 Output path: {output_path.name}")
+    print(f"   💾 Downloads copy: {downloads_path}")
     
     # Save table_df to temp CSV for R to read
     temp_csv = repo_root / 'temp_mvp_data.csv'
@@ -418,33 +474,39 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
     # Determine if we have season start column
     has_season_start = any('Oct' in col or 'Nov' in col or 'Dec' in col or 'Jan' in col or 'Feb' in col or 'Start' in col for col in table_df.columns)
     
-    # Build colClasses (Vig % moved to far right)
+    # Build colClasses (Vig % at far right)
     col_classes = {
         'Rank': 'integer',
         'headshot_url': 'character',
         'Player': 'character',
         'Preseason': 'character',
         'Preseason Implied': 'character',
+        'Last Week': 'character',
+        'Last Week Implied': 'character',
         'Current': 'character',
         'Current Implied': 'character',
         'Fair Odds': 'character',
-        'Difference': 'numeric',
+        'Difference<br>(PS → Current)': 'numeric',
+        'Difference<br>(LW → Current)': 'numeric',
         'Vig %': 'numeric'
     }
     
     col_classes_str = ',\n      '.join([f'"{k}"="{v}"' for k, v in col_classes.items()])
     
-    # Build column widths string (Vig % moved to far right)
+    # Build column widths string (Vig % at far right)
     col_widths = [
         f"Rank ~ px({COL_WIDTH_RANK})",
         f"headshot_url ~ px({COL_WIDTH_HEADSHOT})",
         f"Player ~ px({COL_WIDTH_PLAYER})",
         f"`Preseason` ~ px({COL_WIDTH_PRESEASON})",
         f"`Preseason Implied` ~ px({COL_WIDTH_PRESEASON_IMPLIED})",
+        f"`Last Week` ~ px({COL_WIDTH_LAST_WEEK})",
+        f"`Last Week Implied` ~ px({COL_WIDTH_LAST_WEEK_IMPLIED})",
         f"`Current` ~ px({COL_WIDTH_CURRENT})",
         f"`Current Implied` ~ px({COL_WIDTH_CURRENT_IMPLIED})",
         f"`Fair Odds` ~ px({COL_WIDTH_FAIR_ODDS})",
-        f"`Difference` ~ px({COL_WIDTH_DIFFERENCE})",
+        f"`Difference<br>(PS → Current)` ~ px({COL_WIDTH_DIFF_PRESEASON})",
+        f"`Difference<br>(LW → Current)` ~ px({COL_WIDTH_DIFF_LAST_WEEK})",
         f"`Vig %` ~ px({COL_WIDTH_VIG_PCT})"
     ]
     
@@ -477,9 +539,9 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       # Add player headshots using gtExtras
       gt_img_rows(columns = headshot_url, height = {HEADSHOT_HEIGHT}) %>%
       
-      # Format Difference column as percentage points with + sign (now before Vig %)
+      # Format Difference columns as percentage points with + sign
       fmt_number(
-        columns = `Difference`,
+        columns = c(`Difference<br>(PS → Current)`, `Difference<br>(LW → Current)`),
         decimals = 1,
         pattern = "{{x}}pp",
         force_sign = TRUE
@@ -508,9 +570,12 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         {col_widths_str}
       ) %>%
       
+      
       # Rename headshot_url column header to empty
       cols_label(
-        headshot_url = ""
+        headshot_url = "",
+        `Difference<br>(PS → Current)` = html("Difference<br>(PS → Current)"),
+        `Difference<br>(LW → Current)` = html("Difference<br>(LW → Current)")
       ) %>%
       
       # Style headers
@@ -543,13 +608,21 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         locations = cells_title(groups = "subtitle")
       ) %>%
       
-      # Conditional formatting for Difference column (now before Vig %)
+      # Conditional formatting for Difference columns
       # Red -> White -> Green gradient (negative = worsened = red, positive = improved = green)
+      # Domain is symmetric around 0 based on actual data
       data_color(
-        columns = `Difference`,
+        columns = `Difference<br>(PS → Current)`,
         method = "numeric",
         palette = c({', '.join([f'"{c}"' for c in DIFF_COLOR_PALETTE])}),
-        domain = c({DIFF_COLOR_DOMAIN_MIN}, {DIFF_COLOR_DOMAIN_MAX}),
+        domain = c(-{diff_domain_max}, {diff_domain_max}),
+        na_color = "#e8e8e8"
+      ) %>%
+      data_color(
+        columns = `Difference<br>(LW → Current)`,
+        method = "numeric",
+        palette = c({', '.join([f'"{c}"' for c in DIFF_COLOR_PALETTE])}),
+        domain = c(-{diff_domain_max}, {diff_domain_max}),
         na_color = "#e8e8e8"
       ) %>%
       
@@ -609,8 +682,11 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         source_note = md("**Data:** {FOOTER_DATA_SOURCE} ({footer_date}) | **Analysis:** {TWITTER_HANDLE}")
       )
     
-    # Save as PNG
+    # Save as PNG (primary location)
     gtsave(table, "{output_path_str}", vwidth = {OUTPUT_WIDTH}, vheight = {OUTPUT_HEIGHT})
+    
+    # Save copy to Downloads folder
+    gtsave(table, "{downloads_path_str}", vwidth = {OUTPUT_WIDTH}, vheight = {OUTPUT_HEIGHT})
     
     cat("✅ Table saved successfully!\\n")
     """
@@ -678,10 +754,10 @@ def main():
         return
     
     # Prepare data
-    df_display, average_vig_pct, season_start_date = prepare_data_for_visualization(df)
+    df_display, average_vig_pct, season_start_date, last_week_date, diff_domain_max = prepare_data_for_visualization(df)
     
     # Create table using R's gt package
-    output_path = create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start_date)
+    output_path = create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start_date, last_week_date, diff_domain_max)
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE!")

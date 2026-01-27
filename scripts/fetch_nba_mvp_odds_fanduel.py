@@ -114,6 +114,24 @@ MVP_ODDS_HISTORY = [
             'Stephen Curry': +100000,
             'Kevin Durant': +100000,
         }
+    },
+    {
+        'date': '20260127',
+        'fetch_date': '2026-01-27',
+        'label': 'Week 17',
+        'odds': {
+            'Shai Gilgeous-Alexander': -400,
+            'Luka Doncic': +1000,
+            'Cade Cunningham': +1200,
+            'Jaylen Brown': +2500,
+            'Anthony Edwards': +5000,
+            'Tyrese Maxey': +7500,
+            'Jalen Brunson': +25000,
+            'Donovan Mitchell': +40000,
+            'Kawhi Leonard': +100000,
+            'Stephen Curry': +100000,
+            'Kevin Durant': +100000,
+        }
     }
 ]
 
@@ -264,7 +282,7 @@ def display_odds_comparison(current_snapshot, previous_snapshot, comparison_labe
 
 def create_mvp_dataframe(odds_dict, fetch_date):
     """
-    Create DataFrame from hardcoded MVP odds with full comparison to season start.
+    Create DataFrame from hardcoded MVP odds with full comparison to season start and last week.
     
     Uses a full outer join approach:
     - Players on current board but not at season start: season_start_odds = None (will show "NEW")
@@ -275,7 +293,8 @@ def create_mvp_dataframe(odds_dict, fetch_date):
         fetch_date: Date string (YYYY-MM-DD) when odds were fetched
     
     Returns:
-        DataFrame with columns: bookmaker, player, odds, implied_prob, fetch_date, season_start_odds
+        DataFrame with columns: bookmaker, player, odds, implied_prob, fetch_date, 
+                                season_start_odds, last_week_odds
     """
     rows = []
     
@@ -283,12 +302,17 @@ def create_mvp_dataframe(odds_dict, fetch_date):
     season_start_snapshot = get_first_odds()
     season_start_odds_dict = season_start_snapshot['odds']
     
-    # Get all unique players from both current and season start (full outer join)
-    all_players = set(odds_dict.keys()) | set(season_start_odds_dict.keys())
+    # Get last week odds for comparison
+    previous_snapshot = get_previous_odds()
+    previous_odds_dict = previous_snapshot['odds'] if previous_snapshot else {}
+    
+    # Get all unique players from current, season start, and last week (full outer join)
+    all_players = set(odds_dict.keys()) | set(season_start_odds_dict.keys()) | set(previous_odds_dict.keys())
     
     for player in all_players:
         current_odds = odds_dict.get(player, None)
         season_start_odds = season_start_odds_dict.get(player, None)
+        last_week_odds = previous_odds_dict.get(player, None)
         
         # Calculate implied prob (only if player is on current board)
         if current_odds is not None:
@@ -304,7 +328,9 @@ def create_mvp_dataframe(odds_dict, fetch_date):
             'implied_prob': implied_prob,
             'fetch_date': fetch_date,
             'season_start_odds': season_start_odds,
-            'season_start_date': season_start_snapshot['fetch_date']
+            'season_start_date': season_start_snapshot['fetch_date'],
+            'last_week_odds': last_week_odds,
+            'last_week_date': previous_snapshot['fetch_date'] if previous_snapshot else None
         })
     
     df = pd.DataFrame(rows)
