@@ -27,7 +27,8 @@ Output:
 
 Data Sources:
     - Betting lines: The Odds API (DraftKings) via S3 bucket 'the-odds-api-mt'
-    - Game results: nba_api via data/01_input/nba_api/historical/
+    - Game results (default): nba_api player game logs via S3 bucket 'nba-api-mt'
+    - Game results (--game-data espn-api): ESPN API via S3 bucket 'nba-betting-mt'
 
 Key Insights from Recent Analysis (2025-26 through Jan 4):
     - Best ATS: Suns 23-11 (67.6%), 76ers 20-13 (60.6%), Nuggets/Celtics 20-14 (58.8%)
@@ -51,6 +52,7 @@ import sys
 import os
 import argparse
 from pathlib import Path
+import yaml
 
 # Add src to path for config
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
@@ -58,6 +60,11 @@ from config_loader import get_config
 from season_utils import get_current_nba_season, parse_season_to_years, season_to_underscore
 
 CONFIG = get_config()
+
+# Load season dates from separate config file
+SEASON_DATES_PATH = Path(__file__).parent.parent / 'config' / 'season_dates.yaml'
+with open(SEASON_DATES_PATH, 'r') as f:
+    SEASON_DATES = yaml.safe_load(f)
 
 # Constants
 RATE_LIMIT_DELAY = 0.6  # NBA API rate limit
@@ -159,7 +166,7 @@ def load_all_game_lines(season):
     return df
 
 
-def get_nba_scores(season):
+def get_nba_scores_from_player_logs(season):
     """
     Load NBA game scores from S3 player game logs and aggregate to team level
     
@@ -219,6 +226,153 @@ def get_nba_scores(season):
     # Keep only what we need (TEAM_NAME already has full names from NBA API)
     team_games = team_games[['TEAM_NAME', 'GAME_DATE', 'MATCHUP', 'WL', 'PTS']].copy()
     team_games.columns = ['team', 'game_date', 'matchup', 'win_loss', 'points']
+    
+    return team_games
+
+
+def get_espn_game_results(season):
+    """
+    Load NBA game results from ESPN API data stored in S3
+    
+    Args:
+        season: Season string (e.g., '2025-26')
+    
+    Returns:
+        DataFrame with game results (team, game_date, matchup, win_loss, points)
+    """
+    s3_prefix = 'data/01_input/historical_game_results/'
+    
+    s3 = boto3.client('s3')
+    
+    # Get season date range from config
+    season_dates = SEASON_DATES['nba']
+    if season not in season_dates:
+        raise ValueError(f"Season {season} not found in config/season_dates.yaml")
+    
+    season_start = pd.to_datetime(season_dates[season]['season_start']).date()
+    season_end = pd.to_datetime(season_dates[season]['playoff_end']).date()
+    
+    print(f"   📅 Season date range: {season_start} to {season_end}")
+    
+    # List all CSV files (handle pagination - S3 returns max 1000 at a time)
+    print(f"   📂 Looking for ESPN game results: s3://{S3_BUCKET_BETTING}/{s3_prefix}")
+    
+    all_objects = []
+    continuation_token = None
+    
+    while True:
+        if continuation_token:
+            response = s3.list_objects_v2(
+                Bucket=S3_BUCKET_BETTING,
+                Prefix=s3_prefix,
+                ContinuationToken=continuation_token
+            )
+        else:
+            response = s3.list_objects_v2(Bucket=S3_BUCKET_BETTING, Prefix=s3_prefix)
+        
+        if 'Contents' not in response:
+            break
+        
+        all_objects.extend(response['Contents'])
+        
+        # Check if there are more results
+        if response.get('IsTruncated'):
+            continuation_token = response.get('NextContinuationToken')
+        else:
+            break
+    
+    if not all_objects:
+        raise ValueError(f"No ESPN game results found in S3: s3://{S3_BUCKET_BETTING}/{s3_prefix}")
+    
+    all_dfs = []
+    file_count = 0
+    skipped_count = 0
+    
+    for obj in all_objects:
+        key = obj['Key']
+        
+        # Skip non-CSV files
+        if not key.endswith('.csv'):
+            continue
+        
+        # Extract date from filename (format: YYYY-MM-DD.csv)
+        try:
+            filename = key.split('/')[-1]  # Get filename from path
+            date_str = filename.replace('.csv', '')
+            file_date = pd.to_datetime(date_str).date()
+            
+            # Filter by season date range
+            if file_date < season_start or file_date > season_end:
+                skipped_count += 1
+                continue
+                
+        except Exception as e:
+            print(f"⚠️  Could not parse date from filename {key}: {e}")
+            continue
+        
+        # Read CSV from S3
+        try:
+            obj_response = s3.get_object(Bucket=S3_BUCKET_BETTING, Key=key)
+            df = pd.read_csv(BytesIO(obj_response['Body'].read()))
+            all_dfs.append(df)
+            file_count += 1
+        except Exception as e:
+            print(f"⚠️  Error reading {key}: {e}")
+    
+    if not all_dfs:
+        raise ValueError(f"No valid ESPN game results found in S3 for season {season}")
+    
+    print(f"   ✅ Loaded {file_count} daily ESPN game result files (skipped {skipped_count} outside season range)")
+    
+    # Combine all dataframes
+    results_df = pd.concat(all_dfs, ignore_index=True)
+    
+    # Normalize column names (handle both lowercase and uppercase variants)
+    col_map = {col: col.lower() for col in results_df.columns}
+    results_df = results_df.rename(columns=col_map)
+    
+    # Convert game date to datetime
+    results_df['game_date'] = pd.to_datetime(results_df['game_date'])
+    
+    # ESPN API returns one row per game with home/away columns
+    # Expected columns after normalization: game_date, home_team, away_team, home_score, away_score
+    
+    # Create two rows per game (home and away)
+    home_games = results_df[['game_date', 'home_team', 'away_team', 'home_score', 'away_score']].copy()
+    home_games['team'] = home_games['home_team']
+    home_games['opponent'] = home_games['away_team']
+    home_games['points'] = home_games['home_score']
+    home_games['opp_points'] = home_games['away_score']
+    home_games['location'] = 'Home'
+    
+    away_games = results_df[['game_date', 'home_team', 'away_team', 'home_score', 'away_score']].copy()
+    away_games['team'] = away_games['away_team']
+    away_games['opponent'] = away_games['home_team']
+    away_games['points'] = away_games['away_score']
+    away_games['opp_points'] = away_games['home_score']
+    away_games['location'] = 'Away'
+    
+    # Combine home and away
+    team_games = pd.concat([home_games, away_games], ignore_index=True)
+    
+    # Create matchup string (like nba-api format: "CHI vs. BOS" or "CHI @ BOS")
+    team_games['matchup'] = team_games.apply(
+        lambda row: f"{row['team']} vs. {row['opponent']}" if row['location'] == 'Home' 
+        else f"{row['team']} @ {row['opponent']}", 
+        axis=1
+    )
+    
+    # Create win_loss column
+    team_games['win_loss'] = team_games.apply(
+        lambda row: 'W' if row['points'] > row['opp_points'] else 'L',
+        axis=1
+    )
+    
+    # Keep only what we need
+    team_games = team_games[['team', 'game_date', 'matchup', 'win_loss', 'points']].copy()
+    
+    # Remove duplicates (in case same game appears in multiple files)
+    team_games = team_games.drop_duplicates(subset=['team', 'game_date'], keep='last')
     
     return team_games
 
@@ -1037,11 +1191,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Use current season (auto-detected)
+  # Use current season (auto-detected) with default nba-api data
   python analysis/analyze_nba_ats_records.py --plot
   
+  # Use ESPN API game results instead (more up-to-date)
+  python analysis/analyze_nba_ats_records.py --plot --game-data espn-api
+  
   # Specify season in YYYY-YY format
-  python analysis/analyze_nba_ats_records.py --season 2024-25 --plot
+  python analysis/analyze_nba_ats_records.py --season 2024-25 --plot --game-data espn-api
   
   # Filter by date range (regular season only)
   python analysis/analyze_nba_ats_records.py --season 2024-25 --start-date 2024-10-24 --end-date 2025-04-13
@@ -1055,6 +1212,13 @@ Examples:
         type=str,
         default=None,
         help="Season to analyze in 'YYYY-YY' format (e.g., '2025-26'). Default: current season"
+    )
+    parser.add_argument(
+        '--game-data',
+        type=str,
+        choices=['nba-api', 'espn-api'],
+        default='nba-api',
+        help="Data source for game results. 'nba-api' uses player game logs (default), 'espn-api' uses ESPN scoreboard data (more up-to-date)"
     )
     parser.add_argument(
         '--start-date',
@@ -1092,9 +1256,14 @@ Examples:
     lines_df = load_all_game_lines(season)
     print(f"✅ Loaded {len(lines_df):,} betting lines from {lines_df['game_id'].nunique()} games")
     
-    # Load game results
-    print("\n📥 Loading game results from nba-api...")
-    scores_df = get_nba_scores(season)
+    # Load game results (based on selected data source)
+    if args.game_data == 'espn-api':
+        print("\n📥 Loading game results from ESPN API...")
+        scores_df = get_espn_game_results(season)
+    else:
+        print("\n📥 Loading game results from nba-api...")
+        scores_df = get_nba_scores_from_player_logs(season)
+    
     print(f"✅ Loaded results for {len(scores_df):,} team-games")
     
     # Calculate ATS records

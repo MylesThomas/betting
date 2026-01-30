@@ -44,7 +44,25 @@ Lambda Configuration:
 - Ephemeral storage: 2048 MB (for git clone)
 
 Lambda Layers Required:
-- use existing layer: 
+- use existing layer: betting-dashboard-dependencies (contains pandas, numpy, nba_api, etc.)
+
+EventBridge Schedule Setup (for automated daily execution):
+- Navigate to: AWS Console → Amazon EventBridge → Rules → Create rule
+- Define rule detail:
+    - Name: nba-player-scoring-props-daily-scheduler
+    - Description: Run NBA props workflow daily (find plays + track results + send email)
+- Define schedule:
+    - Schedule expression: cron(0 15 * * ? *)  (10:00 AM ET daily)
+    - Or adjust time as needed for your workflow
+- Select target:
+    - Target type: AWS Lambda function
+    - Function: nba-player-scoring-props-daily-workflow
+    - IMPORTANT - Execution role:
+      * Select: "Create a new role for this specific resource"
+      * DO NOT reuse existing EventBridge roles
+      * This ensures the rule has proper permissions to invoke THIS Lambda
+      * Prevents "FailedInvocation" errors from permission issues
+- Review + Create
 
 Author: Myles Thomas
 Date: 2026-01-06

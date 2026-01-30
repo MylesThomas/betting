@@ -606,7 +606,7 @@ def simulate_kelly_betting_dynamic(df_plays: pd.DataFrame, starting_bankroll: fl
         running_win_rates.append(current_win_rate)
         paper_trading_flags.append(is_paper_trading)
         
-        # Calculate actual profit/loss
+        # Calculate actual profit/loss and track W-L-T
         if row['result'] == 'WIN':
             if bet_size > 0:
                 actual_profit = bet_size / 1.1  # Win at -110 odds
@@ -619,6 +619,9 @@ def simulate_kelly_betting_dynamic(df_plays: pd.DataFrame, starting_bankroll: fl
             else:
                 actual_profit = 0  # Paper trading or no bet
             running_losses += 1
+        elif row['result'] == 'TIE':
+            running_ties += 1
+            actual_profit = 0
         else:
             actual_profit = 0
         
@@ -635,6 +638,26 @@ def simulate_kelly_betting_dynamic(df_plays: pd.DataFrame, starting_bankroll: fl
     df['running_win_rate'] = running_win_rates
     df['paper_trading'] = paper_trading_flags
     df['play_number'] = range(1, len(df) + 1)
+    
+    # Add running W-L-T record
+    wins = []
+    losses = []
+    ties = []
+    w, l, t = 0, 0, 0
+    for _, row in df.iterrows():
+        if row['result'] == 'WIN':
+            w += 1
+        elif row['result'] == 'LOSS':
+            l += 1
+        elif row['result'] == 'TIE':
+            t += 1
+        wins.append(w)
+        losses.append(l)
+        ties.append(t)
+    
+    df['wins'] = wins
+    df['losses'] = losses
+    df['ties'] = ties
     
     return df
 
@@ -821,15 +844,28 @@ def create_visualizations(df_all_plays: pd.DataFrame, df_strategies: pd.DataFram
         
         # Log detailed edge evolution (for dynamic Kelly)
         if use_kelly and dynamic_edge:
-            print(f"\n   {'='*70}")
+            print(f"\n   {'='*88}")
             print(f"   EDGE EVOLUTION: {strategy}")
-            print(f"   {'='*70}")
-            print(f"   {'Play':<6} {'RunWR%':<8} {'Kelly%':<8} {'BetSize':<10} {'Result':<7} {'Bankroll':<12} {'Paper?':<7}")
-            print(f"   {'-'*76}")
+            print(f"   {'='*88}")
+            print(f"   {'Play':<6} {'W-L-T':<9} {'RunWR%':<8} {'Kelly%':<8} {'BetSize':<10} {'Result':<7} {'Bankroll':<12} {'Paper?':<7}")
+            print(f"   {'-'*88}")
             
-            # Log ALL plays (no sampling)
+            # Log ALL plays (no sampling) with cumulative W-L-T
+            cumulative_wins = 0
+            cumulative_losses = 0
+            cumulative_ties = 0
+            
             for idx, row in strategy_plays.iterrows():
+                # Update cumulative counts
+                if row['result'] == 'WIN':
+                    cumulative_wins += 1
+                elif row['result'] == 'LOSS':
+                    cumulative_losses += 1
+                else:
+                    cumulative_ties += 1
+                
                 play_num = int(row['play_number'])
+                wlt_str = f"{cumulative_wins}-{cumulative_losses}-{cumulative_ties}"
                 run_wr = row['running_win_rate'] * 100
                 kelly_pct = row['kelly_fraction_used'] * 100
                 bet_size = row['bet_size']
@@ -837,9 +873,9 @@ def create_visualizations(df_all_plays: pd.DataFrame, df_strategies: pd.DataFram
                 bankroll = row['bankroll']
                 is_paper = 'YES' if row['paper_trading'] else 'NO'
                 
-                print(f"   {play_num:<6} {run_wr:>6.1f}% {kelly_pct:>6.2f}% ${bet_size:>8,.0f} {result:<7} ${bankroll:>10,.0f} {is_paper:<7}")
+                print(f"   {play_num:<6} {wlt_str:<9} {run_wr:>6.1f}% {kelly_pct:>6.2f}% ${bet_size:>8,.0f} {result:<7} ${bankroll:>10,.0f} {is_paper:<7}")
             
-            print(f"   {'='*70}\n")
+            print(f"   {'='*88}\n")
         
         # Add vertical lines for edge start/stop (only for dynamic Kelly)
         if use_kelly and dynamic_edge:
@@ -893,11 +929,13 @@ def create_visualizations(df_all_plays: pd.DataFrame, df_strategies: pd.DataFram
     
     for idx, row in top_10_strategies.iterrows():
         strategy_name = row['strategy_name']
+        season_stats = row.get('season_stats', {})
         
         for season in ['2023-24', '2024-25', '2025-26']:
-            season_key = season.replace('-', '_')
-            col_name = f'{season_key}_roi'
-            roi_value = row.get(col_name, 0)
+            # Access ROI from nested season_stats dict
+            season_data = season_stats.get(season, {})
+            roi_value = season_data.get('roi', 0.0)
+            
             roi_data.append({
                 'Strategy': strategy_name[:30],  # Truncate for readability
                 'Season': season,
@@ -973,7 +1011,7 @@ def create_visualizations(df_all_plays: pd.DataFrame, df_strategies: pd.DataFram
     ax.set_title(f'Win Rate Over Time - Top 5 Strategies (Rolling {window}-Game Avg)', fontsize=14, fontweight='bold')
     ax.legend(loc='best', fontsize=10)
     ax.grid(True, alpha=0.3)
-    ax.set_ylim([40, 70])
+    ax.set_ylim([0, 100])
     
     filepath = f"{output_dir}/03_win_rate_over_time_rolling.png"
     plt.tight_layout()

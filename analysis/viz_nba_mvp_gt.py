@@ -447,7 +447,7 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
                     'Preseason', 'Preseason Implied',
                     'Last Week', 'Last Week Implied',
                     'Current', 'Current Implied', 
-                    'Fair Odds', 'Difference<br>(PS → Current)', 'Difference<br>(LW → Current)', 'Vig %']
+                    'Fair Odds', 'Difference<br>(Pre → Current)', 'Difference<br>(LW → Current)', 'Vig %']
     
     table_df.columns = column_names
     
@@ -486,7 +486,7 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         'Current': 'character',
         'Current Implied': 'character',
         'Fair Odds': 'character',
-        'Difference<br>(PS → Current)': 'numeric',
+        'Difference<br>(Pre → Current)': 'numeric',
         'Difference<br>(LW → Current)': 'numeric',
         'Vig %': 'numeric'
     }
@@ -505,7 +505,7 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         f"`Current` ~ px({COL_WIDTH_CURRENT})",
         f"`Current Implied` ~ px({COL_WIDTH_CURRENT_IMPLIED})",
         f"`Fair Odds` ~ px({COL_WIDTH_FAIR_ODDS})",
-        f"`Difference<br>(PS → Current)` ~ px({COL_WIDTH_DIFF_PRESEASON})",
+        f"`Difference<br>(Pre → Current)` ~ px({COL_WIDTH_DIFF_PRESEASON})",
         f"`Difference<br>(LW → Current)` ~ px({COL_WIDTH_DIFF_LAST_WEEK})",
         f"`Vig %` ~ px({COL_WIDTH_VIG_PCT})"
     ]
@@ -541,7 +541,7 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       
       # Format Difference columns as percentage points with + sign
       fmt_number(
-        columns = c(`Difference<br>(PS → Current)`, `Difference<br>(LW → Current)`),
+        columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
         decimals = 1,
         pattern = "{{x}}pp",
         force_sign = TRUE
@@ -574,7 +574,7 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       # Rename headshot_url column header to empty
       cols_label(
         headshot_url = "",
-        `Difference<br>(PS → Current)` = html("Difference<br>(PS → Current)"),
+        `Difference<br>(Pre → Current)` = html("Difference<br>(Pre → Current)"),
         `Difference<br>(LW → Current)` = html("Difference<br>(LW → Current)")
       ) %>%
       
@@ -612,7 +612,7 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       # Red -> White -> Green gradient (negative = worsened = red, positive = improved = green)
       # Domain is symmetric around 0 based on actual data
       data_color(
-        columns = `Difference<br>(PS → Current)`,
+        columns = `Difference<br>(Pre → Current)`,
         method = "numeric",
         palette = c({', '.join([f'"{c}"' for c in DIFF_COLOR_PALETTE])}),
         domain = c(-{diff_domain_max}, {diff_domain_max}),

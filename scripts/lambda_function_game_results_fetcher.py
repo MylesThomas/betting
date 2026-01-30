@@ -107,6 +107,11 @@ EventBridge Schedule (Run at 9:00 AM ET daily):
 - Select target:
     - Target type: AWS Lambda function
     - Function: multi-sport-game-results-fetcher
+    - IMPORTANT - Execution role:
+      * Select: "Create a new role for this specific resource"
+      * DO NOT reuse existing EventBridge roles
+      * This ensures the rule has proper permissions to invoke THIS Lambda
+      * Prevents "FailedInvocation" errors from permission issues
 - Review + Create
 
 NOTE: NBA API player game logs may not be available if games finished late the previous night.

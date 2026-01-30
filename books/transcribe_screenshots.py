@@ -3,6 +3,10 @@ Transcribe screenshots from Monte Carlo or Bust book chapter.
 
 This script reads all screenshots in order and uses OCR to extract text.
 We'll manually transcribe since the Read tool should handle images.
+
+Usage:
+    cd /Users/thomasmyles/dev/betting
+    python books/transcribe_screenshots.py
 """
 import os
 from pathlib import Path

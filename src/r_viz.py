@@ -36,7 +36,8 @@ def generate_footer_notes(
     sport: str,
     teams_with_odds: int,
     total_teams: int,
-    top_n: int
+    top_n: int,
+    has_historical: bool = False
 ) -> str:
     """
     Generate footer notes with optional filtering message.
@@ -46,13 +47,18 @@ def generate_footer_notes(
         teams_with_odds: Number of teams that have odds available
         total_teams: Total number of teams before filtering
         top_n: Number of teams displayed
+        has_historical: Whether historical odds are included
         
     Returns:
         Formatted footer notes string
     """
-    # Base notes (shared across all sports)
-    note_1 = "'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%)."
-    note_2 = "Color indicates vig level: green = low vig, red = high vig, yellow = negative vig (bettor advantage)."
+    # Base notes (different for historical vs non-historical)
+    if has_historical:
+        note_1 = "'Implied %' includes bookmaker vig. 'Fair Odds' is the true probability with vig removed."
+        note_2 = "'Difference' columns show change in implied probability (green = improved, red = worsened)."
+    else:
+        note_1 = "'Implied %' includes bookmaker vig. 'Fair %' is the true probability with vig removed (fair probabilities sum to exactly 100%)."
+        note_2 = "Color indicates vig level: green = low vig, red = high vig, yellow = negative vig (bettor advantage)."
     
     # Sport-specific note 3 (pro sports only - college doesn't have elimination concept)
     note_count = 2
@@ -89,7 +95,12 @@ def create_futures_table(
     top_n: int,
     save_locally: bool = False,
     s3_bucket: str = None,
-    s3_path: str = None
+    s3_path: str = None,
+    season_start_date: str = None,
+    season_start_label: str = None,
+    last_week_date: str = None,
+    last_week_label: str = None,
+    diff_domain_max: float = 10.0
 ) -> Path:
     """
     Create a publication-quality futures table using R's gt package.
@@ -113,12 +124,19 @@ def create_futures_table(
     """
     print("🎨 Creating table with R's gt package...\n")
     
+    # Check if we have historical odds (must do this first)
+    has_historical = (
+        'preseason_odds_str' in df_display.columns and 
+        df_display['preseason_odds_str'].notna().any() and
+        df_display['preseason_odds_str'].ne('-').any()
+    )
+    
     # Generate subtitle with calculated vig
     subtitle = f"Bookmakers charge an *average {average_vig_pct:.1f}% vig* on championship futures (vs. 4-5% on game lines)"
     
     # Generate footer notes
     # Note: total_teams = count of teams with odds (before any top_n filtering)
-    footer_notes = generate_footer_notes(sport, total_teams, total_teams, top_n)
+    footer_notes = generate_footer_notes(sport, total_teams, total_teams, top_n, has_historical)
     
     # Import R/Python interface
     try:
@@ -138,25 +156,56 @@ def create_futures_table(
         sys.exit(1)
     
     # Select and rename columns for display
-    table_df = df_display[[
-        'rank', 'team', 'logo_url', 'record', 
-        'fair_odds_str', 'fair_pct_str',
-        'avg_odds_str', 'implied_pct_str', 'vig_diff',
-        'best_book_display', 'best_odds_str', 'best_vig_diff'
-    ]].copy()
-    
-    table_df.columns = [
-        'Rank', 'Team', 'logo_url', 'Record', 
-        'Fair Odds', 'Fair %',
-        'Avg Odds', 'Implied %', 'Vig %',
-        'Best Book', 'Best Odds', 'Best Vig %'
-    ]
+    if has_historical:
+        # Include historical odds columns
+        table_df = df_display[[
+            'rank', 'team', 'logo_url', 'record',
+            'preseason_odds_str', 'preseason_implied_str',
+            'last_week_odds_str', 'last_week_implied_str',
+            'current_odds_str', 'current_implied_str',
+            'fair_odds_str', 'diff_preseason', 'diff_last_week', 'vig_diff'
+        ]].copy()
+        
+        table_df.columns = [
+            'Rank', 'Team', 'logo_url', 'Record',
+            'Preseason', 'Preseason Implied',
+            'Last Week', 'Last Week Implied',
+            'Current', 'Current Implied',
+            'Fair Odds', 'Difference<br>(Pre → Current)', 'Difference<br>(LW → Current)', 'Vig %'
+        ]
+    else:
+        # Original columns (no historical odds)
+        table_df = df_display[[
+            'rank', 'team', 'logo_url', 'record', 
+            'fair_odds_str', 'fair_pct_str',
+            'avg_odds_str', 'implied_pct_str', 'vig_diff',
+            'best_book_display', 'best_odds_str', 'best_vig_diff'
+        ]].copy()
+        
+        table_df.columns = [
+            'Rank', 'Team', 'logo_url', 'Record', 
+            'Fair Odds', 'Fair %',
+            'Avg Odds', 'Implied %', 'Vig %',
+            'Best Book', 'Best Odds', 'Best Vig %'
+        ]
     
     print(f"   📋 Table dimensions: {table_df.shape}")
     print(f"   📋 Columns: {list(table_df.columns)}")
+    print(f"   📋 Historical odds: {'Yes' if has_historical else 'No'}")
     print(f"   📋 Vig % column type: {table_df['Vig %'].dtype}")
     print(f"   📋 Vig % min/max: {table_df['Vig %'].min():.2f} to {table_df['Vig %'].max():.2f}")
-    print(f"   📋 Best Vig % min/max: {table_df['Best Vig %'].min():.2f} to {table_df['Best Vig %'].max():.2f}\n")
+    
+    if has_historical:
+        diff_pre_col = 'Difference<br>(Pre → Current)'
+        diff_lw_col = 'Difference<br>(LW → Current)'
+        if diff_pre_col in table_df.columns and table_df[diff_pre_col].notna().any():
+            print(f"   📋 Diff (Pre→Current) min/max: {table_df[diff_pre_col].min():.2f} to {table_df[diff_pre_col].max():.2f}")
+        if diff_lw_col in table_df.columns and table_df[diff_lw_col].notna().any():
+            print(f"   📋 Diff (LW→Current) min/max: {table_df[diff_lw_col].min():.2f} to {table_df[diff_lw_col].max():.2f}")
+    else:
+        print(f"   📋 Best Vig % min/max: {table_df['Best Vig %'].min():.2f} to {table_df['Best Vig %'].max():.2f}")
+    
+    print()
     
     # Convert pandas DataFrame to R dataframe
     with localconverter(ro.default_converter + pandas2ri.converter):
@@ -189,32 +238,51 @@ def create_futures_table(
     header_padding = viz_config['header_padding_px']
     data_row_padding = viz_config['data_row_padding_px']
     
-    # Column widths
-    col_widths = {
-        'Rank': viz_config['col_width_rank'],
-        'Team': viz_config['col_width_team'],
-        'logo_url': viz_config['col_width_logo'],
-        'Record': viz_config['col_width_record'],
-        'Fair Odds': viz_config['col_width_fair_odds'],
-        'Fair %': viz_config['col_width_fair_pct'],
-        'Avg Odds': viz_config['col_width_avg_odds'],
-        'Implied %': viz_config['col_width_implied_pct'],
-        'Vig %': viz_config['col_width_vig_pct'],
-        'Best Book': viz_config['col_width_best_book'],
-        'Best Odds': viz_config['col_width_best_odds'],
-        'Best Vig %': viz_config['col_width_best_vig_pct'],
-    }
+    # Column widths (different for historical vs non-historical)
+    if has_historical:
+        col_widths = {
+            'Rank': viz_config['col_width_rank'],
+            'Team': viz_config['col_width_team'],
+            'logo_url': viz_config['col_width_logo'],
+            'Record': viz_config['col_width_record'],
+            'Preseason': viz_config['col_width_preseason'],
+            'Preseason Implied': viz_config['col_width_preseason_implied'],
+            'Last Week': viz_config['col_width_last_week'],
+            'Last Week Implied': viz_config['col_width_last_week_implied'],
+            'Current': viz_config['col_width_current'],
+            'Current Implied': viz_config['col_width_current_implied'],
+            'Fair Odds': viz_config['col_width_fair_odds'],
+            'Difference<br>(Pre → Current)': viz_config['col_width_diff_preseason'],
+            'Difference<br>(LW → Current)': viz_config['col_width_diff_last_week'],
+            'Vig %': viz_config['col_width_vig_pct'],
+        }
+    else:
+        col_widths = {
+            'Rank': viz_config['col_width_rank'],
+            'Team': viz_config['col_width_team'],
+            'logo_url': viz_config['col_width_logo'],
+            'Record': viz_config['col_width_record'],
+            'Fair Odds': viz_config['col_width_fair_odds'],
+            'Fair %': viz_config['col_width_fair_pct'],
+            'Avg Odds': viz_config['col_width_avg_odds'],
+            'Implied %': viz_config['col_width_implied_pct'],
+            'Vig %': viz_config['col_width_vig_pct'],
+            'Best Book': viz_config['col_width_best_book'],
+            'Best Odds': viz_config['col_width_best_odds'],
+            'Best Vig %': viz_config['col_width_best_vig_pct'],
+        }
     
     # Color settings
-    color_palette_str = ', '.join([f'"{c}"' for c in viz_config['color_palette']])
+    vig_color_palette_str = ', '.join([f'"{c}"' for c in viz_config['vig_color_palette']])
+    diff_color_palette_str = ', '.join([f'"{c}"' for c in viz_config['diff_color_palette']])
     vig_color_min = sport_config.get('vig_color_domain_min', 0.0)
     vig_color_max = sport_config.get('vig_color_domain_max', 5.0)
     negative_vig_color = viz_config['negative_vig_color']
     
     # Debug: Print color config
-    print(f"   🎨 Color domain: {vig_color_min} to {vig_color_max}")
-    print(f"   🎨 Color palette: {viz_config['color_palette']}")
-    print(f"   🎨 Number of colors: {len(viz_config['color_palette'])}\n")
+    print(f"   🎨 Vig color domain: {vig_color_min} to {vig_color_max}")
+    print(f"   🎨 Vig color palette: {viz_config['vig_color_palette']}")
+    print(f"   🎨 Diff color palette: {viz_config['diff_color_palette']}\n")
     # Footer
     data_source = "The Odds API"
     twitter_handle = viz_config['twitter_handle']
@@ -222,6 +290,134 @@ def create_futures_table(
     # Get current date
     from datetime import datetime
     data_date = datetime.now().strftime("%B %d, %Y")
+    
+    # Build column widths string dynamically
+    col_widths_r_list = []
+    for col_name, width in col_widths.items():
+        if col_name == 'logo_url':
+            col_widths_r_list.append(f"{col_name} ~ px({width})")
+        elif '<br>' in col_name:
+            # Escape column names with HTML
+            col_widths_r_list.append(f"`{col_name}` ~ px({width})")
+        else:
+            col_widths_r_list.append(f"`{col_name}` ~ px({width})")
+    
+    col_widths_str = ',\n        '.join(col_widths_r_list)
+    
+    # Generate formatting and coloring code based on has_historical
+    if has_historical:
+        # Historical odds table: Format difference columns + vig column
+        format_code = f"""
+      # Format Difference columns as percentage points with + sign
+      fmt_number(
+        columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
+        decimals = 1,
+        pattern = "{{{{x}}}}pp",
+        force_sign = TRUE
+      ) %>%
+      
+      # Format Vig % column
+      fmt(
+        columns = `Vig %`,
+        fns = function(x) {{{{
+          ifelse(is.na(x), "-", 
+                 ifelse(x >= 0, paste0("+", sprintf("%.1f", x), "%"),
+                        paste0(sprintf("%.1f", x), "%")))
+        }}}}
+      ) %>%"""
+        
+        color_code = f"""
+      # Conditional formatting for Difference columns
+      # Red -> White -> Green gradient (negative = worsened = red, positive = improved = green)
+      data_color(
+        columns = `Difference<br>(Pre → Current)`,
+        method = "numeric",
+        palette = c({diff_color_palette_str}),
+        domain = c(-{diff_domain_max}, {diff_domain_max}),
+        na_color = "#e8e8e8"
+      ) %>%
+      data_color(
+        columns = `Difference<br>(LW → Current)`,
+        method = "numeric",
+        palette = c({diff_color_palette_str}),
+        domain = c(-{diff_domain_max}, {diff_domain_max}),
+        na_color = "#e8e8e8"
+      ) %>%
+      
+      # Color for Vig % column
+      data_color(
+        columns = `Vig %`,
+        method = "numeric",
+        palette = c({vig_color_palette_str}),
+        domain = c({vig_color_min}, {vig_color_max}),
+        na_color = "#e8e8e8"
+      ) %>%
+      
+      # Override negative vig with yellow
+      tab_style(
+        style = cell_fill(color = "{negative_vig_color}"),
+        locations = cells_body(columns = `Vig %`, rows = `Vig %` < 0)
+      ) %>%"""
+        
+        label_code = """
+      # Rename column headers with HTML line breaks
+      cols_label(
+        logo_url = "",
+        `Difference<br>(Pre → Current)` = html("Difference<br>(Pre → Current)"),
+        `Difference<br>(LW → Current)` = html("Difference<br>(LW → Current)")
+      ) %>%"""
+        
+    else:
+        # Original table: Format vig columns only
+        format_code = f"""
+      # Format Vig % columns (numeric → "+X.X%" strings)
+      fmt(
+        columns = `Vig %`,
+        fns = function(x) {{{{
+          ifelse(is.na(x), "-", 
+                 ifelse(x >= 0, paste0("+", sprintf("%.1f", x), "%"),
+                        paste0(sprintf("%.1f", x), "%")))
+        }}}}
+      ) %>%
+      fmt(
+        columns = `Best Vig %`,
+        fns = function(x) {{{{
+          ifelse(is.na(x), "-", 
+                 ifelse(x >= 0, paste0("+", sprintf("%.1f", x), "%"),
+                        paste0(sprintf("%.1f", x), "%")))
+        }}}}
+      ) %>%"""
+        
+        color_code = f"""
+      # Apply color gradient to Vig % columns (reads numeric values)
+      data_color(
+        columns = `Vig %`,
+        method = "numeric",
+        palette = c({vig_color_palette_str}),
+        domain = c({vig_color_min}, {vig_color_max}),
+        na_color = "#e8e8e8"
+      ) %>%
+      data_color(
+        columns = `Best Vig %`,
+        method = "numeric",
+        palette = c({vig_color_palette_str}),
+        domain = c({vig_color_min}, {vig_color_max}),
+        na_color = "#e8e8e8"
+      ) %>%
+      
+      # Override negative vig with yellow (bettor advantage)
+      tab_style(
+        style = cell_fill(color = "{negative_vig_color}"),
+        locations = cells_body(columns = `Vig %`, rows = `Vig %` < 0)
+      ) %>%
+      tab_style(
+        style = cell_fill(color = "{negative_vig_color}"),
+        locations = cells_body(columns = `Best Vig %`, rows = `Best Vig %` < 0)
+      ) %>%"""
+        
+        label_code = """
+      # Hide logo column header
+      cols_label(logo_url = "") %>%"""
     
     # Generate R code for gt table
     r_code = f"""
@@ -249,63 +445,16 @@ def create_futures_table(
       cols_align(align = "center", columns = everything()) %>%
       cols_align(align = "left", columns = c(Team)) %>%
       
-      # ==========================================================================
-      # CRITICAL: Color application order for Vig % columns
-      # ==========================================================================
-      # Step 1: Format columns first (fmt)
-      #   - Converts numeric values to strings with formatting ("+6.5%")
-      #   - Must happen BEFORE data_color() so the numeric values are preserved
-      #
-      # Step 2: Apply color gradient (data_color)
-      #   - Reads the NUMERIC values (not the formatted strings)
-      #   - Applies green -> white -> red gradient based on domain (0-10%)
-      #   - Works even though fmt() already formatted them (gt magic!)
-      #
-      # Step 3: Override negative values with yellow (tab_style)
-      #   - Applies AFTER data_color to override negative vig with yellow
-      #   - Yellow = bettor advantage (bookmaker offering better than fair odds)
-      #
-      # Why this order matters:
-      #   - If data_color comes before fmt: R treats formatted strings as NA (gray)
-      #   - If tab_style comes before data_color: yellow gets overwritten by gradient
-      # ==========================================================================
-      
-      # Step 1: Format Vig % columns (numeric → "+X.X%" strings)
-      fmt(
-        columns = `Vig %`,
-        fns = function(x) {{
-          ifelse(is.na(x), "-", 
-                 ifelse(x >= 0, paste0("+", sprintf("%.1f", x), "%"),
-                        paste0(sprintf("%.1f", x), "%")))
-        }}
-      ) %>%
-      fmt(
-        columns = `Best Vig %`,
-        fns = function(x) {{
-          ifelse(is.na(x), "-", 
-                 ifelse(x >= 0, paste0("+", sprintf("%.1f", x), "%"),
-                        paste0(sprintf("%.1f", x), "%")))
-        }}
-      ) %>%
+      # Format columns (step 1)
+      {format_code}
       
       # Column widths
       cols_width(
-        Rank ~ px({col_widths['Rank']}),
-        Team ~ px({col_widths['Team']}),
-        logo_url ~ px({col_widths['logo_url']}),
-        Record ~ px({col_widths['Record']}),
-        `Fair Odds` ~ px({col_widths['Fair Odds']}),
-        `Fair %` ~ px({col_widths['Fair %']}),
-        `Avg Odds` ~ px({col_widths['Avg Odds']}),
-        `Implied %` ~ px({col_widths['Implied %']}),
-        `Vig %` ~ px({col_widths['Vig %']}),
-        `Best Book` ~ px({col_widths['Best Book']}),
-        `Best Odds` ~ px({col_widths['Best Odds']}),
-        `Best Vig %` ~ px({col_widths['Best Vig %']})
+        {col_widths_str}
       ) %>%
       
-      # Hide logo column header
-      cols_label(logo_url = "") %>%
+      # Column labels
+      {label_code}
       
       # Style headers
       tab_style(
@@ -337,31 +486,8 @@ def create_futures_table(
         locations = cells_title(groups = "subtitle")
       ) %>%
       
-      # Step 2: Apply color gradient to Vig % columns (reads numeric values)
-      data_color(
-        columns = `Vig %`,
-        method = "numeric",
-        palette = c({color_palette_str}),
-        domain = c({vig_color_min}, {vig_color_max}),
-        na_color = "#e8e8e8"
-      ) %>%
-      data_color(
-        columns = `Best Vig %`,
-        method = "numeric",
-        palette = c({color_palette_str}),
-        domain = c({vig_color_min}, {vig_color_max}),
-        na_color = "#e8e8e8"
-      ) %>%
-      
-      # Step 3: Override negative vig with yellow (bettor advantage)
-      tab_style(
-        style = cell_fill(color = "{negative_vig_color}"),
-        locations = cells_body(columns = `Vig %`, rows = `Vig %` < 0)
-      ) %>%
-      tab_style(
-        style = cell_fill(color = "{negative_vig_color}"),
-        locations = cells_body(columns = `Best Vig %`, rows = `Best Vig %` < 0)
-      ) %>%
+      # Apply color gradients (step 2)
+      {color_code}
       
       # Bold rank and team names
       tab_style(

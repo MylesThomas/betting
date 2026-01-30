@@ -780,6 +780,11 @@ SETUP STEPS:
       - Select a target: Lambda function
       - Target location: Target in this account
       - Function: track-line-movement-hourly
+      - IMPORTANT - Execution role:
+        * Select: "Create a new role for this specific resource"
+        * DO NOT reuse existing EventBridge roles
+        * This ensures the rule has proper permissions to invoke THIS Lambda
+        * Prevents "FailedInvocation" errors from permission issues
       - Click "Next" -> "Next"
    
    d) Review and create:

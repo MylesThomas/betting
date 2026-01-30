@@ -127,6 +127,11 @@ EventBridge Schedule (Run ~5 minutes AFTER line movement tracking script):
 - Select target:
     - Target type: AWS Lambda function
     - Function: nba-line-movement-steam-alerts
+    - IMPORTANT - Execution role:
+      * Select: "Create a new role for this specific resource"
+      * DO NOT reuse existing EventBridge roles
+      * This ensures the rule has proper permissions to invoke THIS Lambda
+      * Prevents "FailedInvocation" errors from permission issues
 - Review + Create
 
 CRITICAL TIMING NOTES:

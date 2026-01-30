@@ -1,38 +1,48 @@
 """
 NBA/NFL/NCAAF/NCAAB Line Movement vs Game Outcome Analysis
 
-Analyzes whether line movements of specific magnitudes (2, 3, 4, 5 points) are 
+Analyzes whether line movements of specific magnitudes (1, 2, 3, 4, 5 points) are 
 predictive of game outcomes. Tests the hypothesis: "Does betting with line 
 movement lead to profitable results?"
 
 Research Question:
-When a betting line moves 2-5 points toward a team, does that team tend to:
+When a betting line moves 1-5 points toward a team, does that team tend to:
 1. Cover the closing spread?
 2. Win straight up more often?
 3. Provide +EV opportunities?
 
 Key Metrics:
-- Line movement magnitude (2pt, 3pt, 4pt, 5pt movements)
+- Line movement magnitude (1pt, 2pt, 3pt, 4pt, 5pt movements)
 - Direction of movement (toward favorite vs underdog)
 - Cover rate: % of times team getting favorable line movement covers
 - Win rate: % of times team getting favorable line movement wins SU
 - ROI: Return on investment if betting with line movement
 - Sample size per movement bucket
+- **NEW**: Bidirectional steam detection (steam both toward fav AND dog)
 
 Analysis Approach:
 1. Load historical line movement data (opening vs closing lines)
 2. Calculate line movement magnitude and direction for each game
-3. Group games by movement size (2pt, 3pt, 4pt, 5pt)
-4. Determine which team received favorable movement
-5. Check actual game results (ATS and SU)
-6. Calculate success rates and expected value
+3. Detect ALL steam events throughout game lifecycle (not just max)
+4. Flag games with bidirectional steam (market uncertainty)
+5. Group games by movement size (1pt, 2pt, 3pt, 4pt, 5pt)
+6. Determine which team received favorable movement
+7. Check actual game results (ATS and SU)
+8. Calculate success rates and expected value
+9. Compare uni-directional vs bi-directional steam performance
 
 Context:
 Sharp money theory suggests large line movements indicate informed betting.
 However, this needs empirical validation. Common wisdom says:
-- Movement > 2 points = sharp action
+- Movement > 1-2 points = sharp action
 - Follow the line movement (bet with the sharps)
 But does the data actually support this?
+
+**NEW - Bidirectional Steam:**
+In production, we send email alerts for ANY steam event (1-hour movement >= threshold).
+A game might have steam BOTH ways (e.g., +2 toward fav, then +3 toward dog).
+This new analysis tracks ALL steam events and flags games with bi-directional
+movement, which may indicate market uncertainty vs conviction.
 
 Usage:
     # First run (fetches from S3 and builds cache):
@@ -63,6 +73,7 @@ Output Files (saved to ~/Downloads/tmp/):
       • snapshots_LEAGUE_YYYYMMDD.parquet
       • movements_LEAGUE_YYYYMMDD.parquet
       • hourly_steam_LEAGUE_YYYYMMDD.parquet
+      • steam_events_LEAGUE_YYYYMMDD.parquet           # NEW: All steam events (bidirectional)
       • game_results_LEAGUE_YYYYMMDD.parquet
 
 Data Sources:
@@ -160,19 +171,40 @@ def load_all_line_movement_snapshots(sport='nba'):
     
     s3 = boto3.client('s3')
     
-    # List all snapshot CSV files
+    # Paginate through ALL objects (list_objects_v2 has 1000 object limit)
+    all_objects = []
+    continuation_token = None
+    
     try:
-        response = s3.list_objects_v2(Bucket=S3_BUCKET_SNAPSHOTS, Prefix=s3_prefix)
+        while True:
+            if continuation_token:
+                response = s3.list_objects_v2(
+                    Bucket=S3_BUCKET_SNAPSHOTS, 
+                    Prefix=s3_prefix,
+                    ContinuationToken=continuation_token
+                )
+            else:
+                response = s3.list_objects_v2(Bucket=S3_BUCKET_SNAPSHOTS, Prefix=s3_prefix)
+            
+            if 'Contents' in response:
+                all_objects.extend(response['Contents'])
+            
+            # Check if there are more results
+            if response.get('IsTruncated'):
+                continuation_token = response.get('NextContinuationToken')
+            else:
+                break
+                
     except Exception as e:
         print(f"❌ Error accessing S3 bucket: {e}")
         raise
     
-    if 'Contents' not in response:
+    if not all_objects:
         raise ValueError(f"No snapshots found in S3 for {sport.upper()}")
     
     all_dfs = []
     
-    for obj in response.get('Contents', []):
+    for obj in all_objects:
         key = obj['Key']
         
         # Only process snapshot CSV files
@@ -413,6 +445,7 @@ def calculate_line_movements(snapshots_df):
     # Count snapshots per game/bookmaker
     snapshots_per_combo = grouped.size()
     print(f"\nSnapshot distribution per game/bookmaker:")
+    print(f"   (Shows how many game/bookmaker combos had N snapshots. E.g., '3  144' = 144 combos had 3 snapshots)")
     print(snapshots_per_combo.value_counts().sort_index().to_string())
     
     # Get opening line (earliest fetched_at) and closing line (latest fetched_at) per game/bookmaker
@@ -517,19 +550,43 @@ def load_game_results(league='nba'):
     
     s3 = boto3.client('s3')
     
+    # Paginate through ALL objects (list_objects_v2 has 1000 object limit)
+    all_objects = []
+    continuation_token = None
+    
     try:
-        response = s3.list_objects_v2(Bucket=bucket, Prefix=s3_prefix)
+        while True:
+            if continuation_token:
+                response = s3.list_objects_v2(
+                    Bucket=bucket, 
+                    Prefix=s3_prefix,
+                    ContinuationToken=continuation_token
+                )
+            else:
+                response = s3.list_objects_v2(Bucket=bucket, Prefix=s3_prefix)
+            
+            if 'Contents' in response:
+                all_objects.extend(response['Contents'])
+            
+            # Check if there are more results
+            if response.get('IsTruncated'):
+                continuation_token = response.get('NextContinuationToken')
+            else:
+                break
+                
     except Exception as e:
         print(f"❌ Error accessing S3 bucket: {e}")
         return None
     
-    if 'Contents' not in response:
+    if not all_objects:
         print(f"❌ No game results found in S3")
         return None
     
+    print(f"   Found {len(all_objects)} files in S3")
+    
     all_dfs = []
     
-    for obj in response.get('Contents', []):
+    for obj in all_objects:
         key = obj['Key']
         
         if not key.endswith('.csv'):
@@ -830,6 +887,144 @@ def analyze_spread_context(df):
                 print(f"  {range_label:12s} {name_label:14s}: {cover_rate:.1f}% cover ({wins}-{losses}-0) | {avg_margin:+.1f} avg margin | {avg_spread:.1f} avg spread | N={len(bucket_subset)}")
 
 
+def calculate_all_steam_events(snapshots_df, steam_threshold=1.0):
+    """
+    Calculate ALL steam events (not just the max) throughout the game lifecycle.
+    
+    A "steam event" is any 1-hour movement >= steam_threshold points.
+    This tracks ALL occurrences, allowing us to detect bi-directional steam.
+    
+    Args:
+        snapshots_df: DataFrame with all hourly snapshots
+        steam_threshold: Minimum movement in points to count as "steam" (default 1.0)
+    
+    Returns:
+        DataFrame with steam event metrics per game:
+        - total_steam_events: Count of all steam events
+        - steam_toward_fav_count: Count of steam events toward opening favorite
+        - steam_toward_dog_count: Count of steam events toward opening underdog
+        - has_bidirectional_steam: Boolean flag for games with steam both directions
+        - first_steam_direction: Direction of first steam event
+        - last_steam_direction: Direction of last steam event
+        - first_steam_timestamp: When first steam occurred
+        - last_steam_timestamp: When last steam occurred
+    """
+    print(f"\n🔥 Calculating ALL steam events (threshold: {steam_threshold}+ pts)...")
+    
+    # Sort by time
+    snapshots_df = snapshots_df.sort_values(['game_id', 'fetched_at'])
+    
+    # Calculate consensus (median) spread at each hour for each game
+    consensus_hourly = snapshots_df.groupby(['game_id', 'fetched_at']).agg({
+        'game_time': 'first',
+        'away_team': 'first',
+        'home_team': 'first',
+        'away_spread': 'median',
+        'home_spread': 'median',
+    }).reset_index()
+    
+    # Rename for clarity
+    consensus_hourly = consensus_hourly.rename(columns={
+        'away_spread': 'consensus_away_spread',
+        'home_spread': 'consensus_home_spread'
+    })
+    
+    # Calculate ALL steam events per game
+    results = []
+    
+    for game_id, game_df in consensus_hourly.groupby('game_id'):
+        if len(game_df) < 2:
+            continue
+            
+        game_df = game_df.sort_values('fetched_at')
+        
+        # Determine opening favorite
+        first_row = game_df.iloc[0]
+        if first_row['consensus_away_spread'] < 0:
+            opening_favorite = first_row['away_team']
+            opening_underdog = first_row['home_team']
+        else:
+            opening_favorite = first_row['home_team']
+            opening_underdog = first_row['away_team']
+        
+        steam_events = []
+        steam_toward_fav_count = 0
+        steam_toward_dog_count = 0
+        
+        # Calculate consecutive hour changes
+        for i in range(1, len(game_df)):
+            prev_row = game_df.iloc[i-1]
+            curr_row = game_df.iloc[i]
+            
+            # Calculate 1-hour changes
+            away_change = curr_row['consensus_away_spread'] - prev_row['consensus_away_spread']
+            home_change = curr_row['consensus_home_spread'] - prev_row['consensus_home_spread']
+            
+            # Get magnitude
+            hour_magnitude = max(abs(away_change), abs(home_change))
+            
+            # Check if this is a steam event (>= threshold)
+            if hour_magnitude >= steam_threshold:
+                # Determine which team got the movement
+                if abs(away_change) > abs(home_change):
+                    steam_team = curr_row['away_team'] if away_change > 0 else curr_row['home_team']
+                else:
+                    steam_team = curr_row['home_team'] if home_change > 0 else curr_row['away_team']
+                
+                # Determine direction relative to opening favorite
+                steam_direction = 'toward_favorite' if steam_team == opening_favorite else 'toward_underdog'
+                
+                if steam_direction == 'toward_favorite':
+                    steam_toward_fav_count += 1
+                else:
+                    steam_toward_dog_count += 1
+                
+                steam_events.append({
+                    'timestamp': curr_row['fetched_at'],
+                    'magnitude': hour_magnitude,
+                    'direction': steam_direction,
+                    'steam_team': steam_team,
+                })
+        
+        # Determine if game has bidirectional steam
+        has_bidirectional = (steam_toward_fav_count > 0) and (steam_toward_dog_count > 0)
+        
+        # First and last steam direction
+        first_steam_direction = steam_events[0]['direction'] if steam_events else None
+        last_steam_direction = steam_events[-1]['direction'] if steam_events else None
+        first_steam_timestamp = steam_events[0]['timestamp'] if steam_events else None
+        last_steam_timestamp = steam_events[-1]['timestamp'] if steam_events else None
+        
+        results.append({
+            'game_id': game_id,
+            'opening_favorite': opening_favorite,
+            'opening_underdog': opening_underdog,
+            'total_steam_events': len(steam_events),
+            'steam_toward_fav_count': steam_toward_fav_count,
+            'steam_toward_dog_count': steam_toward_dog_count,
+            'has_bidirectional_steam': has_bidirectional,
+            'steam_direction_pattern': 'bidirectional' if has_bidirectional else 'unidirectional' if len(steam_events) > 0 else 'none',
+            'avg_steam_event_magnitude': np.mean([e['magnitude'] for e in steam_events]) if steam_events else 0,
+            'max_steam_event_magnitude': max([e['magnitude'] for e in steam_events]) if steam_events else 0,
+            'first_steam_direction': first_steam_direction,
+            'last_steam_direction': last_steam_direction,
+            'first_steam_timestamp': first_steam_timestamp,
+            'last_steam_timestamp': last_steam_timestamp,
+        })
+    
+    steam_events_df = pd.DataFrame(results)
+    
+    print(f"✅ Analyzed {len(steam_events_df)} games")
+    if len(steam_events_df) > 0:
+        total_events = steam_events_df['total_steam_events'].sum()
+        bidirectional_count = steam_events_df['has_bidirectional_steam'].sum()
+        print(f"   Total steam events detected: {total_events:,}")
+        print(f"   Games with bidirectional steam: {bidirectional_count} ({bidirectional_count/len(steam_events_df)*100:.1f}%)")
+        print(f"   Avg steam events per game: {steam_events_df['total_steam_events'].mean():.1f}")
+    
+    return steam_events_df
+
+
 def analyze_hourly_steam(df):
     """Analyze max 1-hour steam vs total steam."""
     print("\n🔥 HOURLY STEAM ANALYSIS (Biggest 1-hour spike vs Total movement)")
@@ -868,6 +1063,166 @@ def analyze_hourly_steam(df):
             avg_margin = subset['steam_team_cover_margin'].mean()
             avg_steam = subset['max_1hr_steam_magnitude'].mean()
             print(f"  Toward {direction.upper()}: {cover_rate:.1f}% cover | {avg_margin:+.1f} avg margin | {avg_steam:.2f} avg 1hr steam | N={len(subset)}")
+
+
+def analyze_bidirectional_steam(df):
+    """
+    Analyze games with bidirectional steam (steam both ways).
+    
+    Option 1: Analyze BOTH directions separately (should be ~50% each if random)
+    Option 2: Compare first vs last steam (does timing matter?)
+    """
+    print("\n🔄 BIDIRECTIONAL STEAM ANALYSIS (Steam in BOTH directions)")
+    print("=" * 80)
+    
+    # Filter to games with steam event data
+    with_steam_events = df[df['steam_direction_pattern'].notna()].copy()
+    
+    if len(with_steam_events) == 0:
+        print("No steam event data available")
+        return
+    
+    # Split by pattern
+    bidirectional = with_steam_events[with_steam_events['steam_direction_pattern'] == 'bidirectional']
+    unidirectional = with_steam_events[with_steam_events['steam_direction_pattern'] == 'unidirectional']
+    
+    print(f"\nGames with BIDIRECTIONAL steam: {len(bidirectional)}")
+    if len(bidirectional) > 0:
+        bidir_avg_events = bidirectional['total_steam_events'].mean()
+        bidir_fav_events = bidirectional['steam_toward_fav_count'].mean()
+        bidir_dog_events = bidirectional['steam_toward_dog_count'].mean()
+        bidir_avg_magnitude = bidirectional['avg_steam_event_magnitude'].mean()
+        bidir_max_magnitude = bidirectional['max_steam_event_magnitude'].mean()
+        
+        print(f"  Avg total steam events: {bidir_avg_events:.1f} (min should be 2.0)")
+        print(f"  Avg steam toward favorite: {bidir_fav_events:.1f} events")
+        print(f"  Avg steam toward underdog: {bidir_dog_events:.1f} events")
+        print(f"  Avg magnitude per steam event: {bidir_avg_magnitude:.2f} pts")
+        print(f"  Avg max steam event: {bidir_max_magnitude:.2f} pts")
+        
+        # Distribution of steam event counts
+        steam_distribution = bidirectional['total_steam_events'].value_counts().sort_index()
+        print(f"\n  📊 Distribution of steam event counts:")
+        for count, freq in steam_distribution.items():
+            pct = freq / len(bidirectional) * 100
+            print(f"     {int(count)} events: {freq} games ({pct:.1f}%)")
+        
+        print(f"\n  → Interpretation: Market showed uncertainty, steam went BOTH directions")
+        
+        # =====================================================================
+        # OPTION 1: Analyze BOTH directions separately
+        # =====================================================================
+        print(f"\n📊 OPTION 1: Split Analysis (Opening Favorite vs Opening Underdog)")
+        print(f"   (Hypothesis: If market is uncertain, both should cover ~50%)")
+        
+        # Opening favorite covered in bidirectional games
+        fav_cover_rate = bidirectional['opening_favorite_covered'].mean() * 100
+        fav_wins = int(bidirectional['opening_favorite_covered'].sum())
+        fav_losses = len(bidirectional) - fav_wins
+        fav_margin = bidirectional['opening_favorite_cover_margin'].mean()
+        print(f"   Opening FAVORITE covered: {fav_cover_rate:.1f}% ({fav_wins}-{fav_losses}) | {fav_margin:+.1f} avg margin")
+        
+        # Opening underdog covered in bidirectional games
+        dog_cover_rate = bidirectional['opening_underdog_covered'].mean() * 100
+        dog_wins = int(bidirectional['opening_underdog_covered'].sum())
+        dog_losses = len(bidirectional) - dog_wins
+        dog_margin = bidirectional['opening_underdog_cover_margin'].mean()
+        print(f"   Opening UNDERDOG covered: {dog_cover_rate:.1f}% ({dog_wins}-{dog_losses}) | {dog_margin:+.1f} avg margin")
+        
+        # Interpretation
+        if abs(fav_cover_rate - 50.0) < 5:
+            print(f"   ✅ Results align with 50/50 hypothesis (market uncertainty)")
+        else:
+            if fav_cover_rate > 55:
+                print(f"   ⚠️  Opening favorite outperformed ({fav_cover_rate:.1f}% vs expected 50%)")
+            elif dog_cover_rate > 55:
+                print(f"   ⚠️  Opening underdog outperformed ({dog_cover_rate:.1f}% vs expected 50%)")
+        
+        # =====================================================================
+        # OPTION 2: First vs Last Steam
+        # =====================================================================
+        print(f"\n📊 OPTION 2: Timing Analysis (First Steam vs Last Steam)")
+        print(f"   (Does the timing of steam events matter?)")
+        
+        # Team that got FIRST steam
+        first_steam_fav = bidirectional[bidirectional['first_steam_direction'] == 'toward_favorite']
+        first_steam_dog = bidirectional[bidirectional['first_steam_direction'] == 'toward_underdog']
+        
+        if len(first_steam_fav) > 0:
+            # In games where FAV got first steam, did FAV cover?
+            first_fav_cover_rate = first_steam_fav['opening_favorite_covered'].mean() * 100
+            first_fav_wins = int(first_steam_fav['opening_favorite_covered'].sum())
+            first_fav_losses = len(first_steam_fav) - first_fav_wins
+            print(f"   First steam → FAV: FAV covered {first_fav_cover_rate:.1f}% ({first_fav_wins}-{first_fav_losses}) | N={len(first_steam_fav)}")
+        
+        if len(first_steam_dog) > 0:
+            # In games where DOG got first steam, did DOG cover?
+            first_dog_cover_rate = first_steam_dog['opening_underdog_covered'].mean() * 100
+            first_dog_wins = int(first_steam_dog['opening_underdog_covered'].sum())
+            first_dog_losses = len(first_steam_dog) - first_dog_wins
+            print(f"   First steam → DOG: DOG covered {first_dog_cover_rate:.1f}% ({first_dog_wins}-{first_dog_losses}) | N={len(first_steam_dog)}")
+        
+        # Team that got LAST steam (most recent before game)
+        last_steam_fav = bidirectional[bidirectional['last_steam_direction'] == 'toward_favorite']
+        last_steam_dog = bidirectional[bidirectional['last_steam_direction'] == 'toward_underdog']
+        
+        if len(last_steam_fav) > 0:
+            # In games where FAV got last steam, did FAV cover?
+            last_fav_cover_rate = last_steam_fav['opening_favorite_covered'].mean() * 100
+            last_fav_wins = int(last_steam_fav['opening_favorite_covered'].sum())
+            last_fav_losses = len(last_steam_fav) - last_fav_wins
+            print(f"   Last steam  → FAV: FAV covered {last_fav_cover_rate:.1f}% ({last_fav_wins}-{last_fav_losses}) | N={len(last_steam_fav)}")
+        
+        if len(last_steam_dog) > 0:
+            # In games where DOG got last steam, did DOG cover?
+            last_dog_cover_rate = last_steam_dog['opening_underdog_covered'].mean() * 100
+            last_dog_wins = int(last_steam_dog['opening_underdog_covered'].sum())
+            last_dog_losses = len(last_steam_dog) - last_dog_wins
+            print(f"   Last steam  → DOG: DOG covered {last_dog_cover_rate:.1f}% ({last_dog_wins}-{last_dog_losses}) | N={len(last_steam_dog)}")
+        
+        # Interpretation
+        print(f"\n   💡 Interpretation:")
+        if len(first_steam_fav) > 0 and len(last_steam_fav) > 0:
+            first_vs_last_diff = last_fav_cover_rate - first_fav_cover_rate
+            if abs(first_vs_last_diff) > 10:
+                if first_vs_last_diff > 0:
+                    print(f"   → Last steam MORE predictive (+{first_vs_last_diff:.1f}% for FAV)")
+                else:
+                    print(f"   → First steam MORE predictive ({first_vs_last_diff:.1f}% for FAV)")
+            else:
+                print(f"   → No clear timing advantage (within ±10%)")
+    
+    print(f"\nGames with UNIDIRECTIONAL steam: {len(unidirectional)}")
+    if len(unidirectional) > 0:
+        unidir_cover_rate = unidirectional['steam_team_covered'].mean() * 100
+        unidir_margin = unidirectional['steam_team_cover_margin'].mean()
+        unidir_avg_events = unidirectional['total_steam_events'].mean()
+        unidir_avg_magnitude = unidirectional['avg_steam_event_magnitude'].mean()
+        unidir_max_magnitude = unidirectional['max_steam_event_magnitude'].mean()
+        
+        print(f"  Cover rate (steam team): {unidir_cover_rate:.1f}%")
+        print(f"  Avg cover margin: {unidir_margin:+.1f} pts")
+        print(f"  Avg total steam events: {unidir_avg_events:.1f}")
+        print(f"  Avg magnitude per steam event: {unidir_avg_magnitude:.2f} pts")
+        print(f"  Avg max steam event: {unidir_max_magnitude:.2f} pts")
+        print(f"  → Interpretation: Market showed conviction, steam went ONE direction")
+    
+    # Show difference
+    if len(bidirectional) > 0 and len(unidirectional) > 0:
+        # Compare bidirectional (using final net steam direction) vs unidirectional
+        bidir_final_cover_rate = bidirectional['steam_team_covered'].mean() * 100
+        diff = bidir_final_cover_rate - unidir_cover_rate
+        print(f"\n📊 COMPARISON (Bidirectional Final Net vs Unidirectional):")
+        print(f"  Bidirectional (final net direction): {bidir_final_cover_rate:.1f}% cover")
+        print(f"  Unidirectional: {unidir_cover_rate:.1f}% cover")
+        print(f"  Difference: {diff:+.1f}%")
+        if abs(diff) > 5:
+            if diff > 0:
+                print(f"  ✅ Bidirectional final net steam performed BETTER (+{diff:.1f}%)")
+            else:
+                print(f"  ❌ Bidirectional final net steam performed WORSE ({diff:.1f}%)")
+        else:
+            print(f"  ≈ No meaningful difference (within ±5%)")
 
 
 def analyze_fade_strategy(df, min_threshold=2.0):
@@ -1313,14 +1668,30 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
     snapshots_cache = cache_dir / f'snapshots_{sport}_{today}.parquet'
     movements_cache = cache_dir / f'movements_{sport}_{today}.parquet'
     hourly_steam_cache = cache_dir / f'hourly_steam_{sport}_{today}.parquet'
+    steam_events_cache = cache_dir / f'steam_events_{sport}_{today}.parquet'
     game_results_cache = cache_dir / f'game_results_{sport}_{today}.parquet'
     
     # Try to load from cache
     if use_cache and snapshots_cache.exists():
         print(f"\n📦 Loading from cache...")
+        print(f"   Cache files:")
+        print(f"   • {snapshots_cache}")
+        print(f"   • {movements_cache}")
+        print(f"   • {hourly_steam_cache}")
+        print(f"   • {steam_events_cache}")
+        print(f"   • {game_results_cache}")
         snapshots_df = pd.read_parquet(snapshots_cache)
         movements_df = pd.read_parquet(movements_cache)
         hourly_steam_df = pd.read_parquet(hourly_steam_cache)
+        
+        # Load steam events if exists, otherwise create it
+        if steam_events_cache.exists():
+            steam_events_df = pd.read_parquet(steam_events_cache)
+        else:
+            print(f"   ⚠️  Steam events cache not found, calculating from snapshots...")
+            steam_events_df = calculate_all_steam_events(snapshots_df, steam_threshold=steam_threshold)
+            steam_events_df.to_parquet(steam_events_cache)
+        
         game_results_df = pd.read_parquet(game_results_cache)
         print(f"✅ Loaded cached data from {today}")
     else:
@@ -1329,6 +1700,9 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
         
         # Calculate consensus hourly steam (biggest 1-hour spikes)
         hourly_steam_df = calculate_consensus_hourly_steam(snapshots_df)
+        
+        # Calculate ALL steam events (for bidirectional steam detection)
+        steam_events_df = calculate_all_steam_events(snapshots_df, steam_threshold=steam_threshold)
         
         # Calculate movements (opening → closing)
         movements_df = calculate_line_movements(snapshots_df)
@@ -1341,6 +1715,7 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
         snapshots_df.to_parquet(snapshots_cache)
         movements_df.to_parquet(movements_cache)
         hourly_steam_df.to_parquet(hourly_steam_cache)
+        steam_events_df.to_parquet(cache_dir / f'steam_events_{sport}_{today}.parquet')
         if game_results_df is not None:
             game_results_df.to_parquet(game_results_cache)
         print(f"✅ Cached data saved to {cache_dir}")
@@ -1395,6 +1770,34 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
                 # Add empty columns if no hourly steam data
                 cover_analysis_df_raw['max_1hr_steam_magnitude'] = None
                 cover_analysis_df_raw['max_1hr_steam_direction_team'] = None
+            
+            # Merge steam events data
+            if len(steam_events_df) > 0:
+                cover_analysis_df_raw = cover_analysis_df_raw.merge(
+                    steam_events_df[[
+                        'game_id', 'total_steam_events', 'steam_toward_fav_count', 
+                        'steam_toward_dog_count', 'has_bidirectional_steam', 
+                        'steam_direction_pattern', 'avg_steam_event_magnitude',
+                        'max_steam_event_magnitude',
+                        'first_steam_direction', 'last_steam_direction',
+                        'first_steam_timestamp', 'last_steam_timestamp'
+                    ]],
+                    on='game_id',
+                    how='left'
+                )
+            else:
+                # Add empty columns if no steam events data
+                cover_analysis_df_raw['total_steam_events'] = None
+                cover_analysis_df_raw['steam_toward_fav_count'] = None
+                cover_analysis_df_raw['steam_toward_dog_count'] = None
+                cover_analysis_df_raw['has_bidirectional_steam'] = None
+                cover_analysis_df_raw['steam_direction_pattern'] = None
+                cover_analysis_df_raw['avg_steam_event_magnitude'] = None
+                cover_analysis_df_raw['max_steam_event_magnitude'] = None
+                cover_analysis_df_raw['first_steam_direction'] = None
+                cover_analysis_df_raw['last_steam_direction'] = None
+                cover_analysis_df_raw['first_steam_timestamp'] = None
+                cover_analysis_df_raw['last_steam_timestamp'] = None
                 
             cover_analysis_df_raw = add_derived_features(cover_analysis_df_raw)
             cover_analysis_df_raw['max_1hr_steam_direction_fav_dog_at_open'] = cover_analysis_df_raw.apply(
@@ -1420,6 +1823,34 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
                 # Add empty columns if no hourly steam data
                 cover_analysis_df['max_1hr_steam_magnitude'] = None
                 cover_analysis_df['max_1hr_steam_direction_team'] = None
+            
+            # Merge steam events data (for bidirectional steam analysis)
+            if len(steam_events_df) > 0:
+                cover_analysis_df = cover_analysis_df.merge(
+                    steam_events_df[[
+                        'game_id', 'total_steam_events', 'steam_toward_fav_count', 
+                        'steam_toward_dog_count', 'has_bidirectional_steam', 
+                        'steam_direction_pattern', 'avg_steam_event_magnitude',
+                        'max_steam_event_magnitude',
+                        'first_steam_direction', 'last_steam_direction',
+                        'first_steam_timestamp', 'last_steam_timestamp'
+                    ]],
+                    on='game_id',
+                    how='left'
+                )
+            else:
+                # Add empty columns if no steam events data
+                cover_analysis_df['total_steam_events'] = None
+                cover_analysis_df['steam_toward_fav_count'] = None
+                cover_analysis_df['steam_toward_dog_count'] = None
+                cover_analysis_df['has_bidirectional_steam'] = None
+                cover_analysis_df['steam_direction_pattern'] = None
+                cover_analysis_df['avg_steam_event_magnitude'] = None
+                cover_analysis_df['max_steam_event_magnitude'] = None
+                cover_analysis_df['first_steam_direction'] = None
+                cover_analysis_df['last_steam_direction'] = None
+                cover_analysis_df['first_steam_timestamp'] = None
+                cover_analysis_df['last_steam_timestamp'] = None
             
             # Add derived features for deeper analysis
             cover_analysis_df = add_derived_features(cover_analysis_df)
@@ -1503,6 +1934,7 @@ def main(use_cache=False, log_individual_games_flag=False, summary_flag=False, s
             analyze_movement_speed(cover_analysis_df_deduped)
             analyze_spread_context(cover_analysis_df_deduped)
             analyze_fade_strategy(cover_analysis_df_deduped, min_threshold=steam_threshold)
+            analyze_bidirectional_steam(cover_analysis_df_deduped)
             
             # Log individual games if requested
             if log_individual_games_flag:

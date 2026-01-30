@@ -2,7 +2,7 @@
 AWS Lambda Function - All Sports Line Steam Alerts Tracking
 
 Python script: scripts/lambda_function_all_sports_line_steam_alerts_tracking.py
-Lambda function name: line-steam-alerts
+Lambda function name: line-steam-alerts / line-steam-alerts-v2
 Handler: lambda_function_all_sports_line_steam_alerts_tracking.lambda_handler
 
 ================================================================================
@@ -123,19 +123,9 @@ AWS LAMBDA SETUP
    - Runtime: Python 3.12
    - Architecture: x86_64
    - Execution role: betting-dashboard-daily-update-role-ille2llh
-   - Handler: lambda_function_all_sports_line_steam_alerts_tracking.lambda_handler
 
 2. UPLOAD CODE
-   - Option A: Upload just this file (RECOMMENDED)
-     * Code tab → Upload from → .zip file
-     * Only need: lambda_function_all_sports_line_steam_alerts_tracking.py
-     * Everything else cloned from GitHub at runtime
-     
-     Create minimal zip:
-       cd /Users/thomasmyles/dev/betting/scripts
-       zip lambda_minimal.zip lambda_function_all_sports_line_steam_alerts_tracking.py
-     
-   - Option B: Copy-paste in Console (fastest for updates)
+   - Copy-paste in Console (fastest for updates)
      * Code tab → Edit code inline
      * Copy entire lambda_function_all_sports_line_steam_alerts_tracking.py
      * Paste into lambda_function.py in Console
@@ -170,10 +160,7 @@ AWS LAMBDA SETUP
    Layer 2: nba-props-fetcher-dependencies (latest version)
 
 6. IAM PERMISSIONS (Role: betting-dashboard-daily-update-role-ille2llh)
-   - AmazonS3FullAccess (read snapshots, write plays/results)
-   - AWSLambdaBasicExecutionRole (CloudWatch logs)
-   - SecretsManagerReadWrite (read GITHUB_TOKEN, ODDS_API_KEY)
-   - SNS Publish (send email alerts)
+   [already added]
 
 7. EVENTBRIDGE SCHEDULE
    Name: line-steam-alerts-schedule
@@ -182,6 +169,13 @@ AWS LAMBDA SETUP
    Translation: Run at :05 past EVERY hour, 24/7
    Target: Lambda function → line-steam-alerts
    State: Enabled
+   
+   IMPORTANT - Execution Role Setup:
+   When adding the Lambda as a target, under "Execution role":
+   - Select: "Create a new role for this specific resource"
+   - DO NOT reuse existing EventBridge roles
+   - This ensures the rule has proper permissions to invoke THIS Lambda
+   - Prevents "FailedInvocation" errors from permission issues
 
    Why 24/7?
    - Line tracking Lambda already runs 24/7 collecting snapshots

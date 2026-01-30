@@ -117,8 +117,16 @@ visualization:
   col_width_team: 200
   col_width_logo: 45
   col_width_record: 70
+  col_width_preseason: 95
+  col_width_preseason_implied: 115
+  col_width_last_week: 95
+  col_width_last_week_implied: 115
+  col_width_current: 85
+  col_width_current_implied: 105
   col_width_fair_odds: 90
   col_width_fair_pct: 70
+  col_width_diff_preseason: 135
+  col_width_diff_last_week: 135
   col_width_avg_odds: 90
   col_width_implied_pct: 90
   col_width_vig_pct: 75
@@ -127,12 +135,21 @@ visualization:
   col_width_best_vig_pct: 100
   
   # Color palette (green -> white -> red for vig)
-  color_palette:
+  vig_color_palette:
     - "#90EE90"  # Light green (low vig)
     - "#ffffff"  # White (medium)
     - "#ffcccc"  # Light red
     - "#ff9999"  # Medium red
     - "#d62728"  # Dark red (high vig)
+  
+  # Difference column color palette (red -> white -> green)
+  # Red = negative change (worsened), Green = positive change (improved)
+  diff_color_palette:
+    - "#d62728"   # Dark red (large negative)
+    - "#ffcccc"   # Light red
+    - "#ffffff"   # White (no change)
+    - "#90EE90"   # Light green
+    - "#4CAF50"   # Dark green (large positive)
   
   # Negative vig color (bettor advantage)
   negative_vig_color: "#FFEB3B"  # Yellow

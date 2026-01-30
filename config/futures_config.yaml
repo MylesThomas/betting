@@ -62,7 +62,7 @@ sports:
       - intermediate_dir: "data/03_intermediate/"
       - output_dir: "data/04_output/"
     
-    title: "NBA Championship Futures: True Odds vs. What Books Charge"
+    title: "NBA Championship Futures: Preseason to Now"
     viz_filename: "nba_futures_vig_single.png"
     logo_source: "espn_cdn"
     logo_height: 30
@@ -72,6 +72,79 @@ sports:
     # Table dimensions (portrait 9:16 for social media)
     output_width: 1600
     output_height: 2844  # 1600 * (16/9) = portrait ratio
+    
+    # Historical odds for tracking changes (Preseason → Current, Last Week → Current)
+    # IMPORTANT: You must manually update these from The Odds API or FanDuel
+    historical_odds:
+      preseason:
+        date: "2024-10-22"
+        label: "Preseason"
+        odds:
+          "Oklahoma City Thunder": 240
+          "Denver Nuggets": 550
+          "Cleveland Cavaliers": 750
+          "New York Knicks": 900
+          "Minnesota Timberwolves": 1300
+          "Houston Rockets": 1400
+          "Los Angeles Lakers": 1600
+          "Los Angeles Clippers": 1800
+          "Orlando Magic": 1800
+          "Golden State Warriors": 2500
+          "Detroit Pistons": 3300
+          "Dallas Mavericks": 3500
+          "Philadelphia 76ers": 4000
+          "Atlanta Hawks": 4000
+          "Milwaukee Bucks": 5500
+          "Boston Celtics": 6000
+          "San Antonio Spurs": 6600
+          "Indiana Pacers": 10000
+          "Toronto Raptors": 10000
+          "Memphis Grizzlies": 12500
+          "Miami Heat": 20000
+          "New Orleans Pelicans": 30000
+          "Phoenix Suns": 50000
+          "Portland Trail Blazers": 50000
+          "Sacramento Kings": 50000
+          "Chicago Bulls": 50000
+          "Charlotte Hornets": 100000
+          "Brooklyn Nets": 100000
+          "Utah Jazz": 100000
+          "Washington Wizards": 100000
+      
+      last_week:
+        date: "2026-01-21"
+        label: "Last Week"
+        odds:
+          "Oklahoma City Thunder": 125
+          "Denver Nuggets": 650
+          "San Antonio Spurs": 1200
+          "Detroit Pistons": 1700
+          "New York Knicks": 1800
+          "Houston Rockets": 1800
+          "Boston Celtics": 2000
+          "Cleveland Cavaliers": 3000
+          "Minnesota Timberwolves": 3000
+          "Los Angeles Lakers": 3500
+          "Orlando Magic": 5000
+          "Philadelphia 76ers": 6000
+          "Los Angeles Clippers": 8000
+          "Miami Heat": 10000
+          "Golden State Warriors": 15000
+          "Atlanta Hawks": 20000
+          "Phoenix Suns": 20000
+          "Milwaukee Bucks": 25000
+          "Toronto Raptors": 25000
+          "Dallas Mavericks": 100000
+          "Portland Trail Blazers": 100000
+          "Chicago Bulls": 100000
+          "Charlotte Hornets": 100000
+          "Sacramento Kings": 200000
+          "Memphis Grizzlies": 200000
+          "Utah Jazz": 200000
+          "Indiana Pacers": 200000
+          "Brooklyn Nets": 200000
+          "New Orleans Pelicans": 200000
+          "Washington Wizards": 200000
     
   ncaaf:
     display_name: "NCAAF"
@@ -126,7 +199,7 @@ sports:
       - intermediate_dir: "data/03_intermediate/"
       - output_dir: "data/04_output/"
     
-    title: "NCAAB Championship Futures: True Odds vs. What Books Charge"
+    title: "NCAAB Championship Futures: Preseason to Now"
     viz_filename: "ncaab_futures_vig_single.png"
     logo_source: "local"
     logo_height: 30
@@ -136,6 +209,128 @@ sports:
     # Table dimensions (portrait 9:16 for social media)
     output_width: 1600
     output_height: 2844  # 1600 * (16/9) = portrait ratio
+    
+    # Historical odds for tracking changes (Preseason → Current, Last Week → Current)
+    # IMPORTANT: You must manually update these from The Odds API
+    historical_odds:
+      preseason:
+        date: "2024-11-04"
+        label: "Preseason"
+        odds:
+          "Purdue Boilermakers": 950
+          "Houston Cougars": 1000
+          "UConn Huskies": 1400
+          "Duke Blue Devils": 1400
+          "Kentucky Wildcats": 1500
+          "Florida Gators": 1600
+          "Michigan Wolverines": 2000
+          "St. John's Red Storm": 2000
+          "BYU Cougars": 2200
+          "Kansas Jayhawks": 2500
+          "Louisville Cardinals": 2500
+          "Texas Tech Red Raiders": 2500
+          "Arkansas Razorbacks": 3000
+          "Alabama Crimson Tide": 3500
+          "Illinois Fighting Illini": 3500
+          "UCLA Bruins": 3500
+          "Arizona Wildcats": 4000
+          "Tennessee Volunteers": 4000
+          "Gonzaga Bulldogs": 4500
+          "Iowa State Cyclones": 5000
+          "Auburn Tigers": 6000
+          "Creighton Bluejays": 6000
+          "Michigan St Spartans": 6000
+          "North Carolina Tar Heels": 6000
+          "NC State Wolfpack": 6000
+          "Wisconsin Badgers": 7000
+          "Baylor Bears": 8000
+          "Indiana Hoosiers": 10000
+          "Ole Miss Rebels": 10000
+          "Ohio State Buckeyes": 10000
+          "Oregon Ducks": 10000
+          "San Diego St Aztecs": 10000
+          "USC Trojans": 10000
+          "Texas Longhorns": 12000
+          "Iowa Hawkeyes": 12500
+          "Mississippi St Bulldogs": 12500
+          "Virginia Cavaliers": 13000
+          "Maryland Terrapins": 15000
+          "Missouri Tigers": 15000
+          "Texas A&M Aggies": 15000
+          "Villanova Wildcats": 15000
+          "Miami Hurricanes": 18000
+          "Washington Huskies": 18000
+          "Clemson Tigers": 20000
+          "Marquette Golden Eagles": 20000
+          "Memphis Tigers": 20000
+          "Syracuse Orange": 20000
+          "Vanderbilt Commodores": 20000
+          "Xavier Musketeers": 20000
+          "Cincinnati Bearcats": 25000
+          "Kansas St Wildcats": 25000
+          "Saint Mary's Gaels": 25000
+          "SMU Mustangs": 25000
+      
+      last_week:
+        date: "2026-01-21"
+        label: "Last Week"
+        odds:
+          "Michigan Wolverines": 440
+          "Arizona Wildcats": 550
+          "Houston Cougars": 1200
+          "UConn Huskies": 1200
+          "Duke Blue Devils": 1300
+          "Purdue Boilermakers": 1500
+          "Florida Gators": 1800
+          "Iowa State Cyclones": 2000
+          "Gonzaga Bulldogs": 2200
+          "Illinois Fighting Illini": 2200
+          "BYU Cougars": 3000
+          "Michigan St Spartans": 3500
+          "Vanderbilt Commodores": 3500
+          "Kansas Jayhawks": 4000
+          "Nebraska Cornhuskers": 4000
+          "Virginia Cavaliers": 5000
+          "Texas Tech Red Raiders": 5000
+          "Alabama Crimson Tide": 5000
+          "Arkansas Razorbacks": 6000
+          "Louisville Cardinals": 6600
+          "St. John's Red Storm": 9000
+          "Kentucky Wildcats": 10000
+          "Tennessee Volunteers": 10000
+          "North Carolina Tar Heels": 10000
+          "Iowa Hawkeyes": 12500
+          "Clemson Tigers": 20000
+          "UCLA Bruins": 20000
+          "SMU Mustangs": 20000
+          "NC State Wolfpack": 20000
+          "Georgia Bulldogs": 20000
+          "Miami Hurricanes": 25000
+          "Texas Longhorns": 25000
+          "Wisconsin Badgers": 25000
+          "Auburn Tigers": 25000
+          "Villanova Wildcats": 25000
+          "Indiana Hoosiers": 30000
+          "Baylor Bears": 30000
+          "Texas A&M Aggies": 30000
+          "Missouri Tigers": 35000
+          "Saint Louis Billikens": 35000
+          "Saint Mary's Gaels": 35000
+          "San Diego St Aztecs": 35000
+          "USC Trojans": 35000
+          "UCF Knights": 35000
+          "Utah State Aggies": 35000
+          "Ohio State Buckeyes": 35000
+          "Seton Hall Pirates": 50000
+          "San Francisco Dons": 50000
+          "Stanford Cardinal": 50000
+          "VCU Rams": 50000
+          "Virginia Tech Hokies": 50000
+          "Oklahoma Sooners": 50000
+          "Oklahoma St Cowboys": 50000
+          "Dayton Flyers": 50000
+          "TCU Horned Frogs": 50000
+          "Creighton Bluejays": 50000
 
 # Shared visualization settings
 visualization:
@@ -157,8 +352,16 @@ visualization:
   col_width_team: 200
   col_width_logo: 45
   col_width_record: 70
+  col_width_preseason: 95
+  col_width_preseason_implied: 115
+  col_width_last_week: 95
+  col_width_last_week_implied: 115
+  col_width_current: 85
+  col_width_current_implied: 105
   col_width_fair_odds: 90
   col_width_fair_pct: 70
+  col_width_diff_preseason: 135
+  col_width_diff_last_week: 135
   col_width_avg_odds: 90
   col_width_implied_pct: 90
   col_width_vig_pct: 75
@@ -167,12 +370,21 @@ visualization:
   col_width_best_vig_pct: 100
   
   # Color palette (green -> white -> red for vig)
-  color_palette:
+  vig_color_palette:
     - "#90EE90"  # Light green (low vig)
     - "#ffffff"  # White (medium)
     - "#ffcccc"  # Light red
     - "#ff9999"  # Medium red
     - "#d62728"  # Dark red (high vig)
+  
+  # Difference column color palette (red -> white -> green)
+  # Red = negative change (worsened), Green = positive change (improved)
+  diff_color_palette:
+    - "#d62728"   # Dark red (large negative)
+    - "#ffcccc"   # Light red
+    - "#ffffff"   # White (no change)
+    - "#90EE90"   # Light green
+    - "#4CAF50"   # Dark green (large positive)
   
   # Vig color domain (for gradient mapping)
   vig_color_domain_min: 0.0

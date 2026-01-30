@@ -81,12 +81,14 @@ def list_s3_files(bucket, prefix):
     """
     s3 = get_s3_client()
     
-    response = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    keys = []
+    paginator = s3.get_paginator('list_objects_v2')
     
-    if 'Contents' not in response:
-        return []
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        if 'Contents' in page:
+            keys.extend([obj['Key'] for obj in page['Contents']])
     
-    return [obj['Key'] for obj in response['Contents']]
+    return keys
 
 
 def get_latest_file_from_s3(bucket, prefix, pattern='*.csv'):

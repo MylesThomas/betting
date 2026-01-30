@@ -25,7 +25,7 @@ from pathlib import Path
 repo_root = Path(__file__).parent.parent
 sys.path.insert(0, str(repo_root / 'src'))
 
-from odds_utils import probability_to_american_odds
+from odds_utils import probability_to_american_odds, odds_to_implied_probability
 from r_viz import create_futures_table
 
 
@@ -162,15 +162,103 @@ def prepare_data_for_visualization(df, logo_map):
     # Best book display (capitalize)
     df_display['best_book_display'] = df_display['best_book'].str.title()
     
+    # =============================================================================
+    # HISTORICAL ODDS (Preseason & Last Week)
+    # =============================================================================
+    # Format preseason odds
+    if 'season_start_odds' in df_display.columns:
+        df_display['preseason_odds_str'] = df_display['season_start_odds'].apply(
+            lambda x: f"{int(x):+d}" if pd.notna(x) else "-"
+        )
+        # Calculate preseason implied probability
+        df_display['preseason_implied_prob'] = df_display['season_start_odds'].apply(
+            lambda x: odds_to_implied_probability(x) if pd.notna(x) else None
+        )
+        df_display['preseason_implied_str'] = df_display['preseason_implied_prob'].apply(
+            lambda x: f"{x*100:.1f}" if pd.notna(x) else "-"
+        )
+        season_start_date = df_display['season_start_date'].iloc[0] if 'season_start_date' in df_display.columns else None
+        season_start_label = df_display['season_start_label'].iloc[0] if 'season_start_label' in df_display.columns else None
+    else:
+        df_display['preseason_odds_str'] = "-"
+        df_display['preseason_implied_str'] = "-"
+        df_display['preseason_implied_prob'] = None
+        season_start_date = None
+        season_start_label = None
+    
+    # Format last week odds
+    if 'last_week_odds' in df_display.columns:
+        df_display['last_week_odds_str'] = df_display['last_week_odds'].apply(
+            lambda x: f"{int(x):+d}" if pd.notna(x) else "-"
+        )
+        # Calculate last week implied probability
+        df_display['last_week_implied_prob'] = df_display['last_week_odds'].apply(
+            lambda x: odds_to_implied_probability(x) if pd.notna(x) else None
+        )
+        df_display['last_week_implied_str'] = df_display['last_week_implied_prob'].apply(
+            lambda x: f"{x*100:.1f}" if pd.notna(x) else "-"
+        )
+        last_week_date = df_display['last_week_date'].iloc[0] if 'last_week_date' in df_display.columns else None
+        last_week_label = df_display['last_week_label'].iloc[0] if 'last_week_label' in df_display.columns else None
+    else:
+        df_display['last_week_odds_str'] = "-"
+        df_display['last_week_implied_str'] = "-"
+        df_display['last_week_implied_prob'] = None
+        last_week_date = None
+        last_week_label = None
+    
+    # Format current odds (best odds = current)
+    df_display['current_odds_str'] = df_display['best_odds_str']
+    df_display['current_implied_str'] = df_display['implied_pct_str']
+    
+    # Calculate difference in implied probability (percentage points)
+    # Difference 1: Preseason -> Current
+    if 'preseason_implied_prob' in df_display.columns and df_display['preseason_implied_prob'].notna().any():
+        df_display['diff_preseason'] = df_display.apply(
+            lambda row: (row['implied_prob_avg'] - row['preseason_implied_prob']) * 100 
+            if pd.notna(row['preseason_implied_prob'])
+            else None,
+            axis=1
+        )
+    else:
+        df_display['diff_preseason'] = None
+    
+    # Difference 2: Last Week -> Current
+    if 'last_week_implied_prob' in df_display.columns and df_display['last_week_implied_prob'].notna().any():
+        df_display['diff_last_week'] = df_display.apply(
+            lambda row: (row['implied_prob_avg'] - row['last_week_implied_prob']) * 100 
+            if pd.notna(row['last_week_implied_prob'])
+            else None,
+            axis=1
+        )
+    else:
+        df_display['diff_last_week'] = None
+    
+    # Calculate dynamic domain for difference gradients (symmetric around 0)
+    max_abs_diff_preseason = df_display['diff_preseason'].abs().max() if df_display['diff_preseason'].notna().any() else 0
+    max_abs_diff_last_week = df_display['diff_last_week'].abs().max() if df_display['diff_last_week'].notna().any() else 0
+    max_abs_diff = max(max_abs_diff_preseason, max_abs_diff_last_week)
+    
+    if pd.isna(max_abs_diff) or max_abs_diff == 0:
+        diff_domain_max = 10.0  # fallback for futures (smaller changes than MVP)
+    else:
+        # Round up to nearest 5 for cleaner visualization
+        diff_domain_max = max(10.0, round(max_abs_diff / 5) * 5 + 5)
+    
     print(f"   ✅ Prepared {len(df_display)} teams")
     
     logos_with_urls = df_display['logo_url'].notna().sum()
     print(f"   ✅ {logos_with_urls}/{len(df_display)} teams have logos")
     
     avg_vig = df_display['vig_diff'].mean()
-    print(f"   ✅ Average vig: {avg_vig:.1f}%\n")
+    print(f"   ✅ Average vig: {avg_vig:.1f}%")
     
-    return df_display
+    if df_display['diff_preseason'].notna().any() or df_display['diff_last_week'].notna().any():
+        print(f"   ✅ Difference gradient domain: [-{diff_domain_max:.0f}, +{diff_domain_max:.0f}]")
+    
+    print()
+    
+    return df_display, season_start_date, season_start_label, last_week_date, last_week_label, diff_domain_max
 
 
 def main():
@@ -295,7 +383,7 @@ def main():
         print()
     
     # Prepare data
-    df_display = prepare_data_for_visualization(df, logo_map)
+    df_display, season_start_date, season_start_label, last_week_date, last_week_label, diff_domain_max = prepare_data_for_visualization(df, logo_map)
     
     # Get save settings from config
     save_locally = futures_config.get('save_locally', False)
@@ -313,7 +401,12 @@ def main():
         top_n=args.top_n,
         save_locally=save_locally,
         s3_bucket=s3_bucket,
-        s3_path=s3_path
+        s3_path=s3_path,
+        season_start_date=season_start_date,
+        season_start_label=season_start_label,
+        last_week_date=last_week_date,
+        last_week_label=last_week_label,
+        diff_domain_max=diff_domain_max
     )
     
     print("\n" + "=" * 80)
