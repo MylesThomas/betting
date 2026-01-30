@@ -273,7 +273,8 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     print(f"{'='*80}\n")
     
     cmd = [
-        'python', 'scripts/find_role_spread_points_model_plays.py',
+        'python', 'scripts/find_nba_role_spread_plays.py',
+        '--dimension', '2d',  # 2D: line + spread only
         '--season', season,
         '--min-roi', '5.0',
         '--granularity', 'detailed',
@@ -296,7 +297,8 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     print(f"{'='*80}\n")
     
     cmd = [
-        'python', 'scripts/find_role_spread_scorer_points_model_plays.py',
+        'python', 'scripts/find_nba_role_spread_plays.py',  # Now using unified script
+        '--dimension', '3d',  # 3D: line + spread + scorer_type
         '--season', season,
         '--min-roi', '5.0',
         '--granularity', 'detailed',
