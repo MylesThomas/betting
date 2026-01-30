@@ -303,6 +303,47 @@ def calculate_consensus_movements(snapshots_df):
 # STEAM DETECTION
 # =============================================================================
 
+def detect_bidirectional_steam_in_plays(existing_plays_df, current_steam_direction_by_game):
+    """
+    Detect if a game has had steam in BOTH directions today.
+    
+    Args:
+        existing_plays_df: DataFrame of all plays detected today (from S3)
+        current_steam_direction_by_game: Dict mapping game_id to current steam_direction
+    
+    Returns:
+        Set of game_ids that have bidirectional steam
+    """
+    if existing_plays_df is None or len(existing_plays_df) == 0:
+        # No existing plays - check if any game appears in current with both directions
+        return set()
+    
+    # Get all steam directions seen today (existing + current)
+    all_directions = {}
+    
+    # Add existing detections
+    for _, row in existing_plays_df.iterrows():
+        game_id = row['game_id']
+        direction = row['steam_direction']
+        if game_id not in all_directions:
+            all_directions[game_id] = set()
+        all_directions[game_id].add(direction)
+    
+    # Add current detections
+    for game_id, direction in current_steam_direction_by_game.items():
+        if game_id not in all_directions:
+            all_directions[game_id] = set()
+        all_directions[game_id].add(direction)
+    
+    # Games with 2+ unique directions = bidirectional
+    bidirectional_game_ids = {
+        game_id for game_id, directions in all_directions.items()
+        if len(directions) >= 2
+    }
+    
+    return bidirectional_game_ids
+
+
 def check_for_steam(movements_df, target_date_str, threshold, sport_name="", sport_config=None):
     """
     Check if any of today's games have threshold+ point steam (both directions).
@@ -402,6 +443,23 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
         steam_games['first_detected_at'] = None
         steam_games['detection_count'] = 0
     
+    # Detect bidirectional steam (steam in BOTH directions today)
+    current_steam_directions = {
+        row['game_id']: 'opening_underdog' if row['steam_toward_opening_underdog'] else 'opening_favorite'
+        for _, row in steam_games.iterrows()
+    }
+    bidirectional_game_ids = detect_bidirectional_steam_in_plays(existing_plays, current_steam_directions)
+    
+    # Add bidirectional flag to steam_games
+    steam_games['is_bidirectional_steam'] = steam_games['game_id'].isin(bidirectional_game_ids)
+    
+    if len(bidirectional_game_ids) > 0:
+        print(f"\n⚠️  {len(bidirectional_game_ids)} game(s) with BIDIRECTIONAL STEAM detected:")
+        for game_id in bidirectional_game_ids:
+            game_row = steam_games[steam_games['game_id'] == game_id].iloc[0]
+            print(f"   - {game_row['opening_favorite']} vs {game_row['opening_underdog']}")
+        print()
+    
     # Sort by steam magnitude (highest first)
     steam_games = steam_games.sort_values('steam_magnitude', ascending=False)
     
@@ -421,7 +479,10 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
         for idx, (_, row) in enumerate(underdog_steam.sort_values('steam_magnitude', ascending=False).iterrows(), 1):
             game_time_et = row['game_time'].tz_convert(et_tz)
             
-            print(f"Game {idx}: {row['opening_favorite']} vs {row['opening_underdog']}")
+            # Add bidirectional warning emoji to game title
+            bidir_warning = " ⚠️ BIDIRECTIONAL STEAM" if row.get('is_bidirectional_steam', False) else ""
+            
+            print(f"Game {idx}: {row['opening_favorite']} vs {row['opening_underdog']}{bidir_warning}")
             print(f"  Opening: {row['opening_favorite']} {row['opening_favorite_spread_open']:+.1f} | "
                   f"{row['opening_underdog']} {-row['opening_favorite_spread_open']:+.1f}")
             print(f"  Current: {row['opening_favorite']} {row['opening_favorite_spread_current']:+.1f} | "
@@ -442,6 +503,21 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
                       f"Detected {detection_count} times today")
             else:
                 print(f"  Steam tracking: First detection of this steam pattern today")
+            
+            # Add bidirectional warning with historical context
+            if row.get('is_bidirectional_steam', False):
+                if sport_name.upper() == "NCAAB":
+                    context = "Historical: 50/50 split in NCAAB (no edge)"
+                elif sport_name.upper() == "NBA":
+                    context = "Historical: 57.5% underdog cover in NBA (slight edge)"
+                else:
+                    context = "Market uncertainty - steam went both directions"
+                
+                print(f"  ⚠️  BIDIRECTIONAL STEAM WARNING")
+                print(f"     This game had steam toward BOTH teams today")
+                print(f"     {context}")
+                print(f"     Confidence: LOW - Consider skipping or reducing stake")
+            
             print()
     
     # Output favorite steam games
@@ -453,7 +529,10 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
         for idx, (_, row) in enumerate(favorite_steam.sort_values('steam_magnitude', ascending=False).iterrows(), 1):
             game_time_et = row['game_time'].tz_convert(et_tz)
             
-            print(f"Game {idx}: {row['opening_favorite']} vs {row['opening_underdog']}")
+            # Add bidirectional warning emoji to game title
+            bidir_warning = " ⚠️ BIDIRECTIONAL STEAM" if row.get('is_bidirectional_steam', False) else ""
+            
+            print(f"Game {idx}: {row['opening_favorite']} vs {row['opening_underdog']}{bidir_warning}")
             print(f"  Opening: {row['opening_favorite']} {row['opening_favorite_spread_open']:+.1f} | "
                   f"{row['opening_underdog']} {-row['opening_favorite_spread_open']:+.1f}")
             print(f"  Current: {row['opening_favorite']} {row['opening_favorite_spread_current']:+.1f} | "
@@ -474,7 +553,33 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
                       f"Detected {detection_count} times today")
             else:
                 print(f"  Steam tracking: First detection of this steam pattern today")
+            
+            # Add bidirectional warning with historical context
+            if row.get('is_bidirectional_steam', False):
+                if sport_name.upper() == "NCAAB":
+                    context = "Historical: 50/50 split in NCAAB (no edge)"
+                elif sport_name.upper() == "NBA":
+                    context = "Historical: 57.5% underdog cover in NBA (slight edge)"
+                else:
+                    context = "Market uncertainty - steam went both directions"
+                
+                print(f"  ⚠️  BIDIRECTIONAL STEAM WARNING")
+                print(f"     This game had steam toward BOTH teams today")
+                print(f"     {context}")
+                print(f"     Confidence: LOW - Consider skipping or reducing stake")
+            
             print()
+    
+    # Add bidirectional summary before final return
+    if len(bidirectional_game_ids) > 0:
+        print(f"{'='*80}")
+        print(f"⚠️  BIDIRECTIONAL STEAM SUMMARY")
+        print(f"{'='*80}\n")
+        print(f"{len(bidirectional_game_ids)} game(s) with steam in BOTH directions:")
+        print(f"These games show market uncertainty - historical performance:")
+        print(f"  • NCAAB: 50/50 coin flip (no edge)")
+        print(f"  • NBA: 57.5% underdog cover (minimal edge)")
+        print(f"\n💡 Recommendation: Skip or reduce stake size\n")
     
     print("STEAM_DETECTED: YES")
     return True, steam_games
@@ -561,6 +666,7 @@ def save_plays_to_s3(steam_games, sport_config, target_date_str, season, thresho
             'status': 'pending',
             'actual_margin': None,
             'cover_margin': None,
+            'is_bidirectional_steam': game.get('is_bidirectional_steam', False),
         }
         plays.append(play)
     
