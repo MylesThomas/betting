@@ -232,7 +232,8 @@ Examples:
             movements_df, 
             args.date, 
             threshold,
-            sport_config.name
+            sport_config.name,
+            sport_config
         )
         
         # Save plays to S3 if requested and steam detected

@@ -1139,35 +1139,31 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26'):
     bucket = 'nba-betting-mt'
     key = f'data/04_output/plays/role_spread_points_model/3d/{target_date}.csv'
     
-    # Backup filename with timestamp
-    from datetime import datetime
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    backup_key = f'data/04_output/plays/role_spread_points_model/3d/{target_date}_backup_{timestamp}.csv'
-    
     try:
         import boto3
         from io import StringIO
+        import pandas as pd
         
         s3 = boto3.client('s3')
         
-        # Check if file already exists, if so create backup
+        # Check if file already exists - if so, concat (no dedupe to preserve odds snapshots)
         try:
-            s3.head_object(Bucket=bucket, Key=key)
-            # File exists, copy it to backup
-            s3.copy_object(
-                Bucket=bucket,
-                CopySource={'Bucket': bucket, 'Key': key},
-                Key=backup_key
-            )
-            print(f"\n💾 Created backup: s3://{bucket}/{backup_key}")
+            response = s3.get_object(Bucket=bucket, Key=key)
+            existing_df = pd.read_csv(response['Body'])
+            print(f"\n📥 Found existing file with {len(existing_df)} plays")
+            
+            # Concat new plays with existing (no dedupe - keep all snapshots for odds tracking)
+            csv_data = pd.concat([existing_df, csv_data], ignore_index=True)
+            print(f"📊 Concatenated: {len(existing_df)} existing + {len(csv_data) - len(existing_df)} new = {len(csv_data)} total")
+            
         except s3.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == '404':
-                # File doesn't exist, no backup needed
-                pass
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                # File doesn't exist, use new data as-is
+                print(f"\n📝 No existing file found, creating new file")
             else:
                 raise
         
-        # Save new file
+        # Save deduplicated file
         csv_buffer = StringIO()
         csv_data.to_csv(csv_buffer, index=False)
         

@@ -89,6 +89,16 @@ def load_plays_from_s3(date_str, season, strategy='both', plays_suffix=''):
         try:
             obj = s3.get_object(Bucket=S3_BUCKET_PLAYS, Key=key)
             df = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')))
+            original_count = len(df)
+            
+            # Dedupe plays but keep FIRST occurrence (when play was first signaled)
+            # This tracks the play as it was when user first saw it and placed the bet
+            # Include spread_bin so plays that shift between strategy bins are both kept
+            dedup_cols = ['player', 'team', 'opponent', 'bet_side', 'line', 'spread_bin']
+            df = df.drop_duplicates(subset=dedup_cols, keep='first')
+            if len(df) < original_count:
+                print(f"   🔄 Deduplicated: {len(df)} unique plays, kept first signal ({original_count - len(df)} later snapshots removed)")
+            
             df['strategy_dimension'] = strat  # Tag with which strategy it came from
             results[strat] = df
             print(f"   ✅ Loaded {len(df)} {strat.upper()} plays from S3")
