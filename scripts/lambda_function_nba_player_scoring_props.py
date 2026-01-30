@@ -523,13 +523,14 @@ def filter_plays_by_config(all_plays_csv_path, config_data, output_csv_path, dim
     
     # Dedupe plays (keep most recent snapshot for each unique play)
     # Raw plays file may contain multiple snapshots from different script runs
+    # Note: line is NOT included - if line moves from 22.5 to 23.0, it's the same play
+    # spread_bin IS included - if spread moves between bins, they're different plays
     dedup_cols = [
         'player',
         'team',
         'opponent',
         'bet_side',
-        'line',
-        'spread_bin', # Include spread_bin so plays that shift between strategy bins are both kept
+        'spread_bin',  # Include spread_bin so plays that shift between strategy bins are both kept
     ]
     df_all = df_all.drop_duplicates(subset=dedup_cols, keep='last')
     if len(df_all) < original_count:
