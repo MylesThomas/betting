@@ -303,7 +303,7 @@ def calculate_consensus_movements(snapshots_df):
 # STEAM DETECTION
 # =============================================================================
 
-def check_for_steam(movements_df, target_date_str, threshold, sport_name=""):
+def check_for_steam(movements_df, target_date_str, threshold, sport_name="", sport_config=None):
     """
     Check if any of today's games have threshold+ point steam (both directions).
     
@@ -312,6 +312,7 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name=""):
         target_date_str: Date string in YYYY-MM-DD format (ET timezone)
         threshold: Minimum movement in points (default from config)
         sport_name: Sport name for display (e.g., "NCAAB")
+        sport_config: SportConfig instance (optional, for loading historical detections)
     
     Returns:
         tuple: (steam_detected: bool, steam_games: DataFrame or None)
@@ -364,6 +365,43 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name=""):
     print(f"\n🚨 STEAM_DETECTED: YES")
     print(f"   {len(steam_games)} game(s) with {threshold}+ point steam\n")
     
+    # Load existing detections to track first/last detection times
+    existing_plays = None
+    if sport_config is not None:
+        try:
+            s3_key = sport_config.get_s3_plays_key(target_date_str)
+            s3 = boto3.client('s3')
+            response = s3.get_object(Bucket=sport_config.s3_bucket_plays, Key=s3_key)
+            existing_plays = pd.read_csv(BytesIO(response['Body'].read()))
+            existing_plays['detected_at'] = pd.to_datetime(existing_plays['detected_at'])
+            print(f"📊 Loaded {len(existing_plays)} existing detections from today")
+        except s3.exceptions.NoSuchKey:
+            print(f"📊 No existing detections found for today (first check of the day)")
+        except Exception as e:
+            print(f"⚠️  Could not load existing detections: {e}")
+    
+    # Add detection tracking info to steam_games
+    if existing_plays is not None and len(existing_plays) > 0:
+        for idx, row in steam_games.iterrows():
+            game_id = row['game_id']
+            steam_direction = 'opening_underdog' if row['steam_toward_opening_underdog'] else 'opening_favorite'
+            
+            # Filter existing detections for this game + direction
+            matching = existing_plays[
+                (existing_plays['game_id'] == game_id) & 
+                (existing_plays['steam_direction'] == steam_direction)
+            ]
+            
+            if len(matching) > 0:
+                steam_games.at[idx, 'first_detected_at'] = matching['detected_at'].min()
+                steam_games.at[idx, 'detection_count'] = len(matching)
+            else:
+                steam_games.at[idx, 'first_detected_at'] = None
+                steam_games.at[idx, 'detection_count'] = 0
+    else:
+        steam_games['first_detected_at'] = None
+        steam_games['detection_count'] = 0
+    
     # Sort by steam magnitude (highest first)
     steam_games = steam_games.sort_values('steam_magnitude', ascending=False)
     
@@ -384,6 +422,15 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name=""):
             print(f"  Steam: {row['steam_magnitude']:.1f} points toward opening underdog {row['opening_underdog']}")
             print(f"  Game time: {game_time_et.strftime('%I:%M %p ET')}")
             print(f"  Snapshots tracked: {(row['current_time'] - row['open_time']).total_seconds() / 3600:.1f} hours")
+            
+            # Show detection tracking info
+            if pd.notna(row.get('first_detected_at')) and row.get('detection_count', 0) > 0:
+                first_detected = pd.to_datetime(row['first_detected_at']).tz_localize('America/New_York')
+                detection_count = int(row['detection_count']) + 1  # +1 for current detection
+                print(f"  Steam tracking: First detected at {first_detected.strftime('%I:%M %p ET')} | "
+                      f"Detected {detection_count} times today")
+            else:
+                print(f"  Steam tracking: First detection of this steam pattern today")
             print()
     
     # Output favorite steam games
@@ -403,6 +450,15 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name=""):
             print(f"  Steam: {row['steam_magnitude']:.1f} points toward opening favorite {row['opening_favorite']}")
             print(f"  Game time: {game_time_et.strftime('%I:%M %p ET')}")
             print(f"  Snapshots tracked: {(row['current_time'] - row['open_time']).total_seconds() / 3600:.1f} hours")
+            
+            # Show detection tracking info
+            if pd.notna(row.get('first_detected_at')) and row.get('detection_count', 0) > 0:
+                first_detected = pd.to_datetime(row['first_detected_at']).tz_localize('America/New_York')
+                detection_count = int(row['detection_count']) + 1  # +1 for current detection
+                print(f"  Steam tracking: First detected at {first_detected.strftime('%I:%M %p ET')} | "
+                      f"Detected {detection_count} times today")
+            else:
+                print(f"  Steam tracking: First detection of this steam pattern today")
             print()
     
     print("STEAM_DETECTED: YES")
