@@ -563,7 +563,7 @@ def load_tonights_games(target_date=None, use_s3=False):
             event_time_utc = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
             event_time_local = event_time_utc.astimezone(tz)
             
-            if event_time_local.date() == today:
+            if event_time_local.date() == today and event_time_local > now:
                 todays_events.append(event)
         
         if not todays_events:
