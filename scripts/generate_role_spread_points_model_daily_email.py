@@ -790,10 +790,18 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
     text += kelly_summary_placeholder + "\n"
     
     # Group plays by game (team + opponent)
-    # Create a sortable game identifier
-    df_plays['game_key'] = df_plays.apply(
-        lambda r: tuple(sorted([r['team'], r['opponent']])), axis=1
-    )
+    # Create a sortable game identifier - prefer away@home if available
+    has_away_home = 'away_team' in df_plays.columns and 'home_team' in df_plays.columns
+    if has_away_home:
+        df_plays['game_key'] = df_plays.apply(
+            lambda r: (r['away_team'], r['home_team']),
+            axis=1
+        )
+    else:
+        # Fallback to sorted tuple
+        df_plays['game_key'] = df_plays.apply(
+            lambda r: tuple(sorted([r['team'], r['opponent']])), axis=1
+        )
     
     # Get unique games and their first occurrence for sorting
     games = df_plays.groupby('game_key').first().reset_index()
@@ -805,7 +813,13 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
     game_num = 1
     for _, game in games.iterrows():
         game_teams = game['game_key']
-        team1, team2 = game_teams
+        
+        # Determine team names for display
+        if has_away_home and isinstance(game_teams, tuple) and len(game_teams) == 2:
+            away_team, home_team = game_teams
+            team1, team2 = away_team, home_team
+        else:
+            team1, team2 = game_teams if isinstance(game_teams, tuple) else (game['team'], game['opponent'])
         
         # Get all plays for this game
         game_plays = df_plays[df_plays['game_key'] == game_teams].copy()
@@ -839,8 +853,11 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
                 # If parsing fails, just skip the time
                 pass
         
+        # Use @ if we have away/home, otherwise use vs
+        game_separator = '@' if has_away_home else 'vs'
+        
         text += f"""{'─'*80}
-{EMOJI['basketball']} GAME {game_num}: {team1} vs {team2}{game_time_str}
+{EMOJI['basketball']} GAME {game_num}: {team1} {game_separator} {team2}{game_time_str}
 {'─'*80}
 
 """
@@ -1013,6 +1030,7 @@ Standard Fixed-Size Comparison:
 def generate_plays_summary(df_plays):
     """
     Generate a concise summary of plays grouped by game, sorted by game start time.
+    Format: AWAY @ HOME (time)
     
     Returns:
         str: Formatted summary text
@@ -1020,27 +1038,67 @@ def generate_plays_summary(df_plays):
     if df_plays is None or len(df_plays) == 0:
         return ""
     
+    # Check if we have away_team and home_team columns
+    has_away_home = 'away_team' in df_plays.columns and 'home_team' in df_plays.columns
+    
+    if has_away_home:
+        # Create game_key using away @ home format
+        df_plays['game_key'] = df_plays.apply(
+            lambda r: (r['away_team'], r['home_team']),
+            axis=1
+        )
+    else:
+        # Fallback to old method if columns not present
+        df_plays['game_key'] = df_plays.apply(
+            lambda r: tuple(sorted([r['team'], r['opponent']])),
+            axis=1
+        )
+    
     # Group plays by game
-    games = df_plays.groupby('game_key').agg({
+    agg_dict = {
         'game_time': 'first',
         'team': 'first',
         'opponent': 'first'
-    }).reset_index()
+    }
+    
+    if has_away_home:
+        agg_dict['away_team'] = 'first'
+        agg_dict['home_team'] = 'first'
+    
+    games = df_plays.groupby('game_key').agg(agg_dict).reset_index()
     
     # Sort by game_time
     games['game_time_parsed'] = pd.to_datetime(games['game_time'])
     games = games.sort_values('game_time_parsed')
     
+    # Get day of week for header
+    if len(games) > 0:
+        first_game_time = games.iloc[0]['game_time_parsed']
+        if first_game_time.tzinfo is None:
+            first_game_time = first_game_time.tz_localize(ET_TZ)
+        else:
+            first_game_time = first_game_time.astimezone(ET_TZ)
+        day_of_week = first_game_time.strftime('%A').lower()
+    else:
+        day_of_week = 'today'
+    
     summary_lines = [
-        "="*80,
-        "📋 PLAYS SUMMARY (sorted by game start time)",
-        "="*80,
+        f"nba {day_of_week}!",
         ""
     ]
     
     for _, game in games.iterrows():
-        game_teams = game['game_key']
-        team1, team2 = game_teams
+        # Determine away and home team
+        if has_away_home and pd.notna(game.get('away_team')) and pd.notna(game.get('home_team')):
+            away_team = game['away_team']
+            home_team = game['home_team']
+        else:
+            # Fallback: use alphabetical order
+            game_teams = game['game_key']
+            if isinstance(game_teams, tuple) and len(game_teams) == 2:
+                away_team, home_team = game_teams
+            else:
+                away_team, home_team = game['team'], game['opponent']
         
         # Format game time
         game_time_str = ""
@@ -1056,27 +1114,24 @@ def generate_plays_summary(df_plays):
                 else:
                     game_time_dt = game_time_dt.astimezone(ET_TZ)
                 
-                if game_time_dt.minute == 0:
-                    game_time_str = game_time_dt.strftime('%I%p ET').lstrip('0').lower()
-                else:
-                    game_time_str = game_time_dt.strftime('%I:%M%p ET').lstrip('0').lower()
+                # Format as "7:10pm et" (lowercase, include minutes)
+                game_time_str = game_time_dt.strftime('%I:%M%p et').lstrip('0').lower()
             except Exception:
                 pass
         
         # Get all plays for this game
-        game_plays = df_plays[df_plays['game_key'] == game_teams].copy()
+        game_plays = df_plays[df_plays['game_key'] == game['game_key']].copy()
         game_plays = game_plays.sort_values('expected_roi', ascending=False)
         
-        summary_lines.append(f"{team1} vs {team2} @ {game_time_str}")
+        # Game header: AWAY @ HOME (time)
+        summary_lines.append(f"{away_team} @ {home_team} ({game_time_str})")
         
+        # Add each play
         for _, play in game_plays.iterrows():
             bet_side_lower = play['bet_side'].lower()[0]  # 'o' or 'u'
             summary_lines.append(f"- {play['player']} {bet_side_lower}{play['line']}")
         
         summary_lines.append("")
-    
-    summary_lines.append("="*80)
-    summary_lines.append("")
     
     return "\n".join(summary_lines)
 

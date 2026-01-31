@@ -918,7 +918,7 @@ def load_tonights_games(target_date=None, use_s3=False):
 # PLAY FINDING
 # =============================================================================
 
-def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
+def find_plays(df_games, strategies, scorer_map=None, granularity='detailed', all_games_info=None):
     """
     Find betting plays by matching games to strategies
     
@@ -927,6 +927,7 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         strategies: Dict of strategies to match against
         scorer_map: Dict of {player_name: scorer_type} (optional for 3D matching)
         granularity: 'standard' or 'detailed'
+        all_games_info: List of game dicts with away_team, home_team, game_time (optional)
     
     Returns:
         DataFrame with plays and reasoning
@@ -944,6 +945,19 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         df_games['PLAYER_NAME_NORMALIZED'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
         df_games['scorer_type'] = df_games['PLAYER_NAME_NORMALIZED'].map(scorer_map)
     
+    # Create a lookup for away/home team info
+    away_home_lookup = {}
+    if all_games_info:
+        for game in all_games_info:
+            away_team = game['away_team']
+            home_team = game['home_team']
+            # Create keys for both orderings since we don't know which order they appear in df_games
+            game_key1 = tuple(sorted([away_team, home_team]))
+            away_home_lookup[game_key1] = {
+                'away_team': away_team,
+                'home_team': home_team
+            }
+    
     plays = []
     
     for idx, row in df_games.iterrows():
@@ -960,6 +974,12 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
         num_bookmakers = row['num_bookmakers']
         bookmaker_details_over = row['bookmaker_details_over']
         bookmaker_details_under = row['bookmaker_details_under']
+        
+        # Look up away/home team info
+        game_key = tuple(sorted([team, opp]))
+        game_info_entry = away_home_lookup.get(game_key, {})
+        away_team = game_info_entry.get('away_team', None)
+        home_team = game_info_entry.get('home_team', None)
         
         # Check if this combination matches any strategy
         for strat_name, strat in strategies.items():
@@ -996,6 +1016,8 @@ def find_plays(df_games, strategies, scorer_map=None, granularity='detailed'):
                 'bet_side': strat['bet_side'],
                 'team': team,
                 'opponent': opp,
+                'away_team': away_team,
+                'home_team': home_team,
                 'spread': spread,
                 'line_tier': line_tier,
                 'spread_bin': spread_bin,
@@ -1084,7 +1106,7 @@ def save_plays_to_s3(df_plays, target_date, season='2025-26', dimension='2d'):
     
     # Prepare CSV columns (use actual column names from find_plays)
     base_columns = [
-        'player', 'team', 'opponent', 'bet_side', 'line', 'spread',
+        'player', 'team', 'opponent', 'away_team', 'home_team', 'bet_side', 'line', 'spread',
         'line_tier', 'spread_bin'
     ]
     
@@ -1360,7 +1382,7 @@ def main():
     print(f"   Found {len(df_games)} players with props\n")
     
     # Find plays using loaded strategies (with scorer_type matching for 3D)
-    df_plays = find_plays(df_games, strategies, scorer_map=scorer_map, granularity=args.granularity)
+    df_plays = find_plays(df_games, strategies, scorer_map=scorer_map, granularity=args.granularity, all_games_info=all_games_info)
     
     # Debug: Show players without scorer_type classification (3D only)
     if args.dimension == '3d' and args.debug_unclassified and scorer_map:
