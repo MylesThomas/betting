@@ -369,6 +369,10 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
     movements_df['game_date_et'] = movements_df['game_time'].dt.tz_convert(et_tz).dt.date
     today_games = movements_df[movements_df['game_date_et'] == target_date].copy()
     
+    # Filter out games that have already started
+    now_et = datetime.now(et_tz)
+    today_games = today_games[today_games['game_time'] > now_et].copy()
+    
     print(f"   Found {len(today_games)} games scheduled for {target_date_str}")
     
     if len(today_games) == 0:
@@ -580,6 +584,28 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
         print(f"  • NCAAB: 50/50 coin flip (no edge)")
         print(f"  • NBA: 57.5% underdog cover (minimal edge)")
         print(f"\n💡 Recommendation: Skip or reduce stake size\n")
+    
+    # Add plays summary at the end (sorted by game time)
+    print(f"{'='*80}")
+    print("📋 PLAYS SUMMARY")
+    print(f"{'='*80}\n")
+    
+    # Sort steam games by game time for the summary
+    steam_games_sorted = steam_games.sort_values('game_time')
+    
+    for _, game in steam_games_sorted.iterrows():
+        game_time_et = game['game_time'].tz_convert(et_tz)
+        game_time_str = game_time_et.strftime('%I:%M%p ET').lstrip('0').lower()
+        
+        # Determine which team to display (steamed team)
+        steamed_team = game['opening_underdog'] if game['steam_toward_opening_underdog'] else game['opening_favorite']
+        current_spread = -game['opening_favorite_spread_current'] if game['steam_toward_opening_underdog'] else game['opening_favorite_spread_current']
+        
+        print(f"{game['opening_favorite']} vs {game['opening_underdog']} @ {game_time_str}")
+        print(f"- {steamed_team} {current_spread:+.1f}")
+        print()
+    
+    print(f"{'='*80}\n")
     
     print("STEAM_DETECTED: YES")
     return True, steam_games

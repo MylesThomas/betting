@@ -852,10 +852,16 @@ Total Plays: {total} | Avg Expected ROI: {avg_roi:+.1f}%
                 strat_label = f"[{play['strategy_dimension']} - {strat_name}]"
             else:
                 strat_label = ""
+            # Calculate win-loss record from hit rate
+            games = play['games_in_sample']
+            hit_rate = play['hit_rate'] / 100
+            wins = int(games * hit_rate)
+            losses = games - wins
+            
             text += f"{EMOJI['fire']} {strat_label} {play['bet_side']}: {play['player']} {play['line']} pts\n"
             text += f"   Team: {play['team']} (Spread: {play['spread']:+.1f})\n"
             text += f"   Strategy: {play['strategy_name']}\n"
-            text += f"   Expected ROI: {play['expected_roi']:+.1f}% | Hit Rate: {play['hit_rate']:.1f}% ({play['games_in_sample']} games)\n"
+            text += f"   Expected ROI: {play['expected_roi']:+.1f}% | Hit Rate: {play['hit_rate']:.1f}% (n={games}, {wins}-{losses})\n"
             text += f"   Edge vs Baseline: {play['edge_vs_baseline']:+.1f}% | Edge vs Breakeven: {play['edge_vs_breakeven']:+.1f}%\n"
             
             # Calculate Kelly Criterion
@@ -1004,6 +1010,77 @@ Standard Fixed-Size Comparison:
     return text
 
 
+def generate_plays_summary(df_plays):
+    """
+    Generate a concise summary of plays grouped by game, sorted by game start time.
+    
+    Returns:
+        str: Formatted summary text
+    """
+    if df_plays is None or len(df_plays) == 0:
+        return ""
+    
+    # Group plays by game
+    games = df_plays.groupby('game_key').agg({
+        'game_time': 'first',
+        'team': 'first',
+        'opponent': 'first'
+    }).reset_index()
+    
+    # Sort by game_time
+    games['game_time_parsed'] = pd.to_datetime(games['game_time'])
+    games = games.sort_values('game_time_parsed')
+    
+    summary_lines = [
+        "="*80,
+        "📋 PLAYS SUMMARY (sorted by game start time)",
+        "="*80,
+        ""
+    ]
+    
+    for _, game in games.iterrows():
+        game_teams = game['game_key']
+        team1, team2 = game_teams
+        
+        # Format game time
+        game_time_str = ""
+        if pd.notna(game['game_time']):
+            try:
+                if isinstance(game['game_time'], str):
+                    game_time_dt = pd.to_datetime(game['game_time'])
+                else:
+                    game_time_dt = game['game_time']
+                
+                if game_time_dt.tzinfo is None:
+                    game_time_dt = game_time_dt.tz_localize(ET_TZ)
+                else:
+                    game_time_dt = game_time_dt.astimezone(ET_TZ)
+                
+                if game_time_dt.minute == 0:
+                    game_time_str = game_time_dt.strftime('%I%p ET').lstrip('0').lower()
+                else:
+                    game_time_str = game_time_dt.strftime('%I:%M%p ET').lstrip('0').lower()
+            except Exception:
+                pass
+        
+        # Get all plays for this game
+        game_plays = df_plays[df_plays['game_key'] == game_teams].copy()
+        game_plays = game_plays.sort_values('expected_roi', ascending=False)
+        
+        summary_lines.append(f"{team1} vs {team2} @ {game_time_str}")
+        
+        for _, play in game_plays.iterrows():
+            bet_side_lower = play['bet_side'].lower()[0]  # 'o' or 'u'
+            summary_lines.append(f"- {play['player']} {bet_side_lower}{play['line']}")
+        
+        summary_lines.append("")
+    
+    summary_lines.append("="*80)
+    summary_lines.append("")
+    
+    return "\n".join(summary_lines)
+
+
 def generate_email_text(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None, skipped_players=None):
     """Generate complete email body in text format"""
     
@@ -1038,6 +1115,9 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
     # Add skipped players warning (if any)
     if skipped_players:
         body += format_skipped_players(skipped_players, plays_date)
+    
+    # Add plays summary at the end (before Kelly explanation)
+    body += generate_plays_summary(df_plays)
     
     # Add Kelly explanation footnote
     body += f"""
