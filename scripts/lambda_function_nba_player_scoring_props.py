@@ -101,6 +101,7 @@ import json
 import os
 import subprocess
 import boto3
+from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -698,12 +699,22 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     s3_2d_top3_path = f'data/04_output/plays/role_spread_points_model/2d/{today}_top3.csv'
     
     print(f"\n   2D Plays:")
-    s3_client.download_file(bucket, s3_2d_path, plays_2d_all_csv)
-    filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top3_csv, dimension='2d')
-    s3_client.upload_file(plays_2d_top3_csv, bucket, s3_2d_top3_path)
-    print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top3_path}")
     
-    results['2d_filter'] = {'success': True, 'plays_count': filtered_2d_count}
+    # Check if 2D file exists in S3 first
+    try:
+        s3_client.head_object(Bucket=bucket, Key=s3_2d_path)
+        s3_client.download_file(bucket, s3_2d_path, plays_2d_all_csv)
+        filtered_2d_count = filter_plays_by_config(plays_2d_all_csv, config_data, plays_2d_top3_csv, dimension='2d')
+        s3_client.upload_file(plays_2d_top3_csv, bucket, s3_2d_top3_path)
+        print(f"   ✅ Uploaded: s3://{bucket}/{s3_2d_top3_path}")
+        results['2d_filter'] = {'success': True, 'plays_count': filtered_2d_count}
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            print(f"   ⚠️  No 2D plays file found in S3 (likely 0 plays today)")
+            print(f"   Expected: s3://{bucket}/{s3_2d_path}")
+            results['2d_filter'] = {'success': True, 'plays_count': 0, 'skipped': True, 'reason': 'no_plays_file'}
+        else:
+            raise
     
     # Download and filter 3D plays CSV
     plays_3d_all_csv = f'/tmp/{today}_3d.csv'
@@ -712,71 +723,101 @@ def run_top3_unders_workflow(repo_dir, today, yesterday, season='2025-26'):
     s3_3d_top3_path = f'data/04_output/plays/role_spread_points_model/3d/{today}_top3.csv'
     
     print(f"\n   3D Plays:")
-    s3_client.download_file(bucket, s3_3d_path, plays_3d_all_csv)
-    filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top3_csv, dimension='3d')
-    s3_client.upload_file(plays_3d_top3_csv, bucket, s3_3d_top3_path)
-    print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top3_path}")
     
-    results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
+    # Check if 3D file exists in S3 first
+    try:
+        s3_client.head_object(Bucket=bucket, Key=s3_3d_path)
+        s3_client.download_file(bucket, s3_3d_path, plays_3d_all_csv)
+        filtered_3d_count = filter_plays_by_config(plays_3d_all_csv, config_data, plays_3d_top3_csv, dimension='3d')
+        s3_client.upload_file(plays_3d_top3_csv, bucket, s3_3d_top3_path)
+        print(f"   ✅ Uploaded: s3://{bucket}/{s3_3d_top3_path}")
+        results['3d_filter'] = {'success': True, 'plays_count': filtered_3d_count}
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            print(f"   ⚠️  No 3D plays file found in S3 (likely 0 plays today)")
+            print(f"   Expected: s3://{bucket}/{s3_3d_path}")
+            results['3d_filter'] = {'success': True, 'plays_count': 0, 'skipped': True, 'reason': 'no_plays_file'}
+        else:
+            raise
     
     # Step 7: Track yesterday's Top3 performance (MUST run before Kelly update)
+    # Skip if both 2D and 3D filtering were skipped (no plays files exist)
     print(f"\n{'='*80}")
     print("Step 7: Tracking Yesterday's Top3 Performance")
     print(f"{'='*80}\n")
     
-    cmd = [
-        'python', 'scripts/track_daily_plays_performance.py',
-        '--date', yesterday,
-        '--season', season,
-        '--strategy', 'both',
-        '--plays-suffix', '_top3',
-        '--output-suffix', '_top3'
-    ]
+    both_dimensions_skipped = (
+        results['2d_filter'].get('skipped', False) and 
+        results['3d_filter'].get('skipped', False)
+    )
     
-    env = {
-        'AWS_DEFAULT_REGION': os.environ['AWS_REGION_NAME'],
-        'PYTHONPATH': '/opt/python'
-    }
-    
-    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
-    results['tracking'] = {'success': returncode == 0, 'output': stdout}
+    if both_dimensions_skipped:
+        print(f"   ⚠️  Skipping tracking - no plays files found for today")
+        results['tracking'] = {'success': True, 'skipped': True, 'reason': 'no_plays_files'}
+    else:
+        cmd = [
+            'python', 'scripts/track_daily_plays_performance.py',
+            '--date', yesterday,
+            '--season', season,
+            '--strategy', 'both',
+            '--plays-suffix', '_top3',
+            '--output-suffix', '_top3'
+        ]
+        
+        env = {
+            'AWS_DEFAULT_REGION': os.environ['AWS_REGION_NAME'],
+            'PYTHONPATH': '/opt/python'
+        }
+        
+        stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+        results['tracking'] = {'success': returncode == 0, 'output': stdout}
     
     # Step 7.5: Update Kelly Bankroll (based on yesterday's Top3 results from Step 7)
+    # Skip if Step 7 (tracking) was skipped
     print(f"\n{'='*80}")
     print("Step 7.5: Updating Kelly Bankroll Tracker")
     print(f"{'='*80}\n")
     
-    cmd = [
-        'python', 'scripts/update_kelly_bankroll_tracker.py',
-        '--date', today
-    ]
-    
-    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
-    results['kelly_update'] = {'success': returncode == 0, 'output': stdout}
-    
-    if returncode != 0:
-        print(f"⚠️  Kelly bankroll update failed (non-fatal, continuing...)")
+    if results['tracking'].get('skipped', False):
+        print(f"   ⚠️  Skipping Kelly update - tracking was skipped")
+        results['kelly_update'] = {'success': True, 'skipped': True, 'reason': 'tracking_skipped'}
+    else:
+        cmd = [
+            'python', 'scripts/update_kelly_bankroll_tracker.py',
+            '--date', today
+        ]
+        
+        stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+        results['kelly_update'] = {'success': returncode == 0, 'output': stdout}
+        
+        if returncode != 0:
+            print(f"⚠️  Kelly bankroll update failed (non-fatal, continuing...)")
     
     # Step 8: Generate Top3 email
+    # Skip if both 2D and 3D filtering were skipped (no plays files exist)
     print(f"\n{'='*80}")
     print("Step 8: Generating Top3 Unders Email")
     print(f"{'='*80}\n")
     
-    cmd = [
-        'python', 'scripts/generate_role_spread_points_model_daily_email.py',
-        '--season', season,
-        '--plays-date', today,
-        '--results-date', yesterday,
-        '--strategy', 'both',
-        '--plays-suffix', '_top3',
-        '--tracking-suffix', '_top3',
-        '--email-title', '🎯 Top 3 Unders Plays',
-        '--load-ytd',  # Load season YTD stats for top3 email
-        '--sns-topic', os.environ['SNS_TOPIC_ARN']
-    ]
-    
-    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
-    results['email'] = {'success': returncode == 0, 'output': stdout, 'email_sent': returncode == 0}
+    if both_dimensions_skipped:
+        print(f"   ⚠️  Skipping email - no plays files found for today")
+        results['email'] = {'success': True, 'skipped': True, 'reason': 'no_plays_files', 'email_sent': False}
+    else:
+        cmd = [
+            'python', 'scripts/generate_role_spread_points_model_daily_email.py',
+            '--season', season,
+            '--plays-date', today,
+            '--results-date', yesterday,
+            '--strategy', 'both',
+            '--plays-suffix', '_top3',
+            '--tracking-suffix', '_top3',
+            '--email-title', '🎯 Top 3 Unders Plays',
+            '--load-ytd',  # Load season YTD stats for top3 email
+            '--sns-topic', os.environ['SNS_TOPIC_ARN']
+        ]
+        
+        stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+        results['email'] = {'success': returncode == 0, 'output': stdout, 'email_sent': returncode == 0}
     
     return results
 
@@ -849,11 +890,35 @@ def lambda_handler(event, context):
         if 'skipped' in top3 and top3['skipped']:
             print(f"  Status: ⏭️  Skipped - {top3['reason']}")
         else:
-            print(f"  2D Filter: {'✅' if top3['2d_filter']['success'] else '❌'} ({top3['2d_filter']['plays_count']} plays)")
-            print(f"  3D Filter: {'✅' if top3['3d_filter']['success'] else '❌'} ({top3['3d_filter']['plays_count']} plays)")
-            print(f"  Kelly Update: {'✅' if top3.get('kelly_update', {}).get('success', False) else '❌'}")
-            print(f"  Tracking: {'✅' if top3['tracking']['success'] else '❌'}")
-            print(f"  Email+SNS: {'✅' if top3['email']['success'] else '❌'}")
+            # Show 2D filter status
+            if top3['2d_filter'].get('skipped', False):
+                print(f"  2D Filter: ⏭️  Skipped - no plays file (0 plays)")
+            else:
+                print(f"  2D Filter: {'✅' if top3['2d_filter']['success'] else '❌'} ({top3['2d_filter']['plays_count']} plays)")
+            
+            # Show 3D filter status
+            if top3['3d_filter'].get('skipped', False):
+                print(f"  3D Filter: ⏭️  Skipped - no plays file (0 plays)")
+            else:
+                print(f"  3D Filter: {'✅' if top3['3d_filter']['success'] else '❌'} ({top3['3d_filter']['plays_count']} plays)")
+            
+            # Show Kelly update status
+            if top3.get('kelly_update', {}).get('skipped', False):
+                print(f"  Kelly Update: ⏭️  Skipped - {top3['kelly_update'].get('reason', 'unknown')}")
+            else:
+                print(f"  Kelly Update: {'✅' if top3.get('kelly_update', {}).get('success', False) else '❌'}")
+            
+            # Show tracking status
+            if top3['tracking'].get('skipped', False):
+                print(f"  Tracking: ⏭️  Skipped - {top3['tracking'].get('reason', 'unknown')}")
+            else:
+                print(f"  Tracking: {'✅' if top3['tracking']['success'] else '❌'}")
+            
+            # Show email status
+            if top3['email'].get('skipped', False):
+                print(f"  Email+SNS: ⏭️  Skipped - {top3['email'].get('reason', 'unknown')}")
+            else:
+                print(f"  Email+SNS: {'✅' if top3['email']['success'] else '❌'}")
         
         print(f"{'='*80}\n")
         
