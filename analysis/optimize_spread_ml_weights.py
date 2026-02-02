@@ -65,6 +65,8 @@ import sys
 import argparse
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend - don't show plots on screen
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
@@ -85,6 +87,7 @@ from src.s3_utils import read_df_from_s3, list_s3_files, upload_df_to_s3
 
 CONFIG = {
     'min_sample_size': 20,
+    'line_source': 'consensus',  # Options: 'consensus', 'betmgm', 'draftkings', etc.
     'ml_bins': [
         (100, 150),
         (150, 200),
@@ -103,6 +106,10 @@ CONFIG = {
         'nba_results_bucket': 'nba-betting-mt',
         'output_bucket': 'nba-betting-mt',
         'output_prefix': 'analysis/spread_ml_optimization',
+    },
+    'team_name_mapping': {
+        # ESPN → Odds API mapping
+        'LA Clippers': 'Los Angeles Clippers',
     }
 }
 
@@ -198,12 +205,13 @@ def load_nba_game_lines(seasons: List[str]) -> pd.DataFrame:
     # Combine all data
     df = pd.concat(all_lines, ignore_index=True)
     
-    # Convert dates
-    df['game_time'] = pd.to_datetime(df['game_time'])
+    # Convert to ET timezone BEFORE extracting date
+    df['game_time'] = pd.to_datetime(df['game_time'], utc=True)
+    df['game_time'] = df['game_time'].dt.tz_convert('US/Eastern')
     df['game_date'] = df['game_time'].dt.date
     
     print(f"  ✅ Loaded {len(df):,} line records")
-    print(f"  Date range: {df['game_date'].min()} to {df['game_date'].max()}")
+    print(f"  Date range (ET): {df['game_date'].min()} to {df['game_date'].max()}")
     
     return df
 
@@ -257,11 +265,19 @@ def load_nba_game_results(seasons: List[str]) -> pd.DataFrame:
     # Combine all data
     df = pd.concat(all_results, ignore_index=True)
     
-    # Convert dates
+    # Filter out postponed/cancelled games (0-0 scores)
+    df = df[(df['AWAY_SCORE'] > 0) | (df['HOME_SCORE'] > 0)].copy()
+    
+    # Convert to ET timezone (ESPN data is already in ET, but make it explicit)
     df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
     
+    # Normalize team names (ESPN → Odds API format)
+    team_mapping = CONFIG['team_name_mapping']
+    df['AWAY_TEAM'] = df['AWAY_TEAM'].replace(team_mapping)
+    df['HOME_TEAM'] = df['HOME_TEAM'].replace(team_mapping)
+    
     print(f"  ✅ Loaded {len(df):,} game results")
-    print(f"  Date range: {df['GAME_DATE'].min()} to {df['GAME_DATE'].max()}")
+    print(f"  Date range (ET): {df['GAME_DATE'].min()} to {df['GAME_DATE'].max()}")
     
     return df
 
@@ -279,25 +295,65 @@ def merge_lines_and_results(lines_df: pd.DataFrame, results_df: pd.DataFrame) ->
     """
     print("\n🔗 Merging lines with results...")
     
-    # Filter to BetMGM only for consistency
-    lines_df = lines_df[lines_df['bookmaker'] == 'BetMGM'].copy()
+    line_source = CONFIG['line_source']
+    print(f"  Line source: {line_source}")
     
-    # Separate spreads and moneylines
-    spreads = lines_df[lines_df['market'] == 'spread'][
-        ['game_date', 'away_team', 'home_team', 'away_line', 'away_odds', 'home_line', 'home_odds']
-    ].rename(columns={
-        'away_line': 'away_spread',
-        'away_odds': 'away_spread_odds',
-        'home_line': 'home_spread',
-        'home_odds': 'home_spread_odds'
-    })
-    
-    moneylines = lines_df[lines_df['market'] == 'moneyline'][
-        ['game_date', 'away_team', 'home_team', 'away_odds', 'home_odds']
-    ].rename(columns={
-        'away_odds': 'away_ml_odds',
-        'home_odds': 'home_ml_odds'
-    })
+    if line_source == 'consensus':
+        # Calculate consensus spreads (mean across all books)
+        spreads = lines_df[lines_df['market'] == 'spread'].groupby(
+            ['game_date', 'away_team', 'home_team']
+        ).agg({
+            'away_line': 'mean',
+            'away_odds': 'mean',
+            'home_line': 'mean',
+            'home_odds': 'mean',
+            'bookmaker': 'count'
+        }).rename(columns={
+            'away_line': 'away_spread',
+            'away_odds': 'away_spread_odds',
+            'home_line': 'home_spread',
+            'home_odds': 'home_spread_odds',
+            'bookmaker': 'num_books_spread'
+        }).reset_index()
+        
+        # Calculate consensus moneylines (mean across all books)
+        moneylines = lines_df[lines_df['market'] == 'moneyline'].groupby(
+            ['game_date', 'away_team', 'home_team']
+        ).agg({
+            'away_odds': 'mean',
+            'home_odds': 'mean',
+            'bookmaker': 'count'
+        }).rename(columns={
+            'away_odds': 'away_ml_odds',
+            'home_odds': 'home_ml_odds',
+            'bookmaker': 'num_books_ml'
+        }).reset_index()
+        
+        # Show consensus stats
+        print(f"  Avg books per game (spread): {spreads['num_books_spread'].mean():.1f}")
+        print(f"  Avg books per game (ML): {moneylines['num_books_ml'].mean():.1f}")
+        
+    else:
+        # Filter to specific bookmaker
+        print(f"  Filtering to {line_source} only")
+        lines_df = lines_df[lines_df['bookmaker'] == line_source].copy()
+        
+        # Separate spreads and moneylines
+        spreads = lines_df[lines_df['market'] == 'spread'][
+            ['game_date', 'away_team', 'home_team', 'away_line', 'away_odds', 'home_line', 'home_odds']
+        ].rename(columns={
+            'away_line': 'away_spread',
+            'away_odds': 'away_spread_odds',
+            'home_line': 'home_spread',
+            'home_odds': 'home_spread_odds'
+        })
+        
+        moneylines = lines_df[lines_df['market'] == 'moneyline'][
+            ['game_date', 'away_team', 'home_team', 'away_odds', 'home_odds']
+        ].rename(columns={
+            'away_odds': 'away_ml_odds',
+            'home_odds': 'home_ml_odds'
+        })
     
     # Merge spreads and moneylines
     lines_merged = spreads.merge(
@@ -318,6 +374,12 @@ def merge_lines_and_results(lines_df: pd.DataFrame, results_df: pd.DataFrame) ->
     )
     
     print(f"  ✅ Matched {len(merged):,} games with results")
+    
+    # Check match rate
+    match_rate = len(merged) / len(results_df) * 100
+    if match_rate < 95:
+        unmatched = len(results_df) - len(merged)
+        print(f"  ⚠️  Warning: {unmatched} games ({100-match_rate:.1f}%) had no matching lines")
     
     return merged
 
@@ -383,6 +445,35 @@ def create_underdog_dataset(merged_df: pd.DataFrame) -> pd.DataFrame:
     print(f"  Avg ML odds: +{df['ml_odds'].mean():.0f}")
     print(f"  Avg spread: +{df['spread_line'].mean():.1f}")
     
+    # Add spread distribution summary
+    print("\n📊 UNDERDOG SPREAD DISTRIBUTION")
+    print("="*60)
+    print(f"Total underdogs: {len(df)}")
+    print(f"\nSpread statistics:")
+    print(f"  Min:  +{df['spread_line'].min():.1f}")
+    print(f"  Max:  +{df['spread_line'].max():.1f}")
+    print(f"  Mean: +{df['spread_line'].mean():.1f}")
+    print(f"  Median: +{df['spread_line'].median():.1f}")
+    
+    print(f"\nPercentiles:")
+    for p in [10, 25, 50, 75, 90, 95, 99]:
+        val = df['spread_line'].quantile(p/100)
+        print(f"  {p}th: +{val:.1f}")
+    
+    # Show most common spreads
+    spread_counts = df['spread_line'].value_counts().head(10)
+    print(f"\nMost common spreads:")
+    for spread, count in spread_counts.items():
+        pct = count / len(df) * 100
+        print(f"  +{spread:.1f}: {count:4d} games ({pct:5.1f}%)")
+    
+    # Check for any underdogs with tiny spreads (might indicate data issues)
+    tiny_spreads = df[df['spread_line'] <= 1.0]
+    if len(tiny_spreads) > 0:
+        print(f"\n⚠️  {len(tiny_spreads)} underdogs with spreads ≤ +1.0")
+    else:
+        print(f"\n✓ No underdogs with spreads ≤ +1.0")
+    
     return df
 
 
@@ -425,6 +516,20 @@ def analyze_cover_rates(df: pd.DataFrame) -> pd.DataFrame:
             'spread_win_ml_loss_rate': (1 - spread_covered['ml_won'].mean()),
             'ml_win_spread_loss_rate': 0.0,
             'both_loss_rate': 0.0,
+        })
+    
+    # Conditional probability: P(ML win | spread NOT covered) - should be 0
+    spread_not_covered = df[~df['spread_covered']]
+    if len(spread_not_covered) > 0:
+        results.append({
+            'category': 'P(ML win | Spread NOT covered)',
+            'sample_size': len(spread_not_covered),
+            'spread_cover_rate': 0.0,
+            'ml_win_rate': spread_not_covered['ml_won'].mean(),
+            'both_win_rate': 0.0,
+            'spread_win_ml_loss_rate': 0.0,
+            'ml_win_spread_loss_rate': spread_not_covered['ml_won'].mean(),
+            'both_loss_rate': (1 - spread_not_covered['ml_won'].mean()),
         })
     
     # By ML odds bins
@@ -676,6 +781,439 @@ def print_results(results: Dict) -> None:
 
 
 # =============================================================================
+# PLOTTING FUNCTIONS
+# =============================================================================
+
+def analyze_underdog_spread_distribution(underdog_df: pd.DataFrame) -> None:
+    """
+    Print distribution statistics for underdog spreads.
+    
+    Args:
+        underdog_df: Underdog dataset
+    """
+    print("\n📊 UNDERDOG SPREAD DISTRIBUTION")
+    print("="*60)
+    
+    spreads = underdog_df['spread_line']
+    
+    print(f"Total underdogs: {len(spreads):,}")
+    print(f"\nSpread statistics:")
+    print(f"  Min:  +{spreads.min():.1f}")
+    print(f"  Max:  +{spreads.max():.1f}")
+    print(f"  Mean: +{spreads.mean():.1f}")
+    print(f"  Median: +{spreads.median():.1f}")
+    
+    print(f"\nPercentiles:")
+    for pct in [10, 25, 50, 75, 90, 95, 99]:
+        val = spreads.quantile(pct/100)
+        print(f"  {pct}th: +{val:.1f}")
+    
+    print(f"\nMost common spreads:")
+    top_spreads = spreads.value_counts().head(10)
+    for spread, count in top_spreads.items():
+        pct = count / len(spreads) * 100
+        print(f"  +{spread:.1f}: {count:4d} games ({pct:5.1f}%)")
+    
+    # Check for small spreads
+    small_spreads = spreads[spreads <= 1.0]
+    if len(small_spreads) > 0:
+        print(f"\n⚠️  Found {len(small_spreads)} underdogs with spreads ≤ +1.0:")
+        for spread in sorted(small_spreads.unique()):
+            count = (spreads == spread).sum()
+            print(f"  +{spread:.1f}: {count} games")
+    else:
+        print(f"\n✓ No underdogs with spreads ≤ +1.0")
+
+
+def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
+    """
+    Create 3 plots analyzing underdog performance by specific spread line.
+    
+    Args:
+        merged_df: Merged game data with lines and results
+        output_dir: Directory to save plots
+    """
+    print("\n📊 Creating spread line plots (underdog perspective)...")
+    
+    # Prepare data - UNDERDOG PERSPECTIVE ONLY
+    rows = []
+    
+    for _, row in merged_df.iterrows():
+        away_ml = row['away_ml_odds']
+        home_ml = row['home_ml_odds']
+        
+        # Away team is underdog (positive ML)
+        if away_ml > 0:
+            rows.append({
+                'team': row['AWAY_TEAM'],
+                'spread': abs(row['away_spread']),  # Make positive
+                'won': row['AWAY_WL'] == 'W',
+                'covered': (row['AWAY_SCORE'] + row['away_spread']) > row['HOME_SCORE'],
+            })
+        
+        # Home team is underdog (positive ML)
+        if home_ml > 0:
+            rows.append({
+                'team': row['HOME_TEAM'],
+                'spread': abs(row['home_spread']),  # Make positive
+                'won': row['HOME_WL'] == 'W',
+                'covered': (row['HOME_SCORE'] + row['home_spread']) > row['AWAY_SCORE'],
+            })
+    
+    df = pd.DataFrame(rows)
+    
+    # Floor spread to whole numbers for binning (1.5 → 1, 2.5 → 2, etc.)
+    df['spread_bin'] = df['spread'].astype(int)
+    
+    # Cap at 15 (bin larger spreads together)
+    df.loc[df['spread_bin'] > 15, 'spread_bin'] = 15
+    
+    # Calculate stats by spread bin
+    stats = df.groupby('spread_bin').agg({
+        'won': ['sum', 'count', 'mean'],
+        'covered': ['sum', 'mean']
+    }).reset_index()
+    
+    stats.columns = ['spread_bin', 'wins', 'total_games', 'win_pct', 'covers', 'cover_pct']
+    
+    # Calculate P(win | covered) for each bin
+    covered_df = df[df['covered']].groupby('spread_bin')['won'].agg(['sum', 'count']).reset_index()
+    covered_df.columns = ['spread_bin', 'wins_when_covered', 'covers']
+    covered_df['win_given_cover_pct'] = covered_df['wins_when_covered'] / covered_df['covers']
+    
+    stats = stats.merge(covered_df[['spread_bin', 'win_given_cover_pct']], on='spread_bin', how='left')
+    
+    # Filter to bins with at least 10 games
+    stats = stats[stats['total_games'] >= 10].copy()
+    
+    # Sort by spread
+    stats = stats.sort_values('spread_bin')
+    
+    print(f"  Spread bins with 10+ games: {len(stats)}")
+    print(f"  Spread range: +{stats['spread_bin'].min():.1f} to +{stats['spread_bin'].max():.1f}")
+    
+    # Create figure with 3 subplots
+    fig = plt.figure(figsize=(16, 18))
+    gs = fig.add_gridspec(3, 1, hspace=0.3)
+    
+    # Calculate overall ML W-L and Spread W-L records
+    ml_wins = df['won'].sum()
+    ml_losses = len(df) - ml_wins
+    ml_win_pct = (ml_wins / len(df)) * 100
+    
+    spread_covers = df['covered'].sum()
+    spread_losses = len(df) - spread_covers
+    spread_cover_pct = (spread_covers / len(df)) * 100
+    
+    # Add overall title with sample info
+    fig.suptitle(f'Underdog Spread Analysis - Aggregated Across All Seasons\n'
+                 f'n={len(df):,} | ML: {ml_wins:,}-{ml_losses:,} ({ml_win_pct:.1f}%) | Spread: {spread_covers:,}-{spread_losses:,} ({spread_cover_pct:.1f}%) | 2021-22 through 2025-26',
+                 fontsize=15, fontweight='bold', y=0.995)
+    
+    axes = [fig.add_subplot(gs[i]) for i in range(3)]
+    
+    # Plot 1: Win % by spread line (UNDERDOGS) - bars + line
+    ax1 = axes[0]
+    ax1.bar(stats['spread_bin'], stats['win_pct'] * 100, alpha=0.3, color='#1f77b4', width=0.4)
+    ax1.plot(stats['spread_bin'], stats['win_pct'] * 100, marker='o', linewidth=2.5, markersize=8, color='#1f77b4')
+    ax1.axhline(y=50, color='gray', linestyle='--', alpha=0.5, label='50% baseline')
+    ax1.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Win %', fontsize=12, fontweight='bold')
+    ax1.set_title('Underdog Win % by Spread Line', fontsize=13, fontweight='bold', pad=15)
+    ax1.text(0.5, 1.08, f'Aggregated across all 5 seasons | Spreads floored to whole numbers | Min 10 games per bin', 
+             transform=ax1.transAxes, ha='center', va='bottom', fontsize=9, 
+             style='italic', color='#555')
+    ax1.grid(True, alpha=0.3, axis='y')
+    ax1.legend()
+    ax1.set_ylim(0, 100)
+    ax1.set_xlim(0, 16)
+    
+    # Set x-axis ticks every 1 unit
+    ax1.set_xticks(range(0, 17, 1))
+    
+    # Add sample size annotations for significant bins
+    for _, row in stats.iterrows():
+        if row['total_games'] >= 30:
+            ax1.annotate(f"n={int(row['total_games'])}", 
+                        xy=(row['spread_bin'], row['win_pct'] * 100),
+                        xytext=(0, 10), textcoords='offset points',
+                        ha='center', fontsize=8, alpha=0.6)
+    
+    # Plot 2: Cover % by spread line (UNDERDOGS) - bars + line
+    ax2 = axes[1]
+    ax2.bar(stats['spread_bin'], stats['cover_pct'] * 100, alpha=0.3, color='#ff7f0e', width=0.4)
+    ax2.plot(stats['spread_bin'], stats['cover_pct'] * 100, marker='s', linewidth=2.5, 
+             markersize=8, color='#ff7f0e')
+    ax2.axhline(y=50, color='gray', linestyle='--', alpha=0.5, label='50% baseline')
+    ax2.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Cover %', fontsize=12, fontweight='bold')
+    ax2.set_title('Underdog Cover % by Spread Line', fontsize=13, fontweight='bold', pad=15)
+    ax2.text(0.5, 1.08, f'Aggregated across all 5 seasons | Spreads floored to whole numbers | Min 10 games per bin', 
+             transform=ax2.transAxes, ha='center', va='bottom', fontsize=9, 
+             style='italic', color='#555')
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.legend()
+    ax2.set_ylim(0, 100)
+    ax2.set_xlim(0, 16)
+    
+    # Set x-axis ticks every 1 unit
+    ax2.set_xticks(range(0, 17, 1))
+    
+    # Plot 3: Win % given cover (UNDERDOGS) - bars + line
+    ax3 = axes[2]
+    ax3.bar(stats['spread_bin'], stats['win_given_cover_pct'] * 100, alpha=0.3, color='#2ca02c', width=0.4)
+    ax3.plot(stats['spread_bin'], stats['win_given_cover_pct'] * 100, marker='^', 
+             linewidth=2.5, markersize=8, color='#2ca02c')
+    ax3.axhline(y=100, color='gray', linestyle='--', alpha=0.3, label='100% (would mean always win when cover)')
+    ax3.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
+    ax3.set_ylabel('Win % (Given Cover)', fontsize=12, fontweight='bold')
+    ax3.set_title('P(Underdog Wins | Covers Spread) by Spread Line', fontsize=13, fontweight='bold', pad=15)
+    ax3.text(0.5, 1.08, f'At small spreads, covering often means winning | Larger spreads allow covering without winning', 
+             transform=ax3.transAxes, ha='center', va='bottom', fontsize=9, 
+             style='italic', color='#555')
+    ax3.grid(True, alpha=0.3, axis='y')
+    ax3.legend()
+    ax3.set_ylim(0, 100)
+    ax3.set_xlim(0, 16)
+    
+    # Set x-axis ticks every 1 unit
+    ax3.set_xticks(range(0, 17, 1))
+    
+    # Add explanatory note
+    ax3.text(0.02, 0.98, 'When underdogs cover:\n- Small spreads (+0.5 to +3): Usually won outright\n- Large spreads (+10+): Often just lost by less than the spread',
+             transform=ax3.transAxes, fontsize=9, verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
+    
+    plt.tight_layout()
+    
+    # Save plot
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plot_path = output_dir / 'underdog_spread_line_analysis.png'
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    print(f"  ✅ Saved plot: {plot_path}")
+    
+    # Also save the data
+    data_path = output_dir / 'underdog_spread_line_stats.csv'
+    stats.to_csv(data_path, index=False)
+    print(f"  ✅ Saved data: {data_path}")
+    
+    plt.close()
+
+
+def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[str], output_dir: Path) -> None:
+    """
+    Create 3 plots analyzing underdog performance by season (grouped bars + lines).
+    
+    Args:
+        merged_df: Merged game data with lines and results
+        seasons: List of seasons to analyze
+        output_dir: Directory to save plots
+    """
+    print("\n📊 Creating spread line plots by season (grouped bars)...")
+    
+    # Prepare data - UNDERDOG PERSPECTIVE with season tracking
+    rows = []
+    
+    for _, row in merged_df.iterrows():
+        away_ml = row['away_ml_odds']
+        home_ml = row['home_ml_odds']
+        game_date = pd.to_datetime(row['GAME_DATE'])
+        
+        # Determine season from game date
+        if game_date.month >= 10:
+            season = f"{game_date.year}-{str(game_date.year + 1)[-2:]}"
+        else:
+            season = f"{game_date.year - 1}-{str(game_date.year)[-2:]}"
+        
+        # Away team is underdog (positive ML)
+        if away_ml > 0:
+            rows.append({
+                'season': season,
+                'spread': abs(row['away_spread']),
+                'won': row['AWAY_WL'] == 'W',
+                'covered': (row['AWAY_SCORE'] + row['away_spread']) > row['HOME_SCORE'],
+            })
+        
+        # Home team is underdog (positive ML)
+        if home_ml > 0:
+            rows.append({
+                'season': season,
+                'spread': abs(row['home_spread']),
+                'won': row['HOME_WL'] == 'W',
+                'covered': (row['HOME_SCORE'] + row['home_spread']) > row['AWAY_SCORE'],
+            })
+    
+    df = pd.DataFrame(rows)
+    
+    # Floor spread to whole numbers for binning (1.5 → 1, 2.5 → 2, etc.)
+    df['spread_bin'] = df['spread'].astype(int)
+    
+    # Cap at 15
+    df.loc[df['spread_bin'] > 15, 'spread_bin'] = 15
+    
+    # Calculate stats by spread bin AND season
+    stats = df.groupby(['spread_bin', 'season']).agg({
+        'won': ['sum', 'count', 'mean'],
+        'covered': ['sum', 'mean']
+    }).reset_index()
+    
+    stats.columns = ['spread_bin', 'season', 'wins', 'total_games', 'win_pct', 'covers', 'cover_pct']
+    
+    # Calculate P(win | covered) for each bin + season
+    covered_df = df[df['covered']].groupby(['spread_bin', 'season'])['won'].agg(['sum', 'count']).reset_index()
+    covered_df.columns = ['spread_bin', 'season', 'wins_when_covered', 'covers']
+    covered_df['win_given_cover_pct'] = covered_df['wins_when_covered'] / covered_df['covers']
+    
+    stats = stats.merge(covered_df[['spread_bin', 'season', 'win_given_cover_pct']], 
+                        on=['spread_bin', 'season'], how='left')
+    
+    # Filter to bins with at least 10 games PER SEASON
+    stats = stats[stats['total_games'] >= 10].copy()
+    
+    print(f"  Total season-spread combinations with 10+ games: {len(stats)}")
+    
+    # Define colors for each season
+    season_colors = {
+        '2025-26': '#1f77b4',  # blue
+        '2024-25': '#ff7f0e',  # orange
+        '2023-24': '#2ca02c',  # green
+        '2022-23': '#d62728',  # red
+        '2021-22': '#9467bd',  # purple
+    }
+    
+    # Get unique spread bins that appear in data
+    spread_bins = sorted(stats['spread_bin'].unique())
+    
+    # Create figure with 3 subplots
+    fig = plt.figure(figsize=(18, 20))
+    gs = fig.add_gridspec(3, 1, hspace=0.35)
+    
+    # Add overall title with sample info and W-L by season
+    season_records = []
+    for s in seasons:
+        season_df = df[df['season'] == s]
+        n = len(season_df)
+        ml_w = season_df['won'].sum()
+        ml_l = n - ml_w
+        spread_w = season_df['covered'].sum()
+        spread_l = n - spread_w
+        season_records.append(f"{s}: n={n:,} ML:{ml_w}-{ml_l} ATS:{spread_w}-{spread_l}")
+    
+    season_summary = ' | '.join(season_records)
+    fig.suptitle(f'Underdog Spread Analysis - By Season Comparison\n'
+                 f'{season_summary}',
+                 fontsize=13, fontweight='bold', y=0.995)
+    
+    axes = [fig.add_subplot(gs[i]) for i in range(3)]
+    
+    # Calculate bar positions
+    bar_width = 0.15
+    n_seasons = len(seasons)
+    
+    # Plot 1: Win % by spread line - grouped bars + lines
+    ax1 = axes[0]
+    for i, season in enumerate(seasons):
+        season_data = stats[stats['season'] == season].copy()
+        
+        # Bar positions offset for grouping
+        x_positions = [x + (i - n_seasons/2 + 0.5) * bar_width for x in season_data['spread_bin']]
+        
+        # Bars
+        ax1.bar(x_positions, season_data['win_pct'] * 100, 
+                width=bar_width, alpha=0.6, color=season_colors.get(season, 'gray'),
+                label=season)
+        
+        # Line connecting points
+        ax1.plot(season_data['spread_bin'], season_data['win_pct'] * 100,
+                marker='o', linewidth=1.5, markersize=5, 
+                color=season_colors.get(season, 'gray'))
+    
+    ax1.axhline(y=50, color='gray', linestyle='--', alpha=0.5, linewidth=1)
+    ax1.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Win %', fontsize=12, fontweight='bold')
+    ax1.set_title('Underdog Win % by Spread Line (By Season)', fontsize=13, fontweight='bold', pad=15)
+    ax1.text(0.5, 1.06, f'Each season shown separately | Spreads floored to whole numbers | Min 10 games per season per bin', 
+             transform=ax1.transAxes, ha='center', va='bottom', fontsize=9, 
+             style='italic', color='#555')
+    ax1.grid(True, alpha=0.3, axis='y')
+    ax1.legend(loc='upper right', fontsize=10)
+    ax1.set_ylim(0, 100)
+    ax1.set_xlim(0, 16)
+    ax1.set_xticks(range(0, 17, 1))
+    
+    # Plot 2: Cover % by spread line - grouped bars + lines
+    ax2 = axes[1]
+    for i, season in enumerate(seasons):
+        season_data = stats[stats['season'] == season].copy()
+        
+        x_positions = [x + (i - n_seasons/2 + 0.5) * bar_width for x in season_data['spread_bin']]
+        
+        ax2.bar(x_positions, season_data['cover_pct'] * 100,
+                width=bar_width, alpha=0.6, color=season_colors.get(season, 'gray'),
+                label=season)
+        
+        ax2.plot(season_data['spread_bin'], season_data['cover_pct'] * 100,
+                marker='s', linewidth=1.5, markersize=5,
+                color=season_colors.get(season, 'gray'))
+    
+    ax2.axhline(y=50, color='gray', linestyle='--', alpha=0.5, linewidth=1)
+    ax2.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Cover %', fontsize=12, fontweight='bold')
+    ax2.set_title('Underdog Cover % by Spread Line (By Season)', fontsize=13, fontweight='bold', pad=15)
+    ax2.text(0.5, 1.06, f'Each season shown separately | Compare seasonal variance in cover rates', 
+             transform=ax2.transAxes, ha='center', va='bottom', fontsize=9, 
+             style='italic', color='#555')
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.legend(loc='upper right', fontsize=10)
+    ax2.set_ylim(0, 100)
+    ax2.set_xlim(0, 16)
+    ax2.set_xticks(range(0, 17, 1))
+    
+    # Plot 3: Win % given cover - grouped bars + lines
+    ax3 = axes[2]
+    for i, season in enumerate(seasons):
+        season_data = stats[stats['season'] == season].copy()
+        
+        x_positions = [x + (i - n_seasons/2 + 0.5) * bar_width for x in season_data['spread_bin']]
+        
+        ax3.bar(x_positions, season_data['win_given_cover_pct'] * 100,
+                width=bar_width, alpha=0.6, color=season_colors.get(season, 'gray'),
+                label=season)
+        
+        ax3.plot(season_data['spread_bin'], season_data['win_given_cover_pct'] * 100,
+                marker='^', linewidth=1.5, markersize=5,
+                color=season_colors.get(season, 'gray'))
+    
+    ax3.axhline(y=100, color='gray', linestyle='--', alpha=0.3, linewidth=1)
+    ax3.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
+    ax3.set_ylabel('Win % (Given Cover)', fontsize=12, fontweight='bold')
+    ax3.set_title('P(Underdog Wins | Covers Spread) by Spread Line (By Season)', fontsize=13, fontweight='bold', pad=15)
+    ax3.text(0.5, 1.06, f'Shows how often dogs win outright when they cover | Values near 100% at small spreads expected', 
+             transform=ax3.transAxes, ha='center', va='bottom', fontsize=9, 
+             style='italic', color='#555')
+    ax3.grid(True, alpha=0.3, axis='y')
+    ax3.legend(loc='upper right', fontsize=10)
+    ax3.set_ylim(0, 100)
+    ax3.set_xlim(0, 16)
+    ax3.set_xticks(range(0, 17, 1))
+    
+    plt.tight_layout()
+    
+    # Save plot
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plot_path = output_dir / 'underdog_spread_line_analysis_by_season.png'
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    print(f"  ✅ Saved plot: {plot_path}")
+    
+    # Also save the data
+    data_path = output_dir / 'underdog_spread_line_stats_by_season.csv'
+    stats.to_csv(data_path, index=False)
+    print(f"  ✅ Saved data: {data_path}")
+    
+    plt.close()
+
+
+# =============================================================================
 # MAIN
 # =============================================================================
 
@@ -746,6 +1284,9 @@ def main():
     s3_prefix = f"{CONFIG['s3']['output_prefix']}/{args.sport}"
     season_suffix = '_'.join(args.seasons)
     
+    # Analyze underdog spread distribution
+    analyze_underdog_spread_distribution(underdog_df)
+    
     # Analyze cover rates
     cover_analysis = analyze_cover_rates(underdog_df)
     
@@ -758,6 +1299,12 @@ def main():
     local_path = local_tmp_dir / f'cover_analysis_{season_suffix}.csv'
     cover_analysis.to_csv(local_path, index=False)
     print(f"💾 Saved locally: {local_path}")
+    
+    # Create spread line plots
+    create_spread_line_plots(merged_df, local_tmp_dir)
+    
+    # Create spread line plots by season (grouped bars)
+    create_spread_line_plots_by_season(merged_df, args.seasons, local_tmp_dir)
     
     if args.analyze_only:
         print("\n✅ Analysis complete (--analyze-only flag set)")
