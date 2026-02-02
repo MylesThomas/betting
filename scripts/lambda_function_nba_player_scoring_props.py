@@ -9,14 +9,35 @@ This Lambda function:
 3. Runs the daily NBA props workflow:
    - Finds today's 2D plays (tier × spread) with bookmaker details
    - Finds today's 3D plays (tier × spread × scorer_type) with bookmaker details
-   - Fetches yesterday's game results from NBA API
+   - Fetches yesterday's game results from NBA API (skips if too early)
    - Tracks yesterday's performance (BOTH 2D and 3D)
    - Generates daily email (BOTH 2D and 3D) with detailed bookmaker info (line + odds)
 4. Sends email via SNS
 
+IMPORTANT - NBA API Timing:
+- Step 3 (Fetch Game Results) checks current time before fetching
+- NBA API has 7-12 hour delay for player game logs after games end
+- Games ending at 1 AM ET aren't available until ~8 AM ET same day
+- If Lambda runs between midnight-8 AM ET, Step 3 is SKIPPED (not a failure)
+- After 8 AM ET, data should be available (script also checks S3 cache)
+- This is EXPECTED behavior - data will be available on subsequent hourly runs
+
 New Feature (2026-01-09):
 - Bookmaker details now include specific line and odds for each book
 - Email displays: "Books (2): FanDuel (12.5 @ -110), BetRivers (12.5 @ -105)"
+
+New Feature (2026-01-30):
+- Strategy statistics are now refreshed daily by separate Lambda (6am ET)
+- This Lambda (7am ET) uses fresh multi-season stats (2023-24, 2024-25, 2025-26)
+- Hit rates and ROI figures update daily based on all available historical data
+- Email format updated to show win-loss records: "Hit Rate: 60.8% (n=289, 175-114)"
+
+New Feature (2026-01-31):
+- Added intelligent timing check for NBA API data availability
+- Step 3 automatically skips if run between midnight-8 AM ET (data not ready)
+- After 8 AM ET, Step 3 attempts fetch (with S3 cache check to avoid re-fetching)
+- Workflow continues normally with skipped step (not treated as failure)
+- Game results fetched on first successful run after 8 AM ET
 
 IMPORTANT: Python dependencies are provided via Lambda Layer.
 
@@ -52,8 +73,10 @@ EventBridge Schedule Setup (for automated daily execution):
     - Name: nba-player-scoring-props-daily-scheduler
     - Description: Run NBA props workflow daily (find plays + track results + send email)
 - Define schedule:
-    - Schedule expression: cron(0 15 * * ? *)  (10:00 AM ET daily)
-    - Or adjust time as needed for your workflow
+    - Schedule expression: cron(0 12 * * ? *)  (7:00 AM ET daily)
+    - IMPORTANT: Must run AFTER nba-strategy-stats-refresher (6:00 AM ET)
+    - This ensures we use fresh strategy statistics in today's plays
+    - NOTE: Step 3 (game fetch) will be skipped midnight-8 AM ET (NBA API delay)
 - Select target:
     - Target type: AWS Lambda function
     - Function: nba-player-scoring-props-daily-workflow
@@ -64,8 +87,14 @@ EventBridge Schedule Setup (for automated daily execution):
       * Prevents "FailedInvocation" errors from permission issues
 - Review + Create
 
+PREREQUISITE: nba-strategy-stats-refresher Lambda must be deployed and scheduled
+- That Lambda runs at 6:00 AM ET (cron: 0 11 * * ? *)
+- It updates strategy JSONs with fresh multi-season statistics
+- This Lambda then loads those fresh JSONs when finding plays
+
 Author: Myles Thomas
 Date: 2026-01-06
+Updated: 2026-01-31 (Added NBA API timing check)
 """
 
 import json
@@ -321,22 +350,41 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     print(f"Step 3: Fetching Yesterday's Game Results ({yesterday})")
     print(f"{'='*80}\n")
     
-    cmd = [
-        'python', 'scripts/fetch_nba_player_props.py',
-        '--date', yesterday,
-        '--fetch-games',
-        '--s3',
-        '--season', season
-    ]
+    # Check if it's too early for NBA API data (needs ~7 hours after games end)
+    # Games typically end by 1 AM ET, skip fetch from midnight-8 AM ET
+    # After 8 AM ET, data should be available (or will use S3 cache if already fetched)
+    current_hour_et = now_et.hour
+    too_early_for_nba_api = 0 <= current_hour_et < 8  # Between midnight and 8 AM ET
     
-    stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
-    results['steps']['fetch_games'] = {
-        'success': returncode == 0,
-        'output': stdout
-    }
-    
-    if returncode != 0:
-        print(f"❌ Game results fetch failed (critical failure)")
+    if too_early_for_nba_api:
+        print(f"⏰ Current time: {now_et.strftime('%I:%M %p ET')}")
+        print(f"⚠️  Skipping game fetch - NBA API data not ready yet")
+        print(f"   NBA API has ~7-12 hour delay for player game logs")
+        print(f"   Games ending at 1 AM ET won't be available until ~8 AM ET")
+        print(f"   This is EXPECTED behavior - not a failure")
+        results['steps']['fetch_games'] = {
+            'success': True,
+            'skipped': True,
+            'reason': 'too_early_for_nba_api',
+            'output': f'Skipped - data not ready until 8 AM ET (current: {now_et.strftime("%I:%M %p ET")})'
+        }
+    else:
+        cmd = [
+            'python', 'scripts/fetch_nba_player_props.py',
+            '--date', yesterday,
+            '--fetch-games',
+            '--s3',
+            '--season', season
+        ]
+        
+        stdout, stderr, returncode = run_command(cmd, cwd=repo_dir, env=env)
+        results['steps']['fetch_games'] = {
+            'success': returncode == 0,
+            'output': stdout
+        }
+        
+        if returncode != 0:
+            print(f"❌ Game results fetch failed (critical failure)")
     
     # Step 4: Track yesterday's performance (BOTH 2D and 3D)
     print(f"\n{'='*80}")
@@ -390,10 +438,12 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     # CHECK CRITICAL FAILURES & SEND STATUS EMAIL
     # =============================================================================
     
-    # Check if critical steps failed (fetch_games is critical)
+    # Check if critical steps failed (fetch_games is critical unless skipped)
     critical_failures = []
     
-    if not results['steps']['fetch_games']['success']:
+    fetch_games_result = results['steps']['fetch_games']
+    # Only consider it a failure if it didn't succeed AND wasn't skipped
+    if not fetch_games_result['success'] and not fetch_games_result.get('skipped', False):
         critical_failures.append(f"Step 3: Game results fetch failed for {yesterday}")
     
     # Build status email regardless of success/failure
@@ -417,8 +467,13 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
     ]
     
     for step_name, success in step_statuses:
-        status_emoji = "✅" if success else "❌"
-        status_lines.append(f"{status_emoji} {step_name}")
+        # Check if step 3 was skipped
+        if "Fetch Game Results" in step_name and results['steps']['fetch_games'].get('skipped', False):
+            status_emoji = "⏭️"
+            status_lines.append(f"{status_emoji} {step_name} (Skipped - NBA API data not ready)")
+        else:
+            status_emoji = "✅" if success else "❌"
+            status_lines.append(f"{status_emoji} {step_name}")
     
     status_lines.extend([
         "",
@@ -781,7 +836,10 @@ def lambda_handler(event, context):
         print(f"\nMain Workflow (All Strategies):")
         print(f"  2D Plays: {'✅' if workflow_results['steps']['2d_plays']['success'] else '❌'}")
         print(f"  3D Plays: {'✅' if workflow_results['steps']['3d_plays']['success'] else '❌'}")
-        print(f"  Fetch Games: {'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'}")
+        if workflow_results['steps']['fetch_games'].get('skipped', False):
+            print(f"  Fetch Games: ⏭️  (Skipped - NBA API data not ready)")
+        else:
+            print(f"  Fetch Games: {'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'}")
         print(f"  Tracking: {'✅' if workflow_results['steps']['tracking']['success'] else '❌'}")
         print(f"  Email+SNS: {'✅' if email_sent else '❌'}")
         
@@ -823,13 +881,21 @@ def lambda_handler(event, context):
             "────────────────────────────────────────────────────────────────────────────────",
             f"{'✅' if workflow_results['steps']['2d_plays']['success'] else '❌'} Step 1: Find 2D Plays",
             f"{'✅' if workflow_results['steps']['3d_plays']['success'] else '❌'} Step 2: Find 3D Plays",
-            f"{'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'} Step 3: Fetch Game Results",
+        ]
+        
+        # Handle Step 3 (may be skipped if NBA API data not ready)
+        if workflow_results['steps']['fetch_games'].get('skipped', False):
+            success_lines.append(f"⏭️  Step 3: Fetch Game Results (Skipped - NBA API data not ready until 8 AM ET)")
+        else:
+            success_lines.append(f"{'✅' if workflow_results['steps']['fetch_games']['success'] else '❌'} Step 3: Fetch Game Results")
+        
+        success_lines.extend([
             f"{'✅' if workflow_results['steps']['tracking']['success'] else '❌'} Step 4: Track Performance",
             f"{'✅' if workflow_results['steps']['email']['success'] else '❌'} Step 5: Generate & Send Main Email",
             "",
             "TOP3 UNDERS WORKFLOW:",
             "────────────────────────────────────────────────────────────────────────────────"
-        ]
+        ])
         
         if 'skipped' in top3 and top3['skipped']:
             success_lines.append(f"⏭️  Skipped: {top3['reason']}")
