@@ -38,10 +38,121 @@ from zoneinfo import ZoneInfo
 import subprocess
 import platform
 import sys
+import requests
+from io import BytesIO
+from PIL import Image
+import urllib3
+
+# Disable SSL warnings for logo downloads
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent / 'src'))
 from nba_team_colors import get_team_color
+
+
+# =============================================================================
+# TEAM LOGOS
+# =============================================================================
+
+def get_team_logos():
+    """Get NBA team logos from ESPN - all 30 teams"""
+    logo_map = {
+        'Atlanta Hawks': 'https://a.espncdn.com/i/teamlogos/nba/500/atl.png',
+        'Boston Celtics': 'https://a.espncdn.com/i/teamlogos/nba/500/bos.png',
+        'Brooklyn Nets': 'https://a.espncdn.com/i/teamlogos/nba/500/bkn.png',
+        'Charlotte Hornets': 'https://a.espncdn.com/i/teamlogos/nba/500/cha.png',
+        'Chicago Bulls': 'https://a.espncdn.com/i/teamlogos/nba/500/chi.png',
+        'Cleveland Cavaliers': 'https://a.espncdn.com/i/teamlogos/nba/500/cle.png',
+        'Dallas Mavericks': 'https://a.espncdn.com/i/teamlogos/nba/500/dal.png',
+        'Denver Nuggets': 'https://a.espncdn.com/i/teamlogos/nba/500/den.png',
+        'Detroit Pistons': 'https://a.espncdn.com/i/teamlogos/nba/500/det.png',
+        'Golden State Warriors': 'https://a.espncdn.com/i/teamlogos/nba/500/gs.png',
+        'Houston Rockets': 'https://a.espncdn.com/i/teamlogos/nba/500/hou.png',
+        'Indiana Pacers': 'https://a.espncdn.com/i/teamlogos/nba/500/ind.png',
+        'LA Clippers': 'https://a.espncdn.com/i/teamlogos/nba/500/lac.png',
+        'Los Angeles Clippers': 'https://a.espncdn.com/i/teamlogos/nba/500/lac.png',
+        'Los Angeles Lakers': 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png',
+        'Memphis Grizzlies': 'https://a.espncdn.com/i/teamlogos/nba/500/mem.png',
+        'Miami Heat': 'https://a.espncdn.com/i/teamlogos/nba/500/mia.png',
+        'Milwaukee Bucks': 'https://a.espncdn.com/i/teamlogos/nba/500/mil.png',
+        'Minnesota Timberwolves': 'https://a.espncdn.com/i/teamlogos/nba/500/min.png',
+        'New Orleans Pelicans': 'https://a.espncdn.com/i/teamlogos/nba/500/no.png',
+        'New York Knicks': 'https://a.espncdn.com/i/teamlogos/nba/500/ny.png',
+        'Oklahoma City Thunder': 'https://a.espncdn.com/i/teamlogos/nba/500/okc.png',
+        'Orlando Magic': 'https://a.espncdn.com/i/teamlogos/nba/500/orl.png',
+        'Philadelphia 76ers': 'https://a.espncdn.com/i/teamlogos/nba/500/phi.png',
+        'Phoenix Suns': 'https://a.espncdn.com/i/teamlogos/nba/500/phx.png',
+        'Portland Trail Blazers': 'https://a.espncdn.com/i/teamlogos/nba/500/por.png',
+        'Sacramento Kings': 'https://a.espncdn.com/i/teamlogos/nba/500/sac.png',
+        'San Antonio Spurs': 'https://a.espncdn.com/i/teamlogos/nba/500/sa.png',
+        'Toronto Raptors': 'https://a.espncdn.com/i/teamlogos/nba/500/tor.png',
+        'Utah Jazz': 'https://a.espncdn.com/i/teamlogos/nba/500/utah.png',
+        'Washington Wizards': 'https://a.espncdn.com/i/teamlogos/nba/500/wsh.png',
+    }
+    return logo_map
+
+
+def download_team_logo(team_name: str):
+    """
+    Download team logo from ESPN.
+    
+    Args:
+        team_name: NBA team name
+        
+    Returns:
+        PIL Image object or None if download fails
+    """
+    logo_map = get_team_logos()
+    logo_url = logo_map.get(team_name)
+    
+    if not logo_url:
+        return None
+    
+    try:
+        response = requests.get(logo_url, timeout=5, verify=False)
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            return img
+    except Exception as e:
+        print(f"   ⚠️  Failed to download logo for {team_name}: {e}")
+    
+    return None
+
+
+def add_team_logos_to_figure(fig, away_team: str, home_team: str, away_color: str, home_color: str):
+    """
+    Add team logos to the figure title area.
+    
+    Args:
+        fig: matplotlib figure
+        away_team: Away team name
+        home_team: Home team name
+        away_color: Away team color (for fallback)
+        home_color: Home team color (for fallback)
+    """
+    # Download logos
+    away_logo = download_team_logo(away_team)
+    home_logo = download_team_logo(home_team)
+    
+    if away_logo and home_logo:
+        # Add logos to the figure
+        # Position: left logo at 0.05, right logo at 0.95
+        logo_size = 0.08  # Size relative to figure
+        
+        # Away logo (left)
+        ax_away_logo = fig.add_axes([0.02, 0.935, logo_size, logo_size], anchor='NW')
+        ax_away_logo.imshow(away_logo)
+        ax_away_logo.axis('off')
+        
+        # Home logo (right)
+        ax_home_logo = fig.add_axes([0.90, 0.935, logo_size, logo_size], anchor='NE')
+        ax_home_logo.imshow(home_logo)
+        ax_home_logo.axis('off')
+        
+        return True
+    
+    return False
 
 
 # =============================================================================
@@ -389,8 +500,8 @@ def find_all_live_games(odds_path: Path, espn_path: Path) -> list[tuple[str, str
     """
     con = duckdb.connect()
     
-    # First, get the most recent snapshot timestamp for each game
-    query = f"""
+    # First, let's see all games with status='in' and their snapshot counts
+    debug_query = f"""
         WITH latest_status AS (
             SELECT 
                 e.away_team_espn as away_team,
@@ -416,23 +527,69 @@ def find_all_live_games(odds_path: Path, espn_path: Path) -> list[tuple[str, str
         SELECT 
             ls.away_team,
             ls.home_team,
-            gs.num_snapshots,
+            COALESCE(gs.num_snapshots, 0) as num_snapshots,
+            ls.game_status,
             ls.collection_timestamp as latest_snapshot
         FROM latest_status ls
-        INNER JOIN game_stats gs
+        LEFT JOIN game_stats gs
             ON ls.away_team = gs.away_team
             AND ls.home_team = gs.home_team
         WHERE ls.rn = 1
           AND ls.game_status = 'in'
-          AND gs.num_snapshots >= 5
         ORDER BY ls.collection_timestamp DESC
     """
     
     try:
+        debug_result = con.execute(debug_query).df()
+        
+        if len(debug_result) > 0:
+            print(f"\n🔍 Debug: Found {len(debug_result)} live games (status='in'):")
+            for _, row in debug_result.iterrows():
+                print(f"   • {row['away_team']} @ {row['home_team']}: {row['num_snapshots']} snapshots")
+        
+        # Now get games with sufficient data (lowered threshold to 3)
+        query = f"""
+            WITH latest_status AS (
+                SELECT 
+                    e.away_team_espn as away_team,
+                    e.home_team_espn as home_team,
+                    e.game_status,
+                    e.collection_timestamp,
+                    ROW_NUMBER() OVER (PARTITION BY e.away_team_espn, e.home_team_espn ORDER BY e.collection_timestamp DESC) as rn
+                FROM '{espn_path}' e
+            ),
+            game_stats AS (
+                SELECT 
+                    o.away_team,
+                    o.home_team,
+                    COUNT(DISTINCT o.fetched_at) as num_snapshots
+                FROM '{odds_path}' o
+                INNER JOIN '{espn_path}' e
+                    ON o.away_team = e.away_team_espn
+                    AND o.home_team = e.home_team_espn
+                    AND o.fetched_at = e.collection_timestamp
+                WHERE e.game_status IS NOT NULL
+                GROUP BY o.away_team, o.home_team
+            )
+            SELECT 
+                ls.away_team,
+                ls.home_team,
+                gs.num_snapshots,
+                ls.collection_timestamp as latest_snapshot
+            FROM latest_status ls
+            INNER JOIN game_stats gs
+                ON ls.away_team = gs.away_team
+                AND ls.home_team = gs.home_team
+            WHERE ls.rn = 1
+              AND ls.game_status = 'in'
+              AND gs.num_snapshots >= 1
+            ORDER BY ls.collection_timestamp DESC
+        """
+        
         result = con.execute(query).df()
         
         if len(result) == 0:
-            print("\n⚠️ No live games found with sufficient data")
+            print("\n⚠️ No live games found with sufficient data (need >= 1 snapshot with both odds and score)")
             return []
         
         print(f"\n🔴 Found {len(result)} live game(s) with sufficient data:")
@@ -552,12 +709,36 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         print("\n❌ No score data after game start")
         return
     
+    # Detect game end (when game_status changes from 'in' to 'post')
+    print(f"\n🏁 Detecting game end...")
+    game_end_time = None
+    df_with_status = df_filtered[df_filtered['game_status'].notna()].copy()
+    
+    if len(df_with_status) > 0:
+        # Find the first occurrence of 'post' status
+        post_status_rows = df_with_status[df_with_status['game_status'] == 'post']
+        if len(post_status_rows) > 0:
+            game_end_time = post_status_rows['timestamp'].min()
+            print(f"   ✅ Game ended at: {game_end_time}")
+            
+            # Filter out all data after game end
+            df_filtered = df_filtered[df_filtered['timestamp'] <= game_end_time].copy()
+            df_with_scores_game = df_with_scores_game[df_with_scores_game['timestamp'] <= game_end_time].copy()
+            print(f"   📊 Filtered data to game end (removed post-game odds movement)")
+        else:
+            print(f"   ⚠️  Game still in progress (no 'post' status found)")
+    
     # Calculate score differential (away - home, so positive means away is winning)
     df_with_scores_game['score_diff'] = df_with_scores_game['away_score'] - df_with_scores_game['home_score']
     
-    # Add a 0,0 point at game start time
+    # Convert timestamps to minutes since game start for easier reading
+    df_filtered['minutes_since_start'] = (df_filtered['timestamp'] - game_start_time).dt.total_seconds() / 60
+    df_with_scores_game['minutes_since_start'] = (df_with_scores_game['timestamp'] - game_start_time).dt.total_seconds() / 60
+    
+    # Add a 0,0 point at game start time (0 minutes)
     first_row = pd.DataFrame({
         'timestamp': [game_start_time],
+        'minutes_since_start': [0],
         'away_ml': [df_filtered['away_ml'].iloc[0] if len(df_filtered) > 0 else None],
         'home_ml': [df_filtered['home_ml'].iloc[0] if len(df_filtered) > 0 else None],
         'away_implied_prob': [df_filtered['away_implied_prob'].iloc[0] if len(df_filtered) > 0 else None],
@@ -565,9 +746,9 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         'score_diff': [0]
     })
     
-    df_with_scores_full = pd.concat([first_row, df_with_scores_game[['timestamp', 'score_diff']]], ignore_index=True)
-    df_ml_full = pd.concat([first_row[['timestamp', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob']], 
-                            df_filtered[['timestamp', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob']]], ignore_index=True)
+    df_with_scores_full = pd.concat([first_row, df_with_scores_game[['timestamp', 'minutes_since_start', 'score_diff']]], ignore_index=True)
+    df_ml_full = pd.concat([first_row[['timestamp', 'minutes_since_start', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob']], 
+                            df_filtered[['timestamp', 'minutes_since_start', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob']]], ignore_index=True)
     
     # Remove duplicates (in case first_score_time already had data)
     df_with_scores_full = df_with_scores_full.drop_duplicates(subset=['timestamp'], keep='last')
@@ -599,7 +780,7 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
             prev_period = current_period
     
     # Get current time (latest timestamp in data)
-    current_time = df['timestamp'].max()
+    current_time = df_filtered['timestamp'].max() if len(df_filtered) > 0 else df['timestamp'].max()
     print(f"   🕐 Current time (latest data): {current_time}")
     
     # Get scheduled tipoff time for title
@@ -610,121 +791,174 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         if tipoff_dt.tzinfo is None:
             tipoff_dt = tipoff_dt.tz_localize('UTC')
         tipoff_et = tipoff_dt.astimezone(ZoneInfo('America/New_York'))
-        tipoff_str = f" (Tip: {tipoff_et.strftime('%I:%M %p ET')})"
+        tipoff_str = f" ({tipoff_et.strftime('%Y-%m-%d')} | Tip: {tipoff_et.strftime('%I:%M %p ET')})"
     
     # Create figure with three subplots (ML, Win %, Score Differential)
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(14, 12), sharex=True)
     fig.suptitle(f'{away_team} @ {home_team}{tipoff_str}\nML Odds, Win Probability, and Score Differential Over Time', 
                  fontsize=16, fontweight='bold')
     
-    # Plot 1: ML Odds with conditional coloring (red for underdog/+odds, green for favorite/-odds)
-    # Away team
-    for i in range(len(df_ml_full)-1):
-        color = 'red' if df_ml_full['away_ml'].iloc[i] > 0 else 'green'
-        ax1.plot(df_ml_full['timestamp'].iloc[i:i+2], df_ml_full['away_ml'].iloc[i:i+2], 
-                'o-', color=color, linewidth=2, markersize=4, alpha=0.7)
-    # Add legend entry
-    ax1.plot([], [], 'o-', color='red', label=f'{away_team} ML (underdog)', linewidth=2, markersize=4)
-    ax1.plot([], [], 'o-', color='green', label=f'{away_team} ML (favorite)', linewidth=2, markersize=4)
+    # Add team logos to the figure
+    print(f"\n🖼️  Adding team logos...")
+    logos_added = add_team_logos_to_figure(fig, away_team, home_team, away_color, home_color)
+    if logos_added:
+        print(f"   ✅ Team logos added to title")
+    else:
+        print(f"   ⚠️  Could not add team logos")
     
-    # Home team
-    for i in range(len(df_ml_full)-1):
-        color = 'red' if df_ml_full['home_ml'].iloc[i] > 0 else 'green'
-        ax1.plot(df_ml_full['timestamp'].iloc[i:i+2], df_ml_full['home_ml'].iloc[i:i+2], 
-                's-', color=color, linewidth=2, markersize=4, alpha=0.7)
-    # Add legend entry
-    ax1.plot([], [], 's-', color='red', label=f'{home_team} ML (underdog)', linewidth=2, markersize=4)
-    ax1.plot([], [], 's-', color='green', label=f'{home_team} ML (favorite)', linewidth=2, markersize=4)
+    # Plot 1: ML Odds with consistent team colors and background shading
+    ax1.plot(df_ml_full['minutes_since_start'], df_ml_full['away_ml'], 'o-', label=f'{away_team} ML', 
+             color=away_color, linewidth=2, markersize=4)
+    ax1.plot(df_ml_full['minutes_since_start'], df_ml_full['home_ml'], 's-', label=f'{home_team} ML', 
+             color=home_color, linewidth=2, markersize=4)
     
-    ax1.axhline(y=0, color='gray', linestyle='--', alpha=0.3)
+    ax1.axhline(y=0, color='black', linestyle='-', alpha=0.5, linewidth=2)
     ax1.set_ylabel('Moneyline Odds', fontsize=12, fontweight='bold')
-    ax1.legend(loc='upper left', fontsize=9)
+    ax1.legend(loc='upper left', fontsize=10)
     ax1.grid(True, alpha=0.3)
-    ax1.set_title('Moneyline Movement (Red=Underdog, Green=Favorite)', fontsize=14)
+    ax1.set_title('Moneyline Movement', fontsize=14)
     
-    # Add favorite/underdog regions
-    ax1.axhspan(-1000, 0, alpha=0.05, color='green')
-    ax1.axhspan(0, 1000, alpha=0.05, color='red')
+    # Set symmetric y-axis range for ML using percentiles to avoid outlier issues
+    all_ml_values = pd.concat([df_ml_full['away_ml'], df_ml_full['home_ml']]).dropna()
+    if len(all_ml_values) > 0:
+        # Use 98th percentile to ignore extreme outliers
+        ml_max = max(abs(all_ml_values.quantile(0.02)), abs(all_ml_values.quantile(0.98)))
+        # Ensure minimum range of 500 for readability, cap at 2000 to avoid excessive zoom-out
+        ml_max = min(max(ml_max, 500), 2000)
+        ax1.set_ylim(-ml_max * 1.1, ml_max * 1.1)  # Add 10% padding
+        
+        # Add background shading for favorite/underdog zones
+        ax1.axhspan(-ml_max * 1.1, 0, alpha=0.1, color='green', label='Favorite Zone')
+        ax1.axhspan(0, ml_max * 1.1, alpha=0.1, color='red', label='Underdog Zone')
+        
+        # Check if there are outliers and add a note
+        outliers = all_ml_values[(all_ml_values < -ml_max * 1.1) | (all_ml_values > ml_max * 1.1)]
+        if len(outliers) > 0:
+            print(f"   ⚠️  {len(outliers)} ML outlier(s) excluded from y-axis range (values: {outliers.tolist()})")
     
-    # Plot 2: Implied Win Probability with shading for who's ahead
-    ax2.plot(df_ml_full['timestamp'], df_ml_full['away_implied_prob'] * 100, 
-             'o-', label=f'{away_team} Win %', color=away_color, linewidth=2, markersize=4)
-    ax2.plot(df_ml_full['timestamp'], df_ml_full['home_implied_prob'] * 100, 
-             's-', label=f'{home_team} Win %', color=home_color, linewidth=2, markersize=4)
+    # Plot 2: Implied Win Probability - only show the favored team (>= 50%)
+    # Create a column for favored team's probability
+    df_ml_full['favored_prob'] = df_ml_full.apply(
+        lambda row: max(row['away_implied_prob'], row['home_implied_prob']) * 100 
+        if pd.notna(row['away_implied_prob']) and pd.notna(row['home_implied_prob']) 
+        else None, 
+        axis=1
+    )
     
-    # Add shading for which team has higher win probability
-    ax2.fill_between(df_ml_full['timestamp'], 
-                     df_ml_full['away_implied_prob'] * 100, 
+    # Plot line segments with appropriate colors based on who's favored
+    # When away team is favored (away_prob >= 50)
+    away_favored_mask = df_ml_full['away_implied_prob'] * 100 >= 50
+    if away_favored_mask.any():
+        ax2.plot(df_ml_full.loc[away_favored_mask, 'minutes_since_start'], 
+                df_ml_full.loc[away_favored_mask, 'favored_prob'],
+                'o-', color=away_color, linewidth=2, markersize=4, label=f'{away_team} Favored')
+    
+    # When home team is favored (home_prob >= 50)
+    home_favored_mask = df_ml_full['home_implied_prob'] * 100 >= 50
+    if home_favored_mask.any():
+        ax2.plot(df_ml_full.loc[home_favored_mask, 'minutes_since_start'], 
+                df_ml_full.loc[home_favored_mask, 'favored_prob'],
+                's-', color=home_color, linewidth=2, markersize=4, label=f'{home_team} Favored')
+    
+    # Add shading for which team is favored
+    ax2.fill_between(df_ml_full['minutes_since_start'], 
+                     df_ml_full['favored_prob'], 
                      50,
                      where=(df_ml_full['away_implied_prob'] * 100 >= 50),
-                     alpha=0.3, color=away_color, label=f'{away_team} Favored')
-    ax2.fill_between(df_ml_full['timestamp'], 
-                     df_ml_full['home_implied_prob'] * 100, 
+                     alpha=0.3, color=away_color, interpolate=True)
+    ax2.fill_between(df_ml_full['minutes_since_start'], 
+                     df_ml_full['favored_prob'], 
                      50,
                      where=(df_ml_full['home_implied_prob'] * 100 >= 50),
-                     alpha=0.3, color=home_color, label=f'{home_team} Favored')
+                     alpha=0.3, color=home_color, interpolate=True)
     
     ax2.axhline(y=50, color='gray', linestyle='--', alpha=0.5, linewidth=1.5)
     ax2.set_ylabel('Implied Win Probability (%)', fontsize=12, fontweight='bold')
     ax2.set_ylim(0, 100)
-    ax2.legend(loc='upper left', fontsize=10)
+    # No legend needed - implied from plot 1 and team colors/shading
     ax2.grid(True, alpha=0.3)
     ax2.set_title('Win Probability Movement', fontsize=14)
     
     # Plot 3: Score Differential (away - home)
-    ax3.plot(df_with_scores_full['timestamp'], df_with_scores_full['score_diff'], 
+    ax3.plot(df_with_scores_full['minutes_since_start'], df_with_scores_full['score_diff'], 
              'o-', linewidth=2, markersize=6, color='#2ca02c')
     ax3.axhline(y=0, color='gray', linestyle='--', alpha=0.5, linewidth=1.5)
-    ax3.fill_between(df_with_scores_full['timestamp'], 
+    ax3.fill_between(df_with_scores_full['minutes_since_start'], 
                      df_with_scores_full['score_diff'], 
                      0,
                      where=(df_with_scores_full['score_diff'] >= 0),
                      alpha=0.3, color=away_color, label=f'{away_team} Leading')
-    ax3.fill_between(df_with_scores_full['timestamp'], 
+    ax3.fill_between(df_with_scores_full['minutes_since_start'], 
                      df_with_scores_full['score_diff'], 
                      0,
                      where=(df_with_scores_full['score_diff'] < 0),
                      alpha=0.3, color=home_color, label=f'{home_team} Leading')
     
+    # Set symmetric y-axis range for score differential
+    score_max = max(abs(df_with_scores_full['score_diff'].max()), abs(df_with_scores_full['score_diff'].min()))
+    ax3.set_ylim(-score_max * 1.1, score_max * 1.1)  # Add 10% padding
+    
+    # Get score for title with FINAL/CURRENT label
+    if len(df_with_scores_game) > 0:
+        final_row = df_with_scores_game.iloc[-1]
+        final_away_score = int(final_row['away_score'])
+        final_home_score = int(final_row['home_score'])
+        score_label = 'FINAL SCORE' if game_end_time is not None else 'CURRENT SCORE'
+        score_title = f'Score Differential ({score_label}: {away_team} {final_away_score} - {home_team} {final_home_score})'
+    else:
+        score_title = 'Score Differential (starts at 0)'
+    
     ax3.set_ylabel('Score Differential\n(Away - Home)', fontsize=12, fontweight='bold')
-    ax3.set_xlabel('Time', fontsize=12, fontweight='bold')
-    ax3.legend(loc='best', fontsize=10)
+    ax3.set_xlabel('Minutes Since Tipoff', fontsize=12, fontweight='bold')
+    # No legend needed - team colors/shading make it clear
     ax3.grid(True, alpha=0.3)
-    ax3.set_title('Score Differential (starts at 0)', fontsize=14)
+    ax3.set_title(score_title, fontsize=14)
     
     # Add reference lines to all three plots
     print(f"\n🎨 Adding reference lines...")
     
-    # 1. Game start (dotted red)
-    for ax in [ax1, ax2, ax3]:
-        ax.axvline(x=game_start_time, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Game Start')
-    print(f"   🟥 Game start line at {game_start_time}")
+    # Convert key timestamps to minutes since start
+    game_start_minutes = 0
+    current_time_minutes = (current_time - game_start_time).total_seconds() / 60
     
-    # 2. Current time (dotted red)
+    # 1. Game start (dotted red) - always at 0
     for ax in [ax1, ax2, ax3]:
-        ax.axvline(x=current_time, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Current Time')
-    print(f"   🟥 Current time line at {current_time}")
+        ax.axvline(x=game_start_minutes, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Game Start')
+    print(f"   🟥 Game start line at {game_start_minutes} minutes")
     
-    # 3. Quarter endings (dashed gray lines)
+    # 2. Game end (solid red line if game finished)
+    if game_end_time is not None:
+        game_end_minutes = (game_end_time - game_start_time).total_seconds() / 60
+        for ax in [ax1, ax2, ax3]:
+            ax.axvline(x=game_end_minutes, color='darkred', linestyle='-', linewidth=2.5, alpha=0.8, label='Game End')
+        print(f"   🏁 Game end line at {game_end_minutes:.1f} minutes")
+    
+    # 3. Current time (dotted red) - only if game is still in progress
+    if game_end_time is None:
+        for ax in [ax1, ax2, ax3]:
+            ax.axvline(x=current_time_minutes, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Current Time')
+        print(f"   🟥 Current time line at {current_time_minutes:.1f} minutes")
+    
+    # 4. Quarter endings (dashed gray lines)
     for period, end_time in quarter_end_times:
+        end_minutes = (end_time - game_start_time).total_seconds() / 60
         for ax in [ax1, ax2, ax3]:
-            ax.axvline(x=end_time, color='gray', linestyle='--', linewidth=1.5, alpha=0.6)
-            ax.text(end_time, ax.get_ylim()[1] * 0.95, f'Q{int(period)} End', 
+            ax.axvline(x=end_minutes, color='gray', linestyle='--', linewidth=1.5, alpha=0.6)
+            ax.text(end_minutes, ax.get_ylim()[1] * 0.95, f'Q{int(period)} End', 
                    rotation=90, verticalalignment='top', fontsize=9, alpha=0.7)
-        print(f"   ⬜ Q{int(period)} end line at {end_time}")
+        print(f"   ⬜ Q{int(period)} end line at {end_minutes:.1f} minutes")
     
-    # 4. Quarter starts (dashed blue lines)
+    # 5. Quarter starts (dashed blue lines)
     for period, start_time in quarter_start_times:
+        start_minutes = (start_time - game_start_time).total_seconds() / 60
         for ax in [ax1, ax2, ax3]:
-            ax.axvline(x=start_time, color='blue', linestyle='--', linewidth=1.5, alpha=0.5)
-            ax.text(start_time, ax.get_ylim()[0] * 0.95, f'Q{int(period)} Start', 
+            ax.axvline(x=start_minutes, color='blue', linestyle='--', linewidth=1.5, alpha=0.5)
+            ax.text(start_minutes, ax.get_ylim()[0] * 0.95, f'Q{int(period)} Start', 
                    rotation=90, verticalalignment='bottom', fontsize=9, alpha=0.7, color='blue')
-        print(f"   🟦 Q{int(period)} start line at {start_time}")
+        print(f"   🟦 Q{int(period)} start line at {start_minutes:.1f} minutes")
     
     # Format x-axis
-    ax3.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-    ax3.xaxis.set_major_locator(mdates.AutoDateLocator())
-    plt.xticks(rotation=45, ha='right')
+    ax3.set_xlim(left=0)  # Start at 0 minutes
     
     # Tight layout
     plt.tight_layout()

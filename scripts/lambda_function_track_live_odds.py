@@ -37,14 +37,16 @@ FUNCTIONALITY:
 5. Parse ESPN data (one record per game with scores/status)
 6. Write 2 separate Parquet files to S3 (immutable, one file per invocation)
 
-OPTIMIZATION - ESPN-First Check:
+OPTIMIZATION - ESPN-First Check + Live-Only Filtering:
 - ESPN API is FREE and returns game status
 - Check ESPN first to count live games (game_status == 'in')
 - Only call Odds API if live games exist
+- Filter Odds API results to ONLY include live games (default behavior)
 - Typical savings: ~73% of API costs
   * Without: 1,440 calls/day (every minute) = ~$630/month
   * With: ~180 calls/day (only when live) = ~$162/month
   * Monthly savings: ~$468
+- Note: Can track upcoming games by setting TRACK_UPCOMING_GAMES="true" (not recommended)
 
 DATA STRUCTURE:
 Stored as PARQUET files (separate for odds and ESPN data).
@@ -190,6 +192,8 @@ Total: ~$162/month (mostly Odds API)
 
 Environment Variables Required:
 - ODDS_API_KEY: Your Odds API key
+- TRACK_UPCOMING_GAMES: (Optional) Set to "true" to track upcoming games in addition to live games.
+  Default: "false" (only track live games)
 
 IAM Permissions Required:
 - s3:PutObject (for nba-betting-mt bucket)
@@ -322,6 +326,11 @@ DATA_ROOT = project_root / 'data'
 S3_BUCKET = 'nba-betting-mt'
 S3_BASE_PATH = 'data/01_input/live_odds'
 IS_LAMBDA = bool(os.getenv('AWS_LAMBDA_FUNCTION_NAME'))
+
+# Tracking Configuration
+# By default, only track games that are currently live (game_status == 'in')
+# Set TRACK_UPCOMING_GAMES="true" to include upcoming games (not recommended - wastes API calls)
+TRACK_UPCOMING_GAMES = os.getenv('TRACK_UPCOMING_GAMES', 'false').lower() == 'true'
 
 # Sports
 SPORT_NBA = 'basketball_nba'
@@ -1050,12 +1059,61 @@ def main(sport: str = 'nba', prod_run: bool = False):
         odds_games = fetch_live_odds(sport_key)
         odds_records = parse_odds_data(odds_games, query_time)
         
-        print(f"{EMOJI['success']} Odds API: Retrieved {len(odds_games)} games, {len(odds_records)} records")
+        total_games_from_api = len(odds_games)
+        total_records_before_filter = len(odds_records)
+        
+        print(f"{EMOJI['success']} Odds API: Retrieved {total_games_from_api} games, {total_records_before_filter} records")
+        
+        # Step 3.5: Filter to only live games (unless TRACK_UPCOMING_GAMES is enabled)
+        if not TRACK_UPCOMING_GAMES:
+            # Get list of live game IDs from ESPN
+            live_game_teams = {
+                (r['away_team_espn'], r['home_team_espn'])
+                for r in espn_records
+                if r['game_status'] == 'in'
+            }
+            
+            # Filter odds records to only live games
+            odds_records_filtered = [
+                r for r in odds_records
+                if (r['away_team'], r['home_team']) in live_game_teams
+            ]
+            
+            # Also filter ESPN records to only live games
+            espn_records_filtered = [
+                r for r in espn_records
+                if r['game_status'] == 'in'
+            ]
+            
+            games_filtered_out = total_games_from_api - len({(r['away_team'], r['home_team']) for r in odds_records_filtered})
+            records_filtered_out = total_records_before_filter - len(odds_records_filtered)
+            
+            print(f"{EMOJI['info']} Filtered to LIVE GAMES ONLY:")
+            print(f"   Kept: {len({(r['away_team'], r['home_team']) for r in odds_records_filtered})} live games")
+            print(f"   Filtered out: {games_filtered_out} upcoming/finished games ({records_filtered_out} records)")
+            
+            odds_records = odds_records_filtered
+            espn_records = espn_records_filtered
+        else:
+            print(f"{EMOJI['warning']} TRACK_UPCOMING_GAMES=true: Keeping all games (live + upcoming)")
         
         # Step 4: Write both files to S3
         print(f"\n{EMOJI['save']} Step 3: Writing to S3...")
         write_parquet_to_s3(odds_records, odds_s3_key)
         write_parquet_to_s3(espn_records, espn_s3_key)
+        
+        # Skip detailed display if no records to show
+        if not odds_records:
+            print(f"\n{EMOJI['info']} No records to display (all games filtered out)")
+            return {
+                'statusCode': 200,
+                'body': {
+                    'message': 'No live games after filtering',
+                    'num_games': 0,
+                    'num_live_games': 0,
+                    'odds_api_calls': 1,
+                }
+            }
         
         # Step 5: Display detailed game info (like test script)
         print(f"\n{EMOJI['chart']} GAME DETAILS:")
@@ -1102,8 +1160,8 @@ def main(sport: str = 'nba', prod_run: bool = False):
                 if pd.notna(game['away_score']) and pd.notna(game['home_score']):
                     print(f"    {EMOJI['nba']} Score: {int(game['away_score'])}-{int(game['home_score'])}")
         
-        # Display upcoming games
-        if len(upcoming_games) > 0:
+        # Display upcoming games (only if TRACK_UPCOMING_GAMES is enabled)
+        if TRACK_UPCOMING_GAMES and len(upcoming_games) > 0:
             print(f"\n{EMOJI['chart']} UPCOMING GAMES ({len(upcoming_games)}):")
             for _, game in upcoming_games.iterrows():
                 matchup = f"{game['away_team']} @ {game['home_team']}"
@@ -1116,8 +1174,7 @@ def main(sport: str = 'nba', prod_run: bool = False):
                 print(f"    Spread: {away_spread} | {home_spread}  |  ML: {away_ml} | {home_ml}")
         
         print(f"\n{EMOJI['success']} Snapshot complete!")
-        print(f"   Games tracked: {len(odds_games)}")
-        print(f"   Live games: {num_live}")
+        print(f"   Games tracked: {len({(r['away_team'], r['home_team']) for r in odds_records})} live")
         print(f"   Odds records: {len(odds_records)}")
         print(f"   ESPN records: {len(espn_records)}")
         print(f"   API calls used: 1")
@@ -1127,8 +1184,8 @@ def main(sport: str = 'nba', prod_run: bool = False):
             'statusCode': 200,
             'body': {
                 'message': 'Snapshot collected successfully',
-                'num_games': len(odds_games),
-                'num_live_games': num_live,
+                'num_games': len({(r['away_team'], r['home_team']) for r in odds_records}),
+                'num_live_games': len({(r['away_team'], r['home_team']) for r in odds_records}),
                 'odds_records': len(odds_records),
                 'espn_records': len(espn_records),
                 'odds_api_calls': 1,

@@ -6,46 +6,53 @@
 
 ---
 
-## Tweet 1: 2025-26 Season Patterns
+## Tweet 1: 2025-26 Season Pattern
 
-been tracking nba underdogs this season and found something interesting.
+(1/n) been tracking nba underdogs performance in the 2025-26 season.
 
-when small underdogs (+1 to +3) cover the spread, they win outright almost every time (90-100%).
+underdogs are covering at 52.6% this season, slightly above the expected 50/50, and good enough that blindly betting dogs is (slightly) profitable.
 
-when big underdogs (+10+) cover? they still lost most of the time—just by less than the spread (20-30% win rate).
+here's what's interesting: when they cover, they win outright 64% of the time outright
 
-covering ≠ winning. spread size changes everything.
-
-[attach: underdog_spread_line_analysis_by_season.png - zoomed to show 2025-26 bars]
+[attach: underdog_spread_line_analysis_2025_26.png]
 
 ---
 
-## Tweet 2: The Trend Doesn't Hold Over Time
+## Tweet 2: The Relationship Changes with Spread Size
 
-pulled 5 seasons of data to see if this pattern was consistent (2021-22 through 2025-26).
+(2/n) now this should be rather obvious, but the relationship changes with spread size - at small spreads (+1-3), covering means winning 95%+ of the time. at larger spreads (+10+), it drops to just 25%
 
-turns out: it's remarkably stable. 
-
-across all 1,796 underdog games:
-• +1-3 spreads: 95%+ win when covered
-• +4-6 spreads: ~70% win when covered
-• +10+ spreads: ~25% win when covered
-
-the relationship between spread size and p(ml win | covered) is structural, not seasonal noise.
-
-[attach: underdog_spread_line_analysis.png - aggregated across all seasons]
+[attach: underdog_spread_line_analysis_2025_26.png - Chart 3 showing the decline]
 
 ---
 
-## Tweet 3: Why This Matters for Betting
+## Tweet 3: Personal Motivation & Optimization
 
-here's why this matters:
+(3/n) i looked into this because i had noticed that often when my dog plays (i typically take dogs) were covering, they were also winning, but i wasn't capitalizing on the longer odds
 
-underdogs are profitable long-term (50.5% cover rate vs 50% breakeven), but you can't just blindly bet every dog and expect to beat the 52.4% threshold for profit.
+this put me down a rabbit hole of trying to optimize the weights (e.g., if you have 1 unit, 0.75 going on the spread, and 0.25 on the ml bet)
 
-the insight: small spread dogs (+1-3) give you optionality—when they cover, you're almost certainly winning the ml too. big spread dogs (+10+) are pure spread plays.
+---
 
-if you're doing ml/spread splits, the optimal allocation depends heavily on that spread number. one strategy doesn't fit all underdogs.
+## Tweet 4: Does This Hold Over Time?
+
+(4/n) does this hold up over time?
+
+pulled 5 seasons of data (2021-22 through 2025-26) to test if this is seasonal noise or something structural.
+
+aggregated results: dogs covering at 50.5% (n=1,796 games), and the p(ml win | covered) pattern is consistent across spread sizes
+
+[attach: underdog_spread_line_analysis_2025_26_2024_25_2023_24_2022_23_2021_22.png]
+
+---
+
+## Tweet 5: Season-by-Season View
+
+(5/n) here's the season-by-season breakdown
+
+there's fluctuation year-to-year (cover rates range from 48% to 54%), but directionally there's something here. the structural relationship between spread size and p(ml win | covered) persists across all 5 seasons
+
+[attach: underdog_spread_line_analysis_by_season_2025_26_2024_25_2023_24_2022_23_2021_22.png]
 
 ---
 
@@ -97,6 +104,18 @@ this is why one-size-fits-all kelly sizing fails. the spread size changes the en
 
 ## Visual Notes
 
-- **Viz 1 (Tweet 1):** Use by_season chart, potentially crop/highlight just 2025-26 bars
-- **Viz 2 (Tweet 2):** Use aggregated chart showing all 5 seasons combined with clear trend line
-- Both charts now have clean titles without distracting grey subtitles
+- **Viz 1 (Tweet 1):** underdog_spread_line_analysis_2025_26.png
+  - Shows 2025-26 season only
+  - P(ML Win | Covered): 64.0%
+  - Each chart has its own info box (ML records, ATS records, P(ML|Cov))
+
+- **Viz 2 (Tweet 2):** underdog_spread_line_analysis_2025_26_2024_25_2023_24_2022_23_2021_22.png
+  - All 5 seasons aggregated
+  - P(ML Win | Covered): 62.3%
+  - Each chart has split info boxes with per-season data
+
+- Both charts now have:
+  - Clean titles without distracting grey subtitles
+  - P(ML Win | Covered) prominently displayed in title
+  - Split info boxes: Chart 1 (ML records), Chart 2 (ATS records), Chart 3 (P(ML|Cov))
+  - Explanatory note on Chart 3 in bottom right

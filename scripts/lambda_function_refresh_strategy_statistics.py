@@ -1,6 +1,8 @@
 """
 Refresh Strategy Statistics - Daily Multi-Season Backtest Update
 
+Lambda function: nba-strategy-stats-refresher
+
 Context:
 This script updates strategy JSONs daily with fresh multi-season statistics.
 It combines backtest results from 2023-24, 2024-25, and 2025-26 (through yesterday)
@@ -104,6 +106,32 @@ def run_cmd(cmd: List[str], cwd: Optional[str] = None) -> subprocess.CompletedPr
     return result
 
 
+def send_sns(subject: str, message: str) -> None:
+    """
+    Send SNS notification.
+    
+    Args:
+        subject: Email subject
+        message: Email body
+    """
+    try:
+        sns_client = boto3.client('sns')
+        topic_arn = os.environ.get('SNS_TOPIC_ARN')
+        
+        if not topic_arn:
+            print("   ⚠️  SNS_TOPIC_ARN not set - skipping notification")
+            return
+        
+        sns_client.publish(
+            TopicArn=topic_arn,
+            Subject=subject,
+            Message=message
+        )
+        print(f"   ✅ SNS notification sent")
+    except Exception as e:
+        print(f"   ⚠️  Failed to send SNS: {e}")
+
+
 def clone_repo(token: Optional[str] = None) -> str:
     """
     Clone GitHub repo to /tmp directory.
@@ -174,7 +202,7 @@ def run_backtest_for_season(season: str, strategy_type: str, repo_dir: str) -> b
         '--seasons', season,
         '--strategy', strategy_type,
         '--granularity', 'detailed',
-        '--min-roi', '5.0'
+        '--min-roi', '-1000.0'  # Set very low to capture ALL strategies (filter later by min plays)
     ]
     
     try:
@@ -289,6 +317,7 @@ def calculate_aggregate_strategy_stats(
         
         total_wins = (group_df['result'] == 'WIN').sum()
         total_losses = (group_df['result'] == 'LOSS').sum()
+        total_ties = (group_df['result'] == 'PUSH').sum()
         total_profit = group_df['profit'].sum()
         
         if (total_wins + total_losses) == 0:
@@ -315,7 +344,8 @@ def calculate_aggregate_strategy_stats(
                 'edge': round(edge, 1),
                 'games': total_plays,
                 'wins': int(total_wins),
-                'losses': int(total_losses)
+                'losses': int(total_losses),
+                'ties': int(total_ties)
             }
         else:  # 3d
             line_tier, spread_bin, bet_side, scorer_type = group_key
@@ -329,13 +359,135 @@ def calculate_aggregate_strategy_stats(
                 'edge': round(edge, 1),
                 'games': total_plays,
                 'wins': int(total_wins),
-                'losses': int(total_losses)
+                'losses': int(total_losses),
+                'ties': int(total_ties)
             }
         
         strategies.append(strat)
     
     print(f"   ✅ Found {len(strategies)} strategies with >= {min_plays} plays")
     return strategies
+
+
+def log_strategy_results(
+    strategies: List[Dict],
+    strategy_type: str,
+    seasons: List[str],
+    df_all: 'pd.DataFrame'
+) -> None:
+    """
+    Log detailed backtest results for each strategy with per-season breakdown.
+    
+    Args:
+        strategies: List of strategy dicts with performance metrics
+        strategy_type: '2d' or '3d'
+        seasons: List of seasons included in backtest
+        df_all: Full dataframe with all plays for per-season breakdown
+    """
+    if not PANDAS_AVAILABLE or df_all is None:
+        print("   ⚠️  pandas not available - cannot show detailed results")
+        return
+    
+    print(f"\n{'='*80}")
+    print(f"📊 {strategy_type.upper()} STRATEGY BACKTEST RESULTS ({', '.join(seasons)})")
+    print(f"{'='*80}\n")
+    
+    # Sort strategies by win rate descending
+    sorted_strategies = sorted(strategies, key=lambda x: x['hit_rate'], reverse=True)
+    
+    # Group columns for filtering
+    if strategy_type == '2d':
+        group_cols = ['line_tier', 'spread_bin', 'bet_side']
+    else:  # 3d
+        group_cols = ['line_tier', 'spread_bin', 'bet_side', 'scorer_type']
+    
+    for i, strat in enumerate(sorted_strategies, 1):
+        # Build strategy description
+        if strategy_type == '2d':
+            desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+        else:  # 3d
+            desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']} | {strat['scorer_type']}"
+        
+        # Format aggregate metrics
+        hit_rate = strat['hit_rate']
+        roi = strat['roi']
+        edge = strat['edge']
+        total_games = strat['games']
+        total_wins = strat['wins']
+        total_losses = strat['losses']
+        total_ties = strat['ties']
+        
+        # Determine emoji based on win rate
+        if hit_rate >= 60:
+            emoji = '🔥'
+        elif hit_rate >= 55:
+            emoji = '✅'
+        elif hit_rate >= 50:
+            emoji = '➖'
+        else:
+            emoji = '❌'
+        
+        print(f"{emoji} #{i:2d}. {desc}")
+        print(f"        AGGREGATE: {total_wins}W-{total_losses}L-{total_ties}T | Hit Rate: {hit_rate:5.1f}% | ROI: {roi:6.1f}% | Edge: {edge:+5.1f}%")
+        
+        # Filter dataframe for this strategy
+        if strategy_type == '2d':
+            mask = (
+                (df_all['line_tier'] == strat['line_tier']) &
+                (df_all['spread_bin'] == strat['spread_bin']) &
+                (df_all['bet_side'] == strat['bet_side'])
+            )
+        else:  # 3d
+            mask = (
+                (df_all['line_tier'] == strat['line_tier']) &
+                (df_all['spread_bin'] == strat['spread_bin']) &
+                (df_all['bet_side'] == strat['bet_side']) &
+                (df_all['scorer_type'] == strat['scorer_type'])
+            )
+        
+        strat_df = df_all[mask]
+        
+        # Calculate per-season stats
+        for season in seasons:
+            season_df = strat_df[strat_df['season'] == season]
+            
+            if len(season_df) == 0:
+                continue
+            
+            season_wins = (season_df['result'] == 'WIN').sum()
+            season_losses = (season_df['result'] == 'LOSS').sum()
+            season_ties = (season_df['result'] == 'PUSH').sum()
+            season_plays = len(season_df)
+            
+            if (season_wins + season_losses) > 0:
+                season_hit_rate = (season_wins / (season_wins + season_losses) * 100)
+            else:
+                season_hit_rate = 0.0
+            
+            season_profit = season_df['profit'].sum()
+            season_wagered = season_plays * 100
+            season_roi = (season_profit / season_wagered * 100) if season_wagered > 0 else 0
+            
+            print(f"          {season}: {season_wins}W-{season_losses}L-{season_ties}T | Hit Rate: {season_hit_rate:5.1f}% | ROI: {season_roi:6.1f}%")
+        
+        print()
+    
+    # Summary statistics
+    total_plays = sum(s['games'] for s in strategies)
+    total_wins = sum(s['wins'] for s in strategies)
+    total_losses = sum(s['losses'] for s in strategies)
+    total_ties = sum(s['ties'] for s in strategies)
+    avg_roi = sum(s['roi'] for s in strategies) / len(strategies) if strategies else 0
+    avg_hit_rate = sum(s['hit_rate'] for s in strategies) / len(strategies) if strategies else 0
+    
+    print(f"{'='*80}")
+    print(f"SUMMARY:")
+    print(f"  Total Strategies: {len(strategies)}")
+    print(f"  Total Plays: {total_plays}")
+    print(f"  Overall Record: {total_wins}W-{total_losses}L-{total_ties}T ({avg_hit_rate:.1f}% avg hit rate)")
+    print(f"  Average ROI: {avg_roi:.1f}%")
+    print(f"  Profitable Strategies: {sum(1 for s in strategies if s['roi'] > 0)}/{len(strategies)}")
+    print(f"{'='*80}\n")
 
 
 def generate_strategy_json(
@@ -490,6 +642,9 @@ def refresh_strategy_statistics(
             }
         )
         
+        # Log detailed results for this strategy type
+        log_strategy_results(strategies, strategy_type, BACKTEST_SEASONS, df_all)
+        
         # Step 5: Upload to S3
         print(f"\nStep 5: Uploading to S3...")
         s3_key = f'{STRATEGIES_PREFIX}/{filename}'
@@ -514,13 +669,53 @@ def refresh_strategy_statistics(
     print("✅ REFRESH COMPLETE")
     print(f"{'='*80}")
     
+    summary_lines = []
+    all_success = all(r.get('success', False) for r in results.values())
+    
     for strategy_type, result in results.items():
         if result['success']:
-            print(f"{strategy_type.upper()}: ✅ {result['strategies_count']} strategies, {result['total_plays']} plays")
+            line = f"{strategy_type.upper()}: ✅ {result['strategies_count']} strategies, {result['total_plays']} plays"
+            print(line)
+            summary_lines.append(line)
         else:
-            print(f"{strategy_type.upper()}: ❌ {result.get('error', 'Failed')}")
+            line = f"{strategy_type.upper()}: ❌ {result.get('error', 'Failed')}"
+            print(line)
+            summary_lines.append(line)
     
     print(f"{'='*80}\n")
+    
+    # Send SNS notification
+    if all_success:
+        subject = f"✅ Strategy Statistics Refresh Complete - {season}"
+        message = f"""Strategy Statistics Refresh Completed Successfully
+
+Season: {season}
+Data Through: {yesterday}
+Backtest Seasons: {', '.join(BACKTEST_SEASONS)}
+Timestamp: {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}
+
+Results:
+{chr(10).join(summary_lines)}
+
+Total Strategies: {sum(r.get('strategies_count', 0) for r in results.values() if r.get('success'))}
+Total Plays: {sum(r.get('total_plays', 0) for r in results.values() if r.get('success'))}
+
+All strategy JSON files have been updated in S3.
+"""
+    else:
+        subject = f"❌ Strategy Statistics Refresh Failed - {season}"
+        message = f"""Strategy Statistics Refresh Failed
+
+Season: {season}
+Timestamp: {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}
+
+Errors:
+{chr(10).join(summary_lines)}
+
+Please check CloudWatch logs for details.
+"""
+    
+    send_sns(subject, message)
     
     return results
 

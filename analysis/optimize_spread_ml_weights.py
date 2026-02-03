@@ -825,12 +825,13 @@ def analyze_underdog_spread_distribution(underdog_df: pd.DataFrame) -> None:
         print(f"\n✓ No underdogs with spreads ≤ +1.0")
 
 
-def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
+def create_spread_line_plots(merged_df: pd.DataFrame, seasons: List[str], output_dir: Path) -> None:
     """
     Create 3 plots analyzing underdog performance by specific spread line.
     
     Args:
         merged_df: Merged game data with lines and results
+        seasons: List of seasons being analyzed
         output_dir: Directory to save plots
     """
     print("\n📊 Creating spread line plots (underdog perspective)...")
@@ -905,9 +906,22 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
     spread_losses = len(df) - spread_covers
     spread_cover_pct = (spread_covers / len(df)) * 100
     
+    # Calculate P(ML win | Covered)
+    covered_dogs = df[df['covered']]
+    p_ml_win_given_cover = (covered_dogs['won'].mean() * 100) if len(covered_dogs) > 0 else 0
+    
+    # Determine title based on number of seasons
+    if len(seasons) == 1:
+        season_text = f'{seasons[0]} Season'
+    else:
+        # seasons list is in reverse chronological order (2025-26, 2024-25, ...)
+        earliest_season = seasons[-1]
+        latest_season = seasons[0]
+        season_text = f'{len(seasons)} Seasons: {earliest_season} through {latest_season}'
+    
     # Add overall title with sample info
-    fig.suptitle(f'Underdog Spread Analysis - Aggregated Across All Seasons\n'
-                 f'n={len(df):,} | ML: {ml_wins:,}-{ml_losses:,} ({ml_win_pct:.1f}%) | Spread: {spread_covers:,}-{spread_losses:,} ({spread_cover_pct:.1f}%) | 2021-22 through 2025-26',
+    fig.suptitle(f'Underdog Spread Analysis - {season_text}\n'
+                 f'n={len(df):,} | ML: {ml_wins:,}-{ml_losses:,} ({ml_win_pct:.1f}%) | Spread: {spread_covers:,}-{spread_losses:,} ({spread_cover_pct:.1f}%) | P(ML Win | Covered): {p_ml_win_given_cover:.1f}%',
                  fontsize=15, fontweight='bold', y=0.995)
     
     axes = [fig.add_subplot(gs[i]) for i in range(3)]
@@ -936,6 +950,67 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
                         xytext=(0, 10), textcoords='offset points',
                         ha='center', fontsize=8, alpha=0.6)
     
+    # Prepare season data for info boxes
+    season_data = []
+    for s in seasons:
+        # Filter data for this season
+        season_rows = []
+        for _, row in merged_df.iterrows():
+            away_ml = row['away_ml_odds']
+            home_ml = row['home_ml_odds']
+            game_date = pd.to_datetime(row['GAME_DATE'])
+            
+            # Determine season from game date
+            if game_date.month >= 10:
+                game_season = f"{game_date.year}-{str(game_date.year + 1)[-2:]}"
+            else:
+                game_season = f"{game_date.year - 1}-{str(game_date.year)[-2:]}"
+            
+            if game_season != s:
+                continue
+            
+            # Away team is underdog (positive ML)
+            if away_ml > 0:
+                season_rows.append({
+                    'won': row['AWAY_WL'] == 'W',
+                    'covered': (row['AWAY_SCORE'] + row['away_spread']) > row['HOME_SCORE'],
+                })
+            
+            # Home team is underdog (positive ML)
+            if home_ml > 0:
+                season_rows.append({
+                    'won': row['HOME_WL'] == 'W',
+                    'covered': (row['HOME_SCORE'] + row['home_spread']) > row['AWAY_SCORE'],
+                })
+        
+        if season_rows:
+            season_df = pd.DataFrame(season_rows)
+            n = len(season_df)
+            ml_w = season_df['won'].sum()
+            ml_l = n - ml_w
+            spread_w = season_df['covered'].sum()
+            spread_l = n - spread_w
+            covered_season = season_df[season_df['covered']]
+            p_ml_given_cover = (covered_season['won'].mean() * 100) if len(covered_season) > 0 else 0
+            
+            season_data.append({
+                'season': s,
+                'n': n,
+                'ml_w': ml_w,
+                'ml_l': ml_l,
+                'spread_w': spread_w,
+                'spread_l': spread_l,
+                'p_ml_cov': p_ml_given_cover
+            })
+    
+    # Chart 1 info box: ML records
+    ml_records = [f"{d['season']}: n={d['n']:,} ML:{d['ml_w']}-{d['ml_l']}" for d in season_data]
+    ml_text = 'ML Records:\n' + '\n'.join(ml_records)
+    ax1.text(0.02, 0.97, ml_text,
+             transform=ax1.transAxes, fontsize=8,
+             verticalalignment='top', horizontalalignment='left',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
+    
     # Plot 2: Cover % by spread line (UNDERDOGS) - bars + line
     ax2 = axes[1]
     ax2.bar(stats['spread_bin'], stats['cover_pct'] * 100, alpha=0.3, color='#ff7f0e', width=0.4)
@@ -952,6 +1027,14 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
     
     # Set x-axis ticks every 1 unit
     ax2.set_xticks(range(0, 17, 1))
+    
+    # Chart 2 info box: ATS records
+    ats_records = [f"{d['season']}: n={d['n']:,} ATS:{d['spread_w']}-{d['spread_l']}" for d in season_data]
+    ats_text = 'ATS Records:\n' + '\n'.join(ats_records)
+    ax2.text(0.02, 0.97, ats_text,
+             transform=ax2.transAxes, fontsize=8,
+             verticalalignment='top', horizontalalignment='left',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
     
     # Plot 3: Win % given cover (UNDERDOGS) - bars + line
     ax3 = axes[2]
@@ -970,21 +1053,30 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
     # Set x-axis ticks every 1 unit
     ax3.set_xticks(range(0, 17, 1))
     
-    # Add explanatory note
-    ax3.text(0.02, 0.98, 'When underdogs cover:\n- Small spreads (+0.5 to +3): Usually won outright\n- Large spreads (+10+): Often just lost by less than the spread',
-             transform=ax3.transAxes, fontsize=9, verticalalignment='top',
+    # Chart 3 info box: P(ML|Cov) by season
+    p_ml_cov_records = [f"{d['season']}: P(ML|Cov)={d['p_ml_cov']:.1f}%" for d in season_data]
+    p_ml_cov_text = 'P(ML Win | Covered):\n' + '\n'.join(p_ml_cov_records)
+    ax3.text(0.02, 0.80, p_ml_cov_text,
+             transform=ax3.transAxes, fontsize=8,
+             verticalalignment='top', horizontalalignment='left',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
+    
+    # Add explanatory note (moved to right side to avoid overlap with data)
+    ax3.text(0.98, 0.02, 'When underdogs cover:\n- Small spreads (+0.5 to +3): Usually won outright\n- Large spreads (+10+): Often just lost by less than the spread',
+             transform=ax3.transAxes, fontsize=9, verticalalignment='bottom', horizontalalignment='right',
              bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
     
     plt.tight_layout()
     
-    # Save plot
+    # Save plot with season names in filename
     output_dir.mkdir(parents=True, exist_ok=True)
-    plot_path = output_dir / 'underdog_spread_line_analysis.png'
+    season_suffix = '_'.join(seasons).replace('-', '_')
+    plot_path = output_dir / f'underdog_spread_line_analysis_{season_suffix}.png'
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     print(f"  ✅ Saved plot: {plot_path}")
     
     # Also save the data
-    data_path = output_dir / 'underdog_spread_line_stats.csv'
+    data_path = output_dir / f'underdog_spread_line_stats_{season_suffix}.csv'
     stats.to_csv(data_path, index=False)
     print(f"  ✅ Saved data: {data_path}")
     
@@ -1083,8 +1175,8 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     fig.suptitle('Underdog Spread Analysis - By Season Comparison',
                  fontsize=14, fontweight='bold', y=0.995)
     
-    # Prepare season records for info box
-    season_records = []
+    # Prepare season data for split info boxes
+    season_data_list = []
     for s in seasons:
         season_df = df[df['season'] == s]
         n = len(season_df)
@@ -1092,7 +1184,19 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
         ml_l = n - ml_w
         spread_w = season_df['covered'].sum()
         spread_l = n - spread_w
-        season_records.append(f"{s}: n={n:,} ML:{ml_w}-{ml_l} ATS:{spread_w}-{spread_l}")
+        # Calculate P(ML win | Covered) for this season
+        covered_season = season_df[season_df['covered']]
+        p_ml_given_cover = (covered_season['won'].mean() * 100) if len(covered_season) > 0 else 0
+        
+        season_data_list.append({
+            'season': s,
+            'n': n,
+            'ml_w': ml_w,
+            'ml_l': ml_l,
+            'spread_w': spread_w,
+            'spread_l': spread_l,
+            'p_ml_cov': p_ml_given_cover
+        })
     
     axes = [fig.add_subplot(gs[i]) for i in range(3)]
     
@@ -1128,6 +1232,14 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     ax1.set_xlim(0, 16)
     ax1.set_xticks(range(0, 17, 1))
     
+    # Chart 1 info box: ML records
+    ml_records = [f"{d['season']}: n={d['n']:,} ML:{d['ml_w']}-{d['ml_l']}" for d in season_data_list]
+    ml_text = 'ML Records:\n' + '\n'.join(ml_records)
+    ax1.text(0.02, 0.97, ml_text,
+             transform=ax1.transAxes, fontsize=8,
+             verticalalignment='top', horizontalalignment='left',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
+    
     # Plot 2: Cover % by spread line - grouped bars + lines
     ax2 = axes[1]
     for i, season in enumerate(seasons):
@@ -1152,6 +1264,14 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     ax2.set_ylim(0, 100)
     ax2.set_xlim(0, 16)
     ax2.set_xticks(range(0, 17, 1))
+    
+    # Chart 2 info box: ATS records
+    ats_records = [f"{d['season']}: n={d['n']:,} ATS:{d['spread_w']}-{d['spread_l']}" for d in season_data_list]
+    ats_text = 'ATS Records:\n' + '\n'.join(ats_records)
+    ax2.text(0.02, 0.97, ats_text,
+             transform=ax2.transAxes, fontsize=8,
+             verticalalignment='top', horizontalalignment='left',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
     
     # Plot 3: Win % given cover - grouped bars + lines
     ax3 = axes[2]
@@ -1178,23 +1298,25 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     ax3.set_xlim(0, 16)
     ax3.set_xticks(range(0, 17, 1))
     
-    # Add season records info box to first plot (left side)
-    info_text = 'Season Records:\n' + '\n'.join(season_records)
-    ax1.text(0.02, 0.97, info_text,
-             transform=ax1.transAxes, fontsize=8,
+    # Chart 3 info box: P(ML|Cov) by season
+    p_ml_cov_records = [f"{d['season']}: P(ML|Cov)={d['p_ml_cov']:.1f}%" for d in season_data_list]
+    p_ml_cov_text = 'P(ML Win | Covered):\n' + '\n'.join(p_ml_cov_records)
+    ax3.text(0.02, 0.97, p_ml_cov_text,
+             transform=ax3.transAxes, fontsize=8,
              verticalalignment='top', horizontalalignment='left',
              bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
     
     plt.tight_layout()
     
-    # Save plot
+    # Save plot with season names in filename
     output_dir.mkdir(parents=True, exist_ok=True)
-    plot_path = output_dir / 'underdog_spread_line_analysis_by_season.png'
+    season_suffix = '_'.join(seasons).replace('-', '_')
+    plot_path = output_dir / f'underdog_spread_line_analysis_by_season_{season_suffix}.png'
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     print(f"  ✅ Saved plot: {plot_path}")
     
     # Also save the data
-    data_path = output_dir / 'underdog_spread_line_stats_by_season.csv'
+    data_path = output_dir / f'underdog_spread_line_stats_by_season_{season_suffix}.csv'
     stats.to_csv(data_path, index=False)
     print(f"  ✅ Saved data: {data_path}")
     
@@ -1289,10 +1411,11 @@ def main():
     print(f"💾 Saved locally: {local_path}")
     
     # Create spread line plots
-    create_spread_line_plots(merged_df, local_tmp_dir)
+    create_spread_line_plots(merged_df, args.seasons, local_tmp_dir)
     
-    # Create spread line plots by season (grouped bars)
-    create_spread_line_plots_by_season(merged_df, args.seasons, local_tmp_dir)
+    # Create spread line plots by season (grouped bars) - only if multiple seasons
+    if len(args.seasons) > 1:
+        create_spread_line_plots_by_season(merged_df, args.seasons, local_tmp_dir)
     
     if args.analyze_only:
         print("\n✅ Analysis complete (--analyze-only flag set)")
