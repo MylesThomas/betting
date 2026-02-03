@@ -105,20 +105,27 @@ def load_line_movement_snapshots(days_back=3):
     cutoff_date_str = cutoff_datetime.strftime('%Y-%m-%d')
     print(f"   Cutoff date: {cutoff_date_str} (only loading files >= this date)")
     
+    # Use pagination to get ALL objects (not just first 1000)
     try:
-        response = s3.list_objects_v2(Bucket=S3_BUCKET_SNAPSHOTS, Prefix=s3_prefix)
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=S3_BUCKET_SNAPSHOTS, Prefix=s3_prefix)
+        
+        all_objects = []
+        for page in pages:
+            if 'Contents' in page:
+                all_objects.extend(page['Contents'])
     except Exception as e:
         print(f"❌ Error accessing S3 bucket: {e}")
         raise
     
-    if 'Contents' not in response:
+    if not all_objects:
         raise ValueError(f"No snapshots found in S3")
     
     # Filter S3 objects by date BEFORE loading
     files_to_load = []
     total_files = 0
     
-    for obj in response.get('Contents', []):
+    for obj in all_objects:
         key = obj['Key']
         total_files += 1
         

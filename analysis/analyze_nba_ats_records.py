@@ -133,12 +133,18 @@ def load_all_game_lines(season):
     
     s3 = boto3.client('s3')
     
-    # List all CSV files for the season
-    response = s3.list_objects_v2(Bucket=S3_BUCKET_ODDS, Prefix=s3_prefix)
+    # List all CSV files for the season (use pagination)
+    paginator = s3.get_paginator('list_objects_v2')
+    pages = paginator.paginate(Bucket=S3_BUCKET_ODDS, Prefix=s3_prefix)
+    
+    all_objects = []
+    for page in pages:
+        if 'Contents' in page:
+            all_objects.extend(page['Contents'])
     
     all_dfs = []
     
-    for obj in response.get('Contents', []):
+    for obj in all_objects:
         key = obj['Key']
         
         # Skip non-CSV files and failures file
@@ -180,17 +186,23 @@ def get_nba_scores_from_player_logs(season):
     
     s3 = boto3.client('s3')
     
-    # List all CSV files for the season
+    # List all CSV files for the season (use pagination)
     print(f"   📂 Looking for player game logs: s3://{S3_BUCKET_NBA_API}/{s3_prefix}")
-    response = s3.list_objects_v2(Bucket=S3_BUCKET_NBA_API, Prefix=s3_prefix)
+    paginator = s3.get_paginator('list_objects_v2')
+    pages = paginator.paginate(Bucket=S3_BUCKET_NBA_API, Prefix=s3_prefix)
     
-    if 'Contents' not in response:
+    all_objects = []
+    for page in pages:
+        if 'Contents' in page:
+            all_objects.extend(page['Contents'])
+    
+    if not all_objects:
         raise ValueError(f"No player game logs found in S3: s3://{S3_BUCKET_NBA_API}/{s3_prefix}")
     
     all_dfs = []
     file_count = 0
     
-    for obj in response.get('Contents', []):
+    for obj in all_objects:
         key = obj['Key']
         
         # Skip non-CSV files

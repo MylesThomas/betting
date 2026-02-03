@@ -2,8 +2,8 @@
 AWS Lambda Function - All Sports Line Steam Alerts Tracking
 
 Python script: scripts/lambda_function_all_sports_line_steam_alerts_tracking.py
-Lambda function name: line-steam-alerts / line-steam-alerts-v2
-Handler: lambda_function_all_sports_line_steam_alerts_tracking.lambda_handler
+
+Lambda function name: line-steam-alerts
 
 ================================================================================
 OVERVIEW
@@ -546,18 +546,24 @@ def generate_ytd_report(sport, today, season, threshold):
     s3_bucket = f"{sport}-betting-mt"
     results_prefix = "data/04_output/results/line-steam/"
     
-    # List all results files
+    # List all results files (use pagination to get all)
     try:
-        response = s3.list_objects_v2(Bucket=s3_bucket, Prefix=results_prefix)
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=s3_bucket, Prefix=results_prefix)
+        
+        all_objects = []
+        for page in pages:
+            if 'Contents' in page:
+                all_objects.extend(page['Contents'])
     except Exception as e:
         return f"❌ Error loading results from S3: {e}"
     
-    if 'Contents' not in response:
+    if not all_objects:
         return f"📊 No results found yet"
     
     # Load all results files
     all_results = []
-    for obj in response.get('Contents', []):
+    for obj in all_objects:
         key = obj['Key']
         if not key.endswith('.csv'):
             continue
