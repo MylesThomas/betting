@@ -920,9 +920,6 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
     ax1.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Win %', fontsize=12, fontweight='bold')
     ax1.set_title('Underdog Win % by Spread Line', fontsize=13, fontweight='bold', pad=15)
-    ax1.text(0.5, 1.08, f'Aggregated across all 5 seasons | Spreads floored to whole numbers | Min 10 games per bin', 
-             transform=ax1.transAxes, ha='center', va='bottom', fontsize=9, 
-             style='italic', color='#555')
     ax1.grid(True, alpha=0.3, axis='y')
     ax1.legend()
     ax1.set_ylim(0, 100)
@@ -948,9 +945,6 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
     ax2.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
     ax2.set_ylabel('Cover %', fontsize=12, fontweight='bold')
     ax2.set_title('Underdog Cover % by Spread Line', fontsize=13, fontweight='bold', pad=15)
-    ax2.text(0.5, 1.08, f'Aggregated across all 5 seasons | Spreads floored to whole numbers | Min 10 games per bin', 
-             transform=ax2.transAxes, ha='center', va='bottom', fontsize=9, 
-             style='italic', color='#555')
     ax2.grid(True, alpha=0.3, axis='y')
     ax2.legend()
     ax2.set_ylim(0, 100)
@@ -968,9 +962,6 @@ def create_spread_line_plots(merged_df: pd.DataFrame, output_dir: Path) -> None:
     ax3.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
     ax3.set_ylabel('Win % (Given Cover)', fontsize=12, fontweight='bold')
     ax3.set_title('P(Underdog Wins | Covers Spread) by Spread Line', fontsize=13, fontweight='bold', pad=15)
-    ax3.text(0.5, 1.08, f'At small spreads, covering often means winning | Larger spreads allow covering without winning', 
-             transform=ax3.transAxes, ha='center', va='bottom', fontsize=9, 
-             style='italic', color='#555')
     ax3.grid(True, alpha=0.3, axis='y')
     ax3.legend()
     ax3.set_ylim(0, 100)
@@ -1088,7 +1079,11 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     fig = plt.figure(figsize=(18, 20))
     gs = fig.add_gridspec(3, 1, hspace=0.35)
     
-    # Add overall title with sample info and W-L by season
+    # Add clean title
+    fig.suptitle('Underdog Spread Analysis - By Season Comparison',
+                 fontsize=14, fontweight='bold', y=0.995)
+    
+    # Prepare season records for info box
     season_records = []
     for s in seasons:
         season_df = df[df['season'] == s]
@@ -1098,11 +1093,6 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
         spread_w = season_df['covered'].sum()
         spread_l = n - spread_w
         season_records.append(f"{s}: n={n:,} ML:{ml_w}-{ml_l} ATS:{spread_w}-{spread_l}")
-    
-    season_summary = ' | '.join(season_records)
-    fig.suptitle(f'Underdog Spread Analysis - By Season Comparison\n'
-                 f'{season_summary}',
-                 fontsize=13, fontweight='bold', y=0.995)
     
     axes = [fig.add_subplot(gs[i]) for i in range(3)]
     
@@ -1132,9 +1122,6 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     ax1.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Win %', fontsize=12, fontweight='bold')
     ax1.set_title('Underdog Win % by Spread Line (By Season)', fontsize=13, fontweight='bold', pad=15)
-    ax1.text(0.5, 1.06, f'Each season shown separately | Spreads floored to whole numbers | Min 10 games per season per bin', 
-             transform=ax1.transAxes, ha='center', va='bottom', fontsize=9, 
-             style='italic', color='#555')
     ax1.grid(True, alpha=0.3, axis='y')
     ax1.legend(loc='upper right', fontsize=10)
     ax1.set_ylim(0, 100)
@@ -1160,9 +1147,6 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     ax2.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
     ax2.set_ylabel('Cover %', fontsize=12, fontweight='bold')
     ax2.set_title('Underdog Cover % by Spread Line (By Season)', fontsize=13, fontweight='bold', pad=15)
-    ax2.text(0.5, 1.06, f'Each season shown separately | Compare seasonal variance in cover rates', 
-             transform=ax2.transAxes, ha='center', va='bottom', fontsize=9, 
-             style='italic', color='#555')
     ax2.grid(True, alpha=0.3, axis='y')
     ax2.legend(loc='upper right', fontsize=10)
     ax2.set_ylim(0, 100)
@@ -1188,14 +1172,18 @@ def create_spread_line_plots_by_season(merged_df: pd.DataFrame, seasons: List[st
     ax3.set_xlabel('Underdog Spread Line (+points)', fontsize=12, fontweight='bold')
     ax3.set_ylabel('Win % (Given Cover)', fontsize=12, fontweight='bold')
     ax3.set_title('P(Underdog Wins | Covers Spread) by Spread Line (By Season)', fontsize=13, fontweight='bold', pad=15)
-    ax3.text(0.5, 1.06, f'Shows how often dogs win outright when they cover | Values near 100% at small spreads expected', 
-             transform=ax3.transAxes, ha='center', va='bottom', fontsize=9, 
-             style='italic', color='#555')
     ax3.grid(True, alpha=0.3, axis='y')
     ax3.legend(loc='upper right', fontsize=10)
     ax3.set_ylim(0, 100)
     ax3.set_xlim(0, 16)
     ax3.set_xticks(range(0, 17, 1))
+    
+    # Add season records info box to first plot (left side)
+    info_text = 'Season Records:\n' + '\n'.join(season_records)
+    ax1.text(0.02, 0.97, info_text,
+             transform=ax1.transAxes, fontsize=8,
+             verticalalignment='top', horizontalalignment='left',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='gray'))
     
     plt.tight_layout()
     
