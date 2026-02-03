@@ -306,7 +306,7 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
         'python', 'scripts/find_nba_role_spread_plays.py',
         '--dimension', '2d',  # 2D: line + spread only
         '--season', season,
-        '--min-roi', '5.0',
+        '--min-roi', '0.1',
         '--granularity', 'detailed',
         '--date', today,  # Pass ET date explicitly to avoid UTC issues
         '--save-s3'
@@ -330,7 +330,7 @@ def run_daily_workflow(repo_dir, odds_api_key, season='2025-26'):
         'python', 'scripts/find_nba_role_spread_plays.py',  # Now using unified script
         '--dimension', '3d',  # 3D: line + spread + scorer_type
         '--season', season,
-        '--min-roi', '5.0',
+        '--min-roi', '0.1',
         '--granularity', 'detailed',
         '--rim-scorer-pct', '40',
         '--date', today,  # Pass ET date explicitly to avoid UTC issues

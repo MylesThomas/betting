@@ -1341,8 +1341,8 @@ def main():
                        help='Binning granularity (detailed = 7x9 grid, standard = 4x6 grid)')
     parser.add_argument('--strategies-json', type=str, default=None,
                        help='Path to strategies JSON (local or S3 URI). If not provided, loads from S3 using --season and --dimension.')
-    parser.add_argument('--min-roi', type=float, default=5.0,
-                       help='Minimum ROI threshold (default: 5.0%%)')
+    parser.add_argument('--min-roi', type=float, default=0.1,
+                       help='Minimum ROI threshold (default: 0.1%%)')
     parser.add_argument('--rim-scorer-pct', type=int, default=40,
                        help='Rim scorer threshold percentage for 3D (default: 40). Must match data generation.')
     parser.add_argument('--s3', action='store_true',
