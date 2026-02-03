@@ -343,21 +343,24 @@ def prepare_data_for_visualization(df):
     )
     
     # Calculate difference in implied probability (percentage points)
+    # Treat missing values ("-") as 0% implied probability to avoid NA
     # Difference 1: Pre-Season -> Current
     if 'preseason_implied_prob' in df_display.columns:
         df_display['diff_preseason'] = df_display.apply(
-            lambda row: (row['fanduel_implied_prob'] - row['preseason_implied_prob']) * 100 
-            if pd.notna(row['preseason_implied_prob'])
-            else None,
+            lambda row: (
+                (row['fanduel_implied_prob'] if pd.notna(row['fanduel_implied_prob']) else 0.0) - 
+                (row['preseason_implied_prob'] if pd.notna(row['preseason_implied_prob']) else 0.0)
+            ) * 100,
             axis=1
         )
     
     # Difference 2: Last Week -> Current
     if 'last_week_implied_prob' in df_display.columns:
         df_display['diff_last_week'] = df_display.apply(
-            lambda row: (row['fanduel_implied_prob'] - row['last_week_implied_prob']) * 100 
-            if pd.notna(row['last_week_implied_prob'])
-            else None,
+            lambda row: (
+                (row['fanduel_implied_prob'] if pd.notna(row['fanduel_implied_prob']) else 0.0) - 
+                (row['last_week_implied_prob'] if pd.notna(row['last_week_implied_prob']) else 0.0)
+            ) * 100,
             axis=1
         )
     
