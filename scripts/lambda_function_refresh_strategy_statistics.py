@@ -460,6 +460,9 @@ def run_backtest_for_season(s3_client, season: str, strategy_type: str) -> bool:
     all_strategies = generate_all_strategy_combinations(strategy_type)
     print(f"   ✅ Generated {len(all_strategies)} strategy combinations to test")
     
+    # Step 1a: Validate strategy pairs (every OVER has an UNDER)
+    validate_strategy_pairs(all_strategies, strategy_type)
+    
     # Step 2: Load player props data from S3
     df_props = load_player_props_from_s3(s3_client, season, strategy_type)
     if df_props is None or df_props.empty:
@@ -476,6 +479,9 @@ def run_backtest_for_season(s3_client, season: str, strategy_type: str) -> bool:
         print(f"   ❌ No plays generated")
         return False
     
+    # Step 3a: Validate inverse results (OVER losses ≈ UNDER wins)
+    validate_inverse_results(df_plays, strategy_type)
+    
     # Step 4: Save plays to S3
     success = save_plays_to_s3(s3_client, df_plays, strategy_type, season)
     
@@ -483,6 +489,126 @@ def run_backtest_for_season(s3_client, season: str, strategy_type: str) -> bool:
         print(f"   ✅ {strategy_type.upper()} backtest complete")
     
     return success
+
+
+def validate_strategy_pairs(strategies: List[Dict], strategy_type: str) -> bool:
+    """
+    Validate that every OVER strategy has a corresponding UNDER strategy.
+    
+    Args:
+        strategies: List of strategy dictionaries
+        strategy_type: '2d' or '3d'
+    
+    Returns:
+        bool: True if validation passes
+    
+    Raises:
+        AssertionError: If validation fails
+    """
+    print(f"\n   🔍 Validating strategy pairs...")
+    
+    # Group strategies by everything except bet_side
+    if strategy_type == '2d':
+        group_keys = ['line_tier', 'spread_bin']
+    else:  # 3d
+        group_keys = ['line_tier', 'spread_bin', 'scorer_type']
+    
+    # Create dictionary: (key_tuple) -> [list of strategies]
+    strategy_groups = {}
+    for strat in strategies:
+        key = tuple(strat[k] for k in group_keys)
+        if key not in strategy_groups:
+            strategy_groups[key] = []
+        strategy_groups[key].append(strat)
+    
+    # Validate each group has exactly 2 strategies (OVER and UNDER)
+    errors = []
+    for key, group in strategy_groups.items():
+        if len(group) != 2:
+            errors.append(f"   ❌ Strategy {key} has {len(group)} variations (expected 2)")
+            continue
+        
+        bet_sides = {s['bet_side'] for s in group}
+        if bet_sides != {'OVER', 'UNDER'}:
+            errors.append(f"   ❌ Strategy {key} has bet_sides {bet_sides} (expected OVER and UNDER)")
+    
+    if errors:
+        print(f"\n   ❌ VALIDATION FAILED:")
+        for error in errors[:10]:  # Show first 10 errors
+            print(error)
+        if len(errors) > 10:
+            print(f"   ... and {len(errors) - 10} more errors")
+        raise AssertionError(f"Strategy pair validation failed: {len(errors)} issues found")
+    
+    print(f"   ✅ Validated {len(strategy_groups)} strategy pairs ({len(strategies)} total strategies)")
+    print(f"   ✅ Each combination has both OVER and UNDER")
+    
+    return True
+
+
+def validate_inverse_results(df_plays: 'pd.DataFrame', strategy_type: str) -> bool:
+    """
+    Validate that OVER and UNDER strategies have approximately inverse results.
+    
+    Args:
+        df_plays: DataFrame with all plays
+        strategy_type: '2d' or '3d'
+    
+    Returns:
+        bool: True if validation passes
+    """
+    if not PANDAS_AVAILABLE or df_plays is None or df_plays.empty:
+        print(f"   ⚠️  Cannot validate inverse results - no data")
+        return True
+    
+    print(f"\n   🔍 Validating inverse results (OVER vs UNDER)...")
+    
+    # Group by everything except bet_side
+    if strategy_type == '2d':
+        group_cols = ['line_tier', 'spread_bin']
+    else:  # 3d
+        group_cols = ['line_tier', 'spread_bin', 'scorer_type']
+    
+    issues = []
+    
+    for group_key, group_df in df_plays.groupby(group_cols):
+        over_df = group_df[group_df['bet_side'] == 'OVER']
+        under_df = group_df[group_df['bet_side'] == 'UNDER']
+        
+        if len(over_df) == 0 or len(under_df) == 0:
+            continue
+        
+        # Check that total plays are equal
+        if len(over_df) != len(under_df):
+            issues.append(f"   ⚠️  {group_key}: OVER has {len(over_df)} plays, UNDER has {len(under_df)} plays")
+            continue
+        
+        # Calculate win rates
+        over_wins = (over_df['result'] == 'WIN').sum()
+        over_losses = (over_df['result'] == 'LOSS').sum()
+        under_wins = (under_df['result'] == 'WIN').sum()
+        under_losses = (under_df['result'] == 'LOSS').sum()
+        
+        # OVER wins should approximately equal UNDER losses (and vice versa)
+        # Allow small discrepancy due to pushes
+        if abs(over_wins - under_losses) > 5 or abs(over_losses - under_wins) > 5:
+            over_wr = over_wins / (over_wins + over_losses) * 100 if (over_wins + over_losses) > 0 else 0
+            under_wr = under_wins / (under_wins + under_losses) * 100 if (under_wins + under_losses) > 0 else 0
+            issues.append(
+                f"   ⚠️  {group_key}: OVER {over_wins}W-{over_losses}L ({over_wr:.1f}%), "
+                f"UNDER {under_wins}W-{under_losses}L ({under_wr:.1f}%) - not inverse"
+            )
+    
+    if issues:
+        print(f"\n   ⚠️  Found {len(issues)} potential issues (showing first 5):")
+        for issue in issues[:5]:
+            print(issue)
+        # Don't fail - just warn (pushes can cause legitimate differences)
+        print(f"   Note: Small differences are OK due to pushes")
+    else:
+        print(f"   ✅ All OVER/UNDER pairs have inverse results")
+    
+    return True
 
 
 def load_backtest_plays(s3_client, bucket: str, strategy_type: str, season: str) -> 'pd.DataFrame':
@@ -873,6 +999,12 @@ def refresh_strategy_statistics(
                 'total_plays': len(df_all)
             }
         )
+        
+        # Validate final strategy pairs before logging
+        try:
+            validate_strategy_pairs(strategies, strategy_type)
+        except AssertionError as e:
+            print(f"   ⚠️  Warning: {e}")
         
         # Log detailed results for this strategy type
         log_strategy_results(strategies, strategy_type, BACKTEST_SEASONS, df_all)
