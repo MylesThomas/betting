@@ -8,21 +8,30 @@ This script updates strategy JSONs daily with fresh multi-season statistics.
 It combines backtest results from 2023-24, 2024-25, and 2025-26 (through yesterday)
 to provide robust, up-to-date win rates and ROI figures.
 
+Self-Contained Approach:
+Instead of relying on external backtest scripts and historical JSON files,
+this implementation generates ALL possible strategy combinations (98 for 2D,
+196 for 3D) and tests them directly. This eliminates the circular dependency
+where only historically profitable strategies get tested.
+
 Steps:
-1. Clone GitHub repo to get latest code
-2. Re-run 2025-26 backtest (includes yesterday's games)
-3. Load 2023-24 and 2024-25 backtests from S3 (static)
-4. Combine all 3 seasons
-5. Calculate aggregate strategy stats
-6. Generate updated strategy JSON files
-7. Upload to S3
+1. Generate all possible strategy combinations (line tier × spread bin × bet side × scorer type)
+2. Load player props data from S3 for current season
+3. Match props to strategies and calculate WIN/LOSS/PUSH outcomes
+4. Save plays.csv to S3
+5. Load plays from all 3 seasons (2023-24, 2024-25, 2025-26)
+6. Calculate aggregate statistics across all seasons
+7. Filter strategies by minimum plays (50+) not historical ROI
+8. Generate updated strategy JSON files
+9. Upload to S3
+10. Send SNS email notification
 
 Lambda Deployment:
-This script is self-contained and can be copied directly into the Lambda editor.
-It clones the GitHub repo at runtime to access backtest scripts and dependencies.
+This script is fully self-contained and can be copied directly into the Lambda editor.
+No git clone or external dependencies required beyond boto3 and pandas (Lambda layer).
 
 Required Lambda Environment Variables:
-- GITHUB_TOKEN: Personal access token for cloning private repo
+- SNS_TOPIC_ARN: SNS topic for email notifications (optional)
 
 Usage (CLI):
     python scripts/lambda_function_refresh_strategy_statistics.py --season 2025-26
@@ -37,19 +46,15 @@ Usage (Lambda):
 
 Author: Myles Thomas
 Date: 2026-01-30
-Updated: 2026-02-01 (self-contained with git clone)
+Updated: 2026-02-03 (fully self-contained, tests all 98/196 combinations)
 """
 
 import sys
 import os
 import json
-import subprocess
-import shutil
-import tempfile
-from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from typing import List, Dict, Optional
+from typing import List, Dict
 from io import StringIO
 
 # Only import stdlib and boto3 (available in Lambda by default)
@@ -78,8 +83,138 @@ BACKTEST_SEASONS = ['2023-24', '2024-25', '2025-26']
 # Minimum plays to include strategy
 MIN_PLAYS_THRESHOLD = 50
 
-# GitHub repo
-GITHUB_REPO = 'https://github.com/MylesThomas/betting.git'
+
+# =============================================================================
+# BINNING FUNCTIONS
+# =============================================================================
+
+def bin_points_line(line: float) -> str:
+    """
+    Bin player points line into tiers (detailed granularity).
+    
+    Args:
+        line: Player points line
+    
+    Returns:
+        Line tier string
+    """
+    if PANDAS_AVAILABLE and pd.isna(line):
+        return 'Unknown'
+    
+    if line < 5:
+        return '<5 (Deep Bench)'
+    elif line < 10:
+        return '5-10 (Bench)'
+    elif line < 15:
+        return '10-15 (Role Player)'
+    elif line < 20:
+        return '15-20 (High Role)'
+    elif line < 25:
+        return '20-25 (Star)'
+    elif line < 30:
+        return '25-30 (High Star)'
+    elif line < 35:
+        return '30-35 (Superstar)'
+    elif line < 40:
+        return '35-40 (Elite)'
+    else:
+        return '40+ (MVP)'
+
+
+def bin_team_spread(spread: float) -> str:
+    """
+    Bin team spread into categories (detailed granularity).
+    
+    Args:
+        spread: Team spread (positive = underdog, negative = favorite)
+    
+    Returns:
+        Spread bin string
+    """
+    if PANDAS_AVAILABLE and pd.isna(spread):
+        return 'Unknown'
+    
+    if spread < -15:
+        return '15+ Fav'
+    elif spread < -10:
+        return '10-15 Fav'
+    elif spread < -6:
+        return '6-10 Fav'
+    elif spread < -2:
+        return '2-6 Fav'
+    elif spread <= 2:
+        return "Pick'em (-2 to +2)"
+    elif spread <= 6:
+        return '2-6 Dog'
+    elif spread <= 10:
+        return '6-10 Dog'
+    elif spread <= 15:
+        return '10-15 Dog'
+    else:
+        return '15+ Dog'
+
+
+def generate_all_strategy_combinations(strategy_type: str) -> List[Dict]:
+    """
+    Generate all possible strategy combinations to test.
+    
+    Args:
+        strategy_type: '2d' or '3d'
+    
+    Returns:
+        List of all strategy dictionaries
+    """
+    # All possible line tiers
+    line_tiers = [
+        '5-10 (Bench)',
+        '10-15 (Role Player)',
+        '15-20 (High Role)',
+        '20-25 (Star)',
+        '25-30 (High Star)',
+        '30-35 (Superstar)',
+        '35-40 (Elite)'
+    ]
+    
+    # All possible spread bins
+    spread_bins = [
+        "Pick'em (-2 to +2)",
+        '2-6 Fav',
+        '2-6 Dog',
+        '6-10 Fav',
+        '6-10 Dog',
+        '10-15 Fav',
+        '10-15 Dog'
+    ]
+    
+    # Both bet sides
+    bet_sides = ['OVER', 'UNDER']
+    
+    combinations = []
+    
+    if strategy_type == '2d':
+        for line_tier in line_tiers:
+            for spread_bin in spread_bins:
+                for bet_side in bet_sides:
+                    combinations.append({
+                        'line_tier': line_tier,
+                        'spread_bin': spread_bin,
+                        'bet_side': bet_side
+                    })
+    
+    elif strategy_type == '3d':
+        scorer_types = ['Rim Attacker (≥40.0%)', 'Perimeter (<40.0%)']
+        for line_tier in line_tiers:
+            for spread_bin in spread_bins:
+                for bet_side in bet_sides:
+                    for scorer_type in scorer_types:
+                        combinations.append({
+                            'line_tier': line_tier,
+                            'spread_bin': spread_bin,
+                            'bet_side': bet_side,
+                            'scorer_type': scorer_type
+                        })
+    
+    return combinations
 
 
 # =============================================================================
@@ -94,16 +229,184 @@ def get_yesterday_et() -> str:
     return yesterday
 
 
-def run_cmd(cmd: List[str], cwd: Optional[str] = None) -> subprocess.CompletedProcess:
-    """Run a shell command and return the result."""
-    result = subprocess.run(
-        cmd,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        timeout=300
-    )
-    return result
+def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd.DataFrame':
+    """
+    Load player props with actuals CSV from S3.
+    
+    Args:
+        s3_client: Boto3 S3 client
+        season: NBA season (e.g., '2024-25')
+        strategy_type: '2d' or '3d' (3d requires rim scorer data)
+    
+    Returns:
+        DataFrame with player props and actuals (or None if not found)
+    """
+    if not PANDAS_AVAILABLE:
+        print(f"   ⚠️  pandas not available - cannot load props data")
+        return None
+    
+    if strategy_type == '2d':
+        key = f"data/03_intermediate/player_props_with_actuals_{season}.csv"
+    elif strategy_type == '3d':
+        key = f"data/03_intermediate/player_props_with_actuals_{season}_rim40.csv"
+    else:
+        raise ValueError(f"Invalid strategy_type: {strategy_type}")
+    
+    print(f"   Loading props from s3://{S3_BUCKET}/{key}...")
+    
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=key)
+        df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
+        print(f"   ✅ Loaded {len(df):,} player-game records")
+        return df
+    except s3_client.exceptions.NoSuchKey:
+        print(f"   ❌ Data file not found: s3://{S3_BUCKET}/{key}")
+        return None
+    except Exception as e:
+        print(f"   ❌ Error loading data: {e}")
+        return None
+
+
+def match_and_calculate_plays(df: 'pd.DataFrame', strategies: List[Dict], strategy_type: str) -> 'pd.DataFrame':
+    """
+    Match player props to strategies and calculate outcomes.
+    
+    Args:
+        df: Player props with actuals
+        strategies: List of all strategy combinations
+        strategy_type: '2d' or '3d'
+    
+    Returns:
+        DataFrame with all plays and their outcomes
+    """
+    if not PANDAS_AVAILABLE or df is None or df.empty:
+        print(f"   ⚠️  No data to process")
+        return None
+    
+    print(f"   Matching {len(df):,} records to {len(strategies)} strategies...")
+    
+    # Bin the data
+    df['line_tier'] = df['points_line'].apply(bin_points_line)
+    df['spread_bin'] = df['team_spread'].apply(bin_team_spread)
+    
+    plays = []
+    
+    for idx, row in df.iterrows():
+        line_tier = row['line_tier']
+        spread_bin = row['spread_bin']
+        scorer_type = row.get('scorer_type', None)
+        
+        # Try to match against each strategy
+        for strat in strategies:
+            # Check if this row matches the strategy
+            line_match = strat['line_tier'] == line_tier
+            spread_match = strat['spread_bin'] == spread_bin
+            
+            # For 3D strategies, also check scorer_type
+            scorer_match = True
+            if strategy_type == '3d':
+                if pd.isna(scorer_type):
+                    continue
+                scorer_match = strat['scorer_type'] == scorer_type
+            
+            if line_match and spread_match and scorer_match:
+                # This row matches this strategy - create a play
+                actual_points = row.get('PTS')
+                line = row['points_line']
+                bet_side = strat['bet_side']
+                
+                # Determine result
+                if pd.isna(actual_points):
+                    result = 'NO_DATA'
+                    profit = 0.0
+                elif bet_side == 'OVER':
+                    if actual_points > line:
+                        result = 'WIN'
+                        profit = 100.0
+                    elif actual_points < line:
+                        result = 'LOSS'
+                        profit = -110.0
+                    else:
+                        result = 'PUSH'
+                        profit = 0.0
+                else:  # UNDER
+                    if actual_points < line:
+                        result = 'WIN'
+                        profit = 100.0
+                    elif actual_points > line:
+                        result = 'LOSS'
+                        profit = -110.0
+                    else:
+                        result = 'PUSH'
+                        profit = 0.0
+                
+                plays.append({
+                    'game_date': row.get('game_date'),
+                    'player_name': row.get('PLAYER_NAME'),
+                    'team': row.get('TEAM_NAME'),
+                    'opponent': row.get('MATCHUP'),
+                    'points_line': line,
+                    'team_spread': row.get('team_spread'),
+                    'line_tier': line_tier,
+                    'spread_bin': spread_bin,
+                    'scorer_type': scorer_type if strategy_type == '3d' else None,
+                    'bet_side': bet_side,
+                    'actual_points': actual_points,
+                    'result': result,
+                    'profit': profit,
+                    'season': row.get('season', '')
+                })
+    
+    if not plays:
+        print(f"   ⚠️  No plays found")
+        return pd.DataFrame()
+    
+    df_plays = pd.DataFrame(plays)
+    print(f"   ✅ Generated {len(df_plays):,} plays")
+    
+    # Filter out NO_DATA results
+    df_plays = df_plays[df_plays['result'] != 'NO_DATA']
+    print(f"   ✅ {len(df_plays):,} plays with valid results")
+    
+    return df_plays
+
+
+def save_plays_to_s3(s3_client, df_plays: 'pd.DataFrame', strategy_type: str, season: str) -> bool:
+    """
+    Save plays DataFrame to S3 as CSV.
+    
+    Args:
+        s3_client: Boto3 S3 client
+        df_plays: DataFrame with plays
+        strategy_type: '2d' or '3d'
+        season: NBA season
+    
+    Returns:
+        bool: True if successful
+    """
+    if not PANDAS_AVAILABLE or df_plays is None or df_plays.empty:
+        print(f"   ⚠️  No plays to save")
+        return False
+    
+    s3_key = f'{BACKTEST_PREFIX}/{strategy_type}/{season}/plays.csv'
+    
+    try:
+        # Convert to CSV
+        csv_buffer = StringIO()
+        df_plays.to_csv(csv_buffer, index=False)
+        
+        # Upload to S3
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=s3_key,
+            Body=csv_buffer.getvalue()
+        )
+        
+        print(f"   ✅ Saved {len(df_plays)} plays to s3://{S3_BUCKET}/{s3_key}")
+        return True
+    except Exception as e:
+        print(f"   ❌ Failed to save plays: {e}")
+        return False
 
 
 def send_sns(subject: str, message: str) -> None:
@@ -132,118 +435,54 @@ def send_sns(subject: str, message: str) -> None:
         print(f"   ⚠️  Failed to send SNS: {e}")
 
 
-def clone_repo(token: Optional[str] = None) -> str:
-    """
-    Clone GitHub repo to /tmp directory.
-    
-    Args:
-        token: GitHub personal access token (optional for public repos)
-    
-    Returns:
-        Path to cloned repo
-    """
-    print("📥 Cloning GitHub repo...")
-    
-    repo_dir = '/tmp/betting_repo'
-    
-    # Clean up existing repo if it exists
-    if os.path.exists(repo_dir):
-        shutil.rmtree(repo_dir)
-    
-    # Build clone URL with token if provided
-    if token:
-        repo_url = GITHUB_REPO.replace('https://', f'https://{token}@')
-    else:
-        repo_url = GITHUB_REPO
-    
-    # Clone repo
-    result = run_cmd(['git', 'clone', repo_url, repo_dir])
-    
-    if result.returncode != 0:
-        raise Exception(f"Failed to clone repo: {result.stderr}")
-    
-    print(f"   ✅ Repo cloned to {repo_dir}")
-    
-    # Add to Python path
-    sys.path.insert(0, repo_dir)
-    sys.path.insert(0, str(Path(repo_dir) / 'src'))
-    
-    return repo_dir
-
-
 # =============================================================================
 # BACKTEST FUNCTIONS
 # =============================================================================
 
-def run_backtest_for_season(season: str, strategy_type: str, repo_dir: str) -> bool:
+def run_backtest_for_season(s3_client, season: str, strategy_type: str) -> bool:
     """
-    Run backtest for a specific season and strategy type.
+    Run self-contained backtest for a specific season and strategy type.
+    
+    This generates ALL possible strategy combinations and tests them,
+    eliminating the circular dependency on historical JSON files.
     
     Args:
+        s3_client: Boto3 S3 client
         season: NBA season (e.g., '2025-26')
         strategy_type: '2d' or '3d'
-        repo_dir: Path to cloned repo
     
     Returns:
         bool: True if successful
     """
     print(f"   Running {strategy_type.upper()} backtest for {season}...")
     
-    backtest_script = Path(repo_dir) / 'backtesting' / '20260108_nba_points_props_strategy_backtest.py'
+    # Step 1: Generate all possible strategy combinations
+    all_strategies = generate_all_strategy_combinations(strategy_type)
+    print(f"   ✅ Generated {len(all_strategies)} strategy combinations to test")
     
-    if not backtest_script.exists():
-        print(f"   ❌ Backtest script not found: {backtest_script}")
+    # Step 2: Load player props data from S3
+    df_props = load_player_props_from_s3(s3_client, season, strategy_type)
+    if df_props is None or df_props.empty:
+        print(f"   ❌ No props data found for {season}")
         return False
     
-    # Use sys.executable to ensure subprocess uses same Python as Lambda runtime
-    cmd = [
-        sys.executable,  # Use Lambda's Python (has access to layers)
-        str(backtest_script),
-        '--seasons', season,
-        '--strategy', strategy_type,
-        '--granularity', 'detailed',
-        '--min-roi', '-1000.0'  # Set very low to capture ALL strategies (filter later by min plays)
-    ]
+    # Add season column if not present
+    if 'season' not in df_props.columns:
+        df_props['season'] = season
     
-    try:
-        # Create environment with Lambda layer paths
-        env = os.environ.copy()
-        
-        # Add Lambda layer paths to PYTHONPATH
-        layer_paths = [
-            '/opt/python',  # Lambda layer for Python packages
-            '/opt/python/lib/python3.12/site-packages',
-            repo_dir,
-            str(Path(repo_dir) / 'src')
-        ]
-        current_pythonpath = env.get('PYTHONPATH', '')
-        env['PYTHONPATH'] = ':'.join(layer_paths + ([current_pythonpath] if current_pythonpath else []))
-        print(f"   ✅ PYTHONPATH: {env['PYTHONPATH']}")
-        
-        # Run with modified environment
-        result = subprocess.run(
-            cmd,
-            cwd=repo_dir,
-            capture_output=True,
-            text=True,
-            timeout=300,
-            env=env
-        )
-        
-        if result.returncode == 0:
-            print(f"   ✅ {strategy_type.upper()} backtest complete")
-            return True
-        else:
-            print(f"   ❌ {strategy_type.upper()} backtest failed:")
-            print(f"      {result.stderr}")
-            return False
-            
-    except subprocess.TimeoutExpired:
-        print(f"   ❌ {strategy_type.upper()} backtest timed out after 5 minutes")
+    # Step 3: Match props to strategies and calculate outcomes
+    df_plays = match_and_calculate_plays(df_props, all_strategies, strategy_type)
+    if df_plays is None or df_plays.empty:
+        print(f"   ❌ No plays generated")
         return False
-    except Exception as e:
-        print(f"   ❌ {strategy_type.upper()} backtest error: {e}")
-        return False
+    
+    # Step 4: Save plays to S3
+    success = save_plays_to_s3(s3_client, df_plays, strategy_type, season)
+    
+    if success:
+        print(f"   ✅ {strategy_type.upper()} backtest complete")
+    
+    return success
 
 
 def load_backtest_plays(s3_client, bucket: str, strategy_type: str, season: str) -> 'pd.DataFrame':
@@ -524,17 +763,22 @@ def generate_strategy_json(
 def refresh_strategy_statistics(
     season: str = '2025-26',
     strategy_types: List[str] = ['2d', '3d'],
-    skip_backtest: bool = False,
-    github_token: Optional[str] = None
+    skip_backtest: bool = False
 ) -> Dict:
     """
     Main function to refresh strategy statistics.
+    
+    Self-contained implementation that:
+    - Generates ALL possible strategy combinations (98 for 2D, 196 for 3D)
+    - Loads player props directly from S3
+    - Matches props to strategies and calculates outcomes
+    - Aggregates statistics across multiple seasons
+    - Filters by minimum plays (50+) not historical ROI
     
     Args:
         season: Current NBA season
         strategy_types: List of strategy types to update
         skip_backtest: If True, skip regenerating current season backtest
-        github_token: GitHub personal access token for cloning repo
     
     Returns:
         Dict with results summary
@@ -551,20 +795,8 @@ def refresh_strategy_statistics(
     print(f"Backtest Seasons: {', '.join(BACKTEST_SEASONS)}")
     print(f"Data Through: {yesterday}")
     print(f"Timestamp: {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"Mode: Self-contained (tests all {98 if '2d' in strategy_types else 0}/{196 if '3d' in strategy_types else 0} combinations)")
     print("="*80)
-    
-    # Step 0: Clone repo if we need to run backtests
-    repo_dir = None
-    if not skip_backtest:
-        try:
-            repo_dir = clone_repo(github_token)
-        except Exception as e:
-            error_msg = f"Failed to clone repo: {e}"
-            print(f"   ❌ {error_msg}")
-            return {
-                '2d': {'success': False, 'error': error_msg},
-                '3d': {'success': False, 'error': error_msg}
-            }
     
     results = {}
     s3_client = boto3.client('s3')
@@ -575,9 +807,9 @@ def refresh_strategy_statistics(
         print(f"{'='*80}\n")
         
         # Step 1: Re-run current season backtest (if not skipped)
-        if not skip_backtest and repo_dir:
+        if not skip_backtest:
             print(f"Step 1: Updating {season} backtest...")
-            success = run_backtest_for_season(season, strategy_type, repo_dir)
+            success = run_backtest_for_season(s3_client, season, strategy_type)
             if not success:
                 error_msg = f"Backtest failed for {strategy_type.upper()} - cannot proceed"
                 print(f"   ❌ {error_msg}")
@@ -740,9 +972,6 @@ def lambda_handler(event, context):
     strategy = event.get('strategy', 'both')
     skip_backtest = event.get('skip_backtest', False)  # Default: run backtest
     
-    # Get GitHub token from environment
-    github_token = os.environ.get('GITHUB_TOKEN')
-    
     # Determine strategy types
     if strategy == 'both':
         strategy_types = ['2d', '3d']
@@ -753,8 +982,7 @@ def lambda_handler(event, context):
     results = refresh_strategy_statistics(
         season=season,
         strategy_types=strategy_types,
-        skip_backtest=skip_backtest,
-        github_token=github_token
+        skip_backtest=skip_backtest
     )
     
     # Format response
@@ -796,12 +1024,6 @@ def main():
         action='store_true',
         help='Skip regenerating current season backtest (use existing data)'
     )
-    parser.add_argument(
-        '--github-token',
-        type=str,
-        default=None,
-        help='GitHub personal access token (for private repos)'
-    )
     
     args = parser.parse_args()
     
@@ -815,8 +1037,7 @@ def main():
     results = refresh_strategy_statistics(
         season=args.season,
         strategy_types=strategy_types,
-        skip_backtest=args.skip_backtest,
-        github_token=args.github_token
+        skip_backtest=args.skip_backtest
     )
     
     # Exit with error code if any failed
