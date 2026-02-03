@@ -132,6 +132,24 @@ MVP_ODDS_HISTORY = [
             'Stephen Curry': +100000,
             'Kevin Durant': +100000,
         }
+    },
+    {
+        'date': '20260202',
+        'fetch_date': '2026-02-02',
+        'label': 'Week 18',
+        'odds': {
+            'Shai Gilgeous-Alexander': -320,
+            'Nikola Jokic': +500,
+            'Luka Doncic': +1400,
+            'Cade Cunningham': +2700,
+            'Jaylen Brown': +6000,
+            'Anthony Edwards': +25000,
+            'Tyrese Maxey': +25000,
+            'Jalen Brunson': +30000,
+            'Donovan Mitchell': +40000,
+            'Kawhi Leonard': +100000,
+            'Kevin Durant': +100000,
+        }
     }
 ]
 
