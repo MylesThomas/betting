@@ -254,11 +254,12 @@ API calls used: 1
 
 When no live games (e.g., 3 AM ET):
 ```
-✅ ESPN API: Retrieved 0 games (0 live)
+✅ ESPN API: Retrieved 10 games (0 live)
 ℹ️ No live games - skipping Odds API call (saved 1 API credit)
-💾 Wrote 0 records to s3://.../espn/20260201_030000.parquet
+ℹ️ No live games - skipping file write (no data to save)
 ```
 API calls used: 0 ✨
+Files written: 0 ✨
 
 ANALYSIS USE CASES:
 After collecting data, analyze:
@@ -1038,21 +1039,34 @@ def main(sport: str = 'nba', prod_run: bool = False):
         # Step 2: Only call Odds API if there are live games
         if num_live == 0:
             print(f"\n{EMOJI['info']} No live games - skipping Odds API call (saved 1 API credit)")
-            print(f"{EMOJI['save']} Writing ESPN data only...\n")
             
-            # Still write ESPN data (shows games are upcoming/finished)
-            write_parquet_to_s3(espn_records, espn_s3_key)
-            
-            return {
-                'statusCode': 200,
-                'body': {
-                    'message': 'No live games',
-                    'num_games': len(espn_records),
-                    'num_live_games': 0,
-                    'odds_api_calls': 0,
-                    'api_calls_saved': 1,
+            if not TRACK_UPCOMING_GAMES:
+                print(f"{EMOJI['info']} No live games - skipping file write (no data to save)\n")
+                return {
+                    'statusCode': 200,
+                    'body': {
+                        'message': 'No live games - no files written',
+                        'num_games': len(espn_records),
+                        'num_live_games': 0,
+                        'odds_api_calls': 0,
+                        'api_calls_saved': 1,
+                    }
                 }
-            }
+            else:
+                # TRACK_UPCOMING_GAMES=true: Write all ESPN data
+                print(f"{EMOJI['save']} Writing ESPN data only (TRACK_UPCOMING_GAMES=true)...\n")
+                write_parquet_to_s3(espn_records, espn_s3_key)
+                
+                return {
+                    'statusCode': 200,
+                    'body': {
+                        'message': 'No live games - wrote upcoming games only',
+                        'num_games': len(espn_records),
+                        'num_live_games': 0,
+                        'odds_api_calls': 0,
+                        'api_calls_saved': 1,
+                    }
+                }
         
         # Step 3: Fetch odds (only if live games exist)
         print(f"\n{EMOJI['fire']} Step 2: Fetching odds for {num_live} live games...")
