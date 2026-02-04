@@ -593,23 +593,118 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
         print(f"\n💡 Recommendation: Skip or reduce stake size\n")
     
     # Add plays summary at the end (sorted by game time)
+    # Show ALL games that had steam today (flagged) + current steam games
     print(f"{'='*80}")
     print("📋 PLAYS SUMMARY")
     print(f"{'='*80}\n")
     
-    # Sort steam games by game time for the summary
-    steam_games_sorted = steam_games.sort_values('game_time')
+    # Build comprehensive list of all games to show
+    # 1. Get all unique game_ids from existing_plays (flagged steam - anything detected today)
+    all_game_ids = set()
+    game_info_map = {}  # game_id -> game info (team names, time, etc)
     
-    for _, game in steam_games_sorted.iterrows():
-        game_time_et = game['game_time'].tz_convert(et_tz)
+    if existing_plays is not None and len(existing_plays) > 0:
+        for _, play in existing_plays.iterrows():
+            game_id = play['game_id']
+            all_game_ids.add(game_id)
+            if game_id not in game_info_map:
+                # Store game metadata from existing plays
+                game_time_dt = pd.to_datetime(play['game_time']).tz_localize(et_tz) if pd.to_datetime(play['game_time']).tz is None else pd.to_datetime(play['game_time']).tz_convert(et_tz)
+                game_info_map[game_id] = {
+                    'opening_favorite': play['opening_favorite'],
+                    'opening_underdog': play['opening_underdog'],
+                    'game_time': game_time_dt,
+                    'game_id': game_id
+                }
+    
+    # 2. Add current steam games
+    for _, game in steam_games.iterrows():
+        game_id = game['game_id']
+        all_game_ids.add(game_id)
+        # Override with current game data (most up-to-date)
+        game_info_map[game_id] = {
+            'opening_favorite': game['opening_favorite'],
+            'opening_underdog': game['opening_underdog'],
+            'game_time': game['game_time'],
+            'game_id': game_id,
+            'opening_favorite_spread_current': game['opening_favorite_spread_current'],
+            'steam_toward_opening_underdog': game['steam_toward_opening_underdog']
+        }
+    
+    # Sort games by game time
+    sorted_games = sorted(game_info_map.values(), key=lambda x: x['game_time'])
+    
+    # Display each game with all plays detected today
+    for game_info in sorted_games:
+        game_id = game_info['game_id']
+        game_time_et = game_info['game_time'].tz_convert(et_tz) if game_info['game_time'].tz is not None else game_info['game_time']
         game_time_str = game_time_et.strftime('%I:%M%p ET').lstrip('0').lower()
         
-        # Determine which team to display (steamed team)
-        steamed_team = game['opening_underdog'] if game['steam_toward_opening_underdog'] else game['opening_favorite']
-        current_spread = -game['opening_favorite_spread_current'] if game['steam_toward_opening_underdog'] else game['opening_favorite_spread_current']
+        print(f"{game_info['opening_favorite']} vs {game_info['opening_underdog']} @ {game_time_str}")
         
-        print(f"{game['opening_favorite']} vs {game['opening_underdog']} @ {game_time_str}")
-        print(f"- {steamed_team} {current_spread:+.1f}")
+        # Get all unique steam directions for this game from existing plays
+        # Keep the detection with MAXIMUM steam magnitude per direction
+        directions_seen = {}
+        
+        if existing_plays is not None and len(existing_plays) > 0:
+            game_plays = existing_plays[existing_plays['game_id'] == game_id].copy()
+            for _, play in game_plays.iterrows():
+                direction = play['steam_direction']
+                steam_mag = play['steam_magnitude']
+                
+                if direction not in directions_seen:
+                    directions_seen[direction] = play
+                else:
+                    # Keep the one with MAXIMUM steam magnitude
+                    if steam_mag > directions_seen[direction]['steam_magnitude']:
+                        directions_seen[direction] = play
+        
+        # Add current steam if this game is in steam_games
+        current_steam_row = steam_games[steam_games['game_id'] == game_id]
+        has_current_steam = len(current_steam_row) > 0
+        
+        if has_current_steam:
+            game = current_steam_row.iloc[0]
+            current_direction = 'opening_underdog' if game['steam_toward_opening_underdog'] else 'opening_favorite'
+            current_steam_mag = game['steam_magnitude']
+            
+            # Check if current steam magnitude is greater than historical max for this direction
+            should_use_current = (
+                current_direction not in directions_seen or 
+                current_steam_mag >= directions_seen[current_direction]['steam_magnitude']
+            )
+            
+            if should_use_current:
+                # Use current data (it's the max for this direction)
+                directions_seen[current_direction] = {
+                    'steam_direction': current_direction,
+                    'play_team': game['opening_underdog'] if game['steam_toward_opening_underdog'] else game['opening_favorite'],
+                    'play_spread': -game['opening_favorite_spread_current'] if game['steam_toward_opening_underdog'] else game['opening_favorite_spread_current'],
+                    'steam_magnitude': current_steam_mag,
+                    'is_current': True
+                }
+            else:
+                # Historical detection had higher magnitude, but mark that current steam exists
+                # (Keep the historical max, but don't mark as current since it's weaker now)
+                pass
+        
+        # Display all unique plays for this game (underdog first, then favorite)
+        if 'opening_underdog' in directions_seen:
+            play = directions_seen['opening_underdog']
+            team = play['play_team']
+            spread = play['play_spread']
+            is_current = play.get('is_current', False)
+            marker = " (CURRENT)" if is_current else ""
+            print(f"- {team} {spread:+.1f}{marker}")
+        
+        if 'opening_favorite' in directions_seen:
+            play = directions_seen['opening_favorite']
+            team = play['play_team']
+            spread = play['play_spread']
+            is_current = play.get('is_current', False)
+            marker = " (CURRENT)" if is_current else ""
+            print(f"- {team} {spread:+.1f}{marker}")
+        
         print()
     
     print(f"{'='*80}\n")
