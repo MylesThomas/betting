@@ -269,10 +269,36 @@ def get_common_timestamps(odds_files: list[str], espn_files: list[str], n_recent
     
     # Filter by date if specified
     if date_filter:
-        # Convert date string to YYYYMMDD format
-        date_prefix = date_filter.replace('-', '')
-        common = {ts for ts in common if ts.startswith(date_prefix)}
-        print(f"   📅 Filtering to date: {date_filter} (ET timezone)")
+        from datetime import datetime, timedelta
+        
+        # Get target date and next day prefixes
+        date_obj = datetime.strptime(date_filter, '%Y-%m-%d')
+        next_date_obj = date_obj + timedelta(days=1)
+        
+        date_prefix = date_filter.replace('-', '')  # e.g., '20260203'
+        next_date_prefix = next_date_obj.strftime('%Y%m%d')  # e.g., '20260204'
+        
+        # Filter files
+        filtered_common = set()
+        for ts in common:
+            # Include all files from target date
+            if ts.startswith(date_prefix):
+                filtered_common.add(ts)
+            # Include only early morning files (00:00-06:00) from next day
+            elif ts.startswith(next_date_prefix):
+                try:
+                    # Extract hour from timestamp (format: YYYYMMDD_HHMMSS)
+                    if '_' in ts:
+                        hour_str = ts.split('_')[1][:2]  # Get 'HH' part
+                        hour = int(hour_str)
+                        if hour <= 6:  # Include files from 00:00 to 06:59
+                            filtered_common.add(ts)
+                except (IndexError, ValueError):
+                    # Skip malformed timestamps
+                    pass
+        
+        common = filtered_common
+        print(f"   📅 Filtering to {date_filter} + next day 00:00-06:00 (for late games)")
         
         if not common:
             print(f"   ⚠️ No files found for date {date_filter}")
@@ -611,6 +637,75 @@ def find_all_live_games(odds_path: Path, espn_path: Path) -> list[tuple[str, str
         con.close()
 
 
+def find_all_games_with_data(odds_path: Path, espn_path: Path, target_date: str, min_snapshots: int = 5) -> list[tuple[str, str, int]]:
+    """
+    Find all games from a specific date (by game_time) that have sufficient data.
+    
+    Args:
+        odds_path: Path to combined odds parquet
+        espn_path: Path to combined ESPN parquet
+        target_date: Target date in YYYY-MM-DD format (ET timezone)
+        min_snapshots: Minimum number of snapshots required (default: 5)
+        
+    Returns:
+        List of tuples: (away_team, home_team, num_snapshots)
+    """
+    con = duckdb.connect()
+    
+    try:
+        # Find all games scheduled on target date with sufficient data
+        # NOTE: game_time is in UTC, so we convert to ET timezone (UTC-5) before extracting date
+        query = f"""
+            WITH game_stats AS (
+                SELECT 
+                    o.away_team,
+                    o.home_team,
+                    MIN(o.game_time) as scheduled_tipoff,
+                    COUNT(DISTINCT o.fetched_at) as num_snapshots
+                FROM '{odds_path}' o
+                INNER JOIN '{espn_path}' e
+                    ON o.away_team = e.away_team_espn
+                    AND o.home_team = e.home_team_espn
+                    AND o.fetched_at = e.collection_timestamp
+                WHERE e.game_status IS NOT NULL
+                  AND DATE(o.game_time::TIMESTAMP - INTERVAL 5 HOURS) = '{target_date}'
+                GROUP BY o.away_team, o.home_team
+                HAVING COUNT(DISTINCT o.fetched_at) >= {min_snapshots}
+            )
+            SELECT 
+                away_team,
+                home_team,
+                num_snapshots,
+                scheduled_tipoff
+            FROM game_stats
+            ORDER BY scheduled_tipoff
+        """
+        
+        result = con.execute(query).df()
+        
+        if len(result) == 0:
+            print(f"\n⚠️ No games found on {target_date} with >= {min_snapshots} snapshots")
+            return []
+        
+        print(f"\n📅 Found {len(result)} game(s) on {target_date} with >= {min_snapshots} snapshots:")
+        all_games = []
+        for _, row in result.iterrows():
+            away = row['away_team']
+            home = row['home_team']
+            snapshots = row['num_snapshots']
+            tipoff = row['scheduled_tipoff']
+            print(f"   • {away} @ {home} ({snapshots} snapshots, tipoff: {tipoff})")
+            all_games.append((away, home, snapshots))
+        
+        return all_games
+        
+    except Exception as e:
+        print(f"\n⚠️ Error finding games for {target_date}: {e}")
+        return []
+    finally:
+        con.close()
+
+
 def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str, home_team: str):
     """
     Create a plot showing ML odds and score changes over time.
@@ -627,7 +722,7 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
     con = duckdb.connect()
     
     try:
-        # Get ML movement with scores over time
+        # Get ML, spread, and score movement over time
         query = f"""
             SELECT 
                 o.fetched_at as timestamp,
@@ -636,6 +731,8 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
                 MEDIAN(o.home_ml) as home_ml,
                 MEDIAN(o.away_ml_implied_prob) as away_implied_prob,
                 MEDIAN(o.home_ml_implied_prob) as home_implied_prob,
+                MEDIAN(o.away_spread) as away_spread,
+                MEDIAN(o.home_spread) as home_spread,
                 e.away_score,
                 e.home_score,
                 e.game_status,
@@ -728,8 +825,30 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         else:
             print(f"   ⚠️  Game still in progress (no 'post' status found)")
     
-    # Calculate score differential (away - home, so positive means away is winning)
-    df_with_scores_game['score_diff'] = df_with_scores_game['away_score'] - df_with_scores_game['home_score']
+    # Determine pregame favorite based on opening ML odds
+    # Lower (more negative) ML = favorite, higher (more positive) ML = underdog
+    opening_away_ml = df_filtered['away_ml'].dropna().iloc[0] if len(df_filtered['away_ml'].dropna()) > 0 else 0
+    opening_home_ml = df_filtered['home_ml'].dropna().iloc[0] if len(df_filtered['home_ml'].dropna()) > 0 else 0
+    
+    # More negative ML = favorite
+    if opening_away_ml < opening_home_ml:
+        favorite_team = away_team
+        underdog_team = home_team
+        favorite_is_away = True
+        print(f"   ⭐ Pregame favorite: {favorite_team} ({int(opening_away_ml):+d} ML)")
+        print(f"   🐶 Pregame underdog: {underdog_team} ({int(opening_home_ml):+d} ML)")
+    else:
+        favorite_team = home_team
+        underdog_team = away_team
+        favorite_is_away = False
+        print(f"   ⭐ Pregame favorite: {favorite_team} ({int(opening_home_ml):+d} ML)")
+        print(f"   🐶 Pregame underdog: {underdog_team} ({int(opening_away_ml):+d} ML)")
+    
+    # Calculate score differential (Favorite - Underdog, so positive means favorite is winning)
+    if favorite_is_away:
+        df_with_scores_game['score_diff'] = df_with_scores_game['away_score'] - df_with_scores_game['home_score']
+    else:
+        df_with_scores_game['score_diff'] = df_with_scores_game['home_score'] - df_with_scores_game['away_score']
     
     # Convert timestamps to minutes since game start for easier reading
     df_filtered['minutes_since_start'] = (df_filtered['timestamp'] - game_start_time).dt.total_seconds() / 60
@@ -743,12 +862,14 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         'home_ml': [df_filtered['home_ml'].iloc[0] if len(df_filtered) > 0 else None],
         'away_implied_prob': [df_filtered['away_implied_prob'].iloc[0] if len(df_filtered) > 0 else None],
         'home_implied_prob': [df_filtered['home_implied_prob'].iloc[0] if len(df_filtered) > 0 else None],
+        'away_spread': [df_filtered['away_spread'].iloc[0] if len(df_filtered) > 0 else None],
+        'home_spread': [df_filtered['home_spread'].iloc[0] if len(df_filtered) > 0 else None],
         'score_diff': [0]
     })
     
     df_with_scores_full = pd.concat([first_row, df_with_scores_game[['timestamp', 'minutes_since_start', 'score_diff']]], ignore_index=True)
-    df_ml_full = pd.concat([first_row[['timestamp', 'minutes_since_start', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob']], 
-                            df_filtered[['timestamp', 'minutes_since_start', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob']]], ignore_index=True)
+    df_ml_full = pd.concat([first_row[['timestamp', 'minutes_since_start', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob', 'away_spread', 'home_spread']], 
+                            df_filtered[['timestamp', 'minutes_since_start', 'away_ml', 'home_ml', 'away_implied_prob', 'home_implied_prob', 'away_spread', 'home_spread']]], ignore_index=True)
     
     # Remove duplicates (in case first_score_time already had data)
     df_with_scores_full = df_with_scores_full.drop_duplicates(subset=['timestamp'], keep='last')
@@ -757,6 +878,8 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
     # Get team colors
     away_color = get_team_color(away_team, 'primary')
     home_color = get_team_color(home_team, 'primary')
+    favorite_color = away_color if favorite_is_away else home_color
+    underdog_color = home_color if favorite_is_away else away_color
     print(f"   🎨 Using colors: {away_team}={away_color}, {home_team}={home_color}")
     
     # Detect quarter endings and starts by looking for period changes
@@ -793,9 +916,9 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         tipoff_et = tipoff_dt.astimezone(ZoneInfo('America/New_York'))
         tipoff_str = f" ({tipoff_et.strftime('%Y-%m-%d')} | Tip: {tipoff_et.strftime('%I:%M %p ET')})"
     
-    # Create figure with three subplots (ML, Win %, Score Differential)
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(14, 12), sharex=True)
-    fig.suptitle(f'{away_team} @ {home_team}{tipoff_str}\nML Odds, Win Probability, and Score Differential Over Time', 
+    # Create figure with four subplots (ML, Spread, Win %, Score Differential)
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(14, 16), sharex=True)
+    fig.suptitle(f'{away_team} @ {home_team}{tipoff_str}\nML Odds, Spread, Win Probability, and Score Differential Over Time', 
                  fontsize=16, fontweight='bold')
     
     # Add team logos to the figure
@@ -807,14 +930,29 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         print(f"   ⚠️  Could not add team logos")
     
     # Plot 1: ML Odds with consistent team colors and background shading
-    ax1.plot(df_ml_full['minutes_since_start'], df_ml_full['away_ml'], 'o-', label=f'{away_team} ML', 
+    # Get opening and current ML values for legend
+    away_ml_open = df_ml_full['away_ml'].dropna().iloc[0] if len(df_ml_full['away_ml'].dropna()) > 0 else None
+    away_ml_current = df_ml_full['away_ml'].dropna().iloc[-1] if len(df_ml_full['away_ml'].dropna()) > 0 else None
+    home_ml_open = df_ml_full['home_ml'].dropna().iloc[0] if len(df_ml_full['home_ml'].dropna()) > 0 else None
+    home_ml_current = df_ml_full['home_ml'].dropna().iloc[-1] if len(df_ml_full['home_ml'].dropna()) > 0 else None
+    
+    # Format ML values with +/- signs
+    def format_ml(val):
+        if val is None or pd.isna(val):
+            return "N/A"
+        return f"{int(val):+d}"
+    
+    away_label = f'{away_team} (At open: {format_ml(away_ml_open)}; Currently: {format_ml(away_ml_current)})'
+    home_label = f'{home_team} (At open: {format_ml(home_ml_open)}; Currently: {format_ml(home_ml_current)})'
+    
+    ax1.plot(df_ml_full['minutes_since_start'], df_ml_full['away_ml'], 'o-', label=away_label, 
              color=away_color, linewidth=2, markersize=4)
-    ax1.plot(df_ml_full['minutes_since_start'], df_ml_full['home_ml'], 's-', label=f'{home_team} ML', 
+    ax1.plot(df_ml_full['minutes_since_start'], df_ml_full['home_ml'], 's-', label=home_label, 
              color=home_color, linewidth=2, markersize=4)
     
     ax1.axhline(y=0, color='black', linestyle='-', alpha=0.5, linewidth=2)
     ax1.set_ylabel('Moneyline Odds', fontsize=12, fontweight='bold')
-    ax1.legend(loc='upper left', fontsize=10)
+    ax1.legend(loc='upper left', fontsize=9)
     ax1.grid(True, alpha=0.3)
     ax1.set_title('Moneyline Movement', fontsize=14)
     
@@ -836,7 +974,41 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         if len(outliers) > 0:
             print(f"   ⚠️  {len(outliers)} ML outlier(s) excluded from y-axis range (values: {outliers.tolist()})")
     
-    # Plot 2: Implied Win Probability - only show the favored team (>= 50%)
+    # Plot 2: Spread Movement with consistent team colors
+    # Get opening and current spread values for legend
+    away_spread_open = df_ml_full['away_spread'].dropna().iloc[0] if len(df_ml_full['away_spread'].dropna()) > 0 else None
+    away_spread_current = df_ml_full['away_spread'].dropna().iloc[-1] if len(df_ml_full['away_spread'].dropna()) > 0 else None
+    home_spread_open = df_ml_full['home_spread'].dropna().iloc[0] if len(df_ml_full['home_spread'].dropna()) > 0 else None
+    home_spread_current = df_ml_full['home_spread'].dropna().iloc[-1] if len(df_ml_full['home_spread'].dropna()) > 0 else None
+    
+    # Format spread values with +/- signs
+    def format_spread(val):
+        if val is None or pd.isna(val):
+            return "N/A"
+        return f"{val:+.1f}"
+    
+    away_spread_label = f'{away_team} (At open: {format_spread(away_spread_open)}; Currently: {format_spread(away_spread_current)})'
+    home_spread_label = f'{home_team} (At open: {format_spread(home_spread_open)}; Currently: {format_spread(home_spread_current)})'
+    
+    ax2.plot(df_ml_full['minutes_since_start'], df_ml_full['away_spread'], 'o-', label=away_spread_label, 
+             color=away_color, linewidth=2, markersize=4)
+    ax2.plot(df_ml_full['minutes_since_start'], df_ml_full['home_spread'], 's-', label=home_spread_label, 
+             color=home_color, linewidth=2, markersize=4)
+    
+    ax2.axhline(y=0, color='black', linestyle='-', alpha=0.5, linewidth=2)
+    ax2.set_ylabel('Spread', fontsize=12, fontweight='bold')
+    ax2.legend(loc='upper left', fontsize=9)
+    ax2.grid(True, alpha=0.3)
+    ax2.set_title('Spread Movement', fontsize=14)
+    
+    # Set symmetric y-axis range for spread
+    all_spread_values = pd.concat([df_ml_full['away_spread'], df_ml_full['home_spread']]).dropna()
+    if len(all_spread_values) > 0:
+        spread_max = max(abs(all_spread_values.min()), abs(all_spread_values.max()))
+        spread_max = max(spread_max, 5)  # Ensure minimum range of 5 for readability
+        ax2.set_ylim(-spread_max * 1.2, spread_max * 1.2)  # Add 20% padding
+    
+    # Plot 3: Implied Win Probability - only show the favored team (>= 50%)
     # Create a column for favored team's probability
     df_ml_full['favored_prob'] = df_ml_full.apply(
         lambda row: max(row['away_implied_prob'], row['home_implied_prob']) * 100 
@@ -849,54 +1021,54 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
     # When away team is favored (away_prob >= 50)
     away_favored_mask = df_ml_full['away_implied_prob'] * 100 >= 50
     if away_favored_mask.any():
-        ax2.plot(df_ml_full.loc[away_favored_mask, 'minutes_since_start'], 
+        ax3.plot(df_ml_full.loc[away_favored_mask, 'minutes_since_start'], 
                 df_ml_full.loc[away_favored_mask, 'favored_prob'],
                 'o-', color=away_color, linewidth=2, markersize=4, label=f'{away_team} Favored')
     
     # When home team is favored (home_prob >= 50)
     home_favored_mask = df_ml_full['home_implied_prob'] * 100 >= 50
     if home_favored_mask.any():
-        ax2.plot(df_ml_full.loc[home_favored_mask, 'minutes_since_start'], 
+        ax3.plot(df_ml_full.loc[home_favored_mask, 'minutes_since_start'], 
                 df_ml_full.loc[home_favored_mask, 'favored_prob'],
                 's-', color=home_color, linewidth=2, markersize=4, label=f'{home_team} Favored')
     
     # Add shading for which team is favored
-    ax2.fill_between(df_ml_full['minutes_since_start'], 
+    ax3.fill_between(df_ml_full['minutes_since_start'], 
                      df_ml_full['favored_prob'], 
                      50,
                      where=(df_ml_full['away_implied_prob'] * 100 >= 50),
                      alpha=0.3, color=away_color, interpolate=True)
-    ax2.fill_between(df_ml_full['minutes_since_start'], 
+    ax3.fill_between(df_ml_full['minutes_since_start'], 
                      df_ml_full['favored_prob'], 
                      50,
                      where=(df_ml_full['home_implied_prob'] * 100 >= 50),
                      alpha=0.3, color=home_color, interpolate=True)
     
-    ax2.axhline(y=50, color='gray', linestyle='--', alpha=0.5, linewidth=1.5)
-    ax2.set_ylabel('Implied Win Probability (%)', fontsize=12, fontweight='bold')
-    ax2.set_ylim(0, 100)
+    ax3.axhline(y=50, color='gray', linestyle='--', alpha=0.5, linewidth=1.5)
+    ax3.set_ylabel('Implied Win Probability (%)', fontsize=12, fontweight='bold')
+    ax3.set_ylim(0, 100)
     # No legend needed - implied from plot 1 and team colors/shading
-    ax2.grid(True, alpha=0.3)
-    ax2.set_title('Win Probability Movement', fontsize=14)
+    ax3.grid(True, alpha=0.3)
+    ax3.set_title('Win Probability Movement', fontsize=14)
     
-    # Plot 3: Score Differential (away - home)
-    ax3.plot(df_with_scores_full['minutes_since_start'], df_with_scores_full['score_diff'], 
+    # Plot 4: Score Differential (Favorite - Underdog)
+    ax4.plot(df_with_scores_full['minutes_since_start'], df_with_scores_full['score_diff'], 
              'o-', linewidth=2, markersize=6, color='#2ca02c')
-    ax3.axhline(y=0, color='gray', linestyle='--', alpha=0.5, linewidth=1.5)
-    ax3.fill_between(df_with_scores_full['minutes_since_start'], 
+    ax4.axhline(y=0, color='gray', linestyle='--', alpha=0.5, linewidth=1.5)
+    ax4.fill_between(df_with_scores_full['minutes_since_start'], 
                      df_with_scores_full['score_diff'], 
                      0,
                      where=(df_with_scores_full['score_diff'] >= 0),
-                     alpha=0.3, color=away_color, label=f'{away_team} Leading')
-    ax3.fill_between(df_with_scores_full['minutes_since_start'], 
+                     alpha=0.3, color=favorite_color, label=f'{favorite_team} Leading')
+    ax4.fill_between(df_with_scores_full['minutes_since_start'], 
                      df_with_scores_full['score_diff'], 
                      0,
                      where=(df_with_scores_full['score_diff'] < 0),
-                     alpha=0.3, color=home_color, label=f'{home_team} Leading')
+                     alpha=0.3, color=underdog_color, label=f'{underdog_team} Leading')
     
     # Set symmetric y-axis range for score differential
     score_max = max(abs(df_with_scores_full['score_diff'].max()), abs(df_with_scores_full['score_diff'].min()))
-    ax3.set_ylim(-score_max * 1.1, score_max * 1.1)  # Add 10% padding
+    ax4.set_ylim(-score_max * 1.1, score_max * 1.1)  # Add 10% padding
     
     # Get score for title with FINAL/CURRENT label
     if len(df_with_scores_game) > 0:
@@ -904,17 +1076,17 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
         final_away_score = int(final_row['away_score'])
         final_home_score = int(final_row['home_score'])
         score_label = 'FINAL SCORE' if game_end_time is not None else 'CURRENT SCORE'
-        score_title = f'Score Differential ({score_label}: {away_team} {final_away_score} - {home_team} {final_home_score})'
+        score_title = f'Score Differential - Favorite vs Underdog ({score_label}: {away_team} {final_away_score} - {home_team} {final_home_score})'
     else:
-        score_title = 'Score Differential (starts at 0)'
+        score_title = 'Score Differential - Favorite vs Underdog (starts at 0)'
     
-    ax3.set_ylabel('Score Differential\n(Away - Home)', fontsize=12, fontweight='bold')
-    ax3.set_xlabel('Minutes Since Tipoff', fontsize=12, fontweight='bold')
+    ax4.set_ylabel('Score Differential\n(Favorite - Underdog)', fontsize=12, fontweight='bold')
+    ax4.set_xlabel('Minutes Since Tipoff', fontsize=12, fontweight='bold')
     # No legend needed - team colors/shading make it clear
-    ax3.grid(True, alpha=0.3)
-    ax3.set_title(score_title, fontsize=14)
+    ax4.grid(True, alpha=0.3)
+    ax4.set_title(score_title, fontsize=14)
     
-    # Add reference lines to all three plots
+    # Add reference lines to all four plots
     print(f"\n🎨 Adding reference lines...")
     
     # Convert key timestamps to minutes since start
@@ -922,27 +1094,27 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
     current_time_minutes = (current_time - game_start_time).total_seconds() / 60
     
     # 1. Game start (dotted red) - always at 0
-    for ax in [ax1, ax2, ax3]:
+    for ax in [ax1, ax2, ax3, ax4]:
         ax.axvline(x=game_start_minutes, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Game Start')
     print(f"   🟥 Game start line at {game_start_minutes} minutes")
     
     # 2. Game end (solid red line if game finished)
     if game_end_time is not None:
         game_end_minutes = (game_end_time - game_start_time).total_seconds() / 60
-        for ax in [ax1, ax2, ax3]:
+        for ax in [ax1, ax2, ax3, ax4]:
             ax.axvline(x=game_end_minutes, color='darkred', linestyle='-', linewidth=2.5, alpha=0.8, label='Game End')
         print(f"   🏁 Game end line at {game_end_minutes:.1f} minutes")
     
     # 3. Current time (dotted red) - only if game is still in progress
     if game_end_time is None:
-        for ax in [ax1, ax2, ax3]:
+        for ax in [ax1, ax2, ax3, ax4]:
             ax.axvline(x=current_time_minutes, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Current Time')
         print(f"   🟥 Current time line at {current_time_minutes:.1f} minutes")
     
     # 4. Quarter endings (dashed gray lines)
     for period, end_time in quarter_end_times:
         end_minutes = (end_time - game_start_time).total_seconds() / 60
-        for ax in [ax1, ax2, ax3]:
+        for ax in [ax1, ax2, ax3, ax4]:
             ax.axvline(x=end_minutes, color='gray', linestyle='--', linewidth=1.5, alpha=0.6)
             ax.text(end_minutes, ax.get_ylim()[1] * 0.95, f'Q{int(period)} End', 
                    rotation=90, verticalalignment='top', fontsize=9, alpha=0.7)
@@ -951,14 +1123,14 @@ def plot_ml_and_score_movement(odds_path: Path, espn_path: Path, away_team: str,
     # 5. Quarter starts (dashed blue lines)
     for period, start_time in quarter_start_times:
         start_minutes = (start_time - game_start_time).total_seconds() / 60
-        for ax in [ax1, ax2, ax3]:
+        for ax in [ax1, ax2, ax3, ax4]:
             ax.axvline(x=start_minutes, color='blue', linestyle='--', linewidth=1.5, alpha=0.5)
             ax.text(start_minutes, ax.get_ylim()[0] * 0.95, f'Q{int(period)} Start', 
                    rotation=90, verticalalignment='bottom', fontsize=9, alpha=0.7, color='blue')
         print(f"   🟦 Q{int(period)} start line at {start_minutes:.1f} minutes")
     
     # Format x-axis
-    ax3.set_xlim(left=0)  # Start at 0 minutes
+    ax4.set_xlim(left=0)  # Start at 0 minutes
     
     # Tight layout
     plt.tight_layout()
@@ -1032,9 +1204,15 @@ def main():
     parser.add_argument(
         '--plot',
         type=str,
-        choices=['recent', 'live'],
+        choices=['recent', 'live', 'all'],
         default=None,
-        help='Create plots: "recent" = most recent game with data, "live" = all currently live games'
+        help='Create plots: "recent" = most recent game with data, "live" = all currently live games, "all" = all games from date'
+    )
+    parser.add_argument(
+        '--min-snapshots',
+        type=int,
+        default=5,
+        help='Minimum number of snapshots required for a game when using --plot all (default: 5)'
     )
     
     args = parser.parse_args()
@@ -1117,10 +1295,94 @@ def main():
             else:
                 print("\n❌ No live games found to plot")
         
+        elif args.plot == 'all':
+            # Require date when using --plot all
+            if not args.date:
+                print("\n❌ Error: --date required when using --plot all")
+                print("   Example: python tmp/read_all_live_odds_parquet.py --plot all --date 2026-02-03")
+                return None, None
+            
+            print(f"\n🎯 Mode: Plotting all games from {args.date}")
+            print(f"   Minimum snapshots: {args.min_snapshots}\n")
+            
+            # Find all games from the date
+            all_games = find_all_games_with_data(
+                odds_path, 
+                espn_path, 
+                args.date,
+                args.min_snapshots
+            )
+            
+            if not all_games:
+                print(f"\n❌ No games found on {args.date} with >= {args.min_snapshots} snapshots")
+                return None, None
+            
+            # Generate plots for all games
+            print(f"\n📊 Generating {len(all_games)} plot(s)...\n")
+            
+            # Track success/failure for summary
+            successful_plots = []
+            failed_plots = []
+            
+            for i, (away, home, snapshots) in enumerate(all_games, 1):
+                print(f"\n{'='*80}")
+                print(f"📊 Plot {i}/{len(all_games)}: {away} @ {home} ({snapshots} snapshots)")
+                print(f"{'='*80}")
+                
+                try:
+                    plot_path = plot_ml_and_score_movement(odds_path, espn_path, away, home)
+                    if plot_path:
+                        plot_paths.append(plot_path)
+                        successful_plots.append((away, home, snapshots, plot_path))
+                        print(f"✅ Plot {i} complete: {plot_path.name}")
+                except Exception as e:
+                    failed_plots.append((away, home, snapshots, str(e)))
+                    print(f"❌ Error plotting {away} @ {home}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
+            
+            # Summary Statistics
+            print(f"\n{'='*80}")
+            print(f"📊 PLOT GENERATION SUMMARY")
+            print(f"{'='*80}")
+            print(f"\n📅 Date: {args.date}")
+            print(f"🎯 Min snapshots threshold: {args.min_snapshots}")
+            print(f"\n📈 Results:")
+            print(f"   • Total games found: {len(all_games)}")
+            print(f"   • Successfully plotted: {len(successful_plots)}")
+            print(f"   • Failed: {len(failed_plots)}")
+            
+            if successful_plots:
+                print(f"\n✅ Successful plots ({len(successful_plots)}):")
+                for away, home, snapshots, path in successful_plots:
+                    print(f"   • {away} @ {home} ({snapshots} snapshots)")
+                    print(f"     → {path.name}")
+            
+            if failed_plots:
+                print(f"\n❌ Failed plots ({len(failed_plots)}):")
+                for away, home, snapshots, error in failed_plots:
+                    print(f"   • {away} @ {home} ({snapshots} snapshots)")
+                    print(f"     → Error: {error}")
+            
+            print(f"\n{'='*80}\n")
+        
         # Open all plots with a single command
         if plot_paths:
             print(f"\n📂 Opening {len(plot_paths)} plot(s)...")
             open_files_batch(plot_paths)
+            
+            # Print copy-paste summary
+            if len(plot_paths) > 1:
+                print(f"\n{'='*80}")
+                print("📋 COPY-PASTE SUMMARY")
+                print(f"{'='*80}\n")
+                print("# Single command to open all plots:")
+                print(f"open {' '.join([f'\"{p}\"' for p in plot_paths])}")
+                print("\n# Or copy all paths:")
+                for path in plot_paths:
+                    print(path)
+                print(f"\n{'='*80}\n")
     
     # Load into pandas for interactive use
     print("\n" + "="*80)
