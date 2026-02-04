@@ -5,11 +5,13 @@ Interactive script to fetch and display the most recent logs from any Lambda fun
 
 Usage:
     python tmp/get_lambda_logs.py
+    python tmp/get_lambda_logs.py --lambda-function-name my-function
 
 Author: Myles Thomas
 Date: 2026-02-03
 """
 
+import argparse
 import boto3
 from botocore.exceptions import ClientError
 from datetime import datetime
@@ -174,6 +176,17 @@ def print_logs(events: list, show_timestamps: bool = False) -> None:
 def main():
     """Main entry point for interactive log fetching."""
     
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description='Fetch and display the most recent logs from a Lambda function'
+    )
+    parser.add_argument(
+        '--lambda-function-name',
+        type=str,
+        help='Name of the Lambda function (skips interactive prompt)'
+    )
+    args = parser.parse_args()
+    
     # Step 1: Display AWS credentials info
     print("\n" + "="*80)
     print(f"{EMOJI['info']} AWS Configuration")
@@ -193,8 +206,11 @@ def main():
     
     print("="*80 + "\n")
     
-    # Step 2: Prompt for Lambda function name
-    lambda_function = input(f"{EMOJI['search']} Enter Lambda function name: ").strip()
+    # Step 2: Get Lambda function name from args or prompt
+    if args.lambda_function_name:
+        lambda_function = args.lambda_function_name.strip()
+    else:
+        lambda_function = input(f"{EMOJI['search']} Enter Lambda function name: ").strip()
     
     if not lambda_function:
         print(f"{EMOJI['error']} No function name provided")
