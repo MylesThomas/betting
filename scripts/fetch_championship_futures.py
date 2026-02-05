@@ -475,13 +475,14 @@ def main():
         print("Add your API key to .env: ODDS_API_KEY=your_key_here")
         return
     
-    # Generate timestamp for this fetch
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    # Generate single timestamp for this entire fetch session
+    fetch_timestamp = datetime.now()
+    timestamp_str = fetch_timestamp.strftime('%Y%m%d_%H%M%S')
     
     print("="*80)
     print("FETCHING CHAMPIONSHIP FUTURES (NFL, NBA, NCAAF, NCAAB)")
     print("="*80)
-    print(f"Timestamp: {timestamp}\n")
+    print(f"Timestamp: {timestamp_str}\n")
     
     # Test NFL Super Bowl futures
     print("\n🏈 Fetching NFL Super Bowl futures...")
@@ -508,13 +509,13 @@ def main():
                 print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
             
             # Save to CSV with timestamp
-            output_file = repo_root / f'data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_{timestamp}.csv'
+            output_file = repo_root / f'data/01_input/the-odds-api/nfl/futures/nfl_super_bowl_futures_{timestamp_str}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_nfl.to_csv(output_file, index=False)
             print(f"\n💾 Saved locally: {output_file}")
             
             # Upload to S3
-            save_to_s3(df_nfl, sport='nfl', timestamp=datetime.now())
+            save_to_s3(df_nfl, sport='nfl', timestamp=fetch_timestamp)
         else:
             print("⚠️  No NFL futures data found")
             
@@ -546,13 +547,13 @@ def main():
                 print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
             
             # Save to CSV with timestamp
-            output_file = repo_root / f'data/01_input/the-odds-api/nba/futures/nba_championship_futures_{timestamp}.csv'
+            output_file = repo_root / f'data/01_input/the-odds-api/nba/futures/nba_championship_futures_{timestamp_str}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_nba.to_csv(output_file, index=False)
             print(f"\n💾 Saved locally: {output_file}")
             
             # Upload to S3
-            save_to_s3(df_nba, sport='nba', timestamp=datetime.now())
+            save_to_s3(df_nba, sport='nba', timestamp=fetch_timestamp)
         else:
             print("⚠️  No NBA futures data found")
             
@@ -582,13 +583,13 @@ def main():
                 print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
             
             # Save to CSV with timestamp
-            output_file = repo_root / f'data/01_input/the-odds-api/ncaaf/futures/ncaaf_championship_futures_{timestamp}.csv'
+            output_file = repo_root / f'data/01_input/the-odds-api/ncaaf/futures/ncaaf_championship_futures_{timestamp_str}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_ncaaf.to_csv(output_file, index=False)
             print(f"\n💾 Saved locally: {output_file}")
             
             # Upload to S3
-            save_to_s3(df_ncaaf, sport='ncaaf', timestamp=datetime.now())
+            save_to_s3(df_ncaaf, sport='ncaaf', timestamp=fetch_timestamp)
         else:
             print("⚠️  No NCAA Football futures data found")
             
@@ -620,13 +621,13 @@ def main():
                 print(f"{i:2d}. {row.team:<30} {odds_str:>7}  ({row.implied_prob*100:>5.1f}% @ {row.bookmaker})")
             
             # Save to CSV with timestamp
-            output_file = repo_root / f'data/01_input/the-odds-api/ncaab/futures/ncaab_championship_futures_{timestamp}.csv'
+            output_file = repo_root / f'data/01_input/the-odds-api/ncaab/futures/ncaab_championship_futures_{timestamp_str}.csv'
             os.makedirs(output_file.parent, exist_ok=True)
             df_ncaab.to_csv(output_file, index=False)
             print(f"\n💾 Saved locally: {output_file}")
             
             # Upload to S3
-            save_to_s3(df_ncaab, sport='ncaab', timestamp=datetime.now())
+            save_to_s3(df_ncaab, sport='ncaab', timestamp=fetch_timestamp)
         else:
             print("⚠️  No NCAA Basketball futures data found")
             
