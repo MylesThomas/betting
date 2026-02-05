@@ -300,11 +300,14 @@ def save_analysis_outputs(
         'worst_bookmaker': vig_df.iloc[0]['bookmaker'],  # First = highest vig
     }])
     
-    # Save locally if requested
+    # Always save locally (viz depends on these files)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    team_avg.to_csv(team_avg_file, index=False)
+    metadata.to_csv(metadata_file, index=False)
+    
     if save_locally:
-        output_dir.mkdir(parents=True, exist_ok=True)
-        team_avg.to_csv(team_avg_file, index=False)
-        metadata.to_csv(metadata_file, index=False)
+        print(f"💾 Saved team averages to: {team_avg_file}")
+        print(f"💾 Saved metadata to: {metadata_file}")
     
     # Save to S3 if bucket provided
     if s3_bucket and s3_path:
