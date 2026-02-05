@@ -123,22 +123,14 @@ def prepare_data_for_visualization(df, logo_map):
     # Add rank
     df_display['rank'] = range(1, len(df_display) + 1)
     
-    # Format odds strings
+    # Format current odds strings (from new CSV structure)
     df_display['best_odds_str'] = df_display.apply(
-        lambda row: (f"+{int(row['best_odds'])}" if row['best_odds'] > 0 else str(int(row['best_odds']))),
+        lambda row: (f"+{int(row['current_odds'])}" if row['current_odds'] > 0 else str(int(row['current_odds']))),
         axis=1
     )
     
-    # Calculate average odds from implied_prob_avg
-    df_display['avg_odds'] = df_display.apply(
-        lambda row: probability_to_american_odds(row['implied_prob_avg'] * 100),
-        axis=1
-    )
-    
-    df_display['avg_odds_str'] = df_display.apply(
-        lambda row: (f"+{int(row['avg_odds'])}" if row['avg_odds'] > 0 else str(int(row['avg_odds']))),
-        axis=1
-    )
+    # For compatibility, create avg_odds_str from current
+    df_display['avg_odds_str'] = df_display['best_odds_str']
     
     # Fair odds string
     df_display['fair_odds_str'] = df_display.apply(
@@ -149,90 +141,70 @@ def prepare_data_for_visualization(df, logo_map):
     # Fair %
     df_display['fair_pct_str'] = df_display['fair_prob'].apply(lambda p: f"{p*100:.1f}")
     
-    # Implied %
-    df_display['implied_pct_str'] = df_display['implied_prob_avg'].apply(lambda p: f"{p*100:.1f}")
+    # Implied % (from new CSV structure)
+    df_display['implied_pct_str'] = df_display['current_implied_prob'].apply(lambda p: f"{p*100:.1f}")
     
-    # Calculate vig difference
-    df_display['vig_diff'] = (df_display['implied_prob_avg'] - df_display['fair_prob']) * 100
+    # Calculate vig difference (already in CSV as vig_pct, just use it)
+    df_display['vig_diff'] = df_display['vig_pct']
     
-    # Calculate best vig
-    best_implied_prob = df_display['implied_prob_min']
-    df_display['best_vig_diff'] = (best_implied_prob - df_display['fair_prob']) * 100
+    # Best vig is same as vig_diff (no more multi-bookmaker comparison)
+    df_display['best_vig_diff'] = df_display['vig_pct']
     
-    # Best book display (capitalize)
-    df_display['best_book_display'] = df_display['best_book'].str.title()
+    # Best book display (not in new CSV, use placeholder)
+    df_display['best_book_display'] = "Best Available"
     
     # =============================================================================
-    # HISTORICAL ODDS (Preseason & Last Week)
+    # HISTORICAL ODDS (Preseason & Last Week) - NEW CSV STRUCTURE
     # =============================================================================
-    # Format preseason odds
-    if 'season_start_odds' in df_display.columns:
-        df_display['preseason_odds_str'] = df_display['season_start_odds'].apply(
-            lambda x: f"{int(x):+d}" if pd.notna(x) else "-"
+    # Format preseason odds (already in new CSV)
+    if 'preseason_odds' in df_display.columns:
+        df_display['preseason_odds_str'] = df_display['preseason_odds'].apply(
+            lambda x: f"{int(x):+d}" if pd.notna(x) else "Off Board"
         )
-        # Calculate preseason implied probability
-        df_display['preseason_implied_prob'] = df_display['season_start_odds'].apply(
-            lambda x: odds_to_implied_probability(x) if pd.notna(x) else None
-        )
+        # Preseason implied prob already in CSV
         df_display['preseason_implied_str'] = df_display['preseason_implied_prob'].apply(
-            lambda x: f"{x*100:.1f}" if pd.notna(x) else "-"
+            lambda x: f"{x*100:.1f}" if pd.notna(x) else "0.0"
         )
-        season_start_date = df_display['season_start_date'].iloc[0] if 'season_start_date' in df_display.columns else None
-        season_start_label = df_display['season_start_label'].iloc[0] if 'season_start_label' in df_display.columns else None
+        season_start_date = "Preseason"  # No date field in new CSV
+        season_start_label = "Preseason"
     else:
-        df_display['preseason_odds_str'] = "-"
-        df_display['preseason_implied_str'] = "-"
+        df_display['preseason_odds_str'] = "Off Board"
+        df_display['preseason_implied_str'] = "0.0"
         df_display['preseason_implied_prob'] = None
         season_start_date = None
         season_start_label = None
     
-    # Format last week odds
+    # Format last week odds (already in new CSV)
     if 'last_week_odds' in df_display.columns:
         df_display['last_week_odds_str'] = df_display['last_week_odds'].apply(
-            lambda x: f"{int(x):+d}" if pd.notna(x) else "-"
+            lambda x: f"{int(x):+d}" if pd.notna(x) else "Off Board"
         )
-        # Calculate last week implied probability
-        df_display['last_week_implied_prob'] = df_display['last_week_odds'].apply(
-            lambda x: odds_to_implied_probability(x) if pd.notna(x) else None
-        )
+        # Last week implied prob already in CSV
         df_display['last_week_implied_str'] = df_display['last_week_implied_prob'].apply(
-            lambda x: f"{x*100:.1f}" if pd.notna(x) else "-"
+            lambda x: f"{x*100:.1f}" if pd.notna(x) else "0.0"
         )
-        last_week_date = df_display['last_week_date'].iloc[0] if 'last_week_date' in df_display.columns else None
-        last_week_label = df_display['last_week_label'].iloc[0] if 'last_week_label' in df_display.columns else None
+        last_week_date = "Last Week"  # No date field in new CSV
+        last_week_label = "Last Week"
     else:
-        df_display['last_week_odds_str'] = "-"
-        df_display['last_week_implied_str'] = "-"
+        df_display['last_week_odds_str'] = "Off Board"
+        df_display['last_week_implied_str'] = "0.0"
         df_display['last_week_implied_prob'] = None
         last_week_date = None
         last_week_label = None
     
-    # Format current odds (best odds = current)
-    df_display['current_odds_str'] = df_display['best_odds_str']
-    df_display['current_implied_str'] = df_display['implied_pct_str']
+    # Format current odds (from new CSV structure)
+    df_display['current_odds_str'] = df_display['best_odds_str']  # Already set above
+    df_display['current_implied_str'] = df_display['current_implied_prob'].apply(
+        lambda x: f"{x*100:.1f}" if pd.notna(x) else "-"
+    )
     
-    # Calculate difference in implied probability (percentage points)
-    # Difference 1: Preseason -> Current
-    if 'preseason_implied_prob' in df_display.columns and df_display['preseason_implied_prob'].notna().any():
-        df_display['diff_preseason'] = df_display.apply(
-            lambda row: (row['implied_prob_avg'] - row['preseason_implied_prob']) * 100 
-            if pd.notna(row['preseason_implied_prob'])
-            else None,
-            axis=1
-        )
-    else:
-        df_display['diff_preseason'] = None
-    
-    # Difference 2: Last Week -> Current
-    if 'last_week_implied_prob' in df_display.columns and df_display['last_week_implied_prob'].notna().any():
-        df_display['diff_last_week'] = df_display.apply(
-            lambda row: (row['implied_prob_avg'] - row['last_week_implied_prob']) * 100 
-            if pd.notna(row['last_week_implied_prob'])
-            else None,
-            axis=1
-        )
-    else:
-        df_display['diff_last_week'] = None
+    # Differences already calculated in new CSV (as percentage points)
+    # No need to modify - analyze_futures.py now treats missing data as 0% implied
+    if 'diff_preseason' not in df_display.columns:
+        df_display['diff_preseason'] = 0
+        
+    if 'diff_last_week' not in df_display.columns:
+        df_display['diff_last_week'] = 0
     
     # Calculate dynamic domain for difference gradients (symmetric around 0)
     max_abs_diff_preseason = df_display['diff_preseason'].abs().max() if df_display['diff_preseason'].notna().any() else 0
@@ -351,14 +323,14 @@ def main():
     print(f"   📊 Loaded {len(df)} teams")
     print(f"   📊 Columns: {list(df.columns)}\n")
     
-    # Read metadata
-    if metadata_file.exists():
-        metadata_df = pd.read_csv(metadata_file)
-        avg_vig_pct = metadata_df['avg_vig_pct'].iloc[0]
-        print(f"   📊 Average market vig: {avg_vig_pct:.2f}%\n")
+    # Calculate market vig (sum of all implied probabilities - 100%)
+    if 'current_implied_prob' in df.columns:
+        total_implied = df['current_implied_prob'].sum()
+        market_vig_pct = (total_implied - 1.0) * 100
+        print(f"   📊 Market vig: {market_vig_pct:.2f}%\n")
     else:
-        print(f"   ⚠️  Metadata file not found, calculating vig from team data")
-        avg_vig_pct = ((df['implied_prob_avg'] - df['fair_prob']) * 100).mean()
+        market_vig_pct = 0.0
+        print(f"   ⚠️  No implied probability data found\n")
     
     # Get team logos
     team_names = df['team'].tolist()
@@ -396,7 +368,7 @@ def main():
         sport=sport,
         sport_config=sport_config,
         viz_config=viz_settings,
-        average_vig_pct=avg_vig_pct,
+        average_vig_pct=market_vig_pct,
         total_teams=total_teams,
         top_n=args.top_n,
         save_locally=save_locally,
