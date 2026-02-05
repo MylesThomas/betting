@@ -1,14 +1,35 @@
 """
 Player Name Normalization Utilities
 
-Handles common player name variations between different data sources (props, game results, etc.)
-to ensure consistent matching.
+CRITICAL: Names must be normalized from the start - before any caching or processing.
 
-Common issues this handles:
-1. Accented characters (Dončić -> Doncic, Porziņģis -> Porzingis)
-2. Suffix variations (Jr. vs Jr, III vs Iii)
-3. Nickname vs full name (Herb Jones vs Herbert Jones)
-4. Initials (P.J. vs PJ vs Pj)
+WHY THIS MODULE EXISTS:
+Different data sources use different name formats, causing match failures:
+
+1. THE ODDS API (props data from S3):
+   - Inconsistent casing: "AARON NESMITH" vs "Aaron Nesmith" 
+   - Full names: "Alfred Joel Horford Reynoso"
+   - Initials with periods: "P.J. Washington", "O.G. Anunoby"
+   - Nicknames: "Herb Jones"
+   - Non-player entries: "Atl Hawks Alternate Total", "Anthony Davis Jr."
+   
+2. NBA API (nba_api):
+   - Title case: "Aaron Nesmith"
+   - Abbreviated: "Al Horford" (not full name)
+   - Initials without periods: "PJ Washington"
+   - Full names: "Herbert Jones" (not nicknames)
+   
+3. ESPN API:
+   - Mixed formats
+   - May include accented characters: "Luka Dončić"
+
+NORMALIZATION RULES:
+1. Remove all periods (P.J. -> PJ -> Pj)
+2. Convert to Title Case (AARON -> Aaron)
+3. Remove accents (Dončić -> Doncic)
+4. Remove generational suffixes (III, II, IV, V)
+5. Apply known name mappings (Herb -> Herbert)
+6. Filter out non-player entries
 
 Date: 2025-11-20
 Author: Myles Thomas
@@ -115,6 +136,12 @@ def get_name_mappings():
         'Kenyon Martin Jr': 'Kj Martin',
         'Paul Reed Jr': 'Paul Reed',
         'Carlton Carrington': 'Bub Carrington',   # Rookie name change
+        
+        # ===================================================================
+        # FULL NAME VARIATIONS (normalize long forms to shorter NBA API forms)
+        # ===================================================================
+        'Alfred Joel Horford Reynoso': 'Al Horford',
+        'Anthony Davis Jr': 'Anthony Davis',
     }
 
 
