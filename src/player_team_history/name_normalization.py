@@ -221,14 +221,85 @@ def get_jr_sr_exceptions() -> set:
     
     Returns:
         Set of player names that need suffix preserved
+        
+    Note:
+        These exceptions are critical for data integrity. Without them,
+        father and son will be collapsed into a single player in the cache,
+        causing incorrect team histories.
     """
     return {
-        'Tim Hardaway Jr',     # Father: Tim Hardaway
-        'Gary Payton Ii',      # Father: Gary Payton (note: II not Jr)
-        'Glen Rice Jr',        # Father: Glen Rice
-        'Larry Nance Jr',      # Father: Larry Nance
-        'Kenyon Martin Jr',    # Father: Kenyon Martin (goes by KJ Martin)
+        # Current/recent players with father who also played in NBA
+        # NOTE: These names are as they appear in NBA API after basic normalization
+        # (periods removed, Title Case, Jr suffix preserved)
+        
+        'Tim Hardaway Jr',       # NBA API: "Tim Hardaway Jr." | Father: Tim Hardaway (1989-2003)
+        'Gary Payton Ii',        # NBA API: "Gary Payton II" | Father: Gary Payton (1990-2007)
+        'Glen Rice Jr',          # NBA API: "Glen Rice Jr." | Father: Glen Rice (1989-2004)
+        'Larry Nance Jr',        # NBA API: "Larry Nance Jr." | Father: Larry Nance (1981-1994)
+        'Kenyon Martin Jr',      # NBA API: "Kenyon Martin Jr." (goes by KJ Martin) | Father: Kenyon Martin (2000-2015)
+        'Jaren Jackson Jr',      # NBA API: "Jaren Jackson Jr." | Father: Jaren Jackson (1989-2002)
+        'Kevin Porter Jr',       # NBA API: "Kevin Porter Jr." | Father: Kevin Porter (1972-1983)
+        'Scotty Pippen Jr',      # NBA API: "Scotty Pippen Jr." (CORRECT spelling - his real name) | Father: Scottie Pippen (1987-2004)
+        'Scottie Pippen Jr',     # Odds API: "Scottie Pippen Jr" (INCORRECT spelling, normalize to Scotty) | Same player, both spellings needed
     }
+
+
+def get_college_players() -> set:
+    """
+    College players who appear in Odds API data but are NOT in NBA.
+    
+    These players should be filtered out during processing or explicitly
+    marked as "college player - not in NBA API" in failure reports.
+    
+    Common reasons they appear in data:
+    - G-League games included in betting data
+    - College games included in betting data
+    - Data quality issues from The Odds API
+    - Players who were drafted but haven't played yet
+    
+    Returns:
+        Set of normalized player names who are college players
+        
+    Notes:
+        - Names should be in normalized form (Title Case, no periods, etc.)
+        - Update this list as new college players appear in failures
+        - Remove players from this list once they play in NBA
+    """
+    return {
+        # Confirmed college players (2024-25 season)
+        'Jj Starling',         # Syracuse - Found in 2023-11-28.csv (OKC vs MIN)
+        'Jalen Reed',          # Texas - Found in 2023-11-28.csv (OKC vs MIN)
+        'Chris Bell',          # Cal - Appears in betting data
+        'Judah Mintz',         # Oak Hill Academy - Appears in betting data
+        
+        # Likely college/G-League players (need verification)
+        'Jordan Wright',       # Appears in failures, not in NBA API
+        'Tyrell Ward',         # Appears in failures, not in NBA API
+        # 'Vincent Williams',    # Appears in failures, not in NBA API (possibly Vince Williams Jr typo?) [Just traded from Grizzlies -> Jazz]
+        'Will Baker',          # Appears in failures, not in NBA API
+        
+        # Recent draft picks who haven't played yet
+        # 'Ron Holland',         # 2024 draft pick - may not have played yet [Plays for the Detroit Pistons]
+    }
+
+
+def is_college_player(name: str) -> bool:
+    """
+    Check if a normalized player name is a known college player.
+    
+    Args:
+        name: Normalized player name (Title Case, no periods, etc.)
+        
+    Returns:
+        True if player is in college player list, False otherwise
+        
+    Example:
+        >>> is_college_player("Jj Starling")
+        True
+        >>> is_college_player("Anthony Davis")
+        False
+    """
+    return name in get_college_players()
 
 
 def get_odds_api_to_nba_mappings() -> dict:
@@ -260,9 +331,9 @@ def get_odds_api_to_nba_mappings() -> dict:
         # NICKNAMES: Map all variations → NBA API canonical name
         # Format: 'Other API name' → 'NBA API name'
         # =================================================================
-        'Herbert Jones': 'Herb Jones',           # NBA API canonical: Herb
-        'Moritz Wagner': 'Moe Wagner',           # NBA API canonical: Moe
-        'Nic Claxton': 'Nicolas Claxton',        # NBA API canonical: Nicolas
+        'Herb Jones': 'Herbert Jones',           # NBA API canonical: Herbert (not Herb!)
+        'Herbert Jones': 'Herbert Jones',        # Keep as is
+        'Nicholas Batum': 'Nicolas Batum',       # h vs no h
         'Ronald Holland': 'Ron Holland',         # NBA API canonical: Ron
         'Vincent Williams Jr': 'Vince Williams Jr',  # NBA API canonical: Vince
         
@@ -271,6 +342,9 @@ def get_odds_api_to_nba_mappings() -> dict:
         # Format: 'Odds API full legal name' → 'NBA API common name'
         # =================================================================
         'Alfred Joel Horford Reynoso': 'Al Horford',     # NBA API canonical: Al Horford
+        'Edrice Femi Adebayo': 'Bam Adebayo',            # NBA API canonical: Bam Adebayo
+        'Eric Ambrose Gordon': 'Eric Gordon',            # NBA API canonical: Eric Gordon
+        'Kevin Devon Knox': 'Kevin Knox',                # NBA API canonical: Kevin Knox
         'Wardell Stephen Curry': 'Stephen Curry',        # NBA API canonical: Stephen Curry
         'William Anthony Perry': 'Anthony Perry',        # NBA API canonical: Anthony Perry
         
@@ -279,7 +353,8 @@ def get_odds_api_to_nba_mappings() -> dict:
         # (All other Jr/Sr suffixes are removed during normalization)
         # Format: 'Any variation' → 'NBA API name (WITH suffix)'
         # =================================================================
-        'Kenyon Martin Jr': 'Kj Martin',  # NBA API canonical: KJ Martin (son of Kenyon Martin)
+        'Bj Boston': 'Bj Boston Jr',              # NBA API: B.J. Boston Jr.
+        'Kenyon Martin Jr': 'Kj Martin',          # NBA API canonical: KJ Martin (son of Kenyon Martin)
         
         # =================================================================
         # NAME CHANGES / ROOKIES: Pre-draft → NBA names
@@ -288,10 +363,10 @@ def get_odds_api_to_nba_mappings() -> dict:
         'Carlton Carrington': 'Bub Carrington',   # NBA API canonical: Bub Carrington
         
         # =================================================================
-        # SHORTENED NAMES: Odds API full → NBA API shortened
-        # Format: 'Odds API full name' → 'NBA API shortened'
+        # SHORTENED NAMES: Odds API shortened → NBA API full OR vice versa
+        # Format: 'Odds API name' → 'NBA API canonical'
         # =================================================================
-        'Cameron Johnson': 'Cam Johnson',         # NBA API canonical: Cam
+        'Cam Johnson': 'Cameron Johnson',         # NBA API canonical: Cameron (full)
         'Cameron Reddish': 'Cam Reddish',         # NBA API canonical: Cam
         'Cameron Thomas': 'Cam Thomas',           # NBA API canonical: Cam
         'Joshua Giddey': 'Josh Giddey',           # NBA API canonical: Josh
@@ -307,8 +382,21 @@ def get_odds_api_to_nba_mappings() -> dict:
         # TYPOS/ABBREVIATIONS: Odds API errors → NBA API correct
         # Format: 'Odds API typo' → 'NBA API correct name'
         # =================================================================
+        'Bojan Bogdanovich': 'Bojan Bogdanovic',  # Typo: ch → c
         'Mil Bridges': 'Miles Bridges',           # NBA API canonical: Miles
         'Xavier Tillman Sr': 'Xavier Tillman',    # NBA API canonical: Xavier Tillman (no Sr)
+        
+        # =================================================================
+        # NICKNAME VARIATIONS: Odds API full → NBA API nickname
+        # Format: 'Odds API full name' → 'NBA API nickname'
+        # =================================================================
+        'Moe Wagner': 'Moritz Wagner',             # Odds API: "Moe Wagner" → NBA API: "Moritz Wagner" (full name)
+        'Mohamed Bamba': 'Mo Bamba',               # Odds API: "Mohamed Bamba" → NBA API: "Mo Bamba" (nickname)
+        'Nicolas Claxton': 'Nic Claxton',          # Odds API: "Nicolas Claxton" → NBA API: "Nic Claxton" (nickname)
+        'Bj Boston': 'Brandon Boston',             # Odds API: "BJ Boston Jr" → NBA API: "Brandon Boston" (full first name)
+        'Ron Holland': 'Ronald Holland',           # Odds API: "Ron Holland" → NBA API: "Ronald Holland" (full first name)
+        'Vincent Williams': 'Vince Williams',      # Odds API: "Vincent Williams Jr" → NBA API: "Vince Williams Jr." (nickname)
+        'Scottie Pippen Jr': 'Scotty Pippen Jr',   # Odds API uses "Scottie" → normalize to correct "Scotty" (his real name)
         
         # =================================================================
         # FULL LEGAL NAMES: Odds API legal → NBA API common
@@ -352,13 +440,14 @@ def normalize_player_name_base(name: str) -> Optional[str]:
     BASIC normalization - applies to ALL sources (Odds API, NBA API, ESPN API).
     
     This performs universal cleaning without source-specific mappings:
-    1. Validate it's a real player name
-    2. Fix reversed names
-    3. Remove periods (P.J. → Pj)
-    4. Convert to Title Case
-    5. Remove accents (Dončić → Doncic)
-    6. Remove Jr/Sr suffixes (with exceptions)
-    7. Clean whitespace
+    1. Standardize apostrophes (curly → straight)
+    2. Validate it's a real player name
+    3. Fix reversed names
+    4. Remove periods (P.J. → Pj)
+    5. Convert to Title Case
+    6. Remove accents (Dončić → Doncic)
+    7. Remove Jr/Sr suffixes (with exceptions)
+    8. Clean whitespace
     
     Does NOT apply source-specific mappings - use normalize_from_*() functions for that.
     
@@ -386,6 +475,17 @@ def normalize_player_name_base(name: str) -> Optional[str]:
     
     # Strip whitespace
     name = name.strip()
+    
+    # Standardize ALL apostrophes to straight quote (')
+    # Converts: ' (8217), ` (96), ′ (8242) → ' (39)
+    apostrophe_variants = [
+        '\u2019',  # ' (right single quotation mark, ord 8217)
+        '\u2018',  # ' (left single quotation mark, ord 8216)
+        '\u0060',  # ` (grave accent, ord 96)
+        '\u2032',  # ′ (prime, ord 8242)
+    ]
+    for variant in apostrophe_variants:
+        name = name.replace(variant, "'")
     
     # Fix reversed names FIRST (before validation)
     name = fix_reversed_names(name)
@@ -503,13 +603,38 @@ def normalize_from_espn_api(name: str) -> Optional[str]:
     return name
 
 
+def get_nba_api_corrections() -> dict:
+    """
+    NBA API name corrections (AFTER basic normalization).
+    
+    Even though NBA API is the source of truth, sometimes it has:
+    - Spelling variations (Scotty vs Scottie)
+    - Inconsistent Jr suffix handling
+    
+    These corrections ensure consistency with our canonical names.
+    
+    Returns:
+        Dict mapping {nba_api_normalized: corrected_canonical}
+        
+    Format:
+        'Name As Normalized From NBA API' → 'Canonical Name'
+        
+    Examples:
+        (Currently no NBA API corrections needed - NBA API returns correct spellings)
+    """
+    return {
+        # Currently empty - NBA API is source of truth and returns correct names
+        # If NBA API ever returns incorrect variations, add corrections here
+    }
+
+
 def normalize_from_nba_api(name: str) -> Optional[str]:
     """
     Normalize a player name from NBA API (source of truth).
     
     Process:
     1. Apply basic normalization (universal)
-    2. No mappings needed - NBA API is the canonical source
+    2. Apply NBA API corrections (spelling fixes, Jr preservation)
     
     Use this when processing names from:
     - nba_api library responses
@@ -526,11 +651,21 @@ def normalize_from_nba_api(name: str) -> Optional[str]:
         >>> normalize_from_nba_api("Aaron Nesmith")
         'Aaron Nesmith'
         
-        >>> normalize_from_nba_api("Al Horford")
-        'Al Horford'
+        >>> normalize_from_nba_api("Scotty Pippen Jr.")
+        'Scotty Pippen Jr'
     """
-    # NBA API names only need basic normalization (no mappings)
-    return normalize_player_name_base(name)
+    # Step 1: Basic normalization
+    name = normalize_player_name_base(name)
+    
+    if not name:
+        return None
+    
+    # Step 2: Apply NBA API corrections
+    corrections = get_nba_api_corrections()
+    if name in corrections:
+        name = corrections[name]
+    
+    return name
 
 
 def normalize_player_name(name: str) -> Optional[str]:
