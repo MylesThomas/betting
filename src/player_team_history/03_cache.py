@@ -45,14 +45,22 @@ CACHE_DIR = Path.home() / 'Downloads' / 'tmp' / 'player_team_history' / 'cache'
 def get_cache_stats():
     """Get cache statistics."""
     if not CACHE_DIR.exists():
-        return 0, 0
+        return {'players': 0, 'seasons': 0, 'size_mb': 0}
     
-    cache_files = list(CACHE_DIR.glob('*.parquet'))
+    player_dir = CACHE_DIR / 'players'
+    season_dir = CACHE_DIR / 'seasons'
     
-    total_size = sum(f.stat().st_size for f in cache_files)
+    player_files = list(player_dir.glob('*.parquet')) if player_dir.exists() else []
+    season_files = list(season_dir.glob('*.parquet')) if season_dir.exists() else []
+    
+    total_size = sum(f.stat().st_size for f in player_files + season_files)
     total_size_mb = total_size / (1024 * 1024)
     
-    return len(cache_files), total_size_mb
+    return {
+        'players': len(player_files),
+        'seasons': len(season_files),
+        'size_mb': total_size_mb
+    }
 
 
 def show_stats():
@@ -67,34 +75,45 @@ def show_stats():
         print(f"   Cache will be created at: {CACHE_DIR}")
         return
     
-    num_players, size_mb = get_cache_stats()
+    stats = get_cache_stats()
     
     print(f"Cache location: {CACHE_DIR}")
-    print(f"Cached players: {num_players}")
-    print(f"Total size: {size_mb:.1f} MB")
+    print(f"Complete players: {stats['players']}")
+    print(f"Individual seasons: {stats['seasons']}")
+    print(f"Total size: {stats['size_mb']:.1f} MB")
     print()
     
-    if num_players > 0:
-        print(f"{EMOJI['info']} Sample of cached players:")
-        cache_files = sorted(CACHE_DIR.glob('*.parquet'))[:10]
+    player_dir = CACHE_DIR / 'players'
+    if stats['players'] > 0 and player_dir.exists():
+        print(f"{EMOJI['info']} Sample of complete players:")
+        cache_files = sorted(player_dir.glob('*.parquet'))[:10]
         for cache_file in cache_files:
             name = cache_file.stem.replace('_', ' ')
             size_kb = cache_file.stat().st_size / 1024
             print(f"   - {name} ({size_kb:.1f} KB)")
         
-        if num_players > 10:
-            print(f"   ... and {num_players - 10} more")
+        if stats['players'] > 10:
+            print(f"   ... and {stats['players'] - 10} more")
     print()
 
 
 def inspect_player(player_name):
     """Inspect cached game logs for a specific player."""
     safe_name = player_name.replace(' ', '_').replace("'", '').replace('.', '')
-    cache_file = CACHE_DIR / f"{safe_name}.parquet"
+    player_dir = CACHE_DIR / 'players'
+    cache_file = player_dir / f"{safe_name}.parquet"
     
     if not cache_file.exists():
-        print(f"{EMOJI['warning']} {player_name} not found in cache")
-        print(f"   Expected file: {cache_file}")
+        print(f"{EMOJI['warning']} {player_name} not found in player cache")
+        
+        # Check season cache
+        season_dir = CACHE_DIR / 'seasons'
+        season_files = list(season_dir.glob(f"{safe_name}_*.parquet")) if season_dir.exists() else []
+        if season_files:
+            print(f"   Found {len(season_files)} individual season caches")
+            print(f"   Run 01_build.py to complete this player")
+        else:
+            print(f"   No cache found for this player")
         return
     
     try:
@@ -154,19 +173,32 @@ def clear_specific_players(player_names):
         print(f"{EMOJI['info']} No cache directory found")
         return
     
+    player_dir = CACHE_DIR / 'players'
+    season_dir = CACHE_DIR / 'seasons'
+    
     cleared = []
     not_found = []
     
     for player_name in player_names:
         safe_name = player_name.replace(' ', '_').replace("'", '').replace('.', '')
-        cache_file = CACHE_DIR / f"{safe_name}.parquet"
         
-        if cache_file.exists():
-            try:
-                cache_file.unlink()
-                cleared.append(player_name)
-            except Exception as e:
-                print(f"{EMOJI['error']} Failed to clear {player_name}: {e}")
+        # Clear player-level cache
+        player_file = player_dir / f"{safe_name}.parquet"
+        # Clear all season-level caches for this player
+        season_files = list(season_dir.glob(f"{safe_name}_*.parquet")) if season_dir.exists() else []
+        
+        found_any = False
+        
+        if player_file.exists():
+            player_file.unlink()
+            found_any = True
+        
+        for season_file in season_files:
+            season_file.unlink()
+            found_any = True
+        
+        if found_any:
+            cleared.append(player_name)
         else:
             not_found.append(player_name)
     
@@ -187,21 +219,27 @@ def clear_all_cache():
         print(f"{EMOJI['info']} No cache directory found")
         return 0
     
-    cache_files = list(CACHE_DIR.glob('*.parquet'))
+    player_dir = CACHE_DIR / 'players'
+    season_dir = CACHE_DIR / 'seasons'
     
-    if not cache_files:
+    player_files = list(player_dir.glob('*.parquet')) if player_dir.exists() else []
+    season_files = list(season_dir.glob('*.parquet')) if season_dir.exists() else []
+    
+    all_files = player_files + season_files
+    
+    if not all_files:
         print(f"{EMOJI['info']} Cache is already empty")
         return 0
     
     count = 0
-    for cache_file in cache_files:
+    for cache_file in all_files:
         try:
             cache_file.unlink()
             count += 1
         except Exception:
             pass
     
-    print(f"{EMOJI['success']} Cleared {count} cached player game logs")
+    print(f"{EMOJI['success']} Cleared {count} cached files ({len(player_files)} players, {len(season_files)} seasons)")
     return count
 
 

@@ -2,6 +2,15 @@
 
 Data-driven betting strategies for NBA and NFL using historical analysis, API data, and statistical modeling.
 
+## Setup
+
+This project uses `uv` for fast package management with Python 3.13. See [SETUP.md](SETUP.md) for full installation instructions.
+
+**Quick start:**
+```bash
+source .venv/bin/activate  # Activate virtual environment
+```
+
 ## Project Structure
 
 ### Core Directories

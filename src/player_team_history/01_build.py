@@ -73,6 +73,7 @@ while not (repo_root / '.gitignore').exists():
 sys.path.insert(0, str(repo_root))
 
 from src.player_team_history.name_normalization import normalize_from_odds_api, normalize_from_nba_api
+from src.player_team_history.team_normalization import normalize_team_code
 from src.config import CURRENT_NBA_SEASON, EMOJI
 
 try:
@@ -127,6 +128,7 @@ def load_season_from_cache(player_name, season):
         try:
             return pd.read_parquet(cache_file)
         except Exception:
+            # Corrupted cache file - delete it
             cache_file.unlink()
             return None
     
@@ -156,7 +158,12 @@ def load_from_cache(player_name):
     player_cache = get_player_cache_filename(player_name)
     
     if player_cache.exists():
-        return pd.read_parquet(player_cache)
+        try:
+            return pd.read_parquet(player_cache)
+        except Exception:
+            # Corrupted cache file - delete it
+            player_cache.unlink()
+            return None
     
     return None
 
@@ -242,14 +249,18 @@ def get_career_seasons(player_id):
 
 
 def extract_team_from_matchup(matchup):
-    """Extract player's team from MATCHUP string."""
+    """Extract player's team from MATCHUP string and normalize to modern codes."""
     if pd.isna(matchup):
         return None
+    
+    team_code = None
     if '@' in matchup:
-        return matchup.split('@')[0].strip()
+        team_code = matchup.split('@')[0].strip()
     elif 'vs.' in matchup:
-        return matchup.split('vs.')[0].strip()
-    return None
+        team_code = matchup.split('vs.')[0].strip()
+    
+    # Normalize historical team codes
+    return normalize_team_code(team_code)
 
 
 def fetch_player_game_log(player_name, player_id, verbose=False, use_cache=True):
@@ -370,6 +381,9 @@ def create_team_history_from_gamelogs(game_logs_df, player_name):
         
         if pd.isna(team):
             continue
+        
+        # Normalize historical team codes to modern abbreviations
+        team = normalize_team_code(team)
         
         first_game = stint_games['GAME_DATE'].min()
         last_game = stint_games['GAME_DATE'].max()

@@ -20,12 +20,17 @@ Validation Checks:
     3. No gaps in active player history
     4. All teams are valid NBA abbreviations
     5. No overlapping stints for same player
+    6. Very short stints (< 7 days - may indicate 10-day contracts)
+    7. NULL valid_to consistency (only final stint per player)
+    8. Chronological order within each player
+    9. Date range sanity (1946 to today + 1 year)
+    10. Same-team consecutive stints check
 """
 
 import sys
 from pathlib import Path
 import pandas as pd
-from datetime import date
+from datetime import date, timedelta
 
 # Add src to path
 repo_root = Path(__file__).resolve()
@@ -163,6 +168,196 @@ def check_overlapping_stints(df):
         return False
 
 
+def check_short_stints(df):
+    """Check for very short stints (< 7 days)."""
+    print(f"{EMOJI['test']} Checking for very short stints...")
+    
+    df_with_end = df[df['valid_to'].notna()].copy()
+    df_with_end['duration'] = (df_with_end['valid_to'] - df_with_end['valid_from']).apply(lambda x: x.days)
+    
+    short_stints = df_with_end[df_with_end['duration'] < 7]
+    
+    if short_stints.empty:
+        print(f"   {EMOJI['success']} No very short stints found")
+        return True
+    else:
+        print(f"   {EMOJI['warning']} Found {len(short_stints)} stints < 7 days (may be 10-day contracts):")
+        for _, row in short_stints.head(10).iterrows():
+            print(f"      {row['player_normalized']} - {row['team']}: {row['duration']} days ({row['valid_from']} to {row['valid_to']})")
+        if len(short_stints) > 10:
+            print(f"      ... and {len(short_stints) - 10} more")
+        return True  # Warning, not failure
+
+
+def check_null_consistency(df):
+    """Check that only final stint for each player has NULL valid_to."""
+    print(f"{EMOJI['test']} Checking NULL valid_to consistency...")
+    
+    issues = []
+    
+    for player in df['player_normalized'].unique():
+        player_df = df[df['player_normalized'] == player].copy()
+        player_df = player_df.sort_values('valid_from')
+        
+        # Check all stints except last
+        for i in range(len(player_df) - 1):
+            stint = player_df.iloc[i]
+            if pd.isna(stint['valid_to']):
+                issues.append({
+                    'player': player,
+                    'team': stint['team'],
+                    'date': stint['valid_from'],
+                    'issue': 'NULL valid_to in non-final stint'
+                })
+        
+        # Check last stint
+        last_stint = player_df.iloc[-1]
+        if pd.notna(last_stint['valid_to']):
+            issues.append({
+                'player': player,
+                'team': last_stint['team'],
+                'date': last_stint['valid_to'],
+                'issue': 'Final stint has non-NULL valid_to (player should be active)'
+            })
+    
+    if not issues:
+        print(f"   {EMOJI['success']} All players have correct NULL valid_to pattern")
+        return True
+    else:
+        print(f"   {EMOJI['error']} Found {len(issues)} NULL consistency issues:")
+        for issue in issues[:10]:
+            print(f"      {issue['player']} - {issue['team']}: {issue['issue']}")
+        if len(issues) > 10:
+            print(f"      ... and {len(issues) - 10} more")
+        return False
+
+
+def check_chronological_order(df):
+    """Check that stints are in chronological order within each player."""
+    print(f"{EMOJI['test']} Checking chronological order...")
+    
+    issues = []
+    
+    for player in df['player_normalized'].unique():
+        player_df = df[df['player_normalized'] == player].copy()
+        player_df = player_df.sort_values('valid_from')
+        
+        for i in range(len(player_df) - 1):
+            current = player_df.iloc[i]
+            next_stint = player_df.iloc[i + 1]
+            
+            # Current stint's end should be before next stint's start
+            if pd.notna(current['valid_to']) and current['valid_to'] > next_stint['valid_from']:
+                issues.append({
+                    'player': player,
+                    'team1': current['team'],
+                    'team2': next_stint['team'],
+                    'issue': f"Out of order: {current['valid_to']} > {next_stint['valid_from']}"
+                })
+    
+    if not issues:
+        print(f"   {EMOJI['success']} All stints in chronological order")
+        return True
+    else:
+        print(f"   {EMOJI['error']} Found {len(issues)} chronological order issues:")
+        for issue in issues[:10]:
+            print(f"      {issue['player']}: {issue['team1']} -> {issue['team2']} - {issue['issue']}")
+        if len(issues) > 10:
+            print(f"      ... and {len(issues) - 10} more")
+        return False
+
+
+def check_date_sanity(df):
+    """Check that dates are within reasonable range (1946 to today + 1 year)."""
+    print(f"{EMOJI['test']} Checking date range sanity...")
+    
+    nba_founding = date(1946, 6, 6)
+    max_future = date.today() + timedelta(days=365)
+    
+    issues = []
+    
+    # Check valid_from dates
+    too_early = df[df['valid_from'] < nba_founding]
+    for _, row in too_early.iterrows():
+        issues.append({
+            'player': row['player_normalized'],
+            'team': row['team'],
+            'date': row['valid_from'],
+            'issue': f"Date before NBA founding ({nba_founding})"
+        })
+    
+    too_late = df[df['valid_from'] > max_future]
+    for _, row in too_late.iterrows():
+        issues.append({
+            'player': row['player_normalized'],
+            'team': row['team'],
+            'date': row['valid_from'],
+            'issue': f"Date too far in future (> {max_future})"
+        })
+    
+    # Check valid_to dates
+    df_with_end = df[df['valid_to'].notna()]
+    too_late_end = df_with_end[df_with_end['valid_to'] > max_future]
+    for _, row in too_late_end.iterrows():
+        issues.append({
+            'player': row['player_normalized'],
+            'team': row['team'],
+            'date': row['valid_to'],
+            'issue': f"End date too far in future (> {max_future})"
+        })
+    
+    if not issues:
+        print(f"   {EMOJI['success']} All dates within reasonable range")
+        return True
+    else:
+        print(f"   {EMOJI['error']} Found {len(issues)} date sanity issues:")
+        for issue in issues[:10]:
+            print(f"      {issue['player']} - {issue['team']}: {issue['date']} - {issue['issue']}")
+        if len(issues) > 10:
+            print(f"      ... and {len(issues) - 10} more")
+        return False
+
+
+def check_consecutive_same_team(df):
+    """Check for same-team consecutive stints that might need consolidation."""
+    print(f"{EMOJI['test']} Checking for consecutive same-team stints...")
+    
+    issues = []
+    
+    for player in df['player_normalized'].unique():
+        player_df = df[df['player_normalized'] == player].copy()
+        player_df = player_df.sort_values('valid_from')
+        
+        for i in range(len(player_df) - 1):
+            current = player_df.iloc[i]
+            next_stint = player_df.iloc[i + 1]
+            
+            # Check if same team
+            if current['team'] == next_stint['team']:
+                # Check if dates are close (within 30 days)
+                if pd.notna(current['valid_to']):
+                    gap_days = (next_stint['valid_from'] - current['valid_to']).days
+                    if abs(gap_days) <= 30:
+                        issues.append({
+                            'player': player,
+                            'team': current['team'],
+                            'stint1_end': current['valid_to'],
+                            'stint2_start': next_stint['valid_from'],
+                            'gap_days': gap_days
+                        })
+    
+    if not issues:
+        print(f"   {EMOJI['success']} No suspicious consecutive same-team stints")
+        return True
+    else:
+        print(f"   {EMOJI['warning']} Found {len(issues)} consecutive same-team stints (may be legitimate):")
+        for issue in issues[:10]:
+            print(f"      {issue['player']} - {issue['team']}: gap of {issue['gap_days']} days ({issue['stint1_end']} to {issue['stint2_start']})")
+        if len(issues) > 10:
+            print(f"      ... and {len(issues) - 10} more")
+        return True  # Warning, not failure
+
+
 def show_statistics(df):
     """Show summary statistics."""
     print()
@@ -181,6 +376,18 @@ def show_statistics(df):
     print(f"Players with most stints:")
     for player, count in stint_counts.head(5).items():
         print(f"   {player}: {count} stints")
+    print()
+    
+    # Stint distribution
+    print(f"Stint distribution:")
+    one_stint = (stint_counts == 1).sum()
+    two_three = ((stint_counts >= 2) & (stint_counts <= 3)).sum()
+    four_six = ((stint_counts >= 4) & (stint_counts <= 6)).sum()
+    seven_plus = (stint_counts >= 7).sum()
+    print(f"   1 stint: {one_stint} players")
+    print(f"   2-3 stints: {two_three} players")
+    print(f"   4-6 stints: {four_six} players")
+    print(f"   7+ stints: {seven_plus} players")
     print()
     
     # Active players (valid_to is null)
@@ -209,6 +416,13 @@ def main():
     all_passed &= check_date_validity(df)
     all_passed &= check_team_codes(df)
     all_passed &= check_overlapping_stints(df)
+    all_passed &= check_null_consistency(df)
+    all_passed &= check_chronological_order(df)
+    all_passed &= check_date_sanity(df)
+    
+    # Warning checks (don't affect pass/fail)
+    check_short_stints(df)
+    check_consecutive_same_team(df)
     
     # Show statistics
     show_statistics(df)

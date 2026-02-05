@@ -25,19 +25,33 @@ Join props by game date to get correct team at that time.
 
 ## Quick Start
 
-### Build the History
-
 ```bash
-# Full career (takes 10-15 mins)
-python -m src.player_team_history.builder
+# Step 1: Build team history from cached game logs
+python src/player_team_history/01_build.py
 
-# Current season only (faster for testing)
-python -m src.player_team_history.builder --current-season-only
+# Step 2: Analyze any failures
+python src/player_team_history/02_analyze_failures.py
+
+# Step 3: Inspect cache (optional)
+python src/player_team_history/03_cache.py --stats
+
+# Step 4: Validate output
+python src/player_team_history/04_validate.py
+
+# Step 5: Export to S3
+aws s3 cp ~/Downloads/tmp/player_team_history/history.parquet \
+  s3://nba-betting-mt/nba/player_team_history/history.parquet
 ```
 
-**Output:**
-- S3: `s3://nba-betting-mt/data/02_cache/player_team_history.parquet`
-- Local backup: `data/02_cache/player_team_history.parquet`
+### Output Files
+
+All files in `~/Downloads/tmp/player_team_history/`:
+
+- `history.parquet` - Final team history (player, team, valid_from, valid_to)
+- `checkpoint.parquet` - For resuming interrupted builds
+- `failures.txt` - Detailed failure report
+- `cache/players/*.parquet` - Complete player game logs
+- `cache/seasons/*.parquet` - Individual season caches
 
 **Update frequency:**
 - Daily during trade deadline week
@@ -64,6 +78,114 @@ props_df = add_team_from_history(props_df, player_col='player', date_col='game_d
 #   Anthony Davis   2026-01-15  28     LAL   ✅ Before trade
 #   Anthony Davis   2026-02-10  25     DAL   ✅ After trade
 ```
+
+## Name Normalization
+
+The pipeline handles name variations across APIs:
+
+**File:** `src/player_team_history/name_normalization.py`
+
+```python
+# Odds API → NBA API mappings
+get_odds_api_to_nba_mappings() = {
+    'Alfred Joel Horford Reynoso': 'Al Horford',      # Full legal name
+    'Cameron Johnson': 'Cam Johnson',                  # Shortened name
+    'Christian James Mccollum': 'Cj Mccollum',        # Full legal name
+    'Scottie Pippen Jr': 'Scotty Pippen Jr',          # Spelling variation
+    # ... 50+ more mappings
+}
+```
+
+**Common patterns:**
+- Full legal names → Common names (`Christian James Mccollum` → `Cj Mccollum`)
+- Shortened names (`Cam` ↔ `Cameron`)
+- Initials (`P.J.` → `Pj`, `O.G.` → `Og`)
+- Spelling variations (`Scotty` vs `Scottie`)
+- Hyphenation (`Dorian Finney Smith` → `Dorian Finney-Smith`)
+
+## Cache Strategy
+
+**Two-tier caching for 100x speedup:**
+
+1. **Season cache** (`cache/seasons/Player_Name_2023-24.parquet`) - Individual seasons
+2. **Player cache** (`cache/players/Player_Name.parquet`) - Complete player history (only saved when all seasons succeed)
+
+The build checks player cache first, falls back to season cache, then fetches from NBA API only if needed.
+
+## Build Process
+
+```bash
+# Test with sample (fast iteration)
+python src/player_team_history/01_build.py --sample 100 --verbose
+
+# Resume from checkpoint
+python src/player_team_history/01_build.py --resume
+
+# Force fresh fetch (bypass cache)
+python src/player_team_history/01_build.py --no-cache
+
+# Full build (uses cache, typically 5-10 minutes)
+python src/player_team_history/01_build.py
+```
+
+## Validation Checks
+
+The validation script (`04_validate.py`) runs comprehensive checks:
+
+**Critical checks:**
+- No duplicate stints
+- Valid date ranges (valid_from ≤ valid_to)
+- Valid NBA team codes
+- No overlapping stints
+- NULL valid_to only on final stint per player
+- Chronological order within each player
+- Date sanity (1946 to today + 1 year)
+
+**Warning checks:**
+- Very short stints (< 7 days, may be 10-day contracts)
+- Consecutive same-team stints (may need consolidation)
+
+**Statistics:**
+- Stint distribution breakdown (1, 2-3, 4-6, 7+ stints)
+- Players with most team changes
+- Active players count
+
+## Iterating on Failures
+
+When the build completes with failures:
+
+1. Check `failures.txt` for details
+2. Run `python src/player_team_history/02_analyze_failures.py`
+3. The analyzer suggests exact code to add to `get_odds_api_to_nba_mappings()`
+4. Add mappings to `name_normalization.py`
+5. Re-run `01_build.py` (uses cache, only re-processes failed players)
+
+## Querying Output
+
+```bash
+# Query from S3 with DuckDB
+duckdb -c "
+SELECT player_normalized, team, valid_from, valid_to
+FROM 's3://nba-betting-mt/nba/player_team_history/history.parquet'
+WHERE player_normalized = 'Anthony Davis'
+ORDER BY valid_from;
+"
+```
+
+Example output:
+```
+player_normalized | team | valid_from  | valid_to
+------------------+------+------------+------------
+Anthony Davis     | NOH  | 2012-10-31 | 2013-04-10
+Anthony Davis     | NOP  | 2013-10-30 | 2019-03-24
+Anthony Davis     | LAL  | 2019-10-22 | NULL
+```
+
+## Known Gaps
+
+- **ESPN API mappings**: Not yet comprehensive (most ESPN data matches after basic normalization)
+- **Retired players**: May fail if not in current NBA API data
+- **Rookies**: May have incomplete data if recently drafted
 
 ## API Reference
 
