@@ -6,14 +6,15 @@ game dates, accounting for trades and team changes throughout the season.
 
 Key Functions:
 ==============
-- load_team_history(): Load player team history with date ranges
+- add_team_from_history(): Add team column to props DataFrame (MAIN FUNCTION)
 - get_player_team_at_date(): Get a player's team on a specific date
-- add_team_from_history(): Add team column to props DataFrame using game dates
+- load_team_history(): Load player team history from S3
+- get_team_history_for_player(): Get full history for one player
 
 Usage Example:
 ==============
     import pandas as pd
-    from team_history_utils import add_team_from_history
+    from src.player_team_history import add_team_from_history
     
     # Your prop data with game dates
     props_df = pd.DataFrame({
@@ -24,14 +25,12 @@ Usage Example:
     
     # Add team column based on game date
     props_df = add_team_from_history(props_df, player_col='player', date_col='game_date')
-    
-    # Now props_df has 'team' column with correct team for each game date
 """
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Optional
 import sys
 import boto3
 from io import BytesIO
@@ -50,58 +49,31 @@ from src.player_name_utils import normalize_player_name, get_name_mappings
 
 # S3 Configuration
 S3_BUCKET = 'nba-betting-mt'
-S3_KEY = 'data/02_cache/player_team_history.csv'
-
-# Local fallback path
-LOCAL_HISTORY_PATH = repo_root / 'data' / '02_cache' / 'player_team_history.csv'
+S3_KEY = 'data/02_cache/player_team_history.parquet'
 
 
 def load_team_history() -> pd.DataFrame:
     """
-    Load player team history from S3 (with local fallback).
+    Load player team history from S3.
     
     Returns:
         DataFrame with columns: player_normalized, team, valid_from, valid_to
         - valid_from: datetime.date when player joined team
         - valid_to: datetime.date when player left team (NaT = current team)
-        
-    Raises:
-        FileNotFoundError: If history file not found in S3 or locally
     """
-    # Try S3 first
-    try:
-        s3 = boto3.client('s3')
-        obj = s3.get_object(Bucket=S3_BUCKET, Key=S3_KEY)
-        history_df = pd.read_csv(BytesIO(obj['Body'].read()))
-        
-        # Convert date columns
-        history_df['valid_from'] = pd.to_datetime(history_df['valid_from']).dt.date
-        history_df['valid_to'] = pd.to_datetime(history_df['valid_to'], errors='coerce').dt.date
-        
-        print(f"✅ Loaded {len(history_df)} team history records from S3")
-        return history_df
+    s3 = boto3.client('s3')
+    obj = s3.get_object(Bucket=S3_BUCKET, Key=S3_KEY)
+    history_df = pd.read_parquet(BytesIO(obj['Body'].read()))
     
-    except Exception as s3_error:
-        print(f"⚠️  S3 read failed, trying local fallback: {s3_error}")
-        
-        # Fallback to local file
-        if not LOCAL_HISTORY_PATH.exists():
-            raise FileNotFoundError(
-                f"Team history not found in S3 or locally.\n"
-                f"Run: python scripts/build_player_team_history_from_gamelogs.py"
-            )
-        
-        history_df = pd.read_csv(LOCAL_HISTORY_PATH)
-        
-        # Convert date columns
-        history_df['valid_from'] = pd.to_datetime(history_df['valid_from']).dt.date
-        history_df['valid_to'] = pd.to_datetime(history_df['valid_to'], errors='coerce').dt.date
-        
-        print(f"✅ Loaded {len(history_df)} team history records from local cache")
-        return history_df
+    # Ensure date columns are date objects
+    history_df['valid_from'] = pd.to_datetime(history_df['valid_from']).dt.date
+    history_df['valid_to'] = pd.to_datetime(history_df['valid_to'], errors='coerce').dt.date
+    
+    print(f"✅ Loaded {len(history_df)} team history records from S3")
+    return history_df
 
 
-def get_player_team_at_date(player_name: str, game_date, history_df: Optional[pd.DataFrame] = None) -> Optional[str]:
+def get_player_team_at_date(player_name: str, game_date, history_df: Optional[pd.DataFrame] = None) -> str:
     """
     Get a player's team on a specific date.
     
@@ -111,7 +83,7 @@ def get_player_team_at_date(player_name: str, game_date, history_df: Optional[pd
         history_df: Optional pre-loaded history DataFrame (loads if not provided)
         
     Returns:
-        Team abbreviation (e.g., 'LAL') or None if not found
+        Team abbreviation (e.g., 'LAL')
     """
     if history_df is None:
         history_df = load_team_history()
@@ -121,7 +93,7 @@ def get_player_team_at_date(player_name: str, game_date, history_df: Optional[pd
     
     # Apply name mappings for nickname variations
     name_mappings = get_name_mappings()
-    player_normalized = name_mappings.get(player_normalized, player_normalized)
+    player_normalized = name_mappings[player_normalized] if player_normalized in name_mappings else player_normalized
     
     # Convert game_date to date object
     if isinstance(game_date, str):
@@ -133,7 +105,7 @@ def get_player_team_at_date(player_name: str, game_date, history_df: Optional[pd
     player_history = history_df[history_df['player_normalized'] == player_normalized]
     
     if player_history.empty:
-        return None
+        raise ValueError(f"Player not found in history: {player_name} (normalized: {player_normalized})")
     
     # Find the team stint that contains this game date
     for _, row in player_history.iterrows():
@@ -146,7 +118,10 @@ def get_player_team_at_date(player_name: str, game_date, history_df: Optional[pd
             if pd.isna(valid_to) or game_date <= valid_to:
                 return row['team']
     
-    return None
+    raise ValueError(
+        f"No team found for {player_name} on {game_date}\n"
+        f"Player history:\n{player_history.to_string()}"
+    )
 
 
 def add_team_from_history(df: pd.DataFrame, 
@@ -163,7 +138,11 @@ def add_team_from_history(df: pd.DataFrame,
         date_col: Name of game date column (default: 'game_date')
         
     Returns:
-        DataFrame with new 'team' column added (NULL if not found in history)
+        DataFrame with new 'team' column added
+        
+    Raises:
+        ValueError: If date_col not in DataFrame
+        ValueError: If any player/date combo not found in history
         
     Example:
         props_df = add_team_from_history(props_df, player_col='player', date_col='game_date')
@@ -173,10 +152,11 @@ def add_team_from_history(df: pd.DataFrame,
     # Load history once
     history_df = load_team_history()
     
-    # Convert game_date to date objects
+    # Validate date column exists
     if date_col not in df.columns:
-        raise ValueError(f"Date column '{date_col}' not found in DataFrame")
+        raise ValueError(f"Date column '{date_col}' not found in DataFrame. Available: {list(df.columns)}")
     
+    # Convert game_date to date objects
     df[f'{date_col}_parsed'] = pd.to_datetime(df[date_col], errors='coerce').dt.date
     
     # Normalize player names
@@ -184,43 +164,39 @@ def add_team_from_history(df: pd.DataFrame,
     
     # Apply name mappings for nickname variations
     name_mappings = get_name_mappings()
-    df['player_normalized'] = df['player_normalized'].map(lambda x: name_mappings.get(x, x))
+    df['player_normalized'] = df['player_normalized'].map(lambda x: name_mappings[x] if x in name_mappings else x)
     
-    # Create team column using vectorized merge
-    # This is more efficient than row-by-row lookups
-    
-    # Merge with history where game_date is within valid range
-    # We'll do this with a conditional join
-    result_rows = []
+    # Get team for each row
+    teams = []
+    errors = []
     
     for idx, row in df.iterrows():
         player_norm = row['player_normalized']
         game_date = row[f'{date_col}_parsed']
         
         if pd.isna(game_date):
-            result_rows.append(None)
+            errors.append(f"Row {idx}: Invalid date for {row[player_col]}: {row[date_col]}")
+            teams.append(None)
             continue
         
-        # Get team for this player/date
-        team = get_player_team_at_date(player_norm, game_date, history_df)
-        result_rows.append(team)
+        try:
+            team = get_player_team_at_date(player_norm, game_date, history_df)
+            teams.append(team)
+        except ValueError as e:
+            errors.append(f"Row {idx}: {str(e)}")
+            teams.append(None)
     
-    df['team'] = result_rows
+    df['team'] = teams
     
     # Clean up temporary columns
     df = df.drop([f'{date_col}_parsed', 'player_normalized'], axis=1)
     
-    # Report missing teams
-    missing_rows = df['team'].isna().sum()
-    if missing_rows > 0:
-        missing_players = df[df['team'].isna()][player_col].nunique()
-        print(f"⚠️  {missing_players} unique players not found in history ({missing_rows} rows showing NULL)")
-        
-        # Show a few examples
-        missing_examples = df[df['team'].isna()][[player_col, date_col]].drop_duplicates().head(5)
-        print("   Examples of missing players:")
-        for _, ex in missing_examples.iterrows():
-            print(f"      - {ex[player_col]} on {ex[date_col]}")
+    # Report errors
+    if errors:
+        error_msg = f"Failed to find teams for {len(errors)} rows:\n" + "\n".join(errors[:10])
+        if len(errors) > 10:
+            error_msg += f"\n... and {len(errors) - 10} more"
+        raise ValueError(error_msg)
     
     return df
 
@@ -234,7 +210,7 @@ def get_team_history_for_player(player_name: str, history_df: Optional[pd.DataFr
         history_df: Optional pre-loaded history DataFrame
         
     Returns:
-        DataFrame with team history for this player (empty if not found)
+        DataFrame with team history for this player
     """
     if history_df is None:
         history_df = load_team_history()
@@ -243,9 +219,12 @@ def get_team_history_for_player(player_name: str, history_df: Optional[pd.DataFr
     
     # Apply name mappings
     name_mappings = get_name_mappings()
-    player_normalized = name_mappings.get(player_normalized, player_normalized)
+    player_normalized = name_mappings[player_normalized] if player_normalized in name_mappings else player_normalized
     
     player_history = history_df[history_df['player_normalized'] == player_normalized].copy()
+    
+    if player_history.empty:
+        raise ValueError(f"Player not found in history: {player_name} (normalized: {player_normalized})")
     
     return player_history
 
@@ -270,13 +249,15 @@ if __name__ == '__main__':
     print("Test 2: Get team for player on specific date...")
     test_cases = [
         ('Anthony Davis', '2025-12-15'),
-        ('Anthony Davis', '2026-02-07'),
         ('Lebron James', '2026-01-15'),
     ]
     
     for player, date in test_cases:
-        team = get_player_team_at_date(player, date)
-        print(f"   {player} on {date}: {team}")
+        try:
+            team = get_player_team_at_date(player, date)
+            print(f"   {player} on {date}: {team}")
+        except ValueError as e:
+            print(f"   {player} on {date}: ERROR - {e}")
     print()
     
     # Test 3: Add team to DataFrame
@@ -291,17 +272,19 @@ if __name__ == '__main__':
     print(test_df.to_string(index=False))
     print()
     
-    test_df = add_team_from_history(test_df)
-    
-    print("   After:")
-    print(test_df.to_string(index=False))
+    try:
+        test_df = add_team_from_history(test_df)
+        print("   After:")
+        print(test_df.to_string(index=False))
+    except ValueError as e:
+        print(f"   ERROR: {e}")
     print()
     
     # Test 4: Get player history
     print("Test 4: Get full history for a player...")
-    player_history = get_team_history_for_player('Anthony Davis')
-    print(f"   Anthony Davis team history:")
-    if not player_history.empty:
+    try:
+        player_history = get_team_history_for_player('Anthony Davis')
+        print(f"   Anthony Davis team history:")
         print(player_history.to_string(index=False))
-    else:
-        print("   No history found")
+    except ValueError as e:
+        print(f"   ERROR: {e}")

@@ -124,7 +124,7 @@ SUBTITLE_LEFT = "When a high-usage teammate scratches late"
 
 # Right table subtitle
 TITLE_RIGHT = "Players Who Underperform"
-SUBTITLE_RIGHT = "When a high-usage teammate scratches late"
+SUBTITLE_RIGHT = "Season: 2025-26"
 
 # Left side footer - data citation & attribution
 FOOTER_NOTES_LEFT = """
@@ -136,9 +136,6 @@ FOOTER_NOTES_LEFT = """
 # Right side footer - key definitions (right-aligned)
 # Note: min_games filter will be dynamically inserted
 FOOTER_NOTES_RIGHT_TEMPLATE = """
-**Consensus Line**: Median prop line across all bookmakers  
-**PPG Over Exp**: Actual PPG minus consensus line (green = exceeded, red = underperformed)  
-**Cover Rate**: Percentage of games player covered their line  
 **Filters**: Minimum {min_games} games in late-scratch scenarios (2+ teammates projected 20+ pts)
 """
 FOOTER_DATA_DATE = datetime.now().strftime("%B %d, %Y")
@@ -151,8 +148,9 @@ OUTPUT_FILENAME = "nba_dnp_scenarios.png"
 LEFT_FILENAME = "nba_dnp_scenarios_left.png"
 RIGHT_FILENAME = "nba_dnp_scenarios_right.png"
 
-# Side-by-side: 16:9 aspect ratio when combined (matching defensive_disruptors)
-TABLE_WIDTH = 1400   # pixels per table (matching defensive_disruptors)
+# Side-by-side: extra compact for mobile viewing
+# Total column widths: ~745px (with new W-L and DNP teammate columns)
+TABLE_WIDTH = 1250   # pixels per table (removed W-L column, 50px saved)
 TABLE_HEIGHT = 1200  # pixels per table (matching defensive_disruptors for proper aspect ratio)
 OUTPUT_DPI = 300
 
@@ -185,16 +183,17 @@ DATA_ROW_PADDING_PX = 0.5    # Minimal padding for compact rows (matching defens
 HEADING_PADDING_PX = 6
 
 # -----------------------------------------------------------------------------
-# Column Widths (pixels) - compact like defensive_disruptors
+# Column Widths (pixels) - extra compact for mobile viewing
 # -----------------------------------------------------------------------------
-COL_WIDTH_RANK = 60
-COL_WIDTH_PLAYER = 180
-COL_WIDTH_HEADSHOT = 55
-COL_WIDTH_GAMES = 70
-COL_WIDTH_CONSENSUS_LINE = 110
-COL_WIDTH_AVG_ACTUAL = 90
-COL_WIDTH_PPG_OVER_EXP = 110
-COL_WIDTH_COVER_RATE = 100
+COL_WIDTH_RANK = 50          # Reduced from 60 (single/double digits)
+COL_WIDTH_PLAYER = 90        # Reduced from 180 (half size for compact design)
+COL_WIDTH_HEADSHOT = 55      # Keep
+COL_WIDTH_N = 45             # Number of games (2-digit numbers, compact)
+COL_WIDTH_DNP_TEAMMATE = 110  # Most common DNP teammate with count
+COL_WIDTH_CONSENSUS_LINE = 90  # Reduced from 110 (format: "24.8")
+COL_WIDTH_AVG_ACTUAL = 75    # Reduced from 90 (format: "30.1")
+COL_WIDTH_PPG_OVER_EXP = 90  # Reduced from 110 (format: "+5.5")
+COL_WIDTH_OVER_HIT = 80      # Over hit % (format: "67%")
 
 HEADSHOT_HEIGHT = 35  # Height of player headshots in pixels (matching defensive_disruptors)
 
@@ -253,6 +252,30 @@ def download_and_convert_to_base64(url, max_size=(300, 300)):
         return data_uri
     except:
         return None
+
+
+def create_transparent_placeholder(width=50, height=35):
+    """
+    Create a transparent placeholder image for empty table rows.
+    
+    Args:
+        width: Image width in pixels
+        height: Image height in pixels
+        
+    Returns:
+        base64 data URI string of transparent PNG
+    """
+    # Create transparent RGBA image
+    img = Image.new('RGBA', (width, height), (255, 255, 255, 0))
+    
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    img_bytes = buffer.getvalue()
+    
+    img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+    data_uri = f"data:image/png;base64,{img_base64}"
+    
+    return data_uri
 
 
 def add_player_headshots(df):
@@ -341,10 +364,44 @@ def load_player_stats_from_cache(cache_key, min_games=3):
     # Calculate metrics
     player_stats['ppg_over_exp'] = player_stats['avg_actual'] - player_stats['avg_projection']
     
-    # Calculate cover rate
-    df['covered'] = df['actual_points'] >= df['projection']
+    # Calculate cover rate (must beat the line, not just tie)
+    df['covered'] = df['actual_points'] > df['projection']
     covers = df.groupby('player')['covered'].mean().reset_index(name='cover_rate')
     player_stats = player_stats.merge(covers, on='player')
+    
+    # Calculate W-L record for each player
+    wl_records = []
+    for player_name in player_stats['player']:
+        player_games = df[df['player'] == player_name]
+        wins = (player_games['wl'] == 'W').sum() if 'wl' in player_games.columns else 0
+        losses = (player_games['wl'] == 'L').sum() if 'wl' in player_games.columns else 0
+        wl_records.append(f"{wins}-{losses}")
+    
+    player_stats['wl_record'] = wl_records
+    
+    # Find most common DNP teammate for each player (with count)
+    dnp_teammates_list = []
+    for player_name in player_stats['player']:
+        player_games = df[df['player'] == player_name]
+        # Get all DNP teammates across all games
+        all_dnp = []
+        if 'dnp_teammates' in player_games.columns:
+            for dnp_str in player_games['dnp_teammates']:
+                if dnp_str and isinstance(dnp_str, str) and dnp_str.strip():
+                    # Split by comma and strip whitespace
+                    teammates = [t.strip() for t in dnp_str.split(',') if t.strip()]
+                    all_dnp.extend(teammates)
+        
+        if all_dnp:
+            # Count occurrences and get most common
+            from collections import Counter
+            counter = Counter(all_dnp)
+            most_common_teammate, count = counter.most_common(1)[0]
+            dnp_teammates_list.append(f"{most_common_teammate} ({count})")
+        else:
+            dnp_teammates_list.append('')
+    
+    player_stats['most_common_dnp'] = dnp_teammates_list
     
     # Filter to min games
     player_stats = player_stats[player_stats['games'] >= min_games]
@@ -362,18 +419,17 @@ def prepare_display_data(player_stats, n=15, is_top=True):
     Prepare data for display in gt table.
     
     Args:
-        player_stats: DataFrame with player statistics
+        player_stats: DataFrame with player statistics (pre-filtered to positive or negative)
         n: Number of players to show
         is_top: True for top performers, False for bottom
     
     Returns:
         DataFrame formatted for display
     """
-    if is_top:
-        df = player_stats.head(n).copy()
-    else:
-        df = player_stats.tail(n).copy()
-        df = df.sort_values('ppg_over_exp', ascending=True)  # Still worst to best visually
+    # Take top N from the already-filtered and sorted dataframe
+    # Positive performers are sorted descending (best first)
+    # Negative performers are sorted ascending (worst first)
+    df = player_stats.head(n).copy()
     
     # Add rank column
     df['rank'] = range(1, len(df) + 1)
@@ -391,17 +447,17 @@ def prepare_display_data(player_stats, n=15, is_top=True):
     df['display_avg_actual'] = df['avg_actual'].apply(lambda x: f"{x:.1f}")
     df['display_avg_projection'] = df['avg_projection'].apply(lambda x: f"{x:.1f}")
     
-    # Select and rename columns for display (headshot after player)
+    # Select and rename columns for display (new order: rank, player, headshot, N, DNP teammate, etc.)
     display_df = df[[
-        'rank', 'player', 'headshot_url', 'display_games', 'display_avg_projection',
-        'display_avg_actual', 'display_ppg_over_exp', 'display_cover_rate',
+        'rank', 'player', 'headshot_url', 'display_games', 'most_common_dnp', 
+        'display_avg_projection', 'display_avg_actual', 'display_ppg_over_exp', 'display_cover_rate',
         'ppg_over_exp',  # Keep for gradient coloring
         'cover_rate'     # Keep for gradient coloring
     ]].copy()
     
     display_df.columns = [
-        'RANK', 'PLAYER', 'headshot_url', 'GAMES', 'CONSENSUS LINE',
-        'AVG PPG', 'PPG OVER EXP', 'COVER RATE', 'ppg_over_exp_value', 'cover_rate_value'
+        'RANK', 'PLAYER', 'headshot_url', 'N', 'DNP TEAMMATE', 'AVG CONSENSUS LINE',
+        'AVG PPG', 'PPG OVER EXP', 'OVER HIT %', 'ppg_over_exp_value', 'cover_rate_value'
     ]
     
     return display_df
@@ -484,11 +540,11 @@ def create_gt_table_r(df, title, subtitle, footer_notes, is_left,
             domain = c({ppg_gradient_min}, {ppg_gradient_max})
           ) %>%
           
-          # Format COVER RATE column with gradient (using numeric value column)
+          # Format OVER HIT % column with gradient (using numeric value column)
           # 5-color palette with white in middle, anchored at 50%
           data_color(
             columns = cover_rate_value,
-            target_columns = `COVER RATE`,
+            target_columns = `OVER HIT %`,
             method = "numeric",
             palette = c("{COLOR_PALETTE[0]}", "{COLOR_PALETTE[1]}", "{COLOR_PALETTE[2]}", 
                        "{COLOR_PALETTE[3]}", "{COLOR_PALETTE[4]}"),
@@ -498,23 +554,24 @@ def create_gt_table_r(df, title, subtitle, footer_notes, is_left,
           # Column alignments
           cols_align(
             align = "center",
-            columns = c(RANK, GAMES, `CONSENSUS LINE`, `AVG PPG`, `PPG OVER EXP`, `COVER RATE`)
+            columns = c(RANK, N, `AVG CONSENSUS LINE`, `AVG PPG`, `PPG OVER EXP`, `OVER HIT %`)
           ) %>%
           cols_align(
             align = "left",
-            columns = PLAYER
+            columns = c(PLAYER, `DNP TEAMMATE`)
           ) %>%
           
-          # Column widths (headshot between player and games)
+          # Column widths (new order: rank, player, headshot, N, DNP teammate, etc.)
           cols_width(
             RANK ~ px({COL_WIDTH_RANK}),
             PLAYER ~ px({COL_WIDTH_PLAYER}),
             headshot_url ~ px({COL_WIDTH_HEADSHOT}),
-            GAMES ~ px({COL_WIDTH_GAMES}),
-            `CONSENSUS LINE` ~ px({COL_WIDTH_CONSENSUS_LINE}),
+            N ~ px({COL_WIDTH_N}),
+            `DNP TEAMMATE` ~ px({COL_WIDTH_DNP_TEAMMATE}),
+            `AVG CONSENSUS LINE` ~ px({COL_WIDTH_CONSENSUS_LINE}),
             `AVG PPG` ~ px({COL_WIDTH_AVG_ACTUAL}),
             `PPG OVER EXP` ~ px({COL_WIDTH_PPG_OVER_EXP}),
-            `COVER RATE` ~ px({COL_WIDTH_COVER_RATE})
+            `OVER HIT %` ~ px({COL_WIDTH_OVER_HIT})
           ) %>%
           
           # Rename headshot_url column header to empty
@@ -678,24 +735,94 @@ def main():
     # Load data
     player_stats = load_player_stats_from_cache(cache_key, min_games=args.min_games)
     
+    # Split by performance: positive/neutral goes top, negative goes bottom
+    # This ensures no "overperformers" end up on the "underperform" side
+    positive_performers = player_stats[player_stats['ppg_over_exp'] >= 0].copy()
+    negative_performers = player_stats[player_stats['ppg_over_exp'] < 0].copy()
+    
+    print(f"   Split: {len(positive_performers)} positive/neutral, {len(negative_performers)} negative performers")
+    
+    # Need at least 1 player on each side
+    if len(positive_performers) == 0 or len(negative_performers) == 0:
+        print(f"   ❌ Cannot create visualization: all players on one side of performance")
+        print(f"   Try using more seasons or different threshold")
+        return
+    
+    # Determine how many to show per side
     if len(player_stats) < args.n * 2:
         print(f"⚠️  Warning: Only {len(player_stats)} players available, need {args.n * 2} for top/bottom {args.n}")
         print(f"   Showing all available players")
-        n = len(player_stats) // 2
+        n_top = len(positive_performers)
+        n_bottom = len(negative_performers)
     else:
-        n = args.n
+        # Use requested N, but respect the natural split
+        n_top = min(args.n, len(positive_performers))
+        n_bottom = min(args.n, len(negative_performers))
     
-    # Prepare display data
-    top_players = prepare_display_data(player_stats, n=n, is_top=True)
-    bottom_players = prepare_display_data(player_stats, n=n, is_top=False)
+    # Sort positive performers descending (best first) - already sorted from parent
+    # Sort negative performers ascending (worst first) for proper selection
+    negative_performers = negative_performers.sort_values('ppg_over_exp', ascending=True)
     
-    print(f"📊 Top {n} players:")
-    print(f"   Best: {top_players.iloc[0]['PLAYER']} ({top_players.iloc[0]['PPG OVER EXP']})")
-    print(f"   {n}th: {top_players.iloc[-1]['PLAYER']} ({top_players.iloc[-1]['PPG OVER EXP']})")
+    # Prepare display data from the pre-split dataframes
+    top_players = prepare_display_data(positive_performers, n=n_top, is_top=True)
+    bottom_players = prepare_display_data(negative_performers, n=n_bottom, is_top=False)
+    
+    if len(top_players) == 0 or len(bottom_players) == 0:
+        print(f"   ❌ Not enough players for visualization after split")
+        return
+    
+    # Pad tables to same length by adding empty rows to the shorter one
+    max_len = max(len(top_players), len(bottom_players))
+    
+    # Create transparent placeholder image for empty rows (matches headshot dimensions)
+    transparent_placeholder = create_transparent_placeholder(width=50, height=35)
+    
+    while len(top_players) < max_len:
+        # Add empty row to top_players
+        empty_row = pd.DataFrame([{
+            'RANK': '-',
+            'PLAYER': '-',
+            'headshot_url': transparent_placeholder,  # Transparent placeholder to maintain row height
+            'N': '-',
+            'DNP TEAMMATE': '-',
+            'AVG CONSENSUS LINE': '-',
+            'AVG PPG': '-',
+            'PPG OVER EXP': '-',
+            'OVER HIT %': '-',
+            'ppg_over_exp_value': 0,  # Neutral value for gradient
+            'cover_rate_value': 0.5    # Neutral value (50%) for gradient
+        }])
+        top_players = pd.concat([top_players, empty_row], ignore_index=True)
+    
+    while len(bottom_players) < max_len:
+        # Add empty row to bottom_players
+        empty_row = pd.DataFrame([{
+            'RANK': '-',
+            'PLAYER': '-',
+            'headshot_url': transparent_placeholder,  # Transparent placeholder to maintain row height
+            'N': '-',
+            'DNP TEAMMATE': '-',
+            'AVG CONSENSUS LINE': '-',
+            'AVG PPG': '-',
+            'PPG OVER EXP': '-',
+            'OVER HIT %': '-',
+            'ppg_over_exp_value': 0,  # Neutral value for gradient
+            'cover_rate_value': 0.5    # Neutral value (50%) for gradient
+        }])
+        bottom_players = pd.concat([bottom_players, empty_row], ignore_index=True)
+    
+    print(f"✅ Tables padded to same length: {max_len} rows each")
     print()
-    print(f"📊 Bottom {n} players:")
+    
+    print(f"📊 Top {n_top} players:")
+    print(f"   Best: {top_players.iloc[0]['PLAYER']} ({top_players.iloc[0]['PPG OVER EXP']})")
+    if n_top > 0 and top_players.iloc[n_top-1]['PLAYER'] != '-':
+        print(f"   {n_top}th: {top_players.iloc[n_top-1]['PLAYER']} ({top_players.iloc[n_top-1]['PPG OVER EXP']})")
+    print()
+    print(f"📊 Bottom {n_bottom} players:")
     print(f"   Worst: {bottom_players.iloc[0]['PLAYER']} ({bottom_players.iloc[0]['PPG OVER EXP']})")
-    print(f"   {n}th: {bottom_players.iloc[-1]['PLAYER']} ({bottom_players.iloc[-1]['PPG OVER EXP']})")
+    if n_bottom > 0 and bottom_players.iloc[n_bottom-1]['PLAYER'] != '-':
+        print(f"   {n_bottom}th: {bottom_players.iloc[n_bottom-1]['PLAYER']} ({bottom_players.iloc[n_bottom-1]['PPG OVER EXP']})")
     print()
     
     # Calculate dynamic gradient ranges based on the plotted data

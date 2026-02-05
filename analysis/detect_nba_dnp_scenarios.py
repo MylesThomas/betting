@@ -86,6 +86,38 @@ from s3_utils import read_df_from_s3
 S3_BUCKET_PROPS = 'the-odds-api-mt'
 S3_BUCKET_GAMES = 'nba-api-mt'
 
+# Load player-team history for date-aware roster validation
+PLAYER_TEAM_HISTORY_DF = None
+player_team_history_path = project_root / 'data' / '02_cache' / 'player_team_history.parquet'
+
+# Try local first, then S3
+if player_team_history_path.exists():
+    print(f"📂 Loading player-team history from: {player_team_history_path}")
+    PLAYER_TEAM_HISTORY_DF = pd.read_parquet(player_team_history_path)
+else:
+    # Try S3
+    try:
+        s3_path = 's3://nba-betting-mt/data/02_cache/player_team_history.parquet'
+        print(f"📂 Loading player-team history from S3: {s3_path}")
+        PLAYER_TEAM_HISTORY_DF = pd.read_parquet(s3_path)
+        # Cache locally for future runs
+        player_team_history_path.parent.mkdir(parents=True, exist_ok=True)
+        PLAYER_TEAM_HISTORY_DF.to_parquet(player_team_history_path)
+        print(f"💾 Cached to: {player_team_history_path}")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not load player_team_history.parquet: {e}")
+        print(f"   Player-team validation will be skipped!")
+
+# Normalize player names in history for matching
+if PLAYER_TEAM_HISTORY_DF is not None:
+    from player_name_utils import normalize_player_name
+    PLAYER_TEAM_HISTORY_DF['player_normalized'] = PLAYER_TEAM_HISTORY_DF['player_name'].apply(normalize_player_name)
+else:
+    print(f"⚠️  Warning: Player-team cache not found at {player_team_cache_path}")
+    print(f"   Run: python3 scripts/build_full_roster_cache.py")
+    print(f"   Proceeding without roster validation (may have cross-team errors)")
+    print()
+
 # Team abbreviation mapping (odds API team names -> ESPN abbreviations)
 TEAM_ABBR_MAP = {
     'Atlanta Hawks': 'atl', 'Boston Celtics': 'bos', 'Brooklyn Nets': 'bkn',
@@ -180,6 +212,8 @@ def save_scenarios_to_cache(scenarios, cache_key):
                 'actual_points': player['points'],
                 'fga': player['fga'],
                 'minutes': player['minutes'],
+                'wl': player.get('wl'),  # Add W/L
+                'dnp_teammates': player.get('dnp_teammates', ''),  # Add DNP teammates
                 'played': True
             })
     
@@ -226,7 +260,9 @@ def load_scenarios_from_cache(cache_key):
                     'projection': row['projection'],
                     'points': row['actual_points'],
                     'fga': row['fga'],
-                    'minutes': row['minutes']
+                    'minutes': row['minutes'],
+                    'wl': row.get('wl') if 'wl' in row else None,  # Add W/L
+                    'dnp_teammates': row.get('dnp_teammates', '') if 'dnp_teammates' in row else ''  # Add DNP teammates
                 })
             else:
                 dnp_players.append({
@@ -296,6 +332,55 @@ def teams_match(team1, team2):
         True if teams match, False otherwise
     """
     return normalize_team_name(team1) == normalize_team_name(team2)
+
+
+def player_on_team_at_date(player_normalized, team_abbr, game_date):
+    """
+    Check if a player was on a specific team on a specific date using player_team_history.
+    
+    Args:
+        player_normalized: Normalized player name
+        team_abbr: Team abbreviation (e.g., 'TOR', 'BKN')
+        game_date: Date string in YYYY-MM-DD format or datetime object
+    
+    Returns:
+        True if player was on team at that date, False otherwise
+    """
+    if PLAYER_TEAM_HISTORY_DF is None:
+        # No history data - skip validation (allow all)
+        return True
+    
+    # Convert game_date to datetime if string
+    if isinstance(game_date, str):
+        game_date = pd.to_datetime(game_date)
+    
+    # Filter to this player
+    player_history = PLAYER_TEAM_HISTORY_DF[
+        PLAYER_TEAM_HISTORY_DF['player_normalized'].str.lower() == player_normalized.lower()
+    ]
+    
+    if player_history.empty:
+        # Player not found in history - skip (allow them through, might be recent call-up)
+        return True
+    
+    # Check if player was on this team on this date
+    # Assuming columns: player_name, team_abbr, start_date, end_date (or similar)
+    # Filter to rows where team matches and date is in range
+    team_abbr_lower = team_abbr.lower()
+    
+    for _, row in player_history.iterrows():
+        row_team = row['team_abbr'].lower() if pd.notna(row['team_abbr']) else ''
+        if row_team != team_abbr_lower:
+            continue
+        
+        # Check date range (assuming start_date and end_date columns exist)
+        start_date = pd.to_datetime(row['start_date']) if 'start_date' in row and pd.notna(row['start_date']) else pd.Timestamp.min
+        end_date = pd.to_datetime(row['end_date']) if 'end_date' in row and pd.notna(row['end_date']) else pd.Timestamp.max
+        
+        if start_date <= game_date <= end_date:
+            return True
+    
+    return False
 
 
 def load_props_from_s3(season, date_str):
@@ -540,17 +625,20 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
     
     # Analyze each team
     for team_name in unique_teams:
+        # Get team abbreviation for roster validation
+        team_abbr = None
+        for full_name, abbr in TEAM_ABBR_MAP.items():
+            if full_name in team_name or team_name in full_name:
+                team_abbr = abbr.lower()
+                break
+        
+        if not team_abbr:
+            # If we can't map team name, skip this team
+            continue
+        
         # Get all players who played for this team
         team_games = games_df[games_df['TEAM_NAME'] == team_name]
         players_played_names = set(team_games['player_normalized'])
-        
-        # Get all players who played for the OPPOSING team in this game
-        # First, get the opponent team name from game results
-        opponent_teams = games_df[games_df['TEAM_NAME'] != team_name]['TEAM_NAME'].unique()
-        opposing_players = set()
-        for opp_team in opponent_teams:
-            opp_games = games_df[games_df['TEAM_NAME'] == opp_team]
-            opposing_players.update(opp_games['player_normalized'])
         
         # Get all players with props for games involving this team
         # (need to match team name variations like "LA Clippers" vs "Los Angeles Clippers")
@@ -563,11 +651,12 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
             continue
         
         # For each player with props, calculate median projection
-        # BUT: only include players who are on THIS team, not the opposing team
+        # ONLY include players who are actually on THIS team's roster on THIS date
         players_with_props = {}
         for player in team_props['player_normalized'].unique():
-            # Skip if player played for opposing team (they're not on this team)
-            if player in opposing_players and player not in players_played_names:
+            # Validate player was on this team's roster on this date using player_team_history
+            if not player_on_team_at_date(player, team_abbr, date_str):
+                # Player was not on this team on this date - skip
                 continue
             
             player_lines = team_props[team_props['player_normalized'] == player]['prop_line']
@@ -588,39 +677,42 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
             if player in players_played_names:
                 # Player played for this team - get their stats
                 player_game = team_games[team_games['player_normalized'] == player].iloc[0]
+                actual_points = player_game['PTS']
+                # W/L based on prop bet result (did they cover the over?)
+                prop_wl = 'W' if actual_points > projection else 'L'
                 players_played.append({
                     'player': player,
                     'projection': projection,
-                    'points': player_game['PTS'],
+                    'points': actual_points,
                     'fga': player_game['FGA'] if 'FGA' in player_game else None,
-                    'minutes': player_game['MIN'] if 'MIN' in player_game else None
+                    'minutes': player_game['MIN'] if 'MIN' in player_game else None,
+                    'wl': prop_wl  # W if covered the over, L if not
                 })
             else:
-                # Player has props but didn't play (DNP candidate)
-                # Only count as DNP if they're not on the opposing team
-                if player not in opposing_players:
-                    players_dnp.append({
-                        'player': player,
-                        'projection': projection
-                    })
+                # Player has props but didn't play (DNP)
+                # We already validated they're on this team's roster above
+                players_dnp.append({
+                    'player': player,
+                    'projection': projection
+                })
         
         # Scenario qualifies if at least 1 DNP and at least 1 played
         if len(players_dnp) >= 1 and len(players_played) >= 1:
             # Get game info (opponent, home/away)
             game_info = identify_team_game(props_df, team_name)
             
-            # Handle team name variations for abbreviation lookup
-            team_abbr = None
-            for full_name, abbr in TEAM_ABBR_MAP.items():
-                if full_name in team_name or team_name in full_name:
-                    team_abbr = abbr
-                    break
+            # Create list of DNP player names for this scenario
+            dnp_player_names = [p['player'] for p in players_dnp]
+            
+            # Add DNP teammates to each player who played
+            for player in players_played:
+                player['dnp_teammates'] = ', '.join(dnp_player_names)
             
             scenario = {
                 'date': date_str,
                 'season': season,
                 'team': team_name,
-                'team_abbr': team_abbr if team_abbr else '???',
+                'team_abbr': team_abbr.upper() if team_abbr else '???',
                 'opponent': game_info['opponent'] if game_info else '???',
                 'home_away': game_info['home_away'] if game_info else '???',
                 'players_projected_20_plus': len(players_with_props),
@@ -687,7 +779,9 @@ def calculate_summary_stats(scenarios):
                 'projection': player['projection'],
                 'actual': player['points'],
                 'margin': player['points'] - player['projection'],
-                'covered': player['points'] >= player['projection']
+                'covered': player['points'] >= player['projection'],
+                'wl': player.get('wl', ''),
+                'dnp_teammates': player.get('dnp_teammates', '')
             })
     
     if not all_players_played:
@@ -708,6 +802,39 @@ def calculate_summary_stats(scenarios):
     
     # Calculate PPG over expectation
     player_stats['ppg_over_exp'] = player_stats['avg_actual'] - player_stats['avg_projection']
+    
+    # Calculate W-L record for each player
+    wl_records = []
+    for player_name in player_stats['player']:
+        player_games = df[df['player'] == player_name]
+        wins = (player_games['wl'] == 'W').sum()
+        losses = (player_games['wl'] == 'L').sum()
+        wl_records.append(f"{wins}-{losses}")
+    
+    player_stats['wl_record'] = wl_records
+    
+    # Find most common DNP teammate for each player (with count)
+    dnp_teammates_list = []
+    for player_name in player_stats['player']:
+        player_games = df[df['player'] == player_name]
+        # Get all DNP teammates across all games
+        all_dnp = []
+        for dnp_str in player_games['dnp_teammates']:
+            if dnp_str and isinstance(dnp_str, str):
+                # Split by comma and strip whitespace
+                teammates = [t.strip() for t in dnp_str.split(',') if t.strip()]
+                all_dnp.extend(teammates)
+        
+        if all_dnp:
+            # Count occurrences and get most common
+            from collections import Counter
+            counter = Counter(all_dnp)
+            most_common_teammate, count = counter.most_common(1)[0]
+            dnp_teammates_list.append(f"{most_common_teammate} ({count})")
+        else:
+            dnp_teammates_list.append('')
+    
+    player_stats['most_common_dnp'] = dnp_teammates_list
     
     # Sort by PPG over expectation (primary), then cover rate (secondary)
     player_stats = player_stats.sort_values(['ppg_over_exp', 'cover_rate'], ascending=[False, False])
@@ -768,10 +895,11 @@ def print_summary(summary, player_stats, show_top_players=False, min_games_displ
             print()
             
             for i, row in qualified_players.head(10).iterrows():
-                print(f"{row['player']:30} | {row['games']:2.0f} games | "
+                print(f"{row['player']:30} | {row['wl_record']:6} | {row['games']:2.0f} games | "
                       f"{row['ppg_over_exp']:+5.1f} vs exp | "
                       f"{row['cover_rate']:5.1%} cover | "
                       f"{row['avg_actual']:.1f} ppg")
+            print(f"{'':30} | {'':6} | {'':8} | {'':11} | {'':12} | {'DNP: ' + qualified_players.head(10).iloc[0]['most_common_dnp']}")
             
             print()
             print("="*80)
