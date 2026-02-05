@@ -1,289 +1,253 @@
 """
-Generic Championship Futures Analysis
+Championship Futures Analysis - S3-Driven
 
-Analyzes championship futures for NFL, NBA, NCAAF, or NCAAB.
+Reads all data from S3 CSV files (no config updates needed).
 
 Usage:
-    python3 analysis/analyze_futures.py --sport nfl
-    python3 analysis/analyze_futures.py --sport nba
-    python3 analysis/analyze_futures.py --sport ncaaf
-    python3 analysis/analyze_futures.py --sport ncaab
+    python3 analysis/analyze_futures.py \
+        --sport nba \
+        --top-n 20 \
+        --preseason s3://the-odds-api-mt/nba/futures/preseason_2024-25.csv \
+        --last-week s3://the-odds-api-mt/nba/futures/2026-01-27/nba_championship_futures_20260127_175837.csv \
+        --this-week s3://the-odds-api-mt/nba/futures/2026-02-04/nba_championship_futures_20260204_163703.csv
 
-Outputs:
+Output:
     - data/04_output/{sport}/{sport}_championship_fair_odds.csv
-    - data/04_output/{sport}/{sport}_championship_metadata.csv
+    - Uploads to S3
 """
 
 import sys
 import argparse
 import pandas as pd
 import yaml
+import boto3
+from io import StringIO
 from pathlib import Path
 
 # Add src to path
 repo_root = Path(__file__).parent.parent
 sys.path.insert(0, str(repo_root / 'src'))
 
-from futures_analysis import (
-    get_most_recent_futures_file,
-    calculate_vig_by_bookmaker,
-    calculate_fair_probabilities,
-    calculate_team_averages,
-    save_analysis_outputs
-)
-from odds_utils import odds_to_implied_probability
-import numpy as np
+from odds_utils import odds_to_implied_probability, probability_to_american_odds
 
 
-def load_configs():
+def load_config():
     """Load futures config."""
-    futures_config_path = repo_root / 'config' / 'futures_config.yaml'
+    config_path = repo_root / 'config' / 'futures_config.yaml'
+    with open(config_path) as f:
+        return yaml.safe_load(f)
+
+
+def parse_s3_path(s3_path):
+    """Parse S3 path into bucket and key."""
+    if not s3_path.startswith('s3://'):
+        raise ValueError(f"Invalid S3 path: {s3_path}")
     
-    with open(futures_config_path) as f:
-        futures_config = yaml.safe_load(f)
+    path = s3_path[5:]  # Remove 's3://'
+    bucket, key = path.split('/', 1)
+    return bucket, key
+
+
+def load_csv_from_s3(s3_path):
+    """Load CSV from S3 path."""
+    bucket, key = parse_s3_path(s3_path)
     
-    return futures_config
+    s3_client = boto3.client('s3')
+    response = s3_client.get_object(Bucket=bucket, Key=key)
+    csv_string = response['Body'].read().decode('utf-8')
+    
+    return pd.read_csv(StringIO(csv_string))
+
+
+def get_median_odds_per_team(df):
+    """
+    Get median odds per team (most representative of market).
+    
+    Returns dict: {team: median_odds}
+    """
+    # Group by team and get median odds
+    median_odds = df.groupby('team')['odds'].median().to_dict()
+    return median_odds
+
+
+def build_analysis_dataframe(preseason_df, last_week_df, current_df):
+    """
+    Build analysis dataframe from three S3 CSVs.
+    
+    Args:
+        preseason_df: DataFrame from preseason S3 CSV
+        last_week_df: DataFrame from last week's S3 CSV
+        current_df: DataFrame from current week's S3 CSV
+    
+    Returns:
+        DataFrame with all calculated fields
+    """
+    # Get median odds per team for each timepoint
+    preseason_median = get_median_odds_per_team(preseason_df)
+    last_week_median = get_median_odds_per_team(last_week_df)
+    current_median = get_median_odds_per_team(current_df)
+    
+    # Get current records per team (take first record for each team since it's the same across bookmakers)
+    # Fill NaN with "NA" for teams not in ESPN API data
+    current_records = current_df.groupby('team')['record'].first().fillna("NA").to_dict()
+    
+    # Get all unique teams
+    all_teams = set()
+    all_teams.update(preseason_median.keys())
+    all_teams.update(last_week_median.keys())
+    all_teams.update(current_median.keys())
+    
+    # Build rows
+    rows = []
+    for team in all_teams:
+        # Preseason
+        preseason = preseason_median.get(team)
+        preseason_implied = odds_to_implied_probability(preseason) if preseason else None
+        
+        # Last week
+        last_week = last_week_median.get(team)
+        last_week_implied = odds_to_implied_probability(last_week) if last_week else None
+        
+        # Current (median odds)
+        current = current_median.get(team)
+        current_implied = odds_to_implied_probability(current) if current else None
+        
+        # Current record
+        record = current_records.get(team, '-')
+        
+        rows.append({
+            'team': team,
+            'record': record,
+            'preseason_odds': preseason,
+            'preseason_implied_prob': preseason_implied,
+            'last_week_odds': last_week,
+            'last_week_implied_prob': last_week_implied,
+            'current_odds': current,
+            'current_implied_prob': current_implied,
+        })
+    
+    df = pd.DataFrame(rows)
+    
+    # Calculate fair probabilities (normalize current to sum to 100%)
+    total_implied = df['current_implied_prob'].sum()
+    df['fair_prob'] = df['current_implied_prob'] / total_implied
+    df['fair_odds'] = df['fair_prob'].apply(
+        lambda p: probability_to_american_odds(p * 100) if pd.notna(p) else None
+    )
+    
+    # Calculate vig (difference between implied and fair)
+    df['vig_pct'] = (df['current_implied_prob'] - df['fair_prob']) * 100
+    
+    # Calculate differences (in percentage points)
+    # Treat missing historical data as 0% implied probability (not on the board = 0%)
+    df['diff_preseason'] = (
+        df['current_implied_prob'] - df['preseason_implied_prob'].fillna(0)
+    ) * 100
+    df['diff_last_week'] = (
+        df['current_implied_prob'] - df['last_week_implied_prob'].fillna(0)
+    ) * 100
+    
+    # Sort by fair probability (best teams first)
+    df = df.sort_values('fair_prob', ascending=False, na_position='last').reset_index(drop=True)
+    
+    return df
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Analyze championship futures for NFL, NBA, NCAAF, or NCAAB'
-    )
-    parser.add_argument(
-        '--sport',
-        type=str,
-        required=True,
-        choices=['nfl', 'nba', 'ncaaf', 'ncaab'],
-        help='Sport to analyze (nfl, nba, ncaaf, ncaab)'
-    )
-    parser.add_argument(
-        '--top-n',
-        type=int,
-        default=99999,
-        help='Limit analysis to top N teams by fair probability (default: all teams)'
-    )
+    parser = argparse.ArgumentParser(description='Analyze futures from S3 CSVs')
+    parser.add_argument('--sport', type=str, required=True, choices=['nfl', 'nba', 'ncaaf', 'ncaab'])
+    parser.add_argument('--top-n', type=int, default=99999, help='Limit to top N teams')
+    parser.add_argument('--preseason', type=str, required=True, help='S3 path to preseason CSV')
+    parser.add_argument('--last-week', type=str, required=True, help='S3 path to last week CSV')
+    parser.add_argument('--this-week', type=str, required=True, help='S3 path to current week CSV')
     args = parser.parse_args()
     
-    sport = args.sport.lower()
-    
-    # Load configs
-    futures_config = load_configs()
-    sport_config = futures_config['sports'][sport]
+    # Load config (for display settings only)
+    config = load_config()
+    sport_config = config['sports'][args.sport]
     
     # Print header
     emoji = sport_config['emoji']
     display_name = sport_config['display_name']
     print("=" * 80)
-    print(f"{emoji} {display_name.upper()} CHAMPIONSHIP FUTURES VIG ANALYSIS")
+    print(f"{emoji} {display_name.upper()} CHAMPIONSHIP FUTURES ANALYSIS (S3-DRIVEN)")
     print("=" * 80 + "\n")
     
-    # Get most recent futures file
-    input_dir = repo_root / sport_config['input_dir']
-    file_prefix = sport_config['file_prefix']
-    s3_bucket_base = futures_config.get('s3_bucket_base')
+    # Load CSV files from S3
+    print(f"📥 Loading data from S3...")
+    print(f"   Preseason: {args.preseason}")
+    preseason_df = load_csv_from_s3(args.preseason)
     
-    try:
-        futures_file = get_most_recent_futures_file(input_dir, file_prefix, s3_bucket=s3_bucket_base)
-        print(f"📁 Reading: {futures_file.name}\n")
-    except FileNotFoundError as e:
-        print(f"❌ Error: {e}")
-        print(f"\n💡 Tip: Run fetch script first:")
-        print(f"   python3 scripts/fetch_championship_futures.py")
-        sys.exit(1)
+    print(f"   Last Week: {args.last_week}")
+    last_week_df = load_csv_from_s3(args.last_week)
     
-    # Read CSV
-    df = pd.read_csv(futures_file)
+    print(f"   This Week: {args.this_week}")
+    current_df = load_csv_from_s3(args.this_week)
+    print(f"   ✅ Loaded\n")
     
-    print(f"📊 Total odds entries: {len(df)}")
-    print(f"{emoji} Unique teams: {df['team'].nunique()}")
-    print(f"📚 Bookmakers: {df['bookmaker'].nunique()}")
-    print(f"   {', '.join(df['bookmaker'].unique())}\n")
+    # Build analysis dataframe
+    df = build_analysis_dataframe(preseason_df, last_week_df, current_df)
     
-    # Calculate vig by bookmaker
-    print("=" * 80)
-    print("VIG BY BOOKMAKER")
-    print("=" * 80 + "\n")
-    
-    vig_df = calculate_vig_by_bookmaker(df)
-    
-    print(f"{'Bookmaker':<20} {'Teams':<8} {'Total Implied':<15} {'Vig %':<10}")
-    print("-" * 80)
-    for _, row in vig_df.iterrows():
-        print(f"{row['bookmaker']:<20} {row['num_teams']:<8} "
-              f"{row['total_implied_prob']:>6.4f} ({row['total_implied_prob']*100:>6.2f}%)  "
-              f"{row['vig_pct']:>6.2f}%")
-    
-    avg_vig = vig_df['vig_pct'].mean()
-    print("-" * 80)
-    print(f"{'AVERAGE VIG':<20} {'':<8} {'':<15} {avg_vig:>6.2f}%\n")
-    
-    # Show fair probabilities for best bookmaker
-    best_bookmaker = vig_df.iloc[-1]['bookmaker']
-    
-    print("=" * 80)
-    print(f"FAIR PROBABILITIES (VIG REMOVED) - {best_bookmaker.upper()}")
-    print("=" * 80 + "\n")
-    
-    fair_df = calculate_fair_probabilities(df, best_bookmaker)
-    
-    print(f"{'Rank':<6} {'Team':<40} {'Odds':<10} {'Implied %':<12} {'Fair %':<12}")
-    print("-" * 80)
-    for i, (idx, row) in enumerate(fair_df.head(20).iterrows(), 1):
-        odds_str = f"{row['odds']:+.0f}" if row['odds'] > 0 else f"{row['odds']:.0f}"
-        print(f"{i:<6} {row['team']:<40} {odds_str:<10} "
-              f"{row['implied_prob']*100:>6.2f}%      {row['fair_prob']*100:>6.2f}%")
-    
-    # Key insights
-    print("\n" + "=" * 80)
-    print("KEY INSIGHTS")
-    print("=" * 80)
-    print(f"\n1. Average vig across all bookmakers: {avg_vig:.2f}%")
-    print(f"2. Bookmaker with best (lowest) vig: {best_bookmaker} ({vig_df.iloc[-1]['vig_pct']:.2f}%)")
-    print(f"3. Bookmaker with worst (highest) vig: {vig_df.iloc[0]['bookmaker']} ({vig_df.iloc[0]['vig_pct']:.2f}%)")
-    print(f"\n💡 For comparison:")
-    print(f"   - Game lines (spread/total): ~4-5% vig")
-    print(f"   - Futures markets: {avg_vig:.1f}% vig")
-    print(f"   - Futures markets have {avg_vig/4.5:.1f}x more vig than game lines!")
-    print(f"\n📉 What this means:")
-    print(f"   If all teams had equal odds, sportsbooks would win {avg_vig:.1f}% of all bets")
-    print(f"   To break even, bettors need to be {avg_vig:.1f}% better than 'fair' odds")
-    
-    # Calculate team averages
-    print("\n" + "=" * 80)
-    print("AVERAGE ODDS ACROSS ALL BOOKMAKERS")
-    print("=" * 80 + "\n")
-    
-    # Calculate implied probability for each entry
-    df['implied_prob'] = df['odds'].apply(odds_to_implied_probability)
-    
-    team_avg = calculate_team_averages(df)
-    
-    # Add historical odds if configured
-    print("\n" + "=" * 80)
-    print("HISTORICAL ODDS (PRESEASON & LAST WEEK)")
-    print("=" * 80 + "\n")
-    
-    historical_config = sport_config.get('historical_odds')
-    if historical_config:
-        # Preseason odds
-        preseason_config = historical_config.get('preseason', {})
-        if preseason_config and preseason_config.get('odds'):
-            preseason_date = preseason_config.get('date', 'Unknown')
-            preseason_label = preseason_config.get('label', 'Preseason')
-            preseason_odds_dict = preseason_config['odds']
-            
-            # Map preseason odds to teams
-            team_avg['season_start_odds'] = team_avg['team'].map(preseason_odds_dict)
-            team_avg['season_start_date'] = preseason_date
-            team_avg['season_start_label'] = preseason_label
-            
-            matched_count = team_avg['season_start_odds'].notna().sum()
-            print(f"   📅 {preseason_label} ({preseason_date}): {matched_count}/{len(team_avg)} teams matched")
-        else:
-            print("   ⚠️  No preseason odds configured")
-            team_avg['season_start_odds'] = np.nan
-            team_avg['season_start_date'] = None
-            team_avg['season_start_label'] = None
-        
-        # Last week odds
-        last_week_config = historical_config.get('last_week', {})
-        if last_week_config and last_week_config.get('odds'):
-            last_week_date = last_week_config.get('date', 'Unknown')
-            last_week_label = last_week_config.get('label', 'Last Week')
-            last_week_odds_dict = last_week_config['odds']
-            
-            # Map last week odds to teams
-            team_avg['last_week_odds'] = team_avg['team'].map(last_week_odds_dict)
-            team_avg['last_week_date'] = last_week_date
-            team_avg['last_week_label'] = last_week_label
-            
-            matched_count = team_avg['last_week_odds'].notna().sum()
-            print(f"   📅 {last_week_label} ({last_week_date}): {matched_count}/{len(team_avg)} teams matched")
-        else:
-            print("   ⚠️  No last week odds configured")
-            team_avg['last_week_odds'] = np.nan
-            team_avg['last_week_date'] = None
-            team_avg['last_week_label'] = None
-        
-        print()
-    else:
-        print("   ℹ️  No historical odds configured for this sport\n")
-        team_avg['season_start_odds'] = np.nan
-        team_avg['season_start_date'] = None
-        team_avg['season_start_label'] = None
-        team_avg['last_week_odds'] = np.nan
-        team_avg['last_week_date'] = None
-        team_avg['last_week_label'] = None
-    
-    # Apply top-n filter if specified
-    total_teams = len(team_avg)
+    # Apply top-n filter
+    total_teams = len(df)
     if args.top_n < total_teams:
-        print(f"\n⚠️  Filtering to top {args.top_n} teams by fair probability")
-        team_avg = team_avg.head(args.top_n)
-        print(f"   Showing {len(team_avg)} of {total_teams} teams\n")
-    else:
-        print()
+        df = df.head(args.top_n)
+        print(f"📊 Showing top {args.top_n} of {total_teams} teams\n")
     
-    print(f"{'Rank':<6} {'Team':<40} {'Record':<10} {'Best Book':<12} {'Best Odds':<12} "
-          f"{'Implied %':<12} {'Fair Odds':<12} {'Fair %':<10}")
-    print("-" * 130)
+    # Print summary
+    print("Data Sources:")
+    print(f"  Preseason: {args.preseason}")
+    print(f"  Last Week: {args.last_week}")
+    print(f"  This Week: {args.this_week}")
+    print(f"\nTeams analyzed: {len(df)}")
+    print(f"Average vig: {df['vig_pct'].mean():.1f}%\n")
     
-    for i, (idx, row) in enumerate(team_avg.iterrows(), 1):
-        best_odds_str = f"{row['best_odds']:+.0f}" if row['best_odds'] > 0 else f"{row['best_odds']:.0f}"
-        fair_odds_str = f"{row['fair_odds']:+.0f}" if row['fair_odds'] > 0 else f"{row['fair_odds']:.0f}"
-        implied_str = f"{row['implied_prob_avg']*100:>5.2f}%"
-        fair_str = f"{row['fair_prob']*100:>5.2f}%"
+    # Print table
+    print("=" * 140)
+    print(f"{'Rank':<5} {'Team':<35} {'Current':<10} {'Implied%':<10} {'Fair%':<10} {'Vig%':<8} {'Δ Pre':<10} {'Δ LW':<10}")
+    print("=" * 140)
+    
+    for i, row in df.iterrows():
+        current_str = f"{int(row['current_odds']):+d}" if pd.notna(row['current_odds']) else "-"
+        implied_str = f"{row['current_implied_prob']*100:.1f}%" if pd.notna(row['current_implied_prob']) else "-"
+        fair_str = f"{row['fair_prob']*100:.1f}%" if pd.notna(row['fair_prob']) else "-"
+        vig_str = f"{row['vig_pct']:.1f}%" if pd.notna(row['vig_pct']) else "-"
+        diff_pre_str = f"{row['diff_preseason']:+.1f}pp" if pd.notna(row['diff_preseason']) else "-"
+        diff_lw_str = f"{row['diff_last_week']:+.1f}pp" if pd.notna(row['diff_last_week']) else "-"
         
-        print(f"{i:<6} {row['team']:<40} "
-              f"{row['record']:<10} "
-              f"{row['best_book']:<12} "
-              f"{best_odds_str:<12} "
-              f"{implied_str:<12} "
-              f"{fair_odds_str:<12} "
-              f"{fair_str:<10}")
+        print(f"{i+1:<5} {row['team']:<35} {current_str:<10} {implied_str:<10} {fair_str:<10} {vig_str:<8} {diff_pre_str:<10} {diff_lw_str:<10}")
     
-    print("-" * 130)
-    print(f"{'TOTAL':<6} {'':<40} {'':<10} {'':<12} {'':<12} "
-          f"{team_avg['implied_prob_avg'].sum()*100:>5.2f}%      {'':<12} 100.00%")
+    print("=" * 140)
     
-    # Line shopping opportunities
-    print("\n" + "=" * 80)
-    print("BIGGEST LINE SHOPPING OPPORTUNITIES")
-    print("=" * 80 + "\n")
-    
-    top_shopping = team_avg.nlargest(5, 'shopping_spread_pct')
-    
-    print(f"{'Rank':<6} {'Team':<40} {'Best Book':<12} {'Best Odds':<12} {'Spread':<10}")
-    print("-" * 90)
-    
-    for i, (idx, row) in enumerate(top_shopping.iterrows(), 1):
-        best_odds_str = f"{row['best_odds']:+.0f}" if row['best_odds'] > 0 else f"{row['best_odds']:.0f}"
-        print(f"{i:<6} {row['team']:<40} {row['best_book']:<12} "
-              f"{best_odds_str:<12} {row['shopping_spread_pct']:>5.2f}%")
-    
-    print("-" * 90)
-    print("\n💡 Shopping tip: The 'Spread' shows how much difference there is between")
-    print("   the best and worst odds. Bigger spread = more important to shop around!")
-    
-    # Save outputs
+    # Save output
     output_dir = repo_root / sport_config['output_dir']
     output_prefix = sport_config['output_prefix']
+    output_file = output_dir / f'{output_prefix}_fair_odds.csv'
     
-    # Get save settings from config
-    save_locally = futures_config.get('save_locally', False)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_file, index=False)
+    
+    print(f"\n💾 Saved to: {output_file}")
+    
+    # Upload to S3 if configured
     s3_bucket = sport_config.get('s3_output_bucket')
     s3_path = sport_config.get('s3_analysis_path')
     
-    team_avg_file, metadata_file = save_analysis_outputs(
-        team_avg, vig_df, output_dir, output_prefix,
-        save_locally=save_locally,
-        s3_bucket=s3_bucket,
-        s3_path=s3_path
-    )
-    
-    if save_locally:
-        print(f"\n💾 Saved team averages to: {team_avg_file}")
-        print(f"💾 Saved metadata to: {metadata_file}")
+    if s3_bucket and s3_path:
+        try:
+            s3_client = boto3.client('s3')
+            
+            s3_key = f"{s3_path}/{output_prefix}_fair_odds.csv"
+            csv_data = df.to_csv(index=False)
+            s3_client.put_object(
+                Bucket=s3_bucket,
+                Key=s3_key,
+                Body=csv_data,
+                ContentType='text/csv'
+            )
+            print(f"☁️  Uploaded to s3://{s3_bucket}/{s3_key}")
+        except Exception as e:
+            print(f"⚠️  S3 upload failed: {e}")
 
 
 if __name__ == '__main__':
