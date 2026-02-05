@@ -131,8 +131,8 @@ def create_futures_table(
         df_display['preseason_odds_str'].ne('-').any()
     )
     
-    # Generate subtitle with calculated vig
-    subtitle = f"Bookmakers charge an *average {average_vig_pct:.1f}% vig* on championship futures (vs. 4-5% on game lines)"
+    # Generate subtitle with market vig
+    subtitle = f"Bookmakers charge a *{average_vig_pct:.1f}% market vig* on championship futures (vs. 4-5% on game lines)"
     
     # Generate footer notes
     # Note: total_teams = count of teams with odds (before any top_n filtering)
@@ -314,6 +314,12 @@ def create_futures_table(
         decimals = 1,
         pattern = "{{{{x}}}}pp",
         force_sign = TRUE
+      ) %>%
+      
+      # Replace missing values with "-"
+      sub_missing(
+        columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
+        missing_text = "-"
       ) %>%
       
       # Format Vig % column
