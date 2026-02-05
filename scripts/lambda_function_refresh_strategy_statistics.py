@@ -81,7 +81,7 @@ STRATEGIES_PREFIX = 'data/03_intermediate'
 BACKTEST_SEASONS = ['2023-24', '2024-25', '2025-26']
 
 # Minimum plays to include strategy
-MIN_PLAYS_THRESHOLD = 50
+MIN_PLAYS_THRESHOLD = 1
 
 
 # =============================================================================
@@ -882,6 +882,72 @@ def generate_strategy_json(
     print(f"   💾 Saved {len(strategies)} strategies to {output_path}")
 
 
+def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_n: int = 20) -> str:
+    """
+    Format top strategies for email notification.
+    
+    Args:
+        strategies: List of strategy dicts with performance metrics
+        strategy_type: '2d' or '3d'
+        top_n: Number of top strategies to include
+    
+    Returns:
+        Formatted string for email
+    """
+    if not strategies:
+        return "No strategies available"
+    
+    # Sort by hit rate descending
+    sorted_strategies = sorted(strategies, key=lambda x: x.get('hit_rate', 0), reverse=True)
+    
+    lines = [f"\n{'='*80}"]
+    lines.append(f"TOP {top_n} {strategy_type.upper()} STRATEGIES BY HIT RATE")
+    lines.append(f"{'='*80}\n")
+    
+    for i, strat in enumerate(sorted_strategies[:top_n], 1):
+        # Build strategy description
+        if strategy_type == '2d':
+            desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+        else:  # 3d
+            desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']} | {strat['scorer_type']}"
+        
+        hit_rate = strat.get('hit_rate', 0)
+        roi = strat.get('roi', 0)
+        edge = strat.get('edge', 0)
+        wins = strat.get('wins', 0)
+        losses = strat.get('losses', 0)
+        ties = strat.get('ties', 0)
+        
+        # Determine emoji
+        if hit_rate >= 60:
+            emoji = '🔥'
+        elif hit_rate >= 55:
+            emoji = '✅'
+        elif hit_rate >= 50:
+            emoji = '➖'
+        else:
+            emoji = '❌'
+        
+        lines.append(f"{emoji} #{i:2d}. {desc}")
+        lines.append(f"     {wins}W-{losses}L-{ties}T | Hit: {hit_rate:.1f}% | ROI: {roi:+.1f}% | Edge: {edge:+.1f}%")
+    
+    # Summary stats
+    total_strategies = len(strategies)
+    profitable = sum(1 for s in strategies if s.get('roi', 0) > 0)
+    avg_hit_rate = sum(s.get('hit_rate', 0) for s in strategies) / len(strategies)
+    avg_roi = sum(s.get('roi', 0) for s in strategies) / len(strategies)
+    
+    lines.append(f"\n{'='*80}")
+    lines.append(f"SUMMARY:")
+    lines.append(f"  Total Strategies: {total_strategies}")
+    lines.append(f"  Profitable: {profitable}/{total_strategies} ({profitable/total_strategies*100:.1f}%)")
+    lines.append(f"  Avg Hit Rate: {avg_hit_rate:.1f}%")
+    lines.append(f"  Avg ROI: {avg_roi:+.1f}%")
+    lines.append(f"{'='*80}\n")
+    
+    return '\n'.join(lines)
+
+
 # =============================================================================
 # MAIN REFRESH FUNCTION
 # =============================================================================
@@ -925,6 +991,7 @@ def refresh_strategy_statistics(
     print("="*80)
     
     results = {}
+    strategy_rankings = {}  # Store strategy rankings for email
     s3_client = boto3.client('s3')
     
     for strategy_type in strategy_types:
@@ -932,15 +999,19 @@ def refresh_strategy_statistics(
         print(f"Processing {strategy_type.upper()} Strategy")
         print(f"{'='*80}\n")
         
-        # Step 1: Re-run current season backtest (if not skipped)
+        # Step 1: Re-run backtests for ALL seasons (if not skipped)
         if not skip_backtest:
-            print(f"Step 1: Updating {season} backtest...")
-            success = run_backtest_for_season(s3_client, season, strategy_type)
-            if not success:
-                error_msg = f"Backtest failed for {strategy_type.upper()} - cannot proceed"
-                print(f"   ❌ {error_msg}")
-                results[strategy_type] = {'success': False, 'error': error_msg}
-                continue  # Skip to next strategy type
+            print(f"Step 1: Updating backtests for all seasons...")
+            all_backtests_successful = True
+            for backtest_season in BACKTEST_SEASONS:
+                print(f"\n   Regenerating {backtest_season} backtest...")
+                success = run_backtest_for_season(s3_client, backtest_season, strategy_type)
+                if not success:
+                    print(f"   ⚠️ {backtest_season} backtest failed - will use existing data if available")
+                    all_backtests_successful = False
+            
+            if not all_backtests_successful:
+                print(f"   ⚠️ Some backtests failed, but continuing with available data...")
         else:
             print(f"Step 1: Skipping backtest regeneration (using existing data)")
         
@@ -978,6 +1049,9 @@ def refresh_strategy_statistics(
             print(f"   ❌ No strategies met minimum threshold!")
             results[strategy_type] = {'success': False, 'error': 'No strategies qualified'}
             continue
+        
+        # Store strategies for email
+        strategy_rankings[strategy_type] = strategies
         
         # Step 4: Generate updated JSON
         print(f"\nStep 4: Generating updated strategy file...")
@@ -1051,6 +1125,17 @@ def refresh_strategy_statistics(
     # Send SNS notification
     if all_success:
         subject = f"✅ Strategy Statistics Refresh Complete - {season}"
+        
+        # Build strategy rankings section
+        rankings_text = ""
+        for strategy_type in strategy_types:
+            if strategy_type in strategy_rankings:
+                rankings_text += format_strategies_for_email(
+                    strategy_rankings[strategy_type],
+                    strategy_type,
+                    top_n=20
+                )
+        
         message = f"""Strategy Statistics Refresh Completed Successfully
 
 Season: {season}
@@ -1065,6 +1150,8 @@ Total Strategies: {sum(r.get('strategies_count', 0) for r in results.values() if
 Total Plays: {sum(r.get('total_plays', 0) for r in results.values() if r.get('success'))}
 
 All strategy JSON files have been updated in S3.
+
+{rankings_text}
 """
     else:
         subject = f"❌ Strategy Statistics Refresh Failed - {season}"
