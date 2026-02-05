@@ -8,8 +8,24 @@ This project uses `uv` for fast package management with Python 3.13. See [SETUP.
 
 **Quick start:**
 ```bash
-source .venv/bin/activate  # Activate virtual environment
+# 1. Install/update dependencies (creates/updates .venv)
+uv sync
+
+# 2. Activate the virtual environment
+source .venv/bin/activate
 ```
+
+### Troubleshooting
+
+**TLS Certificate Error with `uv sync`:**
+
+If you encounter an "invalid peer certificate: UnknownIssuer" error when running `uv sync`, use the `--native-tls` flag:
+
+```bash
+uv sync --native-tls
+```
+
+This issue typically occurs on corporate networks or systems with custom certificate authorities. The flag enables use of system TLS certificates instead of the bundled certificates.
 
 ## Project Structure
 
