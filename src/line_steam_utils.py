@@ -694,16 +694,50 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
             team = play['play_team']
             spread = play['play_spread']
             is_current = play.get('is_current', False)
-            marker = " (CURRENT)" if is_current else ""
-            print(f"- {team} {spread:+.1f}{marker}")
+            steam_type = " (STEAM UNDERDOG)"
+            
+            if is_current:
+                status_marker = " (CURRENT)"
+            else:
+                # Show peak magnitude and time for non-current plays
+                peak_mag = play['steam_magnitude']
+                detected_at = pd.to_datetime(play['detected_at']) if 'detected_at' in play else None
+                if detected_at is not None:
+                    if detected_at.tz is None:
+                        detected_at = detected_at.tz_localize('America/New_York')
+                    else:
+                        detected_at = detected_at.tz_convert('America/New_York')
+                    time_str = detected_at.strftime('%I:%M%p').lstrip('0').lower()
+                    status_marker = f" (PEAK: {peak_mag:.1f} pts @ {time_str})"
+                else:
+                    status_marker = f" (PEAK: {peak_mag:.1f} pts)"
+            
+            print(f"- {team} {spread:+.1f}{steam_type}{status_marker}")
         
         if 'opening_favorite' in directions_seen:
             play = directions_seen['opening_favorite']
             team = play['play_team']
             spread = play['play_spread']
             is_current = play.get('is_current', False)
-            marker = " (CURRENT)" if is_current else ""
-            print(f"- {team} {spread:+.1f}{marker}")
+            steam_type = " (STEAM FAVORITE)"
+            
+            if is_current:
+                status_marker = " (CURRENT)"
+            else:
+                # Show peak magnitude and time for non-current plays
+                peak_mag = play['steam_magnitude']
+                detected_at = pd.to_datetime(play['detected_at']) if 'detected_at' in play else None
+                if detected_at is not None:
+                    if detected_at.tz is None:
+                        detected_at = detected_at.tz_localize('America/New_York')
+                    else:
+                        detected_at = detected_at.tz_convert('America/New_York')
+                    time_str = detected_at.strftime('%I:%M%p').lstrip('0').lower()
+                    status_marker = f" (PEAK: {peak_mag:.1f} pts @ {time_str})"
+                else:
+                    status_marker = f" (PEAK: {peak_mag:.1f} pts)"
+            
+            print(f"- {team} {spread:+.1f}{steam_type}{status_marker}")
         
         print()
     
