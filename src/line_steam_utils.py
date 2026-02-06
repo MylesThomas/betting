@@ -708,9 +708,9 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
                     else:
                         detected_at = detected_at.tz_convert('America/New_York')
                     time_str = detected_at.strftime('%I:%M%p').lstrip('0').lower()
-                    status_marker = f" (PEAK: {peak_mag:.1f} pts @ {time_str})"
+                    status_marker = f" (PEAK UNDERDOG STEAM: {peak_mag:.1f} pts @ {time_str})"
                 else:
-                    status_marker = f" (PEAK: {peak_mag:.1f} pts)"
+                    status_marker = f" (PEAK UNDERDOG STEAM: {peak_mag:.1f} pts)"
             
             print(f"- {team} {spread:+.1f}{steam_type}{status_marker}")
         
@@ -733,9 +733,9 @@ def check_for_steam(movements_df, target_date_str, threshold, sport_name="", spo
                     else:
                         detected_at = detected_at.tz_convert('America/New_York')
                     time_str = detected_at.strftime('%I:%M%p').lstrip('0').lower()
-                    status_marker = f" (PEAK: {peak_mag:.1f} pts @ {time_str})"
+                    status_marker = f" (PEAK FAVORITE STEAM: {peak_mag:.1f} pts @ {time_str})"
                 else:
-                    status_marker = f" (PEAK: {peak_mag:.1f} pts)"
+                    status_marker = f" (PEAK FAVORITE STEAM: {peak_mag:.1f} pts)"
             
             print(f"- {team} {spread:+.1f}{steam_type}{status_marker}")
         
