@@ -10,6 +10,7 @@ This project uses `uv` for fast package management with Python 3.13. See [SETUP.
 ```bash
 # 1. Install/update dependencies (creates/updates .venv)
 uv sync
+uv sync --native-tls
 
 # 2. Activate the virtual environment
 source .venv/bin/activate
