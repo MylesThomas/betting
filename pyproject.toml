@@ -29,6 +29,8 @@ dependencies = [
     
     # Visualization
     "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "plotly>=5.18.0",
     
     # Streamlit (for dashboard)
     "streamlit>=1.28.0",
