@@ -85,37 +85,22 @@ from s3_utils import read_df_from_s3
 
 S3_BUCKET_PROPS = 'the-odds-api-mt'
 S3_BUCKET_GAMES = 'nba-api-mt'
+S3_PLAYER_TEAM_HISTORY = 's3://nba-betting-mt/nba/player_team_history/history.parquet'
 
 # Load player-team history for date-aware roster validation
 PLAYER_TEAM_HISTORY_DF = None
-player_team_history_path = project_root / 'data' / '02_cache' / 'player_team_history.parquet'
 
-# Try local first, then S3
-if player_team_history_path.exists():
-    print(f"📂 Loading player-team history from: {player_team_history_path}")
-    PLAYER_TEAM_HISTORY_DF = pd.read_parquet(player_team_history_path)
-else:
-    # Try S3
-    try:
-        s3_path = 's3://nba-betting-mt/data/02_cache/player_team_history.parquet'
-        print(f"📂 Loading player-team history from S3: {s3_path}")
-        PLAYER_TEAM_HISTORY_DF = pd.read_parquet(s3_path)
-        # Cache locally for future runs
-        player_team_history_path.parent.mkdir(parents=True, exist_ok=True)
-        PLAYER_TEAM_HISTORY_DF.to_parquet(player_team_history_path)
-        print(f"💾 Cached to: {player_team_history_path}")
-    except Exception as e:
-        print(f"⚠️  Warning: Could not load player_team_history.parquet: {e}")
-        print(f"   Player-team validation will be skipped!")
-
-# Normalize player names in history for matching
-if PLAYER_TEAM_HISTORY_DF is not None:
-    from player_name_utils import normalize_player_name
-    PLAYER_TEAM_HISTORY_DF['player_normalized'] = PLAYER_TEAM_HISTORY_DF['player_name'].apply(normalize_player_name)
-else:
-    print(f"⚠️  Warning: Player-team cache not found at {player_team_cache_path}")
-    print(f"   Run: python3 scripts/build_full_roster_cache.py")
-    print(f"   Proceeding without roster validation (may have cross-team errors)")
+try:
+    print(f"📂 Loading player-team history from S3: {S3_PLAYER_TEAM_HISTORY}")
+    PLAYER_TEAM_HISTORY_DF = pd.read_parquet(S3_PLAYER_TEAM_HISTORY)
+    print(f"✅ Loaded {len(PLAYER_TEAM_HISTORY_DF):,} player-team records")
+    print(f"   Players: {PLAYER_TEAM_HISTORY_DF['player_normalized'].nunique():,}")
+    print(f"   Date range: {PLAYER_TEAM_HISTORY_DF['valid_from'].min()} to {PLAYER_TEAM_HISTORY_DF['valid_to'].max()}")
+    print()
+except Exception as e:
+    print(f"⚠️  Warning: Could not load player_team_history.parquet from S3: {e}")
+    print(f"   Player-team validation will be skipped!")
+    print(f"   Run: python src/player_team_history/01_build.py")
     print()
 
 # Team abbreviation mapping (odds API team names -> ESPN abbreviations)
@@ -340,7 +325,7 @@ def player_on_team_at_date(player_normalized, team_abbr, game_date):
     
     Args:
         player_normalized: Normalized player name
-        team_abbr: Team abbreviation (e.g., 'TOR', 'BKN')
+        team_abbr: Team abbreviation (e.g., 'tor', 'bkn', 'lac')
         game_date: Date string in YYYY-MM-DD format or datetime object
     
     Returns:
@@ -364,23 +349,63 @@ def player_on_team_at_date(player_normalized, team_abbr, game_date):
         return True
     
     # Check if player was on this team on this date
-    # Assuming columns: player_name, team_abbr, start_date, end_date (or similar)
-    # Filter to rows where team matches and date is in range
+    # Columns in history.parquet: player_normalized, team, valid_from, valid_to
     team_abbr_lower = team_abbr.lower()
     
     for _, row in player_history.iterrows():
-        row_team = row['team_abbr'].lower() if pd.notna(row['team_abbr']) else ''
+        row_team = row['team'].lower() if pd.notna(row['team']) else ''
         if row_team != team_abbr_lower:
             continue
         
-        # Check date range (assuming start_date and end_date columns exist)
-        start_date = pd.to_datetime(row['start_date']) if 'start_date' in row and pd.notna(row['start_date']) else pd.Timestamp.min
-        end_date = pd.to_datetime(row['end_date']) if 'end_date' in row and pd.notna(row['end_date']) else pd.Timestamp.max
+        # Check date range using valid_from and valid_to
+        start_date = pd.to_datetime(row['valid_from']) if pd.notna(row['valid_from']) else pd.Timestamp.min
+        # valid_to can be NULL for current team
+        end_date = pd.to_datetime(row['valid_to']) if pd.notna(row['valid_to']) else pd.Timestamp.max
         
         if start_date <= game_date <= end_date:
             return True
     
     return False
+
+
+def get_team_roster_on_date(team_abbr, game_date):
+    """
+    Get all players on a team's roster on a specific date.
+    
+    Args:
+        team_abbr: Team abbreviation (e.g., 'tor', 'bkn', 'lac')
+        game_date: Date string in YYYY-MM-DD format or datetime object
+    
+    Returns:
+        Set of normalized player names on the roster, or None if no history data
+    """
+    if PLAYER_TEAM_HISTORY_DF is None:
+        return None
+    
+    # Convert game_date to datetime if string
+    if isinstance(game_date, str):
+        game_date = pd.to_datetime(game_date)
+    
+    team_abbr_lower = team_abbr.lower()
+    
+    # Filter to this team
+    team_history = PLAYER_TEAM_HISTORY_DF[
+        PLAYER_TEAM_HISTORY_DF['team'].str.lower() == team_abbr_lower
+    ]
+    
+    if team_history.empty:
+        return set()
+    
+    # Find all players who were on this team on this date
+    roster = set()
+    for _, row in team_history.iterrows():
+        start_date = pd.to_datetime(row['valid_from']) if pd.notna(row['valid_from']) else pd.Timestamp.min
+        end_date = pd.to_datetime(row['valid_to']) if pd.notna(row['valid_to']) else pd.Timestamp.max
+        
+        if start_date <= game_date <= end_date:
+            roster.add(row['player_normalized'])
+    
+    return roster
 
 
 def load_props_from_s3(season, date_str):
@@ -561,12 +586,14 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
     """
     Analyze a single game date for DNP scenarios.
     
-    Strategy:
-    1. Load game results to get accurate team assignments
-    2. Get all unique teams that played
-    3. For each team, find all players with prop lines (played or DNP)
-    4. Calculate median projections for players with 20+ lines
-    5. Check if 2+ players had 20+ projections and at least 1 DNP + 1 played
+    Clean strategy:
+    1. Load all props for this date
+    2. Load all game results for this date
+    3. For each team that played:
+       a. Get roster for that team on that date from player_team_history
+       b. Filter props to ONLY players on that team's roster
+       c. Calculate projections for those players
+       d. Check for DNP scenarios
     
     Args:
         date_str: Date in YYYY-MM-DD format
@@ -577,7 +604,7 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
     Returns:
         List of scenario dictionaries
     """
-    # Load props data
+    # Load all props for this date
     props_df = load_props_from_s3(season, date_str)
     
     if props_df.empty:
@@ -594,7 +621,7 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
     name_mappings = get_name_mappings()
     props_df['player_normalized'] = props_df['player_normalized'].replace(name_mappings)
     
-    # Load game results to get accurate team assignments
+    # Load all game results for this date
     games_df = load_games_from_s3(season, date_str)
     
     if games_df.empty:
@@ -609,13 +636,11 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
     
     # Apply team filter if specified
     if team_filter:
-        # Get all possible team names for the filter abbreviations
         team_filter_full = []
         for abbr in team_filter:
             possible_names = ABBR_TO_TEAM_MAP.get(abbr.lower(), [])
             team_filter_full.extend(possible_names)
         
-        # Filter by matching team names (games use full names like "LA Clippers")
         unique_teams = [t for t in unique_teams if any(filter_name in t for filter_name in team_filter_full)]
         
         if not unique_teams:
@@ -623,9 +648,9 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
     
     scenarios = []
     
-    # Analyze each team
+    # For each team that played
     for team_name in unique_teams:
-        # Get team abbreviation for roster validation
+        # Get team abbreviation
         team_abbr = None
         for full_name, abbr in TEAM_ABBR_MAP.items():
             if full_name in team_name or team_name in full_name:
@@ -633,37 +658,33 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
                 break
         
         if not team_abbr:
-            # If we can't map team name, skip this team
             continue
         
-        # Get all players who played for this team
+        # Get players who actually played for this team
         team_games = games_df[games_df['TEAM_NAME'] == team_name]
         players_played_names = set(team_games['player_normalized'])
         
-        # Get all players with props for games involving this team
-        # (need to match team name variations like "LA Clippers" vs "Los Angeles Clippers")
-        team_props = props_df[
-            props_df['home_team'].apply(lambda x: teams_match(x, team_name)) |
-            props_df['away_team'].apply(lambda x: teams_match(x, team_name))
-        ]
+        # Get roster: all players on this team on this date
+        team_roster = get_team_roster_on_date(team_abbr, date_str)
         
-        if team_props.empty:
+        if not team_roster:
+            # No roster data - skip this team
             continue
         
-        # For each player with props, calculate median projection
-        # ONLY include players who are actually on THIS team's roster on THIS date
+        # Filter props to ONLY players on this team's roster
+        team_player_props = props_df[props_df['player_normalized'].isin(team_roster)]
+        
+        if team_player_props.empty:
+            continue
+        
+        # Calculate median projection for each rostered player with props
         players_with_props = {}
-        for player in team_props['player_normalized'].unique():
-            # Validate player was on this team's roster on this date using player_team_history
-            if not player_on_team_at_date(player, team_abbr, date_str):
-                # Player was not on this team on this date - skip
-                continue
-            
-            player_lines = team_props[team_props['player_normalized'] == player]['prop_line']
-            median_proj = player_lines.median()
-            
-            if median_proj >= points_threshold:
-                players_with_props[player] = median_proj
+        for player in team_roster:
+            player_lines = team_player_props[team_player_props['player_normalized'] == player]['prop_line']
+            if not player_lines.empty:
+                median_proj = player_lines.median()
+                if median_proj >= points_threshold:
+                    players_with_props[player] = median_proj
         
         # Need at least 2 players with 20+ projections
         if len(players_with_props) < 2:
@@ -675,10 +696,9 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
         
         for player, projection in players_with_props.items():
             if player in players_played_names:
-                # Player played for this team - get their stats
+                # Player played - get their stats
                 player_game = team_games[team_games['player_normalized'] == player].iloc[0]
                 actual_points = player_game['PTS']
-                # W/L based on prop bet result (did they cover the over?)
                 prop_wl = 'W' if actual_points > projection else 'L'
                 players_played.append({
                     'player': player,
@@ -686,11 +706,10 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
                     'points': actual_points,
                     'fga': player_game['FGA'] if 'FGA' in player_game else None,
                     'minutes': player_game['MIN'] if 'MIN' in player_game else None,
-                    'wl': prop_wl  # W if covered the over, L if not
+                    'wl': prop_wl
                 })
             else:
                 # Player has props but didn't play (DNP)
-                # We already validated they're on this team's roster above
                 players_dnp.append({
                     'player': player,
                     'projection': projection
@@ -701,7 +720,7 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
             # Get game info (opponent, home/away)
             game_info = identify_team_game(props_df, team_name)
             
-            # Create list of DNP player names for this scenario
+            # Create list of DNP player names
             dnp_player_names = [p['player'] for p in players_dnp]
             
             # Add DNP teammates to each player who played
@@ -717,8 +736,19 @@ def analyze_date(date_str, season, points_threshold, team_filter=None):
                 'home_away': game_info['home_away'] if game_info else '???',
                 'players_projected_20_plus': len(players_with_props),
                 'players_dnp': players_dnp,
-                'players_played': players_played
+                'players_played': players_played,
+                'team_roster': team_roster  # Store for verification in print_scenario
             }
+            
+            # VERIFY: All players in this scenario should be on the same team on this date (silent check, assert only)
+            all_scenario_players = [p['player'] for p in players_dnp] + [p['player'] for p in players_played]
+            verification_failed = any(player not in team_roster for player in all_scenario_players)
+            
+            # Assert that all players are on the same team
+            assert not verification_failed, (
+                f"VERIFICATION FAILED: Not all players in scenario are on {team_abbr.upper()} on {date_str}. "
+                f"Players: {all_scenario_players}"
+            )
             
             scenarios.append(scenario)
     
@@ -753,6 +783,16 @@ def print_scenario(scenario):
         fga_str = f" ({player['fga']} FGA)" if player['fga'] is not None else ""
         
         print(f"   {covered} {player['player']}: {actual}pts vs {line:.1f} line (margin: {margin:+.1f}){fga_str}")
+    
+    # Print verification at the end
+    if 'team_roster' in scenario:
+        all_scenario_players = [p['player'] for p in scenario['players_dnp']] + [p['player'] for p in scenario['players_played']]
+        print(f"\n🔍 VERIFY PLAYERS ARE ON {scenario['team_abbr']} ON {scenario['date']}:")
+        for player in all_scenario_players:
+            if player in scenario['team_roster']:
+                print(f"   ✅ {player} -> on {scenario['team_abbr']}")
+            else:
+                print(f"   ❌ {player} -> NOT on {scenario['team_abbr']}")
 
 
 def calculate_summary_stats(scenarios):

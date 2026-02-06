@@ -124,7 +124,7 @@ SUBTITLE_LEFT = "When a high-usage teammate scratches late"
 
 # Right table subtitle
 TITLE_RIGHT = "Players Who Underperform"
-SUBTITLE_RIGHT = "Season: 2025-26"
+SUBTITLE_RIGHT = "Seasons: 2023-24, 2024-25, 2025-26"
 
 # Left side footer - data citation & attribution
 FOOTER_NOTES_LEFT = """
@@ -148,10 +148,10 @@ OUTPUT_FILENAME = "nba_dnp_scenarios.png"
 LEFT_FILENAME = "nba_dnp_scenarios_left.png"
 RIGHT_FILENAME = "nba_dnp_scenarios_right.png"
 
-# Side-by-side: extra compact for mobile viewing
-# Total column widths: ~745px (with new W-L and DNP teammate columns)
-TABLE_WIDTH = 1250   # pixels per table (removed W-L column, 50px saved)
-TABLE_HEIGHT = 1200  # pixels per table (matching defensive_disruptors for proper aspect ratio)
+# Side-by-side: Each table is portrait (9:16), combined is landscape (18:16)
+# Each table uses 9:16 ratio (portrait), combined side-by-side becomes 18:16 (landscape)
+TABLE_WIDTH = 1400   # pixels per table (base width)
+TABLE_HEIGHT = int(TABLE_WIDTH * (16/9))  # 9:16 portrait ratio: height = width × (16/9)
 OUTPUT_DPI = 300
 
 # -----------------------------------------------------------------------------
@@ -169,33 +169,33 @@ DEFAULT_GRADIENT_MAX = 10.0  # Upper bound (green end - exceeded)
 # Typography (matching defensive_disruptors for proper proportions)
 # -----------------------------------------------------------------------------
 FONT_FAMILY = "Arial"
-TITLE_FONT_SIZE = 24
-SUBTITLE_FONT_SIZE = 14
-HEADER_FONT_SIZE = 13
-BODY_FONT_SIZE = 12
-FOOTER_FONT_SIZE = 10
+TITLE_FONT_SIZE = 28
+SUBTITLE_FONT_SIZE = 16
+HEADER_FONT_SIZE = 15
+BODY_FONT_SIZE = 14
+FOOTER_FONT_SIZE = 12
 
 # -----------------------------------------------------------------------------
 # Spacing & Padding (matching defensive_disruptors for compact rows)
 # -----------------------------------------------------------------------------
-HEADER_PADDING_PX = 1
-DATA_ROW_PADDING_PX = 0.5    # Minimal padding for compact rows (matching defensive_disruptors)
-HEADING_PADDING_PX = 6
+HEADER_PADDING_PX = 2
+DATA_ROW_PADDING_PX = 1.5    # Increased padding for better readability
+HEADING_PADDING_PX = 8
 
 # -----------------------------------------------------------------------------
 # Column Widths (pixels) - extra compact for mobile viewing
 # -----------------------------------------------------------------------------
-COL_WIDTH_RANK = 50          # Reduced from 60 (single/double digits)
-COL_WIDTH_PLAYER = 90        # Reduced from 180 (half size for compact design)
-COL_WIDTH_HEADSHOT = 55      # Keep
-COL_WIDTH_N = 45             # Number of games (2-digit numbers, compact)
-COL_WIDTH_DNP_TEAMMATE = 110  # Most common DNP teammate with count
-COL_WIDTH_CONSENSUS_LINE = 90  # Reduced from 110 (format: "24.8")
-COL_WIDTH_AVG_ACTUAL = 75    # Reduced from 90 (format: "30.1")
-COL_WIDTH_PPG_OVER_EXP = 90  # Reduced from 110 (format: "+5.5")
-COL_WIDTH_OVER_HIT = 80      # Over hit % (format: "67%")
+COL_WIDTH_RANK = 60          # Increased for better readability
+COL_WIDTH_PLAYER = 120       # Increased for better readability
+COL_WIDTH_HEADSHOT = 60      # Increased slightly
+COL_WIDTH_N = 55             # Increased for better readability
+COL_WIDTH_DNP_TEAMMATE = 140  # Increased for better readability
+COL_WIDTH_CONSENSUS_LINE = 100  # Increased for better readability
+COL_WIDTH_AVG_ACTUAL = 85    # Increased for better readability
+COL_WIDTH_PPG_OVER_EXP = 100  # Increased for better readability
+COL_WIDTH_OVER_HIT = 90      # Increased for better readability
 
-HEADSHOT_HEIGHT = 35  # Height of player headshots in pixels (matching defensive_disruptors)
+HEADSHOT_HEIGHT = 40  # Increased height of player headshots in pixels
 
 # -----------------------------------------------------------------------------
 # Player ID Mapping (for headshots from NBA CDN)
