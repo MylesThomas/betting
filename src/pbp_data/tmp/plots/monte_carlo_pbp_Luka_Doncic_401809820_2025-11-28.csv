@@ -1,450 +1,450 @@
-play_num,quarter,game_minute,cumulative_points,prob_over
-1,1,0.0000,0,0.5060
-2,1,0.1333,0,0.4860
-3,1,0.5500,0,0.4840
-4,1,0.6167,0,0.4670
-5,1,0.8833,0,0.4670
-6,1,1.2500,0,0.4520
-7,1,1.5833,0,0.4060
-8,1,1.6667,0,0.4230
-9,1,1.7833,0,0.4190
-10,1,2.0500,0,0.4020
-11,1,2.0500,0,0.3980
-12,1,2.0500,0,0.3890
-13,1,2.0500,0,0.3970
-14,1,2.2167,0,0.4070
-15,1,2.5333,0,0.4010
-16,1,2.5833,0,0.3990
-17,1,2.9000,0,0.3720
-18,1,2.9333,0,0.3820
-19,1,3.0500,0,0.3880
-20,1,3.3833,0,0.3520
-21,1,3.4333,0,0.3740
-22,1,3.4333,0,0.3520
-23,1,3.7833,0,0.3510
-24,1,4.0500,3,0.4920
-25,1,4.4000,3,0.4380
-26,1,4.5333,3,0.4700
-27,1,4.6000,3,0.4670
-28,1,4.8167,3,0.4430
-29,1,5.1500,3,0.4250
-30,1,5.5167,3,0.4350
-31,1,5.5167,3,0.4210
-32,1,5.5167,3,0.4570
-33,1,5.5167,3,0.4240
-34,1,5.5167,3,0.4330
-35,1,5.6833,3,0.3940
-36,1,6.0500,3,0.4130
-37,1,6.1167,3,0.3810
-38,1,6.2667,3,0.3710
-39,1,6.3167,3,0.3890
-40,1,6.3167,3,0.3950
-41,1,6.3167,3,0.3680
-42,1,6.5833,3,0.3720
-43,1,6.8167,3,0.3480
-44,1,6.8167,3,0.3430
-45,1,6.8167,3,0.3470
-46,1,6.8167,3,0.3720
-47,1,7.0500,5,0.4360
-48,1,7.2000,5,0.4160
-49,1,7.2500,5,0.4460
-50,1,7.3833,5,0.4180
-51,1,7.3833,5,0.4350
-52,1,7.5000,5,0.4140
-53,1,7.6167,5,0.4430
-54,1,7.6167,5,0.4110
-55,1,7.6167,5,0.4340
-56,1,7.6333,5,0.3960
-57,1,7.8833,5,0.4290
-58,1,7.9500,5,0.4160
-59,1,8.1500,5,0.4100
-60,1,8.4167,5,0.3980
-61,1,8.4667,5,0.3770
-62,1,8.4833,5,0.3570
-63,1,8.4833,5,0.3900
-64,1,8.5333,5,0.3890
-65,1,8.6000,5,0.3860
-66,1,8.8000,5,0.3700
-67,1,8.8333,5,0.3710
-68,1,8.8333,5,0.3710
-69,1,9.0667,5,0.3720
-70,1,9.1167,5,0.3850
-71,1,9.1833,5,0.3460
-72,1,9.1833,5,0.3430
-73,1,9.1833,5,0.3670
-74,1,9.1833,5,0.3680
-75,1,9.1833,5,0.3550
-76,1,9.1833,5,0.3670
-77,1,9.1833,5,0.3680
-78,1,9.3500,5,0.3630
-79,1,9.4500,5,0.3400
-80,1,9.8333,5,0.3540
-81,1,10.1167,5,0.3380
-82,1,10.2667,5,0.3140
-83,1,10.5000,5,0.2870
-84,1,10.5333,5,0.3190
-85,1,10.6500,5,0.2970
-86,1,10.7000,5,0.3030
-87,1,10.8833,7,0.4050
-88,1,11.0267,7,0.3900
-89,1,11.1467,7,0.3720
-90,1,11.4067,7,0.3660
-91,1,11.4583,7,0.3620
-92,1,11.4583,7,0.3720
-93,1,11.4583,7,0.3770
-94,1,11.4583,7,0.3510
-95,1,11.4850,7,0.3530
-96,1,11.7950,10,0.5460
-102,2,12.0000,10,0.5170
-101,2,12.0000,10,0.5350
-100,2,12.0000,10,0.5250
-98,2,12.0000,10,0.5430
-97,1,12.0000,10,0.5480
-99,2,12.0000,10,0.5390
-103,2,12.1667,10,0.5300
-104,2,12.2500,10,0.5240
-105,2,12.5167,10,0.4650
-106,2,12.7500,10,0.4820
-107,2,13.0000,10,0.5020
-108,2,13.0833,10,0.4850
-109,2,13.2000,10,0.4690
-110,2,13.2667,10,0.5040
-111,2,13.3667,10,0.4540
-112,2,13.5833,10,0.4530
-113,2,13.6333,10,0.4350
-114,2,13.7500,10,0.4650
-115,2,13.7500,10,0.4300
-116,2,13.8667,10,0.4360
-117,2,13.9333,10,0.4750
-118,2,13.9833,10,0.4250
-119,2,13.9833,10,0.4560
-120,2,13.9833,10,0.4440
-121,2,14.1833,10,0.4100
-122,2,14.1833,10,0.4140
-123,2,14.1833,10,0.3850
-124,2,14.3833,10,0.4350
-125,2,14.5167,10,0.3950
-126,2,14.5500,10,0.4320
-127,2,14.6167,10,0.4090
-128,2,14.8167,10,0.3950
-129,2,14.9500,10,0.3780
-130,2,14.9500,10,0.4070
-131,2,15.0833,10,0.3750
-132,2,15.0833,10,0.4000
-133,2,15.0833,10,0.3850
-134,2,15.2167,10,0.3760
-135,2,15.5500,10,0.3470
-136,2,15.6167,10,0.3560
-137,2,15.6500,10,0.3680
-138,2,15.6500,10,0.3670
-141,2,15.6667,10,0.3830
-142,2,15.6667,10,0.3540
-139,2,15.6667,10,0.3850
-140,2,15.6667,10,0.3680
-143,2,15.9333,10,0.3880
-144,2,16.1833,10,0.3630
-145,2,16.3667,10,0.3290
-146,2,16.4167,10,0.3480
-147,2,16.4833,10,0.3320
-148,2,16.4833,10,0.3630
-149,2,16.4833,10,0.3340
-150,2,16.4833,10,0.3340
-151,2,16.7167,10,0.3530
-152,2,16.7167,11,0.4190
-153,2,16.7167,12,0.4480
-155,2,16.9667,12,0.4170
-154,2,16.9667,12,0.4240
-156,2,17.0000,12,0.4500
-157,2,17.0667,12,0.4400
-158,2,17.2833,12,0.4040
-159,2,17.3667,12,0.4350
-160,2,17.4500,12,0.4160
-161,2,17.6500,12,0.4240
-162,2,17.9833,12,0.4110
-163,2,18.0000,12,0.3690
-164,2,18.1000,12,0.4090
-165,2,18.1000,12,0.4320
-166,2,18.1000,12,0.3530
-167,2,18.1000,12,0.4190
-168,2,18.1000,12,0.3990
-173,2,18.3333,12,0.3970
-172,2,18.3333,12,0.3990
-169,2,18.3333,12,0.4240
-170,2,18.3333,12,0.4140
-171,2,18.3333,12,0.3640
-174,2,18.7000,12,0.4010
-175,2,18.8833,12,0.3720
-176,2,18.9167,12,0.3410
-177,2,19.0167,12,0.3580
-178,2,19.1000,12,0.3350
-179,2,19.2667,12,0.3690
-180,2,19.2667,12,0.3440
-181,2,19.5000,12,0.3360
-183,2,19.5667,12,0.3450
-182,2,19.5667,12,0.3520
-184,2,19.7500,12,0.3390
-185,2,20.1167,12,0.3400
-186,2,20.3167,12,0.3120
-187,2,20.3667,12,0.3000
-188,2,20.4167,12,0.3250
-189,2,20.4167,12,0.3020
-190,2,20.4167,12,0.3190
-191,2,20.4167,12,0.3260
-192,2,20.4167,12,0.3040
-193,2,20.4167,12,0.3230
-199,2,20.6000,14,0.4380
-197,2,20.6000,13,0.3560
-198,2,20.6000,13,0.3780
-195,2,20.6000,13,0.3500
-194,2,20.6000,12,0.2960
-196,2,20.6000,13,0.3580
-200,2,20.7833,14,0.4000
-201,2,20.8333,14,0.4240
-202,2,20.9833,16,0.5600
-203,2,21.3000,16,0.5830
-204,2,21.5667,16,0.5900
-205,2,21.7833,16,0.5760
-206,2,21.9333,16,0.5270
-207,2,21.9333,16,0.5760
-208,2,22.1833,16,0.5410
-209,2,22.2333,16,0.5120
-210,2,22.3333,16,0.5380
-211,2,22.4333,16,0.5200
-212,2,22.4500,16,0.5210
-213,2,22.4500,16,0.5040
-214,2,22.7500,16,0.5200
-215,2,23.0817,16,0.4940
-216,2,23.1200,16,0.5050
-217,2,23.4400,16,0.4370
-218,2,23.5367,16,0.4420
-219,2,23.7983,16,0.4460
-220,2,23.7983,17,0.5720
-221,2,23.7983,18,0.6170
-222,2,23.9667,18,0.6220
-223,2,23.9667,18,0.6130
-228,3,24.0000,18,0.5910
-227,3,24.0000,18,0.6120
-225,2,24.0000,18,0.6190
-226,2,24.0000,18,0.6160
-224,2,24.0000,18,0.6130
-229,3,24.3833,18,0.6090
-230,3,24.6833,18,0.5890
-231,3,24.7167,18,0.5870
-232,3,24.9000,18,0.5290
-233,3,25.1500,20,0.6870
-234,3,25.3833,20,0.6790
-235,3,25.5167,20,0.6580
-236,3,25.6000,23,0.8690
-237,3,25.7833,23,0.8350
-238,3,25.8333,23,0.8370
-239,3,25.9167,23,0.8060
-240,3,26.0333,23,0.8540
-241,3,26.0667,23,0.8450
-242,3,26.0667,23,0.8300
-243,3,26.4000,23,0.8350
-244,3,26.4333,23,0.8230
-245,3,26.4833,23,0.8410
-246,3,26.6667,23,0.8220
-247,3,26.7000,23,0.8290
-248,3,26.8833,23,0.7940
-249,3,27.1667,23,0.7970
-250,3,27.3000,23,0.7980
-251,3,27.4833,23,0.7390
-252,3,27.7333,23,0.7490
-253,3,27.9333,23,0.7410
-254,3,28.2000,23,0.7270
-255,3,28.2333,23,0.7400
-256,3,28.3000,23,0.6930
-257,3,28.3000,23,0.7250
-258,3,28.7167,23,0.6930
-259,3,29.0167,23,0.6790
-260,3,29.4167,23,0.6440
-261,3,29.5833,23,0.6460
-262,3,30.0833,23,0.6270
-263,3,30.1333,23,0.5800
-264,3,30.1333,23,0.6120
-265,3,30.1333,23,0.6140
-266,3,30.1333,23,0.6170
-267,3,30.1333,23,0.6140
-268,3,30.3167,25,0.7580
-269,3,30.7333,25,0.7380
-270,3,30.7500,25,0.7280
-271,3,30.7500,25,0.7390
-272,3,30.9667,25,0.7140
-273,3,30.9833,25,0.7110
-274,3,31.0833,25,0.7040
-275,3,31.1333,25,0.7100
-276,3,31.2167,25,0.6980
-277,3,31.2667,25,0.7000
-278,3,31.2667,25,0.6910
-279,3,31.5000,25,0.7030
-280,3,31.5333,25,0.6850
-281,3,31.6667,25,0.6930
-282,3,31.9167,25,0.6720
-283,3,32.3167,25,0.6620
-284,3,32.4000,25,0.6430
-285,3,32.5000,25,0.6220
-286,3,32.5500,25,0.6420
-287,3,32.5500,25,0.6110
-288,3,32.5667,25,0.6140
-289,3,32.5667,25,0.6340
-290,3,32.8833,25,0.6250
-291,3,32.8833,25,0.5800
-292,3,32.8833,25,0.5860
-293,3,32.8833,25,0.5960
-295,3,32.9500,25,0.5860
-296,3,32.9500,25,0.5830
-294,3,32.9500,25,0.5830
-297,3,33.1667,27,0.7470
-298,3,33.4667,27,0.7340
-299,3,33.7667,27,0.7160
-300,3,34.0000,27,0.6950
-301,3,34.1167,27,0.7310
-302,3,34.1833,27,0.7130
-303,3,34.3500,27,0.7030
-304,3,34.3500,27,0.6640
-305,3,34.5667,30,0.8180
-306,3,34.8833,30,0.7940
-307,3,34.9333,30,0.8150
-308,3,34.9667,30,0.8370
-309,3,35.3000,30,0.7870
-310,3,35.3300,30,0.8200
-311,3,35.3317,30,0.8000
-312,3,35.5217,30,0.7880
-313,3,35.6900,30,0.8150
-314,3,35.7433,30,0.7920
-315,3,35.9183,30,0.8090
-316,3,35.9650,30,0.8160
-317,3,35.9833,30,0.7990
-318,3,35.9917,30,0.8100
-325,4,36.0000,30,0.7820
-323,4,36.0000,30,0.8270
-322,4,36.0000,30,0.7800
-324,4,36.0000,30,0.7860
-320,3,36.0000,30,0.7980
-319,3,36.0000,30,0.7910
-321,4,36.0000,30,0.7720
-326,4,36.2833,30,0.7900
-327,4,36.2833,30,0.8020
-328,4,36.2833,30,0.7860
-329,4,36.3333,30,0.7880
-330,4,36.6500,30,0.7870
-331,4,36.9667,30,0.7860
-332,4,36.9667,30,0.7800
-333,4,36.9667,30,0.7650
-334,4,37.1167,30,0.7680
-336,4,37.4167,30,0.7600
-335,4,37.4167,30,0.7610
-337,4,37.4167,30,0.7390
-338,4,37.8333,30,0.7860
-339,4,38.1000,30,0.7380
-340,4,38.4667,30,0.7530
-341,4,38.7833,30,0.7520
-342,4,39.1833,30,0.7140
-343,4,39.2167,30,0.7240
-344,4,39.2167,30,0.7050
-345,4,39.2167,30,0.7230
-346,4,39.2167,30,0.7300
-347,4,39.2167,30,0.7250
-348,4,39.3833,30,0.7090
-349,4,39.4500,30,0.7200
-350,4,39.4833,30,0.7180
-352,4,39.5167,30,0.6990
-351,4,39.5167,30,0.6900
-353,4,39.7333,30,0.6870
-354,4,39.8000,30,0.6700
-355,4,39.9500,30,0.6970
-356,4,40.1333,30,0.6630
-357,4,40.3333,30,0.6450
-358,4,40.5500,30,0.6310
-359,4,40.6167,30,0.6480
-360,4,40.6333,30,0.6290
-361,4,40.6667,30,0.6710
-362,4,40.6667,30,0.6500
-363,4,40.7000,30,0.6400
-364,4,40.7667,30,0.6340
-366,4,40.7833,30,0.5840
-365,4,40.7833,30,0.6210
-367,4,40.8833,30,0.6170
-368,4,41.0667,30,0.5870
-369,4,41.0667,30,0.5910
-370,4,41.0667,30,0.5850
-371,4,41.2167,30,0.6050
-372,4,41.4167,30,0.5650
-373,4,41.4833,30,0.5380
-374,4,41.6167,30,0.5240
-375,4,41.6167,30,0.4930
-376,4,41.6167,30,0.5260
-377,4,41.6500,30,0.5120
-378,4,41.8667,30,0.4570
-379,4,41.9167,30,0.4530
-380,4,42.0833,30,0.4100
-381,4,42.1000,30,0.4160
-382,4,42.1000,30,0.4150
-383,4,42.1000,30,0.3900
-384,4,42.1000,30,0.3860
-385,4,42.3667,30,0.3880
-386,4,42.4167,30,0.3560
-387,4,42.6833,30,0.3100
-388,4,42.7167,30,0.2980
-389,4,42.8000,30,0.2850
-390,4,42.8000,30,0.2840
-391,4,42.8000,30,0.2580
-392,4,42.8333,30,0.2800
-393,4,43.1333,30,0.2230
-394,4,43.2667,30,0.1960
-395,4,43.4500,30,0.1590
-396,4,43.4833,30,0.1430
-397,4,43.6000,30,0.1330
-398,4,43.6000,31,0.4650
-399,4,43.6000,32,0.7520
-400,4,43.6000,32,0.7820
-401,4,43.6000,32,0.7680
-402,4,43.6000,32,0.7520
-403,4,43.6000,33,0.8120
-404,4,43.9333,33,0.8530
-406,4,44.1500,33,0.8450
-405,4,44.1500,33,0.8190
-407,4,44.4000,33,0.8160
-408,4,44.4000,33,0.8290
-409,4,44.4500,33,0.8230
-410,4,44.4500,33,0.8320
-411,4,44.4500,33,0.8310
-412,4,44.4500,33,0.8280
-413,4,44.4833,33,0.8630
-414,4,44.7167,33,0.8210
-415,4,44.7500,33,0.8340
-416,4,44.7500,33,0.8440
-417,4,45.2333,33,0.8320
-418,4,45.5333,33,0.8250
-419,4,45.5500,33,0.8240
-420,4,45.6167,33,0.8340
-421,4,45.6500,33,0.8120
-422,4,45.6667,33,0.8350
-423,4,46.0000,33,0.8110
-424,4,46.2667,33,0.8020
-425,4,46.3000,33,0.7950
-426,4,46.5833,33,0.7550
-427,4,46.5833,34,1.0000
-428,4,46.5833,35,1.0000
-429,4,46.7667,35,1.0000
-430,4,46.7833,35,1.0000
-438,4,46.8333,35,1.0000
-437,4,46.8333,35,1.0000
-436,4,46.8333,35,1.0000
-435,4,46.8333,35,1.0000
-434,4,46.8333,35,1.0000
-433,4,46.8333,35,1.0000
-432,4,46.8333,35,1.0000
-431,4,46.8333,35,1.0000
-439,4,46.8833,35,1.0000
-440,4,47.2283,35,1.0000
-441,4,47.2733,35,1.0000
-442,4,47.4750,35,1.0000
-443,4,47.5150,35,1.0000
-444,4,47.5367,35,1.0000
-445,4,47.5433,35,1.0000
-446,4,47.5433,35,1.0000
-447,4,47.9433,35,1.0000
-448,4,48.0000,35,1.0000
-449,4,48.0000,35,1.0000
+player_name,game_id,game_date,prop_line,game_minute,quarter,cumulative_points,description,prob_over,final_points,result
+Luka Doncic,401809820,2025-11-28,33.3902,0.0000,1,0,Anthony Davis vs. Deandre Ayton (LeBron James gains possession),0.4650,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,0.1334,1,0,Austin Reaves makes 26-foot three point jumper (LeBron James assists),0.5080,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,0.5502,1,0,P.J. Washington misses 25-foot three point jumper,0.4580,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,0.6170,1,0,Rui Hachimura defensive rebound,0.4530,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,0.8837,1,0,LeBron James makes 5-foot alley oop dunk shot (Luka Doncic assists),0.4390,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,1.2505,1,0,P.J. Washington makes 3-foot dunk (Anthony Davis assists),0.3960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,1.5839,1,0,Anthony Davis blocks Austin Reaves 's 3-foot driving layup,0.3750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,1.6674,1,0,Anthony Davis defensive rebound,0.3810,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,1.7841,1,0,Max Christie makes 22-foot three point jumper (Cooper Flagg assists),0.3790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.0509,1,0,Ryan Nembhard shooting foul,0.3520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.0510,1,0,Deandre Ayton misses free throw 1 of 2,0.3460,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.0511,1,0,Lakers offensive team rebound,0.3380,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.0512,1,0,Deandre Ayton makes free throw 2 of 2,0.3160,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.2180,1,0,Ryan Nembhard makes 15-foot pullup jump shot,0.3290,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.5347,1,0,Rui Hachimura misses 20-foot pullup jump shot,0.3120,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.5848,1,0,Anthony Davis defensive rebound,0.3060,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.9016,1,0,P.J. Washington misses 5-foot two point shot,0.2990,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,2.9350,1,0,Rui Hachimura defensive rebound,0.2880,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,3.0518,1,0,Deandre Ayton makes 3-foot dunk (LeBron James assists),0.2520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,3.3852,1,0,Ryan Nembhard bad pass (LeBron James steals),0.2600,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,3.4353,1,0,Austin Reaves makes 1-foot dunk (Deandre Ayton assists),0.2610,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,3.4354,1,0,Mavericks Full timeout,0.2330,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,3.7855,1,0,Max Christie makes 25-foot three point step back jumpshot (Ryan Nembhard assists),0.2360,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,4.0523,1,3,Luka Doncic makes 27-foot three point jumper (LeBron James assists),0.4820,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,4.4024,1,3,P.J. Washington bad pass (Deandre Ayton steals),0.4450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,4.5358,1,3,Rui Hachimura misses 11-foot step back jumpshot,0.4420,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,4.6026,1,3,Deandre Ayton offensive rebound,0.4410,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,4.8194,1,3,Deandre Ayton offensive goaltending turnover,0.4480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.1528,1,3,Anthony Davis makes 1-foot alley oop dunk shot (Ryan Nembhard assists),0.3820,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.5196,1,3,Ryan Nembhard personal foul,0.3540,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.5197,1,3,Jake LaRavia enters the game for LeBron James,0.3660,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.5198,1,3,Daniel Gafford enters the game for Anthony Davis,0.3680,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.5199,1,3,Naji Marshall enters the game for Cooper Flagg,0.3480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.5200,1,3,Brandon Williams enters the game for Ryan Nembhard,0.3660,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,5.6867,1,3,Deandre Ayton makes 2-foot alley oop dunk shot (Luka Doncic assists),0.3340,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.0535,1,3,Max Christie misses 27-foot three point jumper,0.3360,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.1203,1,3,Austin Reaves defensive rebound,0.3140,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.2704,1,3,Rui Hachimura misses 22-foot three point jumper,0.2870,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.3205,1,3,P.J. Washington defensive rebound,0.3350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.3206,1,3,Naji Marshall offensive charge,0.2700,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.3207,1,3,Naji Marshall turnover,0.2960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.5874,1,3,Rui Hachimura out of bounds lost ball turnover,0.3000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.8209,1,3,Daniel Gafford misses 3-foot hook shot,0.2860,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.8210,1,3,Mavericks offensive team rebound,0.2780,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.8211,1,3,P.J. Washington offensive foul,0.2680,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,6.8212,1,3,P.J. Washington turnover,0.2630,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.0546,1,3,Luka Doncic makes driving layup,0.2490,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.2047,1,3,Naji Marshall misses driving floating jump shot,0.2520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.2548,1,3,Jake LaRavia defensive rebound,0.2380,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.3882,1,3,Jaxson Hayes enters the game for Deandre Ayton,0.2260,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.3883,1,3,Klay Thompson enters the game for Max Christie,0.2270,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.5051,1,3,Luka Doncic out of bounds bad pass turnover,0.2190,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.6219,1,3,Luka Doncic shooting foul,0.2280,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.6220,1,3,Brandon Williams makes free throw 1 of 2,0.2210,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.6221,1,3,Brandon Williams misses free throw 2 of 2,0.2350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.6388,1,3,Austin Reaves defensive rebound,0.2120,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.8889,1,3,Austin Reaves misses 26-foot three point jumper,0.1930,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,7.9557,1,3,Naji Marshall defensive rebound,0.1830,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.1558,1,3,Brandon Williams makes 26-foot three point jumper (Klay Thompson assists),0.2050,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.4226,1,3,Luka Doncic misses 26-foot three point step back jumpshot,0.1830,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.4727,1,3,Austin Reaves offensive rebound,0.1800,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.4894,1,3,Brandon Williams personal foul,0.1720,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.4895,1,3,Gabe Vincent enters the game for Austin Reaves,0.1550,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.5396,1,3,Luka Doncic misses 15-foot two point shot,0.1670,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.6064,1,3,P.J. Washington defensive rebound,0.1500,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.8065,1,3,Klay Thompson misses 25-foot three point jumper,0.1620,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.8399,1,3,Lakers defensive team rebound,0.1440,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,8.8400,1,3,Cooper Flagg enters the game for P.J. Washington,0.1280,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.0735,1,3,Jaxson Hayes misses driving layup,0.1450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1236,1,3,Cooper Flagg defensive rebound,0.1490,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1903,1,3,Luka Doncic shooting foul,0.1510,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1904,1,3,Lakers Full timeout,0.1460,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1905,1,3,Luka Doncic technical foul,0.1350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1906,1,3,LeBron James enters the game for Rui Hachimura,0.1320,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1907,1,3,Klay Thompson makes technical free throw,0.1210,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1908,1,3,Naji Marshall makes free throw 1 of 2,0.1280,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.1909,1,3,Naji Marshall makes free throw 2 of 2,0.1470,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.3577,1,3,Brandon Williams personal foul,0.1390,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.4578,1,3,Gabe Vincent makes 23-foot three point jumper (Jaxson Hayes assists),0.1350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,9.8412,1,3,Daniel Gafford out of bounds bad pass turnover,0.1160,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.1247,1,6,Gabe Vincent makes 24-foot three point jumper (Luka Doncic assists),0.2770,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.2748,1,6,Cooper Flagg makes 19-foot pullup jump shot,0.3180,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.5082,1,6,Gabe Vincent misses 23-foot three point jumper,0.2530,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.5416,1,6,Brandon Williams defensive rebound,0.2700,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.6584,1,6,Brandon Williams misses 26-foot three point jumper,0.2710,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.7085,1,6,LeBron James defensive rebound,0.2750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,10.8919,1,6,Luka Doncic makes driving layup (Gabe Vincent assists),0.2410,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.0354,1,6,LeBron James personal foul,0.2450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.1555,1,6,Daniel Gafford out of bounds bad pass turnover,0.2230,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.4156,1,6,Jake LaRavia lost ball turnover (Daniel Gafford steals),0.2350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.4673,1,6,Jake LaRavia shooting foul,0.2010,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.4674,1,6,Daniel Gafford makes free throw 1 of 2,0.2100,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.4675,1,6,Max Christie enters the game for Brandon Williams,0.2240,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.4676,1,6,Daniel Gafford misses free throw 2 of 2,0.2140,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.4944,1,6,Luka Doncic defensive rebound,0.2040,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,11.8045,1,9,Luka Doncic makes 27-foot three pointer,0.4700,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.0096,2,9,Ryan Nembhard enters the game for Max Christie,0.4470,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.0097,2,9,Anthony Davis enters the game for Daniel Gafford,0.4250,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.0098,2,9,Deandre Ayton enters the game for Luka Doncic,0.4220,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.0099,2,9,Austin Reaves enters the game for Jaxson Hayes,0.4630,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.0100,1,9,End of the 1st Quarter,0.4320,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.0101,2,9,Maxi Kleber enters the game for Jake LaRavia,0.4410,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.1769,2,9,Klay Thompson misses 17-foot pullup jump shot,0.3910,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.2603,2,9,LeBron James defensive rebound,0.4260,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.5271,2,9,Austin Reaves makes 25-foot three point jumper (LeBron James assists),0.3970,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,12.7605,2,9,Klay Thompson makes 23-foot three point jumper (Ryan Nembhard assists),0.4020,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.0106,2,9,LeBron James misses 16-foot two point shot,0.3590,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.0940,2,9,Cooper Flagg defensive rebound,0.3960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.2108,2,9,Naji Marshall misses 27-foot three point jumper,0.3670,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.2776,2,9,Austin Reaves defensive rebound,0.3750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.3777,2,9,Austin Reaves makes 6-foot driving floating jump shot,0.3770,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.5944,2,9,Cooper Flagg misses 26-foot three point pullup jump shot,0.3310,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.6445,2,9,Deandre Ayton defensive rebound,0.3300,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.7613,2,9,Ryan Nembhard personal foul,0.3450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.7614,2,9,Brandon Williams enters the game for Ryan Nembhard,0.3350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.8782,2,9,Maxi Kleber misses 23-foot three point jumper,0.3270,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.9449,2,9,Naji Marshall defensive rebound,0.2960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.9950,2,9,Gabe Vincent shooting foul,0.3270,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.9951,2,9,Naji Marshall makes free throw 1 of 2,0.3260,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,13.9952,2,9,Naji Marshall makes free throw 2 of 2,0.3170,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.1953,2,9,Klay Thompson shooting foul,0.3100,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.1954,2,9,Austin Reaves makes free throw 1 of 2,0.3000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.1955,2,9,Austin Reaves makes free throw 2 of 2,0.3120,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.3956,2,9,Brandon Williams bad pass (Maxi Kleber steals),0.3370,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.5291,2,9,LeBron James misses 5-foot two point shot,0.2680,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.5625,2,9,Cooper Flagg defensive rebound,0.3030,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.6293,2,9,Brandon Williams makes two point shot (Anthony Davis assists),0.2770,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.8294,2,9,Deandre Ayton makes driving layup (Austin Reaves assists),0.2790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.9628,2,9,Deandre Ayton personal foul,0.2530,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,14.9629,2,9,P.J. Washington enters the game for Naji Marshall,0.2710,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.0963,2,9,Anthony Davis misses 17-foot pullup jump shot,0.2890,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.0964,2,9,Mavericks offensive team rebound,0.2800,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.0965,2,9,Maxi Kleber loose ball foul,0.2390,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.2300,2,9,Klay Thompson makes 27-foot three point jumper (Anthony Davis assists),0.2800,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.5634,2,9,Maxi Kleber bad pass (Cooper Flagg steals),0.2050,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6302,2,9,Klay Thompson misses 26-foot three point shot,0.2610,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6636,2,9,Mavericks offensive team rebound,0.2330,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6637,2,9,Maxi Kleber loose ball foul,0.2180,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6805,2,9,Rui Hachimura enters the game for Maxi Kleber,0.2280,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6806,2,9,P.J. Washington makes free throw 2 of 2,0.2360,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6807,2,9,Maxi Kleber shooting foul,0.2260,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.6808,2,9,P.J. Washington makes free throw 1 of 2,0.2280,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,15.9475,2,9,Deandre Ayton makes 6-foot hook shot (LeBron James assists),0.2160,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.1976,2,9,P.J. Washington makes 2-foot layup (Brandon Williams assists),0.2120,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.3811,2,9,LeBron James misses 26-foot three point step back jumpshot,0.2130,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.4312,2,9,Cooper Flagg defensive rebound,0.1950,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.4979,2,9,Anthony Davis makes 2-foot driving dunk (Cooper Flagg assists),0.1910,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.4980,2,9,Lakers Full timeout,0.2040,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.4981,2,9,Luka Doncic enters the game for Deandre Ayton,0.2070,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.4982,2,9,Jaxson Hayes enters the game for LeBron James,0.1980,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.7317,2,9,Cooper Flagg shooting foul,0.1850,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.7318,2,10,Luka Doncic makes free throw 1 of 2,0.2460,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.7319,2,11,Luka Doncic makes free throw 2 of 2,0.3200,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.9820,2,11,Naji Marshall enters the game for Cooper Flagg,0.3530,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,16.9821,2,11,Daniel Gafford enters the game for Anthony Davis,0.3420,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.0155,2,11,Klay Thompson misses 15-foot jumper,0.3370,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.0823,2,11,Jaxson Hayes defensive rebound,0.3410,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.2990,2,11,Rui Hachimura misses 26-foot three point jumper,0.3140,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.3825,2,11,Daniel Gafford defensive rebound,0.3250,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.4659,2,11,P.J. Washington makes 27-foot three point step back jumpshot,0.3340,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.6660,2,11,Jaxson Hayes makes 2-foot dunk (Luka Doncic assists),0.3080,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,17.9994,2,11,P.J. Washington misses driving floating jump shot,0.2810,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.0162,2,11,Jaxson Hayes defensive rebound,0.2660,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.1163,2,11,Daniel Gafford shooting foul,0.2840,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.1164,2,11,Austin Reaves makes free throw 1 of 2,0.2590,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.1165,2,11,Jake LaRavia enters the game for Gabe Vincent,0.2510,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.1166,2,11,Austin Reaves makes free throw 2 of 2,0.2920,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.1167,2,11,Max Christie enters the game for Klay Thompson,0.2880,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.3501,2,11,Naji Marshall makes free throw 1 of 1,0.2400,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.3502,2,11,Jaxson Hayes shooting foul,0.2750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.3503,2,11,Max Christie misses 26-foot three point jumper,0.2730,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.3504,2,11,Naji Marshall offensive rebound,0.2550,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.3505,2,11,Naji Marshall makes two point shot,0.2580,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.7173,2,11,Austin Reaves makes 2-foot two point shot,0.2220,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.9007,2,11,Brandon Williams misses 7-foot pullup jump shot,0.2460,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,18.9342,2,11,Luka Doncic defensive rebound,0.2480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.0343,2,11,Luka Doncic bad pass (Naji Marshall steals),0.2090,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.1177,2,11,P.J. Washington makes two point shot (Brandon Williams assists),0.2380,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.2845,2,11,Jaxson Hayes offensive foul,0.2240,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.2846,2,11,Jaxson Hayes turnover,0.2280,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.5180,2,11,Brandon Williams misses two point shot,0.1980,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.5848,2,11,Daniel Gafford makes tip shot,0.2050,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.5849,2,11,Daniel Gafford offensive rebound,0.2020,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,19.7683,2,11,Jaxson Hayes makes 4-foot driving dunk,0.1790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.1351,2,11,Max Christie makes 13-foot pullup jump shot (Brandon Williams assists),0.1830,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.3352,2,11,Luka Doncic misses 34-foot three point pullup jump shot,0.1470,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.3853,2,11,P.J. Washington defensive rebound,0.1630,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.4354,2,11,Rui Hachimura shooting foul,0.1700,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.4355,2,11,Brandon Williams makes free throw 1 of 2,0.1430,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.4356,2,11,LeBron James enters the game for Jaxson Hayes,0.1560,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.4357,2,11,Gabe Vincent enters the game for Austin Reaves,0.1480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.4358,2,11,Deandre Ayton enters the game for Jake LaRavia,0.1690,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.4359,2,11,Brandon Williams makes free throw 2 of 2,0.1500,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.6193,2,12,Luka Doncic makes free throw 2 of 2,0.2310,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.6194,2,12,Cooper Flagg enters the game for Naji Marshall,0.2330,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.6195,2,12,Anthony Davis enters the game for Daniel Gafford,0.2200,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.6196,2,13,Luka Doncic makes free throw 1 of 2,0.3230,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.6197,2,13,Naji Marshall shooting foul,0.3420,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.6198,2,13,Mavericks Full timeout,0.3250,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.8032,2,13,Anthony Davis misses 10-foot pullup jump shot,0.3190,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,20.8533,2,13,LeBron James defensive rebound,0.2940,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,21.0034,2,15,Luka Doncic makes 12-foot two point shot,0.5130,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,21.3202,2,15,Cooper Flagg makes 11-foot pullup jump shot (Max Christie assists),0.4920,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,21.5870,2,15,Deandre Ayton makes 4-foot alley oop dunk shot (LeBron James assists),0.4780,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,21.8037,2,15,Cooper Flagg makes 27-foot three pointer,0.4550,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,21.9538,2,15,Deandre Ayton traveling,0.4340,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,21.9539,2,15,Austin Reaves enters the game for Rui Hachimura,0.4580,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.2040,2,15,Deandre Ayton blocks Cooper Flagg 's 7-foot driving floating jump shot,0.4050,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.2541,2,15,Deandre Ayton defensive rebound,0.4150,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.3542,2,15,LeBron James out of bounds bad pass turnover,0.4310,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.4543,2,15,Deandre Ayton blocks P.J. Washington 's 2-foot driving layup,0.4070,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.4711,2,15,Anthony Davis offensive rebound,0.4230,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.4712,2,15,Anthony Davis makes dunk,0.3830,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,22.7713,2,15,Austin Reaves makes 26-foot three pointer,0.3950,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.1031,2,15,P.J. Washington misses 26-foot three point jumper,0.3550,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.1415,2,15,Austin Reaves defensive rebound,0.3750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.4616,2,15,Austin Reaves bad pass (P.J. Washington steals),0.3510,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.5584,2,15,Max Christie makes 23-foot three point shot (P.J. Washington assists),0.3300,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.8201,2,15,Max Christie shooting foul,0.3030,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.8202,2,16,Luka Doncic makes free throw 1 of 2,0.4480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.8203,2,17,Luka Doncic makes free throw 2 of 2,0.5300,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.9888,2,17,Brandon Williams misses driving layup,0.5460,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,23.9889,2,17,P.J. Washington offensive rebound,0.5300,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.0223,3,17,Ryan Nembhard enters the game for Brandon Williams,0.4930,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.0224,3,17,Rui Hachimura enters the game for Gabe Vincent,0.5540,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.0225,2,17,Mavericks offensive team rebound,0.5480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.0226,2,17,End of the 2nd Quarter,0.5260,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.0227,2,17,P.J. Washington misses two point shot,0.5690,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.4061,3,17,Ryan Nembhard makes 26-foot three point jumper (Cooper Flagg assists),0.4990,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.7062,3,17,Rui Hachimura misses 25-foot three point jumper,0.4970,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.7397,3,17,P.J. Washington defensive rebound,0.4610,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,24.9231,3,17,Ryan Nembhard makes 17-foot two point shot,0.4500,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.1732,3,17,Luka Doncic makes driving layup,0.4130,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.4066,3,17,P.J. Washington makes 2-foot dunk (Cooper Flagg assists),0.4070,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.5401,3,17,Anthony Davis personal foul,0.3620,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.6235,3,20,Luka Doncic makes 28-foot three point step back jumpshot (Austin Reaves assists),0.7180,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.8069,3,20,Anthony Davis misses 25-foot three point jumper,0.6870,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.8570,3,20,Austin Reaves defensive rebound,0.7040,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,25.9405,3,20,LeBron James lost ball turnover (Cooper Flagg steals),0.6790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.0572,3,20,Cooper Flagg misses driving floating jump shot,0.6810,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.0907,3,20,Anthony Davis offensive rebound,0.6730,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.0908,3,20,Anthony Davis makes tip shot,0.6920,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.4242,3,20,Luka Doncic misses 26-foot three point pullup jump shot,0.6480,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.4576,3,20,P.J. Washington defensive rebound,0.6380,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.5077,3,20,Luka Doncic personal foul,0.6310,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.6912,3,20,Ryan Nembhard misses 22-foot three point jumper,0.6230,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.7246,3,20,Austin Reaves defensive rebound,0.6190,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,26.9080,3,20,Austin Reaves makes 26-foot three point step back jumpshot,0.5870,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,27.1915,3,20,Austin Reaves personal foul,0.5960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,27.3249,3,20,Anthony Davis makes 20-foot pullup jump shot,0.5840,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,27.5083,3,23,Rui Hachimura makes 23-foot three point jumper (Luka Doncic assists),0.8360,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,27.7584,3,23,Max Christie out of bounds bad pass turnover,0.8270,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,27.9585,3,23,Rui Hachimura makes 23-foot three point jumper (LeBron James assists),0.7720,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,28.2253,3,23,Cooper Flagg misses 27-foot three point pullup jump shot,0.8080,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,28.2587,3,23,LeBron James defensive rebound,0.7820,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,28.3255,3,23,LeBron James makes two point shot,0.7930,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,28.3256,3,23,Mavericks Full timeout,0.7840,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,28.7424,3,23,Ryan Nembhard makes 16-foot driving floating jump shot (Cooper Flagg assists),0.7370,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,29.0425,3,26,LeBron James makes 24-foot three point jumper (Luka Doncic assists),0.9230,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,29.4426,3,26,Max Christie makes 3-foot two point shot (Anthony Davis assists),0.8980,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,29.6093,3,26,Austin Reaves makes 27-foot three point step back jumpshot,0.8880,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.1094,3,26,Max Christie misses 27-foot three point shot,0.8700,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.1595,3,26,Cooper Flagg offensive rebound,0.8740,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.1596,3,26,Cooper Flagg offensive charge,0.8780,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.1597,3,26,Cooper Flagg turnover,0.8750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.1598,3,26,Daniel Gafford enters the game for Anthony Davis,0.8550,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.1599,3,26,Naji Marshall enters the game for Cooper Flagg,0.8950,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.3434,3,26,Luka Doncic makes driving layup,0.8610,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.7601,3,26,Ryan Nembhard misses 26-foot three point jumper,0.8370,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.7769,3,26,Lakers defensive team rebound,0.8420,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.7770,3,26,Brandon Williams enters the game for Ryan Nembhard,0.8580,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,30.9938,3,26,LeBron James misses 23-foot three point jumper,0.8600,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.0105,3,26,Brandon Williams defensive rebound,0.8520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.1106,3,26,P.J. Washington misses two point shot,0.8360,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.1607,3,26,Deandre Ayton defensive rebound,0.8540,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.2442,3,26,P.J. Washington blocks LeBron James 's 2-foot layup,0.8290,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.2943,3,26,Lakers offensive team rebound,0.8460,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.2944,3,26,Jake LaRavia enters the game for LeBron James,0.8150,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.5278,3,26,Luka Doncic misses 26-foot three point jumper,0.8180,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.5612,3,26,Naji Marshall defensive rebound,0.8190,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.6947,3,26,P.J. Washington makes 26-foot three point jumper (Naji Marshall assists),0.8240,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,31.9448,3,26,Austin Reaves makes 25-foot three point jumper (Deandre Ayton assists),0.8010,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.3449,3,26,Brandon Williams misses 26-foot three point jumper,0.8010,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.4283,3,26,Deandre Ayton defensive rebound,0.8030,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.5284,3,26,Austin Reaves misses 27-foot three point pullup jump shot,0.7600,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.5785,3,26,Rui Hachimura offensive rebound,0.7870,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.5786,3,26,Rui Hachimura misses two point shot,0.7760,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.5954,3,26,Deandre Ayton offensive rebound,0.7790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.5955,3,26,Deandre Ayton makes tip shot,0.7450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9122,3,26,Jaxson Hayes enters the game for Deandre Ayton,0.7380,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9123,3,26,Gabe Vincent enters the game for Rui Hachimura,0.7410,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9124,3,26,Cooper Flagg enters the game for Max Christie,0.7450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9125,3,26,Klay Thompson enters the game for P.J. Washington,0.7110,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9793,3,26,Cooper Flagg makes free throw 1 of 2,0.6950,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9794,3,26,Cooper Flagg makes free throw 2 of 2,0.7350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,32.9795,3,26,Jaxson Hayes shooting foul,0.7580,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,33.1963,3,26,Luka Doncic makes driving layup,0.7050,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,33.4964,3,26,Naji Marshall makes 23-foot three point jumper (Cooper Flagg assists),0.6780,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,33.7965,3,28,Jaxson Hayes makes 5-foot two point shot (Luka Doncic assists),0.8350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.0299,3,28,Brandon Williams makes 9-foot driving floating jump shot,0.8240,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.1467,3,28,Luka Doncic bad pass (Brandon Williams steals),0.8200,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.2134,3,28,Klay Thompson makes 24-foot three point shot (Cooper Flagg assists),0.8340,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.3802,3,28,Lakers Full timeout,0.8110,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.3803,3,28,LeBron James enters the game for Austin Reaves,0.7830,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.5971,3,31,Luka Doncic makes 25-foot three point step back jumpshot,0.9140,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.9138,3,31,Klay Thompson misses 27-foot three point pullup jump shot,0.9080,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.9639,3,31,Jake LaRavia defensive rebound,0.8910,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,34.9974,3,33,LeBron James makes two point shot (Luka Doncic assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.3308,3,33,Naji Marshall misses two point shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.3609,3,33,Daniel Gafford offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.3627,3,33,Daniel Gafford makes two point shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.5528,3,33,Brandon Williams personal foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.7212,3,33,LeBron James misses 23-foot three point jumper,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.7746,3,33,Klay Thompson defensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.9497,3,33,Luka Doncic personal foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,35.9965,3,33,Jaxson Hayes blocks Naji Marshall 's 20-foot pullup jump shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0149,3,33,Naji Marshall offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0234,3,33,Naji Marshall makes 12-foot jumper,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0318,4,33,Ryan Nembhard enters the game for Daniel Gafford,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0319,4,33,Rui Hachimura enters the game for Luka Doncic,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0320,4,33,Deandre Ayton enters the game for Jake LaRavia,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0321,4,33,Anthony Davis enters the game for Brandon Williams,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0322,3,33,End of the 3rd Quarter,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0323,3,33,(00:00) [Mavericks] REF-INITIATED REVIEW (REPLAY SUPPORTS CALL),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.0324,4,33,Austin Reaves enters the game for Jaxson Hayes,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.3158,4,33,Cooper Flagg shooting foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.3159,4,33,LeBron James makes free throw 1 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.3160,4,33,LeBron James misses free throw 2 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.3661,4,33,Anthony Davis defensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.6829,4,33,Naji Marshall makes 8-foot pullup jump shot (Cooper Flagg assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.9997,4,33,Naji Marshall shooting foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.9998,4,33,Austin Reaves makes free throw 1 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,36.9999,4,33,Austin Reaves makes free throw 2 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,37.1500,4,33,Cooper Flagg makes 2-foot layup (Ryan Nembhard assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,37.4501,4,33,Naji Marshall shooting foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,37.4502,4,33,Austin Reaves makes driving layup,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,37.4503,4,33,Austin Reaves makes free throw 1 of 1,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,37.8670,4,33,Ryan Nembhard makes 25-foot three point jumper (Cooper Flagg assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,38.1338,4,33,Rui Hachimura makes 23-foot three point jumper (Austin Reaves assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,38.5006,4,33,Cooper Flagg makes 4-foot two point shot (Anthony Davis assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,38.8173,4,33,Austin Reaves makes driving layup,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.2174,4,33,Anthony Davis misses 16-foot jumper,0.9970,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.2509,4,33,Naji Marshall offensive rebound,0.9980,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.2510,4,33,Gabe Vincent shooting foul,0.9960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.2511,4,33,Naji Marshall makes free throw 1 of 2,0.9960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.2512,4,33,Luka Doncic enters the game for Gabe Vincent,0.9970,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.2513,4,33,Naji Marshall makes free throw 2 of 2,0.9980,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.4180,4,33,Anthony Davis blocks Deandre Ayton 's 4-foot dunk,0.9960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.4848,4,33,Naji Marshall defensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.5182,4,33,Ryan Nembhard makes 27-foot three point shot (Naji Marshall assists),0.9930,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.5517,4,33,P.J. Washington enters the game for Naji Marshall,0.9990,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.5518,4,33,Lakers Full timeout,0.9970,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.7685,4,33,Luka Doncic misses 20-foot pullup jump shot,0.9970,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.8353,4,33,Cooper Flagg defensive rebound,0.9980,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,39.9854,4,33,Austin Reaves personal foul,0.9960,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.1688,4,33,Anthony Davis makes 11-foot two point shot (Cooper Flagg assists),0.9930,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.3689,4,33,Deandre Ayton makes layup (Luka Doncic assists),0.9930,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.5857,4,33,Ryan Nembhard misses driving floating jump shot,0.9920,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.6525,4,33,Luka Doncic defensive rebound,0.9900,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.6692,4,33,Rui Hachimura misses two point shot,0.9890,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.7027,4,33,LeBron James offensive rebound,0.9900,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.7028,4,33,Anthony Davis blocks LeBron James's two point shot,0.9890,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.7362,4,33,Rui Hachimura offensive rebound,0.9890,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.8030,4,33,LeBron James misses 26-foot three point jumper,0.9870,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.8197,4,33,Gabe Vincent enters the game for LeBron James,0.9790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.8198,4,33,Lakers offensive team rebound,0.9880,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,40.9199,4,33,Austin Reaves makes 12-foot driving floating jump shot,0.9910,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.1034,4,33,Klay Thompson offensive foul,0.9800,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.1035,4,33,Klay Thompson turnover,0.9850,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.1036,4,33,Naji Marshall enters the game for Anthony Davis,0.9790,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.2537,4,33,Luka Doncic bad pass (Cooper Flagg steals),0.9840,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.4538,4,33,Cooper Flagg misses 11-foot pullup jump shot,0.9750,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.5205,4,33,Deandre Ayton defensive rebound,0.9810,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.6540,4,33,P.J. Washington shooting foul,0.9720,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.6541,4,33,Austin Reaves makes free throw 1 of 2,0.9740,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.6542,4,33,Austin Reaves misses free throw 2 of 2,0.9740,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.6876,4,33,Cooper Flagg defensive rebound,0.9770,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.9044,4,33,Cooper Flagg misses 12-foot two point shot,0.9620,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,41.9545,4,33,Deandre Ayton defensive rebound,0.9520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.1212,4,33,Rui Hachimura makes 24-foot three point jumper (Gabe Vincent assists),0.9530,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.1380,4,33,Mavericks Full timeout,0.9520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.1381,4,33,Daniel Gafford enters the game for Ryan Nembhard,0.9470,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.1382,4,33,Brandon Williams enters the game for Klay Thompson,0.9690,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.1383,4,33,Max Christie enters the game for Cooper Flagg,0.9520,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.4051,4,33,Brandon Williams misses driving layup,0.9440,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.4552,4,33,Austin Reaves defensive rebound,0.9410,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.7219,4,33,Rui Hachimura misses 28-foot three point jumper,0.9500,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.7554,4,33,Daniel Gafford defensive rebound,0.9500,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.8388,4,33,Gabe Vincent shooting foul,0.9350,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.8389,4,33,Brandon Williams makes free throw 1 of 2,0.9310,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.8390,4,33,Brandon Williams misses free throw 2 of 2,0.9400,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,42.8724,4,33,Luka Doncic defensive rebound,0.9450,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.1725,4,33,Deandre Ayton makes 2-foot dunk (Gabe Vincent assists),0.9230,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.3060,4,33,Gabe Vincent personal foul,0.9060,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.4894,4,33,Brandon Williams misses driving floating jump shot,0.9310,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.5228,4,33,Luka Doncic defensive rebound,0.9140,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6396,4,33,Brandon Williams shooting foul,0.9090,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6397,4,34,Luka Doncic makes free throw 1 of 3,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6398,4,35,Luka Doncic makes free throw 2 of 3,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6399,4,35,Anthony Davis enters the game for Naji Marshall,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6400,4,35,Cooper Flagg enters the game for Daniel Gafford,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6401,4,35,Ryan Nembhard enters the game for Brandon Williams,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.6402,4,36,Luka Doncic makes free throw 3 of 3,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,43.9736,4,36,P.J. Washington makes driving layup (Cooper Flagg assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.1904,4,36,LeBron James enters the game for Gabe Vincent,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.1905,4,36,Lakers Full timeout,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.4406,4,36,Luka Doncic misses driving floating jump shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.4407,4,36,Lakers offensive team rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.4908,4,36,Cooper Flagg personal foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.4909,4,36,LeBron James misses free throw 1 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.4910,4,36,Lakers offensive team rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.4911,4,36,LeBron James misses free throw 2 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.5245,4,36,Ryan Nembhard defensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.7580,4,36,P.J. Washington misses 10-foot two point shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.7914,4,36,P.J. Washington offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,44.7915,4,36,P.J. Washington makes tip shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,45.2749,4,36,Rui Hachimura makes 13-foot pullup jump shot (Luka Doncic assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,45.5750,4,36,Max Christie misses 23-foot three point jumper,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,45.5918,4,36,Max Christie offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,45.6586,4,36,Ryan Nembhard misses driving floating jump shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,45.6920,4,36,Ryan Nembhard offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,45.7088,4,36,Ryan Nembhard makes 19-foot pullup jump shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.0422,4,39,LeBron James makes 26-foot three point jumper (Luka Doncic assists),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.3090,4,39,Max Christie misses 22-foot three point pullup jump shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.3424,4,39,Lakers defensive team rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.6258,4,39,Anthony Davis shooting foul,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.6259,4,40,Luka Doncic makes free throw 1 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.6260,4,41,Luka Doncic makes free throw 2 of 2,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8095,4,41,Ryan Nembhard lost ball turnover (Rui Hachimura steals),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8262,4,41,Rui Hachimura lost ball turnover (Ryan Nembhard steals),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8763,4,41,Lakers defensive team rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8764,4,41,Luka Doncic blocks P.J. Washington 's 5-foot layup,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8765,4,41,Dwight Powell enters the game for Cooper Flagg,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8766,4,41,Caleb Martin enters the game for Ryan Nembhard,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8767,4,41,Jaden Hardy enters the game for Anthony Davis,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8768,4,41,Brandon Williams enters the game for Max Christie,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8769,4,41,(01:10) [Lakers] COACH'S CHALLENGE (CALL OVERTURNED) [Lakers] retain their timeout,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.8770,4,41,Lakers Full timeout,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,46.9271,4,41,P.J. Washington vs. Deandre Ayton (Rui Hachimura gains possession),1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.2722,4,41,Luka Doncic misses 28-foot three point step back jumpshot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.3173,4,41,Dwight Powell defensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.5191,4,41,Brandon Williams misses driving layup,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.5592,4,41,P.J. Washington offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.5810,4,41,P.J. Washington misses finger roll layup,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.5877,4,41,P.J. Washington offensive rebound,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.5878,4,41,P.J. Washington makes tip shot,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,47.9879,4,41,shot clock turnover ,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,48.0447,4,41,End of the 4th Quarter,1.0000,41,HIT
+Luka Doncic,401809820,2025-11-28,33.3902,48.0448,4,41,End of Game,1.0000,41,HIT

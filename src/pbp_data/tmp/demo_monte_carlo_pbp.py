@@ -406,20 +406,27 @@ def load_play_by_play(game_id, player_name):
         'commence_time_et': commence_time_et,
     }
     
-    # Parse plays
+    # Parse plays - TWO PASS: first extract, then sort, then calculate cumulative
     plays = data['plays']
     play_data = []
-    player_points = 0
     
-    for play in plays:
+    # PASS 1: Extract play info and check if player scored
+    for play_idx, play in enumerate(plays):
         play_id = play.get('id')
         quarter = play.get('period', {}).get('number', 1)
         
         # Calculate game minute from clock
         clock_display = play.get('clock', {}).get('displayValue', '12:00')
         try:
-            mins, secs = map(int, clock_display.split(':'))
-            time_left_in_quarter = mins + secs / 60.0
+            # Handle both "MM:SS" string format and numeric values
+            if isinstance(clock_display, (int, float)):
+                time_left_in_quarter = float(clock_display) / 60.0
+            elif ':' in str(clock_display):
+                mins, secs = map(int, str(clock_display).split(':'))
+                time_left_in_quarter = mins + secs / 60.0
+            else:
+                # Fallback: try to convert to float
+                time_left_in_quarter = float(clock_display) / 60.0
             
             # Game minute = start of quarter + time elapsed in quarter
             quarter_start = (quarter - 1) * 12
@@ -432,30 +439,40 @@ def load_play_by_play(game_id, player_name):
         away_score = play.get('awayScore', 0)
         home_score = play.get('homeScore', 0)
         
-        # Check if player scored
+        # Check if player scored on THIS play (store points, don't accumulate yet)
+        points_this_play = 0
         if player_name in description:
-            # Check for scoring plays
             if 'makes' in description.lower() or 'free throw' in description.lower():
-                # Extract points (e.g., "makes 2-pt", "makes 3-pt", "free throw")
                 if '3-pt' in description.lower() or 'three point' in description.lower():
-                    player_points += 3
+                    points_this_play = 3
                 elif '2-pt' in description.lower() or 'two point' in description.lower():
-                    player_points += 2
+                    points_this_play = 2
                 elif 'free throw' in description.lower() and 'makes' in description.lower():
-                    player_points += 1
+                    points_this_play = 1
         
         play_data.append({
             'play_id': play_id,
+            'espn_index': play_idx,  # Store original ESPN order
             'quarter': quarter,
             'game_minute': game_minute,
             'description': description,
             'away_score': away_score,
             'home_score': home_score,
-            'cumulative_points': player_points,
+            'points_this_play': points_this_play,
         })
     
+    # PASS 2: Sort by game_minute ONLY (ignore ESPN order)
     df = pd.DataFrame(play_data)
     df = df.sort_values('game_minute').reset_index(drop=True)
+    
+    # PASS 3: Calculate cumulative points in correct order
+    df['cumulative_points'] = df['points_this_play'].cumsum()
+    
+    # PASS 4: Add tiny offset to game_minute to preserve sorted order in plotting
+    df['game_minute'] = df['game_minute'] + (df.index * 0.0001)
+    
+    # Clean up temporary column
+    df = df.drop(columns=['espn_index', ])
     
     return df, game_metadata
 
@@ -704,7 +721,7 @@ p1 <- ggplot(df) +
     legend.justification = "left",
     legend.box = "horizontal",
     legend.margin = margin(0,0,5,0),
-    plot.margin = margin(t = 60, r = 10, b = 10, l = 10)
+    plot.margin = margin(t = 80, r = 10, b = 10, l = 10)
   )
 
 # Bottom plot: Points vs Pace Line (colored by ahead/behind pace)
@@ -713,9 +730,9 @@ p2 <- ggplot(df, aes(x = game_minute)) +
   geom_ribbon(aes(ymin = pace_line, ymax = cumulative_points, fill = ahead_of_pace),
               alpha = 0.3) +
   
-  # Points line
+  # Points line (royal blue like MC smoothed line)
   geom_line(aes(y = cumulative_points, linetype = "Actual Points"), 
-            color = "darkgreen", linewidth = 1.5) +
+            color = "#4169E1", linewidth = 1.5) +
   
   # Pace line (straight line from 0 to ceil(prop_line))
   geom_line(aes(y = pace_line, linetype = "Pace Line"),
@@ -724,14 +741,6 @@ p2 <- ggplot(df, aes(x = game_minute)) +
   # Prop line (for reference)
   geom_hline(aes(yintercept = {prop_line}, linetype = "Prop Line"), 
              color = "gray50", linewidth = 1.0) +
-  
-  # Annotations
-  annotate("text", x = 45, y = {prop_line_ceil} + 2, 
-           label = paste0("Pace: {prop_line_ceil}"), 
-           color = "black", size = 4, fontface = "bold") +
-  annotate("text", x = 45, y = {prop_line} - 2, 
-           label = paste0("Prop: {prop_line}"), 
-           color = "gray50", size = 4, fontface = "bold") +
   
   # Styling
   scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"),
@@ -742,7 +751,7 @@ p2 <- ggplot(df, aes(x = game_minute)) +
                                    "Prop Line" = "dashed"),
                         name = "") +
   scale_x_continuous(limits = c(0, 48), breaks = seq(0, 48, 12), expand = c(0, 0)) +
-  labs(subtitle = paste0("Final: {final_points} pts ({result_label})"),
+  labs(subtitle = paste0("Target: {prop_line_ceil} pts | Final: {final_points} pts ({result_label})"),
        x = "Game Time (minutes)",
        y = "Points Scored") +
   theme_minimal(base_size = 14) +
@@ -770,9 +779,9 @@ pushViewport(viewport(width = 1, height = 1))
 print(combined)
 
 # Add logos and headshot on top
-grid.raster(readPNG("{away_logo_path}"), x = 0.12, y = 0.97, width = 0.08, height = 0.08, just = c("center", "top"))
-grid.raster(readPNG("{home_logo_path}"), x = 0.88, y = 0.97, width = 0.08, height = 0.08, just = c("center", "top"))
-grid.raster(readPNG("{player_headshot_path}"), x = 0.5, y = 0.97, width = 0.09, height = 0.09, just = c("center", "top"))
+grid.raster(readPNG("{away_logo_path}"), x = 0.12, y = 0.95, width = 0.08, height = 0.08, just = c("center", "top"))
+grid.raster(readPNG("{home_logo_path}"), x = 0.88, y = 0.95, width = 0.08, height = 0.08, just = c("center", "top"))
+grid.raster(readPNG("{player_headshot_path}"), x = 0.5, y = 0.95, width = 0.09, height = 0.09, just = c("center", "top"))
 
 dev.off()
 
@@ -871,6 +880,7 @@ def process_game(player_name, game_id, n_sims, use_consensus):
             'game_minute': game_minute,
             'quarter': row['quarter'],
             'cumulative_points': current_points,
+            'description': row['description'],
             'prob_over': prob_over,
         })
     
