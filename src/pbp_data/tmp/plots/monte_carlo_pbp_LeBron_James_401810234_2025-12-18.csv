@@ -1,0 +1,546 @@
+player_name,game_id,game_date,prop_line,game_minute,quarter,cumulative_points,description,prob_over,final_points,result
+LeBron James,401810234,2025-12-18,22.0000,0.0000,1,0,Jaxson Hayes vs. Jusuf Nurkic (Keyonte George gains possession),0.4920,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,0.3500,1,0,Keyonte George misses 25-foot three point step back jumpshot,0.4630,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,0.4333,1,0,Jusuf Nurkic offensive rebound,0.4390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,0.4333,1,0,Jusuf Nurkic misses two point shot,0.4700,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,0.4333,1,0,Jazz offensive team rebound,0.4440,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,0.4667,1,0,Kyle Filipowski makes 4-foot dunk (Keyonte George assists),0.4560,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,0.8667,1,0,Luka Doncic makes 14-foot two point shot,0.3980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.2000,1,0,Ace Bailey misses 25-foot three point jumper,0.4110,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.2333,1,0,Kyle Filipowski offensive rebound,0.4330,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.3333,1,0,Jaxson Hayes shooting foul,0.4290,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.3333,1,0,Jusuf Nurkic makes free throw 1 of 2,0.4240,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.3333,1,0,Jusuf Nurkic misses free throw 2 of 2,0.3990,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.3667,1,0,Rui Hachimura defensive rebound,0.4250,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.6000,1,2,Marcus Smart makes two point shot (LeBron James assists),0.6130,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,1.7833,1,2,Jusuf Nurkic makes 3-foot layup (Keyonte George assists),0.5920,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.0000,1,2,Luka Doncic misses 28-foot three point jumper,0.6060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.0667,1,2,Jusuf Nurkic defensive rebound,0.6140,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.2833,1,2,Keyonte George misses 25-foot three point pullup jump shot,0.6050,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.3500,1,2,Kyle Filipowski offensive rebound,0.5850,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.3500,1,2,Kyle Filipowski makes tip shot,0.6060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.5667,1,2,LeBron James makes driving layup (Luka Doncic assists),0.6050,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,2.8167,1,2,Ace Bailey makes 20-foot pullup jump shot (Jusuf Nurkic assists),0.5710,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.0667,1,2,Rui Hachimura misses 25-foot three point jumper,0.5620,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.1167,1,2,Svi Mykhailiuk defensive rebound,0.5500,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.2167,1,2,Marcus Smart shooting foul,0.5670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.2167,1,2,Svi Mykhailiuk makes free throw 1 of 2,0.5490,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.2167,1,2,Svi Mykhailiuk makes free throw 2 of 2,0.5880,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.3000,1,2,Marcus Smart makes 24-foot three point jumper (Luka Doncic assists),0.5380,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.5500,1,2,Svi Mykhailiuk makes 25-foot three pointer (Jusuf Nurkic assists),0.5320,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,3.7333,1,2,Svi Mykhailiuk personal foul,0.5220,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.0167,1,2,LeBron James misses 13-foot turnaround jump shot,0.5060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.0500,1,2,Keyonte George defensive rebound,0.4860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.1167,1,2,Keyonte George makes 25-foot three pointer,0.4770,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.3667,1,2,Luka Doncic makes 25-foot three point step back jumpshot,0.5080,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.5833,1,2,Svi Mykhailiuk lost ball turnover (Luka Doncic steals),0.5020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.6500,1,2,LeBron James makes running layup (Luka Doncic assists),0.5110,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.6500,1,2,Lakers Full timeout,0.4900,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.6500,1,2,Taylor Hendricks enters the game for Ace Bailey,0.4840,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.6500,1,2,Isaiah Collier enters the game for Kyle Filipowski,0.5230,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,4.9500,1,2,Jusuf Nurkic makes driving layup (Keyonte George assists),0.5090,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,5.2167,1,2,Isaiah Collier shooting foul,0.4860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,5.2167,1,2,Jaxson Hayes makes free throw 1 of 2,0.4710,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,5.2167,1,2,Jaxson Hayes makes free throw 2 of 2,0.4760,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,5.4667,1,2,Isaiah Collier makes 25-foot three point jumper (Taylor Hendricks assists),0.4350,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,5.7500,1,2,Luka Doncic misses 25-foot three point step back jumpshot,0.4210,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,5.7667,1,2,Jusuf Nurkic defensive rebound,0.4290,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.0167,1,2,"Jusuf Nurkic bad pass
+turnover (Luka Doncic steals)",0.4230,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.1167,1,2,Luka Doncic misses two point shot,0.4210,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.1500,1,2,LeBron James misses tip shot,0.3980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.1500,1,2,LeBron James offensive rebound,0.3840,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.1833,1,2,Jaxson Hayes offensive rebound,0.4280,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.1833,1,2,Jaxson Hayes makes tip in dunk,0.4340,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.3833,1,2,Svi Mykhailiuk makes 24-foot three pointer,0.4060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Jake LaRavia enters the game for LeBron James,0.3910,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Jaxson Hayes offensive foul,0.4000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Jaxson Hayes offensive foul turnover,0.3910,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Kevin Love enters the game for Svi Mykhailiuk,0.4120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Brice Sensabaugh enters the game for Jusuf Nurkic,0.3930,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Nick Smith Jr. enters the game for Jaxson Hayes,0.3910,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.6833,1,2,Jarred Vanderbilt enters the game for Rui Hachimura,0.3790,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,6.8500,1,2,Keyonte George makes driving layup (Isaiah Collier assists),0.3950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.1167,1,2,Luka Doncic makes 6-foot two point shot,0.3510,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.2000,1,2,Isaiah Collier makes free throw 1 of 2,0.3730,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.2000,1,2,Maxi Kleber enters the game for Marcus Smart,0.3830,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.2000,1,2,Nick Smith Jr. shooting foul,0.3520,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.2000,1,2,Isaiah Collier misses free throw 2 of 2,0.3720,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.2333,1,2,Jarred Vanderbilt defensive rebound,0.3800,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.4667,1,2,Brice Sensabaugh shooting foul,0.3460,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.4667,1,2,Luka Doncic makes free throw 1 of 2,0.3580,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.4667,1,2,Luka Doncic misses free throw 2 of 2,0.3630,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.5500,1,2,Jarred Vanderbilt offensive rebound,0.3330,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.5500,1,2,Jarred Vanderbilt misses tip shot,0.3590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.5500,1,2,Keyonte George defensive rebound,0.3690,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,7.8333,1,2,Keyonte George out of bounds bad pass turnover,0.3380,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.0333,1,2,Kevin Love shooting foul,0.3300,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.0333,1,2,Luka Doncic makes free throw 1 of 2,0.3100,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.0333,1,2,Luka Doncic makes free throw 2 of 2,0.3280,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.2167,1,2,"Isaiah Collier bad pass
+turnover (Luka Doncic steals)",0.3260,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.2833,1,2,Jake LaRavia makes 4-foot dunk (Luka Doncic assists),0.3300,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.5667,1,2,Brice Sensabaugh makes 25-foot three pointer (Isaiah Collier assists),0.3120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.8167,1,2,Nick Smith Jr. misses 28-foot three point jumper,0.2850,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.8667,1,2,Kevin Love defensive rebound,0.3160,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.9833,1,2,Taylor Hendricks misses free throw 2 of 2,0.3040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.9833,1,2,Jake LaRavia shooting foul,0.2960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,8.9833,1,2,Taylor Hendricks makes free throw 1 of 2,0.2820,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.0167,1,2,Jarred Vanderbilt defensive rebound,0.2890,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.2667,1,2,Isaiah Collier shooting foul,0.2580,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.2667,1,2,Jazz Full timeout,0.2500,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.2667,1,2,Luka Doncic makes free throw 1 of 3,0.2670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.2667,1,2,Luka Doncic makes free throw 2 of 3,0.2740,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.2667,1,2,Luka Doncic makes free throw 3 of 3,0.2950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.6833,1,2,Isaiah Collier makes 4-foot layup (Keyonte George assists),0.2630,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,9.9333,1,2,Jarred Vanderbilt makes 4-foot dunk (Luka Doncic assists),0.2480,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.1500,1,2,Taylor Hendricks makes free throw 1 of 1,0.2200,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.1500,1,2,Taylor Hendricks makes 7-foot driving dunk (Isaiah Collier assists),0.2510,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.1500,1,2,Jarred Vanderbilt shooting foul,0.2600,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.1500,1,2,Kyle Filipowski enters the game for Keyonte George,0.2360,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.1500,1,2,LeBron James enters the game for Maxi Kleber,0.2350,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.3500,1,2,Kyle Filipowski blocks Luka Doncic 's 2-foot driving layup,0.2330,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.3833,1,2,Kyle Filipowski defensive rebound,0.2430,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.5333,1,2,Kevin Love makes 25-foot three point jumper (Isaiah Collier assists),0.2430,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,10.9333,1,2,Luka Doncic misses 27-foot three point pullup jump shot,0.2160,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.0000,1,2,Jarred Vanderbilt offensive rebound,0.2160,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.0000,1,2,Kyle Filipowski shooting foul,0.2040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.0000,1,2,Luka Doncic makes free throw 1 of 2,0.1940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.0000,1,2,Luka Doncic misses free throw 2 of 2,0.2280,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.0200,1,2,Kyle Filipowski defensive rebound,0.2220,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.1917,1,2,Jake LaRavia personal foul,0.2290,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.1917,1,2,Isaiah Collier makes free throw 1 of 2,0.1960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.1917,1,2,Isaiah Collier misses free throw 2 of 2,0.2020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.2067,1,2,Jazz offensive team rebound,0.2050,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.2300,1,2,Kevin Love misses 22-foot three point jumper,0.2130,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.2817,1,2,Jake LaRavia defensive rebound,0.2120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.4317,1,2,Luka Doncic misses 27-foot three point pullup jump shot,0.2000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.5000,1,2,Brice Sensabaugh defensive rebound,0.2020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.8233,1,2,Kevin Love misses 25-foot three point pullup jump shot,0.2020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.8633,1,2,Jarred Vanderbilt defensive rebound,0.2020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.9467,1,2,Taylor Hendricks shooting foul,0.2000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.9467,1,3,LeBron James makes free throw 1 of 2,0.2940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.9467,1,3,Marcus Smart enters the game for Luka Doncic,0.2890,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.9467,1,3,LeBron James misses free throw 2 of 2,0.2950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.9583,1,3,Lakers offensive team rebound,0.2680,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,11.9583,1,3,Luka Doncic enters the game for Marcus Smart,0.2710,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,1,3,Nick Smith Jr. misses 23-foot three point jumper,0.2390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,1,3,Lakers offensive team rebound,0.2560,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,1,3,End of the 1st Quarter,0.2760,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,2,3,Jusuf Nurkic enters the game for Taylor Hendricks,0.2530,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,2,3,Ace Bailey enters the game for Kevin Love,0.2870,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,2,3,Marcus Smart enters the game for Nick Smith Jr.,0.2610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.0000,2,3,Adou Thiero enters the game for Luka Doncic,0.2510,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.2333,2,3,Adou Thiero misses layup,0.2610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.2667,2,3,Jarred Vanderbilt offensive rebound,0.2590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.2833,2,3,Jarred Vanderbilt makes two point shot,0.2670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.5000,2,3,Brice Sensabaugh makes 25-foot three point jumper (Isaiah Collier assists),0.2290,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,12.8167,2,6,Jarred Vanderbilt makes 23-foot three point jumper (LeBron James assists),0.5600,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.1667,2,6,Adou Thiero personal foul,0.5360,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.2000,2,6,Brice Sensabaugh makes 5-foot dunk (Isaiah Collier assists),0.5470,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.6167,2,6,Marcus Smart makes 25-foot three point jumper (Jake LaRavia assists),0.5090,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.8500,2,6,Adou Thiero shooting foul,0.4990,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.8500,2,6,Ace Bailey misses free throw 1 of 2,0.4750,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.8500,2,6,Jazz offensive team rebound,0.5160,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.8500,2,6,Walter Clayton Jr. enters the game for Isaiah Collier,0.5030,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.8500,2,6,Ace Bailey misses free throw 2 of 2,0.5010,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,13.8833,2,6,Adou Thiero defensive rebound,0.5060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.0167,2,6,LeBron James misses 25-foot three point jumper,0.5020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.0833,2,6,Jusuf Nurkic defensive rebound,0.5150,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.2167,2,6,Marcus Smart shooting foul,0.4870,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.2167,2,6,Brice Sensabaugh makes free throw 1 of 2,0.4880,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.2167,2,6,Brice Sensabaugh makes free throw 2 of 2,0.5030,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.4500,2,6,Adou Thiero misses two point shot,0.4690,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.4833,2,6,Brice Sensabaugh defensive rebound,0.4420,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.5500,2,6,Kyle Filipowski misses running layup,0.4600,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.5833,2,6,Kyle Filipowski offensive rebound,0.4800,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.5833,2,6,Kyle Filipowski misses two point shot,0.4590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.6167,2,6,LeBron James defensive rebound,0.4530,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.7000,2,6,Jake LaRavia makes 23-foot running jump shot (LeBron James assists),0.4510,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.9833,2,6,Adou Thiero personal foul,0.4480,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.9833,2,6,Taylor Hendricks enters the game for Kyle Filipowski,0.4560,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.9833,2,6,Rui Hachimura enters the game for Adou Thiero,0.4490,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,14.9833,2,6,Jaxson Hayes enters the game for Jarred Vanderbilt,0.4550,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.1500,2,6,Brice Sensabaugh misses layup,0.4060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.1833,2,6,Marcus Smart defensive rebound,0.4270,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.2500,2,6,LeBron James makes running layup,0.4420,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.4333,2,6,Walter Clayton Jr. makes free throw 1 of 1,0.4390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.4333,2,6,Keyonte George enters the game for Brice Sensabaugh,0.3950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.4333,2,6,Dalton Knecht enters the game for Jake LaRavia,0.4640,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.4333,2,6,Walter Clayton Jr. makes 11-foot pullup jump shot,0.4470,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.4333,2,6,Jake LaRavia shooting foul,0.4120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.6500,2,6,LeBron James makes driving layup,0.4020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.6500,2,6,Taylor Hendricks shooting foul,0.4170,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.6500,2,6,Jazz Full timeout,0.4220,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.6500,2,7,LeBron James makes free throw 1 of 1,0.5270,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,15.9000,2,7,Ace Bailey makes 20-foot pullup jump shot (Jusuf Nurkic assists),0.5200,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.1333,2,7,Walter Clayton Jr. personal foul,0.5270,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.2500,2,9,Rui Hachimura makes 13-foot two point shot (LeBron James assists),0.7440,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.4833,2,9,Jusuf Nurkic misses 9-foot two point shot,0.7250,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.5000,2,9,Jusuf Nurkic misses free throw 2 of 2,0.6940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.5000,2,9,Jusuf Nurkic offensive rebound,0.7270,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.5000,2,9,Rui Hachimura shooting foul,0.7330,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.5000,2,9,Jusuf Nurkic makes free throw 1 of 2,0.7210,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.5000,2,9,Luka Doncic enters the game for Marcus Smart,0.7390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.5333,2,9,LeBron James defensive rebound,0.7390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.8333,2,9,LeBron James misses 7-foot turnaround jump shot,0.7170,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.8833,2,9,Jaxson Hayes offensive rebound,0.7330,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,16.8833,2,9,Jaxson Hayes makes two point shot,0.6840,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,17.0667,2,9,Keyonte George makes 2-foot reverse layup (Jusuf Nurkic assists),0.6840,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,17.4500,2,11,LeBron James makes two point shot (Luka Doncic assists),0.8860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,17.6500,2,11,Keyonte George makes 6-foot two point shot (Jusuf Nurkic assists),0.8800,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,17.8167,2,11,Jaxson Hayes makes 3-foot alley oop dunk (Luka Doncic assists),0.8530,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.2833,2,11,Keyonte George misses layup,0.8510,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.3167,2,11,Luka Doncic defensive rebound,0.8310,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.4667,2,11,Luka Doncic misses 26-foot three point jumper,0.8590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.5000,2,11,Taylor Hendricks defensive rebound,0.8110,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.6333,2,11,Walter Clayton Jr. makes running layup,0.8120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.9500,2,11,Rui Hachimura misses 23-foot three point jumper,0.8040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,18.9833,2,11,Taylor Hendricks defensive rebound,0.7970,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Maxi Kleber enters the game for LeBron James,0.8070,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Jusuf Nurkic misses free throw 1 of 1,0.8010,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Svi Mykhailiuk enters the game for Ace Bailey,0.8260,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Jarred Vanderbilt enters the game for Jaxson Hayes,0.8180,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Kyle Filipowski enters the game for Taylor Hendricks,0.8090,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Jaxson Hayes shooting foul,0.8140,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1167,2,11,Jusuf Nurkic makes layup (Keyonte George assists),0.8190,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1500,2,11,Jusuf Nurkic offensive rebound,0.8210,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.1667,2,11,Jusuf Nurkic misses 6-foot floating jump shot,0.8160,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.2167,2,11,Rui Hachimura defensive rebound,0.8190,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.4333,2,11,Luka Doncic makes 17-foot step back jumpshot,0.7860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.6500,2,11,Keyonte George makes 25-foot three pointer,0.7780,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9000,2,11,Dalton Knecht misses 27-foot three point jumper,0.7860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Jusuf Nurkic misses free throw 2 of 2,0.7780,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Jazz offensive team rebound,0.7750,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Jusuf Nurkic enters the game for Kevin Love,0.8000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Marcus Smart enters the game for Dalton Knecht,0.7800,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Jusuf Nurkic misses free throw 1 of 2,0.7670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,(04:05) [Jazz] COACH'S CHALLENGE (CALL OVERTURNED) [Jazz] retain their timeout,0.7750,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Jazz Full timeout,0.7730,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Kevin Love enters the game for Jusuf Nurkic,0.7680,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Jazz defensive team rebound,0.7710,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9167,2,11,Maxi Kleber loose ball foul,0.7870,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,19.9500,2,11,Luka Doncic defensive rebound,0.7820,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.2333,2,11,Luka Doncic makes 11-foot turnaround jump shot,0.7760,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5000,2,11,Walter Clayton Jr. misses 27-foot three point pullup jump shot,0.7480,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5167,2,11,Jusuf Nurkic makes free throw 2 of 2,0.7450,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5167,2,11,Isaiah Collier enters the game for Walter Clayton Jr.,0.7680,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5167,2,11,Jazz offensive team rebound,0.7390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5167,2,11,Maxi Kleber loose ball foul,0.7470,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5167,2,11,Jazz offensive team rebound,0.7540,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.5167,2,11,Jusuf Nurkic misses free throw 1 of 2,0.7460,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,20.8667,2,11,Rui Hachimura makes 15-foot turnaround jump shot (Marcus Smart assists),0.7410,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.0167,2,11,Kevin Love enters the game for Jusuf Nurkic,0.7230,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.0167,2,11,Jusuf Nurkic offensive foul,0.7040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.0167,2,11,Jusuf Nurkic offensive foul turnover,0.7400,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.2500,2,11,Maxi Kleber misses 23-foot three point jumper,0.6940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.3167,2,11,Jarred Vanderbilt offensive rebound,0.7420,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.3500,2,11,Marcus Smart misses 25-foot three point jumper,0.6700,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.3833,2,11,Keyonte George defensive rebound,0.6960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.6500,2,11,Svi Mykhailiuk makes 23-foot three point jumper,0.7040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.8167,2,11,Luka Doncic misses 25-foot three point step back jumpshot,0.6770,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,21.8667,2,11,Luka Doncic offensive rebound,0.6700,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.0167,2,11,Rui Hachimura makes 2-foot reverse layup (Luka Doncic assists),0.6570,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.1667,2,11,Isaiah Collier misses two point shot,0.6670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.2167,2,11,Jarred Vanderbilt defensive rebound,0.6540,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.2667,2,11,Luka Doncic makes 10-foot running pullup jump shot,0.6520,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.5333,2,11,Maxi Kleber shooting foul,0.6640,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.5333,2,11,Keyonte George makes free throw 1 of 2,0.6460,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.5333,2,11,Taylor Hendricks enters the game for Kyle Filipowski,0.6410,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.5333,2,11,LeBron James enters the game for Maxi Kleber,0.6170,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.5333,2,11,Keyonte George makes free throw 2 of 2,0.6520,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.5333,2,11,Jazz delay of game violation,0.6340,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.8833,2,12,LeBron James makes free throw 2 of 2,0.7230,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.8833,2,12,Keyonte George shooting foul,0.7440,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,22.8833,2,13,LeBron James makes free throw 1 of 2,0.8380,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.2333,2,13,Keyonte George makes 29-foot three pointer (Isaiah Collier assists),0.8410,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.2333,2,13,LeBron James shooting foul,0.8370,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.2333,2,13,Keyonte George makes free throw 1 of 1,0.8320,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.4833,2,13,Luka Doncic misses driving floating jump shot,0.8070,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.5217,2,13,Luka Doncic offensive rebound,0.8260,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.5400,2,13,Luka Doncic makes 3-foot floating jump shot,0.8100,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.8667,2,13,Isaiah Collier makes driving layup,0.7960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.8667,2,13,Luka Doncic shooting foul,0.8090,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.8667,2,13,Isaiah Collier makes free throw 1 of 1,0.7750,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.9450,2,13,Luka Doncic makes free throw 1 of 1,0.8040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.9450,2,13,Luka Doncic makes 22-foot driving floating jump shot,0.7850,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,23.9450,2,13,Taylor Hendricks shooting foul,0.8000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,3,13,Marcus Smart technical foul,0.8000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,3,13,Jaxson Hayes enters the game for Jarred Vanderbilt,0.7950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,3,13,Keyonte George makes technical free throw,0.8140,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,3,13,Kyle Filipowski enters the game for Kevin Love,0.7980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,3,13,Jusuf Nurkic enters the game for Taylor Hendricks,0.8150,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,3,13,Ace Bailey enters the game for Isaiah Collier,0.7940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,2,13,End of the 2nd Quarter,0.7880,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,2,13,Jazz offensive team rebound,0.8110,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.0000,2,13,Isaiah Collier misses 33-foot three point pullup jump shot,0.7900,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.2167,3,13,Marcus Smart misses 25-foot three point jumper,0.7820,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.2500,3,13,Kyle Filipowski defensive rebound,0.7990,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.5667,3,13,Jusuf Nurkic lost ball turnover (Marcus Smart steals),0.7850,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.8333,3,13,Rui Hachimura misses 16-foot pullup jump shot,0.7670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.8667,3,13,Keyonte George defensive rebound,0.7390,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,24.9500,3,13,Kyle Filipowski lost ball turnover (Luka Doncic steals),0.7420,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,25.0333,3,13,Jaxson Hayes makes 5-foot dunk (Luka Doncic assists),0.7300,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,25.4833,3,13,Ace Bailey makes 23-foot three point jumper (Jusuf Nurkic assists),0.7320,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,25.7833,3,13,Rui Hachimura misses 12-foot pullup jump shot,0.6930,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,25.8000,3,13,Kyle Filipowski defensive rebound,0.6950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.0000,3,13,Jusuf Nurkic makes free throw 2 of 2,0.6820,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.0000,3,13,Jazz offensive team rebound,0.6850,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.0000,3,13,Jusuf Nurkic misses free throw 1 of 2,0.6960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.0000,3,13,Marcus Smart shooting foul,0.7250,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.1833,3,13,Marcus Smart misses 23-foot three point jumper,0.6880,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.2333,3,13,Kyle Filipowski defensive rebound,0.6900,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.3667,3,13,Ace Bailey misses 14-foot jumper,0.6770,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.4167,3,13,Luka Doncic defensive rebound,0.6660,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.5000,3,13,"LeBron James bad pass
+turnover (Svi Mykhailiuk steals)",0.6680,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.8167,3,13,Keyonte George misses 22-foot three point step back jumpshot,0.6560,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,26.8500,3,13,Jaxson Hayes defensive rebound,0.6480,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.0000,3,13,Lakers Full timeout,0.6340,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.1667,3,13,Jaxson Hayes makes 1-foot alley oop dunk (LeBron James assists),0.6570,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.3167,3,13,Luka Doncic personal foul,0.6240,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.5167,3,13,Keyonte George misses 15-foot pullup jump shot,0.5780,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.5667,3,13,Marcus Smart defensive rebound,0.5810,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.6500,3,13,LeBron James makes 2-foot dunk (Rui Hachimura assists),0.6130,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.6833,3,13,Keyonte George makes technical free throw,0.5690,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.6833,3,13,Jaxson Hayes technical foul,0.5710,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,27.8500,3,13,Ace Bailey makes 8-foot driving floating jump shot (Keyonte George assists),0.5660,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.2000,3,16,Luka Doncic makes 26-foot three point jumper (LeBron James assists),0.8920,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.4667,3,16,Ace Bailey misses 11-foot pullup jump shot,0.9060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.5000,3,16,Rui Hachimura defensive rebound,0.9010,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.5333,3,16,Marcus Smart offensive foul,0.8940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.5333,3,16,Marcus Smart offensive foul turnover,0.8910,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.5333,3,16,Luka Doncic technical foul,0.8980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.5333,3,16,Keyonte George makes technical free throw,0.8970,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.5333,3,16,Jake LaRavia enters the game for Marcus Smart,0.9170,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.7500,3,16,"Keyonte George bad pass
+turnover (LeBron James steals)",0.9000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.8000,3,16,Kyle Filipowski shooting foul,0.9120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.8000,3,17,LeBron James makes free throw 1 of 2,0.9660,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.8000,3,18,LeBron James makes free throw 2 of 2,0.9890,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,28.9500,3,18,Ace Bailey makes 25-foot three point jumper (Jusuf Nurkic assists),0.9950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.2333,3,18,Luka Doncic misses 27-foot three point jumper,0.9860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.2500,3,18,Kyle Filipowski defensive rebound,0.9860,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.3667,3,18,Ace Bailey makes 25-foot three point jumper (Keyonte George assists),0.9880,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.4167,3,18,Lakers Full timeout,0.9890,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.4167,3,18,Jarred Vanderbilt enters the game for LeBron James,0.9830,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.4167,3,18,Taylor Hendricks enters the game for Svi Mykhailiuk,0.9830,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.4167,3,18,Isaiah Collier enters the game for Kyle Filipowski,0.9840,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.7333,3,18,Jarred Vanderbilt misses two point shot,0.9770,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.7500,3,18,Ace Bailey defensive rebound,0.9810,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.9000,3,18,Ace Bailey misses driving layup,0.9840,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,29.9167,3,18,Lakers defensive team rebound,0.9830,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.0333,3,18,Isaiah Collier personal foul,0.9790,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.1333,3,18,Luka Doncic makes 11-foot turnaround jump shot (Jake LaRavia assists),0.9780,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.4333,3,18,Keyonte George misses driving floating jump shot,0.9800,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.5000,3,18,Jake LaRavia defensive rebound,0.9810,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.7000,3,18,Rui Hachimura makes driving layup,0.9800,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.9000,3,18,Kevin Love enters the game for Ace Bailey,0.9830,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.9000,3,18,Brice Sensabaugh enters the game for Jusuf Nurkic,0.9690,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.9000,3,18,Jusuf Nurkic offensive foul,0.9730,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,30.9000,3,18,Jusuf Nurkic offensive foul turnover,0.9720,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.0167,3,18,Luka Doncic misses 20-foot step back jumpshot,0.9750,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.0500,3,18,Lakers offensive team rebound,0.9670,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.2167,3,18,Jaxson Hayes makes layup,0.9520,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.4167,3,18,Jaxson Hayes shooting foul,0.9610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.4167,3,18,Kevin Love misses free throw 1 of 3,0.9570,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.4167,3,18,Jazz offensive team rebound,0.9730,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.4167,3,18,Kevin Love makes free throw 2 of 3,0.9690,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.4167,3,18,Maxi Kleber enters the game for Jaxson Hayes,0.9590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.4167,3,18,Kevin Love makes free throw 3 of 3,0.9760,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.7333,3,18,Taylor Hendricks shooting foul,0.9590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.7333,3,18,Luka Doncic makes free throw 1 of 2,0.9570,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,31.7333,3,18,Luka Doncic makes free throw 2 of 2,0.9560,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.0500,3,18,Keyonte George misses driving floating jump shot,0.9490,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.0833,3,18,Jarred Vanderbilt defensive rebound,0.9470,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.2000,3,18,Luka Doncic misses 17-foot step back jumpshot,0.9590,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.2833,3,18,Brice Sensabaugh defensive rebound,0.9500,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.3500,3,18,Isaiah Collier makes running layup (Keyonte George assists),0.9450,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.5833,3,18,Maxi Kleber makes 4-foot dunk (Jarred Vanderbilt assists),0.9220,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.8667,3,18,Brice Sensabaugh makes 25-foot three point jumper (Kevin Love assists),0.9370,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,32.9000,3,18,Lakers Full timeout,0.9190,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.0833,3,18,Jarred Vanderbilt out of bounds bad pass turnover,0.9170,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.2500,3,18,Kevin Love misses 22-foot three point jumper,0.9020,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.3167,3,18,Jarred Vanderbilt defensive rebound,0.9060,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.4000,3,18,Rui Hachimura makes 3-foot running dunk (Luka Doncic assists),0.9030,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.6667,3,18,Brice Sensabaugh misses 27-foot three point jumper,0.8980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.7167,3,18,Luka Doncic defensive rebound,0.8690,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,33.9000,3,18,Jake LaRavia makes 25-foot three point jumper (Luka Doncic assists),0.8820,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.3333,3,18,Keyonte George misses driving floating jump shot,0.8490,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.3667,3,18,Luka Doncic defensive rebound,0.8640,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.4333,3,18,Jarred Vanderbilt misses 24-foot three point jumper,0.8610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.4833,3,18,Kyle Filipowski enters the game for Taylor Hendricks,0.8460,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.4833,3,18,LeBron James enters the game for Rui Hachimura,0.8470,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.4833,3,18,Jazz defensive team rebound,0.8530,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.6667,3,18,Jarred Vanderbilt shooting foul,0.8460,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.6667,3,18,Isaiah Collier makes free throw 1 of 2,0.8310,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.6667,3,18,Isaiah Collier makes free throw 2 of 2,0.8430,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.8000,3,18,Luka Doncic makes driving layup (LeBron James assists),0.8300,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.8000,3,18,Kevin Love shooting foul,0.8340,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.8000,3,18,Luka Doncic makes free throw 1 of 1,0.8130,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,34.9833,3,18,Isaiah Collier makes driving layup,0.8230,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.1917,3,18,LeBron James misses 27-foot three point jumper,0.8150,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.2333,3,18,Kevin Love defensive rebound,0.7930,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.4467,3,18,Brice Sensabaugh makes 4-foot two point shot (Isaiah Collier assists),0.7760,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.5083,3,18,Luka Doncic misses 29-foot three point step back jumpshot,0.7870,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.5517,3,18,Kyle Filipowski defensive rebound,0.7740,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.8917,3,18,Ace Bailey enters the game for Kevin Love,0.7610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.8917,3,18,Taylor Hendricks enters the game for Isaiah Collier,0.7780,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.8917,3,18,Isaiah Collier offensive foul turnover,0.7790,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.8917,3,18,Lakers Coach's Challenge,0.7700,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.8917,3,18,Isaiah Collier offensive foul,0.7610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.8917,3,18,(00:06.5) [Lakers] COACH'S CHALLENGE (CALL OVERTURNED) [Lakers] retain their timeout,0.7640,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.9600,3,18,Jake LaRavia misses 23-foot three point jumper,0.7480,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,35.9600,3,18,Jarred Vanderbilt offensive rebound,0.7620,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.0000,4,18,Kevin Love enters the game for Keyonte George,0.7350,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.0000,3,18,Jarred Vanderbilt misses tip shot,0.7620,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.0000,3,18,Taylor Hendricks defensive rebound,0.7460,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.0000,3,18,End of the 3rd Quarter,0.7620,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.0000,4,18,Walter Clayton Jr. enters the game for Taylor Hendricks,0.7640,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.0000,4,18,Marcus Smart enters the game for Luka Doncic,0.7270,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.1333,4,18,Ace Bailey misses 25-foot three point jumper,0.7420,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.1833,4,18,LeBron James defensive rebound,0.7430,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.3000,4,18,LeBron James makes 17-foot pullup jump shot,0.7430,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.6333,4,18,Kyle Filipowski makes 5-foot driving dunk (Walter Clayton Jr. assists),0.6970,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.9167,4,18,LeBron James misses 26-foot three point pullup jump shot,0.7080,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,36.9667,4,18,Jake LaRavia offensive rebound,0.6960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.0000,4,18,LeBron James makes 6-foot dunk (Jake LaRavia assists),0.7040,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.3500,4,18,Kyle Filipowski misses driving layup,0.6980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.4000,4,18,Maxi Kleber defensive rebound,0.6750,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.4667,4,18,Kevin Love shooting foul,0.6940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.4667,4,18,(10:32) [Lakers] REF-INITIATED REVIEW (REPLAY SUPPORTS CALL),0.6740,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.4667,4,18,Maxi Kleber makes free throw 1 of 2,0.6890,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.4667,4,18,Maxi Kleber makes free throw 2 of 2,0.6720,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.7333,4,18,Ace Bailey misses 24-foot three point jumper,0.6880,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.8000,4,18,LeBron James defensive rebound,0.6610,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.8833,4,18,Walter Clayton Jr. shooting foul,0.6710,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.8833,4,18,Maxi Kleber makes free throw 1 of 2,0.6490,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.8833,4,18,Maxi Kleber misses free throw 2 of 2,0.6120,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,37.9333,4,18,Ace Bailey defensive rebound,0.6300,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.1167,4,18,Kevin Love misses 26-foot three point jumper,0.6230,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.1833,4,18,Marcus Smart defensive rebound,0.6360,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.4833,4,21,Marcus Smart makes 25-foot three point jumper (LeBron James assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.7333,4,21,Brice Sensabaugh misses 23-foot three point jumper,0.9970,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.8000,4,21,LeBron James defensive rebound,0.9960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.8667,4,21,Marcus Smart misses two point shot,0.9980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,38.9167,4,21,Kyle Filipowski defensive rebound,0.9970,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.0333,4,21,Ace Bailey offensive charge,0.9950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.0333,4,21,Ace Bailey offensive foul turnover,0.9980,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.0333,4,21,Jusuf Nurkic enters the game for Kevin Love,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.0333,4,21,Taylor Hendricks enters the game for Kyle Filipowski,0.9970,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.0333,4,21,Isaiah Collier enters the game for Ace Bailey,0.9990,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.2000,4,21,LeBron James misses 28-foot three point jumper,0.9950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.2333,4,21,Jake LaRavia offensive rebound,0.9960,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.2833,4,21,"Jake LaRavia bad pass
+turnover (Taylor Hendricks steals)",0.9950,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.4833,4,21,Brice Sensabaugh misses 22-foot three point jumper,0.9940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.5500,4,21,Marcus Smart defensive rebound,0.9890,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.6333,4,21,Taylor Hendricks shooting foul,0.9940,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.6333,4,22,LeBron James makes free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.6333,4,22,Keyonte George enters the game for Brice Sensabaugh,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.6333,4,23,LeBron James makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.9333,4,23,Keyonte George makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.9333,4,23,Luka Doncic enters the game for LeBron James,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.9333,4,23,Keyonte George makes free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,39.9333,4,23,Jake LaRavia shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,40.0667,4,23,Marcus Smart makes 26-foot three point jumper (Luka Doncic assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,40.4000,4,23,Keyonte George makes 26-foot three point jumper (Isaiah Collier assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,40.7000,4,23,Marcus Smart misses 26-foot three point jumper,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,40.7667,4,23,Jake LaRavia offensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,40.7667,4,23,Jake LaRavia makes tip shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,40.8833,4,23,Keyonte George makes 25-foot three pointer (Isaiah Collier assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.3000,4,23,Luka Doncic misses 6-foot turnaround jump shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.3333,4,23,Walter Clayton Jr. defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.4000,4,23,Maxi Kleber blocks Isaiah Collier 's 3-foot running layup,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.4000,4,23,Maxi Kleber defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.4000,4,23,Isaiah Collier personal foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.4000,4,23,Jazz Full timeout,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.4000,4,23,Rui Hachimura enters the game for Jarred Vanderbilt,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.5667,4,23,Luka Doncic makes free throw 1 of 1,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.5667,4,23,Keyonte George shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.5667,4,23,Luka Doncic makes 11-foot pullup jump shot (Jake LaRavia assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.7167,4,23,Marcus Smart personal foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.9167,4,23,Isaiah Collier misses driving floating jump shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,41.9500,4,23,Luka Doncic defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,42.2000,4,23,Marcus Smart makes 26-foot three point jumper (Luka Doncic assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,42.5167,4,23,"Jusuf Nurkic bad pass
+turnover (Luka Doncic steals)",1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,42.6000,4,23,Luka Doncic lost ball turnover (Jusuf Nurkic steals),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,42.7167,4,23,Walter Clayton Jr. makes 26-foot running jump shot (Isaiah Collier assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.2000,4,23,Luka Doncic makes 28-foot three point jumper (Maxi Kleber assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.3667,4,23,Marcus Smart personal foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.3667,4,23,Jaxson Hayes enters the game for Maxi Kleber,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.3667,4,23,LeBron James enters the game for Marcus Smart,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.5167,4,23,Walter Clayton Jr. misses 7-foot fade away jump shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.5333,4,23,Luka Doncic defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.6167,4,23,Luka Doncic makes 31-foot running jump shot (LeBron James assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.6500,4,23,Kyle Filipowski enters the game for Walter Clayton Jr.,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.6500,4,23,Ace Bailey enters the game for Taylor Hendricks,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.6500,4,23,Jazz Full timeout,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.9000,4,23,Kyle Filipowski misses 26-foot three point jumper,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.9333,4,23,Ace Bailey offensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.9500,4,23,Rui Hachimura shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.9500,4,23,Ace Bailey misses free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.9500,4,23,Jazz offensive team rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,43.9500,4,23,Ace Bailey makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.1500,4,23,Ace Bailey shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.1500,4,23,Jaxson Hayes misses free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.1500,4,23,Lakers offensive team rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.1500,4,23,Jaxson Hayes misses free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.2000,4,23,Kyle Filipowski defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.3500,4,23,Isaiah Collier double dribble turnover,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.3500,4,23,Lakers Full timeout,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.6333,4,23,LeBron James lost ball turnover (Ace Bailey steals),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,44.6833,4,23,Ace Bailey makes 4-foot running dunk (Isaiah Collier assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.0167,4,23,Jusuf Nurkic kicked ball violation,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.1333,4,23,LeBron James misses 14-foot two point shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.1833,4,23,Kyle Filipowski defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.4500,4,23,Keyonte George misses 24-foot three point step back jumpshot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.5000,4,23,Jake LaRavia defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.8167,4,23,Jake LaRavia misses 25-foot three point jumper,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.8667,4,23,Jusuf Nurkic defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.9667,4,23,Keyonte George makes 17-foot driving floating jump shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.9667,4,23,Jake LaRavia shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,45.9667,4,23,Keyonte George makes free throw 1 of 1,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,46.3000,4,23,LeBron James misses 27-foot three point pullup jump shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,46.3167,4,23,Jazz defensive team rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,46.5000,4,23,Isaiah Collier makes driving layup,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,46.7667,4,26,Rui Hachimura makes 22-foot three point jumper (LeBron James assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,46.9167,4,26,Jusuf Nurkic makes 25-foot three point jumper (Isaiah Collier assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.1367,4,26,Jaxson Hayes makes 2-foot alley oop dunk (Luka Doncic assists),1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.2267,4,26,Keyonte George misses 27-foot three point pullup jump shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.2817,4,26,Ace Bailey offensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3000,4,26,Rui Hachimura shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3000,4,26,Ace Bailey makes free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3000,4,26,Ace Bailey misses free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3167,4,27,LeBron James makes free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3167,4,27,Maxi Kleber enters the game for Jaxson Hayes,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3167,4,28,LeBron James makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3167,4,28,LeBron James defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3167,4,28,Jusuf Nurkic personal foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,Keyonte George makes free throw 3 of 3,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,Rui Hachimura shooting foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,Lakers Full timeout,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,(00:37.1) [Lakers] COACH'S CHALLENGE (REPLAY SUPPORTS CALL) [Lakers] charged with a timeout,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,Keyonte George misses free throw 1 of 3,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,Jazz offensive team rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.3817,4,28,Keyonte George makes free throw 2 of 3,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.5100,4,28,Jake LaRavia makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.5100,4,28,Keyonte George personal take foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.5100,4,28,Jake LaRavia makes free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.5683,4,28,Keyonte George misses 27-foot three point jumper,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.6267,4,28,Luka Doncic defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.6600,4,28,Kyle Filipowski personal take foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.6600,4,28,Luka Doncic misses free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.6600,4,28,Lakers offensive team rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.6600,4,28,Luka Doncic makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.7517,4,28,Rui Hachimura blocks Isaiah Collier 's 5-foot driving layup,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.7867,4,28,Jusuf Nurkic offensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.7867,4,28,Jusuf Nurkic makes two point shot,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.8100,4,28,Kyle Filipowski personal take foul,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.8100,4,29,LeBron James makes free throw 1 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.8100,4,30,LeBron James makes free throw 2 of 2,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.9350,4,30,Isaiah Collier misses driving layup,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,47.9700,4,30,Luka Doncic defensive rebound,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,48.0000,4,30,End of the 4th Quarter,1.0000,30,HIT
+LeBron James,401810234,2025-12-18,22.0000,48.0000,4,30,End of Game,1.0000,30,HIT

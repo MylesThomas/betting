@@ -1,474 +1,474 @@
-play_num,quarter,game_minute,cumulative_points,prob_over
-1,1,0.0000,0,0.4680
-2,1,0.3000,0,0.5040
-3,1,0.7167,0,0.4650
-4,1,0.9667,0,0.4680
-5,1,1.2833,0,0.4480
-6,1,1.5667,0,0.4590
-7,1,1.6167,0,0.4350
-8,1,1.7167,0,0.4690
-9,1,1.9000,0,0.4360
-10,1,1.9667,0,0.4530
-11,1,1.9833,0,0.4400
-12,1,2.1667,0,0.4250
-13,1,2.2000,0,0.4420
-14,1,2.4667,0,0.4320
-15,1,2.5167,0,0.4420
-16,1,2.6667,0,0.4360
-17,1,2.7167,0,0.4190
-18,1,2.8500,0,0.4430
-19,1,3.0833,0,0.3810
-20,1,3.2333,0,0.4090
-21,1,3.2333,0,0.4560
-22,1,3.2333,0,0.4250
-23,1,3.2333,0,0.4120
-24,1,3.6333,0,0.3990
-25,1,3.8167,0,0.3980
-26,1,4.0667,0,0.3990
-27,1,4.3167,0,0.4050
-28,1,4.6833,0,0.4140
-29,1,4.8167,0,0.3850
-30,1,4.8833,0,0.3620
-31,1,4.9500,0,0.4060
-32,1,4.9833,0,0.3710
-33,1,5.0333,0,0.3590
-34,1,5.3000,0,0.3600
-35,1,5.3000,0,0.3770
-36,1,5.3000,0,0.4040
-37,1,5.4667,0,0.3350
-38,1,5.7333,0,0.3660
-39,1,6.0000,0,0.3410
-40,1,6.0333,0,0.3350
-41,1,6.1667,0,0.3550
-42,1,6.5500,0,0.3340
-43,1,6.5667,0,0.3530
-44,1,6.5833,0,0.3410
-45,1,6.6000,0,0.3310
-46,1,6.7000,0,0.3060
-47,1,6.7000,0,0.3590
-48,1,6.7000,0,0.3280
-49,1,6.7000,0,0.3380
-50,1,6.7000,0,0.3210
-51,1,6.8167,0,0.3150
-52,1,6.8167,0,0.3480
-53,1,6.8167,0,0.3360
-54,1,7.0667,0,0.3310
-55,1,7.1000,0,0.3370
-56,1,7.4000,0,0.3000
-57,1,7.4667,0,0.3280
-58,1,7.6167,0,0.3130
-63,1,7.9167,0,0.3200
-62,1,7.9167,0,0.3030
-59,1,7.9167,0,0.3190
-60,1,7.9167,0,0.2930
-61,1,7.9167,0,0.3120
-64,1,8.0833,0,0.3040
-65,1,8.2667,0,0.2920
-66,1,8.2667,0,0.2990
-67,1,8.4667,0,0.2900
-68,1,8.4667,0,0.2920
-69,1,8.4667,0,0.2760
-70,1,8.4667,0,0.3080
-71,1,8.4667,0,0.2870
-72,1,8.6500,0,0.2560
-73,1,8.7167,0,0.2770
-74,1,8.8333,0,0.2360
-75,1,9.0833,0,0.2740
-76,1,9.3667,0,0.2560
-77,1,9.5667,0,0.2630
-78,1,9.6333,0,0.2390
-79,1,9.7500,0,0.2550
-80,1,9.8000,0,0.2480
-81,1,9.8500,0,0.2390
-82,1,10.1000,0,0.2360
-83,1,10.2333,0,0.2230
-84,1,10.5000,0,0.2220
-85,1,10.5000,0,0.2610
-86,1,10.5000,0,0.2580
-87,1,10.5000,0,0.2400
-88,1,10.7000,0,0.2340
-89,1,10.7667,0,0.2010
-90,1,11.0250,0,0.2250
-91,1,11.3400,0,0.1990
-92,1,11.5150,0,0.1930
-93,1,11.5633,0,0.2040
-94,1,11.7917,0,0.2020
-95,1,11.8200,0,0.1740
-96,1,11.9550,0,0.1800
-97,1,11.9900,0,0.1720
-98,1,11.9983,0,0.1890
-103,2,12.0000,0,0.1920
-102,2,12.0000,0,0.1710
-104,2,12.0000,0,0.1780
-100,2,12.0000,0,0.1980
-99,1,12.0000,0,0.1920
-101,2,12.0000,0,0.1800
-105,2,12.3667,0,0.1580
-106,2,12.6500,0,0.1620
-107,2,12.8167,0,0.1560
-108,2,12.8333,0,0.1530
-111,2,12.9167,2,0.2870
-110,2,12.9167,1,0.2090
-109,2,12.9167,0,0.1350
-112,2,13.3167,2,0.2640
-113,2,13.6000,2,0.2490
-114,2,13.6000,2,0.2530
-115,2,13.6000,2,0.2620
-116,2,13.9667,2,0.2360
-117,2,13.9833,2,0.2270
-119,2,14.0000,2,0.2390
-118,2,14.0000,2,0.2250
-120,2,14.1167,2,0.2270
-121,2,14.1500,2,0.2260
-122,2,14.2167,2,0.2190
-123,2,14.2167,2,0.2320
-124,2,14.2167,2,0.2600
-125,2,14.2167,2,0.2420
-126,2,14.4667,2,0.2350
-127,2,14.7167,2,0.2160
-128,2,14.7167,2,0.2380
-129,2,14.9167,2,0.2130
-130,2,14.9667,2,0.2190
-131,2,15.1667,2,0.2060
-132,2,15.2333,2,0.2140
-133,2,15.4500,2,0.1510
-134,2,15.6500,2,0.1890
-135,2,16.0000,2,0.1770
-136,2,16.2500,2,0.1400
-137,2,16.3333,2,0.1360
-138,2,16.3333,3,0.2500
-139,2,16.3333,3,0.2200
-140,2,16.3333,4,0.3150
-141,2,16.5833,4,0.3070
-142,2,16.6167,4,0.2920
-143,2,16.7000,4,0.2770
-144,2,16.7167,4,0.2690
-145,2,16.7167,4,0.2660
-146,2,16.7167,4,0.2470
-147,2,16.9167,4,0.2600
-148,2,16.9833,4,0.2710
-149,2,17.1333,4,0.2600
-150,2,17.1833,4,0.2580
-151,2,17.3167,4,0.2340
-152,2,17.3667,4,0.2600
-153,2,17.5833,4,0.2590
-154,2,17.7333,4,0.2580
-155,2,17.7333,4,0.2480
-156,2,17.7333,4,0.2480
-157,2,17.7333,4,0.2730
-158,2,17.7333,4,0.2600
-159,2,17.7333,4,0.2240
-160,2,18.1500,4,0.2330
-161,2,18.1833,4,0.2420
-163,2,18.5333,4,0.2200
-162,2,18.5333,4,0.2160
-164,2,18.8000,4,0.1950
-165,2,19.0167,4,0.2050
-166,2,19.3000,4,0.1790
-167,2,19.4667,4,0.1850
-168,2,19.5167,4,0.1780
-169,2,19.6333,4,0.1570
-170,2,19.6667,4,0.1800
-171,2,19.9000,4,0.1440
-172,2,20.2333,4,0.1640
-173,2,20.5000,4,0.1310
-176,2,20.5167,4,0.1250
-174,2,20.5167,4,0.1320
-175,2,20.5167,4,0.1330
-179,2,20.6167,6,0.2820
-178,2,20.6167,6,0.2470
-177,2,20.6167,6,0.3040
-180,2,20.6667,6,0.3000
-181,2,21.0000,6,0.2560
-182,2,21.0167,6,0.2610
-183,2,21.1000,9,0.5160
-184,2,21.5000,9,0.4880
-185,2,21.8000,9,0.4730
-186,2,21.8667,9,0.4940
-187,2,22.1833,9,0.4840
-188,2,22.2167,9,0.4900
-193,2,22.2500,9,0.4580
-191,2,22.2500,9,0.4560
-192,2,22.2500,9,0.4750
-189,2,22.2500,9,0.4630
-190,2,22.2500,9,0.5090
-194,2,22.6167,9,0.4920
-195,2,22.8167,9,0.4560
-196,2,22.8167,9,0.4410
-197,2,22.8167,9,0.4460
-198,2,22.8167,9,0.3990
-199,2,23.1317,9,0.4380
-200,2,23.2217,9,0.4300
-201,2,23.5083,9,0.4040
-202,2,23.5467,9,0.4130
-203,2,23.6317,9,0.3970
-205,2,23.9483,9,0.3840
-204,2,23.9483,9,0.3730
-206,2,23.9483,9,0.4030
-207,2,23.9683,9,0.4200
-208,2,23.9983,9,0.3920
-209,2,24.0000,9,0.4020
-210,3,24.0000,9,0.3910
-211,3,24.0000,9,0.4040
-212,3,24.0000,9,0.3870
-213,3,24.0000,9,0.3800
-214,3,24.2833,9,0.3910
-215,3,24.2833,9,0.3710
-216,3,24.2833,9,0.3850
-217,3,24.4333,9,0.3710
-218,3,24.4833,9,0.3570
-219,3,24.7500,11,0.5570
-220,3,25.0167,11,0.5430
-221,3,25.3333,11,0.5160
-222,3,25.5500,11,0.4990
-223,3,25.7333,11,0.5080
-224,3,26.0333,11,0.5110
-225,3,26.0667,11,0.4960
-226,3,26.2167,13,0.6870
-227,3,26.2333,13,0.6990
-228,3,26.4167,13,0.6620
-229,3,26.6667,13,0.6700
-230,3,26.9833,13,0.6540
-231,3,27.2167,13,0.6600
-232,3,27.2167,13,0.6530
-233,3,27.2167,13,0.6540
-234,3,27.5000,15,0.8010
-235,3,27.6667,15,0.7960
-236,3,27.9000,15,0.8080
-237,3,27.9667,15,0.7960
-238,3,27.9833,15,0.7830
-239,3,28.0833,15,0.7930
-240,3,28.1667,15,0.8020
-241,3,28.1833,15,0.8210
-242,3,28.3833,15,0.7890
-243,3,28.5833,15,0.7790
-244,3,28.5833,15,0.8010
-245,3,28.7500,15,0.7800
-246,3,28.7500,15,0.7650
-247,3,28.8333,15,0.7810
-248,3,28.8667,15,0.7610
-249,3,28.9833,15,0.7730
-250,3,29.0500,15,0.7710
-251,3,29.2000,15,0.7620
-252,3,29.6167,15,0.7610
-253,3,29.6500,15,0.7560
-254,3,29.8667,15,0.7280
-255,3,29.8667,15,0.7420
-256,3,29.8667,15,0.7500
-257,3,29.8667,15,0.7510
-258,3,30.1167,15,0.7320
-259,3,30.1667,15,0.7300
-260,3,30.2667,15,0.7320
-261,3,30.2667,15,0.7340
-262,3,30.2667,15,0.7320
-263,3,30.4833,15,0.7520
-264,3,30.7833,15,0.7390
-265,3,30.8167,15,0.7200
-266,3,30.8833,15,0.7080
-267,3,30.9500,15,0.7410
-268,3,31.0500,15,0.7110
-269,3,31.1333,15,0.7310
-270,3,31.3167,15,0.7290
-271,3,31.3167,15,0.6960
-272,3,31.5167,15,0.6840
-273,3,31.5500,15,0.6890
-274,3,31.6500,15,0.6940
-275,3,31.6500,15,0.6750
-276,3,31.6500,15,0.6950
-277,3,32.0167,15,0.6910
-278,3,32.0333,15,0.6840
-279,3,32.0500,15,0.6650
-282,3,32.3333,15,0.6190
-281,3,32.3333,15,0.6610
-280,3,32.3333,15,0.6660
-283,3,32.4333,15,0.6410
-284,3,32.4833,15,0.6430
-285,3,32.5667,15,0.6490
-286,3,32.6000,15,0.6370
-287,3,32.6000,15,0.6400
-288,3,32.7000,15,0.6340
-289,3,32.7000,15,0.6170
-290,3,32.7000,15,0.6210
-291,3,32.7000,15,0.6460
-292,3,32.9500,15,0.5970
-293,3,32.9500,15,0.6330
-294,3,32.9500,15,0.6040
-295,3,33.0000,15,0.6230
-296,3,33.0333,15,0.6160
-297,3,33.0667,15,0.6030
-298,3,33.2500,15,0.6060
-299,3,33.2500,15,0.5990
-300,3,33.2500,15,0.5850
-301,3,33.2500,15,0.5860
-302,3,33.2500,15,0.6000
-303,3,33.2500,15,0.5790
-304,3,33.2500,15,0.5800
-305,3,33.4333,15,0.6160
-306,3,33.8667,15,0.5780
-307,3,34.1833,15,0.5320
-308,3,34.5833,15,0.5400
-309,3,34.5833,15,0.5070
-310,3,34.7500,15,0.5330
-311,3,34.7667,15,0.5320
-312,3,34.7833,15,0.5200
-313,3,34.8000,15,0.5330
-314,3,35.0000,15,0.4880
-315,3,35.2667,15,0.4850
-316,3,35.4633,15,0.4850
-317,3,35.4633,15,0.4770
-318,3,35.4633,15,0.4650
-319,3,35.4633,15,0.4690
-320,3,35.4633,15,0.4780
-321,3,35.4633,15,0.4770
-322,3,35.4633,15,0.4540
-324,3,35.6533,17,0.7490
-325,3,35.6533,18,0.8700
-323,3,35.6533,17,0.7340
-326,3,35.9850,18,0.8600
-327,3,35.9983,18,0.8680
-328,3,35.9983,18,0.8810
-329,3,36.0000,18,0.8610
-330,4,36.0000,18,0.8620
-331,4,36.0000,18,0.8560
-332,4,36.0000,18,0.8670
-333,4,36.0000,18,0.8730
-334,4,36.0000,18,0.8800
-335,4,36.3833,18,0.8540
-336,4,36.4500,18,0.8570
-337,4,36.4833,18,0.8470
-338,4,36.5000,18,0.8490
-343,4,36.6500,18,0.8500
-342,4,36.6500,18,0.8530
-339,4,36.6500,18,0.8580
-340,4,36.6500,18,0.8450
-341,4,36.6500,18,0.8620
-344,4,36.9167,18,0.8560
-345,4,36.9333,18,0.8450
-346,4,36.9500,18,0.8660
-347,4,36.9667,18,0.8210
-348,4,36.9833,18,0.8510
-349,4,37.2667,18,0.8350
-351,4,37.5333,18,0.8300
-350,4,37.5333,18,0.8360
-352,4,37.9500,21,1.0000
-353,4,38.2167,21,1.0000
-356,4,38.4167,21,1.0000
-355,4,38.4167,21,1.0000
-354,4,38.4167,21,1.0000
-357,4,38.7500,21,1.0000
-358,4,38.8333,21,1.0000
-359,4,38.9167,21,1.0000
-360,4,38.9500,21,1.0000
-361,4,39.1333,23,1.0000
-362,4,39.3667,23,1.0000
-363,4,39.4167,23,1.0000
-364,4,39.5000,23,1.0000
-365,4,39.5667,23,1.0000
-366,4,39.5667,23,1.0000
-367,4,39.5667,23,1.0000
-368,4,39.5667,23,1.0000
-369,4,39.7167,23,1.0000
-370,4,39.9167,23,1.0000
-371,4,40.2000,23,1.0000
-372,4,40.2000,23,1.0000
-373,4,40.2000,23,1.0000
-374,4,40.2000,23,1.0000
-375,4,40.2000,23,1.0000
-376,4,40.3500,23,1.0000
-377,4,40.3500,23,1.0000
-378,4,40.3500,23,1.0000
-379,4,40.3500,23,1.0000
-380,4,40.4000,23,1.0000
-381,4,40.5833,23,1.0000
-382,4,40.8333,23,1.0000
-385,4,41.1500,23,1.0000
-384,4,41.1500,23,1.0000
-383,4,41.1500,23,1.0000
-386,4,41.3500,23,1.0000
-387,4,41.5333,23,1.0000
-388,4,41.7500,23,1.0000
-389,4,41.8833,23,1.0000
-390,4,42.1500,23,1.0000
-391,4,42.4167,23,1.0000
-392,4,42.7333,23,1.0000
-393,4,42.7500,23,1.0000
-394,4,42.7500,23,1.0000
-395,4,42.8667,23,1.0000
-396,4,42.9333,23,1.0000
-397,4,43.1667,23,1.0000
-398,4,43.1833,23,1.0000
-402,4,43.2500,23,1.0000
-401,4,43.2500,23,1.0000
-399,4,43.2500,23,1.0000
-400,4,43.2500,23,1.0000
-403,4,43.5167,23,1.0000
-404,4,43.6667,23,1.0000
-405,4,43.7167,23,1.0000
-406,4,43.7333,23,1.0000
-407,4,43.7333,23,1.0000
-408,4,43.7333,23,1.0000
-409,4,43.7333,23,1.0000
-412,4,43.8833,23,1.0000
-410,4,43.8833,23,1.0000
-411,4,43.8833,23,1.0000
-413,4,43.8833,23,1.0000
-414,4,44.2667,23,1.0000
-415,4,44.2833,23,1.0000
-416,4,44.2833,23,1.0000
-417,4,44.2833,23,1.0000
-418,4,44.3833,23,1.0000
-419,4,44.4500,23,1.0000
-420,4,44.4500,23,1.0000
-421,4,44.4500,23,1.0000
-422,4,44.4500,23,1.0000
-423,4,44.4500,23,1.0000
-424,4,44.4500,23,1.0000
-425,4,44.4500,23,1.0000
-426,4,44.7500,23,1.0000
-427,4,44.8000,23,1.0000
-429,4,45.0833,23,1.0000
-428,4,45.0833,23,1.0000
-430,4,45.2667,23,1.0000
-431,4,45.3167,23,1.0000
-432,4,45.3167,23,1.0000
-433,4,45.3167,23,1.0000
-434,4,45.3167,23,1.0000
-435,4,45.3167,23,1.0000
-436,4,45.4667,23,1.0000
-437,4,45.5167,23,1.0000
-438,4,45.5667,23,1.0000
-439,4,45.8833,23,1.0000
-440,4,45.9167,23,1.0000
-446,4,46.1333,23,1.0000
-445,4,46.1333,23,1.0000
-444,4,46.1333,23,1.0000
-442,4,46.1333,23,1.0000
-441,4,46.1333,23,1.0000
-443,4,46.1333,23,1.0000
-447,4,46.2833,23,1.0000
-448,4,46.3167,25,1.0000
-449,4,46.4667,25,1.0000
-450,4,46.5167,25,1.0000
-457,4,46.8000,25,1.0000
-451,4,46.8000,25,1.0000
-452,4,46.8000,25,1.0000
-453,4,46.8000,25,1.0000
-454,4,46.8000,25,1.0000
-455,4,46.8000,25,1.0000
-456,4,46.8000,25,1.0000
-461,4,46.8833,25,1.0000
-460,4,46.8833,25,1.0000
-458,4,46.8833,25,1.0000
-459,4,46.8833,25,1.0000
-462,4,47.2483,25,1.0000
-463,4,47.3133,25,1.0000
-464,4,47.4950,25,1.0000
-465,4,47.5783,25,1.0000
-466,4,47.8667,25,1.0000
-467,4,47.8667,25,1.0000
-468,4,47.8667,25,1.0000
-469,4,47.8667,25,1.0000
-470,4,47.9600,25,1.0000
-471,4,47.9983,25,1.0000
-472,4,48.0000,25,1.0000
-473,4,48.0000,25,1.0000
+player_name,game_id,game_date,prop_line,game_minute,quarter,cumulative_points,description,prob_over,final_points,result
+LeBron James,401809801,2025-11-25,22.0000,0.0000,1,0,Ivica Zubac vs. Jaxson Hayes (Luka Doncic gains possession),0.4990,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,0.3000,1,0,Rui Hachimura makes 25-foot three point jumper (Luka Doncic assists),0.4410,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,0.7167,1,0,Kris Dunn makes 7-foot two point shot (Ivica Zubac assists),0.4490,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,0.9667,1,0,Luka Doncic makes 7-foot driving floating jump shot,0.4550,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.2833,1,0,Kris Dunn makes 25-foot three point jumper (Kawhi Leonard assists),0.4390,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.5667,1,0,Luka Doncic misses 14-foot two point shot,0.4360,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.6167,1,0,James Harden defensive rebound,0.4560,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.7167,1,0,John Collins makes 4-foot two point shot (James Harden assists),0.4110,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.9000,1,0,Austin Reaves misses 26-foot three point step back jumpshot,0.3830,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.9667,1,0,Rui Hachimura offensive rebound,0.4080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,1.9833,1,0,Rui Hachimura makes 18-foot jumper,0.3920,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.1667,1,0,Kawhi Leonard misses 25-foot three point pullup jump shot,0.3690,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.2000,1,0,Rui Hachimura defensive rebound,0.3960,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.4667,1,0,Rui Hachimura misses 9-foot two point shot,0.3950,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.5167,1,0,Ivica Zubac defensive rebound,0.3840,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.6667,1,0,James Harden misses 25-foot three point step back jumpshot,0.3680,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.7167,1,0,Austin Reaves defensive rebound,0.3670,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,2.8500,1,0,Austin Reaves makes driving layup,0.3900,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.0833,1,0,Ivica Zubac makes driving layup (Kawhi Leonard assists),0.3760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.2333,1,0,John Collins shooting foul,0.3430,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.2333,1,0,Luka Doncic misses free throw 1 of 2,0.3340,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.2333,1,0,Lakers offensive team rebound,0.3430,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.2333,1,0,Luka Doncic makes free throw 2 of 2,0.3820,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.6333,1,0,Kris Dunn makes 10-foot driving floating jump shot (John Collins assists),0.3060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,3.8167,1,0,Jaxson Hayes makes 1-foot alley oop dunk shot (LeBron James assists),0.3450,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.0667,1,0,John Collins makes 23-foot three point jumper (James Harden assists),0.3210,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.3167,1,0,Luka Doncic makes 26-foot three point jumper (Austin Reaves assists),0.2830,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.6833,1,0,Kris Dunn bad pass (Jaxson Hayes steals),0.2760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.8167,1,0,LeBron James misses 25-foot three point jumper,0.2670,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.8833,1,0,Austin Reaves offensive rebound,0.2400,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.9500,1,0,Austin Reaves misses 8-foot two point shot,0.2800,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,4.9833,1,0,James Harden defensive rebound,0.2660,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,5.0333,1,0,Kawhi Leonard makes 25-foot three point shot (James Harden assists),0.2550,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,5.3000,1,0,Kris Dunn personal foul,0.2640,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,5.3000,1,0,Lakers Full timeout,0.2590,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,5.3000,1,0,Marcus Smart enters the game for LeBron James,0.2680,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,5.4667,1,0,Luka Doncic makes 3-foot driving floating jump shot,0.2450,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,5.7333,1,0,Luka Doncic personal foul,0.2290,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.0000,1,0,Kawhi Leonard misses 23-foot three point jumper,0.2180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.0333,1,0,Jaxson Hayes defensive rebound,0.2350,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.1667,1,0,Luka Doncic makes 25-foot three point step back jumpshot,0.2450,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.5500,1,0,Kris Dunn misses two point shot,0.2030,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.5667,1,0,Ivica Zubac offensive rebound,0.1940,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.5833,1,0,Ivica Zubac misses tip shot,0.2040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.6000,1,0,Austin Reaves defensive rebound,0.2210,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.7000,1,0,Luka Doncic makes 32-foot running pullup jump shot (Marcus Smart assists),0.2250,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.7000,1,0,Clippers Full timeout,0.2110,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.7000,1,0,Kobe Sanders enters the game for Kawhi Leonard,0.2180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.7000,1,0,Kobe Brown enters the game for Kris Dunn,0.2140,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.7000,1,0,Nicolas Batum enters the game for Ivica Zubac,0.2030,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.8167,1,0,James Harden makes 11-foot driving floating jump shot,0.1810,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.8167,1,0,Marcus Smart shooting foul,0.2070,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,6.8167,1,0,James Harden makes free throw 1 of 1,0.2050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.0667,1,0,Luka Doncic misses 7-foot pullup jump shot,0.1760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.1000,1,0,John Collins defensive rebound,0.1880,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.4000,1,0,James Harden misses 31-foot three point pullup jump shot,0.1710,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.4667,1,0,Luka Doncic defensive rebound,0.1890,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.6167,1,0,Luka Doncic makes 27-foot three point step back jumpshot,0.1800,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.9167,1,0,James Harden makes free throw 3 of 3,0.1710,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.9167,1,0,Maxi Kleber enters the game for Jaxson Hayes,0.1600,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.9167,1,0,Jaxson Hayes shooting foul,0.1700,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.9167,1,0,James Harden makes free throw 1 of 3,0.1800,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,7.9167,1,0,James Harden makes free throw 2 of 3,0.1690,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.0833,1,0,Luka Doncic makes 27-foot three point jumper (Austin Reaves assists),0.1450,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.2667,1,0,James Harden out of bounds bad pass turnover,0.1470,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.2667,1,0,Jake LaRavia enters the game for Austin Reaves,0.1490,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.4667,1,0,Clippers Coach's Challenge,0.1420,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.4667,1,0,(03:32) [Clippers] COACH'S CHALLENGE (CALL OVERTURNED) [Clippers] retain their timeout,0.1470,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.4667,1,0,Luka Doncic misses 27-foot three point step back jumpshot,0.1580,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.4667,1,0,Clippers defensive team rebound,0.1650,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.4667,1,0,John Collins vs. Maxi Kleber (Kobe Brown gains possession),0.1310,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.6500,1,0,James Harden misses 26-foot three point step back jumpshot,0.1480,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.7167,1,0,James Harden offensive rebound,0.1390,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,8.8333,1,0,John Collins makes 23-foot three point jumper (Kobe Sanders assists),0.1440,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.0833,1,0,Jake LaRavia makes 1-foot dunk (Luka Doncic assists),0.1240,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.3667,1,0,James Harden makes driving layup,0.1080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.5667,1,0,Luka Doncic misses 25-foot three point step back jumpshot,0.1270,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.6333,1,0,James Harden defensive rebound,0.1250,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.7500,1,0,Luka Doncic blocks James Harden 's 2-foot driving layup,0.1100,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.8000,1,0,Maxi Kleber defensive rebound,0.1080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,9.8500,1,0,Luka Doncic makes two point shot (Marcus Smart assists),0.1120,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.1000,1,0,Kobe Brown makes 1-foot driving dunk,0.1060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.2333,1,0,Rui Hachimura makes two point shot (Luka Doncic assists),0.0970,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.5000,1,0,John Collins offensive foul,0.0820,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.5000,1,0,John Collins turnover,0.0940,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.5000,1,0,LeBron James enters the game for Rui Hachimura,0.0840,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.5000,1,0,Ivica Zubac enters the game for John Collins,0.0930,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.7000,1,0,Luka Doncic bad pass (Nicolas Batum steals),0.0960,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,10.7667,1,0,Nicolas Batum makes 25-foot three point shot (Ivica Zubac assists),0.0940,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.0250,1,0,Luka Doncic makes 6-foot driving floating jump shot,0.0730,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.3400,1,0,Kobe Brown makes 2-foot layup (James Harden assists),0.0760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.5150,1,0,Luka Doncic misses 27-foot three point step back jumpshot,0.0670,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.5633,1,0,Maxi Kleber offensive rebound,0.0800,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.7917,1,0,Marcus Smart misses 6-foot two point shot,0.0740,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.8200,1,0,Ivica Zubac defensive rebound,0.0600,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.9550,1,0,James Harden makes 25-foot three point step back jumpshot,0.0780,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.9900,1,0,Luka Doncic misses heave jump shot,0.0760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,11.9983,1,0,Lakers offensive team rebound,0.0530,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.0000,2,0,Kawhi Leonard enters the game for James Harden,0.0610,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.0000,2,0,Austin Reaves enters the game for Luka Doncic,0.0560,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.0000,2,0,Chris Paul enters the game for Kobe Sanders,0.0650,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.0000,2,0,Gabe Vincent enters the game for Maxi Kleber,0.0700,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.0000,1,0,End of the 1st Quarter,0.0580,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.0000,2,0,Jaxson Hayes enters the game for Marcus Smart,0.0760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.3667,2,0,Kawhi Leonard makes 16-foot step back jumpshot,0.0600,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.6500,2,0,LeBron James bad pass (Kawhi Leonard steals),0.0520,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.8167,2,0,LeBron James blocks Kobe Brown 's 3-foot driving layup,0.0510,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.8333,2,0,Austin Reaves defensive rebound,0.0600,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.9167,2,1,LeBron James makes free throw 2 of 2,0.0860,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.9167,2,2,LeBron James makes free throw 1 of 2,0.1420,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,12.9167,2,2,Ivica Zubac shooting foul,0.1460,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,13.3167,2,2,Nicolas Batum makes 25-foot three point jumper (Chris Paul assists),0.1240,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,13.6000,2,2,Ivica Zubac shooting foul,0.1490,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,13.6000,2,2,Jaxson Hayes makes free throw 1 of 2,0.1350,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,13.6000,2,2,Jaxson Hayes makes free throw 2 of 2,0.1370,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,13.9667,2,2,Kawhi Leonard misses 12-foot pullup jump shot,0.1090,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,13.9833,2,2,Ivica Zubac offensive rebound,0.0930,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.0000,2,2,Austin Reaves defensive rebound,0.1140,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.0000,2,2,Ivica Zubac misses tip shot,0.1050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.1167,2,2,Jaxson Hayes misses two point shot,0.0880,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.1500,2,2,Kawhi Leonard defensive rebound,0.1090,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.2167,2,2,Austin Reaves shooting foul,0.0860,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.2167,2,2,Kawhi Leonard makes free throw 1 of 2,0.1220,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.2167,2,2,Kris Dunn enters the game for Kobe Brown,0.0950,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.2167,2,2,Kawhi Leonard makes free throw 2 of 2,0.1020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.4667,2,2,Austin Reaves makes 25-foot three pointer,0.0920,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.7167,2,2,Kawhi Leonard offensive charge,0.0760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.7167,2,2,Kawhi Leonard turnover,0.0960,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.9167,2,2,LeBron James misses 15-foot pullup jump shot,0.0780,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,14.9667,2,2,Kawhi Leonard defensive rebound,0.0740,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,15.1667,2,2,Kawhi Leonard lost ball turnover (Jake LaRavia steals),0.0850,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,15.2333,2,2,Austin Reaves makes two point shot,0.0820,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,15.4500,2,2,Chris Paul makes 16-foot pullup jump shot,0.0720,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,15.6500,2,2,Gabe Vincent lost ball turnover (Nicolas Batum steals),0.0560,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.0000,2,2,LeBron James personal foul,0.0480,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.2500,2,2,Ivica Zubac lost ball turnover (LeBron James steals),0.0380,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.3333,2,2,Kawhi Leonard shooting foul,0.0520,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.3333,2,3,LeBron James makes free throw 1 of 2,0.1030,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.3333,2,3,Luka Doncic enters the game for Jake LaRavia,0.0860,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.3333,2,4,LeBron James makes free throw 2 of 2,0.1820,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.5833,2,4,Chris Paul misses 25-foot three point pullup jump shot,0.1590,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.6167,2,4,Austin Reaves defensive rebound,0.1700,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.7000,2,4,Austin Reaves makes two point shot,0.1740,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.7167,2,4,Clippers Full timeout,0.1620,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.7167,2,4,Marcus Smart enters the game for LeBron James,0.1710,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.7167,2,4,John Collins enters the game for Nicolas Batum,0.1650,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.9167,2,4,Kawhi Leonard misses 25-foot three point jumper,0.1320,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,16.9833,2,4,Austin Reaves defensive rebound,0.1260,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.1333,2,4,Gabe Vincent misses 25-foot three point jumper,0.1430,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.1833,2,4,Austin Reaves offensive rebound,0.1190,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.3167,2,4,Gabe Vincent misses 22-foot three point jumper,0.1310,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.3667,2,4,Chris Paul defensive rebound,0.1380,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.5833,2,4,Kawhi Leonard makes 13-foot pullup jump shot,0.1080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.7333,2,4,Luka Doncic makes 10-foot two point shot,0.1180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.7333,2,4,Kawhi Leonard shooting foul,0.1110,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.7333,2,4,Maxi Kleber enters the game for Jaxson Hayes,0.1230,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.7333,2,4,James Harden enters the game for Kawhi Leonard,0.1140,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.7333,2,4,Kobe Sanders enters the game for Chris Paul,0.0910,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,17.7333,2,4,Luka Doncic makes free throw 1 of 1,0.1010,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,18.1500,2,4,Kobe Sanders misses 24-foot three point jumper,0.0930,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,18.1833,2,4,Luka Doncic defensive rebound,0.0960,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,18.5333,2,4,Rui Hachimura enters the game for Austin Reaves,0.0730,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,18.5333,2,4,Luka Doncic steps out of bounds turnover,0.0840,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,18.8000,2,4,Kris Dunn makes driving layup (Ivica Zubac assists),0.0830,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.0167,2,4,Maxi Kleber makes 15-foot jumper (Luka Doncic assists),0.0570,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.3000,2,4,James Harden makes driving layup,0.0730,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.4667,2,4,Luka Doncic misses 29-foot three point pullup jump shot,0.0620,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.5167,2,4,Ivica Zubac defensive rebound,0.0610,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.6333,2,4,Ivica Zubac misses driving floating jump shot,0.0550,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.6667,2,4,Luka Doncic defensive rebound,0.0570,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,19.9000,2,4,Rui Hachimura makes 13-foot two point shot (Luka Doncic assists),0.0520,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.2333,2,4,James Harden makes 26-foot three point step back jumpshot,0.0470,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.5000,2,4,Luka Doncic bad pass (Kris Dunn steals),0.0380,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.5167,2,4,LeBron James enters the game for Gabe Vincent,0.0420,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.5167,2,4,Kris Dunn out of bounds bad pass turnover,0.0410,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.5167,2,4,Lakers Full timeout,0.0390,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.6167,2,4,LeBron James misses free throw 1 of 1,0.0450,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.6167,2,4,James Harden shooting foul,0.0420,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.6167,2,4,LeBron James makes layup (Luka Doncic assists),0.0460,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,20.6667,2,4,John Collins defensive rebound,0.0420,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,21.0000,2,4,James Harden misses 32-foot three point pullup jump shot,0.0340,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,21.0167,2,4,Marcus Smart defensive rebound,0.0260,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,21.1000,2,4,LeBron James makes 28-foot running pullup jump shot (Marcus Smart assists),0.0310,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,21.5000,2,4,John Collins makes 23-foot three point jumper (Kris Dunn assists),0.0180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,21.8000,2,4,Maxi Kleber misses 27-foot three point jumper,0.0220,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,21.8667,2,4,Kobe Sanders defensive rebound,0.0200,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.1833,2,4,James Harden misses driving floating jump shot,0.0170,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.2167,2,4,Maxi Kleber defensive rebound,0.0170,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.2500,2,4,Nicolas Batum enters the game for Ivica Zubac,0.0170,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.2500,2,4,Austin Reaves enters the game for Marcus Smart,0.0090,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.2500,2,4,Kobe Brown enters the game for John Collins,0.0150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.2500,2,4,LeBron James offensive charge,0.0180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.2500,2,4,LeBron James turnover,0.0180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.6167,2,4,Kris Dunn makes 25-foot three point step back jumpshot (James Harden assists),0.0120,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.8167,2,4,Kobe Sanders shooting foul,0.0070,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.8167,2,4,Luka Doncic makes free throw 1 of 2,0.0160,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.8167,2,4,Jake LaRavia enters the game for Maxi Kleber,0.0110,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,22.8167,2,4,Luka Doncic makes free throw 2 of 2,0.0070,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.1317,2,4,Kobe Brown makes driving layup (Kris Dunn assists),0.0120,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.2217,2,4,Luka Doncic makes 26-foot three point step back jumpshot,0.0080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.5083,2,4,James Harden misses 26-foot three point pullup jump shot,0.0070,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.5467,2,4,LeBron James defensive rebound,0.0090,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.6317,2,6,Jake LaRavia makes two point shot (LeBron James assists),0.0540,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.9483,2,6,Kobe Sanders makes free throw 1 of 2,0.0560,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.9483,2,6,Rui Hachimura shooting foul,0.0430,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.9483,2,6,Kobe Sanders makes free throw 2 of 2,0.0460,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.9683,2,6,Jake LaRavia misses heave jump shot,0.0410,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,23.9983,2,6,Lakers offensive team rebound,0.0500,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.0000,2,6,End of the 2nd Quarter,0.0510,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.0000,3,6,Jaxson Hayes enters the game for Jake LaRavia,0.0390,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.0000,3,6,Kawhi Leonard enters the game for Kobe Sanders,0.0650,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.0000,3,6,John Collins enters the game for Kobe Brown,0.0440,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.0000,3,6,Ivica Zubac enters the game for Nicolas Batum,0.0600,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.2833,3,6,Kawhi Leonard misses 13-foot pullup jump shot,0.0470,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.2833,3,6,Clippers offensive team rebound,0.0320,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.2833,3,6,Rui Hachimura loose ball foul,0.0400,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.4333,3,6,Kris Dunn misses 24-foot three point jumper,0.0440,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.4833,3,6,Luka Doncic defensive rebound,0.0440,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,24.7500,3,8,LeBron James makes 7-foot two point shot (Luka Doncic assists),0.1460,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,25.0167,3,8,John Collins makes 2-foot layup (James Harden assists),0.1270,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,25.3333,3,8,Austin Reaves makes 3-foot jump bank shot,0.1080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,25.5500,3,8,Kris Dunn makes two point shot (James Harden assists),0.1150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,25.7333,3,8,Luka Doncic makes 25-foot three point step back jumpshot,0.1240,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.0333,3,8,John Collins misses 25-foot three point jumper,0.0960,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.0667,3,8,Luka Doncic defensive rebound,0.1000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.2167,3,10,LeBron James makes 9-foot two point shot (Luka Doncic assists),0.3070,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.2333,3,10,Clippers Full timeout,0.2890,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.4167,3,10,James Harden makes driving layup,0.2490,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.6667,3,10,Rui Hachimura makes 1-foot dunk (LeBron James assists),0.2760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,26.9833,3,10,LeBron James personal foul,0.2250,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.2167,3,10,Kawhi Leonard misses driving floating jump shot,0.2160,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.2167,3,10,Clippers offensive team rebound,0.2170,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.2167,3,10,shot clock turnover ,0.2180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.5000,3,10,LeBron James makes 17-foot pullup jump shot,0.2020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.6667,3,10,James Harden makes 29-foot three pointer,0.1820,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.9000,3,10,LeBron James misses 22-foot three point jumper,0.1930,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.9667,3,10,Austin Reaves offensive rebound,0.1750,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,27.9833,3,10,LeBron James lost ball turnover (James Harden steals),0.1760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.0833,3,10,James Harden misses running pullup jump shot,0.1690,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.1667,3,10,Rui Hachimura defensive rebound,0.1520,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.1833,3,10,Rui Hachimura bad pass (James Harden steals),0.1520,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.3833,3,10,Ivica Zubac makes 1-foot two point shot (James Harden assists),0.1440,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.5833,3,10,Jaxson Hayes offensive foul,0.1650,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.5833,3,10,Jaxson Hayes turnover,0.1380,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.7500,3,10,Jaxson Hayes blocks James Harden 's 4-foot driving floating jump shot,0.1090,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.7500,3,10,Clippers offensive team rebound,0.1200,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.8333,3,10,Kawhi Leonard misses 25-foot three point pullup jump shot,0.1310,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.8667,3,10,Luka Doncic defensive rebound,0.1210,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,28.9833,3,10,Luka Doncic misses driving floating jump shot,0.1330,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.0500,3,10,Ivica Zubac defensive rebound,0.1210,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.2000,3,10,James Harden makes driving layup,0.1040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.6167,3,10,Austin Reaves misses 13-foot two point shot,0.0920,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.6500,3,10,Kawhi Leonard defensive rebound,0.0780,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.8667,3,10,Ivica Zubac makes driving layup,0.0750,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.8667,3,10,Lakers Full timeout,0.0880,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.8667,3,10,Maxi Kleber enters the game for LeBron James,0.0760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,29.8667,3,10,Marcus Smart enters the game for Jaxson Hayes,0.0790,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.1167,3,10,Luka Doncic misses 13-foot two point shot,0.0680,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.1667,3,10,Kawhi Leonard defensive rebound,0.0660,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.2667,3,10,Kris Dunn misses 24-foot three point shot,0.0510,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.2667,3,10,Clippers offensive team rebound,0.0560,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.2667,3,10,Maxi Kleber loose ball foul,0.0740,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.4833,3,10,Kawhi Leonard makes 11-foot pullup jump shot,0.0550,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.7833,3,10,Maxi Kleber misses layup,0.0560,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.8167,3,10,John Collins defensive rebound,0.0370,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.8833,3,10,James Harden bad pass (Austin Reaves steals),0.0470,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,30.9500,3,10,Austin Reaves makes two point shot,0.0450,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.0500,3,10,Luka Doncic personal foul,0.0400,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.1333,3,10,Kawhi Leonard makes 18-foot jumper,0.0440,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.3167,3,10,Ivica Zubac personal foul,0.0360,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.3167,3,10,Nicolas Batum enters the game for Kawhi Leonard,0.0220,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.5167,3,10,Ivica Zubac blocks Luka Doncic 's 18-foot two point shot,0.0340,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.5500,3,10,John Collins defensive rebound,0.0380,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.6500,3,10,James Harden lost ball turnover (Luka Doncic steals),0.0360,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.6500,3,10,James Harden personal foul,0.0150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,31.6500,3,10,(04:21) [Clippers] REF-INITIATED REVIEW (CALL STANDS),0.0310,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.0167,3,10,Rui Hachimura misses 17-foot pullup jump shot,0.0270,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.0333,3,10,Marcus Smart offensive rebound,0.0150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.0500,3,10,Marcus Smart makes two point shot,0.0210,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.3333,3,10,Kobe Sanders enters the game for Ivica Zubac,0.0230,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.3333,3,10,Kobe Brown enters the game for Kris Dunn,0.0180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.3333,3,10,Jake LaRavia enters the game for Austin Reaves,0.0100,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.4333,3,10,James Harden misses 28-foot three point pullup jump shot,0.0180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.4833,3,10,Luka Doncic defensive rebound,0.0180,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.5667,3,10,Luka Doncic misses 17-foot pullup jump shot,0.0110,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.6000,3,10,Lakers offensive team rebound,0.0140,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.6000,3,10,Marcus Smart out of bounds bad pass turnover,0.0160,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.7000,3,10,Maxi Kleber personal foul,0.0130,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.7000,3,10,Lakers delay of game violation,0.0170,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.7000,3,10,John Collins makes free throw 1 of 2,0.0150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.7000,3,10,John Collins makes free throw 2 of 2,0.0120,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.9500,3,10,Luka Doncic makes driving layup,0.0070,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.9500,3,10,Kobe Sanders shooting foul,0.0130,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,32.9500,3,10,Luka Doncic misses free throw 1 of 1,0.0150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.0000,3,10,Luka Doncic offensive rebound,0.0120,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.0333,3,10,Luka Doncic misses driving floating jump shot,0.0140,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.0667,3,10,John Collins defensive rebound,0.0100,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,Marcus Smart personal foul,0.0100,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,LeBron James enters the game for Rui Hachimura,0.0100,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,Clippers Full timeout,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,(02:45) [Clippers] COACH'S CHALLENGE (CALL OVERTURNED) [Clippers] retain their timeout,0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,James Harden makes free throw 1 of 2,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,Gabe Vincent enters the game for Maxi Kleber,0.0130,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.2500,3,10,James Harden makes free throw 2 of 2,0.0080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.4333,3,10,Marcus Smart makes layup (Luka Doncic assists),0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,33.8667,3,10,shot clock turnover ,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.1833,3,10,Luka Doncic makes 6-foot two point shot,0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.5833,3,10,James Harden lost ball turnover,0.0020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.5833,3,10,James Harden loose ball foul,0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.7500,3,10,Luka Doncic misses 25-foot three point step back jumpshot,0.0020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.7667,3,10,Marcus Smart offensive rebound,0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.7833,3,10,Marcus Smart misses tip shot,0.0020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,34.8000,3,10,James Harden defensive rebound,0.0010,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.0000,3,10,Kobe Sanders makes dunk (Kobe Brown assists),0.0020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.2667,3,10,Marcus Smart makes 23-foot three point jumper (Luka Doncic assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,Marcus Smart personal foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,Lakers Full timeout,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,(00:32.2) [Lakers] COACH'S CHALLENGE (CALL STANDS) [Lakers] charged with a timeout,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,Kris Dunn enters the game for Kobe Sanders,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,James Harden makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,James Harden makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.4633,3,10,(00:32.2) [Clippers] COACH'S CHALLENGE (CALL REPLAYCENTER),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.6533,3,10,Nicolas Batum shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.6533,3,11,LeBron James makes free throw 1 of 1,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.6533,3,11,LeBron James makes layup (Luka Doncic assists),0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.9850,3,11,James Harden bad pass (Marcus Smart steals),0.0030,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.9983,3,11,Luka Doncic misses heave jump shot,0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,35.9983,3,11,Lakers offensive team rebound,0.0010,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.0000,3,11,End of the 3rd Quarter,0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.0000,4,11,Jaxson Hayes enters the game for Marcus Smart,0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.0000,4,11,Austin Reaves enters the game for Luka Doncic,0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.0000,4,11,Kawhi Leonard enters the game for James Harden,0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.0000,4,11,Chris Paul enters the game for John Collins,0.0050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.0000,4,11,Ivica Zubac enters the game for Kris Dunn,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.3833,4,11,Austin Reaves misses 26-foot three point step back jumpshot,0.0010,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.4500,4,11,Jaxson Hayes offensive rebound,0.0010,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.4833,4,11,LeBron James misses 9-foot two point shot,0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.5000,4,11,LeBron James offensive rebound,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.6500,4,11,Austin Reaves makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.6500,4,11,Austin Reaves makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.6500,4,11,Kobe Brown shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.6500,4,11,Chris Paul technical foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.6500,4,11,Austin Reaves makes technical free throw,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.9167,4,11,Ivica Zubac misses dunk,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.9333,4,11,Ivica Zubac offensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.9500,4,11,Ivica Zubac misses tip shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.9667,4,11,Ivica Zubac offensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,36.9833,4,11,Ivica Zubac makes two point shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,37.2667,4,11,Jaxson Hayes makes layup (LeBron James assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,37.5333,4,11,Lakers defensive team rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,37.5333,4,11,Kawhi Leonard misses 13-foot pullup jump shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,37.9500,4,14,LeBron James makes 24-foot three point jumper (Austin Reaves assists),0.0340,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.2167,4,14,Chris Paul makes driving layup,0.0230,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.4167,4,14,Austin Reaves makes free throw 2 of 2,0.0160,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.4167,4,14,Austin Reaves makes free throw 1 of 2,0.0260,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.4167,4,14,Chris Paul shooting foul,0.0290,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.7500,4,14,Clippers Full timeout,0.0140,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.8333,4,14,Kawhi Leonard bad pass (Austin Reaves steals),0.0130,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.9167,4,14,LeBron James misses 6-foot two point shot,0.0100,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,38.9500,4,14,Jake LaRavia offensive rebound,0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.1333,4,16,LeBron James makes 14-foot two point shot,0.1570,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.3667,4,16,Nicolas Batum misses 25-foot three point jumper,0.1150,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.4167,4,16,LeBron James defensive rebound,0.1060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.5000,4,16,LeBron James misses 26-foot three point shot,0.1020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.5667,4,16,Lakers offensive team rebound,0.1000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.5667,4,16,Nicolas Batum loose ball foul,0.1170,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.5667,4,16,Kris Dunn enters the game for Nicolas Batum,0.1030,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.5667,4,16,James Harden enters the game for Chris Paul,0.1050,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.7167,4,16,Austin Reaves makes 3-foot layup (LeBron James assists),0.0760,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,39.9167,4,16,Kris Dunn makes 25-foot three point jumper (Kobe Brown assists),0.0700,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.2000,4,16,Ivica Zubac blocks Austin Reaves 's 3-foot driving layup,0.0480,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.2000,4,16,Clippers defensive team rebound,0.0580,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.2000,4,16,Jake LaRavia loose ball foul,0.0490,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.2000,4,16,Luka Doncic enters the game for Jake LaRavia,0.0550,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.2000,4,16,John Collins enters the game for Kobe Brown,0.0540,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.3500,4,16,Austin Reaves shooting foul,0.0390,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.3500,4,16,Ivica Zubac misses free throw 1 of 2,0.0330,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.3500,4,16,Clippers offensive team rebound,0.0420,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.3500,4,16,Ivica Zubac misses free throw 2 of 2,0.0390,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.4000,4,16,LeBron James defensive rebound,0.0410,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.5833,4,16,Austin Reaves makes 23-foot three point jumper (Luka Doncic assists),0.0300,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,40.8333,4,16,Kawhi Leonard makes layup (Ivica Zubac assists),0.0200,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.1500,4,16,Rui Hachimura enters the game for LeBron James,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.1500,4,16,Clippers Full timeout,0.0080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.1500,4,16,Austin Reaves makes driving layup (Jaxson Hayes assists),0.0080,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.3500,4,16,Gabe Vincent personal foul,0.0060,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.5333,4,16,John Collins makes 23-foot three point jumper (Kawhi Leonard assists),0.0040,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.7500,4,16,Ivica Zubac personal foul,0.0020,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,41.8833,4,16,Austin Reaves makes layup (Jaxson Hayes assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.1500,4,16,Kris Dunn makes 6-foot driving floating jump shot (James Harden assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.4167,4,16,Rui Hachimura makes 2-foot alley oop dunk shot (Jaxson Hayes assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.7333,4,16,James Harden misses 22-foot three point pullup jump shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.7500,4,16,Clippers offensive team rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.7500,4,16,Marcus Smart enters the game for Gabe Vincent,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.8667,4,16,Kris Dunn misses 24-foot three point jumper,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,42.9333,4,16,Jaxson Hayes defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.1667,4,16,Luka Doncic misses 12-foot two point shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.1833,4,16,Kawhi Leonard defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.2500,4,16,Kawhi Leonard makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.2500,4,16,LeBron James enters the game for Jaxson Hayes,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.2500,4,16,Luka Doncic shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.2500,4,16,Kawhi Leonard makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.5167,4,16,Austin Reaves bad pass (Ivica Zubac steals),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.6667,4,16,Marcus Smart blocks Ivica Zubac 's 4-foot layup,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.7167,4,16,Ivica Zubac offensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.7333,4,16,Luka Doncic shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.7333,4,16,Kawhi Leonard makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.7333,4,16,Jaxson Hayes enters the game for Austin Reaves,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.7333,4,16,Kawhi Leonard makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.8833,4,16,Kobe Brown enters the game for Kawhi Leonard,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.8833,4,16,Kris Dunn shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.8833,4,16,Luka Doncic makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,43.8833,4,16,Luka Doncic makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.2667,4,16,Kris Dunn misses driving layup,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.2833,4,16,Ivica Zubac offensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.2833,4,16,Ivica Zubac misses tip shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.2833,4,16,Clippers offensive team rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.3833,4,16,Ivica Zubac makes 4-foot two point shot (Kris Dunn assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Kris Dunn technical foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Jaxson Hayes technical foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Kris Dunn technical foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Kris Dunn ejected,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Luka Doncic makes technical free throw,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Austin Reaves enters the game for Marcus Smart,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.4500,4,16,Nicolas Batum enters the game for Kris Dunn,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.7500,4,16,Luka Doncic misses driving floating jump shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,44.8000,4,16,Nicolas Batum defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.0833,4,16,Jaxson Hayes defensive goaltending violation,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.0833,4,16,James Harden makes 4-foot driving floating jump shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.2667,4,16,Rui Hachimura misses 25-foot three point jumper,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.3167,4,16,Luka Doncic offensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.3167,4,16,Ivica Zubac shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.3167,4,16,Luka Doncic misses free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.3167,4,16,Lakers offensive team rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.3167,4,16,Luka Doncic makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.4667,4,16,James Harden misses 25-foot three point step back jumpshot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.5167,4,16,LeBron James defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.5667,4,18,Austin Reaves makes two point shot (LeBron James assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.8833,4,18,John Collins misses 22-foot three point pullup jump shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,45.9167,4,18,LeBron James defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.1333,4,18,Yanic Konan Niederhauser enters the game for Nicolas Batum,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.1333,4,18,Jahmyl Telfort enters the game for Ivica Zubac,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.1333,4,18,Cam Christie enters the game for John Collins,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.1333,4,18,Clippers Full timeout,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.1333,4,18,Jaxson Hayes makes 1-foot alley oop dunk shot (Luka Doncic assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.1333,4,18,Kobe Sanders enters the game for James Harden,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.2833,4,18,Kobe Sanders bad pass (Austin Reaves steals),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.3167,4,20,LeBron James makes two point shot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.4667,4,20,Cam Christie misses 25-foot three point jumper,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.5167,4,20,Jaxson Hayes defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Austin Reaves makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Kobe Sanders shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Austin Reaves makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Adou Thiero enters the game for Jaxson Hayes,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Dalton Knecht enters the game for LeBron James,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Bronny James enters the game for Rui Hachimura,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8000,4,20,Drew Timme enters the game for Luka Doncic,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8833,4,20,Kobe Sanders makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8833,4,20,Maxi Kleber enters the game for Austin Reaves,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8833,4,20,Austin Reaves personal take foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,46.8833,4,20,Kobe Sanders makes free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.2483,4,20,Drew Timme misses 23-foot three point jumper,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.3133,4,20,Cam Christie defensive rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.4950,4,20,Kobe Sanders bad pass (Drew Timme steals),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.5783,4,20,Drew Timme makes two point shot (Bronny James assists),0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.8667,4,20,Adou Thiero shooting foul,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.8667,4,20,Cam Christie misses free throw 1 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.8667,4,20,Clippers offensive team rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.8667,4,20,Cam Christie makes free throw 2 of 2,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.9600,4,20,Bronny James misses 24-foot three point step back jumpshot,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,47.9983,4,20,Lakers offensive team rebound,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,48.0000,4,20,End of the 4th Quarter,0.0000,20,MISS
+LeBron James,401809801,2025-11-25,22.0000,48.0000,4,20,End of Game,0.0000,20,MISS
