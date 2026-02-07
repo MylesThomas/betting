@@ -129,23 +129,53 @@ def download_team_logo(team_name, size=(100, 100)):
 
 
 def download_player_headshot(player_id, size=(120, 120)):
-    """Download player headshot from NBA CDN and return temp file path."""
-    url = f"https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png"
+    """Download player headshot from ESPN/NBA CDN and return temp file path."""
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     
+    # Try ESPN CDN first (has better quality actual photos)
+    url_espn = f"https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/{player_id}.png"
     try:
-        response = requests.get(url, timeout=5, verify=False)
+        response = requests.get(url_espn, timeout=5, verify=False)
         response.raise_for_status()
         
         img = Image.open(BytesIO(response.content))
-        img = img.convert("RGBA")
-        img = img.resize(size, Image.Resampling.LANCZOS)
-        img.save(temp_file.name, "PNG")
         
-        return temp_file.name
-    except Exception as e:
-        print(f"⚠️  Failed to download headshot for player_id {player_id}: {e}")
-        return create_blank_image(size)
+        # Check if it's a placeholder (very small file size)
+        if len(response.content) > 50000:  # Real photos are > 50KB
+            img = img.convert("RGBA")
+            img = img.resize(size, Image.Resampling.LANCZOS)
+            img.save(temp_file.name, "PNG")
+            
+            print(f"   ✅ Downloaded headshot from ESPN CDN (player_id: {player_id})")
+            return temp_file.name
+        else:
+            raise Exception("ESPN returned placeholder image")
+            
+    except Exception as e1:
+        # Try NBA CDN as fallback
+        url_nba = f"https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png"
+        try:
+            response = requests.get(url_nba, timeout=5, verify=False)
+            response.raise_for_status()
+            
+            img = Image.open(BytesIO(response.content))
+            
+            # Check if it's a placeholder
+            if len(response.content) > 50000:  # Real photos are > 50KB
+                img = img.convert("RGBA")
+                img = img.resize(size, Image.Resampling.LANCZOS)
+                img.save(temp_file.name, "PNG")
+                
+                print(f"   ✅ Downloaded headshot from NBA CDN (player_id: {player_id})")
+                return temp_file.name
+            else:
+                raise Exception("NBA CDN returned placeholder image")
+                
+        except Exception as e2:
+            print(f"   ⚠️  Failed to download headshot for player_id {player_id}")
+            print(f"      ESPN CDN error: {e1}")
+            print(f"      NBA CDN error: {e2}")
+            return create_blank_image(size)
 
 
 def create_blank_image(size=(100, 100)):
@@ -338,8 +368,18 @@ def get_consensus_prop_line(player_name, game_date, market="player_points"):
                 """).df()
                 
                 if len(df) > 0:
-                    # Calculate median (consensus)
-                    consensus = df['point'].median()
+                    # Calculate consensus: median, but if median is average of two values,
+                    # take the higher of the two (more conservative for betting)
+                    points = sorted(df['point'].values)
+                    n = len(points)
+                    
+                    if n % 2 == 1:
+                        # Odd number: median is the middle value
+                        consensus = points[n // 2]
+                    else:
+                        # Even number: take the higher of the two middle values
+                        consensus = points[n // 2]  # This is the higher one after sorting
+                    
                     con.close()
                     return float(consensus)
             except Exception:
@@ -465,14 +505,11 @@ def load_play_by_play(game_id, player_name):
     df = pd.DataFrame(play_data)
     df = df.sort_values('game_minute').reset_index(drop=True)
     
-    # PASS 3: Calculate cumulative points in correct order
+    # PASS 3: Calculate cumulative points in correct chronological order
     df['cumulative_points'] = df['points_this_play'].cumsum()
     
-    # PASS 4: Add tiny offset to game_minute to preserve sorted order in plotting
-    df['game_minute'] = df['game_minute'] + (df.index * 0.0001)
-    
-    # Clean up temporary column
-    df = df.drop(columns=['espn_index', ])
+    # Clean up temporary columns (keep description for debugging)
+    df = df.drop(columns=['espn_index', 'points_this_play'])
     
     return df, game_metadata
 
@@ -653,6 +690,7 @@ def create_ggplot(df, prop_line, player_name, player_id, game_id, game_date,
     
     # Download team logos and player headshot
     print("   📥 Downloading images...")
+    print(f"      Player ID: {player_id}")
     away_logo_path = download_team_logo(away_team, size=(100, 100))
     home_logo_path = download_team_logo(home_team, size=(100, 100))
     player_headshot_path = download_player_headshot(player_id, size=(120, 120))
@@ -660,6 +698,8 @@ def create_ggplot(df, prop_line, player_name, player_id, game_id, game_date,
     # Prepare R code
     result_label = "HIT ✅" if result == "HIT" else "MISS ❌"
     prop_line_ceil = math.ceil(prop_line)
+    # Format prop line: show "22" instead of "22.0", but keep "22.5" as "22.5"
+    prop_line_display = f"{prop_line:.1f}".rstrip('0').rstrip('.')
     
     r_code = f'''
 library(ggplot2)
@@ -706,7 +746,7 @@ p1 <- ggplot(df) +
                         name = "") +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
   scale_x_continuous(limits = c(0, 48), breaks = seq(0, 48, 12), expand = c(0, 0)) +
-  labs(title = paste0("{player_name} - Monte Carlo (Over {prop_line} pts)"),
+  labs(title = paste0("{player_name} - Monte Carlo (Over {prop_line_display} pts)"),
        subtitle = paste0("Game: {away_team} @ {home_team} on {game_date} | Vegas-Adjusted (starts at 50%)"),
        y = "Probability (%)") +
   theme_minimal(base_size = 14) +
@@ -847,11 +887,15 @@ def process_game(player_name, game_id, n_sims, use_consensus):
         if prop_line:
             print(f"   📊 Consensus prop line: {prop_line}")
         else:
-            print(f"   ⚠️  No consensus prop line found, using average: {player_profile['avg_points_per_game']:.1f}")
-            prop_line = player_profile['avg_points_per_game']
+            # Round average to nearest 0.5 (like sportsbooks do)
+            avg = player_profile['avg_points_per_game']
+            prop_line = round(avg * 2) / 2
+            print(f"   ⚠️  No consensus prop line found, using rounded average: {prop_line}")
     else:
-        prop_line = player_profile['avg_points_per_game']
-        print(f"   📊 Using player average as prop line: {prop_line:.1f}")
+        # Round average to nearest 0.5 (like sportsbooks do)
+        avg = player_profile['avg_points_per_game']
+        prop_line = round(avg * 2) / 2
+        print(f"   📊 Using player average as prop line: {prop_line}")
     
     # Find Vegas adjustment (one-time, at game start)
     print(f"   🎲 Calibrating Vegas adjustment...")
@@ -967,7 +1011,7 @@ def main():
             SELECT DISTINCT game_id, game_date
             FROM '{MINUTE_BY_MINUTE}'
             WHERE player_name = '{args.player_name}'
-            ORDER BY game_date DESC
+            ORDER BY game_date ASC
         """).df()
         con.close()
         
