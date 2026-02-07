@@ -18,6 +18,7 @@ PACKAGES=(
     "patchwork"
     "png"
     "grid"
+    "magick"
 )
 
 echo "📦 Installing ${#PACKAGES[@]} packages..."
