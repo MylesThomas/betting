@@ -36,6 +36,42 @@ Lambda Deployment:
 This script is fully self-contained and can be copied directly into the Lambda editor.
 No git clone or external dependencies required beyond boto3 and pandas (Lambda layer).
 
+Lambda Layers:
+This function uses TWO layers to provide all dependencies:
+
+Layer 1: git:lambda2 (existing AWS layer)
+- ARN: arn:aws:lambda:us-east-2:553035198032:layer:git-lambda2:8
+- Provides base dependencies
+
+Layer 2: nba-minimal-deps (custom layer we created)
+- Created using the commands below to add matplotlib:
+   ```
+   # 1. Create a minimal layer locally
+   mkdir -p layer/python
+   cd layer/python
+   
+   # Install minimal dependencies
+   pip install pandas matplotlib --target . --no-deps
+   
+   # Install only pandas + matplotlib dependencies (not full numpy)
+   pip install numpy --target .
+   
+   # Zip it (keeping it under size limit)
+   cd ..
+   zip -r minimal-layer.zip python
+   
+   # Check size (under 50 MB)
+   ls -lh minimal-layer.zip
+   
+   # 2. Upload to AWS (if under 50 MB)
+   aws lambda publish-layer-version \
+     --layer-name nba-minimal-deps \
+     --zip-file fileb://minimal-layer.zip \
+     --compatible-runtimes python3.12
+   ```
+
+Both layers are attached to the Lambda function to provide pandas, numpy, and matplotlib.
+
 Required Lambda Environment Variables:
 - SNS_TOPIC_ARN: SNS topic for email notifications (optional)
 
@@ -472,6 +508,13 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     
     # Join game lines
     if df_lines is not None:
+        # Normalize team names for game lines join
+        # NBA API uses "LA Clippers", The Odds API uses "Los Angeles Clippers"
+        team_name_map = {
+            'Los Angeles Clippers': 'LA Clippers'
+        }
+        df_merged['TEAM_NAME'] = df_merged['TEAM_NAME'].replace(team_name_map)
+        
         # Determine home/away for each player
         df_merged['is_home'] = ~df_merged['MATCHUP'].str.contains('@')
         
