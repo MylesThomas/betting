@@ -9,22 +9,28 @@ It combines backtest results from 2023-24, 2024-25, and 2025-26 (through yesterd
 to provide robust, up-to-date win rates and ROI figures.
 
 Self-Contained Approach:
-Instead of relying on external backtest scripts and historical JSON files,
-this implementation generates ALL possible strategy combinations (98 for 2D,
-196 for 3D) and tests them directly. This eliminates the circular dependency
-where only historically profitable strategies get tested.
+This implementation is FULLY self-contained and does not depend on pre-joined files.
+It loads raw data directly from source buckets and joins them in memory:
+- Player props from the-odds-api-mt bucket
+- Game logs (actuals) from nba-api-mt bucket
+- Shot charts from nba-api-mt bucket (for 3D strategies)
+- Game lines (spreads) from the-odds-api-mt bucket
+
+This eliminates the circular dependency on external join scripts.
 
 Steps:
-1. Generate all possible strategy combinations (line tier × spread bin × bet side × scorer type)
-2. Load player props data from S3 for current season
-3. Match props to strategies and calculate WIN/LOSS/PUSH outcomes
-4. Save plays.csv to S3
-5. Load plays from all 3 seasons (2023-24, 2024-25, 2025-26)
-6. Calculate aggregate statistics across all seasons
-7. Filter strategies by minimum plays (50+) not historical ROI
-8. Generate updated strategy JSON files
-9. Upload to S3
-10. Send SNS email notification
+1. Load raw player props, game logs, shot charts, and game lines from S3
+2. Join them in memory to create player_props_with_actuals dataset
+3. Generate all possible strategy combinations (98 for 2D, 196 for 3D)
+4. Match props to strategies and calculate WIN/LOSS/PUSH outcomes
+5. Save plays.csv to S3
+6. Load plays from all 3 seasons (2023-24, 2024-25, 2025-26)
+7. Calculate aggregate statistics across all seasons
+8. Filter strategies by minimum plays (50+) not historical ROI
+9. Generate updated strategy JSON files
+10. Upload to S3
+11. Generate 5-panel performance plots (3 seasons + overall + recent plays table)
+12. Send SNS email notification
 
 Lambda Deployment:
 This script is fully self-contained and can be copied directly into the Lambda editor.
@@ -46,7 +52,7 @@ Usage (Lambda):
 
 Author: Myles Thomas
 Date: 2026-01-30
-Updated: 2026-02-03 (fully self-contained, tests all 98/196 combinations)
+Updated: 2026-02-07 (fully self-contained with in-memory joins, no dependency on pre-joined files)
 """
 
 import sys
@@ -56,6 +62,9 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import List, Dict
 from io import StringIO
+
+# Set matplotlib config for Lambda (must be writable /tmp)
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
 
 # Only import stdlib and boto3 (available in Lambda by default)
 import boto3
@@ -73,7 +82,10 @@ except ImportError:
 # CONFIGURATION
 # =============================================================================
 
+# S3 buckets
 S3_BUCKET = 'nba-betting-mt'
+S3_BUCKET_PROPS = 'the-odds-api-mt'
+S3_BUCKET_NBA = 'nba-api-mt'
 BACKTEST_PREFIX = 'data/04_output/backtests'
 STRATEGIES_PREFIX = 'data/03_intermediate'
 
@@ -82,6 +94,67 @@ BACKTEST_SEASONS = ['2023-24', '2024-25', '2025-26']
 
 # Minimum plays to include strategy
 MIN_PLAYS_THRESHOLD = 1
+
+
+# =============================================================================
+# PLAYER NAME NORMALIZATION (INLINED FOR SELF-CONTAINED LAMBDA)
+# =============================================================================
+
+def remove_accents(text):
+    """Remove accents/diacritics from text (e.g., Dončić -> Doncic)."""
+    import unicodedata
+    if pd.isna(text):
+        return text
+    nfd = unicodedata.normalize('NFD', text)
+    return ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
+
+
+def normalize_player_name(name):
+    """
+    Normalize player name for consistent matching across data sources.
+    
+    Rules:
+    1. Remove periods (P.J. -> PJ)
+    2. Title case
+    3. Remove accents
+    4. Remove generational suffixes (III, II, IV, V)
+    5. Apply known mappings
+    """
+    if pd.isna(name):
+        return name
+    
+    name = name.strip().replace('.', '').title()
+    name = remove_accents(name)
+    
+    # Remove generational suffixes at end
+    if name.endswith(' Iii'):
+        name = name[:-4]
+    elif name.endswith(' Ii'):
+        name = name[:-3]
+    elif name.endswith(' Iv'):
+        name = name[:-3]
+    elif name.endswith(' V'):
+        name = name[:-2]
+    
+    name = ' '.join(name.split())
+    
+    # Known name mappings (Odds API -> NBA API)
+    mappings = {
+        'Herb Jones': 'Herbert Jones',
+        'Moe Wagner': 'Moritz Wagner',
+        'Nicolas Claxton': 'Nic Claxton',
+        'Ron Holland': 'Ronald Holland',
+        'Vincent Williams Jr': 'Vince Williams Jr',
+        'Derrick Jones': 'Derrick Jones Jr',
+        'Bruce Brown Jr': 'Bruce Brown',
+        'Kenyon Martin Jr': 'Kj Martin',
+        'Paul Reed Jr': 'Paul Reed',
+        'Carlton Carrington': 'Bub Carrington',
+        'Alfred Joel Horford Reynoso': 'Al Horford',
+        'Anthony Davis Jr': 'Anthony Davis',
+    }
+    
+    return mappings.get(name, name)
 
 
 # =============================================================================
@@ -231,7 +304,10 @@ def get_yesterday_et() -> str:
 
 def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd.DataFrame':
     """
-    Load player props with actuals CSV from S3.
+    Load and join player props with actuals directly from source data.
+    
+    This function is self-contained and does not depend on pre-joined files.
+    It loads raw props, game logs, shot charts, and game lines from S3 and joins them.
     
     Args:
         s3_client: Boto3 S3 client
@@ -242,29 +318,210 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
         DataFrame with player props and actuals (or None if not found)
     """
     if not PANDAS_AVAILABLE:
-        print(f"   ⚠️  pandas not available - cannot load props data")
-        return None
+        raise RuntimeError("pandas not available - cannot load props data. Check Lambda layer.")
     
-    if strategy_type == '2d':
-        key = f"data/03_intermediate/player_props_with_actuals_{season}.csv"
-    elif strategy_type == '3d':
-        key = f"data/03_intermediate/player_props_with_actuals_{season}_rim40.csv"
-    else:
-        raise ValueError(f"Invalid strategy_type: {strategy_type}")
+    print(f"\n   🔄 Loading and joining fresh data from source buckets...")
     
-    print(f"   Loading props from s3://{S3_BUCKET}/{key}...")
+    # Step 1: Load player props
+    print(f"   📊 Loading props from s3://{S3_BUCKET_PROPS}/nba/historical_player_props/{season}/...")
+    prefix = f"nba/historical_player_props/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
     
-    try:
-        response = s3_client.get_object(Bucket=S3_BUCKET, Key=key)
-        df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
-        print(f"   ✅ Loaded {len(df):,} player-game records")
-        return df
-    except s3_client.exceptions.NoSuchKey:
-        print(f"   ❌ Data file not found: s3://{S3_BUCKET}/{key}")
-        return None
-    except Exception as e:
-        print(f"   ❌ Error loading data: {e}")
-        return None
+    if 'Contents' not in response:
+        raise RuntimeError(f"No props files found in s3://{S3_BUCKET_PROPS}/nba/historical_player_props/{season}/")
+    
+    all_props = []
+    for obj in response['Contents']:
+        if obj['Key'].endswith('.csv'):
+            try:
+                obj_data = s3_client.get_object(Bucket=S3_BUCKET_PROPS, Key=obj['Key'])
+                df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                filename = obj['Key'].split('/')[-1]
+                date_str = filename.replace('.csv', '')
+                df['game_date'] = date_str
+                all_props.append(df)
+            except Exception as e:
+                print(f"   ⚠️  Failed to load {obj['Key']}: {e}")
+                raise  # FAIL HARD - don't silently skip
+    
+    if not all_props:
+        raise RuntimeError(f"No props data loaded for {season}")
+    
+    df_props = pd.concat(all_props, ignore_index=True)
+    df_props['player_normalized'] = df_props['player'].apply(normalize_player_name)
+    print(f"   ✅ Loaded {len(df_props):,} prop rows ({df_props['game_date'].min()} to {df_props['game_date'].max()})")
+    
+    # Step 2: Load game logs (actuals)
+    print(f"   🏀 Loading game logs from s3://{S3_BUCKET_NBA}/player_game_logs/{season}/...")
+    prefix = f"player_game_logs/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
+    
+    if 'Contents' not in response:
+        raise RuntimeError(f"No game log files found in s3://{S3_BUCKET_NBA}/player_game_logs/{season}/")
+    
+    all_game_logs = []
+    for obj in response['Contents']:
+        if obj['Key'].endswith('.csv'):
+            try:
+                obj_data = s3_client.get_object(Bucket=S3_BUCKET_NBA, Key=obj['Key'])
+                df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                all_game_logs.append(df)
+            except Exception as e:
+                print(f"   ⚠️  Failed to load {obj['Key']}: {e}")
+                raise  # FAIL HARD
+    
+    if not all_game_logs:
+        raise RuntimeError(f"No game logs loaded for {season}")
+    
+    df_games = pd.concat(all_game_logs, ignore_index=True)
+    df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'])
+    df_games['game_date'] = df_games['GAME_DATE'].dt.date.astype(str)
+    df_games['player_normalized'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
+    df_games = df_games[df_games['MIN'].notna() & (df_games['MIN'] > 0)].copy()
+    print(f"   ✅ Loaded {len(df_games):,} player-game rows ({df_games['game_date'].min()} to {df_games['game_date'].max()})")
+    
+    # Step 3: Load shot charts (only for 3d)
+    df_shots = None
+    if strategy_type == '3d':
+        print(f"   🎯 Loading shot charts from s3://{S3_BUCKET_NBA}/player_shot_charts/{season}/...")
+        prefix = f"player_shot_charts/{season}/"
+        response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
+        
+        if 'Contents' in response:
+            all_shot_data = []
+            for obj in response['Contents']:
+                if obj['Key'].endswith('.csv'):
+                    try:
+                        file_name = obj['Key'].split('/')[-1].replace('.csv', '')
+                        parts = file_name.split('_')
+                        if len(parts) >= 2:
+                            player_name_raw = ' '.join(parts[:-1])
+                            player_normalized = normalize_player_name(player_name_raw)
+                            
+                            obj_data = s3_client.get_object(Bucket=S3_BUCKET_NBA, Key=obj['Key'])
+                            df_shots_player = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                            
+                            rim_shots = df_shots_player[df_shots_player['SHOT_DISTANCE'] <= 6]
+                            rim_makes = rim_shots['SHOT_MADE_FLAG'].sum() if not rim_shots.empty else 0
+                            rim_points = rim_makes * 2
+                            
+                            all_shot_data.append({
+                                'player_normalized': player_normalized,
+                                'rim_season_points': rim_points
+                            })
+                    except Exception as e:
+                        print(f"   ⚠️  Failed to load shot chart {obj['Key']}: {e}")
+                        raise  # FAIL HARD
+            
+            if all_shot_data:
+                df_shots = pd.DataFrame(all_shot_data)
+                print(f"   ✅ Loaded {len(df_shots):,} player shot chart aggregations")
+            else:
+                raise RuntimeError(f"No shot chart data loaded for 3D strategy in {season}")
+    
+    # Step 4: Load game lines (spreads)
+    print(f"   📈 Loading game lines from s3://{S3_BUCKET_PROPS}/nba/historical_game_lines/{season}/...")
+    prefix = f"nba/historical_game_lines/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
+    
+    df_lines = None
+    if 'Contents' in response:
+        all_lines = []
+        for obj in response['Contents']:
+            if obj['Key'].endswith('.csv') and 'nba_game_lines' in obj['Key']:
+                try:
+                    obj_data = s3_client.get_object(Bucket=S3_BUCKET_PROPS, Key=obj['Key'])
+                    df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                    filename = obj['Key'].split('/')[-1]
+                    date_str = filename.replace('nba_game_lines_', '').replace('.csv', '')
+                    df['game_date'] = date_str
+                    all_lines.append(df)
+                except Exception as e:
+                    print(f"   ⚠️  Failed to load game lines {obj['Key']}: {e}")
+                    raise  # FAIL HARD
+        
+        if all_lines:
+            df_lines = pd.concat(all_lines, ignore_index=True)
+            # Calculate consensus spreads
+            consensus = df_lines.groupby(['game_id', 'game_date', 'away_team', 'home_team', 'market']).agg({
+                'away_line': 'mean',
+                'home_line': 'mean'
+            }).reset_index()
+            spread = consensus[consensus['market'] == 'spread'][['game_id', 'game_date', 'away_team', 'home_team', 'away_line', 'home_line']]
+            spread.columns = ['game_id', 'game_date', 'away_team', 'home_team', 'away_spread', 'home_spread']
+            df_lines = spread
+            print(f"   ✅ Loaded {len(df_lines):,} games with spreads")
+        else:
+            raise RuntimeError(f"No game lines loaded for {season}")
+    
+    # Step 5: Join all data
+    print(f"   🔗 Joining all datasets...")
+    
+    # Filter props to player_points only and aggregate
+    df_props = df_props[df_props['market'] == 'player_points'].copy()
+    props_agg = df_props.groupby(['player_normalized', 'game_date']).agg({
+        'prop_line': 'mean'
+    }).reset_index()
+    props_agg.columns = ['player_normalized', 'game_date', 'points_line']
+    
+    # Start with game logs (players who actually played)
+    df_merged = df_games.copy()
+    
+    # Join props
+    df_merged = df_merged.merge(props_agg, on=['player_normalized', 'game_date'], how='left')
+    
+    # Join game lines
+    if df_lines is not None:
+        # Determine home/away for each player
+        df_merged['is_home'] = ~df_merged['MATCHUP'].str.contains('@')
+        
+        # Create separate joins for home and away
+        df_merged_home = df_merged[df_merged['is_home']].copy()
+        df_merged_away = df_merged[~df_merged['is_home']].copy()
+        
+        df_merged_home = df_merged_home.merge(
+            df_lines[['game_date', 'home_team', 'home_spread']],
+            left_on=['game_date', 'TEAM_NAME'],
+            right_on=['game_date', 'home_team'],
+            how='left'
+        )
+        df_merged_home['team_spread'] = df_merged_home['home_spread']
+        
+        df_merged_away = df_merged_away.merge(
+            df_lines[['game_date', 'away_team', 'away_spread']],
+            left_on=['game_date', 'TEAM_NAME'],
+            right_on=['game_date', 'away_team'],
+            how='left'
+        )
+        df_merged_away['team_spread'] = df_merged_away['away_spread']
+        
+        df_merged = pd.concat([df_merged_home, df_merged_away], ignore_index=True)
+    
+    # Join shot charts (3d only)
+    if df_shots is not None:
+        # Calculate scorer type
+        player_season_points = df_games.groupby('player_normalized').agg({'PTS': 'sum'}).reset_index()
+        player_season_points.columns = ['player_normalized', 'total_pts_season']
+        
+        df_shots = df_shots.merge(player_season_points, on='player_normalized', how='left')
+        df_shots['pts_0_6_pct'] = (df_shots['rim_season_points'] / df_shots['total_pts_season'] * 100).fillna(0)
+        df_shots['scorer_type'] = df_shots['pts_0_6_pct'].apply(
+            lambda x: 'Rim Attacker (≥40.0%)' if x >= 40.0 else 'Perimeter (<40.0%)'
+        )
+        
+        df_merged = df_merged.merge(
+            df_shots[['player_normalized', 'scorer_type']],
+            on='player_normalized',
+            how='left'
+        )
+    
+    # Filter to rows with props only
+    df_merged = df_merged[df_merged['points_line'].notna()].copy()
+    
+    print(f"   ✅ Joined {len(df_merged):,} player-game records with props and actuals")
+    print(f"   📅 Final date range: {df_merged['game_date'].min()} to {df_merged['game_date'].max()}")
+    
+    return df_merged
 
 
 def match_and_calculate_plays(df: 'pd.DataFrame', strategies: List[Dict], strategy_type: str) -> 'pd.DataFrame':
@@ -279,9 +536,11 @@ def match_and_calculate_plays(df: 'pd.DataFrame', strategies: List[Dict], strate
     Returns:
         DataFrame with all plays and their outcomes
     """
-    if not PANDAS_AVAILABLE or df is None or df.empty:
-        print(f"   ⚠️  No data to process")
-        return None
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("pandas not available - cannot process data")
+    
+    if df is None or df.empty:
+        raise RuntimeError("No data to process - empty DataFrame")
     
     print(f"   Matching {len(df):,} records to {len(strategies)} strategies...")
     
@@ -342,7 +601,7 @@ def match_and_calculate_plays(df: 'pd.DataFrame', strategies: List[Dict], strate
                 
                 plays.append({
                     'game_date': row.get('game_date'),
-                    'player_name': row.get('PLAYER_NAME'),
+                    'player_name': row.get('player_normalized'),  # Use normalized name
                     'team': row.get('TEAM_NAME'),
                     'opponent': row.get('MATCHUP'),
                     'points_line': line,
@@ -625,8 +884,7 @@ def load_backtest_plays(s3_client, bucket: str, strategy_type: str, season: str)
         DataFrame of plays
     """
     if not PANDAS_AVAILABLE:
-        print(f"   ⚠️  pandas not available - cannot load backtest plays")
-        return None
+        raise RuntimeError("pandas not available - check Lambda layer")
     
     s3_key = f'{BACKTEST_PREFIX}/{strategy_type}/{season}/plays.csv'
     
@@ -637,8 +895,7 @@ def load_backtest_plays(s3_client, bucket: str, strategy_type: str, season: str)
         print(f"   Loaded {len(df)} plays from {season} {strategy_type.upper()}")
         return df
     except Exception as e:
-        print(f"   ⚠️  Could not load {season} {strategy_type.upper()}: {e}")
-        return None
+        raise RuntimeError(f"Could not load backtest plays for {season} {strategy_type.upper()}: {e}")
 
 
 def calculate_aggregate_strategy_stats(
@@ -948,19 +1205,21 @@ def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_
     return '\n'.join(lines)
 
 
-def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
+def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_plays_n: int = 10) -> int:
     """
     Generate performance plots for all strategies in ranking.
     
     Args:
         strategy_rankings: Dict with '2d' and '3d' keys containing strategy lists
         season: Current season string
+        recent_plays_n: Number of recent plays to show in table (default 10)
     
     Returns:
         int: Number of plots generated
     """
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.gridspec as gridspec
     from datetime import datetime
     
     s3_client = boto3.client('s3')
@@ -987,8 +1246,9 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
                 plot_name = plot_name.replace(' ', '_').replace('(', '').replace(')', '').replace("'", '')
                 plot_filename = f"{plot_name}.png"
                 
-                # Generate 4-panel plot
-                fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+                # Generate 5-panel plot (3x2 grid)
+                fig = plt.figure(figsize=(16, 14))
+                gs = gridspec.GridSpec(3, 2, figure=fig, height_ratios=[1, 1, 0.8])
                 
                 desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
                 if strategy_type == '3d':
@@ -1010,7 +1270,7 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
                 
                 # Plot each season (panels 1-3)
                 for idx, s in enumerate(seasons[:3]):
-                    ax = axes[idx // 2, idx % 2]
+                    ax = fig.add_subplot(gs[idx // 2, idx % 2])
                     df_season = df[df['season'] == s].copy()
                     
                     if len(df_season) == 0:
@@ -1043,7 +1303,7 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
                            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
                 
                 # Panel 4: Overall
-                ax = axes[1, 1]
+                ax = fig.add_subplot(gs[1, 1])
                 df_overall = df.copy()
                 df_overall['cumulative_wins'] = df_overall['is_win'].cumsum()
                 df_overall['cumulative_plays'] = range(1, len(df_overall) + 1)
@@ -1073,6 +1333,116 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
                        transform=ax.transAxes, fontsize=10, verticalalignment='top',
                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
                 
+                # Panel 5: Recent plays table (bottom row, spans both columns)
+                ax_table = fig.add_subplot(gs[2, :])
+                ax_table.axis('off')
+                
+                # Get most recent N plays (sorted descending - most recent first)
+                df_recent = df_overall.tail(recent_plays_n).sort_values('game_date', ascending=False).copy()
+                
+                # Format table data
+                table_data = []
+                for _, row in df_recent.iterrows():
+                    date_str = row['game_date'].strftime('%m/%d/%y')
+                    player = row.get('player_name', 'Unknown')[:18]
+                    line = f"{row['points_line']:.1f}"
+                    actual_pts = f"{int(row['actual_points'])}" if pd.notna(row['actual_points']) else 'N/A'
+                    
+                    # What we bet (from strategy config)
+                    our_bet = strat['bet_side']
+                    
+                    # Determine what actually happened in the market
+                    if pd.notna(row['actual_points']):
+                        if row['actual_points'] > row['points_line']:
+                            actual_result = 'OVER'
+                        elif row['actual_points'] < row['points_line']:
+                            actual_result = 'UNDER'
+                        else:
+                            actual_result = 'PUSH'
+                    else:
+                        actual_result = 'N/A'
+                    
+                    # Strategy result (did OUR bet win?)
+                    strat_result = row['result']
+                    if strat_result == 'WIN':
+                        result_text = 'WIN'
+                    elif strat_result == 'LOSS':
+                        result_text = 'LOSS'
+                    else:
+                        result_text = 'PUSH'
+                    
+                    # Get metadata fields
+                    line_tier = row.get('line_tier', 'Unknown')
+                    spread_bin = row.get('spread_bin', 'Unknown')
+                    scorer_type = row.get('scorer_type', '')
+                    # Shorten scorer_type for display
+                    if scorer_type == 'Rim Attacker (≥40.0%)':
+                        scorer_type_display = 'Rim'
+                    elif scorer_type == 'Perimeter (<40.0%)':
+                        scorer_type_display = 'Perimeter'
+                    else:
+                        scorer_type_display = ''
+                    
+                    table_data.append([
+                        date_str,
+                        player,
+                        line,
+                        actual_pts,
+                        line_tier,
+                        spread_bin,
+                        scorer_type_display,
+                        our_bet,
+                        actual_result,
+                        result_text
+                    ])
+                
+                # Create table
+                table = ax_table.table(
+                    cellText=table_data,
+                    colLabels=['Date', 'Player', 'Line', 'Scored', 'Line Tier', 'Spread', 'Scorer', 'Our Bet', 'Actual', 'Result'],
+                    loc='center',
+                    cellLoc='left',
+                    colWidths=[0.08, 0.16, 0.06, 0.06, 0.11, 0.10, 0.09, 0.08, 0.07, 0.11]
+                )
+                
+                # Style table
+                table.auto_set_font_size(False)
+                table.set_fontsize(8)
+                table.scale(1, 2)
+                
+                # Header styling
+                for i in range(10):
+                    cell = table[(0, i)]
+                    cell.set_facecolor('#4472C4')
+                    cell.set_text_props(weight='bold', color='white')
+                
+                # Alternate row colors and color-code results
+                for i in range(1, len(table_data) + 1):
+                    for j in range(10):
+                        cell = table[(i, j)]
+                        
+                        # Base row color (alternating)
+                        if i % 2 == 0:
+                            cell.set_facecolor('#F0F0F0')
+                        else:
+                            cell.set_facecolor('#FFFFFF')
+                        
+                        # Color-code result column (column 9)
+                        if j == 9:
+                            result_text = table_data[i-1][9]
+                            if result_text == 'WIN':
+                                cell.set_facecolor('#C6EFCE')
+                                cell.set_text_props(weight='bold', color='#006100')
+                            elif result_text == 'LOSS':
+                                cell.set_facecolor('#FFC7CE')
+                                cell.set_text_props(weight='bold', color='#9C0006')
+                            elif result_text == 'PUSH':
+                                cell.set_facecolor('#FFEB9C')
+                                cell.set_text_props(weight='bold', color='#9C5700')
+                
+                # Title for table panel
+                ax_table.set_title(f'Most Recent {recent_plays_n} Plays', fontsize=14, fontweight='bold', pad=20)
+                
                 plt.tight_layout()
                 
                 # Save to /tmp and upload to S3
@@ -1096,7 +1466,7 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
 def load_backtest_plays_for_strategy_simple(s3_client, strategy: Dict, strategy_type: str, seasons: List[str]) -> 'pd.DataFrame':
     """Load plays for a strategy across seasons (simplified for refresh lambda)."""
     if not PANDAS_AVAILABLE:
-        return None
+        raise RuntimeError("pandas not available - check Lambda layer")
     
     dfs = []
     for season in seasons:
@@ -1104,6 +1474,36 @@ def load_backtest_plays_for_strategy_simple(s3_client, strategy: Dict, strategy_
         try:
             response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
             df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
+            
+            # CRITICAL: Validate no Unknown spread_bin values exist
+            unknown_spread_count = (df['spread_bin'] == 'Unknown').sum()
+            if unknown_spread_count > 0:
+                total_plays = len(df)
+                unknown_pct = (unknown_spread_count / total_plays) * 100
+                unknown_dates = sorted([str(d) for d in df[df['spread_bin'] == 'Unknown']['game_date'].unique()])
+                
+                if unknown_pct < 1.0:
+                    # Under 1% - acceptable, just filter out and warn
+                    print(f"   ⚠️  Found {unknown_spread_count} plays ({unknown_pct:.2f}%) with spread_bin='Unknown' in {season}")
+                    print(f"   Dates ({len(unknown_dates)}): {', '.join(unknown_dates)}")
+                    print(f"   These plays will be EXCLUDED (under 1% threshold)")
+                    
+                    # Filter out Unknown plays
+                    df = df[df['spread_bin'] != 'Unknown'].copy()
+                else:
+                    # Over 1% - this is a problem, raise error
+                    error_msg = (
+                        f"\n❌ FATAL ERROR: Found {unknown_spread_count} plays ({unknown_pct:.1f}%) with spread_bin='Unknown' in {season}!\n"
+                        f"   S3 file: s3://{S3_BUCKET}/{s3_key}\n"
+                        f"   This exceeds the 1% tolerance threshold.\n"
+                        f"   Dates ({len(unknown_dates)}): {', '.join(unknown_dates)}\n\n"
+                        f"   This means game lines are MISSING for these dates.\n\n"
+                        f"   FIX:\n"
+                        f"   1. Fetch missing game lines:\n"
+                        f"      python scripts/fetch_nba_player_props.py --mode 2 --fetch-games --s3 --season {season}\n"
+                        f"   2. Re-run backtest to regenerate plays.csv with correct spread_bin\n"
+                    )
+                    raise ValueError(error_msg)
             
             mask = (
                 (df['line_tier'] == strategy['line_tier']) &
@@ -1244,16 +1644,15 @@ def refresh_strategy_statistics(
         # Step 1: Re-run backtests for ALL seasons (if not skipped)
         if not skip_backtest:
             print(f"Step 1: Updating backtests for all seasons...")
-            all_backtests_successful = True
             for backtest_season in BACKTEST_SEASONS:
                 print(f"\n   Regenerating {backtest_season} backtest...")
                 success = run_backtest_for_season(s3_client, backtest_season, strategy_type)
                 if not success:
-                    print(f"   ⚠️ {backtest_season} backtest failed - will use existing data if available")
-                    all_backtests_successful = False
-            
-            if not all_backtests_successful:
-                print(f"   ⚠️ Some backtests failed, but continuing with available data...")
+                    error_msg = f"{backtest_season} backtest failed - cannot continue with stale data"
+                    print(f"   ❌ {error_msg}")
+                    results[strategy_type] = {'success': False, 'error': error_msg}
+                    # FAIL HARD - don't continue
+                    raise RuntimeError(f"Backtest failed for {backtest_season} {strategy_type}")
         else:
             print(f"Step 1: Skipping backtest regeneration (using existing data)")
         
@@ -1392,7 +1791,7 @@ def refresh_strategy_statistics(
         plots_summary = f"\n{'='*80}\n"
         plots_summary += f"📈 STRATEGY PERFORMANCE PLOTS\n"
         plots_summary += f"{'='*80}\n"
-        plots_summary += f"Generated {plots_generated} performance plots (4-panel: 2023-24, 2024-25, 2025-26, Overall)\n"
+        plots_summary += f"Generated {plots_generated} performance plots (5-panel: 2023-24, 2024-25, 2025-26, Overall, Recent Plays Table)\n"
         plots_summary += f"Location: s3://{S3_BUCKET}/data/04_output/strategy_plots/{season}/\n"
         plots_summary += f"{'='*80}\n"
         

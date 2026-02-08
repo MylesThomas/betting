@@ -22,6 +22,9 @@ import boto3
 from io import StringIO, BytesIO
 from pathlib import Path
 import json
+import subprocess
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # Matplotlib setup (non-interactive backend)
 import matplotlib
@@ -33,11 +36,115 @@ import matplotlib.dates as mdates
 # CONFIGURATION
 # =============================================================================
 
+# S3 buckets
 S3_BUCKET = 'nba-betting-mt'
+S3_BUCKET_PROPS = 'the-odds-api-mt'
+S3_BUCKET_NBA = 'nba-api-mt'
 BACKTEST_PREFIX = 'data/04_output/backtests'
+
+# Seasons to analyze
 SEASONS = ['2023-24', '2024-25', '2025-26']
+
+# Output directory
 OUTPUT_DIR = Path.home() / 'Downloads' / 'tmp' / 'strategy_plots'
 OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
+
+# Cache directory (for downloaded data)
+CACHE_DIR = Path.home() / 'Downloads' / 'tmp' / 'cache'
+CACHE_DIR.mkdir(exist_ok=True, parents=True)
+
+# Config S3 key
+CONFIG_S3_KEY = 'strategies/enhanced_unders_v5.json'
+
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+def get_today_et():
+    """Get today's date in ET timezone (for cache naming)."""
+    from zoneinfo import ZoneInfo
+    from datetime import datetime
+    et_tz = ZoneInfo('America/New_York')
+    return datetime.now(et_tz).strftime('%Y-%m-%d')
+
+
+def bin_points_line(line):
+    """Bin player points line into tiers."""
+    if pd.isna(line):
+        return 'Unknown'
+    if line < 5:
+        return '<5 (Deep Bench)'
+    elif line < 10:
+        return '5-10 (Bench)'
+    elif line < 15:
+        return '10-15 (Role Player)'
+    elif line < 20:
+        return '15-20 (High Role)'
+    elif line < 25:
+        return '20-25 (Star)'
+    elif line < 30:
+        return '25-30 (High Star)'
+    elif line < 35:
+        return '30-35 (Superstar)'
+    elif line < 40:
+        return '35-40 (Elite)'
+    else:
+        return '40+ (MVP)'
+
+
+def bin_team_spread(spread):
+    """Bin team spread into categories."""
+    if pd.isna(spread):
+        return 'Unknown'
+    if spread < -15:
+        return '15+ Fav'
+    elif spread < -10:
+        return '10-15 Fav'
+    elif spread < -6:
+        return '6-10 Fav'
+    elif spread < -2:
+        return '2-6 Fav'
+    elif spread <= 2:
+        return "Pick'em (-2 to +2)"
+    elif spread <= 6:
+        return '2-6 Dog'
+    elif spread <= 10:
+        return '6-10 Dog'
+    elif spread <= 15:
+        return '10-15 Dog'
+    else:
+        return '15+ Dog'
+
+
+def get_cache_path(season):
+    """Get cache file path for a season (unified for 2D and 3D)."""
+    today_et = get_today_et()
+    cache_filename = f"plays_{season}_{today_et}.parquet"
+    return CACHE_DIR / cache_filename
+
+
+def load_from_cache(season):
+    """Load plays from cache if exists for today."""
+    cache_path = get_cache_path(season)
+    if cache_path.exists():
+        print(f"   💾 Loading from cache: {cache_path.name}")
+        df = pd.read_parquet(cache_path)
+        return df
+    return None
+
+
+def save_to_cache(df, season):
+    """Save plays to cache."""
+    cache_path = get_cache_path(season)
+    df.to_parquet(cache_path, index=False)
+    print(f"   💾 Saved to cache: {cache_path.name}")
+    
+    # Clean up old cache files for this season
+    pattern = f"plays_{season}_*.parquet"
+    for old_file in CACHE_DIR.glob(pattern):
+        if old_file != cache_path:
+            old_file.unlink()
+            print(f"   🗑️  Removed old cache: {old_file.name}")
 
 # =============================================================================
 # LOAD CONFIG FROM S3
@@ -63,75 +170,421 @@ def load_strategy_config():
 
 
 # =============================================================================
-# LOAD BACKTEST PLAYS
+# LOAD BACKTEST PLAYS (WITH CACHE AND SELF-CONTAINED JOIN)
 # =============================================================================
+
+def load_and_join_raw_data(season):
+    """
+    Load and join raw data from source S3 buckets (self-contained).
+    Always loads complete dataset including scorer_type for both 2D and 3D use.
+    
+    Returns DataFrame with plays for this season.
+    """
+    print(f"   🔄 Loading and joining fresh data from source buckets for {season}...")
+    
+    s3_client = boto3.client('s3')
+    
+    # Import player_name_utils
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+    from player_name_utils import normalize_player_name
+    
+    # Step 1: Load player props
+    print(f"   📊 Loading props...")
+    prefix = f"nba/historical_player_props/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
+    
+    if 'Contents' not in response:
+        print(f"   ❌ No props files found")
+        return None
+    
+    all_props = []
+    for obj in response['Contents']:
+        if obj['Key'].endswith('.csv'):
+            try:
+                obj_data = s3_client.get_object(Bucket=S3_BUCKET_PROPS, Key=obj['Key'])
+                df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                filename = obj['Key'].split('/')[-1]
+                date_str = filename.replace('.csv', '')
+                df['game_date'] = date_str
+                all_props.append(df)
+            except Exception:
+                continue
+    
+    if not all_props:
+        return None
+    
+    df_props = pd.concat(all_props, ignore_index=True)
+    df_props['player_normalized'] = df_props['player'].apply(normalize_player_name)
+    print(f"      ✅ {len(df_props):,} prop rows ({df_props['game_date'].min()} to {df_props['game_date'].max()})")
+    
+    # Step 2: Load game logs
+    print(f"   🏀 Loading game logs...")
+    prefix = f"player_game_logs/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
+    
+    if 'Contents' not in response:
+        return None
+    
+    all_game_logs = []
+    for obj in response['Contents']:
+        if obj['Key'].endswith('.csv'):
+            try:
+                obj_data = s3_client.get_object(Bucket=S3_BUCKET_NBA, Key=obj['Key'])
+                df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                all_game_logs.append(df)
+            except Exception:
+                continue
+    
+    if not all_game_logs:
+        return None
+    
+    df_games = pd.concat(all_game_logs, ignore_index=True)
+    df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'])
+    df_games['game_date'] = df_games['GAME_DATE'].dt.date.astype(str)
+    df_games['player_normalized'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
+    df_games = df_games[df_games['MIN'].notna() & (df_games['MIN'] > 0)].copy()
+    print(f"      ✅ {len(df_games):,} player-game rows ({df_games['game_date'].min()} to {df_games['game_date'].max()})")
+    
+    # Step 3: Load shot charts (ALWAYS load for complete dataset)
+    print(f"   🎯 Loading shot charts...")
+    prefix = f"player_shot_charts/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
+    
+    df_shots = None
+    if 'Contents' in response:
+        all_shot_data = []
+        for obj in response['Contents']:
+            if obj['Key'].endswith('.csv'):
+                try:
+                    file_name = obj['Key'].split('/')[-1].replace('.csv', '')
+                    parts = file_name.split('_')
+                    if len(parts) >= 2:
+                        player_name_raw = ' '.join(parts[:-1])
+                        player_normalized = normalize_player_name(player_name_raw)
+                        
+                        obj_data = s3_client.get_object(Bucket=S3_BUCKET_NBA, Key=obj['Key'])
+                        df_shots_player = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                        
+                        rim_shots = df_shots_player[df_shots_player['SHOT_DISTANCE'] <= 6]
+                        rim_makes = rim_shots['SHOT_MADE_FLAG'].sum() if not rim_shots.empty else 0
+                        rim_points = rim_makes * 2
+                        
+                        all_shot_data.append({
+                            'player_normalized': player_normalized,
+                            'rim_season_points': rim_points
+                        })
+                except Exception:
+                    continue
+        
+        if all_shot_data:
+            df_shots = pd.DataFrame(all_shot_data)
+            print(f"      ✅ {len(df_shots):,} player shot charts")
+    
+    # Step 4: Load game lines
+    print(f"   📈 Loading game lines...")
+    prefix = f"nba/historical_game_lines/{season}/"
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
+    
+    df_lines = None
+    if 'Contents' in response:
+        all_lines = []
+        for obj in response['Contents']:
+            if obj['Key'].endswith('.csv') and 'nba_game_lines' in obj['Key']:
+                try:
+                    obj_data = s3_client.get_object(Bucket=S3_BUCKET_PROPS, Key=obj['Key'])
+                    df = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
+                    filename = obj['Key'].split('/')[-1]
+                    date_str = filename.replace('nba_game_lines_', '').replace('.csv', '')
+                    df['game_date'] = date_str
+                    all_lines.append(df)
+                except Exception:
+                    continue
+        
+        if all_lines:
+            df_lines = pd.concat(all_lines, ignore_index=True)
+            
+            # Team name normalization (critical for join!)
+            # The Odds API uses "Los Angeles Clippers", NBA API uses "LA Clippers"
+            team_name_map = {
+                'Los Angeles Clippers': 'LA Clippers',
+                'Los Angeles Lakers': 'Los Angeles Lakers',  # This one matches
+            }
+            
+            df_lines['home_team'] = df_lines['home_team'].replace(team_name_map)
+            df_lines['away_team'] = df_lines['away_team'].replace(team_name_map)
+            
+            consensus = df_lines.groupby(['game_id', 'game_date', 'away_team', 'home_team', 'market']).agg({
+                'away_line': 'mean',
+                'home_line': 'mean'
+            }).reset_index()
+            spread = consensus[consensus['market'] == 'spread'][['game_id', 'game_date', 'away_team', 'home_team', 'away_line', 'home_line']]
+            spread.columns = ['game_id', 'game_date', 'away_team', 'home_team', 'away_spread', 'home_spread']
+            df_lines = spread
+            print(f"      ✅ {len(df_lines):,} games with spreads")
+    
+    # Step 5: Join
+    print(f"   🔗 Joining datasets...")
+    
+    # Filter props to player_points and aggregate
+    df_props = df_props[df_props['market'] == 'player_points'].copy()
+    props_agg = df_props.groupby(['player_normalized', 'game_date']).agg({
+        'prop_line': 'mean'
+    }).reset_index()
+    props_agg.columns = ['player_normalized', 'game_date', 'points_line']
+    
+    df_merged = df_games.copy()
+    df_merged = df_merged.merge(props_agg, on=['player_normalized', 'game_date'], how='left')
+    
+    # Join game lines
+    if df_lines is not None:
+        df_merged['is_home'] = ~df_merged['MATCHUP'].str.contains('@')
+        df_merged_home = df_merged[df_merged['is_home']].copy()
+        df_merged_away = df_merged[~df_merged['is_home']].copy()
+        
+        df_merged_home = df_merged_home.merge(
+            df_lines[['game_date', 'home_team', 'home_spread']],
+            left_on=['game_date', 'TEAM_NAME'],
+            right_on=['game_date', 'home_team'],
+            how='left'
+        )
+        df_merged_home['team_spread'] = df_merged_home['home_spread']
+        
+        df_merged_away = df_merged_away.merge(
+            df_lines[['game_date', 'away_team', 'away_spread']],
+            left_on=['game_date', 'TEAM_NAME'],
+            right_on=['game_date', 'away_team'],
+            how='left'
+        )
+        df_merged_away['team_spread'] = df_merged_away['away_spread']
+        
+        df_merged = pd.concat([df_merged_home, df_merged_away], ignore_index=True)
+    
+    # Join shot charts (ALWAYS, for complete dataset)
+    if df_shots is not None:
+        player_season_points = df_games.groupby('player_normalized').agg({'PTS': 'sum'}).reset_index()
+        player_season_points.columns = ['player_normalized', 'total_pts_season']
+        
+        df_shots = df_shots.merge(player_season_points, on='player_normalized', how='left')
+        df_shots['pts_0_6_pct'] = (df_shots['rim_season_points'] / df_shots['total_pts_season'] * 100).fillna(0)
+        df_shots['scorer_type'] = df_shots['pts_0_6_pct'].apply(
+            lambda x: 'Rim Attacker (≥40.0%)' if x >= 40.0 else 'Perimeter (<40.0%)'
+        )
+        
+        df_merged = df_merged.merge(
+            df_shots[['player_normalized', 'scorer_type']],
+            on='player_normalized',
+            how='left'
+        )
+    
+    # Filter to rows with props only
+    df_merged = df_merged[df_merged['points_line'].notna()].copy()
+    df_merged['season'] = season
+    
+    print(f"      ✅ {len(df_merged):,} records with props and actuals")
+    
+    return df_merged
+
 
 def load_plays_for_strategy(strategy, strategy_type):
     """
     Load historical plays for a specific strategy across all seasons.
-    
-    Args:
-        strategy: Strategy dict with line_tier, spread_bin, bet_side, scorer_type
-        strategy_type: '2d' or '3d'
-    
-    Returns:
-        DataFrame with plays across all seasons
+    Uses unified cache (includes scorer_type for both 2D and 3D).
     """
     s3_client = boto3.client('s3')
     dfs = []
     
     for season in SEASONS:
-        s3_key = f'{BACKTEST_PREFIX}/{strategy_type}/{season}/plays.csv'
+        # Try cache first (unified cache for both 2D and 3D)
+        df_cached = load_from_cache(season)
         
-        try:
-            response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
-            df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
-            
-            # Filter to this specific strategy
-            mask = (
-                (df['line_tier'] == strategy['line_tier']) &
-                (df['spread_bin'] == strategy['spread_bin']) &
-                (df['bet_side'] == strategy['bet_side'])
-            )
-            
-            # For 3D strategies, also filter by scorer_type
-            if strategy_type == '3d' and 'scorer_type' in strategy:
-                mask = mask & (df['scorer_type'] == strategy['scorer_type'])
-            
-            df_strat = df[mask].copy()
-            df_strat['season'] = season
-            
-            if len(df_strat) > 0:
-                dfs.append(df_strat)
+        if df_cached is not None:
+            # CRITICAL: Validate no Unknown spread_bin values exist
+            unknown_spread_count = (df_cached['spread_bin'] == 'Unknown').sum()
+            if unknown_spread_count > 0:
+                total_plays = len(df_cached)
+                unknown_pct = (unknown_spread_count / total_plays) * 100
+                unknown_dates = sorted(df_cached[df_cached['spread_bin'] == 'Unknown']['game_date'].unique())
                 
-        except Exception as e:
-            print(f"   ⚠️  Could not load {season} plays: {e}")
+                if unknown_pct < 1.0:
+                    # Under 1% - acceptable, just filter out and warn
+                    print(f"   ⚠️  Found {unknown_spread_count} plays ({unknown_pct:.2f}%) with spread_bin='Unknown' in {season}")
+                    print(f"   Dates ({len(unknown_dates)}): {', '.join(unknown_dates)}")
+                    print(f"   These plays will be EXCLUDED (under 1% threshold)")
+                    
+                    # Filter out Unknown plays
+                    df_cached = df_cached[df_cached['spread_bin'] != 'Unknown'].copy()
+                else:
+                    # Over 1% - this is a problem, raise error
+                    # Format date display
+                    if len(unknown_dates) <= 10:
+                        dates_display = ', '.join(unknown_dates)
+                    else:
+                        first_5 = ', '.join(unknown_dates[:5])
+                        last_5 = ', '.join(unknown_dates[-5:])
+                        dates_display = f"{first_5} ... {last_5}"
+                    
+                    error_msg = (
+                        f"\n❌ FATAL ERROR: Found {unknown_spread_count} plays ({unknown_pct:.1f}%) with spread_bin='Unknown' in {season} cache!\n"
+                        f"   This exceeds the 1% tolerance threshold.\n"
+                        f"   Date range: {unknown_dates[0]} to {unknown_dates[-1]} ({len(unknown_dates)} dates)\n"
+                        f"   Dates: {dates_display}\n\n"
+                        f"   This means game lines are MISSING for these dates.\n\n"
+                        f"   FIX:\n"
+                        f"   1. Fetch missing game lines:\n"
+                        f"      python scripts/fetch_nba_player_props.py --mode 2 --fetch-games --s3 --season {season}\n"
+                        f"   2. Delete cache to regenerate:\n"
+                        f"      rm ~/Downloads/tmp/cache/plays_{season}_*.parquet\n"
+                        f"   3. Re-run this script\n"
+                    )
+                    raise ValueError(error_msg)
+            
+            # Filter cached data to this strategy
+            mask = (
+                (df_cached['line_tier'] == strategy['line_tier']) &
+                (df_cached['spread_bin'] == strategy['spread_bin'])
+            )
+            if strategy_type == '3d' and 'scorer_type' in strategy:
+                mask = mask & (df_cached['scorer_type'] == strategy['scorer_type'])
+            
+            df_strat = df_cached[mask].copy()
+            
+            # Calculate results for this bet_side
+            if len(df_strat) > 0:
+                bet_side = strategy['bet_side']
+                actual_points = df_strat['PTS']
+                line = df_strat['points_line']
+                
+                # Calculate WIN/LOSS/PUSH
+                if bet_side == 'OVER':
+                    df_strat['result'] = df_strat.apply(
+                        lambda row: 'WIN' if pd.notna(row['PTS']) and row['PTS'] > row['points_line']
+                        else 'LOSS' if pd.notna(row['PTS']) and row['PTS'] < row['points_line']
+                        else 'PUSH' if pd.notna(row['PTS'])
+                        else 'NO_DATA',
+                        axis=1
+                    )
+                else:  # UNDER
+                    df_strat['result'] = df_strat.apply(
+                        lambda row: 'WIN' if pd.notna(row['PTS']) and row['PTS'] < row['points_line']
+                        else 'LOSS' if pd.notna(row['PTS']) and row['PTS'] > row['points_line']
+                        else 'PUSH' if pd.notna(row['PTS'])
+                        else 'NO_DATA',
+                        axis=1
+                    )
+                
+                # Add columns for compatibility
+                df_strat['bet_side'] = bet_side
+                df_strat['player_name'] = df_strat['player_normalized']  # Use normalized name
+                df_strat['actual_points'] = df_strat['PTS']
+                
+                dfs.append(df_strat)
             continue
+        
+        # Not in cache - load and join from source (ALWAYS includes scorer_type)
+        print(f"\n   🔄 Cache miss for {season} - loading from source...")
+        df_merged = load_and_join_raw_data(season)
+        
+        if df_merged is None or df_merged.empty:
+            print(f"   ⚠️  No data for {season}")
+            continue
+        
+        # Bin the data
+        df_merged['line_tier'] = df_merged['points_line'].apply(bin_points_line)
+        df_merged['spread_bin'] = df_merged['team_spread'].apply(bin_team_spread)
+        
+        # Save to cache for future use (unified cache)
+        save_to_cache(df_merged, season)
+        
+        # Filter to this specific strategy
+        mask = (
+            (df_merged['line_tier'] == strategy['line_tier']) &
+            (df_merged['spread_bin'] == strategy['spread_bin'])
+        )
+        if strategy_type == '3d' and 'scorer_type' in strategy:
+            mask = mask & (df_merged['scorer_type'] == strategy['scorer_type'])
+        
+        df_strat = df_merged[mask].copy()
+        
+        # Calculate results for this bet_side
+        if len(df_strat) > 0:
+            bet_side = strategy['bet_side']
+            
+            # Calculate WIN/LOSS/PUSH
+            if bet_side == 'OVER':
+                df_strat['result'] = df_strat.apply(
+                    lambda row: 'WIN' if pd.notna(row['PTS']) and row['PTS'] > row['points_line']
+                    else 'LOSS' if pd.notna(row['PTS']) and row['PTS'] < row['points_line']
+                    else 'PUSH' if pd.notna(row['PTS'])
+                    else 'NO_DATA',
+                    axis=1
+                )
+            else:  # UNDER
+                df_strat['result'] = df_strat.apply(
+                    lambda row: 'WIN' if pd.notna(row['PTS']) and row['PTS'] < row['points_line']
+                    else 'LOSS' if pd.notna(row['PTS']) and row['PTS'] > row['points_line']
+                    else 'PUSH' if pd.notna(row['PTS'])
+                    else 'NO_DATA',
+                    axis=1
+                )
+            
+            # Add columns for compatibility
+            df_strat['bet_side'] = bet_side
+            df_strat['player_name'] = df_strat['player_normalized']  # Use normalized name
+            df_strat['actual_points'] = df_strat['PTS']
+            
+            dfs.append(df_strat)
     
     if not dfs:
         return None
     
-    return pd.concat(dfs, ignore_index=True)
+    combined = pd.concat(dfs, ignore_index=True)
+    
+    # Show comprehensive stats for this strategy
+    if 'game_date' in combined.columns:
+        combined['game_date'] = pd.to_datetime(combined['game_date'])
+        min_date = combined['game_date'].min().strftime('%Y-%m-%d')
+        max_date = combined['game_date'].max().strftime('%Y-%m-%d')
+        
+        # Calculate stats
+        total_plays = len(combined)
+        wins = (combined['result'] == 'WIN').sum()
+        losses = (combined['result'] == 'LOSS').sum()
+        pushes = (combined['result'] == 'PUSH').sum()
+        
+        if (wins + losses) > 0:
+            win_rate = (wins / (wins + losses) * 100)
+        else:
+            win_rate = 0.0
+        
+        print(f"   📊 Strategy Results:")
+        print(f"      Date Range: {min_date} to {max_date}")
+        print(f"      Record: {wins}W-{losses}L-{pushes}P ({total_plays} total plays)")
+        print(f"      Win Rate: {win_rate:.1f}%")
+    
+    return combined
 
 
 # =============================================================================
 # GENERATE 4-PANEL PLOT
 # =============================================================================
 
-def generate_performance_plot(strategy, strategy_type, output_path):
+def generate_performance_plot(strategy, strategy_type, output_path, recent_plays_n=10):
     """
-    Generate 4-panel plot showing strategy performance over time.
+    Generate 5-panel plot showing strategy performance over time + recent plays table.
     
     Panels:
     1. 2023-24 season: Date vs Win Rate
     2. 2024-25 season: Date vs Win Rate
     3. 2025-26 season: Date vs Win Rate
     4. Overall: All seasons combined
+    5. Recent plays table: Last N plays with details
     
     Args:
         strategy: Strategy dict
         strategy_type: '2d' or '3d'
         output_path: Where to save the PNG
+        recent_plays_n: Number of recent plays to show in table (default: 10)
     
     Returns:
         bool: True if successful
@@ -150,15 +603,16 @@ def generate_performance_plot(strategy, strategy_type, output_path):
     # Calculate win indicator
     df['is_win'] = (df['result'] == 'WIN').astype(int)
     
-    # Create 2x2 subplot
-    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+    # Create 3 rows x 2 cols layout (6 panels, using 5)
+    fig = plt.figure(figsize=(16, 14))
+    gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.25)
     
     # Build title
     title = f"Strategy Performance: {strategy['line_tier']} | {strategy['spread_bin']} | {strategy['bet_side']}"
     if strategy_type == '3d' and 'scorer_type' in strategy:
         title += f" | {strategy['scorer_type']}"
     
-    fig.suptitle(title, fontsize=16, fontweight='bold')
+    fig.suptitle(title, fontsize=16, fontweight='bold', y=0.98)
     
     # Season colors
     season_colors = {
@@ -167,9 +621,9 @@ def generate_performance_plot(strategy, strategy_type, output_path):
         '2025-26': '#2ca02c'   # Green
     }
     
-    # Plot each season individually (panels 1-3)
+    # Panels 1-3: Individual seasons
     for idx, season in enumerate(SEASONS[:3]):
-        ax = axes[idx // 2, idx % 2]
+        ax = fig.add_subplot(gs[idx // 2, idx % 2])
         
         df_season = df[df['season'] == season].copy()
         
@@ -215,7 +669,7 @@ def generate_performance_plot(strategy, strategy_type, output_path):
                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
     # Panel 4: Overall (all seasons combined)
-    ax = axes[1, 1]
+    ax = fig.add_subplot(gs[1, 1])
     
     # Reset cumulative across all seasons
     df_overall = df.copy()
@@ -255,12 +709,265 @@ def generate_performance_plot(strategy, strategy_type, output_path):
            transform=ax.transAxes, fontsize=10, verticalalignment='top',
            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
-    # Adjust layout and save
-    plt.tight_layout()
+    # Panel 5: Recent plays table (bottom row, spans both columns)
+    ax_table = fig.add_subplot(gs[2, :])  # Row 3, span both columns
+    ax_table.axis('off')
+    
+    # Get most recent N plays (sorted descending - most recent first)
+    df_recent = df_overall.tail(recent_plays_n).sort_values('game_date', ascending=False).copy()
+    
+    # Format table data
+    table_data = []
+    for _, row in df_recent.iterrows():
+        date_str = row['game_date'].strftime('%m/%d/%y')
+        player = row.get('player_name', 'Unknown')[:18]  # Truncate long names
+        line = f"{row['points_line']:.1f}"
+        actual_pts = f"{int(row['actual_points'])}" if pd.notna(row['actual_points']) else 'N/A'
+        
+        # Calculate Diff and Diff %
+        if pd.notna(row['actual_points']) and pd.notna(row['points_line']):
+            diff = row['actual_points'] - row['points_line']
+            diff_pct = (diff / row['points_line'] * 100) if row['points_line'] != 0 else 0
+            diff_str = f"{diff:+.1f}"  # e.g., "+5.0" or "-10.4"
+            diff_pct_str = f"{diff_pct:+.1f}%"  # e.g., "+14.1%" or "-29.4%"
+        else:
+            diff_str = 'N/A'
+            diff_pct_str = 'N/A'
+        
+        # What we bet (from strategy config)
+        our_bet = strategy['bet_side']  # e.g. 'UNDER' or 'OVER'
+        
+        # Determine what actually happened in the market
+        if pd.notna(row['actual_points']):
+            if row['actual_points'] > row['points_line']:
+                actual_result = 'OVER'
+            elif row['actual_points'] < row['points_line']:
+                actual_result = 'UNDER'
+            else:
+                actual_result = 'PUSH'
+        else:
+            actual_result = 'N/A'
+        
+        # Strategy result (did OUR bet win?)
+        strat_result = row['result']
+        if strat_result == 'WIN':
+            result_text = 'WIN'
+        elif strat_result == 'LOSS':
+            result_text = 'LOSS'
+        else:
+            result_text = 'PUSH'
+        
+        # Get metadata fields
+        line_tier = row.get('line_tier', 'Unknown')
+        spread_bin = row.get('spread_bin', 'Unknown')
+        scorer_type = row.get('scorer_type', '')
+        # Shorten scorer_type for display
+        if scorer_type == 'Rim Attacker (≥40.0%)':
+            scorer_type_display = 'Rim'
+        elif scorer_type == 'Perimeter (<40.0%)':
+            scorer_type_display = 'Perimeter'
+        else:
+            scorer_type_display = ''
+        
+        table_data.append([
+            date_str,
+            player,
+            line,
+            actual_pts,
+            diff_str,
+            diff_pct_str,
+            line_tier,
+            spread_bin,
+            scorer_type_display,
+            our_bet,
+            actual_result,
+            result_text
+        ])
+    
+    # Create table
+    table = ax_table.table(
+        cellText=table_data,
+        colLabels=['Date', 'Player', 'Line', 'Scored', 'Diff', 'Diff %', 'Line Tier', 'Spread', 'Scorer', 'Our Bet', 'Actual', 'Result'],
+        loc='center',
+        cellLoc='left',
+        colWidths=[0.07, 0.14, 0.05, 0.05, 0.05, 0.06, 0.10, 0.09, 0.08, 0.07, 0.06, 0.10]
+    )
+    
+    # Style table
+    table.auto_set_font_size(False)
+    table.set_fontsize(8)
+    table.scale(1, 2)
+    
+    # Header styling
+    for i in range(12):  # Now 12 columns
+        cell = table[(0, i)]
+        cell.set_facecolor('#4472C4')
+        cell.set_text_props(weight='bold', color='white')
+    
+    # Alternate row colors and color-code results
+    for i in range(1, len(table_data) + 1):
+        for j in range(12):  # Now 12 columns
+            cell = table[(i, j)]
+            
+            # Base row color (alternating)
+            if i % 2 == 0:
+                cell.set_facecolor('#F0F0F0')
+            else:
+                cell.set_facecolor('#FFFFFF')
+            
+            # Color-code Diff % column (column 5) with gradient
+            if j == 5:  # Diff % column
+                diff_pct_str = table_data[i-1][5]
+                if diff_pct_str != 'N/A':
+                    try:
+                        # Parse percentage value
+                        diff_pct_val = float(diff_pct_str.replace('%', ''))
+                        
+                        # Normalize to 0-1 range (clamped between -100 and +100)
+                        normalized = max(-100, min(100, diff_pct_val)) / 100.0
+                        
+                        # Generate color gradient
+                        if normalized < 0:
+                            # Red gradient for negative (under)
+                            intensity = abs(normalized)
+                            r = 1.0
+                            g = 1.0 - (intensity * 0.7)  # Fade from white to red
+                            b = 1.0 - (intensity * 0.7)
+                        else:
+                            # Green gradient for positive (over)
+                            intensity = normalized
+                            r = 1.0 - (intensity * 0.7)  # Fade from white to green
+                            g = 1.0
+                            b = 1.0 - (intensity * 0.7)
+                        
+                        cell.set_facecolor((r, g, b))
+                    except ValueError:
+                        pass
+            
+            # Color-code result column (column 11)
+            if j == 11:  # Strategy Result column
+                result_text = table_data[i-1][11]
+                if result_text == 'WIN':
+                    cell.set_facecolor('#C6EFCE')  # Light green
+                    cell.set_text_props(weight='bold', color='#006100')
+                elif result_text == 'LOSS':
+                    cell.set_facecolor('#FFC7CE')  # Light red
+                    cell.set_text_props(weight='bold', color='#9C0006')
+                elif result_text == 'PUSH':
+                    cell.set_facecolor('#FFEB9C')  # Light yellow
+                    cell.set_text_props(weight='bold', color='#9C5700')
+    
+    # Title for table panel
+    ax_table.set_title(f'Most Recent {recent_plays_n} Plays', fontsize=14, fontweight='bold', pad=20)
+    
+    # Save
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
     
     return True
+
+
+# =============================================================================
+# DATA FETCH & VALIDATION
+# =============================================================================
+
+def get_yesterday_et():
+    """Get yesterday's date in ET timezone."""
+    from zoneinfo import ZoneInfo
+    from datetime import datetime, timedelta
+    et_tz = ZoneInfo('America/New_York')
+    today_et = datetime.now(et_tz).date()
+    yesterday_et = today_et - timedelta(days=1)
+    return yesterday_et
+
+
+def fetch_latest_data():
+    """Run fetch script to get latest props, game results, and game lines."""
+    import subprocess
+    
+    print("="*80)
+    print("🔄 FETCHING LATEST DATA")
+    print("="*80)
+    print("Running: python scripts/fetch_nba_player_props.py --mode 2 --fetch-games --s3 --season 2025-26")
+    print("This fetches: props, game results, AND game lines\n")
+    
+    # Run the fetch script
+    result = subprocess.run(
+        ['python3', 'scripts/fetch_nba_player_props.py', '--mode', '2', '--fetch-games', '--s3', '--season', '2025-26'],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).parent.parent
+    )
+    
+    if result.returncode != 0:
+        print(f"❌ Fetch script failed with exit code {result.returncode}")
+        print(f"\nSTDOUT:\n{result.stdout}")
+        print(f"\nSTDERR:\n{result.stderr}")
+        raise RuntimeError("Failed to fetch latest data")
+    
+    print("✅ Fetch script completed successfully\n")
+
+
+def validate_data_freshness():
+    """Validate all 3 data sources have data up to yesterday."""
+    import boto3
+    
+    yesterday = get_yesterday_et()
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+    
+    print("="*80)
+    print("✅ VALIDATING DATA FRESHNESS")
+    print("="*80)
+    print(f"Today (ET): {yesterday + timedelta(days=1)}")
+    print(f"Yesterday (ET): {yesterday}")
+    print(f"Checking for data up to: {yesterday_str}\n")
+    
+    s3_client = boto3.client('s3')
+    
+    # Define data sources to check
+    data_sources = {
+        'props': {
+            'bucket': 'the-odds-api-mt',
+            'prefix': f'nba/historical_player_props/2025-26/{yesterday_str}.csv'
+        },
+        'game_results': {
+            'bucket': 'nba-api-mt',
+            'prefix': f'player_game_logs/2025-26/{yesterday_str}.csv'
+        },
+        'game_lines': {
+            'bucket': 'the-odds-api-mt',
+            'prefix': f'nba/historical_game_lines/2025-26/nba_game_lines_{yesterday_str}.csv'
+        }
+    }
+    
+    all_valid = True
+    for source_name, config in data_sources.items():
+        bucket = config['bucket']
+        key = config['prefix']
+        
+        try:
+            s3_client.head_object(Bucket=bucket, Key=key)
+            print(f"✅ {source_name:15s}: s3://{bucket}/{key}")
+        except:
+            print(f"❌ {source_name:15s}: MISSING - s3://{bucket}/{key}")
+            all_valid = False
+    
+    print()
+    
+    if not all_valid:
+        error_msg = (
+            f"\n❌ VALIDATION FAILED: Missing data for {yesterday_str}\n\n"
+            f"One or more data sources are missing files for yesterday.\n"
+            f"The fetch script should have created these files.\n\n"
+            f"Possible reasons:\n"
+            f"1. No games on {yesterday_str} (check NBA schedule)\n"
+            f"2. Fetch script had errors (check logs above)\n"
+            f"3. NBA API delay - game results take 12+ hours after games finish\n\n"
+            f"If there were games yesterday, wait and re-run, or check the fetch script logs.\n"
+        )
+        raise RuntimeError(error_msg)
+    
+    print(f"✅ All 3 data sources have fresh data up to {yesterday_str}\n")
 
 
 # =============================================================================
@@ -275,7 +982,14 @@ def main():
     print(f"Output Directory: {OUTPUT_DIR}")
     print(f"Seasons: {', '.join(SEASONS)}\n")
     
-    # Load config
+    # Step 1: Fetch latest data
+    fetch_latest_data()
+    
+    # Step 2: Validate data freshness
+    from datetime import timedelta
+    validate_data_freshness()
+    
+    # Step 3: Load config and generate plots
     config = load_strategy_config()
     if not config:
         print("❌ Failed to load config")
@@ -338,8 +1052,10 @@ def main():
         print("Opening all plots...")
         print(f"{'='*80}\n")
         import subprocess
+        import sys
         subprocess.run(['open'] + [str(f) for f in sorted(OUTPUT_DIR.glob("*.png"))])
-        print(f"✅ Opened {plots_generated} plots in default viewer")
+        print(f"✅ Opened {plots_generated} plots in default viewer\n")
+        sys.stdout.flush()  # Ensure output is visible
 
 
 if __name__ == '__main__':
