@@ -437,6 +437,11 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
                             obj_data = s3_client.get_object(Bucket=S3_BUCKET_NBA, Key=obj['Key'])
                             df_shots_player = pd.read_csv(StringIO(obj_data['Body'].read().decode('utf-8')))
                             
+                            # Skip if required columns are missing
+                            if 'SHOT_DISTANCE' not in df_shots_player.columns or 'SHOT_MADE_FLAG' not in df_shots_player.columns:
+                                print(f"   ⚠️  Skipping {obj['Key']}: missing required columns")
+                                continue
+                            
                             rim_shots = df_shots_player[df_shots_player['SHOT_DISTANCE'] <= 6]
                             rim_makes = rim_shots['SHOT_MADE_FLAG'].sum() if not rim_shots.empty else 0
                             rim_points = rim_makes * 2
@@ -447,7 +452,7 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
                             })
                     except Exception as e:
                         print(f"   ⚠️  Failed to load shot chart {obj['Key']}: {e}")
-                        raise  # FAIL HARD
+                        continue  # Skip malformed files instead of failing
             
             if all_shot_data:
                 df_shots = pd.DataFrame(all_shot_data)
