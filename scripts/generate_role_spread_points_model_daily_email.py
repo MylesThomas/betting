@@ -100,6 +100,337 @@ ET_TZ = ZoneInfo('America/New_York')
 
 
 # =============================================================================
+# STRATEGY CONFIG LOADING & ANALYSIS
+# =============================================================================
+
+def load_strategy_config_from_s3(config_name='enhanced_unders_v5.json'):
+    """
+    Load strategy configuration from S3.
+    
+    Args:
+        config_name: Name of config file in S3 strategies folder
+    
+    Returns:
+        dict: Config data with strategies list
+    """
+    s3_client = boto3.client('s3')
+    
+    try:
+        s3_key = f'strategies/{config_name}'
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
+        config = json.loads(response['Body'].read().decode('utf-8'))
+        
+        print(f"✅ Loaded strategy config from S3: {config_name}")
+        print(f"   Config: {config['name']}")
+        print(f"   Strategies: {len(config['strategies'])}")
+        
+        return config
+    except Exception as e:
+        print(f"⚠️  Could not load strategy config from S3: {e}")
+        return None
+
+
+def load_backtest_plays_for_strategy(s3_client, strategy, strategy_type, seasons):
+    """
+    Load historical plays data for a specific strategy across multiple seasons.
+    
+    Args:
+        s3_client: Boto3 S3 client
+        strategy: Strategy dict with line_tier, spread_bin, bet_side, scorer_type
+        strategy_type: '2d' or '3d'
+        seasons: List of seasons to load (e.g., ['2023-24', '2024-25', '2025-26'])
+    
+    Returns:
+        DataFrame with all plays for this strategy across all seasons
+    """
+    dfs = []
+    
+    for season in seasons:
+        s3_key = f'data/04_output/backtests/{strategy_type}/{season}/plays.csv'
+        
+        try:
+            response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
+            df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
+            
+            # Filter to this specific strategy
+            mask = (
+                (df['line_tier'] == strategy['line_tier']) &
+                (df['spread_bin'] == strategy['spread_bin']) &
+                (df['bet_side'] == strategy['bet_side'])
+            )
+            
+            # For 3D strategies, also filter by scorer_type
+            if strategy_type == '3d' and 'scorer_type' in strategy:
+                mask = mask & (df['scorer_type'] == strategy['scorer_type'])
+            
+            df_strat = df[mask].copy()
+            df_strat['season'] = season
+            
+            if len(df_strat) > 0:
+                dfs.append(df_strat)
+                
+        except Exception as e:
+            print(f"   ⚠️  Could not load {season} plays: {e}")
+            continue
+    
+    if not dfs:
+        return None
+    
+    return pd.concat(dfs, ignore_index=True)
+
+
+def generate_strategy_performance_plot(strategy, strategy_type, seasons, output_path):
+    """
+    Generate 4-panel plot showing strategy performance over time.
+    
+    Panels:
+    1. 2023-24 season: Date vs Win Rate
+    2. 2024-25 season: Date vs Win Rate
+    3. 2025-26 season: Date vs Win Rate
+    4. Overall: All seasons combined
+    
+    Args:
+        strategy: Strategy dict with line_tier, spread_bin, bet_side, scorer_type
+        strategy_type: '2d' or '3d'
+        seasons: List of seasons (e.g., ['2023-24', '2024-25', '2025-26'])
+        output_path: Where to save the PNG
+    
+    Returns:
+        bool: True if successful
+    """
+    try:
+        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates
+        from datetime import datetime
+    except ImportError:
+        print(f"   ⚠️  matplotlib not available - cannot generate plot")
+        return False
+    
+    # Load plays data
+    s3_client = boto3.client('s3')
+    df = load_backtest_plays_for_strategy(s3_client, strategy, strategy_type, seasons)
+    
+    if df is None or len(df) == 0:
+        print(f"   ⚠️  No plays data found for strategy")
+        return False
+    
+    # Convert game_date to datetime
+    df['game_date'] = pd.to_datetime(df['game_date'])
+    df = df.sort_values('game_date')
+    
+    # Calculate cumulative win rate over time
+    df['is_win'] = (df['result'] == 'WIN').astype(int)
+    df['cumulative_wins'] = df.groupby('season')['is_win'].cumsum()
+    df['cumulative_plays'] = df.groupby('season').cumsum().index + 1
+    df['win_rate'] = (df['cumulative_wins'] / df['cumulative_plays'] * 100)
+    
+    # Create 2x2 subplot
+    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+    fig.suptitle(f"Strategy Performance: {strategy['line_tier']} | {strategy['spread_bin']} | {strategy['bet_side']}", 
+                 fontsize=16, fontweight='bold')
+    
+    # Define season colors
+    season_colors = {
+        '2023-24': '#1f77b4',  # Blue
+        '2024-25': '#ff7f0e',  # Orange
+        '2025-26': '#2ca02c'   # Green
+    }
+    
+    # Plot each season individually (panels 1-3)
+    for idx, season in enumerate(seasons[:3]):
+        ax = axes[idx // 2, idx % 2]
+        
+        df_season = df[df['season'] == season].copy()
+        
+        if len(df_season) == 0:
+            ax.text(0.5, 0.5, f'No data for {season}', 
+                   ha='center', va='center', fontsize=12)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 100)
+            continue
+        
+        # Reset cumulative for this season
+        df_season['cumulative_wins'] = df_season['is_win'].cumsum()
+        df_season['cumulative_plays'] = range(1, len(df_season) + 1)
+        df_season['win_rate'] = (df_season['cumulative_wins'] / df_season['cumulative_plays'] * 100)
+        
+        # Plot
+        ax.plot(df_season['game_date'], df_season['win_rate'], 
+               color=season_colors.get(season, 'blue'), linewidth=2, label=season)
+        ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5, label='50% Baseline')
+        
+        # Format
+        ax.set_title(f'{season}', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Date', fontsize=11)
+        ax.set_ylabel('Win Rate (%)', fontsize=11)
+        ax.set_ylim(0, 100)
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='best')
+        
+        # Format x-axis dates
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+        ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        
+        # Add final stats
+        final_wr = df_season['win_rate'].iloc[-1]
+        total_plays = len(df_season)
+        total_wins = df_season['cumulative_wins'].iloc[-1]
+        total_losses = total_plays - total_wins
+        ax.text(0.02, 0.98, f'{total_wins}W-{total_losses}L | {final_wr:.1f}%', 
+               transform=ax.transAxes, fontsize=10, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    # Panel 4: Overall (all seasons combined)
+    ax = axes[1, 1]
+    
+    # Reset cumulative across all seasons
+    df_overall = df.copy()
+    df_overall = df_overall.sort_values('game_date')
+    df_overall['cumulative_wins'] = df_overall['is_win'].cumsum()
+    df_overall['cumulative_plays'] = range(1, len(df_overall) + 1)
+    df_overall['win_rate'] = (df_overall['cumulative_wins'] / df_overall['cumulative_plays'] * 100)
+    
+    # Plot with season-colored segments
+    for season in seasons:
+        df_season_segment = df_overall[df_overall['season'] == season]
+        if len(df_season_segment) > 0:
+            ax.plot(df_season_segment['game_date'], df_season_segment['win_rate'],
+                   color=season_colors.get(season, 'black'), linewidth=2, label=season)
+    
+    ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5, label='50% Baseline')
+    
+    # Format
+    ax.set_title('Overall (All Seasons)', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Date', fontsize=11)
+    ax.set_ylabel('Win Rate (%)', fontsize=11)
+    ax.set_ylim(0, 100)
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc='best')
+    
+    # Format x-axis dates
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+    
+    # Add final stats
+    final_wr = df_overall['win_rate'].iloc[-1]
+    total_plays = len(df_overall)
+    total_wins = int(df_overall['cumulative_wins'].iloc[-1])
+    total_losses = total_plays - total_wins
+    ax.text(0.02, 0.98, f'{total_wins}W-{total_losses}L | {final_wr:.1f}%', 
+           transform=ax.transAxes, fontsize=10, verticalalignment='top',
+           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    # Adjust layout and save
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    print(f"   ✅ Generated plot: {output_path}")
+    return True
+
+
+def format_strategy_config_analysis(config, plots_dir='/tmp/strategy_plots'):
+    """
+    Generate strategy config analysis section for email.
+    Creates performance plots for each strategy and formats text summary.
+    
+    Args:
+        config: Strategy config dict from S3
+        plots_dir: Where to save plot PNGs
+    
+    Returns:
+        str: Formatted text for email
+    """
+    if not config or 'strategies' not in config:
+        return ""
+    
+    # Create plots directory
+    Path(plots_dir).mkdir(exist_ok=True, parents=True)
+    
+    text = f"""
+{'='*80}
+{EMOJI['chart']} STRATEGY PORTFOLIO ANALYSIS - {config['name'].upper()}
+{'='*80}
+Config Version: {config['version']}
+Last Updated: {config['last_updated']}
+Total Strategies: {len(config['strategies'])}
+
+Description: {config['description']}
+{'='*80}
+
+"""
+    
+    seasons = ['2023-24', '2024-25', '2025-26']
+    s3_client = boto3.client('s3')
+    
+    # Group strategies by tier
+    strategies_by_tier = {}
+    for strat in config['strategies']:
+        tier = strat.get('tier', 'unknown')
+        if tier not in strategies_by_tier:
+            strategies_by_tier[tier] = []
+        strategies_by_tier[tier].append(strat)
+    
+    # Process each tier
+    for tier, strategies in sorted(strategies_by_tier.items()):
+        text += f"\n{'─'*80}\n"
+        text += f"TIER: {tier.upper()} ({len(strategies)} strategies)\n"
+        text += f"{'─'*80}\n\n"
+        
+        for strat in strategies:
+            strategy_name = strat['strategy_name']
+            strategy_type = strat['strategy_type']
+            
+            text += f"{EMOJI['fire']} Strategy: {strategy_name}\n"
+            text += f"   Config: {strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+            
+            if strategy_type == '3d' and 'scorer_type' in strat:
+                text += f" | {strat['scorer_type']}"
+            
+            text += "\n"
+            
+            # Show stats if available
+            if 'stats' in strat:
+                stats = strat['stats']
+                text += f"   Performance: {stats['wins']}W-{stats['losses']}L-{stats.get('ties', 0)}T "
+                text += f"| Hit Rate: {stats['hit_rate']:.1f}% | ROI: {stats['roi']:+.1f}% | Edge: {stats['edge']:+.1f}%\n"
+                text += f"   Sample Size: {stats['sample_size']} games\n"
+            
+            # Generate plot
+            plot_filename = f"{strategy_name}.png"
+            plot_path = Path(plots_dir) / plot_filename
+            
+            text += f"   {EMOJI['chart']} Performance Plot: {plot_filename}\n"
+            
+            success = generate_strategy_performance_plot(
+                strat, 
+                strategy_type, 
+                seasons, 
+                str(plot_path)
+            )
+            
+            if success:
+                # Upload to S3
+                s3_key = f'data/04_output/strategy_plots/{config["version"]}/{plot_filename}'
+                try:
+                    s3_client.upload_file(str(plot_path), S3_BUCKET, s3_key)
+                    s3_url = f's3://{S3_BUCKET}/{s3_key}'
+                    text += f"   {EMOJI['success']} Uploaded to: {s3_url}\n"
+                except Exception as e:
+                    text += f"   {EMOJI['warning']} Upload failed: {e}\n"
+            else:
+                text += f"   {EMOJI['warning']} Plot generation failed\n"
+            
+            text += "\n"
+    
+    text += f"{'='*80}\n\n"
+    
+    return text
+
+
+# =============================================================================
 # KELLY BANKROLL LOADING
 # =============================================================================
 
@@ -1136,7 +1467,7 @@ def generate_plays_summary(df_plays):
     return "\n".join(summary_lines)
 
 
-def generate_email_text(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None, skipped_players=None):
+def generate_email_text(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None, skipped_players=None, include_strategy_analysis=False):
     """Generate complete email body in text format"""
     
     if custom_title:
@@ -1156,6 +1487,12 @@ def generate_email_text(df_results, results_date, df_plays, plays_date, custom_t
     
     # Load Kelly config (includes bankroll, fractional_kelly, max_kelly)
     kelly_config = load_kelly_config_from_s3()
+    
+    # Add strategy portfolio analysis (if requested)
+    if include_strategy_analysis:
+        config = load_strategy_config_from_s3('enhanced_unders_v5.json')
+        if config:
+            body += format_strategy_config_analysis(config)
     
     # Add YTD stats first (if provided)
     if ytd_stats:
@@ -1222,11 +1559,11 @@ Generated by: /betting/scripts/generate_role_spread_points_model_daily_email.py
 # HTML FORMATTING (Optional)
 # =============================================================================
 
-def generate_email_html(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None, skipped_players=None):
+def generate_email_html(df_results, results_date, df_plays, plays_date, custom_title=None, ytd_stats=None, skipped_players=None, include_strategy_analysis=False):
     """Generate complete email body in HTML format"""
     # TODO: Implement HTML formatting if needed
     # For now, just wrap text in <pre> tags
-    subject, text_body = generate_email_text(df_results, results_date, df_plays, plays_date, custom_title, ytd_stats, skipped_players)
+    subject, text_body = generate_email_text(df_results, results_date, df_plays, plays_date, custom_title, ytd_stats, skipped_players, include_strategy_analysis)
     html_body = f"<html><body><pre>{text_body}</pre></body></html>"
     return subject, html_body
 
@@ -1286,6 +1623,8 @@ def main():
                        help='Custom email subject line')
     parser.add_argument('--load-ytd', action='store_true', default=False,
                        help='Load and display YTD season stats (default: False)')
+    parser.add_argument('--include-strategy-plots', action='store_true', default=False,
+                       help='Generate and include strategy performance plots (default: False)')
     
     args = parser.parse_args()
     
@@ -1334,9 +1673,9 @@ def main():
     
     # Generate email
     if args.format == 'html':
-        subject, body = generate_email_html(df_results, results_date, df_plays, plays_date, args.email_title, ytd_stats, skipped_players)
+        subject, body = generate_email_html(df_results, results_date, df_plays, plays_date, args.email_title, ytd_stats, skipped_players, args.include_strategy_plots)
     else:
-        subject, body = generate_email_text(df_results, results_date, df_plays, plays_date, args.email_title, ytd_stats, skipped_players)
+        subject, body = generate_email_text(df_results, results_date, df_plays, plays_date, args.email_title, ytd_stats, skipped_players, args.include_strategy_plots)
     
     # Output
     if args.output:

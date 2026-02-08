@@ -948,6 +948,248 @@ def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_
     return '\n'.join(lines)
 
 
+def generate_all_strategy_plots(strategy_rankings: Dict, season: str) -> int:
+    """
+    Generate performance plots for all strategies in ranking.
+    
+    Args:
+        strategy_rankings: Dict with '2d' and '3d' keys containing strategy lists
+        season: Current season string
+    
+    Returns:
+        int: Number of plots generated
+    """
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+    from datetime import datetime
+    
+    s3_client = boto3.client('s3')
+    plots_generated = 0
+    seasons = BACKTEST_SEASONS  # ['2023-24', '2024-25', '2025-26']
+    
+    for strategy_type, strategies in strategy_rankings.items():
+        print(f"\n📊 Generating plots for {strategy_type.upper()} strategies...")
+        
+        for strat in strategies:
+            try:
+                # Load plays data for this strategy
+                df = load_backtest_plays_for_strategy_simple(s3_client, strat, strategy_type, seasons)
+                
+                if df is None or len(df) == 0:
+                    print(f"   ⚠️  No data for {strat['line_tier']} | {strat['spread_bin']}")
+                    continue
+                
+                # Generate plot filename
+                plot_name = f"{strat['line_tier']}_{strat['spread_bin']}_{strat['bet_side']}"
+                if strategy_type == '3d':
+                    scorer = strat.get('scorer_type', '').replace('≥', 'ge').replace('%', 'pct')
+                    plot_name += f"_{scorer}"
+                plot_name = plot_name.replace(' ', '_').replace('(', '').replace(')', '').replace("'", '')
+                plot_filename = f"{plot_name}.png"
+                
+                # Generate 4-panel plot
+                fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+                
+                desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+                if strategy_type == '3d':
+                    desc += f" | {strat.get('scorer_type', '')}"
+                
+                fig.suptitle(f"Strategy Performance: {desc}", fontsize=16, fontweight='bold')
+                
+                # Convert dates and calculate cumulative win rates
+                df['game_date'] = pd.to_datetime(df['game_date'])
+                df = df.sort_values('game_date')
+                df['is_win'] = (df['result'] == 'WIN').astype(int)
+                
+                # Season colors
+                season_colors = {
+                    '2023-24': '#1f77b4',
+                    '2024-25': '#ff7f0e',
+                    '2025-26': '#2ca02c'
+                }
+                
+                # Plot each season (panels 1-3)
+                for idx, s in enumerate(seasons[:3]):
+                    ax = axes[idx // 2, idx % 2]
+                    df_season = df[df['season'] == s].copy()
+                    
+                    if len(df_season) == 0:
+                        ax.text(0.5, 0.5, f'No data for {s}', ha='center', va='center')
+                        ax.set_xlim(0, 1)
+                        ax.set_ylim(0, 100)
+                        continue
+                    
+                    df_season['cumulative_wins'] = df_season['is_win'].cumsum()
+                    df_season['cumulative_plays'] = range(1, len(df_season) + 1)
+                    df_season['win_rate'] = (df_season['cumulative_wins'] / df_season['cumulative_plays'] * 100)
+                    
+                    ax.plot(df_season['game_date'], df_season['win_rate'], 
+                           color=season_colors.get(s, 'blue'), linewidth=2)
+                    ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+                    ax.set_title(f'{s}', fontsize=14, fontweight='bold')
+                    ax.set_xlabel('Date', fontsize=11)
+                    ax.set_ylabel('Win Rate (%)', fontsize=11)
+                    ax.set_ylim(0, 100)
+                    ax.grid(True, alpha=0.3)
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+                    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+                    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+                    
+                    final_wr = df_season['win_rate'].iloc[-1]
+                    total_wins = int(df_season['cumulative_wins'].iloc[-1])
+                    total_losses = len(df_season) - total_wins
+                    ax.text(0.02, 0.98, f'{total_wins}W-{total_losses}L | {final_wr:.1f}%',
+                           transform=ax.transAxes, fontsize=10, verticalalignment='top',
+                           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                
+                # Panel 4: Overall
+                ax = axes[1, 1]
+                df_overall = df.copy()
+                df_overall['cumulative_wins'] = df_overall['is_win'].cumsum()
+                df_overall['cumulative_plays'] = range(1, len(df_overall) + 1)
+                df_overall['win_rate'] = (df_overall['cumulative_wins'] / df_overall['cumulative_plays'] * 100)
+                
+                for s in seasons:
+                    df_seg = df_overall[df_overall['season'] == s]
+                    if len(df_seg) > 0:
+                        ax.plot(df_seg['game_date'], df_seg['win_rate'],
+                               color=season_colors.get(s, 'black'), linewidth=2, label=s)
+                
+                ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+                ax.set_title('Overall (All Seasons)', fontsize=14, fontweight='bold')
+                ax.set_xlabel('Date', fontsize=11)
+                ax.set_ylabel('Win Rate (%)', fontsize=11)
+                ax.set_ylim(0, 100)
+                ax.grid(True, alpha=0.3)
+                ax.legend(loc='best')
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+                ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+                plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+                
+                final_wr = df_overall['win_rate'].iloc[-1]
+                total_wins = int(df_overall['cumulative_wins'].iloc[-1])
+                total_losses = len(df_overall) - total_wins
+                ax.text(0.02, 0.98, f'{total_wins}W-{total_losses}L | {final_wr:.1f}%',
+                       transform=ax.transAxes, fontsize=10, verticalalignment='top',
+                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                
+                plt.tight_layout()
+                
+                # Save to /tmp and upload to S3
+                local_path = f'/tmp/{plot_filename}'
+                plt.savefig(local_path, dpi=150, bbox_inches='tight')
+                plt.close()
+                
+                s3_key = f'data/04_output/strategy_plots/{season}/{plot_filename}'
+                s3_client.upload_file(local_path, S3_BUCKET, s3_key)
+                
+                plots_generated += 1
+                print(f"   ✅ {plot_filename}")
+                
+            except Exception as e:
+                print(f"   ❌ Failed to generate plot: {e}")
+                continue
+    
+    return plots_generated
+
+
+def load_backtest_plays_for_strategy_simple(s3_client, strategy: Dict, strategy_type: str, seasons: List[str]) -> 'pd.DataFrame':
+    """Load plays for a strategy across seasons (simplified for refresh lambda)."""
+    if not PANDAS_AVAILABLE:
+        return None
+    
+    dfs = []
+    for season in seasons:
+        s3_key = f'{BACKTEST_PREFIX}/{strategy_type}/{season}/plays.csv'
+        try:
+            response = s3_client.get_object(Bucket=S3_BUCKET, Key=s3_key)
+            df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
+            
+            mask = (
+                (df['line_tier'] == strategy['line_tier']) &
+                (df['spread_bin'] == strategy['spread_bin']) &
+                (df['bet_side'] == strategy['bet_side'])
+            )
+            
+            if strategy_type == '3d' and 'scorer_type' in strategy:
+                mask = mask & (df['scorer_type'] == strategy['scorer_type'])
+            
+            df_strat = df[mask].copy()
+            df_strat['season'] = season
+            if len(df_strat) > 0:
+                dfs.append(df_strat)
+        except Exception:
+            continue
+    
+    return pd.concat(dfs, ignore_index=True) if dfs else None
+
+
+def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_n: int = 20) -> str:
+    """
+    Format top strategies for email notification.
+    
+    Args:
+        strategies: List of strategy dicts with performance metrics
+        strategy_type: '2d' or '3d'
+        top_n: Number of top strategies to include
+    
+    Returns:
+        Formatted string for email
+    """
+    if not strategies:
+        return "No strategies available"
+    
+    # Sort by hit rate descending
+    sorted_strategies = sorted(strategies, key=lambda x: x.get('hit_rate', 0), reverse=True)
+    
+    lines = [f"\n{'='*80}"]
+    lines.append(f"TOP {top_n} {strategy_type.upper()} STRATEGIES BY HIT RATE")
+    lines.append(f"{'='*80}\n")
+    
+    for i, strat in enumerate(sorted_strategies[:top_n], 1):
+        # Build strategy description
+        if strategy_type == '2d':
+            desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+        else:  # 3d
+            desc = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']} | {strat['scorer_type']}"
+        
+        hit_rate = strat.get('hit_rate', 0)
+        roi = strat.get('roi', 0)
+        edge = strat.get('edge', 0)
+        wins = strat.get('wins', 0)
+        losses = strat.get('losses', 0)
+        ties = strat.get('ties', 0)
+        
+        # Determine emoji
+        if hit_rate >= 60:
+            emoji = '🔥'
+        elif hit_rate >= 55:
+            emoji = '✅'
+        elif hit_rate >= 50:
+            emoji = '➖'
+        else:
+            emoji = '❌'
+        
+        lines.append(f"{emoji} #{i:2d}. {desc}")
+        lines.append(f"     {wins}W-{losses}L-{ties}T | Hit: {hit_rate:.1f}% | ROI: {roi:+.1f}% | Edge: {edge:+.1f}%")
+    
+    # Summary stats
+    total_strategies = len(strategies)
+    profitable = sum(1 for s in strategies if s.get('roi', 0) > 0)
+    avg_hit_rate = sum(s.get('hit_rate', 0) for s in strategies) / len(strategies)
+    avg_roi = sum(s.get('roi', 0) for s in strategies) / len(strategies)
+    
+    lines.append(f"\n{'='*80}")
+    lines.append(f"SUMMARY:")
+    lines.append(f"  Total Strategies: {total_strategies}")
+    lines.append(f"  Profitable: {profitable}/{total_strategies} ({profitable/total_strategies*100:.1f}%)")
+    lines.append(f"  Avg Hit Rate: {avg_hit_rate:.1f}%")
+    lines.append(f"  Avg ROI: {avg_roi:+.1f}%")
+    lines.append(f"{'='*80}\n")
+    
+    return '\n'.join(lines)
+
+
 # =============================================================================
 # MAIN REFRESH FUNCTION
 # =============================================================================
@@ -1126,7 +1368,7 @@ def refresh_strategy_statistics(
     if all_success:
         subject = f"✅ Strategy Statistics Refresh Complete - {season}"
         
-        # Build strategy rankings section
+        # Build strategy rankings section WITH PLOTS
         rankings_text = ""
         for strategy_type in strategy_types:
             if strategy_type in strategy_rankings:
@@ -1135,6 +1377,24 @@ def refresh_strategy_statistics(
                     strategy_type,
                     top_n=20
                 )
+        
+        # Generate strategy performance plots
+        print(f"\n{'='*80}")
+        print("📊 Generating Strategy Performance Plots")
+        print(f"{'='*80}\n")
+        
+        import matplotlib
+        matplotlib.use('Agg')  # Non-interactive backend for Lambda
+        import matplotlib.pyplot as plt
+        
+        plots_generated = generate_all_strategy_plots(strategy_rankings, season)
+        
+        plots_summary = f"\n{'='*80}\n"
+        plots_summary += f"📈 STRATEGY PERFORMANCE PLOTS\n"
+        plots_summary += f"{'='*80}\n"
+        plots_summary += f"Generated {plots_generated} performance plots (4-panel: 2023-24, 2024-25, 2025-26, Overall)\n"
+        plots_summary += f"Location: s3://{S3_BUCKET}/data/04_output/strategy_plots/{season}/\n"
+        plots_summary += f"{'='*80}\n"
         
         message = f"""Strategy Statistics Refresh Completed Successfully
 
@@ -1150,6 +1410,8 @@ Total Strategies: {sum(r.get('strategies_count', 0) for r in results.values() if
 Total Plays: {sum(r.get('total_plays', 0) for r in results.values() if r.get('success'))}
 
 All strategy JSON files have been updated in S3.
+
+{plots_summary}
 
 {rankings_text}
 """
