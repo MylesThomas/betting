@@ -1513,11 +1513,14 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
                 spread_bin = row.get('spread_bin', 'Unknown')
                 scorer_type = row.get('scorer_type', '')
                 
-                # Shorten scorer_type
-                if 'Rim' in scorer_type:
-                    scorer_type_display = 'Rim'
-                elif 'Perimeter' in scorer_type:
-                    scorer_type_display = 'Perim'
+                # Shorten scorer_type - handle NaN/None
+                if pd.notna(scorer_type) and isinstance(scorer_type, str):
+                    if 'Rim' in scorer_type:
+                        scorer_type_display = 'Rim'
+                    elif 'Perimeter' in scorer_type:
+                        scorer_type_display = 'Perim'
+                    else:
+                        scorer_type_display = ''
                 else:
                     scorer_type_display = ''
                 
@@ -1848,29 +1851,27 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
                            transform=ax.transAxes, fontsize=10, verticalalignment='top',
                            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
                 
-                # Panel 4: Overall
+                # Panel 4: Overall (use play number instead of date)
                 ax = fig.add_subplot(gs[1, 1])
                 df_overall = df.copy()
                 df_overall['cumulative_wins'] = df_overall['is_win'].cumsum()
-                df_overall['cumulative_plays'] = range(1, len(df_overall) + 1)
-                df_overall['win_rate'] = (df_overall['cumulative_wins'] / df_overall['cumulative_plays'] * 100)
+                df_overall['play_number'] = range(1, len(df_overall) + 1)
+                df_overall['win_rate'] = (df_overall['cumulative_wins'] / df_overall['play_number'] * 100)
                 
+                # Plot each season with different colors
                 for s in seasons:
                     df_seg = df_overall[df_overall['season'] == s]
                     if len(df_seg) > 0:
-                        ax.plot(df_seg['game_date'], df_seg['win_rate'],
+                        ax.plot(df_seg['play_number'], df_seg['win_rate'],
                                color=season_colors.get(s, 'black'), linewidth=2, label=s)
                 
                 ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5)
                 ax.set_title('Overall (All Seasons)', fontsize=14, fontweight='bold')
-                ax.set_xlabel('Date', fontsize=11)
+                ax.set_xlabel('Play Number', fontsize=11)
                 ax.set_ylabel('Win Rate (%)', fontsize=11)
                 ax.set_ylim(0, 100)
                 ax.grid(True, alpha=0.3)
                 ax.legend(loc='best')
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-                ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
-                plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
                 
                 final_wr = df_overall['win_rate'].iloc[-1]
                 total_wins = int(df_overall['cumulative_wins'].iloc[-1])
