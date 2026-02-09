@@ -36,6 +36,12 @@ Lambda Deployment:
 This script is fully self-contained and can be copied directly into the Lambda editor.
 No git clone or external dependencies required beyond boto3 and pandas (Lambda layer).
 
+IMPORTANT - Lambda Timeout Configuration:
+This function processes 3 full seasons of data and regenerates multiple backtests.
+The Lambda timeout MUST be set to at least 10 minutes (600 seconds) to avoid timeouts.
+Current runtime typically takes 5-6 minutes depending on data volume.
+Default 5-minute timeout will cause the function to fail during 2025-26 backtest processing.
+
 Lambda Layers:
 This function uses TWO layers to provide all dependencies:
 
@@ -112,6 +118,18 @@ try:
 except ImportError:
     PANDAS_AVAILABLE = False
     print("⚠️  pandas not available")
+
+# Try to import matplotlib for plotting
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # Non-interactive backend for Lambda
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+    import matplotlib.gridspec as gridspec
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    print("⚠️  matplotlib not available")
 
 
 # =============================================================================
@@ -1332,6 +1350,271 @@ def format_v5_strategies_for_email(strategy_rankings: Dict, season: str) -> str:
     return '\n'.join(lines)
 
 
+def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yesterday: str) -> bool:
+    """
+    Generate a summary plot showing yesterday's plays across all v5 strategies.
+    
+    Top panel: Win rate over time (all v5 strategies combined) for current season
+    Bottom panel: Table of yesterday's plays
+    
+    Args:
+        strategy_rankings: Dict with '2d' and '3d' keys containing backtest results
+        season: Current season (e.g., '2025-26')
+        yesterday: Yesterday's date in YYYY-MM-DD format (ET)
+    
+    Returns:
+        bool: True if plot generated successfully
+    """
+    try:
+        print(f"\n📊 Generating V5 Yesterday Summary Plot...")
+        
+        # Load v5 strategies
+        v5_strategies = load_v5_strategies_from_s3()
+        if not v5_strategies:
+            print("   ⚠️  Could not load v5 strategies")
+            return False
+        
+        # Combine all backtest strategies
+        all_backtest_strategies = []
+        for strat_type in ['2d', '3d']:
+            if strat_type in strategy_rankings:
+                for strat in strategy_rankings[strat_type]:
+                    strat['_type'] = strat_type
+                    all_backtest_strategies.append(strat)
+        
+        # Load plays data for all v5 strategies (current season only)
+        s3_client = boto3.client('s3')
+        all_v5_plays = []
+        
+        for v5_strat in v5_strategies:
+            # Match to backtest results
+            matched_strat = None
+            for backtest_strat in all_backtest_strategies:
+                if (v5_strat['line_tier'] == backtest_strat['line_tier'] and
+                    v5_strat['spread_bin'] == backtest_strat['spread_bin'] and
+                    v5_strat['bet_side'] == backtest_strat['bet_side']):
+                    if v5_strat['strategy_type'] == '3d':
+                        if v5_strat.get('scorer_type') == backtest_strat.get('scorer_type'):
+                            matched_strat = backtest_strat
+                            break
+                    else:
+                        matched_strat = backtest_strat
+                        break
+            
+            if not matched_strat:
+                continue
+            
+            # Load plays for this strategy (current season only)
+            strat_type = v5_strat['strategy_type']
+            df = load_backtest_plays_for_strategy_simple(
+                s3_client,
+                matched_strat,
+                strat_type,
+                [season]  # Current season only
+            )
+            
+            if df is not None and len(df) > 0:
+                df['strategy_name'] = v5_strat['strategy_name']
+                all_v5_plays.append(df)
+        
+        if not all_v5_plays:
+            print("   ⚠️  No v5 plays data found")
+            return False
+        
+        # Combine all v5 plays
+        df_all = pd.concat(all_v5_plays, ignore_index=True)
+        df_all['game_date'] = pd.to_datetime(df_all['game_date'])
+        df_all = df_all.sort_values('game_date')
+        
+        # Filter to yesterday's plays
+        yesterday_date = pd.to_datetime(yesterday)
+        df_yesterday = df_all[df_all['game_date'] == yesterday_date].copy()
+        
+        print(f"   📅 Found {len(df_yesterday)} plays from yesterday ({yesterday})")
+        
+        # Create figure with 2 panels
+        fig = plt.figure(figsize=(16, 10))
+        gs = gridspec.GridSpec(2, 1, figure=fig, height_ratios=[1, 1.2], hspace=0.3)
+        
+        fig.suptitle(f"V5 Strategies - Yesterday's Performance ({yesterday})", 
+                    fontsize=16, fontweight='bold')
+        
+        # Panel 1: Win rate over time (current season)
+        ax = fig.add_subplot(gs[0])
+        
+        df_all['is_win'] = (df_all['result'] == 'WIN').astype(int)
+        df_all['cumulative_wins'] = df_all['is_win'].cumsum()
+        df_all['cumulative_plays'] = range(1, len(df_all) + 1)
+        df_all['win_rate'] = (df_all['cumulative_wins'] / df_all['cumulative_plays'] * 100)
+        
+        ax.plot(df_all['game_date'], df_all['win_rate'], 
+               color='#2ca02c', linewidth=2, label=f'{season} (All V5)')
+        ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5, label='50% Break-even')
+        
+        # Highlight yesterday with vertical line
+        ax.axvline(x=yesterday_date, color='red', linestyle=':', linewidth=2, alpha=0.7, label='Yesterday')
+        
+        ax.set_title(f'Cumulative Win Rate - {season} (All 15 V5 Strategies Combined)', 
+                    fontsize=14, fontweight='bold')
+        ax.set_xlabel('Date', fontsize=11)
+        ax.set_ylabel('Win Rate (%)', fontsize=11)
+        ax.set_ylim(0, 100)
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='best')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
+        ax.xaxis.set_major_locator(mdates.WeekdayLocator(interval=1))
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        
+        # Add stats box
+        final_wr = df_all['win_rate'].iloc[-1]
+        total_wins = int(df_all['cumulative_wins'].iloc[-1])
+        total_losses = len(df_all) - total_wins
+        ax.text(0.02, 0.98, f'Season Total: {total_wins}W-{total_losses}L | {final_wr:.1f}%',
+               transform=ax.transAxes, fontsize=10, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        # Panel 2: Yesterday's plays table
+        ax_table = fig.add_subplot(gs[1])
+        ax_table.axis('off')
+        
+        if len(df_yesterday) > 0:
+            # Sort by strategy name, then player name
+            df_yesterday = df_yesterday.sort_values(['strategy_name', 'player_name'])
+            
+            # Format table data
+            table_data = []
+            for _, row in df_yesterday.iterrows():
+                player = row.get('player_name', 'Unknown')[:18]
+                line = f"{row['points_line']:.1f}"
+                actual_pts = f"{int(row['actual_points'])}" if pd.notna(row['actual_points']) else 'N/A'
+                
+                # Determine actual result
+                if pd.notna(row['actual_points']):
+                    if row['actual_points'] > row['points_line']:
+                        actual_result = 'OVER'
+                    elif row['actual_points'] < row['points_line']:
+                        actual_result = 'UNDER'
+                    else:
+                        actual_result = 'PUSH'
+                else:
+                    actual_result = 'N/A'
+                
+                # Strategy result
+                strat_result = row['result']
+                if strat_result == 'WIN':
+                    result_text = 'WIN'
+                elif strat_result == 'LOSS':
+                    result_text = 'LOSS'
+                else:
+                    result_text = 'PUSH'
+                
+                # Get metadata
+                line_tier = row.get('line_tier', 'Unknown')
+                spread_bin = row.get('spread_bin', 'Unknown')
+                scorer_type = row.get('scorer_type', '')
+                
+                # Shorten scorer_type
+                if 'Rim' in scorer_type:
+                    scorer_type_display = 'Rim'
+                elif 'Perimeter' in scorer_type:
+                    scorer_type_display = 'Perim'
+                else:
+                    scorer_type_display = ''
+                
+                # Get our bet (from line_tier matching)
+                our_bet = row.get('bet_side', 'UNDER')
+                
+                # Strategy name (shortened)
+                strat_name = row.get('strategy_name', 'Unknown')[:20]
+                
+                table_data.append([
+                    strat_name,
+                    player,
+                    line,
+                    actual_pts,
+                    line_tier,
+                    spread_bin,
+                    scorer_type_display,
+                    our_bet,
+                    actual_result,
+                    result_text
+                ])
+            
+            # Create table
+            table = ax_table.table(
+                cellText=table_data,
+                colLabels=['Strategy', 'Player', 'Line', 'Scored', 'Line Tier', 'Spread', 'Scorer', 'Our Bet', 'Actual', 'Result'],
+                loc='center',
+                cellLoc='left',
+                colWidths=[0.13, 0.14, 0.06, 0.06, 0.11, 0.10, 0.07, 0.08, 0.07, 0.08]
+            )
+            
+            # Style table
+            table.auto_set_font_size(False)
+            table.set_fontsize(7)
+            table.scale(1, 2)
+            
+            # Header styling
+            for i in range(10):
+                cell = table[(0, i)]
+                cell.set_facecolor('#4CAF50')
+                cell.set_text_props(weight='bold', color='white')
+            
+            # Row styling (alternating colors)
+            for i in range(1, len(table_data) + 1):
+                for j in range(10):
+                    cell = table[(i, j)]
+                    if i % 2 == 0:
+                        cell.set_facecolor('#f0f0f0')
+                    
+                    # Color result column
+                    if j == 9:  # Result column
+                        if table_data[i-1][9] == 'WIN':
+                            cell.set_facecolor('#90EE90')
+                            cell.set_text_props(weight='bold')
+                        elif table_data[i-1][9] == 'LOSS':
+                            cell.set_facecolor('#FFB6C1')
+                            cell.set_text_props(weight='bold')
+            
+            # Add summary text above table
+            wins_yesterday = (df_yesterday['result'] == 'WIN').sum()
+            losses_yesterday = (df_yesterday['result'] == 'LOSS').sum()
+            pushes_yesterday = (df_yesterday['result'] == 'PUSH').sum()
+            hit_rate_yesterday = (wins_yesterday / (wins_yesterday + losses_yesterday) * 100) if (wins_yesterday + losses_yesterday) > 0 else 0
+            
+            ax_table.text(0.5, 0.95, 
+                         f"Yesterday's Results: {wins_yesterday}W-{losses_yesterday}L-{pushes_yesterday}P | Hit Rate: {hit_rate_yesterday:.1f}%",
+                         transform=ax_table.transAxes, fontsize=12, fontweight='bold',
+                         ha='center', va='top',
+                         bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.3))
+        else:
+            # No plays yesterday
+            ax_table.text(0.5, 0.5, 'No plays recorded for yesterday',
+                         transform=ax_table.transAxes, fontsize=14,
+                         ha='center', va='center',
+                         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        # Save plot
+        plot_filename = f'v5_yesterday_summary_{yesterday}.png'
+        local_plot_path = f'/tmp/{plot_filename}'
+        plt.tight_layout()
+        plt.savefig(local_plot_path, dpi=100, bbox_inches='tight')
+        plt.close()
+        
+        # Upload to S3
+        s3_key = f'data/04_output/strategy_plots/{season}/{plot_filename}'
+        s3_client.upload_file(local_plot_path, S3_BUCKET, s3_key)
+        
+        print(f"   ✅ Generated v5 yesterday summary plot: s3://{S3_BUCKET}/{s3_key}")
+        return True
+        
+    except Exception as e:
+        print(f"   ❌ Failed to generate v5 yesterday summary plot: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_n: int = 20) -> str:
     """
     Format top strategies for email notification.
@@ -2030,26 +2313,28 @@ def refresh_strategy_statistics(
     if all_success:
         subject = f"✅ Strategy Statistics Refresh Complete - {season}"
         
-        # Build strategy rankings section WITH PLOTS
-        rankings_text = ""
-        for strategy_type in strategy_types:
-            if strategy_type in strategy_rankings:
-                rankings_text += format_strategies_for_email(
-                    strategy_rankings[strategy_type],
-                    strategy_type,
-                    top_n=20
-                )
-        
         # Generate strategy performance plots
         print(f"\n{'='*80}")
         print("📊 Generating Strategy Performance Plots")
         print(f"{'='*80}\n")
         
-        import matplotlib
-        matplotlib.use('Agg')  # Non-interactive backend for Lambda
-        import matplotlib.pyplot as plt
+        # Generate yesterday summary plot for v5 strategies
+        v5_yesterday_success = generate_v5_yesterday_summary_plot(strategy_rankings, season, yesterday)
         
+        # Generate individual strategy plots
         plots_generated = generate_all_strategy_plots(strategy_rankings, season)
+        
+        # Build yesterday summary section
+        if v5_yesterday_success:
+            yesterday_plot_url = f"s3://{S3_BUCKET}/data/04_output/strategy_plots/{season}/v5_yesterday_summary_{yesterday}.png"
+            yesterday_summary = f"\n{'='*80}\n"
+            yesterday_summary += f"📅 YESTERDAY'S PERFORMANCE ({yesterday})\n"
+            yesterday_summary += f"{'='*80}\n"
+            yesterday_summary += f"Combined results across all 15 v5 strategies\n"
+            yesterday_summary += f"📈 Plot: {yesterday_plot_url}\n"
+            yesterday_summary += f"{'='*80}\n"
+        else:
+            yesterday_summary = ""
         
         plots_summary = f"\n{'='*80}\n"
         plots_summary += f"📈 STRATEGY PERFORMANCE PLOTS\n"
@@ -2057,6 +2342,12 @@ def refresh_strategy_statistics(
         plots_summary += f"Generated {plots_generated} performance plots (5-panel: 2023-24, 2024-25, 2025-26, Overall, Recent Plays Table)\n"
         plots_summary += f"Location: s3://{S3_BUCKET}/data/04_output/strategy_plots/{season}/\n"
         plots_summary += f"{'='*80}\n"
+        
+        # Build V5 strategy performance section
+        v5_performance = format_v5_strategies_for_email(strategy_rankings, season)
+        
+        # Build combined strategy rankings (ALL strategies, not split by 2D/3D)
+        all_strategies_ranked = format_all_strategies_combined(strategy_rankings, top_n=40)
         
         message = f"""Strategy Statistics Refresh Completed Successfully
 
@@ -2073,9 +2364,13 @@ Total Plays: {sum(r.get('total_plays', 0) for r in results.values() if r.get('su
 
 All strategy JSON files have been updated in S3.
 
+{yesterday_summary}
+
+{v5_performance}
+
 {plots_summary}
 
-{rankings_text}
+{all_strategies_ranked}
 """
     else:
         subject = f"❌ Strategy Statistics Refresh Failed - {season}"
