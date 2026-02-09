@@ -85,6 +85,42 @@ Required Lambda Environment Variables:
 
 Note: SES must be configured in us-east-2 region and sender email must be verified.
 
+Lambda IAM Role Setup (Required for SES):
+The Lambda execution role needs permissions to send SES emails. Add one of these:
+
+Option 1: Attach AWS Managed Policy (Quick)
+1. Go to Lambda Console → Configuration → Permissions
+2. Click on the execution role name (e.g., betting-dashboard-daily-update-role-ille2llh)
+3. Click "Add permissions" → "Attach policies"
+4. Search for "AmazonSESFullAccess" and attach it
+
+Option 2: Custom Inline Policy (More Secure - Recommended)
+1. Go to Lambda Console → Configuration → Permissions
+2. Click on the execution role name
+3. Click "Add permissions" → "Create inline policy"
+4. Click "JSON" tab and paste:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ses:SendEmail",
+                "ses:SendRawEmail"
+            ],
+            "Resource": [
+                "arn:aws:ses:us-east-2:232692785472:identity/myles@thomasquantitativestrategies.com",
+                "arn:aws:ses:us-east-2:232692785472:identity/mylescgthomas@gmail.com"
+            ]
+        }
+    ]
+}
+
+5. Name it "SESEmailSendPolicy" and create
+
+Note: Both sender and recipient emails must be verified in SES (us-east-2 region).
+
 S3 Bucket Policy Setup (Required for Inline Images):
 To display plots inline in HTML emails, the strategy_plots folder must be publicly readable.
 Follow these 3 steps:
@@ -194,6 +230,11 @@ BACKTEST_SEASONS = ['2023-24', '2024-25', '2025-26']
 
 # Minimum plays to include strategy
 MIN_PLAYS_THRESHOLD = 1
+
+# Plot generation mode: 'all' or 'active_only'
+# - 'all': Generate plots for all 280+ strategy combinations (slow, ~10 min)
+# - 'active_only': Only generate plots for strategies with active JSON files (~15 strategies, fast ~2 min)
+PLOT_GENERATION_MODE = 'active_only'
 
 # Team name mappings: Odds API → NBA API (NBA API is source of truth)
 # Different APIs use different team name formats, so we normalize Odds API names
@@ -809,6 +850,8 @@ def generate_html_email(message: str, yesterday_plot_url: str = None) -> str:
     Returns:
         HTML formatted email body
     """
+    import re
+    
     # Start HTML
     html_parts = ["""
     <html>
@@ -817,9 +860,10 @@ def generate_html_email(message: str, yesterday_plot_url: str = None) -> str:
             body { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; color: #333; background-color: #f5f5f5; padding: 20px; }
             .container { max-width: 900px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 5px; }
             .header { background-color: #2c3e50; color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-            .plot-container { margin: 20px 0; text-align: center; }
-            .plot-container img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 3px; }
-            pre { background-color: #f8f9fa; padding: 15px; border-left: 3px solid #2c3e50; overflow-x: auto; }
+            .plot-container { margin: 20px 0; padding: 15px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; }
+            .plot-container img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 3px; display: block; margin: 10px auto; }
+            .strategy-section { margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 3px solid #2c3e50; }
+            pre { background-color: transparent; margin: 0; white-space: pre-wrap; word-wrap: break-word; }
             .footer { margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; font-size: 11px; color: #666; }
         </style>
     </head>
@@ -839,10 +883,49 @@ def generate_html_email(message: str, yesterday_plot_url: str = None) -> str:
             </div>
         """)
     
-    # Convert message to HTML (preserve formatting with <pre>)
-    html_parts.append(f"""
-            <pre>{message}</pre>
+    # Parse message and convert plot URLs to embedded images
+    # Pattern: 📈 Plot: https://...png
+    plot_pattern = r'📈 Plot: (https://[^\s]+\.png)'
+    
+    # Split message by strategies (each starts with #)
+    lines = message.split('\n')
+    current_section = []
+    
+    html_parts.append('<div class="strategy-section">')
+    
+    for line in lines:
+        # Check if line contains a plot URL
+        match = re.search(plot_pattern, line)
+        if match:
+            plot_url = match.group(1)
+            # Add text before the plot
+            text_before = line[:match.start()]
+            if text_before.strip():
+                current_section.append(text_before)
             
+            # Close current section and add plot
+            if current_section:
+                html_parts.append(f'<pre>{"".join(current_section)}</pre>')
+                current_section = []
+            
+            # Add the plot as an image
+            html_parts.append(f'''
+                <div class="plot-container">
+                    <img src="{plot_url}" alt="Strategy Performance Plot">
+                </div>
+            ''')
+        else:
+            # Regular line, add to current section
+            current_section.append(line + '\n')
+    
+    # Add remaining content
+    if current_section:
+        html_parts.append(f'<pre>{"".join(current_section)}</pre>')
+    
+    html_parts.append('</div>')
+    
+    # Footer
+    html_parts.append(f"""
             <div class="footer">
                 <p>Generated by NBA Strategy Stats Refresher Lambda</p>
                 <p>All plots available in S3: s3://{S3_BUCKET}/data/04_output/strategy_plots/</p>
@@ -1949,6 +2032,62 @@ def format_all_strategies_combined(strategy_rankings: Dict, top_n: int = 40) -> 
     return '\n'.join(lines)
 
 
+def load_active_strategies_from_v5(s3_client) -> set:
+    """
+    Load the list of active strategies from enhanced_unders_v5.json.
+    
+    Returns:
+        set: Set of tuples (line_tier, spread_bin, scorer_type) for active strategies
+    """
+    active_strategies = set()
+    
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key='strategies/enhanced_unders_v5.json')
+        v5_data = json.loads(response['Body'].read().decode('utf-8'))
+        
+        print(f"\n📋 Loading active strategies from v5 JSON:")
+        for idx, strat in enumerate(v5_data.get('strategies', []), 1):
+            line_tier = strat.get('line_tier', '')
+            spread_bin = strat.get('spread_bin', '')
+            scorer_type = strat.get('scorer_type', 'N/A')
+            
+            active_strategies.add((line_tier, spread_bin, scorer_type))
+            
+            # Log each active strategy
+            strat_name = strat.get('strategy_name', 'Unknown')
+            strat_type = strat.get('strategy_type', '?')
+            print(f"   {idx}. [{strat_type.upper()}] {line_tier} | {spread_bin} | UNDER", end='')
+            if scorer_type != 'N/A':
+                print(f" | {scorer_type}", end='')
+            print(f" ({strat_name})")
+        
+        print(f"\n✅ Loaded {len(active_strategies)} active strategies from v5 JSON")
+        return active_strategies
+    except Exception as e:
+        print(f"⚠️  Failed to load v5 JSON, will generate all plots: {e}")
+        return set()
+
+
+def strategy_is_active(strat: Dict, strategy_type: str, active_strategies: set) -> bool:
+    """
+    Check if a strategy is in the active v5 list.
+    Uses line_tier, spread_bin, and scorer_type to match (bet_side is always UNDER in v5).
+    
+    Args:
+        strat: Strategy dictionary
+        strategy_type: '2d' or '3d'
+        active_strategies: Set of active strategy tuples (line_tier, spread_bin, scorer_type)
+    
+    Returns:
+        bool: True if strategy is active, False otherwise
+    """
+    line_tier = strat.get('line_tier', '')
+    spread_bin = strat.get('spread_bin', '')
+    scorer_type = strat.get('scorer_type', 'N/A') if strategy_type == '3d' else 'N/A'
+    
+    return (line_tier, spread_bin, scorer_type) in active_strategies
+
+
 def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_plays_n: int = 10) -> int:
     """
     Generate performance plots for all strategies in ranking.
@@ -1963,12 +2102,27 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
     """
     s3_client = boto3.client('s3')
     plots_generated = 0
+    plots_skipped = 0
     seasons = BACKTEST_SEASONS  # ['2023-24', '2024-25', '2025-26']
+    
+    # Load active strategies from v5 JSON if in active_only mode
+    active_strategies = set()
+    if PLOT_GENERATION_MODE == 'active_only':
+        active_strategies = load_active_strategies_from_v5(s3_client)
     
     for strategy_type, strategies in strategy_rankings.items():
         print(f"\n📊 Generating plots for {strategy_type.upper()} strategies...")
         
         for strat in strategies:
+            # Check if we should skip this strategy based on config
+            if PLOT_GENERATION_MODE == 'active_only' and active_strategies:
+                if not strategy_is_active(strat, strategy_type, active_strategies):
+                    strat_name = f"{strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+                    if strategy_type == '3d':
+                        strat_name += f" | {strat.get('scorer_type', '')}"
+                    print(f"   ⏭️  Skipping {strat_name} (not in v5)")
+                    plots_skipped += 1
+                    continue
             try:
                 # Load plays data for this strategy
                 df = load_backtest_plays_for_strategy_simple(s3_client, strat, strategy_type, seasons)
@@ -2197,6 +2351,12 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
             except Exception as e:
                 print(f"   ❌ Failed to generate plot: {e}")
                 continue
+    
+    # Summary
+    if PLOT_GENERATION_MODE == 'active_only':
+        print(f"\n📊 Plot generation summary: {plots_generated} generated, {plots_skipped} skipped (mode: {PLOT_GENERATION_MODE})")
+    else:
+        print(f"\n📊 Plot generation summary: {plots_generated} generated (mode: {PLOT_GENERATION_MODE})")
     
     return plots_generated
 
