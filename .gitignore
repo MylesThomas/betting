@@ -124,3 +124,5 @@ docs/AI_summaries/
 content/
 # NFL historical props local data (fetched from API, stored in S3)
 data/01_input/the-odds-api/nfl/historical_player_props/
+src/pbp_data/tmp/plots/*.csv
+src/pbp_data/tmp/plots/*.png
