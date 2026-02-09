@@ -263,7 +263,7 @@ def load_player_profile(player_name, minute_by_minute_path=None):
     """)
     
     # Get player profile with full game PPM history
-    query = f"""
+    query = """
     SELECT 
         g.player_id,
         g.player_name,
@@ -292,11 +292,11 @@ def load_player_profile(player_name, minute_by_minute_path=None):
     LEFT JOIN quarter_splits_with_ppm q 
         ON g.game_id = q.game_id 
         AND g.player_id = q.player_id
-    WHERE g.player_name = '{player_name}'
+    WHERE g.player_name = ?
     GROUP BY g.player_id, g.player_name
     """
     
-    result = con.execute(query).fetchone()
+    result = con.execute(query, [player_name]).fetchone()
     
     if not result:
         con.close()
@@ -363,9 +363,9 @@ def get_consensus_prop_line(player_name, game_date, market="player_points"):
                         point,
                         commence_time_et
                     FROM '{file}'
-                    WHERE player_name = '{player_name}'
-                    AND market = '{market}'
-                """).df()
+                    WHERE player_name = ?
+                    AND market = ?
+                """, [player_name, market]).df()
                 
                 if len(df) > 0:
                     # Calculate consensus: median, but if median is average of two values,
