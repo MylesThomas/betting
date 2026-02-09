@@ -53,7 +53,8 @@ MINUTE_BY_MINUTE = PATHS['minute_by_minute']
 # Validation cache directory
 VALIDATION_DIR = Path.home() / "Downloads" / "tmp" / "monte_carlo_validation"
 VALIDATION_DIR.mkdir(exist_ok=True, parents=True)
-PREDICTIONS_FILE = VALIDATION_DIR / "predictions.parquet"
+PREDICTIONS_DIR = VALIDATION_DIR / "predictions"
+PREDICTIONS_DIR.mkdir(exist_ok=True, parents=True)
 PLOTS_DIR = VALIDATION_DIR / "plots"
 PLOTS_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -113,34 +114,22 @@ def get_player_games(player_name):
     return df
 
 
-def save_predictions(predictions_df):
-    """Save predictions to parquet file (append if exists)."""
-    if PREDICTIONS_FILE.exists():
-        # Append to existing file
-        existing_df = pd.read_parquet(PREDICTIONS_FILE)
-        combined_df = pd.concat([existing_df, predictions_df], ignore_index=True)
-        combined_df.to_parquet(PREDICTIONS_FILE, index=False)
-    else:
-        # Create new file
-        predictions_df.to_parquet(PREDICTIONS_FILE, index=False)
+def get_prediction_filename(player_name, game_id):
+    """Get filename for a player-game prediction file."""
+    player_name_clean = player_name.replace(" ", "_").replace("'", "")
+    return PREDICTIONS_DIR / f"{player_name_clean}_{game_id}.parquet"
+
+
+def save_predictions(predictions_df, player_name, game_id):
+    """Save predictions to individual parquet file per player-game."""
+    prediction_file = get_prediction_filename(player_name, game_id)
+    predictions_df.to_parquet(prediction_file, index=False)
 
 
 def check_game_already_processed(player_name, game_id):
     """Check if a player-game combination has already been processed."""
-    if not PREDICTIONS_FILE.exists():
-        return False
-    
-    try:
-        con = duckdb.connect()
-        count = con.execute(f"""
-            SELECT COUNT(*) 
-            FROM '{PREDICTIONS_FILE}'
-            WHERE player_name = ? AND game_id = ?
-        """, [player_name, game_id]).fetchone()[0]
-        con.close()
-        return count > 0
-    except Exception:
-        return False
+    prediction_file = get_prediction_filename(player_name, game_id)
+    return prediction_file.exists()
 
 
 def process_player_game(player_name, game_id, player_profile, n_sims):
@@ -237,7 +226,7 @@ def main():
     print("=" * 80)
     print(f"\nMode: {'All players' if args.top_n == 0 else f'Top {args.top_n} players by PPG'}")
     print(f"Simulations per play: {args.n_sims:,}")
-    print(f"Output: {PREDICTIONS_FILE}")
+    print(f"Output: {PREDICTIONS_DIR}")
     print(f"Plots: {PLOTS_DIR}")
     print()
     
@@ -301,7 +290,7 @@ def main():
                 
                 if predictions_df is not None:
                     # Save predictions
-                    save_predictions(predictions_df)
+                    save_predictions(predictions_df, player_name, game_id)
                     total_games_processed += 1
                     print(f"      ✅ Saved {len(predictions_df)} predictions")
                 
@@ -314,7 +303,8 @@ def main():
     print(f"{'='*80}")
     print(f"   Games processed: {total_games_processed}")
     print(f"   Games skipped (already done): {total_games_skipped}")
-    print(f"   Predictions file: {PREDICTIONS_FILE}")
+    print(f"   Predictions directory: {PREDICTIONS_DIR}")
+    print(f"   Total prediction files: {len(list(PREDICTIONS_DIR.glob('*.parquet')))}")
     print(f"   Plots directory: {PLOTS_DIR}")
 
 
