@@ -742,20 +742,38 @@ def send_sns(subject: str, message: str) -> None:
         subject: Email subject
         message: Email body
     """
+    print(f"\n{'='*80}")
+    print("📧 SENDING EMAIL NOTIFICATION")
+    print(f"{'='*80}")
+    
     try:
         sns_client = boto3.client('sns')
         topic_arn = os.environ.get('SNS_TOPIC_ARN')
         
+        print(f"📋 Subject: {subject}")
+        print(f"📧 Topic ARN: {topic_arn if topic_arn else 'NOT SET'}")
+        print(f"📝 Message length: {len(message)} characters")
+        
         if not topic_arn:
-            print("   ⚠️  SNS_TOPIC_ARN not set - skipping notification")
+            print("   ❌ SNS_TOPIC_ARN environment variable not set - skipping notification")
+            print("   💡 Set SNS_TOPIC_ARN in Lambda environment variables to enable email")
             return
         
-        sns_client.publish(
+        print("   📤 Publishing to SNS...")
+        response = sns_client.publish(
             TopicArn=topic_arn,
             Subject=subject,
             Message=message
         )
-        print(f"   ✅ SNS notification sent")
+        
+        message_id = response.get('MessageId', 'unknown')
+        print(f"   ✅ SNS notification sent successfully!")
+        print(f"   📬 Message ID: {message_id}")
+        
+    except Exception as e:
+        print(f"   ❌ Failed to send SNS notification: {e}")
+        import traceback
+        traceback.print_exc()
     except Exception as e:
         print(f"   ⚠️  Failed to send SNS: {e}")
 
