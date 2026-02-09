@@ -1187,6 +1187,151 @@ def generate_strategy_json(
     print(f"   💾 Saved {len(strategies)} strategies to {output_path}")
 
 
+def load_v5_strategies_from_s3() -> List[Dict]:
+    """
+    Load the v5 strategy config from S3.
+    
+    Returns:
+        List of v5 strategy configs (empty list if error)
+    """
+    try:
+        s3_client = boto3.client('s3')
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET,
+            Key='strategies/enhanced_unders_v5.json'
+        )
+        data = json.loads(response['Body'].read().decode('utf-8'))
+        return data.get('strategies', [])
+    except Exception as e:
+        print(f"   ⚠️  Failed to load v5 strategies: {e}")
+        return []
+
+
+def format_v5_strategies_for_email(strategy_rankings: Dict, season: str) -> str:
+    """
+    Format v5 strategies with season-by-season breakdown for email.
+    
+    Shows each of the 15 v5 strategies with:
+    - W-L-T for each season (2023-24, 2024-25, 2025-26)
+    - Aggregate stats
+    - Link to performance plot
+    
+    Args:
+        strategy_rankings: Dict with '2d' and '3d' keys containing backtest results
+        season: Current season (for plot links)
+    
+    Returns:
+        Formatted string for email
+    """
+    # Load v5 config
+    v5_strategies = load_v5_strategies_from_s3()
+    if not v5_strategies:
+        return "⚠️  Could not load v5 strategies from S3\n"
+    
+    # Combine all backtest strategies
+    all_backtest_strategies = []
+    for strat_type in ['2d', '3d']:
+        if strat_type in strategy_rankings:
+            for strat in strategy_rankings[strat_type]:
+                strat['_type'] = strat_type
+                all_backtest_strategies.append(strat)
+    
+    lines = [f"\n{'='*80}"]
+    lines.append(f"📊 V5 STRATEGY PERFORMANCE (15 Strategies)")
+    lines.append(f"{'='*80}\n")
+    
+    # Get season-by-season data for each v5 strategy
+    s3_client = boto3.client('s3')
+    seasons = BACKTEST_SEASONS  # ['2023-24', '2024-25', '2025-26']
+    
+    for i, v5_strat in enumerate(v5_strategies, 1):
+        # Match to backtest results
+        matched_strat = None
+        for backtest_strat in all_backtest_strategies:
+            if (v5_strat['line_tier'] == backtest_strat['line_tier'] and
+                v5_strat['spread_bin'] == backtest_strat['spread_bin'] and
+                v5_strat['bet_side'] == backtest_strat['bet_side']):
+                # For 3D strategies, also match scorer_type
+                if v5_strat['strategy_type'] == '3d':
+                    if v5_strat.get('scorer_type') == backtest_strat.get('scorer_type'):
+                        matched_strat = backtest_strat
+                        break
+                else:
+                    matched_strat = backtest_strat
+                    break
+        
+        if not matched_strat:
+            lines.append(f"⚠️  #{i:2d}. {v5_strat['strategy_name']} - NO BACKTEST DATA")
+            continue
+        
+        # Strategy header
+        strategy_name = v5_strat['strategy_name']
+        tier = v5_strat.get('tier', 'N/A').replace('_', ' ').title()
+        lines.append(f"\n#{i:2d}. {strategy_name} ({tier})")
+        lines.append(f"     {v5_strat['line_tier']} | {v5_strat['spread_bin']} | {v5_strat['bet_side']}")
+        if v5_strat['strategy_type'] == '3d':
+            lines.append(f"     Scorer Type: {v5_strat.get('scorer_type', 'N/A')}")
+        
+        # Load season-by-season data
+        season_stats = {}
+        strat_type = v5_strat['strategy_type']
+        
+        for s in seasons:
+            try:
+                df = load_backtest_plays_for_strategy_simple(
+                    s3_client,
+                    matched_strat,
+                    strat_type,
+                    [s]  # Single season
+                )
+                if df is not None and len(df) > 0:
+                    wins = (df['result'] == 'WIN').sum()
+                    losses = (df['result'] == 'LOSS').sum()
+                    ties = (df['result'] == 'PUSH').sum()
+                    total = wins + losses + ties
+                    hit_rate = (wins / (wins + losses) * 100) if (wins + losses) > 0 else 0
+                    season_stats[s] = {
+                        'wins': wins,
+                        'losses': losses,
+                        'ties': ties,
+                        'total': total,
+                        'hit_rate': hit_rate
+                    }
+            except Exception as e:
+                print(f"   ⚠️  Failed to load {s} data for {strategy_name}: {e}")
+        
+        # Display season-by-season
+        lines.append(f"")
+        for s in seasons:
+            if s in season_stats:
+                st = season_stats[s]
+                lines.append(f"     {s}: {st['wins']}W-{st['losses']}L-{st['ties']}T ({st['hit_rate']:.1f}%)")
+            else:
+                lines.append(f"     {s}: No data")
+        
+        # Aggregate stats
+        total_wins = matched_strat.get('wins', 0)
+        total_losses = matched_strat.get('losses', 0)
+        total_ties = matched_strat.get('ties', 0)
+        hit_rate = matched_strat.get('hit_rate', 0)
+        roi = matched_strat.get('roi', 0)
+        
+        lines.append(f"")
+        lines.append(f"     OVERALL: {total_wins}W-{total_losses}L-{total_ties}T | Hit: {hit_rate:.1f}% | ROI: {roi:+.1f}%")
+        
+        # Plot link
+        plot_name = f"{matched_strat['line_tier']}_{matched_strat['spread_bin']}_{matched_strat['bet_side']}"
+        if strat_type == '3d':
+            scorer = matched_strat.get('scorer_type', '').replace('≥', 'ge').replace('%', 'pct')
+            plot_name += f"_{scorer}"
+        plot_name = plot_name.replace(' ', '_').replace('(', '').replace(')', '').replace("'", '')
+        plot_url = f"s3://{S3_BUCKET}/data/04_output/strategy_plots/{season}/{plot_name}.png"
+        lines.append(f"     📈 Plot: {plot_url}")
+    
+    lines.append(f"\n{'='*80}\n")
+    return '\n'.join(lines)
+
+
 def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_n: int = 20) -> str:
     """
     Format top strategies for email notification.
@@ -1253,6 +1398,81 @@ def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_
     return '\n'.join(lines)
 
 
+def format_all_strategies_combined(strategy_rankings: Dict, top_n: int = 40) -> str:
+    """
+    Format ALL strategies (2D + 3D combined) ranked by hit rate.
+    
+    Args:
+        strategy_rankings: Dict with '2d' and '3d' keys containing strategy lists
+        top_n: Number of top strategies to include
+    
+    Returns:
+        Formatted string for email
+    """
+    # Combine all strategies
+    all_strategies = []
+    for strat_type in ['2d', '3d']:
+        if strat_type in strategy_rankings:
+            for strat in strategy_rankings[strat_type]:
+                strat_copy = strat.copy()
+                strat_copy['_type'] = strat_type
+                all_strategies.append(strat_copy)
+    
+    if not all_strategies:
+        return "No strategies available"
+    
+    # Sort by hit rate descending
+    sorted_strategies = sorted(all_strategies, key=lambda x: x.get('hit_rate', 0), reverse=True)
+    
+    lines = [f"\n{'='*80}"]
+    lines.append(f"ALL STRATEGIES RANKED BY HIT RATE (Top {top_n})")
+    lines.append(f"{'='*80}\n")
+    
+    for i, strat in enumerate(sorted_strategies[:top_n], 1):
+        # Build strategy description
+        strat_type = strat['_type']
+        if strat_type == '2d':
+            desc = f"[2D] {strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']}"
+        else:  # 3d
+            desc = f"[3D] {strat['line_tier']} | {strat['spread_bin']} | {strat['bet_side']} | {strat['scorer_type']}"
+        
+        hit_rate = strat.get('hit_rate', 0)
+        roi = strat.get('roi', 0)
+        edge = strat.get('edge', 0)
+        wins = strat.get('wins', 0)
+        losses = strat.get('losses', 0)
+        ties = strat.get('ties', 0)
+        
+        # Determine emoji
+        if hit_rate >= 60:
+            emoji = '🔥'
+        elif hit_rate >= 55:
+            emoji = '✅'
+        elif hit_rate >= 50:
+            emoji = '➖'
+        else:
+            emoji = '❌'
+        
+        lines.append(f"{emoji} #{i:2d}. {desc}")
+        lines.append(f"     {wins}W-{losses}L-{ties}T | Hit: {hit_rate:.1f}% | ROI: {roi:+.1f}% | Edge: {edge:+.1f}%")
+    
+    # Summary stats
+    total_strategies = len(all_strategies)
+    profitable = sum(1 for s in all_strategies if s.get('roi', 0) > 0)
+    avg_hit_rate = sum(s.get('hit_rate', 0) for s in all_strategies) / len(all_strategies) if all_strategies else 0
+    avg_roi = sum(s.get('roi', 0) for s in all_strategies) / len(all_strategies) if all_strategies else 0
+    
+    lines.append(f"\n{'='*80}")
+    lines.append(f"SUMMARY:")
+    lines.append(f"  Total Strategies: {total_strategies}")
+    lines.append(f"  Profitable: {profitable}/{total_strategies} ({profitable/total_strategies*100:.1f}%)" if total_strategies > 0 else "  Profitable: 0")
+    lines.append(f"  Avg Hit Rate: {avg_hit_rate:.1f}%")
+    lines.append(f"  Avg ROI: {avg_roi:+.1f}%")
+    lines.append(f"{'='*80}\n")
+    
+    return '\n'.join(lines)
+
+
 def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_plays_n: int = 10) -> int:
     """
     Generate performance plots for all strategies in ranking.
@@ -1265,11 +1485,6 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
     Returns:
         int: Number of plots generated
     """
-    import matplotlib.pyplot as plt
-    import matplotlib.dates as mdates
-    import matplotlib.gridspec as gridspec
-    from datetime import datetime
-    
     s3_client = boto3.client('s3')
     plots_generated = 0
     seasons = BACKTEST_SEASONS  # ['2023-24', '2024-25', '2025-26']
@@ -1969,6 +2184,12 @@ def main():
     )
     
     # Exit with error code if any failed
+    all_success = all(r.get('success', False) for r in results.values())
+    sys.exit(0 if all_success else 1)
+
+
+if __name__ == '__main__':
+    main()
     all_success = all(r.get('success', False) for r in results.values())
     sys.exit(0 if all_success else 1)
 
