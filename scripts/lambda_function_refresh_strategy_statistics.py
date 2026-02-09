@@ -37,10 +37,10 @@ This script is fully self-contained and can be copied directly into the Lambda e
 No git clone or external dependencies required beyond boto3 and pandas (Lambda layer).
 
 IMPORTANT - Lambda Timeout Configuration:
-This function processes 3 full seasons of data and regenerates multiple backtests.
-The Lambda timeout MUST be set to at least 10 minutes (600 seconds) to avoid timeouts.
-Current runtime typically takes 5-6 minutes depending on data volume.
-Default 5-minute timeout will cause the function to fail during 2025-26 backtest processing.
+This function processes 3 full seasons of data and regenerates 280+ strategy plots.
+The Lambda timeout MUST be set to 15 minutes (900 seconds) to avoid timeouts.
+Current runtime: ~12-13 minutes (backtest: 3-4 min, plots: 8-9 min).
+Timeout occurs during plot generation if set too low.
 
 Lambda Layers:
 This function uses TWO layers to provide all dependencies:
