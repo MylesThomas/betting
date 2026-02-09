@@ -31,6 +31,10 @@ from PIL import Image
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# Disk-based image cache directory (persists across script runs)
+_IMAGE_CACHE_DIR = Path.home() / "Downloads" / "tmp" / "monte_carlo_validation" / "image_cache"
+_IMAGE_CACHE_DIR.mkdir(exist_ok=True, parents=True)
+
 
 # =============================================================================
 # PATHS - Use functions to get paths relative to caller
@@ -95,13 +99,19 @@ TEAM_LOGOS = {
 # =============================================================================
 
 def download_team_logo(team_name, size=(100, 100)):
-    """Download team logo from ESPN CDN and return temp file path."""
+    """Download team logo from ESPN CDN and return cached file path. Uses disk cache to persist across runs."""
+    # Check disk cache first
+    cache_filename = f"team_{team_name}_{size[0]}x{size[1]}.png"
+    cache_path = _IMAGE_CACHE_DIR / cache_filename
+    
+    if cache_path.exists():
+        return str(cache_path)
+    
     if team_name not in TEAM_LOGOS:
         print(f"⚠️  Team '{team_name}' not found in TEAM_LOGOS dict")
         return create_blank_image(size)
     
     url = TEAM_LOGOS[team_name]
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     
     try:
         response = requests.get(url, timeout=5, verify=False)
@@ -110,17 +120,23 @@ def download_team_logo(team_name, size=(100, 100)):
         img = Image.open(BytesIO(response.content))
         img = img.convert("RGBA")
         img = img.resize(size, Image.Resampling.LANCZOS)
-        img.save(temp_file.name, "PNG")
+        img.save(cache_path, "PNG")
         
-        return temp_file.name
+        return str(cache_path)
     except Exception as e:
         print(f"⚠️  Failed to download logo for {team_name}: {e}")
         return create_blank_image(size)
 
 
 def download_player_headshot(player_id, size=(120, 120)):
-    """Download player headshot from ESPN/NBA CDN and return temp file path."""
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    """Download player headshot from ESPN/NBA CDN and return cached file path. Uses disk cache to persist across runs."""
+    # Check disk cache first
+    cache_filename = f"player_{player_id}_{size[0]}x{size[1]}.png"
+    cache_path = _IMAGE_CACHE_DIR / cache_filename
+    
+    if cache_path.exists():
+        print(f"   📦 Using cached headshot (player_id: {player_id})")
+        return str(cache_path)
     
     # Try ESPN CDN first (has better quality actual photos)
     url_espn = f"https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/{player_id}.png"
@@ -134,10 +150,11 @@ def download_player_headshot(player_id, size=(120, 120)):
         if len(response.content) > 50000:  # Real photos are > 50KB
             img = img.convert("RGBA")
             img = img.resize(size, Image.Resampling.LANCZOS)
-            img.save(temp_file.name, "PNG")
+            img.save(str(cache_path), "PNG")
             
             print(f"   ✅ Downloaded headshot from ESPN CDN (player_id: {player_id})")
-            return temp_file.name
+            print(f"      💾 Cached to: {cache_path}")
+            return str(cache_path)
         else:
             raise Exception("ESPN returned placeholder image")
             
@@ -154,10 +171,11 @@ def download_player_headshot(player_id, size=(120, 120)):
             if len(response.content) > 50000:  # Real photos are > 50KB
                 img = img.convert("RGBA")
                 img = img.resize(size, Image.Resampling.LANCZOS)
-                img.save(temp_file.name, "PNG")
+                img.save(str(cache_path), "PNG")
                 
                 print(f"   ✅ Downloaded headshot from NBA CDN (player_id: {player_id})")
-                return temp_file.name
+                print(f"      💾 Cached to: {cache_path}")
+                return str(cache_path)
             else:
                 raise Exception("NBA CDN returned placeholder image")
                 
@@ -718,9 +736,7 @@ def create_ggplot(df, prop_line, player_name, player_id, game_id, game_date,
     player_name_clean = player_name.replace(" ", "_")
     plot_file = plot_dir / f"monte_carlo_pbp_{player_name_clean}_{game_id}_{game_date}.png"
     
-    # Download team logos and player headshot
-    print("   📥 Downloading images...")
-    print(f"      Player ID: {player_id}")
+    # Download team logos and player headshot (with caching)
     away_logo_path = download_team_logo(away_team, size=(100, 100))
     home_logo_path = download_team_logo(home_team, size=(100, 100))
     player_headshot_path = download_player_headshot(player_id, size=(120, 120))
@@ -872,11 +888,8 @@ cat("✅ Plot saved to {plot_file}\\n")
             print(result.stderr)
             return None
         
-        # Clean up temp files
+        # Clean up temp CSV (keep cached images for reuse)
         os.unlink(temp_csv.name)
-        os.unlink(away_logo_path)
-        os.unlink(home_logo_path)
-        os.unlink(player_headshot_path)
         
         return str(plot_file)
         
