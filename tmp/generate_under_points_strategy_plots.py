@@ -56,6 +56,14 @@ CACHE_DIR.mkdir(exist_ok=True, parents=True)
 # Config S3 key
 CONFIG_S3_KEY = 'strategies/enhanced_unders_v5.json'
 
+# Team name mappings: Odds API → NBA API (NBA API is source of truth)
+# Different APIs use different team name formats, so we normalize Odds API names
+# to match NBA API format for consistent joins across all data sources
+ODDS_TO_NBA_TEAM_MAP = {
+    'Los Angeles Clippers': 'LA Clippers',  # Odds API → NBA API (source of truth)
+    # Note: Lakers already match, no mapping needed
+}
+
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
@@ -304,15 +312,15 @@ def load_and_join_raw_data(season):
         if all_lines:
             df_lines = pd.concat(all_lines, ignore_index=True)
             
-            # Team name normalization (critical for join!)
-            # The Odds API uses "Los Angeles Clippers", NBA API uses "LA Clippers"
-            team_name_map = {
-                'Los Angeles Clippers': 'LA Clippers',
-                'Los Angeles Lakers': 'Los Angeles Lakers',  # This one matches
-            }
-            
-            df_lines['home_team'] = df_lines['home_team'].replace(team_name_map)
-            df_lines['away_team'] = df_lines['away_team'].replace(team_name_map)
+            # =====================================================================
+            # NORMALIZE TEAM NAMES: ODDS API → NBA API (SOURCE OF TRUTH)
+            # =====================================================================
+            # Odds API uses "Los Angeles Clippers", NBA API uses "LA Clippers"
+            # NBA API is the source of truth for all game data, so we standardize
+            # the Odds API team names to match NBA API format.
+            # =====================================================================
+            df_lines['home_team'] = df_lines['home_team'].replace(ODDS_TO_NBA_TEAM_MAP)
+            df_lines['away_team'] = df_lines['away_team'].replace(ODDS_TO_NBA_TEAM_MAP)
             
             consensus = df_lines.groupby(['game_id', 'game_date', 'away_team', 'home_team', 'market']).agg({
                 'away_line': 'mean',
@@ -668,37 +676,32 @@ def generate_performance_plot(strategy, strategy_type, output_path, recent_plays
                transform=ax.transAxes, fontsize=10, verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
-    # Panel 4: Overall (all seasons combined)
+    # Panel 4: Overall (use play number instead of date)
     ax = fig.add_subplot(gs[1, 1])
     
     # Reset cumulative across all seasons
     df_overall = df.copy()
     df_overall = df_overall.sort_values('game_date')
     df_overall['cumulative_wins'] = df_overall['is_win'].cumsum()
-    df_overall['cumulative_plays'] = range(1, len(df_overall) + 1)
-    df_overall['win_rate'] = (df_overall['cumulative_wins'] / df_overall['cumulative_plays'] * 100)
+    df_overall['play_number'] = range(1, len(df_overall) + 1)
+    df_overall['win_rate'] = (df_overall['cumulative_wins'] / df_overall['play_number'] * 100)
     
-    # Plot with season-colored segments
+    # Plot each season with different colors
     for season in SEASONS:
         df_season_segment = df_overall[df_overall['season'] == season]
         if len(df_season_segment) > 0:
-            ax.plot(df_season_segment['game_date'], df_season_segment['win_rate'],
+            ax.plot(df_season_segment['play_number'], df_season_segment['win_rate'],
                    color=season_colors.get(season, 'black'), linewidth=2, label=season)
     
-    ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5, label='50% Baseline')
+    ax.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5)
     
     # Format
     ax.set_title('Overall (All Seasons)', fontsize=14, fontweight='bold')
-    ax.set_xlabel('Date', fontsize=11)
+    ax.set_xlabel('Play Number', fontsize=11)
     ax.set_ylabel('Win Rate (%)', fontsize=11)
     ax.set_ylim(0, 100)
     ax.grid(True, alpha=0.3)
     ax.legend(loc='best')
-    
-    # Format x-axis dates
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
     
     # Add final stats
     final_wr = df_overall['win_rate'].iloc[-1]
@@ -868,6 +871,273 @@ def generate_performance_plot(strategy, strategy_type, output_path, recent_plays
 
 
 # =============================================================================
+# GENERATE V5 YESTERDAY SUMMARY PLOT
+# =============================================================================
+
+def generate_v5_yesterday_summary_plot(config, output_path):
+    """
+    Generate a 2-panel plot for yesterday's plays across all 15 v5 strategies.
+    
+    Top panel: Cumulative win rate over time (current season only, all v5 strategies)
+    Bottom panel: Table of yesterday's plays across all 15 strategies
+    
+    Args:
+        config: Strategy config dict
+        output_path: Where to save the PNG
+    
+    Returns:
+        bool: True if successful
+    """
+    yesterday = get_yesterday_et()
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+    
+    print(f"\n📊 Generating V5 Yesterday Summary Plot...")
+    print(f"   Yesterday: {yesterday_str}")
+    
+    # Load cache for current season
+    df_cached = load_from_cache('2025-26')
+    if df_cached is None:
+        print("   ⚠️  No cache found for 2025-26")
+        return False
+    
+    # Collect all v5 strategy plays
+    all_v5_plays = []
+    
+    for v5_strat in config['strategies']:
+        strategy_type = v5_strat['strategy_type']
+        
+        # Filter cache to this strategy
+        mask = (
+            (df_cached['line_tier'] == v5_strat['line_tier']) &
+            (df_cached['spread_bin'] == v5_strat['spread_bin'])
+        )
+        if strategy_type == '3d' and 'scorer_type' in v5_strat:
+            mask = mask & (df_cached['scorer_type'] == v5_strat['scorer_type'])
+        
+        df_strat = df_cached[mask].copy()
+        
+        if len(df_strat) > 0:
+            # Calculate results for this bet_side
+            bet_side = v5_strat['bet_side']
+            
+            if bet_side == 'OVER':
+                df_strat['result'] = df_strat.apply(
+                    lambda row: 'WIN' if pd.notna(row['PTS']) and row['PTS'] > row['points_line']
+                    else 'LOSS' if pd.notna(row['PTS']) and row['PTS'] < row['points_line']
+                    else 'PUSH',
+                    axis=1
+                )
+            else:  # UNDER
+                df_strat['result'] = df_strat.apply(
+                    lambda row: 'WIN' if pd.notna(row['PTS']) and row['PTS'] < row['points_line']
+                    else 'LOSS' if pd.notna(row['PTS']) and row['PTS'] > row['points_line']
+                    else 'PUSH',
+                    axis=1
+                )
+            
+            df_strat['strategy_name'] = v5_strat['strategy_name']
+            df_strat['bet_side'] = bet_side
+            all_v5_plays.append(df_strat)
+    
+    if not all_v5_plays:
+        print("   ⚠️  No plays found for v5 strategies")
+        return False
+    
+    # Combine all plays
+    df_all = pd.concat(all_v5_plays, ignore_index=True)
+    df_all['game_date'] = pd.to_datetime(df_all['game_date'])
+    df_all = df_all.sort_values('game_date')
+    
+    # Filter to yesterday
+    df_yesterday = df_all[df_all['game_date'] == yesterday_str].copy()
+    
+    print(f"   📅 Found {len(df_yesterday)} plays from yesterday")
+    
+    if len(df_yesterday) == 0:
+        print("   ⚠️  No plays yesterday")
+        return False
+    
+    # Create figure with 2 panels (top: win rate chart, bottom: table)
+    fig = plt.figure(figsize=(16, 12))
+    gs = fig.add_gridspec(2, 1, height_ratios=[1, 1.5], hspace=0.3)
+    
+    # Panel 1: Cumulative win rate over time (current season only)
+    ax_chart = fig.add_subplot(gs[0])
+    
+    df_all['is_win'] = (df_all['result'] == 'WIN').astype(int)
+    df_all['cumulative_wins'] = df_all['is_win'].cumsum()
+    df_all['play_number'] = range(1, len(df_all) + 1)
+    df_all['win_rate'] = (df_all['cumulative_wins'] / df_all['play_number'] * 100)
+    
+    ax_chart.plot(df_all['play_number'], df_all['win_rate'], 
+                  color='#2ca02c', linewidth=2.5, label='All V5 Strategies')
+    ax_chart.axhline(y=50, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+    
+    ax_chart.set_title(f"V5 Strategies - Cumulative Win Rate (2025-26 Season)", 
+                       fontsize=14, fontweight='bold')
+    ax_chart.set_xlabel('Play Number', fontsize=11)
+    ax_chart.set_ylabel('Win Rate (%)', fontsize=11)
+    ax_chart.set_ylim(0, 100)
+    ax_chart.grid(True, alpha=0.3)
+    ax_chart.legend(loc='best')
+    
+    # Add stats
+    total_wins = int(df_all['cumulative_wins'].iloc[-1])
+    total_plays = len(df_all)
+    final_wr = df_all['win_rate'].iloc[-1]
+    ax_chart.text(0.02, 0.98, f'{total_wins}W-{total_plays - total_wins}L | {final_wr:.1f}%',
+                  transform=ax_chart.transAxes, fontsize=10, verticalalignment='top',
+                  bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    # Panel 2: Yesterday's plays table
+    ax_table = fig.add_subplot(gs[1])
+    ax_table.axis('off')
+    
+    # Sort by strategy name for consistent display
+    df_yesterday = df_yesterday.sort_values(['strategy_name', 'player_normalized'])
+    
+    # Format table data
+    table_data = []
+    for _, row in df_yesterday.iterrows():
+        date_str = row['game_date'].strftime('%m/%d/%y')
+        player = row.get('player_normalized', 'Unknown')[:18]
+        line = f"{row['points_line']:.1f}"
+        actual_pts = f"{int(row['PTS'])}" if pd.notna(row['PTS']) else 'N/A'
+        
+        # Calculate Diff and Diff %
+        if pd.notna(row['PTS']) and pd.notna(row['points_line']):
+            diff = row['PTS'] - row['points_line']
+            diff_pct = (diff / row['points_line'] * 100) if row['points_line'] != 0 else 0
+            diff_str = f"{diff:+.1f}"
+            diff_pct_str = f"{diff_pct:+.1f}%"
+        else:
+            diff_str = 'N/A'
+            diff_pct_str = 'N/A'
+        
+        # Strategy metadata
+        line_tier = row.get('line_tier', 'Unknown')
+        spread_bin = row.get('spread_bin', 'Unknown')
+        scorer_type = row.get('scorer_type', '')
+        
+        # Shorten scorer_type
+        if pd.notna(scorer_type) and isinstance(scorer_type, str):
+            if 'Rim' in scorer_type:
+                scorer_type_display = 'Rim'
+            elif 'Perimeter' in scorer_type:
+                scorer_type_display = 'Perim'
+            else:
+                scorer_type_display = ''
+        else:
+            scorer_type_display = ''
+        
+        # Bet info
+        our_bet = row['bet_side']
+        
+        # Result
+        if row['PTS'] > row['points_line']:
+            actual_result = 'OVER'
+        elif row['PTS'] < row['points_line']:
+            actual_result = 'UNDER'
+        else:
+            actual_result = 'PUSH'
+        
+        result_text = row['result']
+        
+        table_data.append([
+            date_str,
+            player,
+            line,
+            actual_pts,
+            diff_str,
+            diff_pct_str,
+            line_tier,
+            spread_bin,
+            scorer_type_display,
+            our_bet,
+            actual_result,
+            result_text
+        ])
+    
+    # Create table
+    table = ax_table.table(
+        cellText=table_data,
+        colLabels=['Date', 'Player', 'Line', 'Scored', 'Diff', 'Diff %', 
+                   'Line Tier', 'Spread', 'Scorer', 'Our Bet', 'Actual', 'Result'],
+        loc='center',
+        cellLoc='left',
+        colWidths=[0.07, 0.14, 0.05, 0.05, 0.05, 0.06, 0.10, 0.09, 0.08, 0.07, 0.06, 0.10]
+    )
+    
+    # Style table
+    table.auto_set_font_size(False)
+    table.set_fontsize(8)
+    table.scale(1, 2)
+    
+    # Header styling
+    for i in range(12):
+        cell = table[(0, i)]
+        cell.set_facecolor('#4472C4')
+        cell.set_text_props(weight='bold', color='white')
+    
+    # Row styling
+    for i in range(1, len(table_data) + 1):
+        for j in range(12):
+            cell = table[(i, j)]
+            
+            # Alternating row colors
+            if i % 2 == 0:
+                cell.set_facecolor('#F0F0F0')
+            else:
+                cell.set_facecolor('#FFFFFF')
+            
+            # Color-code Diff % column
+            if j == 5:
+                diff_pct_str = table_data[i-1][5]
+                if diff_pct_str != 'N/A':
+                    try:
+                        diff_pct_val = float(diff_pct_str.replace('%', ''))
+                        normalized = max(-100, min(100, diff_pct_val)) / 100.0
+                        
+                        if normalized < 0:
+                            intensity = abs(normalized)
+                            r, g, b = 1.0, 1.0 - (intensity * 0.7), 1.0 - (intensity * 0.7)
+                        else:
+                            intensity = normalized
+                            r, g, b = 1.0 - (intensity * 0.7), 1.0, 1.0 - (intensity * 0.7)
+                        
+                        cell.set_facecolor((r, g, b))
+                    except ValueError:
+                        pass
+            
+            # Color-code result column
+            if j == 11:
+                result_text = table_data[i-1][11]
+                if result_text == 'WIN':
+                    cell.set_facecolor('#C6EFCE')
+                    cell.set_text_props(weight='bold', color='#006100')
+                elif result_text == 'LOSS':
+                    cell.set_facecolor('#FFC7CE')
+                    cell.set_text_props(weight='bold', color='#9C0006')
+                elif result_text == 'PUSH':
+                    cell.set_facecolor('#FFEB9C')
+                    cell.set_text_props(weight='bold', color='#9C5700')
+    
+    # Title
+    wins = (df_yesterday['result'] == 'WIN').sum()
+    losses = (df_yesterday['result'] == 'LOSS').sum()
+    ax_table.set_title(f"Yesterday's Plays ({yesterday_str}) - {wins}W-{losses}L", 
+                       fontsize=14, fontweight='bold', pad=20)
+    
+    # Save
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    print(f"   ✅ Generated: {output_path}")
+    return True
+
+
+# =============================================================================
 # DATA FETCH & VALIDATION
 # =============================================================================
 
@@ -995,9 +1265,65 @@ def main():
         print("❌ Failed to load config")
         return
     
+    # Step 4: Show yesterday's plays summary for debugging
+    yesterday = get_yesterday_et()
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+    print("="*80)
+    print(f"📅 YESTERDAY'S PLAYS SUMMARY ({yesterday_str})")
+    print("="*80)
+    
+    # Load cache for 2025-26 season
+    df_cached = load_from_cache('2025-26')
+    if df_cached is not None:
+        df_yesterday = df_cached[df_cached['game_date'] == yesterday_str].copy()
+        
+        if len(df_yesterday) > 0:
+            print(f"Total plays: {len(df_yesterday)}")
+            print(f"\nBreakdown by strategy filters:")
+            
+            # Group by line_tier + spread_bin
+            for (line_tier, spread_bin), group_df in df_yesterday.groupby(['line_tier', 'spread_bin']):
+                print(f"   {line_tier:30s} | {spread_bin:20s}: {len(group_df):2d} plays")
+                
+                # Show player names for this combo
+                players = sorted(group_df['player_normalized'].unique())
+                for player in players:
+                    player_plays = group_df[group_df['player_normalized'] == player]
+                    for _, row in player_plays.iterrows():
+                        print(f"      - {player:25s} | Line: {row['points_line']:5.1f} | Scored: {int(row['PTS']):2d} | Spread: {row['team_spread']:+6.1f}")
+        else:
+            print(f"⚠️  No plays found for {yesterday_str}")
+    else:
+        print(f"⚠️  No cache found for 2025-26 season")
+    
+    print()
+    
     strategies = config['strategies']
     plots_generated = 0
     plots_failed = 0
+    
+    # Generate V5 yesterday summary plot FIRST
+    print(f"\n{'='*80}")
+    print("GENERATING V5 YESTERDAY SUMMARY PLOT")
+    print(f"{'='*80}")
+    
+    yesterday_plot_path = OUTPUT_DIR / f"v5_yesterday_summary_{yesterday_str}.png"
+    try:
+        success = generate_v5_yesterday_summary_plot(config, str(yesterday_plot_path))
+        if success:
+            file_size = yesterday_plot_path.stat().st_size / 1024
+            print(f"✅ Generated: {yesterday_plot_path.name} ({file_size:.1f} KB)")
+        else:
+            print(f"⚠️  Skipped (no yesterday plays)")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # Generate individual strategy plots
+    print(f"\n{'='*80}")
+    print("GENERATING INDIVIDUAL STRATEGY PLOTS")
+    print(f"{'='*80}")
     
     # Generate plots for each strategy
     for i, strat in enumerate(strategies, 1):
