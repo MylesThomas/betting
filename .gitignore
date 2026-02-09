@@ -126,3 +126,5 @@ content/
 data/01_input/the-odds-api/nfl/historical_player_props/
 src/pbp_data/tmp/plots/*.csv
 src/pbp_data/tmp/plots/*.png
+src/pbp_data/tmp/plots/*.csv
+src/pbp_data/tmp/plots/*.png
