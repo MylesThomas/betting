@@ -149,6 +149,13 @@ BACKTEST_SEASONS = ['2023-24', '2024-25', '2025-26']
 # Minimum plays to include strategy
 MIN_PLAYS_THRESHOLD = 1
 
+# Team name mappings: Odds API → NBA API (NBA API is source of truth)
+# Different APIs use different team name formats, so we normalize Odds API names
+# to match NBA API format for consistent joins across all data sources
+ODDS_TO_NBA_TEAM_MAP = {
+    'Los Angeles Clippers': 'LA Clippers'  # Odds API → NBA API (source of truth)
+}
+
 
 # =============================================================================
 # PLAYER NAME NORMALIZATION (INLINED FOR SELF-CONTAINED LAMBDA)
@@ -509,6 +516,17 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
             spread = consensus[consensus['market'] == 'spread'][['game_id', 'game_date', 'away_team', 'home_team', 'away_line', 'home_line']]
             spread.columns = ['game_id', 'game_date', 'away_team', 'home_team', 'away_spread', 'home_spread']
             df_lines = spread
+            
+            # =====================================================================
+            # NORMALIZE TEAM NAMES: ODDS API → NBA API (SOURCE OF TRUTH)
+            # =====================================================================
+            # Odds API uses "Los Angeles Clippers", NBA API uses "LA Clippers"
+            # NBA API is the source of truth for all game data, so we standardize
+            # the Odds API team names to match NBA API format.
+            # =====================================================================
+            df_lines['away_team'] = df_lines['away_team'].replace(ODDS_TO_NBA_TEAM_MAP)
+            df_lines['home_team'] = df_lines['home_team'].replace(ODDS_TO_NBA_TEAM_MAP)
+            
             print(f"   ✅ Loaded {len(df_lines):,} games with spreads")
         else:
             raise RuntimeError(f"No game lines loaded for {season}")
@@ -531,12 +549,8 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     
     # Join game lines
     if df_lines is not None:
-        # Normalize team names for game lines join
-        # NBA API uses "LA Clippers", The Odds API uses "Los Angeles Clippers"
-        team_name_map = {
-            'Los Angeles Clippers': 'LA Clippers'
-        }
-        df_merged['TEAM_NAME'] = df_merged['TEAM_NAME'].replace(team_name_map)
+        # At this point, df_lines team names have already been normalized to match
+        # NBA API format (done in Step 4 when loading game lines)
         
         # Determine home/away for each player
         df_merged['is_home'] = ~df_merged['MATCHUP'].str.contains('@')
@@ -545,18 +559,22 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
         df_merged_home = df_merged[df_merged['is_home']].copy()
         df_merged_away = df_merged[~df_merged['is_home']].copy()
         
+        # Join home players to home team spreads
+        # Both sides now use NBA API team name format
         df_merged_home = df_merged_home.merge(
             df_lines[['game_date', 'home_team', 'home_spread']],
-            left_on=['game_date', 'TEAM_NAME'],
-            right_on=['game_date', 'home_team'],
+            left_on=['game_date', 'TEAM_NAME'],      # NBA API format (source of truth)
+            right_on=['game_date', 'home_team'],      # Odds API normalized to NBA API format
             how='left'
         )
         df_merged_home['team_spread'] = df_merged_home['home_spread']
         
+        # Join away players to away team spreads
+        # Both sides now use NBA API team name format
         df_merged_away = df_merged_away.merge(
             df_lines[['game_date', 'away_team', 'away_spread']],
-            left_on=['game_date', 'TEAM_NAME'],
-            right_on=['game_date', 'away_team'],
+            left_on=['game_date', 'TEAM_NAME'],      # NBA API format (source of truth)
+            right_on=['game_date', 'away_team'],      # Odds API normalized to NBA API format
             how='left'
         )
         df_merged_away['team_spread'] = df_merged_away['away_spread']
@@ -1404,6 +1422,8 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
         s3_client = boto3.client('s3')
         all_v5_plays = []
         
+        print(f"   🔍 Matching {len(v5_strategies)} v5 strategies to backtest results...")
+        
         for v5_strat in v5_strategies:
             # Match to backtest results
             matched_strat = None
@@ -1418,6 +1438,9 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
                     else:
                         matched_strat = backtest_strat
                         break
+            
+            if not matched_strat:
+                print(f"   ⚠️  No match for v5: {v5_strat['strategy_name']} - line_tier={v5_strat['line_tier']}, spread_bin={v5_strat['spread_bin']}, bet_side={v5_strat['bet_side']}")
             
             if not matched_strat:
                 continue
