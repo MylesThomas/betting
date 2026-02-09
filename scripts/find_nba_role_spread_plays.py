@@ -470,7 +470,12 @@ def load_tonights_games(target_date=None, use_s3=False):
     Also loads player-team mapping from historical game data
     
     Returns:
-        DataFrame with columns: PLAYER_NAME, points_line, team_abbr, team_spread, opponent
+        tuple: (df_games, game_info, skipped_players)
+            - df_games: DataFrame with columns: PLAYER_NAME, points_line, team_abbr, 
+                       team_spread, opponent, game_time, bookmakers, num_bookmakers,
+                       bookmaker_details_over, bookmaker_details_under
+            - game_info: List of game dicts with away_team, home_team, spreads, game_time
+            - skipped_players: List of player dicts that couldn't be mapped to teams
     """
     import requests
     import ssl
@@ -493,8 +498,13 @@ def load_tonights_games(target_date=None, use_s3=False):
         print("Add it to .env file as: ODDS_API_KEY=your_key")
         # print("\n⚠️  Using mock data for now...\n")
         
-        # Return mock data
-        return -99
+        # Return empty data - consistent with other error paths
+        empty_df = pd.DataFrame(columns=[
+            'PLAYER_NAME', 'points_line', 'team_abbr', 'team_spread', 'opponent',
+            'game_time', 'bookmakers', 'num_bookmakers', 
+            'bookmaker_details_over', 'bookmaker_details_under'
+        ])
+        return empty_df, [], []  # Return (df, game_info, skipped_players)
     
     # Load player-team mapping from cache
     print(f"📋 Loading player-team mapping from {'S3' if use_s3 else 'local cache'}...")
@@ -575,7 +585,7 @@ def load_tonights_games(target_date=None, use_s3=False):
                 'game_time', 'bookmakers', 'num_bookmakers', 
                 'bookmaker_details_over', 'bookmaker_details_under'
             ])
-            return empty_df, []  # Return (df, game_info)
+            return empty_df, [], []  # Return (df, game_info, skipped_players)
         
         print(f"✅ Found {len(todays_events)} games today\n")
         
