@@ -14,7 +14,7 @@ Brier Score:
 - < 0.25 is generally considered good for binary predictions
 
 Usage:
-    python src/pbp_data/tmp/07_analyze_monte_carlo_performance.py
+    python src/pbp_data/07_analyze_monte_carlo_performance.py
     
 Output:
     ~/Downloads/tmp/monte_carlo_validation/analysis/
@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Import path functions
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from pbp_data.monte_carlo_utils import get_project_root
 
 

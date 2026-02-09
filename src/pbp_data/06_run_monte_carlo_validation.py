@@ -9,13 +9,13 @@ Purpose:
 
 Usage:
     # Top 50 players
-    python src/pbp_data/tmp/06_run_monte_carlo_validation.py --top-n 50 --n-sims 1000
+    python src/pbp_data/06_run_monte_carlo_validation.py --top-n 50 --n-sims 1000
     
     # All players
-    python src/pbp_data/tmp/06_run_monte_carlo_validation.py --top-n 0 --n-sims 1000
+    python src/pbp_data/06_run_monte_carlo_validation.py --top-n 0 --n-sims 1000
     
     # Resume from specific player (skip already completed)
-    python src/pbp_data/tmp/06_run_monte_carlo_validation.py --top-n 50 --start-from "Luka Doncic"
+    python src/pbp_data/06_run_monte_carlo_validation.py --top-n 50 --start-from "Luka Doncic"
 
 Output:
     ~/Downloads/tmp/monte_carlo_validation/predictions.parquet
@@ -29,7 +29,7 @@ import sys
 from pathlib import Path
 
 # Import functions from monte_carlo_utils
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from pbp_data.monte_carlo_utils import (
     get_project_root,
     get_data_paths,
