@@ -507,7 +507,7 @@ def parse_game_lines(games, odds_fetch_times=None):
     return df
 
 
-def fetch_date_lines(date_str, save=True, local_backup=True):
+def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
     """
     Fetch all game lines for a specific date
     
@@ -515,6 +515,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True):
         date_str: Date in YYYY-MM-DD format
         save: Save results to S3
         local_backup: Also save to local disk
+        force: Force overwrite existing files (skip existence check)
     
     Returns:
         DataFrame with all lines for that date
@@ -526,8 +527,8 @@ def fetch_date_lines(date_str, save=True, local_backup=True):
     print(f"🏀 FETCHING LINES FOR {date_str} ({day_of_week})")
     print(f"{'='*80}")
     
-    # Check if file already exists in S3
-    if file_exists_in_s3(date_str):
+    # Check if file already exists in S3 (skip if force=True)
+    if not force and file_exists_in_s3(date_str):
         s3_key = get_s3_key_from_date(date_str)
         print(f"  ✅ File already exists in S3: s3://{S3_BUCKET}/{s3_key}")
         print(f"     Skipping (0 credits used)")

@@ -183,6 +183,8 @@ parser.add_argument('--s3', action='store_true',
                     help='Upload to S3 (default: True for full season mode)')
 parser.add_argument('--fetch-games', action='store_true',
                     help='Also fetch game results (NBA API) AND game lines (The Odds API)')
+parser.add_argument('--force', action='store_true',
+                    help='Force overwrite existing S3 files (skip existence check)')
 args = parser.parse_args()
 
 # ============================================================================
@@ -661,7 +663,7 @@ def save_games_to_s3(df, date_str):
 # MAIN FETCH FUNCTION
 # ============================================================================
 
-def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists=True):
+def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists=True, force=False):
     """
     Fetch player props for a specific date
     
@@ -670,10 +672,14 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         upload_s3: Upload to S3 (default: True)
         fetch_games: Also fetch game results from NBA API
         skip_if_exists: Skip fetching if files exist in S3 (default: True)
+        force: Force overwrite existing files (overrides skip_if_exists)
     
     Returns:
         Tuple of (props_df, games_df)
     """
+    # Force flag overrides skip_if_exists
+    if force:
+        skip_if_exists = False
     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
     day_of_week = date_obj.strftime('%A')
     
@@ -821,7 +827,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
             
             # Use fetch_date_lines from fetch_historical_nba_season_lines.py
             # It handles S3 upload internally when save=True
-            game_lines_df = fetch_date_lines(date_str, save=upload_s3, local_backup=False)
+            game_lines_df = fetch_date_lines(date_str, save=upload_s3, local_backup=False, force=force)
             
             if not game_lines_df.empty:
                 num_games = game_lines_df['game_id'].nunique()
@@ -879,13 +885,15 @@ def check_past_season_complete(season, expected_game_dates):
     return is_complete, props_files, gamelogs_files
 
 
-def fetch_full_season(upload_s3=True, fetch_games=False):
+def fetch_full_season(upload_s3=True, fetch_games=False, force=False):
     """Fetch props for all dates in season"""
     logging.info("="*80)
     logging.info("FULL SEASON FETCH MODE")
     logging.info("="*80)
     logging.info(f"Upload to S3: {upload_s3}")
     logging.info(f"Fetch game results & game lines: {fetch_games}")
+    if force:
+        logging.info(f"Force mode: ON (will overwrite existing files)")
     
     # Generate all dates in season from config
     all_season_dates = generate_season_date_range(SEASON)
@@ -944,9 +952,9 @@ def fetch_full_season(upload_s3=True, fetch_games=False):
         logging.info(f"Progress: {(i/len(past_dates))*100:.1f}%")
         logging.info(f"{'='*80}")
         
-        # Fetch (will upload to S3, skips internally if files exist)
+        # Fetch (will upload to S3, skips internally if files exist unless force=True)
         try:
-            props_df, games_df, game_lines_df = fetch_date_props(date_str, upload_s3=upload_s3, fetch_games=fetch_games)
+            props_df, games_df, game_lines_df = fetch_date_props(date_str, upload_s3=upload_s3, fetch_games=fetch_games, force=force)
             
             if not props_df.empty:
                 stats['successful'] += 1
@@ -994,8 +1002,10 @@ def main():
     if args.date:
         date_str = args.date
         logging.info(f"Fetching specific date: {date_str}")
+        if args.force:
+            logging.info("⚠️  FORCE MODE: Will overwrite existing S3 files")
         upload_s3 = True if args.s3 is None else args.s3
-        props_df, games_df, game_lines_df = fetch_date_props(date_str, upload_s3=upload_s3, fetch_games=args.fetch_games)
+        props_df, games_df, game_lines_df = fetch_date_props(date_str, upload_s3=upload_s3, fetch_games=args.fetch_games, force=args.force)
         if not props_df.empty:
             logging.info("✅ Props fetch complete!")
         if not games_df.empty:
@@ -1041,9 +1051,11 @@ def main():
         test_date_str = test_date.strftime('%Y-%m-%d')
         
         logging.info(f"TEST MODE: Fetching {test_date_str}")
+        if args.force:
+            logging.info("⚠️  FORCE MODE: Will overwrite existing S3 files")
         
         upload_s3 = True if args.s3 is None else args.s3
-        props_df, games_df, game_lines_df = fetch_date_props(test_date_str, upload_s3=upload_s3, fetch_games=args.fetch_games)
+        props_df, games_df, game_lines_df = fetch_date_props(test_date_str, upload_s3=upload_s3, fetch_games=args.fetch_games, force=args.force)
         
         if not props_df.empty:
             logging.info("="*80)
@@ -1056,8 +1068,10 @@ def main():
     else:
         # Full season mode
         logging.info("FULL SEASON MODE selected")
+        if args.force:
+            logging.info("⚠️  FORCE MODE: Will overwrite existing S3 files")
         upload_s3 = args.s3 if args.s3 is not None else True  # Default to True for full season
-        stats = fetch_full_season(upload_s3=upload_s3, fetch_games=args.fetch_games)
+        stats = fetch_full_season(upload_s3=upload_s3, fetch_games=args.fetch_games, force=args.force)
         
         if stats:
             if stats.get('skipped'):
