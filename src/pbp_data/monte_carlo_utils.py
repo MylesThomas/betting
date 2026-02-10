@@ -707,17 +707,17 @@ def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
 
 def apply_confidence_limits(prob_over, current_minute, current_points, prop_line):
     """
-    Apply confidence limits to prevent overconfidence early in games.
+    Apply confidence limits to reduce overconfidence.
     
     Methodology:
     1. Deterministic override: If already hit, return 100%
-    2. Quarter-based caps: Limit max confidence based on game progress
+    2. Asymmetric dampening: Only dampen over-predictions, not under-predictions
+    3. Quarter-based caps: Additional limits based on game progress
     
     Rationale:
-    - Q1: Only 25% done, huge variance ahead → cap at 85%
-    - Q2: 50% done, 2 full quarters left → cap at 90%
-    - Q3: 75% done, patterns clearer → cap at 93%
-    - Q4: Final quarter, confidence grows → 95-99% depending on time
+    - Model systematically over-predicts, so only dampen high probabilities
+    - Early in game, even high MC confidence should be tempered
+    - Late in game, allow more confidence as uncertainty decreases
     
     Args:
         prob_over: Raw Monte Carlo probability (0-1)
@@ -732,30 +732,43 @@ def apply_confidence_limits(prob_over, current_minute, current_points, prop_line
     if current_points > prop_line:
         return 1.0
     
-    # Quarter-based confidence caps
+    # Asymmetric dampening: Only dampen overconfidence (prob > 0.5)
+    # Leave underconfidence (prob < 0.5) alone - those are often correct
+    if prob_over > 0.5:
+        # Quarter-based dampening strength
+        if current_minute <= 12:
+            dampening = 0.20  # Q1: Dampen 20% toward 50%
+        elif current_minute <= 24:
+            dampening = 0.15  # Q2: Dampen 15%
+        elif current_minute <= 36:
+            dampening = 0.10  # Q3: Dampen 10%
+        elif current_minute < 42:
+            dampening = 0.05  # Q4 early: Light dampening
+        else:
+            dampening = 0.0  # Q4 late: No dampening
+        
+        # Apply dampening (pull toward 50%)
+        prob_over = 0.5 + (prob_over - 0.5) * (1 - dampening)
+    
+    # Hard caps to prevent extreme predictions early
     if current_minute <= 12:
-        cap = 0.85  # Q1
+        max_prob = 0.85  # Q1
     elif current_minute <= 24:
-        cap = 0.90  # Q2
+        max_prob = 0.90  # Q2
     elif current_minute <= 36:
-        cap = 0.93  # Q3
+        max_prob = 0.93  # Q3
     elif current_minute < 42:
-        cap = 0.95  # Q4 early
+        max_prob = 0.95  # Q4 early
     elif current_minute < 46:
-        cap = 0.97  # Q4 mid
+        max_prob = 0.97  # Q4 mid
     elif current_minute < 48:
-        cap = 0.98  # Q4 late
+        max_prob = 0.98  # Q4 late
     else:
-        cap = 0.99  # OT/End
+        max_prob = 0.99  # OT/End
     
-    # Apply cap symmetrically (both over and under)
-    lower_bound = 1 - cap
-    upper_bound = cap
-    
-    if prob_over > upper_bound:
-        return upper_bound
-    elif prob_over < lower_bound:
-        return lower_bound
+    # Apply hard cap (only on high side)
+    if prob_over > max_prob:
+        return max_prob
     else:
         return prob_over
 
