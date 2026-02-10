@@ -47,7 +47,8 @@ from pbp_data.monte_carlo_utils import get_project_root
 # =============================================================================
 
 VALIDATION_DIR = Path.home() / "Downloads" / "tmp" / "monte_carlo_validation"
-PREDICTIONS_DIR = VALIDATION_DIR / "predictions"
+PREDICTIONS_FILE = VALIDATION_DIR / "predictions.parquet"
+CURRENT_PREDICTIONS_DIR = VALIDATION_DIR / "current_player_game_predictions"
 ANALYSIS_DIR = VALIDATION_DIR / "analysis"
 ANALYSIS_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -132,19 +133,16 @@ def analyze_calibration(predictions_df, n_bins=10):
 # =============================================================================
 
 def analyze_player_performance(predictions_df):
-    """Analyze Brier scores by player."""
-    # Get one row per game (use final prediction)
-    game_level = predictions_df.sort_values('game_minute').groupby(['player_name', 'game_id']).last().reset_index()
-    
+    """Analyze Brier scores by player (across all predictions, not just final)."""
     # Convert result to binary
-    game_level['actual_outcome'] = (game_level['result'] == 'HIT').astype(int)
-    game_level['squared_error'] = (game_level['prob_over'] - game_level['actual_outcome']) ** 2
+    predictions_df['actual_outcome'] = (predictions_df['result'] == 'HIT').astype(int)
+    predictions_df['squared_error'] = (predictions_df['prob_over'] - predictions_df['actual_outcome']) ** 2
     
-    # Brier score by player
-    player_brier = game_level.groupby('player_name').agg({
+    # Brier score by player (average across ALL predictions)
+    player_brier = predictions_df.groupby('player_name').agg({
         'squared_error': 'mean',
-        'game_id': 'count',
-        'result': lambda x: (x == 'HIT').mean(),  # Hit rate
+        'game_id': lambda x: x.nunique(),  # Count unique games
+        'actual_outcome': 'mean',  # Hit rate
     }).reset_index()
     
     player_brier.columns = ['player_name', 'brier_score', 'num_games', 'hit_rate']
@@ -669,22 +667,23 @@ def main():
     print("="*80)
     print()
     
-    # Check if predictions directory exists
-    if not PREDICTIONS_DIR.exists() or len(list(PREDICTIONS_DIR.glob('*.parquet'))) == 0:
-        print(f"❌ No predictions found in: {PREDICTIONS_DIR}")
-        print("   Run script 06 first to generate predictions.")
+    # Check if combined predictions file exists
+    if not PREDICTIONS_FILE.exists():
+        print(f"❌ Combined predictions file not found: {PREDICTIONS_FILE}")
+        print()
+        print("This script requires a combined predictions.parquet file.")
+        print()
+        print("To fix this:")
+        print("   1. Run script 06 to process games and generate predictions:")
+        print("      python src/pbp_data/06_run_monte_carlo_validation.py --top-n 10 --n-sims 1000")
+        print()
+        print(f"   Expected output: {PREDICTIONS_FILE}")
+        print(f"   Individual files: {CURRENT_PREDICTIONS_DIR}")
         return
     
-    # Load all prediction files
-    print(f"📥 Loading predictions from: {PREDICTIONS_DIR}")
-    prediction_files = list(PREDICTIONS_DIR.glob('*.parquet'))
-    print(f"   Found {len(prediction_files)} prediction files")
-    
-    predictions_list = []
-    for pf in prediction_files:
-        predictions_list.append(pd.read_parquet(pf))
-    
-    predictions_df = pd.concat(predictions_list, ignore_index=True)
+    # Load combined prediction file
+    print(f"📥 Loading predictions from: {PREDICTIONS_FILE}")
+    predictions_df = pd.read_parquet(PREDICTIONS_FILE)
     print(f"   ✅ Loaded {len(predictions_df):,} predictions")
     print(f"   📊 {predictions_df['game_id'].nunique()} games, {predictions_df['player_name'].nunique()} players")
     print()

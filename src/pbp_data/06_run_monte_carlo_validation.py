@@ -53,8 +53,15 @@ MINUTE_BY_MINUTE = PATHS['minute_by_minute']
 # Validation cache directory
 VALIDATION_DIR = Path.home() / "Downloads" / "tmp" / "monte_carlo_validation"
 VALIDATION_DIR.mkdir(exist_ok=True, parents=True)
-PREDICTIONS_DIR = VALIDATION_DIR / "predictions"
-PREDICTIONS_DIR.mkdir(exist_ok=True, parents=True)
+
+# Individual prediction files (one per player-game)
+CURRENT_PREDICTIONS_DIR = VALIDATION_DIR / "current_player_game_predictions"
+CURRENT_PREDICTIONS_DIR.mkdir(exist_ok=True, parents=True)
+
+# Combined predictions file (all predictions in one parquet)
+PREDICTIONS_FILE = VALIDATION_DIR / "predictions.parquet"
+
+# Plots directory
 PLOTS_DIR = VALIDATION_DIR / "plots"
 PLOTS_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -117,19 +124,57 @@ def get_player_games(player_name):
 def get_prediction_filename(player_name, game_id):
     """Get filename for a player-game prediction file."""
     player_name_clean = player_name.replace(" ", "_").replace("'", "")
-    return PREDICTIONS_DIR / f"{player_name_clean}_{game_id}.parquet"
+    return CURRENT_PREDICTIONS_DIR / f"{player_name_clean}_{game_id}.parquet"
 
 
 def save_predictions(predictions_df, player_name, game_id):
-    """Save predictions to individual parquet file per player-game."""
+    """
+    Save predictions to:
+    1. Individual parquet file (for granular inspection)
+    2. Combined predictions.parquet (append mode for analysis)
+    """
+    # Save individual file
     prediction_file = get_prediction_filename(player_name, game_id)
     predictions_df.to_parquet(prediction_file, index=False)
+    
+    # Append to combined file
+    if PREDICTIONS_FILE.exists():
+        existing_df = pd.read_parquet(PREDICTIONS_FILE)
+        combined_df = pd.concat([existing_df, predictions_df], ignore_index=True)
+        combined_df.to_parquet(PREDICTIONS_FILE, index=False)
+    else:
+        predictions_df.to_parquet(PREDICTIONS_FILE, index=False)
 
 
 def check_game_already_processed(player_name, game_id):
     """Check if a player-game combination has already been processed."""
     prediction_file = get_prediction_filename(player_name, game_id)
     return prediction_file.exists()
+
+
+def combine_individual_predictions():
+    """
+    Combine all individual prediction files into a single predictions.parquet file.
+    Useful when individual files exist but combined file is missing.
+    """
+    individual_files = list(CURRENT_PREDICTIONS_DIR.glob("*.parquet"))
+    
+    if not individual_files:
+        print("⚠️  No individual prediction files found")
+        return
+    
+    print(f"\n📦 Combining {len(individual_files)} individual prediction files...")
+    
+    all_predictions = []
+    for file in individual_files:
+        df = pd.read_parquet(file)
+        all_predictions.append(df)
+    
+    combined_df = pd.concat(all_predictions, ignore_index=True)
+    combined_df.to_parquet(PREDICTIONS_FILE, index=False)
+    
+    print(f"✅ Created combined file: {PREDICTIONS_FILE}")
+    print(f"   Total predictions: {len(combined_df):,}")
 
 
 def process_player_game(player_name, game_id, player_profile, n_sims):
@@ -226,7 +271,8 @@ def main():
     print("=" * 80)
     print(f"\nMode: {'All players' if args.top_n == 0 else f'Top {args.top_n} players by PPG'}")
     print(f"Simulations per play: {args.n_sims:,}")
-    print(f"Output: {PREDICTIONS_DIR}")
+    print(f"Output (combined): {PREDICTIONS_FILE}")
+    print(f"Output (individual): {CURRENT_PREDICTIONS_DIR}")
     print(f"Plots: {PLOTS_DIR}")
     print()
     
@@ -289,7 +335,7 @@ def main():
                 )
                 
                 if predictions_df is not None:
-                    # Save predictions
+                    # Save predictions (both individual and combined)
                     save_predictions(predictions_df, player_name, game_id)
                     total_games_processed += 1
                     print(f"      ✅ Saved {len(predictions_df)} predictions")
@@ -303,9 +349,21 @@ def main():
     print(f"{'='*80}")
     print(f"   Games processed: {total_games_processed}")
     print(f"   Games skipped (already done): {total_games_skipped}")
-    print(f"   Predictions directory: {PREDICTIONS_DIR}")
-    print(f"   Total prediction files: {len(list(PREDICTIONS_DIR.glob('*.parquet')))}")
+    print(f"   Combined predictions: {PREDICTIONS_FILE}")
+    print(f"   Individual files: {CURRENT_PREDICTIONS_DIR}")
     print(f"   Plots directory: {PLOTS_DIR}")
+    
+    # If combined file doesn't exist but individual files do, combine them
+    if not PREDICTIONS_FILE.exists() and list(CURRENT_PREDICTIONS_DIR.glob("*.parquet")):
+        combine_individual_predictions()
+    
+    # Report combined file size
+    if PREDICTIONS_FILE.exists():
+        import duckdb
+        con = duckdb.connect()
+        count = con.execute(f"SELECT COUNT(*) FROM '{PREDICTIONS_FILE}'").fetchone()[0]
+        con.close()
+        print(f"   Total predictions in combined file: {count:,}")
 
 
 if __name__ == "__main__":
