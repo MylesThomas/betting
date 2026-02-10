@@ -543,6 +543,178 @@ def load_play_by_play(game_id, player_name):
 # MONTE CARLO SIMULATION WITH VEGAS ADJUSTMENT
 # =============================================================================
 
+def get_game_state(current_minute):
+    """
+    Determine game state including OT detection.
+    
+    Args:
+        current_minute: Current game minute
+    
+    Returns:
+        dict with: quarter, time_remaining, is_ot, ot_period
+    """
+    if current_minute < 12:
+        return {
+            'quarter': 1,
+            'time_remaining': 12 - current_minute,
+            'is_ot': False,
+            'ot_period': 0
+        }
+    elif current_minute < 24:
+        return {
+            'quarter': 2,
+            'time_remaining': 24 - current_minute,
+            'is_ot': False,
+            'ot_period': 0
+        }
+    elif current_minute < 36:
+        return {
+            'quarter': 3,
+            'time_remaining': 36 - current_minute,
+            'is_ot': False,
+            'ot_period': 0
+        }
+    elif current_minute < 48:
+        return {
+            'quarter': 4,
+            'time_remaining': 48 - current_minute,
+            'is_ot': False,
+            'ot_period': 0
+        }
+    else:
+        # In overtime
+        ot_minute = current_minute - 48
+        ot_period = min(int(ot_minute / 5) + 1, 3)  # Cap at 3OT
+        time_in_current_ot = ot_minute % 5
+        time_remaining = 5 - time_in_current_ot
+        return {
+            'quarter': 4,
+            'time_remaining': time_remaining,
+            'is_ot': True,
+            'ot_period': ot_period
+        }
+
+
+def estimate_ot_probability(current_minute, ot_period=0, score_differential=None):
+    """
+    Estimate probability of next OT period.
+    
+    Args:
+        current_minute: Current game minute
+        ot_period: Current OT period (0 = regulation, 1 = OT1, etc.)
+        score_differential: Point differential (optional, improves estimate)
+    
+    Returns:
+        Probability of next OT period (0-1)
+    """
+    # Determine time left in current period
+    if ot_period == 0:
+        # End of Q4
+        if current_minute < 47:
+            return 0.0  # Too early
+        time_left = 48 - current_minute
+        base_ot_rate = 0.06  # NBA average ~6%
+    elif ot_period == 1:
+        # In OT1, check for OT2
+        if current_minute < 52:
+            return 0.0
+        time_left = 53 - current_minute
+        base_ot_rate = 0.20  # ~20% of OT games go to 2OT
+    elif ot_period == 2:
+        # In OT2, check for OT3
+        if current_minute < 57:
+            return 0.0
+        time_left = 58 - current_minute
+        base_ot_rate = 0.15  # ~15% go to 3OT
+    else:
+        # Cap at 3OT
+        return 0.0
+    
+    # Adjust based on time remaining
+    if time_left > 2.0:
+        return 0.0
+    elif time_left > 1.0:
+        time_multiplier = 0.5  # 1-2 min left
+    elif time_left > 0.5:
+        time_multiplier = 1.0  # 30sec-1min left
+    else:
+        time_multiplier = 1.5  # Final 30 seconds
+    
+    # Adjust based on score differential if available
+    if score_differential is not None:
+        abs_diff = abs(score_differential)
+        if abs_diff <= 3:
+            score_multiplier = 4.0  # One possession game
+        elif abs_diff <= 5:
+            score_multiplier = 2.5  # Two possession game
+        elif abs_diff <= 8:
+            score_multiplier = 1.5  # Three possession game
+        else:
+            score_multiplier = 0.2  # Unlikely
+    else:
+        # Conservative assumption of moderately close game
+        score_multiplier = 2.0
+    
+    final_prob = base_ot_rate * time_multiplier * score_multiplier
+    
+    # Cap at reasonable maximum
+    return min(final_prob, 0.40)
+
+
+def project_ot_points(player_profile, vegas_adjustment=1.0, proportion=1.0):
+    """
+    Project points in OT period using Q1 starter stats.
+    
+    Rationale:
+    - OT predominantly uses best players (like Q1 starters)
+    - Q1 is 12 minutes, OT is 5 minutes (ratio: 5/12 ≈ 0.417)
+    - Q1 captures high-usage starter minutes
+    
+    Args:
+        player_profile: Player's historical stats
+        vegas_adjustment: PPM multiplier
+        proportion: Proportion of OT period to project (default 1.0 = full 5 min)
+    
+    Returns:
+        Projected points for this OT portion
+    """
+    # Use Q1 minutes as proxy for OT (best players)
+    q1_minutes_history = player_profile.get('q1_minutes_history', [])
+    q1_minutes_history = [m for m in q1_minutes_history if m > 0]
+    
+    if not q1_minutes_history:
+        # Fallback: use Q4 (starters in close games)
+        q1_minutes_history = player_profile.get('q4_minutes_history', [])
+        q1_minutes_history = [m for m in q1_minutes_history if m > 0]
+    
+    if not q1_minutes_history:
+        return 0  # Player doesn't play meaningful minutes
+    
+    # Sample Q1 minutes
+    typical_q1_minutes = random.choice(q1_minutes_history)
+    
+    # Scale to OT length: 5 min vs 12 min Q1
+    ot_length = 5.0
+    q1_length = 12.0
+    scale_factor = (ot_length / q1_length) * proportion
+    
+    projected_ot_minutes = typical_q1_minutes * scale_factor
+    
+    # Get PPM from full game history
+    ppm_history = player_profile.get('points_per_minute_history', [])
+    ppm_history = [p for p in ppm_history if p > 0]
+    
+    if not ppm_history:
+        return 0
+    
+    ot_ppm = random.choice(ppm_history) * vegas_adjustment
+    
+    # Calculate OT points
+    ot_points = ot_ppm * projected_ot_minutes
+    
+    return ot_points
+
+
 def monte_carlo_simulate_bet(
     player_profile,
     current_minute,
@@ -550,108 +722,129 @@ def monte_carlo_simulate_bet(
     prop_line,
     n_simulations=10000,
     vegas_adjustment=1.0,
+    score_differential=None,
     debug=False
 ):
     """
-    Run Monte Carlo simulation for remaining game.
+    Run Monte Carlo simulation for remaining game with OT support.
     
     Methodology:
     - Sample minutes from quarter-specific history (captures blowout risk)
     - Sample PPM from full game history (assumes aggressive scoring when playing)
     - Apply vegas_adjustment to PPM (one-time calibration at game start)
+    - Model OT probability and project OT points using Q1 starter stats
     
     Args:
         player_profile: dict with quarterly distributions
-        current_minute: Current game minute (0-47)
+        current_minute: Current game minute (0-48+, OT possible)
         current_points: Points scored so far
         prop_line: Target line (e.g., 30.5)
         n_simulations: Number of simulations
         vegas_adjustment: PPM multiplier (default 1.0 = no adjustment)
+        score_differential: Point differential for OT estimation (optional)
         debug: If True, print first 5 simulations
     
     Returns:
         prob_over: Probability of hitting over
     """
-    # Determine current quarter and time remaining
-    # Use >= to properly handle quarter boundaries (12.0, 24.0, 36.0, 48.0)
-    if current_minute >= 48:
-        current_quarter = 4
-        time_remaining_in_quarter = 48 - current_minute
-    elif current_minute >= 36:
-        current_quarter = 4
-        time_remaining_in_quarter = 48 - current_minute
-    elif current_minute >= 24:
-        current_quarter = 3
-        time_remaining_in_quarter = 36 - current_minute
-    elif current_minute >= 12:
-        current_quarter = 2
-        time_remaining_in_quarter = 24 - current_minute
-    else:
-        current_quarter = 1
-        time_remaining_in_quarter = 12 - current_minute
+    # Quick check: already hit
+    if current_points > prop_line:
+        return 1.0
     
-    # If game is over, return deterministic result
-    if time_remaining_in_quarter <= 0 and current_quarter >= 4:
-        return 1.0 if current_points > prop_line else 0.0
+    # Get game state (handles OT detection)
+    game_state = get_game_state(current_minute)
+    
+    # If past 3OT and didn't hit, return 0
+    if game_state['is_ot'] and game_state['ot_period'] >= 3 and game_state['time_remaining'] <= 0:
+        return 0.0
     
     hits = 0
     
     for sim_num in range(n_simulations):
         projected_final_points = current_points
         
-        # Current quarter (partial) - project remaining time
-        if time_remaining_in_quarter > 0:
-            minutes_key = f'q{current_quarter}_minutes_history'
-            
-            minutes_history = player_profile[minutes_key]
-            ppm_history = player_profile['points_per_minute_history']
-            
-            # Filter out zeros
-            minutes_history = [m for m in minutes_history if m > 0]
-            ppm_history = [p for p in ppm_history if p > 0]
-            
-            if minutes_history and ppm_history:
-                # Sample minutes from quarter-specific history
-                typical_minutes_this_quarter = random.choice(minutes_history)
+        # 1. Project remainder of current quarter/OT period
+        if game_state['time_remaining'] > 0:
+            if not game_state['is_ot']:
+                # Regular quarter projection
+                current_quarter = game_state['quarter']
+                time_remaining = game_state['time_remaining']
+                minutes_key = f'q{current_quarter}_minutes_history'
                 
-                # Scale by proportion of quarter remaining
-                quarter_length = 12.0
-                proportion_remaining = time_remaining_in_quarter / quarter_length
-                projected_minutes_remaining = typical_minutes_this_quarter * proportion_remaining
+                minutes_history = player_profile.get(minutes_key, [])
+                ppm_history = player_profile.get('points_per_minute_history', [])
                 
-                # Sample PPM from full game history
-                current_q_ppm = random.choice(ppm_history) * vegas_adjustment
+                # Filter out zeros
+                minutes_history = [m for m in minutes_history if m > 0]
+                ppm_history = [p for p in ppm_history if p > 0]
                 
-                # Calculate points
-                remaining_quarter_points = current_q_ppm * projected_minutes_remaining
-                projected_final_points += remaining_quarter_points
+                if minutes_history and ppm_history:
+                    typical_minutes = random.choice(minutes_history)
+                    quarter_length = 12.0
+                    proportion_remaining = time_remaining / quarter_length
+                    projected_minutes = typical_minutes * proportion_remaining
+                    ppm = random.choice(ppm_history) * vegas_adjustment
+                    projected_final_points += ppm * projected_minutes
+            else:
+                # In OT - project remainder using Q1 stats
+                time_remaining = game_state['time_remaining']
+                ot_length = 5.0
+                proportion_remaining = time_remaining / ot_length
+                ot_points = project_ot_points(player_profile, vegas_adjustment, proportion_remaining)
+                projected_final_points += ot_points
         
-        # Future quarters
-        for future_quarter in range(current_quarter + 1, 5):
-            minutes_key = f'q{future_quarter}_minutes_history'
-            
-            minutes_history = player_profile[minutes_key]
-            ppm_history = player_profile['points_per_minute_history']
-            
-            # Filter out zeros
-            minutes_history = [m for m in minutes_history if m > 0]
-            ppm_history = [p for p in ppm_history if p > 0]
-            
-            if minutes_history and ppm_history:
-                # Sample minutes from quarter-specific history
-                future_q_minutes = random.choice(minutes_history)
+        # 2. Project future quarters (if in regulation)
+        if not game_state['is_ot'] and game_state['quarter'] < 4:
+            for future_quarter in range(game_state['quarter'] + 1, 5):
+                minutes_key = f'q{future_quarter}_minutes_history'
+                minutes_history = player_profile.get(minutes_key, [])
+                ppm_history = player_profile.get('points_per_minute_history', [])
                 
-                # Sample PPM from full game history
-                future_q_ppm = random.choice(ppm_history) * vegas_adjustment
+                # Filter out zeros
+                minutes_history = [m for m in minutes_history if m > 0]
+                ppm_history = [p for p in ppm_history if p > 0]
                 
-                future_quarter_points = future_q_ppm * future_q_minutes
-                projected_final_points += future_quarter_points
+                if minutes_history and ppm_history:
+                    future_minutes = random.choice(minutes_history)
+                    future_ppm = random.choice(ppm_history) * vegas_adjustment
+                    projected_final_points += future_ppm * future_minutes
+        
+        # 3. Model OT probability and project OT periods
+        current_ot_period = game_state['ot_period']
+        
+        # Check for OT1 (if ending Q4)
+        if not game_state['is_ot'] and game_state['quarter'] == 4:
+            ot_prob = estimate_ot_probability(current_minute, 0, score_differential)
+            if random.random() < ot_prob:
+                # Add OT1
+                projected_final_points += project_ot_points(player_profile, vegas_adjustment, 1.0)
+                current_ot_period = 1
+        
+        # Check for OT2 (if in/finished OT1)
+        if current_ot_period == 1:
+            ot_prob = estimate_ot_probability(current_minute, 1, score_differential)
+            if random.random() < ot_prob:
+                # Add OT2
+                projected_final_points += project_ot_points(player_profile, vegas_adjustment, 1.0)
+                current_ot_period = 2
+        
+        # Check for OT3 (if in/finished OT2)
+        if current_ot_period == 2:
+            ot_prob = estimate_ot_probability(current_minute, 2, score_differential)
+            if random.random() < ot_prob:
+                # Add OT3 (capped here as requested)
+                projected_final_points += project_ot_points(player_profile, vegas_adjustment, 1.0)
         
         # Check if bet hits
         if projected_final_points > prop_line:
             hits += 1
     
     prob_over = hits / n_simulations
+    
+    # Apply minimum probability floor (never exactly 0% until past 3OT)
+    MIN_PROB = 0.001
+    if prob_over < MIN_PROB and current_minute < 63:  # 48 + 15 (3 OT periods)
+        prob_over = MIN_PROB
     
     # Apply confidence limits (quarter-based caps + deterministic overrides)
     prob_over_limited = apply_confidence_limits(prob_over, current_minute, current_points, prop_line)
