@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 from datetime import datetime
+import pytz
 
 
 # =============================================================================
@@ -91,6 +92,7 @@ def compare_versions(version_names=None):
         ax1.set_xlabel('Version', fontsize=12)
         ax1.set_ylabel('Overall Brier Score', fontsize=12)
         ax1.set_title('Brier Score Evolution\n(Lower is better)', fontsize=14, fontweight='bold')
+        ax1.set_ylim(0, 1)
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
@@ -110,9 +112,10 @@ def compare_versions(version_names=None):
         # Save plot with descriptive filename
         VERSION_COMPARISONS_DIR.mkdir(parents=True, exist_ok=True)
         
-        # Generate filename with versions and timestamp
+        # Generate filename with versions and timestamp (ET)
         versions_str = "_".join(summary_df['version'].tolist())
-        timestamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+        et_tz = pytz.timezone('America/New_York')
+        timestamp = datetime.now(et_tz).strftime("%Y-%m-%d-%H%M%S")
         filename = f"mc_version_comparison_{versions_str}_{timestamp}.png"
         comparison_plot = VERSION_COMPARISONS_DIR / filename
         
@@ -162,17 +165,51 @@ def compare_detailed_metrics(version1, version2):
     
     if len(cal1) > 0 and len(cal2) > 0:
         print("Calibration Error by Probability Bin:")
-        cal1['bin'] = cal1['metric_name'].str.extract(r'(\d+)').astype(int)
-        cal2['bin'] = cal2['metric_name'].str.extract(r'(\d+)').astype(int)
+        print("(Lower absolute error = better calibration)")
+        print()
+        
+        # Extract bin number from metric_name (format: "prob_bin_0.0", "prob_bin_1.0", etc.)
+        cal1['bin_idx'] = cal1['metric_name'].str.extract(r'prob_bin_([\d.]+)').astype(float).astype(int)
+        cal2['bin_idx'] = cal2['metric_name'].str.extract(r'prob_bin_([\d.]+)').astype(float).astype(int)
         
         cal_comparison = pd.merge(
-            cal1[['bin', 'value']].rename(columns={'value': version1}),
-            cal2[['bin', 'value']].rename(columns={'value': version2}),
-            on='bin'
-        )
+            cal1[['bin_idx', 'value']].rename(columns={'value': version1}),
+            cal2[['bin_idx', 'value']].rename(columns={'value': version2}),
+            on='bin_idx'
+        ).sort_values('bin_idx')
+        
         cal_comparison['change'] = cal_comparison[version2] - cal_comparison[version1]
         
-        print(cal_comparison.to_string(index=False))
+        # Calculate percent change based on absolute values (since we care about magnitude)
+        cal_comparison['pct_change'] = (cal_comparison['change'] / cal_comparison[version1].abs()) * 100
+        
+        # Format probability bin ranges (10% bins: 0-10%, 10-20%, etc.)
+        cal_comparison['prob_range'] = cal_comparison['bin_idx'].apply(
+            lambda x: f"{x*10:>2.0f}-{(x+1)*10:>2.0f}%"
+        )
+        
+        # Print formatted table
+        print(f"{'Bin':<10} {version1:>10} {version2:>10} {'Change':>10} {'% Chg':>8}  {'Status'}")
+        print("-" * 70)
+        
+        for _, row in cal_comparison.iterrows():
+            # Determine emoji based on absolute change (closer to 0 is better)
+            abs_v1 = abs(row[version1])
+            abs_v2 = abs(row[version2])
+            abs_change = abs_v2 - abs_v1
+            
+            if abs_change < -0.005:
+                emoji = "✅"
+                status = "Better"
+            elif abs_change > 0.005:
+                emoji = "⚠️"
+                status = "Worse"
+            else:
+                emoji = "➖"
+                status = "Stable"
+            
+            print(f"{row['prob_range']:<10} {row[version1]:>10.4f} {row[version2]:>10.4f} "
+                  f"{row['change']:>+10.4f} {row['pct_change']:>+7.1f}%  {emoji} {status}")
         print()
 
 
