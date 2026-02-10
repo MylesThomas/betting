@@ -1777,6 +1777,13 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
                 # Get metadata - actual values instead of bins
                 line_value = row.get('points_line', 'N/A')
                 spread_value = row.get('team_spread', 'N/A')
+                
+                # Format to 1 decimal place
+                if pd.notna(line_value) and line_value != 'N/A':
+                    line_value = f"{float(line_value):.1f}"
+                if pd.notna(spread_value) and spread_value != 'N/A':
+                    spread_value = f"{float(spread_value):+.1f}"
+                
                 scorer_type = row.get('scorer_type', '')
                 
                 # Shorten scorer_type - handle NaN/None
@@ -2265,6 +2272,13 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
                     # Get metadata fields - actual values instead of bins
                     line_value = row.get('points_line', 'N/A')
                     spread_value = row.get('team_spread', 'N/A')
+                    
+                    # Format to 1 decimal place
+                    if pd.notna(line_value) and line_value != 'N/A':
+                        line_value = f"{float(line_value):.1f}"
+                    if pd.notna(spread_value) and spread_value != 'N/A':
+                        spread_value = f"{float(spread_value):+.1f}"
+                    
                     scorer_type = row.get('scorer_type', '')
                     # Shorten scorer_type for display
                     if scorer_type == 'Rim Attacker (≥40.0%)':
