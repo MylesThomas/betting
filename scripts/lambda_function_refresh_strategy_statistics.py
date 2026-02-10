@@ -1774,9 +1774,9 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
                 else:
                     result_text = 'PUSH'
                 
-                # Get metadata
-                line_tier = row.get('line_tier', 'Unknown')
-                spread_bin = row.get('spread_bin', 'Unknown')
+                # Get metadata - actual values instead of bins
+                line_value = row.get('points_line', 'N/A')
+                spread_value = row.get('team_spread', 'N/A')
                 scorer_type = row.get('scorer_type', '')
                 
                 # Shorten scorer_type - handle NaN/None
@@ -1799,10 +1799,10 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
                 table_data.append([
                     strat_name,
                     player,
+                    line_value,
+                    spread_value,
                     line,
                     actual_pts,
-                    line_tier,
-                    spread_bin,
                     scorer_type_display,
                     our_bet,
                     actual_result,
@@ -1812,10 +1812,10 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
             # Create table
             table = ax_table.table(
                 cellText=table_data,
-                colLabels=['Strategy', 'Player', 'Line', 'Scored', 'Line Tier', 'Spread', 'Scorer', 'Our Bet', 'Actual', 'Result'],
+                colLabels=['Strategy', 'Player', 'Line', 'Spread', 'Over/Under', 'Scored', 'Scorer', 'Our Bet', 'Actual', 'Result'],
                 loc='center',
                 cellLoc='left',
-                colWidths=[0.13, 0.14, 0.06, 0.06, 0.11, 0.10, 0.07, 0.08, 0.07, 0.08]
+                colWidths=[0.13, 0.14, 0.06, 0.07, 0.09, 0.06, 0.07, 0.08, 0.07, 0.08]
             )
             
             # Style table
@@ -2262,9 +2262,9 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
                     else:
                         result_text = 'PUSH'
                     
-                    # Get metadata fields
-                    line_tier = row.get('line_tier', 'Unknown')
-                    spread_bin = row.get('spread_bin', 'Unknown')
+                    # Get metadata fields - actual values instead of bins
+                    line_value = row.get('points_line', 'N/A')
+                    spread_value = row.get('team_spread', 'N/A')
                     scorer_type = row.get('scorer_type', '')
                     # Shorten scorer_type for display
                     if scorer_type == 'Rim Attacker (≥40.0%)':
@@ -2277,10 +2277,10 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
                     table_data.append([
                         date_str,
                         player,
+                        line_value,
+                        spread_value,
                         line,
                         actual_pts,
-                        line_tier,
-                        spread_bin,
                         scorer_type_display,
                         our_bet,
                         actual_result,
@@ -2290,10 +2290,10 @@ def generate_all_strategy_plots(strategy_rankings: Dict, season: str, recent_pla
                 # Create table
                 table = ax_table.table(
                     cellText=table_data,
-                    colLabels=['Date', 'Player', 'Line', 'Scored', 'Line Tier', 'Spread', 'Scorer', 'Our Bet', 'Actual', 'Result'],
+                    colLabels=['Date', 'Player', 'Line', 'Spread', 'Over/Under', 'Scored', 'Scorer', 'Our Bet', 'Actual', 'Result'],
                     loc='center',
                     cellLoc='left',
-                    colWidths=[0.08, 0.16, 0.06, 0.06, 0.11, 0.10, 0.09, 0.08, 0.07, 0.11]
+                    colWidths=[0.08, 0.16, 0.06, 0.07, 0.09, 0.06, 0.09, 0.08, 0.07, 0.11]
                 )
                 
                 # Style table
