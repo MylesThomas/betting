@@ -573,18 +573,22 @@ def monte_carlo_simulate_bet(
         prob_over: Probability of hitting over
     """
     # Determine current quarter and time remaining
-    if current_minute < 12:
-        current_quarter = 1
-        time_remaining_in_quarter = 12 - current_minute
-    elif current_minute < 24:
-        current_quarter = 2
-        time_remaining_in_quarter = 24 - current_minute
-    elif current_minute < 36:
-        current_quarter = 3
-        time_remaining_in_quarter = 36 - current_minute
-    else:
+    # Use >= to properly handle quarter boundaries (12.0, 24.0, 36.0, 48.0)
+    if current_minute >= 48:
         current_quarter = 4
         time_remaining_in_quarter = 48 - current_minute
+    elif current_minute >= 36:
+        current_quarter = 4
+        time_remaining_in_quarter = 48 - current_minute
+    elif current_minute >= 24:
+        current_quarter = 3
+        time_remaining_in_quarter = 36 - current_minute
+    elif current_minute >= 12:
+        current_quarter = 2
+        time_remaining_in_quarter = 24 - current_minute
+    else:
+        current_quarter = 1
+        time_remaining_in_quarter = 12 - current_minute
     
     # If game is over, return deterministic result
     if time_remaining_in_quarter <= 0 and current_quarter >= 4:
@@ -648,7 +652,11 @@ def monte_carlo_simulate_bet(
             hits += 1
     
     prob_over = hits / n_simulations
-    return prob_over
+    
+    # Apply confidence limits (quarter-based caps + deterministic overrides)
+    prob_over_limited = apply_confidence_limits(prob_over, current_minute, current_points, prop_line)
+    
+    return prob_over_limited
 
 
 def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
@@ -695,6 +703,61 @@ def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
     
     # Return best guess
     return (low + high) / 2
+
+
+def apply_confidence_limits(prob_over, current_minute, current_points, prop_line):
+    """
+    Apply confidence limits to prevent overconfidence early in games.
+    
+    Methodology:
+    1. Deterministic override: If already hit, return 100%
+    2. Quarter-based caps: Limit max confidence based on game progress
+    
+    Rationale:
+    - Q1: Only 25% done, huge variance ahead → cap at 85%
+    - Q2: 50% done, 2 full quarters left → cap at 90%
+    - Q3: 75% done, patterns clearer → cap at 93%
+    - Q4: Final quarter, confidence grows → 95-99% depending on time
+    
+    Args:
+        prob_over: Raw Monte Carlo probability (0-1)
+        current_minute: Current game minute (0-48+)
+        current_points: Points scored so far
+        prop_line: Prop bet line (e.g., 29.5)
+    
+    Returns:
+        Limited probability (0-1)
+    """
+    # Override: Already hit the line
+    if current_points > prop_line:
+        return 1.0
+    
+    # Quarter-based confidence caps
+    if current_minute <= 12:
+        cap = 0.85  # Q1
+    elif current_minute <= 24:
+        cap = 0.90  # Q2
+    elif current_minute <= 36:
+        cap = 0.93  # Q3
+    elif current_minute < 42:
+        cap = 0.95  # Q4 early
+    elif current_minute < 46:
+        cap = 0.97  # Q4 mid
+    elif current_minute < 48:
+        cap = 0.98  # Q4 late
+    else:
+        cap = 0.99  # OT/End
+    
+    # Apply cap symmetrically (both over and under)
+    lower_bound = 1 - cap
+    upper_bound = cap
+    
+    if prob_over > upper_bound:
+        return upper_bound
+    elif prob_over < lower_bound:
+        return lower_bound
+    else:
+        return prob_over
 
 
 # =============================================================================
