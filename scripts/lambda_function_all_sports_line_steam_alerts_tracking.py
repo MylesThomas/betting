@@ -436,7 +436,7 @@ def get_today_et():
 
 
 @timed
-def run_cmd(cmd, cwd=None, extra_env=None, stream_output=False):
+def run_cmd(cmd, cwd=None, extra_env=None, stream_output=False, timeout=None):
     """
     Run shell command and return (stdout, stderr, returncode).
     
@@ -445,6 +445,7 @@ def run_cmd(cmd, cwd=None, extra_env=None, stream_output=False):
         cwd: Working directory
         extra_env: Additional environment variables
         stream_output: If True, stream output in real-time (for long-running commands)
+        timeout: Timeout in seconds (None = no timeout)
     """
     env = {
         **os.environ,
@@ -468,32 +469,57 @@ def run_cmd(cmd, cwd=None, extra_env=None, stream_output=False):
         )
         
         stdout_lines = []
-        for line in process.stdout:
-            print(line, end='', flush=True)
-            stdout_lines.append(line)
-        
-        process.wait()
-        stdout = ''.join(stdout_lines)
-        return stdout, '', process.returncode
+        try:
+            for line in process.stdout:
+                print(line, end='', flush=True)
+                stdout_lines.append(line)
+            
+            process.wait(timeout=timeout)
+            stdout = ''.join(stdout_lines)
+            return stdout, '', process.returncode
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+            stdout = ''.join(stdout_lines)
+            return stdout, f'Command timed out after {timeout}s', -1
     else:
         # Buffered output for quick commands (git clone)
-        result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            env=env
-        )
-        if result.stdout:
-            print(result.stdout)
-        if result.stderr:
-            print(result.stderr)
-        return result.stdout, result.stderr, result.returncode
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=timeout
+            )
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print(result.stderr)
+            return result.stdout, result.stderr, result.returncode
+        except subprocess.TimeoutExpired:
+            return '', f'Command timed out after {timeout}s', -1
 
 
 @timed
-def clone_repo(token):
-    """Clone betting repo to /tmp/betting (shallow clone for speed)."""
+def clone_repo(token, max_retries=3, timeout=30):
+    """
+    Clone betting repo to /tmp/betting (shallow clone for speed).
+    
+    Retries with exponential backoff on transient GitHub failures (500 errors).
+    
+    Args:
+        token: GitHub token for authentication
+        max_retries: Maximum number of clone attempts (default: 3)
+        timeout: Timeout in seconds per attempt (default: 30s)
+    
+    Returns:
+        Path to cloned repo (/tmp/betting)
+    
+    Raises:
+        Exception: If all retry attempts fail
+    """
     target = '/tmp/betting'
     if os.path.exists(target):
         subprocess.run(['rm', '-rf', target])
@@ -501,11 +527,40 @@ def clone_repo(token):
     repo_url = os.environ['GITHUB_REPO_URL']
     auth_url = repo_url.replace('https://', f'https://{token}@')
     
-    _, stderr, code = run_cmd(['git', 'clone', '--depth', '1', auth_url, target])
-    if code != 0:
-        raise Exception(f"Git clone failed: {stderr}")
+    for attempt in range(1, max_retries + 1):
+        print(f"   Attempt {attempt}/{max_retries}...")
+        
+        _, stderr, code = run_cmd(
+            ['git', 'clone', '--depth', '1', auth_url, target],
+            timeout=timeout
+        )
+        
+        if code == 0:
+            print(f"   ✅ Clone succeeded on attempt {attempt}")
+            return target
+        
+        # Check if it's a transient GitHub error (500)
+        is_transient = '500' in stderr or 'Internal Server Error' in stderr or 'timed out' in stderr.lower()
+        
+        if is_transient and attempt < max_retries:
+            wait_time = 2 ** attempt  # Exponential backoff: 2s, 4s, 8s
+            print(f"   ⚠️  Transient error detected (attempt {attempt}): {stderr.strip()}")
+            print(f"   🔄 Retrying in {wait_time}s...")
+            time.sleep(wait_time)
+            
+            # Clean up failed clone attempt
+            if os.path.exists(target):
+                subprocess.run(['rm', '-rf', target])
+        else:
+            # Non-transient error or final attempt failed
+            error_msg = f"Git clone failed after {attempt} attempts: {stderr.strip()}"
+            if is_transient:
+                error_msg += "\n\nThis appears to be a GitHub service issue (500 Internal Server Error)."
+                error_msg += f"\nCheck GitHub status: https://www.githubstatus.com/"
+            raise Exception(error_msg)
     
-    return target
+    # Should never reach here due to exception above, but just in case
+    raise Exception(f"Git clone failed after {max_retries} attempts")
 
 
 @timed
