@@ -547,6 +547,12 @@ def get_game_state(current_minute):
     """
     Determine game state including OT detection.
     
+    ESPN's Play-by-Play Minute System (with 7-minute gaps between periods):
+    - Regulation Q1-Q4: 0-48
+    - OT1 (Q5): 55-60
+    - OT2 (Q6): 67-72
+    - OT3 (Q7): 79-84
+    
     Args:
         current_minute: Current game minute
     
@@ -581,23 +587,74 @@ def get_game_state(current_minute):
             'is_ot': False,
             'ot_period': 0
         }
-    else:
-        # In overtime
-        ot_minute = current_minute - 48
-        ot_period = min(int(ot_minute / 5) + 1, 3)  # Cap at 3OT
-        time_in_current_ot = ot_minute % 5
-        time_remaining = 5 - time_in_current_ot
+    elif current_minute >= 55 and current_minute < 60:
+        # OT1 (Quarter 5): 55-60
         return {
-            'quarter': 4,
-            'time_remaining': time_remaining,
+            'quarter': 5,
+            'time_remaining': 60 - current_minute,
             'is_ot': True,
-            'ot_period': ot_period
+            'ot_period': 1
         }
+    elif current_minute >= 67 and current_minute < 72:
+        # OT2 (Quarter 6): 67-72
+        return {
+            'quarter': 6,
+            'time_remaining': 72 - current_minute,
+            'is_ot': True,
+            'ot_period': 2
+        }
+    elif current_minute >= 79 and current_minute < 84:
+        # OT3 (Quarter 7): 79-84 (capped at 3OT as requested)
+        return {
+            'quarter': 7,
+            'time_remaining': 84 - current_minute,
+            'is_ot': True,
+            'ot_period': 3
+        }
+    else:
+        # Gap between periods or past 3OT - treat as end of previous period
+        if current_minute >= 84:
+            # Past 3OT
+            return {
+                'quarter': 7,
+                'time_remaining': 0,
+                'is_ot': True,
+                'ot_period': 3
+            }
+        elif current_minute >= 72:
+            # Gap after OT2
+            return {
+                'quarter': 6,
+                'time_remaining': 0,
+                'is_ot': True,
+                'ot_period': 2
+            }
+        elif current_minute >= 60:
+            # Gap after OT1
+            return {
+                'quarter': 5,
+                'time_remaining': 0,
+                'is_ot': True,
+                'ot_period': 1
+            }
+        else:
+            # Gap after regulation (48-55)
+            return {
+                'quarter': 4,
+                'time_remaining': 0,
+                'is_ot': False,
+                'ot_period': 0
+            }
 
 
 def estimate_ot_probability(current_minute, ot_period=0, score_differential=None):
     """
     Estimate probability of next OT period.
+    
+    Uses ESPN's minute system:
+    - OT1 (Q5): 55-60
+    - OT2 (Q6): 67-72
+    - OT3 (Q7): 79-84
     
     Args:
         current_minute: Current game minute
@@ -607,27 +664,27 @@ def estimate_ot_probability(current_minute, ot_period=0, score_differential=None
     Returns:
         Probability of next OT period (0-1)
     """
-    # Determine time left in current period
+    # Determine time left in current period and base rate
     if ot_period == 0:
-        # End of Q4
+        # End of Q4 (regulation)
         if current_minute < 47:
             return 0.0  # Too early
         time_left = 48 - current_minute
         base_ot_rate = 0.06  # NBA average ~6%
     elif ot_period == 1:
-        # In OT1, check for OT2
-        if current_minute < 52:
-            return 0.0
-        time_left = 53 - current_minute
+        # In OT1, check for OT2 (minute 55-60)
+        if current_minute < 59:
+            return 0.0  # Too early in OT1
+        time_left = 60 - current_minute
         base_ot_rate = 0.20  # ~20% of OT games go to 2OT
     elif ot_period == 2:
-        # In OT2, check for OT3
-        if current_minute < 57:
+        # In OT2, check for OT3 (minute 67-72)
+        if current_minute < 71:
             return 0.0
-        time_left = 58 - current_minute
+        time_left = 72 - current_minute
         base_ot_rate = 0.15  # ~15% go to 3OT
     else:
-        # Cap at 3OT
+        # Cap at 3OT as requested
         return 0.0
     
     # Adjust based on time remaining
