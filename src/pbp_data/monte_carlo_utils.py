@@ -720,12 +720,13 @@ def estimate_ot_probability(current_minute, ot_period=0, score_differential=None
 
 def project_ot_points(player_profile, vegas_adjustment=1.0, proportion=1.0):
     """
-    Project points in OT period using Q1 starter stats.
+    Project points in OT period using Q4 stats.
     
-    Rationale:
-    - OT predominantly uses best players (like Q1 starters)
-    - Q1 is 12 minutes, OT is 5 minutes (ratio: 5/12 ≈ 0.417)
-    - Q1 captures high-usage starter minutes
+    Rationale (v8 update):
+    - Use Q4 minutes/PPM for more conservative OT projection
+    - Q4 better represents late-game/clutch scenarios
+    - Avoids overconfidence from Q1 starter minutes
+    - Q4 is 12 minutes, OT is 5 minutes (ratio: 5/12 ≈ 0.417)
     
     Args:
         player_profile: Player's historical stats
@@ -735,36 +736,35 @@ def project_ot_points(player_profile, vegas_adjustment=1.0, proportion=1.0):
     Returns:
         Projected points for this OT portion
     """
-    # Use Q1 minutes as proxy for OT (best players)
-    q1_minutes_history = player_profile.get('q1_minutes_history', [])
-    q1_minutes_history = [m for m in q1_minutes_history if m > 0]
+    # Use Q4 minutes for OT projections (v8 change - keep zeros!)
+    # Zeros represent DNP, benched, blowout situations - legitimate scenarios
+    q4_minutes_history = player_profile['q4_minutes_history']
     
-    if not q1_minutes_history:
-        # Fallback: use Q4 (starters in close games)
-        q1_minutes_history = player_profile.get('q4_minutes_history', [])
-        q1_minutes_history = [m for m in q1_minutes_history if m > 0]
+    if not q4_minutes_history:
+        return 0  # No Q4 data at all
     
-    if not q1_minutes_history:
-        return 0  # Player doesn't play meaningful minutes
+    # Sample Q4 minutes (could be 0 if player sits/DNP in Q4)
+    typical_q4_minutes = random.choice(q4_minutes_history)
     
-    # Sample Q1 minutes
-    typical_q1_minutes = random.choice(q1_minutes_history)
-    
-    # Scale to OT length: 5 min vs 12 min Q1
-    ot_length = 5.0
-    q1_length = 12.0
-    scale_factor = (ot_length / q1_length) * proportion
-    
-    projected_ot_minutes = typical_q1_minutes * scale_factor
-    
-    # Get PPM from full game history
-    ppm_history = player_profile.get('points_per_minute_history', [])
-    ppm_history = [p for p in ppm_history if p > 0]
-    
-    if not ppm_history:
+    # If sampled 0 minutes, player doesn't play this OT
+    if typical_q4_minutes == 0:
         return 0
     
-    ot_ppm = random.choice(ppm_history) * vegas_adjustment
+    # Scale to OT length: 5 min vs 12 min Q4
+    ot_length = 5.0
+    q4_length = 12.0
+    scale_factor = (ot_length / q4_length) * proportion
+    
+    projected_ot_minutes = typical_q4_minutes * scale_factor
+    
+    # Get PPM from Q4 history (v8 change - keep zeros!)
+    q4_ppm_history = player_profile['q4_points_per_minute_history']
+    
+    if not q4_ppm_history:
+        return 0  # No Q4 PPM data
+    
+    # Sample Q4 PPM (could be 0 if player had 0 PPM in some Q4s)
+    ot_ppm = random.choice(q4_ppm_history) * vegas_adjustment
     
     # Calculate OT points
     ot_points = ot_ppm * projected_ot_minutes
@@ -829,21 +829,38 @@ def monte_carlo_simulate_bet(
                 minutes_key = f'q{current_quarter}_minutes_history'
                 
                 minutes_history = player_profile.get(minutes_key, [])
-                ppm_history = player_profile.get('points_per_minute_history', [])
                 
-                # Filter out zeros
-                minutes_history = [m for m in minutes_history if m > 0]
-                ppm_history = [p for p in ppm_history if p > 0]
+                # v8 change: Use quarter-specific PPM for Q4 (no fallback - fail if missing)
+                if current_quarter == 4:
+                    ppm_key = 'q4_points_per_minute_history'
+                    ppm_history = player_profile[ppm_key]  # Will fail if missing
+                else:
+                    ppm_history = player_profile['points_per_minute_history']
                 
-                if minutes_history and ppm_history:
-                    typical_minutes = random.choice(minutes_history)
+                # v8: Keep zeros for Q4 (DNP/benched scenarios), filter for Q1-Q3
+                if current_quarter == 4:
+                    # Keep zeros - player might not play Q4
+                    minutes_history_filtered = minutes_history if minutes_history else []
+                    ppm_history_filtered = ppm_history if ppm_history else []
+                else:
+                    # Filter out zeros for Q1-Q3 (players typically play earlier quarters)
+                    minutes_history_filtered = [m for m in minutes_history if m > 0]
+                    ppm_history_filtered = [p for p in ppm_history if p > 0]
+                
+                if minutes_history_filtered and ppm_history_filtered:
+                    typical_minutes = random.choice(minutes_history_filtered)
+                    
+                    # If sampled 0 minutes in Q4, skip projection
+                    if typical_minutes == 0:
+                        continue
+                    
                     quarter_length = 12.0
                     proportion_remaining = time_remaining / quarter_length
                     projected_minutes = typical_minutes * proportion_remaining
-                    ppm = random.choice(ppm_history) * vegas_adjustment
+                    ppm = random.choice(ppm_history_filtered) * vegas_adjustment
                     projected_final_points += ppm * projected_minutes
             else:
-                # In OT - project remainder using Q1 stats
+                # In OT - project remainder using Q4 stats (v8 change)
                 time_remaining = game_state['time_remaining']
                 ot_length = 5.0
                 proportion_remaining = time_remaining / ot_length
@@ -855,42 +872,38 @@ def monte_carlo_simulate_bet(
             for future_quarter in range(game_state['quarter'] + 1, 5):
                 minutes_key = f'q{future_quarter}_minutes_history'
                 minutes_history = player_profile.get(minutes_key, [])
-                ppm_history = player_profile.get('points_per_minute_history', [])
                 
-                # Filter out zeros
-                minutes_history = [m for m in minutes_history if m > 0]
-                ppm_history = [p for p in ppm_history if p > 0]
+                # v8 change: Use Q4 PPM for Q4 projections (no fallback - fail if missing)
+                if future_quarter == 4:
+                    ppm_key = 'q4_points_per_minute_history'
+                    ppm_history = player_profile[ppm_key]  # Will fail if missing
+                else:
+                    ppm_history = player_profile['points_per_minute_history']
                 
-                if minutes_history and ppm_history:
-                    future_minutes = random.choice(minutes_history)
-                    future_ppm = random.choice(ppm_history) * vegas_adjustment
+                # v8: Keep zeros for Q4, filter for Q1-Q3
+                if future_quarter == 4:
+                    # Keep zeros - player might not play Q4
+                    minutes_history_filtered = minutes_history if minutes_history else []
+                    ppm_history_filtered = ppm_history if ppm_history else []
+                else:
+                    # Filter out zeros for Q1-Q3
+                    minutes_history_filtered = [m for m in minutes_history if m > 0]
+                    ppm_history_filtered = [p for p in ppm_history if p > 0]
+                
+                if minutes_history_filtered and ppm_history_filtered:
+                    future_minutes = random.choice(minutes_history_filtered)
+                    
+                    # If sampled 0 minutes in Q4, skip projection
+                    if future_minutes == 0:
+                        continue
+                    
+                    future_ppm = random.choice(ppm_history_filtered) * vegas_adjustment
                     projected_final_points += future_ppm * future_minutes
         
-        # 3. Model OT probability and project OT periods
-        current_ot_period = game_state['ot_period']
-        
-        # Check for OT1 (if ending Q4)
-        if not game_state['is_ot'] and game_state['quarter'] == 4:
-            ot_prob = estimate_ot_probability(current_minute, 0, score_differential)
-            if random.random() < ot_prob:
-                # Add OT1
-                projected_final_points += project_ot_points(player_profile, vegas_adjustment, 1.0)
-                current_ot_period = 1
-        
-        # Check for OT2 (if in/finished OT1)
-        if current_ot_period == 1:
-            ot_prob = estimate_ot_probability(current_minute, 1, score_differential)
-            if random.random() < ot_prob:
-                # Add OT2
-                projected_final_points += project_ot_points(player_profile, vegas_adjustment, 1.0)
-                current_ot_period = 2
-        
-        # Check for OT3 (if in/finished OT2)
-        if current_ot_period == 2:
-            ot_prob = estimate_ot_probability(current_minute, 2, score_differential)
-            if random.random() < ot_prob:
-                # Add OT3 (capped here as requested)
-                projected_final_points += project_ot_points(player_profile, vegas_adjustment, 1.0)
+        # v8: No future OT projection at all
+        # Rationale: Don't add OT1 points while in Q4 - too speculative
+        # Only project remaining minutes if ALREADY IN OT (handled in step 1 above)
+        # Probability will naturally be low in late Q4, then spike when OT actually starts
         
         # Check if bet hits
         if projected_final_points > prop_line:
@@ -903,13 +916,10 @@ def monte_carlo_simulate_bet(
     if prob_over < MIN_PROB and current_minute < 63:  # 48 + 15 (3 OT periods)
         prob_over = MIN_PROB
     
-    # Step 1: Apply confidence limits (quarter-based caps + deterministic overrides)
+    # Apply confidence limits (quarter-based caps + deterministic overrides)
     prob_over_limited = apply_confidence_limits(prob_over, current_minute, current_points, prop_line)
     
-    # Step 2: Apply empirical calibration (v7 bias correction)
-    prob_over_calibrated = apply_calibration(prob_over_limited)
-    
-    return prob_over_calibrated
+    return prob_over_limited
 
 
 def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
