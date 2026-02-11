@@ -108,8 +108,8 @@ TEAM_LOGOS = {
 # - Version: v10 introduces this empirical calibration
 
 CALIBRATION_MAP_V9 = {
-    # Q1
-    ('Q1', 0.05): 0.08,
+    # Q1 - has v9 data for all bins
+    ('Q1', 0.05): 0.08, # 0.08: for each prediction in this bin, we will subtract 0.08 from the probability
     ('Q1', 0.15): 0.07,
     ('Q1', 0.25): 0.07,
     ('Q1', 0.35): 0.05,
@@ -118,8 +118,9 @@ CALIBRATION_MAP_V9 = {
     ('Q1', 0.65): 0.08,
     ('Q1', 0.75): 0.11,
     ('Q1', 0.85): 0.11,
+    ('Q1', 0.95): 0.0,  # No data (n<10 in v9)
     
-    # Q2
+    # Q2 - has v9 data for all bins
     ('Q2', 0.05): 0.02,
     ('Q2', 0.15): 0.02,
     ('Q2', 0.25): -0.01,
@@ -131,7 +132,7 @@ CALIBRATION_MAP_V9 = {
     ('Q2', 0.85): 0.08,
     ('Q2', 0.95): 0.03,
     
-    # Q3
+    # Q3 - has v9 data for all bins
     ('Q3', 0.05): 0.02,
     ('Q3', 0.15): 0.01,
     ('Q3', 0.25): -0.01,
@@ -143,7 +144,7 @@ CALIBRATION_MAP_V9 = {
     ('Q3', 0.85): 0.11,
     ('Q3', 0.95): 0.04,
     
-    # Q4
+    # Q4 - has v9 data for all bins
     ('Q4', 0.05): 0.02,
     ('Q4', 0.15): 0.01,
     ('Q4', 0.25): -0.02,
@@ -155,7 +156,7 @@ CALIBRATION_MAP_V9 = {
     ('Q4', 0.85): 0.12,
     ('Q4', 0.95): 0.37,
     
-    # OT1
+    # OT1 - has v9 data for all bins
     ('OT1', 0.05): -0.04,
     ('OT1', 0.15): -0.45,
     ('OT1', 0.25): -0.29,
@@ -167,10 +168,41 @@ CALIBRATION_MAP_V9 = {
     ('OT1', 0.85): 0.72,
     ('OT1', 0.95): 0.63,
     
-    # OT2
-    ('OT2', 0.05): 0.01,
-    ('OT2', 0.85): -0.15,
-    ('OT2', 0.95): -0.07,
+    # OT2 - sparse data, fill with 0.0 where no data
+    ('OT2', 0.05): 0.01,   # v9 data (n=289)
+    ('OT2', 0.15): 0.0,    # No data
+    ('OT2', 0.25): 0.0,    # No data
+    ('OT2', 0.35): 0.0,    # No data
+    ('OT2', 0.45): 0.0,    # No data
+    ('OT2', 0.55): 0.0,    # No data
+    ('OT2', 0.65): 0.0,    # No data
+    ('OT2', 0.75): 0.0,    # No data
+    ('OT2', 0.85): -0.15,  # v9 data (n=12)
+    ('OT2', 0.95): -0.07,  # v9 data (n=47)
+    
+    # OT3 - no data, use 0.0 (no correction)
+    ('OT3', 0.05): 0.0,
+    ('OT3', 0.15): 0.0,
+    ('OT3', 0.25): 0.0,
+    ('OT3', 0.35): 0.0,
+    ('OT3', 0.45): 0.0,
+    ('OT3', 0.55): 0.0,
+    ('OT3', 0.65): 0.0,
+    ('OT3', 0.75): 0.0,
+    ('OT3', 0.85): 0.0,
+    ('OT3', 0.95): 0.0,
+    
+    # OT4+ - no data, use 0.0 (no correction)
+    ('OT4+', 0.05): 0.0,
+    ('OT4+', 0.15): 0.0,
+    ('OT4+', 0.25): 0.0,
+    ('OT4+', 0.35): 0.0,
+    ('OT4+', 0.45): 0.0,
+    ('OT4+', 0.55): 0.0,
+    ('OT4+', 0.65): 0.0,
+    ('OT4+', 0.75): 0.0,
+    ('OT4+', 0.85): 0.0,
+    ('OT4+', 0.95): 0.0,
 }
 
 
@@ -968,9 +1000,9 @@ def apply_calibration(raw_prob, quarter, calibration_map=None):
     bin_start = math.floor(raw_prob * 10) / 10.0
     bin_center = round(bin_start + 0.05, 2)
     
-    # Lookup correction factor
+    # Lookup correction factor (no fallback - should always exist)
     key = (period, bin_center)
-    correction_factor = calibration_map.get(key, 0.0)
+    correction_factor = calibration_map[key]  # Will raise KeyError if missing
     
     # Apply correction: calibrated = raw - bias
     # (If we predict 0.85 but actually hit 0.75, bias=+0.10, so we subtract 0.10)
@@ -1183,204 +1215,7 @@ def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
     return (low + high) / 2
 
 
-# =============================================================================
-# CALIBRATION DATA (Global Config)
-# =============================================================================
-# Calibration data for apply_calibration() function
-# Format: list of (bucket_range, avg_predicted_prob, actual_hit_rate, n_predictions)
-# 
-# To generate this data from a predictions.parquet file:
-# duckdb -c "
-# WITH bucketed_predictions AS (
-#     SELECT 
-#         prob_over,
-#         CASE WHEN result = 'HIT' THEN 1 ELSE 0 END as actual_outcome,
-#         FLOOR(prob_over * 20) / 20.0 as bucket_start,
-#         FLOOR(prob_over * 20) / 20.0 + 0.05 as bucket_end
-#     FROM '~/Downloads/tmp/monte_carlo_validation/versions/v9/predictions.parquet'
-# ),
-# calibration_stats AS (
-#     SELECT 
-#         bucket_start,
-#         bucket_end,
-#         ROUND((bucket_start + bucket_end) / 2.0, 3) as bucket_midpoint,
-#         COUNT(*) as n_predictions,
-#         ROUND(AVG(prob_over), 4) as avg_predicted_prob,
-#         ROUND(AVG(actual_outcome), 4) as actual_hit_rate,
-#         ROUND(AVG(prob_over) - AVG(actual_outcome), 4) as bias,
-#         ROUND(AVG(POWER(prob_over - actual_outcome, 2)), 4) as avg_brier
-#     FROM bucketed_predictions
-#     GROUP BY bucket_start, bucket_end
-#     ORDER BY bucket_start
-# )
-# SELECT 
-#     bucket_start || '-' || ROUND(bucket_end * 100, 0) || '%' as bucket_range,
-#     avg_predicted_prob,
-#     actual_hit_rate,
-#     n_predictions
-# FROM calibration_stats
-# WHERE bucket_midpoint < 1.0;"
-
-# V9 Calibration Data (Fallback - hardcoded from v9 validation results)
-# If v9/predictions.parquet exists, we'll try to load from there first
-#
-# Note on non-monotonicity at high probabilities:
-# The last bucket (0.95-100%) shows predictions ~96% only hit ~58% in v7.
-# This creates a non-monotonic calibration curve, which is EMPIRICALLY CORRECT
-# and shows the model's overconfidence at extreme high probabilities.
-# This behavior will be updated once v9 validation data is available.
-#
-# To update this data after v9 completes:
-# 1. Run the validation: python src/pbp_data/06_run_monte_carlo_validation.py
-# 2. Generate calibration data using the query in the docstring above
-# 3. Replace the values below with the new v9 results
-# 4. The load_calibration_data() function will automatically use v9 file if present
-V9_RAW_CALIBRATION_DATA_FALLBACK = [
-    # (bucket_range, avg_predicted_prob, actual_hit_rate, n_predictions)
-    # TODO: Update these values once v9 validation completes
-    # For now using v7 as fallback
-    ('0.0-5.0%',     0.0089,  0.041,   150058),
-    ('0.05-10.0%',   0.0737,  0.1322,   32921),
-    ('0.1-15.0%',    0.1237,  0.1678,   27767),
-    ('0.15-20.0%',   0.1743,  0.1942,   25147),
-    ('0.2-25.0%',    0.2245,  0.2402,   23296),
-    ('0.25-30.0%',   0.2744,  0.2718,   22729),
-    ('0.3-35.0%',    0.3246,  0.2996,   23473),
-    ('0.35-40.0%',   0.3749,  0.3233,   24974),
-    ('0.4-45.0%',    0.4248,  0.3472,   26254),
-    ('0.45-50.0%',   0.4737,  0.3752,   25760),
-    ('0.5-55.0%',    0.5239,  0.414,    23796),
-    ('0.55-60.0%',   0.575,   0.4642,   22400),
-    ('0.6-65.0%',    0.6247,  0.4991,   21549),
-    ('0.65-70.0%',   0.6746,  0.5325,   20291),
-    ('0.7-75.0%',    0.7246,  0.5541,   19745),
-    ('0.75-80.0%',   0.7751,  0.5856,   19465),
-    ('0.8-85.0%',    0.825,   0.6141,   20754),
-    ('0.85-90.0%',   0.8674,  0.7018,   26152),
-    ('0.9-95.0%',    0.918,   0.7953,   37268),
-    ('0.95-100.0%',  0.9619,  0.5824,    5938),
-]
-
-def load_calibration_data():
-    """
-    Load calibration data from v9/predictions.parquet if available.
-    Falls back to hardcoded V9_RAW_CALIBRATION_DATA_FALLBACK if file not found.
-    
-    Returns:
-        list: Raw calibration data in same format as V9_RAW_CALIBRATION_DATA_FALLBACK
-    """
-    v9_predictions_path = Path.home() / "Downloads" / "tmp" / "monte_carlo_validation" / "versions" / "v9" / "predictions.parquet"
-    
-    if not v9_predictions_path.exists():
-        print(f"   ℹ️  v9/predictions.parquet not found, using fallback calibration data")
-        return V9_RAW_CALIBRATION_DATA_FALLBACK
-    
-    try:
-        print(f"   📊 Loading calibration data from {v9_predictions_path}")
-        con = duckdb.connect()
-        
-        query = """
-        WITH bucketed_predictions AS (
-            SELECT 
-                prob_over,
-                CASE WHEN result = 'HIT' THEN 1 ELSE 0 END as actual_outcome,
-                FLOOR(prob_over * 20) / 20.0 as bucket_start,
-                FLOOR(prob_over * 20) / 20.0 + 0.05 as bucket_end
-            FROM ?
-        ),
-        calibration_stats AS (
-            SELECT 
-                bucket_start,
-                bucket_end,
-                ROUND((bucket_start + bucket_end) / 2.0, 3) as bucket_midpoint,
-                COUNT(*) as n_predictions,
-                ROUND(AVG(prob_over), 4) as avg_predicted_prob,
-                ROUND(AVG(actual_outcome), 4) as actual_hit_rate
-            FROM bucketed_predictions
-            GROUP BY bucket_start, bucket_end
-            ORDER BY bucket_start
-        )
-        SELECT 
-            bucket_start || '-' || ROUND(bucket_end * 100, 0) || '%' as bucket_range,
-            avg_predicted_prob,
-            actual_hit_rate,
-            n_predictions
-        FROM calibration_stats
-        WHERE bucket_midpoint < 1.0
-        """
-        
-        result = con.execute(query, [str(v9_predictions_path)]).fetchall()
-        con.close()
-        
-        if not result:
-            print(f"   ⚠️  No calibration data from v9, using fallback")
-            return V9_RAW_CALIBRATION_DATA_FALLBACK
-        
-        print(f"   ✅ Loaded {len(result)} calibration buckets from v9/predictions.parquet")
-        return result
-        
-    except Exception as e:
-        print(f"   ⚠️  Error loading v9 calibration data: {e}")
-        print(f"   ℹ️  Using fallback calibration data")
-        return V9_RAW_CALIBRATION_DATA_FALLBACK
-
-
-# Load calibration data on module import
-# Will use v9/predictions.parquet if available, otherwise fallback
-_RAW_CALIBRATION_DATA = load_calibration_data()
-
-# Derived calibration mapping: (avg_predicted_prob → actual_hit_rate)
-# Maps what model predicted to what actually happened
-_CALIBRATION_MAPPING = [
-    (pred, actual) 
-    for _, pred, actual, _ in _RAW_CALIBRATION_DATA
-]
-
-
-def apply_calibration(prob_over):
-    """
-    Apply empirical calibration correction using validation data.
-    
-    Maps raw MC probabilities to calibrated probabilities based on observed
-    discrepancies in historical validation. Uses linear interpolation between 
-    calibration points for smooth transitions.
-    
-    Example: When model predicted 92%, it actually hit 79.5% of the time.
-             So we map 0.92 → 0.795 instead.
-    
-    Key insight: High predictions (>70%) are systematically overconfident,
-                 low predictions (<25%) are systematically underconfident.
-    
-    Args:
-        prob_over: Raw probability from MC simulation (after confidence limits)
-    
-    Returns:
-        Calibrated probability based on empirical performance
-    """
-    # Handle edge cases
-    if prob_over >= 0.999:
-        return 0.999
-    if prob_over <= 0.001:
-        return 0.001
-    
-    # Find surrounding calibration points for linear interpolation
-    for i in range(len(_CALIBRATION_MAPPING) - 1):
-        pred1, actual1 = _CALIBRATION_MAPPING[i]
-        pred2, actual2 = _CALIBRATION_MAPPING[i + 1]
-        
-        if pred1 <= prob_over <= pred2:
-            # Linear interpolation
-            t = (prob_over - pred1) / (pred2 - pred1)
-            calibrated = actual1 + t * (actual2 - actual1)
-            return max(0.001, min(0.999, calibrated))
-    
-    # Edge cases: beyond calibration range
-    if prob_over < _CALIBRATION_MAPPING[0][0]:
-        # Below lowest calibration point
-        return _CALIBRATION_MAPPING[0][1]
-    else:
-        # Above highest calibration point - cap at last observed hit rate
-        return _CALIBRATION_MAPPING[-1][1]
+# Old calibration system removed in v10 - replaced with period-specific CALIBRATION_MAP_V9
 
 
 def apply_confidence_limits(prob_over, current_minute, current_points, prop_line):
