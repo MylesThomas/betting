@@ -2503,6 +2503,101 @@ def format_strategies_for_email(strategies: List[Dict], strategy_type: str, top_
 
 
 # =============================================================================
+# YESTERDAY PLAYS SUMMARY
+# =============================================================================
+
+def print_yesterday_plays_summary(season: str, yesterday: str) -> None:
+    """
+    Print a summary of yesterday's plays to CloudWatch logs.
+    
+    Args:
+        season: Current season
+        yesterday: Yesterday's date in YYYY-MM-DD format
+    """
+    try:
+        print(f"\n{'='*80}")
+        print(f"📋 YESTERDAY'S PLAYS SUMMARY ({yesterday})")
+        print(f"{'='*80}\n")
+        
+        s3_client = boto3.client('s3')
+        
+        # Load v5 strategies
+        v5_strategies = load_v5_strategies_from_s3()
+        if not v5_strategies:
+            print("   ⚠️  Could not load v5 strategies")
+            return
+        
+        # Load 2025-26 backtest plays
+        try:
+            response = s3_client.get_object(Bucket=S3_BUCKET, Key=f'{BACKTEST_PREFIX}/2d/{season}/plays.csv')
+            df = pd.read_csv(StringIO(response['Body'].read().decode('utf-8')))
+        except Exception as e:
+            print(f"   ⚠️  Could not load backtest plays: {e}")
+            return
+        
+        # Filter to yesterday's plays
+        df['game_date'] = pd.to_datetime(df['game_date'])
+        yesterday_date = pd.to_datetime(yesterday)
+        df_yesterday = df[df['game_date'] == yesterday_date].copy()
+        
+        if len(df_yesterday) == 0:
+            print(f"   No plays found for {yesterday}")
+            return
+        
+        # Match to v5 strategies
+        v5_plays = []
+        for _, row in df_yesterday.iterrows():
+            for v5_strat in v5_strategies:
+                if (row['line_tier'] == v5_strat['line_tier'] and
+                    row['spread_bin'] == v5_strat['spread_bin'] and
+                    row['bet_side'] == v5_strat['bet_side']):
+                    
+                    play_info = {
+                        'strategy_name': v5_strat['strategy_name'],
+                        'player': row['player_name'],
+                        'line': row['points_line'],
+                        'actual': row['actual_points'],
+                        'result': row['result'],
+                        'team': row.get('team', 'N/A'),
+                        'opponent': row.get('opponent', 'N/A')
+                    }
+                    v5_plays.append(play_info)
+                    break
+        
+        if not v5_plays:
+            print(f"   No v5 strategy plays found for {yesterday}")
+            return
+        
+        print(f"   Found {len(v5_plays)} plays matching v5 strategies:\n")
+        
+        # Print each play
+        for i, play in enumerate(v5_plays, 1):
+            result_emoji = '✅' if play['result'] == 'WIN' else '❌' if play['result'] == 'LOSS' else '🔄'
+            actual = f"{int(play['actual'])}" if pd.notna(play['actual']) else 'DNP'
+            
+            print(f"   Play {i}: {result_emoji} {play['result']}")
+            print(f"      Strategy: {play['strategy_name']}")
+            print(f"      Player: {play['player']}")
+            print(f"      Line: UNDER {play['line']:.1f} pts")
+            print(f"      Actual: {actual} pts")
+            print(f"      Matchup: {play['team']} vs {play['opponent']}")
+            print()
+        
+        # Summary stats
+        wins = sum(1 for p in v5_plays if p['result'] == 'WIN')
+        losses = sum(1 for p in v5_plays if p['result'] == 'LOSS')
+        hit_rate = (wins / (wins + losses) * 100) if (wins + losses) > 0 else 0
+        
+        print(f"   Summary: {wins}W-{losses}L | Hit Rate: {hit_rate:.1f}%")
+        print(f"\n{'='*80}\n")
+        
+    except Exception as e:
+        print(f"   ⚠️  Error generating yesterday plays summary: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+# =============================================================================
 # MAIN REFRESH FUNCTION
 # =============================================================================
 
@@ -2772,6 +2867,9 @@ Please check CloudWatch logs for details.
         
         html_message = generate_html_email(message, yesterday_plot_https)
         send_ses(subject, html_message, message)
+    
+    # Print yesterday's plays summary to logs
+    print_yesterday_plays_summary(season, yesterday)
     
     return results
 
