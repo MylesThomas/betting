@@ -2692,8 +2692,9 @@ def refresh_strategy_statistics(
         
         # Build yesterday summary section
         if v5_yesterday_success:
-            # Use HTTPS URL for email embedding
-            yesterday_plot_url = f"https://{S3_BUCKET}.s3.us-east-2.amazonaws.com/data/04_output/strategy_plots/{season}/v5_yesterday_summary_{yesterday}.png"
+            # Use HTTPS URL for email embedding (with cache-busting timestamp)
+            timestamp = int(now_et.timestamp())
+            yesterday_plot_url = f"https://{S3_BUCKET}.s3.us-east-2.amazonaws.com/data/04_output/strategy_plots/{season}/v5_yesterday_summary_{yesterday}.png?t={timestamp}"
             yesterday_summary = f"\n{'='*80}\n"
             yesterday_summary += f"📅 YESTERDAY'S PERFORMANCE ({yesterday})\n"
             yesterday_summary += f"{'='*80}\n"
@@ -2765,7 +2766,9 @@ Please check CloudWatch logs for details.
         # Extract yesterday plot URL from yesterday_summary if it exists
         yesterday_plot_https = None
         if v5_yesterday_success and yesterday_summary:
-            yesterday_plot_https = f"https://{S3_BUCKET}.s3.us-east-2.amazonaws.com/data/04_output/strategy_plots/{season}/v5_yesterday_summary_{yesterday}.png"
+            # Add timestamp to URL to bust email client caching
+            timestamp = int(now_et.timestamp())
+            yesterday_plot_https = f"https://{S3_BUCKET}.s3.us-east-2.amazonaws.com/data/04_output/strategy_plots/{season}/v5_yesterday_summary_{yesterday}.png?t={timestamp}"
         
         html_message = generate_html_email(message, yesterday_plot_https)
         send_ses(subject, html_message, message)
