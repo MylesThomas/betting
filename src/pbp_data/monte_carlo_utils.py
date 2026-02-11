@@ -726,10 +726,11 @@ def project_ot_points(player_profile, vegas_adjustment=1.0, proportion=1.0):
     """
     Project points in OT period using Q4 stats.
     
-    Rationale (v8 update):
+    Rationale (v9 update):
+    - Games that go to OT are close → key players don't sit
+    - Filter Q4 history to exclude blowout-sits (minutes > 3)
     - Use Q4 minutes/PPM for more conservative OT projection
     - Q4 better represents late-game/clutch scenarios
-    - Avoids overconfidence from Q1 starter minutes
     - Q4 is 12 minutes, OT is 5 minutes (ratio: 5/12 ≈ 0.417)
     
     Args:
@@ -740,19 +741,25 @@ def project_ot_points(player_profile, vegas_adjustment=1.0, proportion=1.0):
     Returns:
         Projected points for this OT portion
     """
-    # Use Q4 minutes for OT projections (v8 change - keep zeros!)
-    # Zeros represent DNP, benched, blowout situations - legitimate scenarios
+    # v9: Filter Q4 history to exclude blowout-sits
+    # Games that go to OT are close → player actually plays
     q4_minutes_history = player_profile['q4_minutes_history']
+    q4_ppm_history = player_profile['q4_points_per_minute_history']
     
-    if not q4_minutes_history:
+    if not q4_minutes_history or not q4_ppm_history:
         return 0  # No Q4 data at all
     
-    # Sample Q4 minutes (could be 0 if player sits/DNP in Q4)
-    typical_q4_minutes = random.choice(q4_minutes_history)
+    # Filter: only use Q4 games where player actually played (> 3 minutes)
+    # Excludes: DNPs, garbage time sits, blowout benching
+    filtered_minutes = [m for m in q4_minutes_history if m > 3]
+    filtered_ppm = [ppm for m, ppm in zip(q4_minutes_history, q4_ppm_history) if m > 3]
     
-    # If sampled 0 minutes, player doesn't play this OT
-    if typical_q4_minutes == 0:
-        return 0
+    if not filtered_minutes:
+        return 0  # No valid Q4 games with significant playing time
+    
+    # Sample from filtered distributions (OT games = close games = player plays)
+    typical_q4_minutes = random.choice(filtered_minutes)
+    ot_ppm = random.choice(filtered_ppm) * vegas_adjustment
     
     # Scale to OT length: 5 min vs 12 min Q4
     ot_length = 5.0
@@ -760,15 +767,6 @@ def project_ot_points(player_profile, vegas_adjustment=1.0, proportion=1.0):
     scale_factor = (ot_length / q4_length) * proportion
     
     projected_ot_minutes = typical_q4_minutes * scale_factor
-    
-    # Get PPM from Q4 history (v8 change - keep zeros!)
-    q4_ppm_history = player_profile['q4_points_per_minute_history']
-    
-    if not q4_ppm_history:
-        return 0  # No Q4 PPM data
-    
-    # Sample Q4 PPM (could be 0 if player had 0 PPM in some Q4s)
-    ot_ppm = random.choice(q4_ppm_history) * vegas_adjustment
     
     # Calculate OT points
     ot_points = ot_ppm * projected_ot_minutes
