@@ -903,10 +903,13 @@ def monte_carlo_simulate_bet(
     if prob_over < MIN_PROB and current_minute < 63:  # 48 + 15 (3 OT periods)
         prob_over = MIN_PROB
     
-    # Apply confidence limits (quarter-based caps + deterministic overrides)
+    # Step 1: Apply confidence limits (quarter-based caps + deterministic overrides)
     prob_over_limited = apply_confidence_limits(prob_over, current_minute, current_points, prop_line)
     
-    return prob_over_limited
+    # Step 2: Apply empirical calibration (v7 bias correction)
+    prob_over_calibrated = apply_calibration(prob_over_limited)
+    
+    return prob_over_calibrated
 
 
 def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
@@ -953,6 +956,124 @@ def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
     
     # Return best guess
     return (low + high) / 2
+
+
+# =============================================================================
+# CALIBRATION DATA (from v7 validation - 2026-02-10)
+# =============================================================================
+# Source: v7 validation with 659,249 predictions across 710 games
+# Query used to generate this data:
+#
+# duckdb -c "
+# WITH bucketed_predictions AS (
+#     SELECT 
+#         prob_over,
+#         CASE WHEN result = 'HIT' THEN 1 ELSE 0 END as actual_outcome,
+#         FLOOR(prob_over * 20) / 20.0 as bucket_start,
+#         FLOOR(prob_over * 20) / 20.0 + 0.05 as bucket_end
+#     FROM '~/Downloads/tmp/monte_carlo_validation/versions/v7/predictions.parquet'
+# ),
+# calibration_stats AS (
+#     SELECT 
+#         bucket_start,
+#         bucket_end,
+#         ROUND((bucket_start + bucket_end) / 2.0, 3) as bucket_midpoint,
+#         COUNT(*) as n_predictions,
+#         ROUND(AVG(prob_over), 4) as avg_predicted_prob,
+#         ROUND(AVG(actual_outcome), 4) as actual_hit_rate,
+#         ROUND(AVG(prob_over) - AVG(actual_outcome), 4) as bias,
+#         ROUND(AVG(POWER(prob_over - actual_outcome, 2)), 4) as avg_brier
+#     FROM bucketed_predictions
+#     GROUP BY bucket_start, bucket_end
+#     ORDER BY bucket_start
+# )
+# SELECT 
+#     bucket_start || '-' || ROUND(bucket_end * 100, 0) || '%' as bucket_range,
+#     avg_predicted_prob,
+#     actual_hit_rate,
+#     n_predictions
+# FROM calibration_stats
+# WHERE bucket_midpoint < 1.0;"
+#
+# Raw query results stored below for reproducibility
+
+V7_RAW_CALIBRATION_DATA = [
+    # (bucket_range, avg_predicted_prob, actual_hit_rate, n_predictions)
+    ('0.0-5.0%',     0.0089,  0.041,   150058),
+    ('0.05-10.0%',   0.0737,  0.1322,   32921),
+    ('0.1-15.0%',    0.1237,  0.1678,   27767),
+    ('0.15-20.0%',   0.1743,  0.1942,   25147),
+    ('0.2-25.0%',    0.2245,  0.2402,   23296),
+    ('0.25-30.0%',   0.2744,  0.2718,   22729),
+    ('0.3-35.0%',    0.3246,  0.2996,   23473),
+    ('0.35-40.0%',   0.3749,  0.3233,   24974),
+    ('0.4-45.0%',    0.4248,  0.3472,   26254),
+    ('0.45-50.0%',   0.4737,  0.3752,   25760),
+    ('0.5-55.0%',    0.5239,  0.414,    23796),
+    ('0.55-60.0%',   0.575,   0.4642,   22400),
+    ('0.6-65.0%',    0.6247,  0.4991,   21549),
+    ('0.65-70.0%',   0.6746,  0.5325,   20291),
+    ('0.7-75.0%',    0.7246,  0.5541,   19745),
+    ('0.75-80.0%',   0.7751,  0.5856,   19465),
+    ('0.8-85.0%',    0.825,   0.6141,   20754),
+    ('0.85-90.0%',   0.8674,  0.7018,   26152),
+    ('0.9-95.0%',    0.918,   0.7953,   37268),
+    ('0.95-100.0%',  0.9619,  0.5824,    5938),
+]
+
+# Derived calibration mapping: (avg_predicted_prob → actual_hit_rate)
+# Maps what v7 predicted to what actually happened
+V7_CALIBRATION_MAPPING = [
+    (pred, actual) 
+    for _, pred, actual, _ in V7_RAW_CALIBRATION_DATA
+]
+
+
+def apply_calibration(prob_over):
+    """
+    Apply empirical calibration correction using v7 validation data.
+    
+    Maps raw MC probabilities to calibrated probabilities based on observed
+    discrepancies in v7. Uses linear interpolation between calibration points
+    for smooth transitions.
+    
+    Example: When v7 predicted 92%, it actually hit 79.5% of the time.
+             So we map 0.92 → 0.795 instead.
+    
+    Key insight: High predictions (>70%) are systematically overconfident,
+                 low predictions (<25%) are systematically underconfident.
+    
+    Args:
+        prob_over: Raw probability from MC simulation (after confidence limits)
+    
+    Returns:
+        Calibrated probability based on v7 empirical performance
+    """
+    # Handle edge cases
+    if prob_over >= 0.999:
+        return 0.999
+    if prob_over <= 0.001:
+        return 0.001
+    
+    # Find surrounding calibration points for linear interpolation
+    for i in range(len(V7_CALIBRATION_MAPPING) - 1):
+        pred1, actual1 = V7_CALIBRATION_MAPPING[i]
+        pred2, actual2 = V7_CALIBRATION_MAPPING[i + 1]
+        
+        if pred1 <= prob_over <= pred2:
+            # Linear interpolation
+            t = (prob_over - pred1) / (pred2 - pred1)
+            calibrated = actual1 + t * (actual2 - actual1)
+            return max(0.001, min(0.999, calibrated))
+    
+    # Edge cases: beyond calibration range
+    if prob_over < V7_CALIBRATION_MAPPING[0][0]:
+        # Below lowest calibration point (~0.9%)
+        return V7_CALIBRATION_MAPPING[0][1]
+    else:
+        # Above 96% - cap at last observed hit rate
+        # (v7 showed 96%+ predictions only hit 58% - very unreliable!)
+        return V7_CALIBRATION_MAPPING[-1][1]
 
 
 def apply_confidence_limits(prob_over, current_minute, current_points, prop_line):
