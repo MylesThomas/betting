@@ -303,7 +303,10 @@ def load_player_profile(player_name, minute_by_minute_path=None):
         -- Q4 minutes distribution
         LIST(q.q4_minutes ORDER BY q.game_date DESC) AS q4_minutes_history,
         
-        -- Full game PPM history (used for sampling PPM)
+        -- Q4 PPM distribution (v8 addition for clutch time modeling)
+        LIST(q.q4_ppm ORDER BY q.game_date DESC) AS q4_points_per_minute_history,
+        
+        -- Full game PPM history (used for sampling PPM in Q1-Q3)
         LIST(g.points_per_minute ORDER BY q.game_date DESC) AS points_per_minute_history
         
     FROM game_stats_with_ppm g
@@ -330,7 +333,8 @@ def load_player_profile(player_name, minute_by_minute_path=None):
         'q2_minutes_history': result[6],
         'q3_minutes_history': result[7],
         'q4_minutes_history': result[8],
-        'points_per_minute_history': result[9],
+        'q4_points_per_minute_history': result[9],  # v8 addition
+        'points_per_minute_history': result[10],
     }
     
     con.close()
