@@ -690,6 +690,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
     if props_exist:
         logging.info("="*80)
         logging.info(f"⏭️  PROPS ALREADY EXIST FOR {date_str} - SKIPPING PROPS FETCH")
+        logging.info(f"   S3: s3://{S3_BUCKET_PROPS}/{props_s3_key}")
         logging.info("="*80)
         df = pd.DataFrame()  # Empty dataframe since we're not fetching
     else:
@@ -786,6 +787,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
             logging.info("")
             logging.info("="*80)
             logging.info(f"⏭️  GAME RESULTS ALREADY EXIST FOR {date_str} - SKIPPING GAME FETCH")
+            logging.info(f"   S3: s3://{S3_BUCKET_GAMES}/{games_s3_key}")
             logging.info("="*80)
         else:
             logging.info("")
