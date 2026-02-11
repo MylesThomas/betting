@@ -107,6 +107,14 @@ TEAM_LOGOS = {
 # - Verified: Each value matches v9/predictions.parquet within 0.001 tolerance
 # - Version: v10 introduces this empirical calibration
 
+# =============================================================================
+# CONSERVATIVE BIAS (v12)
+# =============================================================================
+# Apply a final conservative multiplier to all probabilities
+# Rationale: Err on the side of underpredicting (lower confidence)
+# This reduces risk of overconfidence while maintaining relative rankings
+CONSERVATIVE_FACTOR = 0.97  # Reduces all probabilities by 3%
+
 CALIBRATION_MAP_V9 = {
     # Q1 - v9 data
     ('Q1', 0.05): 0.08,
@@ -1027,13 +1035,14 @@ def monte_carlo_simulate_bet(
     """
     Run Monte Carlo simulation for remaining game with OT support.
     
-    Methodology (v10):
+    Methodology (v12):
     - Sample minutes from quarter-specific history (captures blowout risk)
     - Sample PPM from quarter-specific history (Q4/OT use Q4 stats)
     - Filter Q4 zeros for OT projections (close game assumption)
     - Apply vegas_adjustment to PPM (one-time calibration at game start)
     - Apply confidence limits (quarter-based caps)
     - Apply empirical calibration (period × probability bin corrections from v9)
+    - Apply conservative bias (3% reduction to err on underpredicting)
     
     Args:
         player_profile: dict with quarterly distributions
@@ -1046,7 +1055,7 @@ def monte_carlo_simulate_bet(
         debug: If True, print first 5 simulations
     
     Returns:
-        prob_over: Calibrated probability of hitting over (0.0 to 1.0)
+        prob_over: Final probability of hitting over (0.0 to 1.0)
     """
     # Quick check: already hit
     if current_points > prop_line:
@@ -1166,7 +1175,11 @@ def monte_carlo_simulate_bet(
     # v10: Apply empirical calibration (period-specific bias correction)
     prob_calibrated = apply_calibration(prob_over_limited, game_state['quarter'])
     
-    return prob_calibrated
+    # v12: Apply conservative bias (reduce all probabilities by 3%)
+    # Rationale: Err on the side of underpredicting to avoid overconfidence
+    prob_final = prob_calibrated * CONSERVATIVE_FACTOR
+    
+    return prob_final
 
 
 def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
