@@ -291,7 +291,8 @@ def create_overconfidence_analysis_plot(predictions_df):
     ax1.set_ylabel('Signed Error (Predicted - Actual)', fontsize=12)
     ax1.set_title('Overconfidence Analysis\n(Above 0 = Overconfident, Below 0 = Underconfident)', fontsize=12, fontweight='bold')
     ax1.grid(True, alpha=0.3)
-    ax1.set_ylim(-1.1, 1.1)
+    ax1.set_xlim(0, 1)
+    ax1.set_ylim(-1, 1)
     
     # Binned mean signed error
     predictions_df['prob_bin'] = pd.cut(predictions_df['prob_over'], bins=20)
@@ -311,6 +312,8 @@ def create_overconfidence_analysis_plot(predictions_df):
     ax2.set_title('Average Bias by Predicted Probability', fontsize=12, fontweight='bold')
     ax2.legend()
     ax2.grid(True, alpha=0.3)
+    ax2.set_xlim(0, 1)
+    ax2.set_ylim(-1, 1)
     
     plt.tight_layout()
     plot_file = ANALYSIS_DIR / "overconfidence_analysis.png"
