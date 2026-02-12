@@ -51,6 +51,7 @@ import json
 import os
 import argparse
 import time
+import pytz
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -81,12 +82,22 @@ ODDS_API_BASE_URL = "https://api.the-odds-api.com/v4"
 
 # S3 configuration
 S3_BUCKET = "nba-betting-mt"
-S3_LIVE_ODDS_PREFIX = "data/01_input/live_player_odds/the-odds-api"
+S3_LIVE_ODDS_PREFIX = "data/01_input/live_player_odds/player_points"
+S3_SIGNALS_PREFIX = "data/04_output/live_betting_signals/player_points"
+
+# Local data directories
+LOCAL_DATA_DIR = Path.home() / "Downloads" / "tmp" / "live_betting_data"
+LOCAL_ODDS_DIR = LOCAL_DATA_DIR / "odds"
+LOCAL_SIGNALS_DIR = LOCAL_DATA_DIR / "signals"
+
+# Create directories
+LOCAL_ODDS_DIR.mkdir(exist_ok=True, parents=True)
+LOCAL_SIGNALS_DIR.mkdir(exist_ok=True, parents=True)
 
 # Betting parameters
-MIN_EDGE_THRESHOLD = 0.15  # 15% minimum edge
+MIN_EDGE_THRESHOLD = 0.10  # 15% minimum edge
 N_SIMULATIONS = 1000  # Default simulations (balance speed vs accuracy)
-MAX_PLAYERS_PER_GAME = 10  # Only check top scorers to save time
+MAX_PLAYERS_PER_GAME = 20  # Only check top scorers to save time
 MAX_DATA_AGE_SECONDS = 60  # Maximum age for fresh data (PBP and odds)
 
 # ESPN API
@@ -94,6 +105,21 @@ ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/
 
 # Initialize boto3
 s3_client = boto3.client('s3')
+
+
+# =============================================================================
+# PERFORMANCE TIMING DECORATOR
+# =============================================================================
+
+def timed(func):
+    """Decorator to time function execution and log results."""
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        elapsed = time.time() - start_time
+        print(f"      ⏱️  {func.__name__}: {elapsed:.2f}s")
+        return result
+    return wrapper
 
 
 # =============================================================================
@@ -283,44 +309,98 @@ def generate_fake_active_players(game_id: str) -> List[Dict]:
 
 def generate_fake_live_odds() -> pd.DataFrame:
     """
-    Generate fake live odds for testing.
+    Generate realistic fake live odds for testing.
     
-    Using standard -110 odds (typical sportsbook juice) but with DIFFERENT lines
-    than pregame to test the line adjustment logic.
+    Simulates real market structure:
+    - Multiple bookmakers (DraftKings, FanDuel, BetMGM, BetRivers, BetOnlineAG, Bovada)
+    - Main lines at -110/-110 (most books)
+    - Bovada with multiple alt lines (5-9 different prop lines)
+    - Skewed odds for some players (tests longshot bias)
     
-    Pregame lines (from fake_pregame_lines):
-    - Nikola Jokic: 26.5
-    - Jamal Murray: 22.5
-    
-    Live lines (have moved based on game flow):
-    - Nikola Jokic: 24.5 (moved down 2 pts - he's behind pace)
-    - Jamal Murray: 20.5 (moved down 2 pts - he's behind pace)
-    
-    Odds explanation:
-    - -110 = bet $110 to win $100 (52.4% implied prob with vig)
-    - This tests the calculation functions with realistic odds
+    This tests the multi-bookmaker, multi-line analysis logic.
     """
-    odds_data = [
-        # Nikola Jokic - standard -110 odds (tests normal calculation)
-        {'bookmaker': 'draftkings', 'player_name': 'Nikola Jokic', 'line': 24.5, 'side': 'Over', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'draftkings', 'player_name': 'Nikola Jokic', 'line': 24.5, 'side': 'Under', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'fanduel', 'player_name': 'Nikola Jokic', 'line': 24.5, 'side': 'Over', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'fanduel', 'player_name': 'Nikola Jokic', 'line': 24.5, 'side': 'Under', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        
-        # Jamal Murray - standard -110 odds (tests normal calculation)
-        {'bookmaker': 'draftkings', 'player_name': 'Jamal Murray', 'line': 20.5, 'side': 'Over', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'draftkings', 'player_name': 'Jamal Murray', 'line': 20.5, 'side': 'Under', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'fanduel', 'player_name': 'Jamal Murray', 'line': 20.5, 'side': 'Over', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'fanduel', 'player_name': 'Jamal Murray', 'line': 20.5, 'side': 'Under', 'odds': -110, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        
-        # LeBron James - heavily skewed odds (tests longshot bias adjustment)
-        # Market heavily favors OVER (-300), making UNDER a longshot (+250)
-        # This will show the adjustment in action
-        {'bookmaker': 'draftkings', 'player_name': 'LeBron James', 'line': 23.5, 'side': 'Over', 'odds': -300, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'draftkings', 'player_name': 'LeBron James', 'line': 23.5, 'side': 'Under', 'odds': +250, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'fanduel', 'player_name': 'LeBron James', 'line': 23.5, 'side': 'Over', 'odds': -280, 'timestamp': datetime.now(timezone.utc).isoformat()},
-        {'bookmaker': 'fanduel', 'player_name': 'LeBron James', 'line': 23.5, 'side': 'Under', 'odds': +230, 'timestamp': datetime.now(timezone.utc).isoformat()},
+    now = datetime.now(timezone.utc).isoformat()
+    odds_data = []
+    
+    # Nikola Jokic - standard market (pregame 26.5, live 24.5)
+    # Multiple bookmakers, mostly -110
+    for bookmaker in ['draftkings', 'fanduel', 'betmgm', 'betrivers', 'betonlineag']:
+        odds_data.extend([
+            {'bookmaker': bookmaker, 'player_name': 'Nikola Jokic', 'line': 24.5, 'side': 'Over', 'odds': -110, 'timestamp': now},
+            {'bookmaker': bookmaker, 'player_name': 'Nikola Jokic', 'line': 24.5, 'side': 'Under', 'odds': -110, 'timestamp': now},
+        ])
+    
+    # Bovada alt lines for Jokic (pregame was 26.5, live main is 24.5)
+    jokic_bovada_lines = [
+        (20.5, -250, 185),   # Heavy favorite over
+        (21.5, -200, 150),
+        (22.5, -165, 125),
+        (23.5, -130, 100),
+        (24.5, -110, -120),  # Main line
+        (25.5, 110, -145),
+        (26.5, 130, -170),
+        (27.5, 155, -210),
+        (28.5, 190, -260),
     ]
+    for line, over_odds, under_odds in jokic_bovada_lines:
+        odds_data.extend([
+            {'bookmaker': 'bovada', 'player_name': 'Nikola Jokic', 'line': line, 'side': 'Over', 'odds': over_odds, 'timestamp': now},
+            {'bookmaker': 'bovada', 'player_name': 'Nikola Jokic', 'line': line, 'side': 'Under', 'odds': under_odds, 'timestamp': now},
+        ])
+    
+    # Jamal Murray - standard market (pregame 22.5, live 20.5)
+    for bookmaker in ['draftkings', 'fanduel', 'betmgm', 'betrivers', 'betonlineag']:
+        odds_data.extend([
+            {'bookmaker': bookmaker, 'player_name': 'Jamal Murray', 'line': 20.5, 'side': 'Over', 'odds': -110, 'timestamp': now},
+            {'bookmaker': bookmaker, 'player_name': 'Jamal Murray', 'line': 20.5, 'side': 'Under', 'odds': -110, 'timestamp': now},
+        ])
+    
+    # Bovada alt lines for Murray (pregame was 22.5, live main is 20.5)
+    murray_bovada_lines = [
+        (16.5, -250, 185),
+        (17.5, -200, 150),
+        (18.5, -165, 125),
+        (19.5, -130, 100),
+        (20.5, -110, -120),  # Main line
+        (21.5, 110, -145),
+        (22.5, 130, -170),
+        (23.5, 155, -210),
+    ]
+    for line, over_odds, under_odds in murray_bovada_lines:
+        odds_data.extend([
+            {'bookmaker': 'bovada', 'player_name': 'Jamal Murray', 'line': line, 'side': 'Over', 'odds': over_odds, 'timestamp': now},
+            {'bookmaker': 'bovada', 'player_name': 'Jamal Murray', 'line': line, 'side': 'Under', 'odds': under_odds, 'timestamp': now},
+        ])
+    
+    # LeBron James - heavily skewed market (pregame 25.5, live 23.5)
+    # Market thinks he's unlikely to hit (he's having a bad game)
+    # Main line is -290/+240 (tests longshot bias adjustment)
+    for bookmaker in ['draftkings', 'fanduel', 'betmgm', 'betrivers']:
+        # Slight variation across books
+        over_odds = -290 if bookmaker == 'draftkings' else -280
+        under_odds = 240 if bookmaker == 'draftkings' else 230
+        odds_data.extend([
+            {'bookmaker': bookmaker, 'player_name': 'LeBron James', 'line': 23.5, 'side': 'Over', 'odds': over_odds, 'timestamp': now},
+            {'bookmaker': bookmaker, 'player_name': 'LeBron James', 'line': 23.5, 'side': 'Under', 'odds': under_odds, 'timestamp': now},
+        ])
+    
+    # Bovada alt lines for LeBron (pregame was 25.5, live main is 23.5)
+    lebron_bovada_lines = [
+        (19.5, -350, 250),
+        (20.5, -300, 220),
+        (21.5, -270, 200),
+        (22.5, -240, 180),
+        (23.5, -210, 160),  # Main line (still skewed but less extreme)
+        (24.5, -170, 130),
+        (25.5, -140, 110),
+        (26.5, -110, -120),
+    ]
+    for line, over_odds, under_odds in lebron_bovada_lines:
+        odds_data.extend([
+            {'bookmaker': 'bovada', 'player_name': 'LeBron James', 'line': line, 'side': 'Over', 'odds': over_odds, 'timestamp': now},
+            {'bookmaker': 'bovada', 'player_name': 'LeBron James', 'line': line, 'side': 'Under', 'odds': under_odds, 'timestamp': now},
+        ])
+    
     return pd.DataFrame(odds_data)
 
 
@@ -328,6 +408,7 @@ def generate_fake_live_odds() -> pd.DataFrame:
 # STEP 1: FETCH LIVE GAMES
 # =============================================================================
 
+@timed
 def fetch_live_games(test_mode: bool = False) -> List[Dict]:
     """
     Fetch currently live NBA games from ESPN API.
@@ -379,6 +460,7 @@ def fetch_live_games(test_mode: bool = False) -> List[Dict]:
 # STEP 2: VALIDATE PBP FRESHNESS (GATE 2)
 # =============================================================================
 
+@timed
 def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_DATA_AGE_SECONDS, test_mode: bool = False) -> Optional[Dict]:
     """
     Fetch play-by-play data and validate it's fresh (Gate 2).
@@ -441,6 +523,7 @@ def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_DATA_AGE_SEC
 # STEP 3: GET ACTIVE PLAYERS (GATE 1)
 # =============================================================================
 
+@timed
 def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
     """
     Get active players from a live game's boxscore.
@@ -522,6 +605,7 @@ def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
 # STEP 3: FETCH LIVE ODDS
 # =============================================================================
 
+@timed
 def fetch_live_odds(game_id: str, test_mode: bool = False) -> Optional[pd.DataFrame]:
     """
     Fetch live player prop odds from The Odds API.
@@ -658,6 +742,104 @@ def save_live_odds_to_s3(odds_df: pd.DataFrame) -> bool:
     
     except Exception as e:
         print(f"⚠️  Error saving odds to S3: {e}")
+        return False
+
+
+# =============================================================================
+# STEP 4B: SAVE SIGNALS TO PARQUET
+# =============================================================================
+
+def get_et_date() -> str:
+    """
+    Get current date in ET timezone (YYYY-MM-DD format).
+    Games past midnight ET will be in next day's file.
+    """
+    et_tz = pytz.timezone('US/Eastern')
+    et_now = datetime.now(et_tz)
+    return et_now.strftime('%Y-%m-%d')
+
+
+def save_signals_to_parquet(signals: List[Dict]) -> bool:
+    """
+    Save signals to parquet files (local and S3).
+    Uses DuckDB to append to existing file for the day (ET timezone).
+    
+    File structure:
+    - S3: s3://nba-betting-mt/data/04_output/live_betting_signals/player_points/YYYYMMDD.parquet
+    - Local: ~/Downloads/tmp/live_betting_data/signals/YYYYMMDD.parquet
+    
+    Args:
+        signals: List of signal dictionaries
+    
+    Returns:
+        True if successful
+    """
+    if not signals:
+        return True
+    
+    try:
+        import duckdb
+        
+        # Get ET date for file naming
+        game_date = get_et_date()
+        date_str = game_date.replace('-', '')
+        
+        # Prepare data
+        signals_df = pd.DataFrame(signals)
+        
+        # Add timestamp in ET
+        et_tz = pytz.timezone('US/Eastern')
+        signals_df['save_timestamp_et'] = datetime.now(et_tz)
+        signals_df['save_timestamp_utc'] = datetime.now(timezone.utc)
+        signals_df['game_date_et'] = game_date
+        
+        # File paths
+        local_file = LOCAL_SIGNALS_DIR / f"{date_str}.parquet"
+        s3_key = f"{S3_SIGNALS_PREFIX}/{date_str}.parquet"
+        
+        # Use DuckDB to append or create
+        con = duckdb.connect(database=':memory:')
+        
+        if local_file.exists():
+            # Load existing data and append
+            con.execute(f"""
+                CREATE TABLE existing AS 
+                SELECT * FROM read_parquet('{local_file}')
+            """)
+            
+            con.execute("""
+                CREATE TABLE new_signals AS 
+                SELECT * FROM signals_df
+            """)
+            
+            con.execute(f"""
+                COPY (
+                    SELECT * FROM existing
+                    UNION ALL
+                    SELECT * FROM new_signals
+                ) TO '{local_file}' (FORMAT PARQUET)
+            """)
+        else:
+            # Create new file
+            con.execute(f"""
+                COPY signals_df TO '{local_file}' (FORMAT PARQUET)
+            """)
+        
+        con.close()
+        
+        # Upload to S3
+        with open(local_file, 'rb') as f:
+            s3_client.put_object(
+                Bucket=S3_BUCKET,
+                Key=s3_key,
+                Body=f.read()
+            )
+        
+        print(f"      💾 Saved {len(signals)} signal(s) to {date_str}.parquet (local + S3)")
+        return True
+    
+    except Exception as e:
+        print(f"      ⚠️  Failed to save signals to parquet: {e}")
         return False
 
 
@@ -901,6 +1083,7 @@ def analyze_player_betting_opportunity(
         
         # Run Monte Carlo simulation ONCE
         print(f"      🎲 Running Monte Carlo ({n_sims:,} sims)...")
+        mc_start = time.time()
         model_prob_over = monte_carlo_simulate_bet(
             player_profile=player_profile,
             current_minute=game_minute,
@@ -911,11 +1094,14 @@ def analyze_player_betting_opportunity(
             score_differential=None,
             debug=False
         )
+        mc_elapsed = time.time() - mc_start
+        print(f"         ⏱️  MC completed: {mc_elapsed:.2f}s")
         
         # =====================================================================
         # Analyze all (bookmaker × line × side) combinations
         # =====================================================================
         all_bets = []
+        combinations_checked = 0
         
         for bookmaker in player_odds['bookmaker'].unique():
             book_odds = player_odds[player_odds['bookmaker'] == bookmaker]
@@ -933,13 +1119,16 @@ def analyze_player_betting_opportunity(
                 over_odds = int(over_row.iloc[0]['odds'])
                 under_odds = int(under_row.iloc[0]['odds'])
                 
-                # Analyze this specific bet
+                # Analyze this specific (bookmaker × line) combination
+                # detect_profitable_bet checks BOTH over and under internally
                 signal = detect_profitable_bet(
                     model_prob_over=model_prob_over,
                     over_odds=over_odds,
                     under_odds=under_odds,
                     min_edge=MIN_EDGE_THRESHOLD
                 )
+                
+                combinations_checked += 1
                 
                 if signal['action'] != 'PASS':
                     # Package signal with all context
@@ -958,13 +1147,16 @@ def analyze_player_betting_opportunity(
                     })
                     all_bets.append(signal)
         
+        print(f"         📊 Analyzed {combinations_checked} (bookmaker × line) combinations")
+        
         # Return bet with highest EV
         if not all_bets:
             print(f"      ⚪ No profitable signals found")
             return None
         
+        print(f"         ✅ Found {len(all_bets)} profitable bet(s)")
         best_bet = max(all_bets, key=lambda x: x['ev'])
-        print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']})")
+        print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']} {best_bet['bet_side']} {best_bet['live_line']})")
         return best_bet
     
     except Exception as e:
@@ -1021,6 +1213,22 @@ def main():
     print(f"   - Max Data Age: {MAX_DATA_AGE_SECONDS}s")
     print()
     
+    # Sync to top of minute if in loop mode
+    if loop_mode:
+        now = datetime.now()
+        seconds_into_minute = now.second + now.microsecond / 1_000_000
+        
+        if seconds_into_minute > 0:
+            # Wait until top of next minute
+            sleep_seconds = interval - seconds_into_minute
+            next_minute = now.replace(second=0, microsecond=0) + timedelta(seconds=interval)
+            
+            print(f"⏰ Syncing to minute boundary...")
+            print(f"   Current time: {now.strftime('%H:%M:%S.%f')[:-3]}")
+            print(f"   Next scan at: {next_minute.strftime('%H:%M:%S')} (waiting {sleep_seconds:.1f}s)")
+            print()
+            time.sleep(sleep_seconds)
+    
     iteration = 0
     
     while True:
@@ -1047,9 +1255,19 @@ def main():
             if not loop_mode:
                 return
             else:
-                print(f"   ⏳ Waiting {interval} seconds before next scan...")
+                # Calculate time to next minute boundary
+                now = datetime.now()
+                current_minute = now.replace(second=0, microsecond=0)
+                next_target = current_minute + timedelta(seconds=interval)
+                
+                if next_target <= now:
+                    next_target = next_target + timedelta(seconds=interval)
+                
+                sleep_seconds = (next_target - now).total_seconds()
+                
+                print(f"   ⏳ Waiting {sleep_seconds:.1f}s (current: {now.strftime('%H:%M:%S.%f')[:-3]})")
                 print()
-                time.sleep(interval)
+                time.sleep(sleep_seconds)
                 continue
         
         print(f"✅ Found {len(live_games)} live game(s)")
@@ -1203,10 +1421,32 @@ def main():
                 print(f"  Expected Value:   ${ev['expected_win']:.2f} - ${ev['expected_loss']:.2f} = ${signal['ev']:.2f}")
                 print(f"{'─'*80}")
                 print()
+            
+            # Save all signals to parquet (local + S3)
+            print("="*80)
+            print("SAVING SIGNALS TO PARQUET...")
+            print("="*80)
+            save_signals_to_parquet(all_signals)
+            print()
         
         print("="*80)
         print("✅ SCAN COMPLETE")
         print("="*80)
+        
+        # Calculate and show iteration timing
+        iteration_end_time = datetime.now()
+        elapsed_seconds = (iteration_end_time - iteration_start_time).total_seconds()
+        
+        print()
+        print(f"⏱️  Iteration Summary:")
+        print(f"   Total time: {elapsed_seconds:.1f}s")
+        print(f"   Games processed: {len(live_games)}")
+        print(f"   Signals found: {len(all_signals)}")
+        
+        if loop_mode and elapsed_seconds > interval * 0.9:
+            print(f"   ⚠️  WARNING: Iteration took {elapsed_seconds:.1f}s (>{interval*0.9:.0f}s)")
+            print(f"       Consider reducing --n-sims or increasing --interval")
+        
         print()
         
         # Exit or continue loop
@@ -1214,10 +1454,6 @@ def main():
             break
         else:
             # Calculate time to next interval boundary
-            iteration_end_time = datetime.now()
-            elapsed_seconds = (iteration_end_time - iteration_start_time).total_seconds()
-            
-            # Calculate next target time (next minute boundary)
             # Round up to next interval boundary
             current_minute = iteration_end_time.replace(second=0, microsecond=0)
             next_target = current_minute + timedelta(seconds=interval)
@@ -1228,8 +1464,8 @@ def main():
             
             sleep_seconds = (next_target - iteration_end_time).total_seconds()
             
-            print(f"⏳ Iteration took {elapsed_seconds:.1f}s")
-            print(f"   Next scan at {next_target.strftime('%H:%M:%S')} (sleeping {sleep_seconds:.1f}s)")
+            print(f"⏳ Next scan at {next_target.strftime('%H:%M:%S')}")
+            print(f"   Current time: {iteration_end_time.strftime('%H:%M:%S.%f')[:-3]} (sleeping {sleep_seconds:.1f}s)")
             print()
             time.sleep(sleep_seconds)
 
