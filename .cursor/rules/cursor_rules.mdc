@@ -173,3 +173,5 @@ def main():
 
 - bad: functions organized alphabetically or randomly - forces reader to jump around
 
+13. if giving me bash/code that does not materially change data (ie., it is safe for you to test before giving to me) - please test it so i don't need to debug small errors
+
