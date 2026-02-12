@@ -7,22 +7,38 @@ simulation to detect edges between our model and live betting markets.
 
 Process:
 1. Fetch live games from ESPN API
-2. Get active players in each game
-3. Load player profiles and pregame lines
-4. Run Monte Carlo simulations (10k iterations)
-5. Fetch live odds from The Odds API
-6. Calculate expected value and detect profitable edges
-7. Log profitable signals to console
+2. Validate PBP data freshness (Gate 2: <1min old)
+3. Fetch live odds from The Odds API
+4. Filter stale odds (Gate 3: <1min at bookmaker level)
+5. Get active players (Gate 1: in live game)
+6. For each player with fresh odds and pregame line (Gates 3 & 4):
+   - Run Monte Carlo simulation (1000 iterations)
+   - Analyze all (bookmaker × line × side) combinations
+   - Return best bet by expected value
+7. Display profitable signals
 8. Save live odds data to S3
 
+Performance Gates (all must pass before running MC):
+- Gate 1: Player is in a live game (ESPN boxscore exists)
+- Gate 2: PBP data is fresh (<1 min old)
+- Gate 3: Player has live odds from at least one fresh bookmaker
+- Gate 4: Player has pregame line in S3 (for calibration)
+
 Usage:
+    # Run once
     python src/pbp_data/10_live_betting_signal_generator.py
     
+    # Run continuously (every 60 seconds)
+    python src/pbp_data/10_live_betting_signal_generator.py --loop --interval 60
+    
     # With custom parameters
-    python src/pbp_data/10_live_betting_signal_generator.py --min-edge 0.20 --n-sims 5000
+    python src/pbp_data/10_live_betting_signal_generator.py --min-edge 0.20 --n-sims 2000
+    
+    # Test mode with fake data
+    python src/pbp_data/10_live_betting_signal_generator.py --test-with-fake-data
 
 Output:
-    - Console: Profitable betting signals
+    - Console: Profitable betting signals with specific bookmakers
     - S3: Live odds snapshots (s3://nba-betting-mt/data/01_input/live_player_odds/)
 """
 
@@ -34,7 +50,8 @@ import numpy as np
 import json
 import os
 import argparse
-from datetime import datetime, timezone
+import time
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dotenv import load_dotenv
@@ -68,8 +85,9 @@ S3_LIVE_ODDS_PREFIX = "data/01_input/live_player_odds/the-odds-api"
 
 # Betting parameters
 MIN_EDGE_THRESHOLD = 0.15  # 15% minimum edge
-N_SIMULATIONS = 10000
+N_SIMULATIONS = 1000  # Default simulations (balance speed vs accuracy)
 MAX_PLAYERS_PER_GAME = 10  # Only check top scorers to save time
+MAX_DATA_AGE_SECONDS = 60  # Maximum age for fresh data (PBP and odds)
 
 # ESPN API
 ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
@@ -358,7 +376,69 @@ def fetch_live_games(test_mode: bool = False) -> List[Dict]:
 
 
 # =============================================================================
-# STEP 2: GET ACTIVE PLAYERS
+# STEP 2: VALIDATE PBP FRESHNESS (GATE 2)
+# =============================================================================
+
+def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_DATA_AGE_SECONDS, test_mode: bool = False) -> Optional[Dict]:
+    """
+    Fetch play-by-play data and validate it's fresh (Gate 2).
+    
+    Args:
+        game_id: ESPN game ID
+        max_age_seconds: Maximum age in seconds for data to be considered fresh
+        test_mode: If True, always return valid (for testing)
+    
+    Returns:
+        PBP data dict if fresh, None if stale or API fails
+    """
+    if test_mode:
+        # In test mode, return a minimal valid structure
+        return {'plays': [{'clock': {'timestamp': datetime.now(timezone.utc).isoformat()}}]}
+    
+    try:
+        url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event={game_id}"
+        response = requests.get(url, timeout=10, verify=False)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Check if we have plays
+        plays = data.get('plays', [])
+        if not plays:
+            print(f"      ⚠️  No plays found in PBP (Gate 2 failed)")
+            return None
+        
+        # Get last play timestamp
+        last_play = plays[-1]
+        last_play_timestamp = last_play.get('wallclock')
+        
+        if not last_play_timestamp:
+            print(f"      ⚠️  No timestamp on last play (Gate 2 failed)")
+            return None
+        
+        # Parse timestamp
+        try:
+            # ESPN timestamp format: "2024-02-11T21:45:30Z"
+            last_play_time = datetime.fromisoformat(last_play_timestamp.replace('Z', '+00:00'))
+            age_seconds = (datetime.now(timezone.utc) - last_play_time).total_seconds()
+            
+            if age_seconds > max_age_seconds:
+                print(f"      ⚠️  PBP data stale ({age_seconds:.0f}s old) (Gate 2 failed)")
+                return None
+            
+            print(f"      ✅ PBP data fresh ({age_seconds:.0f}s old) (Gate 2 passed)")
+            return data
+        
+        except Exception as e:
+            print(f"      ⚠️  Could not parse timestamp: {e} (Gate 2 failed)")
+            return None
+    
+    except Exception as e:
+        print(f"      ❌ Failed to fetch PBP: {e} (Gate 2 failed)")
+        return None
+
+
+# =============================================================================
+# STEP 3: GET ACTIVE PLAYERS (GATE 1)
 # =============================================================================
 
 def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
@@ -505,6 +585,44 @@ def fetch_live_odds(game_id: str, test_mode: bool = False) -> Optional[pd.DataFr
     except Exception as e:
         print(f"⚠️  Error fetching live odds: {e}")
         return None
+
+
+def filter_stale_odds(odds_df: pd.DataFrame, max_age_seconds: int = MAX_DATA_AGE_SECONDS) -> pd.DataFrame:
+    """
+    Filter out stale odds at the bookmaker level (Gate 3 pre-check).
+    If ANY odds from a bookmaker are older than max_age_seconds, remove ALL odds from that bookmaker.
+    
+    Args:
+        odds_df: DataFrame with live odds
+        max_age_seconds: Maximum age in seconds for fresh data
+    
+    Returns:
+        DataFrame with only fresh bookmakers
+    """
+    if len(odds_df) == 0:
+        return odds_df
+    
+    now = datetime.now(timezone.utc)
+    
+    # Convert timestamp to datetime
+    odds_df = odds_df.copy()
+    odds_df['timestamp_dt'] = pd.to_datetime(odds_df['timestamp'], utc=True)
+    odds_df['age_seconds'] = (now - odds_df['timestamp_dt']).dt.total_seconds()
+    
+    # Find bookmakers with ANY stale data
+    stale_bookmakers = odds_df[odds_df['age_seconds'] > max_age_seconds]['bookmaker'].unique()
+    
+    if len(stale_bookmakers) > 0:
+        print(f"   ⚠️  Filtering out stale bookmakers: {', '.join(stale_bookmakers)}")
+    
+    # Keep only fresh bookmakers
+    fresh_df = odds_df[~odds_df['bookmaker'].isin(stale_bookmakers)].copy()
+    fresh_df = fresh_df.drop(columns=['timestamp_dt', 'age_seconds'])
+    
+    num_fresh_books = len(fresh_df['bookmaker'].unique()) if len(fresh_df) > 0 else 0
+    print(f"   ✅ {num_fresh_books} bookmaker(s) with fresh odds (<{max_age_seconds}s)")
+    
+    return fresh_df
 
 
 # =============================================================================
@@ -672,64 +790,103 @@ def analyze_player_betting_opportunity(
     game: Dict,
     live_odds_df: Optional[pd.DataFrame],
     n_sims: int = N_SIMULATIONS,
-    test_mode: bool = False
+    test_mode: bool = False,
+    market: str = "player_points"
 ) -> Optional[Dict]:
     """
-    Analyze a single player for betting opportunities.
+    Analyze all betting opportunities for a player across all bookmakers and lines.
+    
+    Performance gates (all must pass before running MC):
+    - Gate 1: Player in live game (already true by this point)
+    - Gate 2: PBP data fresh (checked at game level)
+    - Gate 3: Player has live odds from at least one bookmaker
+    - Gate 4: Player has pregame line for calibration
+    
+    Process:
+    1. Check Gates 3 & 4 (cheap checks)
+    2. Load profile and calculate vegas adjustment
+    3. Run MC simulation ONCE
+    4. Analyze all (bookmaker × line × side) combinations
+    5. Return best bet by expected value
     
     Args:
         player: Player info (name, points, minutes)
         game: Game info (game_id, quarter, clock)
-        live_odds_df: DataFrame with live odds
+        live_odds_df: DataFrame with live odds (already filtered for freshness)
         n_sims: Number of Monte Carlo simulations
         test_mode: If True, use fake pregame lines
+        market: Betting market to analyze (default "player_points")
     
     Returns:
-        Signal dictionary if profitable, None otherwise
+        Signal dictionary with best bet if profitable, None otherwise
     """
     player_name = player['player_name']
     current_points = player['current_points']
     
     try:
-        # Step 1: Load player profile
-        player_profile = load_player_profile(player_name)
+        # =====================================================================
+        # GATE 3: Check if player has live odds
+        # =====================================================================
+        if live_odds_df is None or len(live_odds_df) == 0:
+            print(f"      ⚪ No live odds available (Gate 3 failed)")
+            return None
         
-        # Step 2: Get pregame line
+        player_odds = live_odds_df[
+            live_odds_df['player_name'].str.contains(player_name, case=False, na=False)
+        ]
+        
+        if len(player_odds) == 0:
+            print(f"      ⚪ No live odds for player (Gate 3 failed)")
+            return None
+        
+        num_bookmakers = len(player_odds['bookmaker'].unique())
+        num_lines = len(player_odds['line'].unique())
+        print(f"      ✅ Found odds: {num_bookmakers} bookmaker(s), {num_lines} line(s) (Gate 3 passed)")
+        
+        # =====================================================================
+        # GATE 4: Check if player has pregame line
+        # =====================================================================
         if test_mode:
             # Use fake pregame lines for testing
             fake_pregame_lines = {
                 'Nikola Jokic': 26.5,
                 'Jamal Murray': 22.5,
-                'LeBron James': 25.5  # For skewed odds test
+                'LeBron James': 25.5
             }
             pregame_line = fake_pregame_lines.get(player_name)
             if pregame_line:
-                print(f"      📊 Pregame line (TEST): {pregame_line}")
+                print(f"      ✅ Pregame line (TEST): {pregame_line} (Gate 4 passed)")
         else:
             pregame_line = get_consensus_prop_line(
                 player_name,
                 game['game_date'],
-                market="player_points"
+                market=market
             )
             if pregame_line:
-                print(f"      📊 Pregame line: {pregame_line}")
+                print(f"      ✅ Pregame line: {pregame_line} (Gate 4 passed)")
         
         if not pregame_line:
-            print(f"      ⚠️  No pregame line found for {player_name}")
-            return None  # No pregame line available
+            print(f"      ⚪ No pregame line found (Gate 4 failed)")
+            return None
         
-        # Step 3: Calculate Vegas adjustment (cache this in production)
+        # =====================================================================
+        # ALL GATES PASSED - Proceed with expensive operations
+        # =====================================================================
+        
+        # Load player profile
+        player_profile = load_player_profile(player_name)
+        
+        # Calculate Vegas adjustment for calibration
         vegas_adjustment = find_vegas_adjustment(
             player_profile,
             pregame_line,
-            n_simulations=5000  # Faster for calibration
+            n_simulations=5000
         )
         
-        # Step 4: Calculate current game minute
+        # Calculate current game minute
         quarter = game['quarter']
         clock = game['clock']
         
-        # Parse clock (MM:SS format)
         try:
             if ':' in clock:
                 mins, secs = map(int, clock.split(':'))
@@ -742,7 +899,8 @@ def analyze_player_betting_opportunity(
         quarter_start = (quarter - 1) * 12
         game_minute = quarter_start + (12 - time_remaining)
         
-        # Step 5: Run Monte Carlo simulation
+        # Run Monte Carlo simulation ONCE
+        print(f"      🎲 Running Monte Carlo ({n_sims:,} sims)...")
         model_prob_over = monte_carlo_simulate_bet(
             player_profile=player_profile,
             current_minute=game_minute,
@@ -754,57 +912,62 @@ def analyze_player_betting_opportunity(
             debug=False
         )
         
-        # Step 6: Get live odds for this player
-        if live_odds_df is None or len(live_odds_df) == 0:
+        # =====================================================================
+        # Analyze all (bookmaker × line × side) combinations
+        # =====================================================================
+        all_bets = []
+        
+        for bookmaker in player_odds['bookmaker'].unique():
+            book_odds = player_odds[player_odds['bookmaker'] == bookmaker]
+            
+            for line_value in book_odds['line'].unique():
+                line_odds = book_odds[book_odds['line'] == line_value]
+                
+                # Get over/under odds for this specific book + line
+                over_row = line_odds[line_odds['side'] == 'Over']
+                under_row = line_odds[line_odds['side'] == 'Under']
+                
+                if len(over_row) == 0 or len(under_row) == 0:
+                    continue
+                
+                over_odds = int(over_row.iloc[0]['odds'])
+                under_odds = int(under_row.iloc[0]['odds'])
+                
+                # Analyze this specific bet
+                signal = detect_profitable_bet(
+                    model_prob_over=model_prob_over,
+                    over_odds=over_odds,
+                    under_odds=under_odds,
+                    min_edge=MIN_EDGE_THRESHOLD
+                )
+                
+                if signal['action'] != 'PASS':
+                    # Package signal with all context
+                    signal.update({
+                        'bookmaker': bookmaker,
+                        'live_line': line_value,
+                        'player_name': player_name,
+                        'team': player['team'],
+                        'current_points': current_points,
+                        'minutes_played': player['minutes_played'],
+                        'game_minute': game_minute,
+                        'game_state': f"Q{quarter} {clock}",
+                        'pregame_line': pregame_line,
+                        'game_id': game['game_id'],
+                        'game_info': f"{game['away_team']} @ {game['home_team']}"
+                    })
+                    all_bets.append(signal)
+        
+        # Return bet with highest EV
+        if not all_bets:
+            print(f"      ⚪ No profitable signals found")
             return None
         
-        player_odds = live_odds_df[
-            live_odds_df['player_name'].str.contains(player_name, case=False, na=False)
-        ]
-        
-        if len(player_odds) == 0:
-            return None  # No live odds for this player
-        
-        # Get over/under odds (take consensus across bookmakers)
-        over_odds_list = player_odds[player_odds['side'] == 'Over']['odds'].tolist()
-        under_odds_list = player_odds[player_odds['side'] == 'Under']['odds'].tolist()
-        
-        if not over_odds_list or not under_odds_list:
-            return None
-        
-        over_odds = int(np.median(over_odds_list))
-        under_odds = int(np.median(under_odds_list))
-        live_line = player_odds['line'].iloc[0]
-        
-        # Step 7: Detect edge
-        signal = detect_profitable_bet(
-            model_prob_over=model_prob_over,
-            over_odds=over_odds,
-            under_odds=under_odds,
-            min_edge=MIN_EDGE_THRESHOLD
-        )
-        
-        if signal['action'] == 'PASS':
-            return None
-        
-        # Step 8: Package signal
-        signal.update({
-            'player_name': player_name,
-            'team': player['team'],
-            'current_points': current_points,
-            'minutes_played': player['minutes_played'],
-            'game_minute': game_minute,
-            'game_state': f"Q{quarter} {clock}",
-            'pregame_line': pregame_line,
-            'live_line': live_line,
-            'game_id': game['game_id'],
-            'game_info': f"{game['away_team']} @ {game['home_team']}",
-        })
-        
-        return signal
+        best_bet = max(all_bets, key=lambda x: x['ev'])
+        print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']})")
+        return best_bet
     
     except Exception as e:
-        # Don't crash on individual player errors
         print(f"   ⚠️  Error analyzing {player_name}: {e}")
         return None
 
@@ -814,184 +977,261 @@ def analyze_player_betting_opportunity(
 # =============================================================================
 
 def main():
-    """Main execution loop."""
+    """Main execution loop with performance gates."""
     
     parser = argparse.ArgumentParser(description="Live betting signal generator")
     parser.add_argument("--min-edge", type=float, default=0.15, help="Minimum edge threshold (default 0.15)")
-    parser.add_argument("--n-sims", type=int, default=10000, help="Number of MC simulations (default 10000)")
+    parser.add_argument("--n-sims", type=int, default=1000, help="Number of MC simulations (default 1000)")
     parser.add_argument("--test-with-fake-data", action="store_true", help="Run in test mode with fake data")
+    parser.add_argument("--loop", action="store_true", help="Run continuously (scan every N seconds)")
+    parser.add_argument("--interval", type=int, default=60, help="Seconds between scans when in loop mode (default 60)")
     args = parser.parse_args()
     
     global MIN_EDGE_THRESHOLD, N_SIMULATIONS
     MIN_EDGE_THRESHOLD = args.min_edge
     N_SIMULATIONS = args.n_sims
     test_mode = args.test_with_fake_data
+    loop_mode = args.loop
+    interval = args.interval
     
     print("="*80)
     print("LIVE BETTING SIGNAL GENERATOR")
     print("="*80)
     print()
-    print("📋 Process Overview:")
+    print("📋 Process Overview (with Performance Gates):")
     print("   1. Fetch live games from ESPN")
-    print("   2. Get active players in each game")
-    print("   3. Load player profiles and pregame lines")
-    print("   4. Run Monte Carlo simulations (10k iterations)")
-    print("   5. Fetch live odds from The Odds API")
-    print("   6. Calculate expected value and detect edges")
-    print("   7. Log profitable signals")
+    print("   2. Validate PBP data freshness (Gate 2: <1min)")
+    print("   3. Fetch live odds from The Odds API")
+    print("   4. Filter stale odds (Gate 3: <1min at bookmaker level)")
+    print("   5. Get active players (Gate 1: in live game)")
+    print("   6. For each player:")
+    print("      - Check Gates 3 & 4 (has odds + pregame line)")
+    print("      - Run MC simulation (only if all gates pass)")
+    print("      - Analyze all (bookmaker × line × side) combinations")
+    print("      - Return best bet by EV")
+    print("   7. Display profitable signals with specific bookmakers")
     print("   8. Save live odds to S3")
     print()
     print(f"⚙️  Configuration:")
     print(f"   - Mode: {'TEST (Fake Data)' if test_mode else 'LIVE (Real Data)'}")
+    print(f"   - Loop Mode: {'ON (every {}s)'.format(interval) if loop_mode else 'OFF (run once)'}")
     print(f"   - Min Edge Threshold: {MIN_EDGE_THRESHOLD:.1%}")
     print(f"   - MC Simulations: {N_SIMULATIONS:,}")
     print(f"   - Max Players Per Game: {MAX_PLAYERS_PER_GAME}")
+    print(f"   - Max Data Age: {MAX_DATA_AGE_SECONDS}s")
     print()
     
-    # =========================================================================
-    # STEP 1: FETCH LIVE GAMES
-    # =========================================================================
-    print("="*80)
-    print(f"STEP 1: Fetching live games {'(TEST MODE - FAKE DATA)' if test_mode else 'from ESPN'}...")
-    print("="*80)
+    iteration = 0
     
-    live_games = fetch_live_games(test_mode=test_mode)
-    
-    if not live_games:
-        print("❌ No live games found")
-        return
-    
-    print(f"✅ Found {len(live_games)} live game(s)")
-    for game in live_games:
-        print(f"   🏀 {game['away_team']} ({game['away_score']}) @ {game['home_team']} ({game['home_score']})")
-        print(f"      Q{game['quarter']} - {game['clock']}")
-    print()
-    
-    # Collect all signals
-    all_signals = []
-    
-    for game in live_games:
-        game_id = game['game_id']
+    while True:
+        iteration += 1
+        iteration_start_time = datetime.now()
+        
+        if loop_mode:
+            print("="*80)
+            print(f"ITERATION #{iteration} - {iteration_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print("="*80)
+            print()
         
         # =====================================================================
-        # STEP 2: GET ACTIVE PLAYERS
+        # STEP 1: FETCH LIVE GAMES
         # =====================================================================
         print("="*80)
-        print(f"STEP 2: Getting active players {'(TEST MODE)' if test_mode else ''} for {game['away_team']} @ {game['home_team']}...")
+        print(f"STEP 1: Fetching live games {'(TEST MODE)' if test_mode else 'from ESPN'}...")
         print("="*80)
         
-        players = get_active_players(game_id, test_mode=test_mode)
+        live_games = fetch_live_games(test_mode=test_mode)
         
-        if not players:
-            print("⚠️  No active players found")
-            continue
-        
-        print(f"✅ Found {len(players)} active player(s)")
-        for p in players:
-            print(f"   - {p['player_name']} ({p['team']}): {p['current_points']} pts, {p['minutes_played']:.1f} min")
-        print()
-        
-        # =====================================================================
-        # STEP 3: FETCH LIVE ODDS
-        # =====================================================================
-        print("="*80)
-        print(f"STEP 3: Fetching live odds {'(TEST MODE - FAKE DATA)' if test_mode else 'from The Odds API'}...")
-        print("="*80)
-        
-        live_odds_df = fetch_live_odds(game_id, test_mode=test_mode)
-        
-        if live_odds_df is None or len(live_odds_df) == 0:
-            print("⚠️  No live odds available for this game")
-            continue
-        
-        print(f"✅ Fetched odds for {live_odds_df['player_name'].nunique()} player(s)")
-        print()
-        
-        # =====================================================================
-        # STEP 4: SAVE ODDS TO S3
-        # =====================================================================
-        print("="*80)
-        print(f"STEP 4: Saving live odds to S3...")
-        print("="*80)
-        
-        if test_mode:
-            print("⏭️  Skipped (test mode)")
-        elif save_live_odds_to_s3(live_odds_df):
-            print("✅ Saved to S3")
-        else:
-            print("⚠️  Failed to save to S3")
-        print()
-        
-        # =====================================================================
-        # STEP 5-7: ANALYZE EACH PLAYER
-        # =====================================================================
-        print("="*80)
-        print(f"STEP 5-7: Analyzing players for betting opportunities...")
-        print("="*80)
-        
-        for player in players:
-            print(f"   🔄 Analyzing {player['player_name']}...")
-            
-            signal = analyze_player_betting_opportunity(
-                player, game, live_odds_df, n_sims=N_SIMULATIONS, test_mode=test_mode
-            )
-            
-            if signal:
-                all_signals.append(signal)
-                print(f"      ✅ PROFITABLE SIGNAL DETECTED")
+        if not live_games:
+            print("❌ No live games found")
+            if not loop_mode:
+                return
             else:
-                print(f"      ⚪ No profitable signal")
+                print(f"   ⏳ Waiting {interval} seconds before next scan...")
+                print()
+                time.sleep(interval)
+                continue
         
+        print(f"✅ Found {len(live_games)} live game(s)")
+        for game in live_games:
+            print(f"   🏀 {game['away_team']} ({game['away_score']}) @ {game['home_team']} ({game['home_score']})")
+            print(f"      Q{game['quarter']} - {game['clock']}")
         print()
-    
-    # =========================================================================
-    # STEP 8: DISPLAY SIGNALS
-    # =========================================================================
-    print("="*80)
-    print("PROFITABLE BETTING SIGNALS")
-    print("="*80)
-    print()
-    
-    if not all_signals:
-        print("❌ No profitable betting opportunities found")
-        return
-    
-    print(f"🎯 Found {len(all_signals)} profitable signal(s):")
-    print()
-    
-    for i, signal in enumerate(all_signals, 1):
-        # Build odds display showing both sides
-        if signal['bet_side'] == 'OVER':
-            odds_display = f"OVER {signal['live_line']} @ {signal['over_odds']:+d} (UNDER {signal['live_line']} @ {signal['under_odds']:+d})"
-            model_display = f"{signal['model_prob']:.1%} (OVER)"
+        
+        # Collect all signals
+        all_signals = []
+        
+        for game in live_games:
+            game_id = game['game_id']
+            
+            # =================================================================
+            # STEP 2: VALIDATE PBP FRESHNESS (GATE 2)
+            # =================================================================
+            print("="*80)
+            print(f"STEP 2: Validating PBP data for {game['away_team']} @ {game['home_team']} (Gate 2)...")
+            print("="*80)
+            
+            pbp_data = fetch_and_validate_pbp(game_id, max_age_seconds=MAX_DATA_AGE_SECONDS, test_mode=test_mode)
+            
+            if not pbp_data:
+                print("   ⏭️  Skipping game (PBP data stale or unavailable)")
+                print()
+                continue
+            
+            print()
+            
+            # =================================================================
+            # STEP 3: FETCH LIVE ODDS
+            # =================================================================
+            print("="*80)
+            print(f"STEP 3: Fetching live odds {'(TEST MODE)' if test_mode else 'from The Odds API'}...")
+            print("="*80)
+            
+            live_odds_df = fetch_live_odds(game_id, test_mode=test_mode)
+            
+            if live_odds_df is None or len(live_odds_df) == 0:
+                print("⚠️  No live odds available for this game")
+                print()
+                continue
+            
+            print(f"✅ Fetched odds for {live_odds_df['player_name'].nunique()} player(s)")
+            
+            # Filter stale odds (Gate 3 pre-check at bookmaker level)
+            live_odds_df = filter_stale_odds(live_odds_df, max_age_seconds=MAX_DATA_AGE_SECONDS)
+            
+            if len(live_odds_df) == 0:
+                print("⚠️  No fresh odds available (all bookmakers stale)")
+                print()
+                continue
+            
+            print()
+            
+            # =================================================================
+            # STEP 4: SAVE ODDS TO S3
+            # =================================================================
+            print("="*80)
+            print(f"STEP 4: Saving live odds to S3...")
+            print("="*80)
+            
+            if test_mode:
+                print("⏭️  Skipped (test mode)")
+            elif save_live_odds_to_s3(live_odds_df):
+                print("✅ Saved to S3")
+            else:
+                print("⚠️  Failed to save to S3")
+            print()
+            
+            # =================================================================
+            # STEP 5: GET ACTIVE PLAYERS (GATE 1)
+            # =================================================================
+            print("="*80)
+            print(f"STEP 5: Getting active players {'(TEST MODE)' if test_mode else ''} (Gate 1)...")
+            print("="*80)
+            
+            players = get_active_players(game_id, test_mode=test_mode)
+            
+            if not players:
+                print("⚠️  No active players found")
+                print()
+                continue
+            
+            print(f"✅ Found {len(players)} active player(s)")
+            for p in players:
+                print(f"   - {p['player_name']} ({p['team']}): {p['current_points']} pts, {p['minutes_played']:.1f} min")
+            print()
+            
+            # =================================================================
+            # STEP 6: ANALYZE EACH PLAYER (GATES 3 & 4, THEN MC)
+            # =================================================================
+            print("="*80)
+            print(f"STEP 6: Analyzing players (Gates 3 & 4, then MC if passed)...")
+            print("="*80)
+            
+            for player in players:
+                print(f"   🔄 Analyzing {player['player_name']}...")
+                
+                signal = analyze_player_betting_opportunity(
+                    player, game, live_odds_df, n_sims=N_SIMULATIONS, test_mode=test_mode
+                )
+                
+                if signal:
+                    all_signals.append(signal)
+            
+            print()
+        
+        # =====================================================================
+        # STEP 7: DISPLAY SIGNALS
+        # =====================================================================
+        print("="*80)
+        print("PROFITABLE BETTING SIGNALS")
+        print("="*80)
+        print()
+        
+        if not all_signals:
+            print("❌ No profitable betting opportunities found")
         else:
-            odds_display = f"UNDER {signal['live_line']} @ {signal['under_odds']:+d} (OVER {signal['live_line']} @ {signal['over_odds']:+d})"
-            model_display = f"{signal['model_prob']:.1%} (1 - {signal['model_prob_over']:.1%} over = UNDER)"
+            print(f"🎯 Found {len(all_signals)} profitable signal(s):")
+            print()
+            
+            for i, signal in enumerate(all_signals, 1):
+                # Build odds display showing both sides
+                if signal['bet_side'] == 'OVER':
+                    odds_display = f"OVER {signal['live_line']} @ {signal['over_odds']:+d} (UNDER {signal['live_line']} @ {signal['under_odds']:+d})"
+                    model_display = f"{signal['model_prob']:.1%} (OVER)"
+                else:
+                    odds_display = f"UNDER {signal['live_line']} @ {signal['under_odds']:+d} (OVER {signal['live_line']} @ {signal['over_odds']:+d})"
+                    model_display = f"{signal['model_prob']:.1%} (1 - {signal['model_prob_over']:.1%} over = UNDER)"
+                
+                # Get EV breakdown
+                ev = signal['ev_breakdown']
+                
+                print(f"Signal #{i} | {signal['player_name']} | {signal['team']}")
+                print(f"{'─'*80}")
+                print(f"Game:         {signal['game_info']} ({signal['game_state']})")
+                print(f"Model Inputs: {signal['current_points']} pts | {signal['game_minute']:.1f} game min | {signal['minutes_played']:.1f} played")
+                print(f"Lines:        {signal['pregame_line']} (pregame) → {signal['live_line']} (live)")
+                print(f"Bet:          {odds_display} on {signal['bookmaker']}")
+                print(f"Probabilities:")
+                print(f"  Model:      {model_display}")
+                print(f"  Market:     {signal['market_prob_fair_before']:.1%} → {signal['market_prob_fair_after']:.1%} (longshot adj)")
+                print(f"  Edge:       {signal['edge_before']:.1%} → {signal['edge_after']:.1%}")
+                print(f"EV Breakdown:")
+                print(f"  Decimal Odds:     {ev['decimal_odds']:.3f}")
+                print(f"  Win Amount:       ${ev['win_amount']:.2f} (per ${ev['bet_amount']:.0f} bet)")
+                print(f"  Expected Win:     {ev['prob_win']:.1%} × ${ev['win_amount']:.2f} = ${ev['expected_win']:.2f}")
+                print(f"  Expected Loss:    {ev['prob_lose']:.1%} × ${ev['bet_amount']:.0f} = ${ev['expected_loss']:.2f}")
+                print(f"  Expected Value:   ${ev['expected_win']:.2f} - ${ev['expected_loss']:.2f} = ${signal['ev']:.2f}")
+                print(f"{'─'*80}")
+                print()
         
-        # Get EV breakdown
-        ev = signal['ev_breakdown']
-        
-        print(f"Signal #{i} | {signal['player_name']} | {signal['team']}")
-        print(f"{'─'*80}")
-        print(f"Game:         {signal['game_info']} ({signal['game_state']})")
-        print(f"Model Inputs: {signal['current_points']} pts | {signal['game_minute']:.1f} game min | {signal['minutes_played']:.1f} played")
-        print(f"Lines:        {signal['pregame_line']} (pregame) → {signal['live_line']} (live) | Bet: {odds_display}")
-        print(f"Probabilities:")
-        print(f"  Model:      {model_display}")
-        print(f"  Market:     {signal['market_prob_fair_before']:.1%} → {signal['market_prob_fair_after']:.1%} (longshot adj)")
-        print(f"  Edge:       {signal['edge_before']:.1%} → {signal['edge_after']:.1%}")
-        print(f"EV Breakdown:")
-        print(f"  Decimal Odds:     {ev['decimal_odds']:.3f}")
-        print(f"  Win Amount:       ${ev['win_amount']:.2f} (per ${ev['bet_amount']:.0f} bet)")
-        print(f"  Expected Win:     {ev['prob_win']:.1%} × ${ev['win_amount']:.2f} = ${ev['expected_win']:.2f}")
-        print(f"  Expected Loss:    {ev['prob_lose']:.1%} × ${ev['bet_amount']:.0f} = ${ev['expected_loss']:.2f}")
-        print(f"  Expected Value:   ${ev['expected_win']:.2f} - ${ev['expected_loss']:.2f} = ${signal['ev']:.2f}")
-        print(f"{'─'*80}")
+        print("="*80)
+        print("✅ SCAN COMPLETE")
+        print("="*80)
         print()
-    
-    print("="*80)
-    print("✅ SCAN COMPLETE")
-    print("="*80)
+        
+        # Exit or continue loop
+        if not loop_mode:
+            break
+        else:
+            # Calculate time to next interval boundary
+            iteration_end_time = datetime.now()
+            elapsed_seconds = (iteration_end_time - iteration_start_time).total_seconds()
+            
+            # Calculate next target time (next minute boundary)
+            # Round up to next interval boundary
+            current_minute = iteration_end_time.replace(second=0, microsecond=0)
+            next_target = current_minute + timedelta(seconds=interval)
+            
+            # If we're already past the next target, go to the one after
+            if next_target <= iteration_end_time:
+                next_target = next_target + timedelta(seconds=interval)
+            
+            sleep_seconds = (next_target - iteration_end_time).total_seconds()
+            
+            print(f"⏳ Iteration took {elapsed_seconds:.1f}s")
+            print(f"   Next scan at {next_target.strftime('%H:%M:%S')} (sleeping {sleep_seconds:.1f}s)")
+            print()
+            time.sleep(sleep_seconds)
 
 
 if __name__ == "__main__":
