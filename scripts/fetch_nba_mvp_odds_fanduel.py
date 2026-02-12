@@ -150,6 +150,24 @@ MVP_ODDS_HISTORY = [
             'Kawhi Leonard': +100000,
             'Kevin Durant': +100000,
         }
+    },
+    {
+        'date': '20260210',
+        'fetch_date': '2026-02-10',
+        'label': 'Week 19',
+        'odds': {
+            'Shai Gilgeous-Alexander': -220,
+            'Nikola Jokic': +300,
+            'Cade Cunningham': +2000,
+            'Luka Doncic': +2000,
+            'Jaylen Brown': +4000,
+            'Anthony Edwards': +15000,
+            'Jalen Brunson': +25000,
+            'Tyrese Maxey': +50000,
+            'Donovan Mitchell': +50000,
+            'Kawhi Leonard': +100000,
+            'Kevin Durant': +100000,
+        }
     }
 ]
 
