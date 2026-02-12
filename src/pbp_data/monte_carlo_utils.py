@@ -1304,7 +1304,8 @@ def apply_confidence_limits(prob_over, current_minute, current_points, prop_line
 # =============================================================================
 
 def create_ggplot(df, prop_line, player_name, player_id, game_id, game_date, 
-                  away_team, home_team, final_points, result, plot_dir=None):
+                  away_team, home_team, final_points, result, plot_dir=None, 
+                  bet_placement_minute=None, current_game_minute=None):
     """
     Create publication-quality plot using R/ggplot2.
     
@@ -1318,8 +1319,10 @@ def create_ggplot(df, prop_line, player_name, player_id, game_id, game_date,
         away_team: Away team name
         home_team: Home team name
         final_points: Final points scored
-        result: "HIT" or "MISS"
+        result: "HIT" or "MISS" or "IN PROGRESS"
         plot_dir: Optional custom plot directory (uses project default if None)
+        bet_placement_minute: Optional minute to mark model comparison point (e.g., 13.18)
+        current_game_minute: Optional minute to mark current game state (e.g., 20.5)
     
     Returns:
         str: Path to saved plot, or None if failed
@@ -1345,9 +1348,81 @@ def create_ggplot(df, prop_line, player_name, player_id, game_id, game_date,
     
     # Prepare R code
     result_label = "HIT ✅" if result == "HIT" else "MISS ❌"
+    if result == "IN PROGRESS":
+        result_label = "IN PROGRESS 🔄"
     prop_line_ceil = math.ceil(prop_line)
     # Format prop line: show "22" instead of "22.0", but keep "22.5" as "22.5"
     prop_line_display = f"{prop_line:.1f}".rstrip('0').rstrip('.')
+    
+    # Prepare observation marker if provided
+    observation_marker_code = ""
+    if bet_placement_minute is not None:
+        # Calculate quarter and time remaining
+        obs_minute = bet_placement_minute
+        if obs_minute < 12:
+            obs_quarter = 1
+            time_left = 12 - obs_minute
+        elif obs_minute < 24:
+            obs_quarter = 2
+            time_left = 24 - obs_minute
+        elif obs_minute < 36:
+            obs_quarter = 3
+            time_left = 36 - obs_minute
+        else:
+            obs_quarter = 4
+            time_left = 48 - obs_minute
+        
+        # Format time as MM:SS
+        time_mins = int(time_left)
+        time_secs = int((time_left - time_mins) * 60)
+        time_str = f"Q{obs_quarter} {time_mins}:{time_secs:02d}"
+        
+        # Get probability at that minute
+        obs_prob = df[df['game_minute'].apply(lambda x: abs(x - obs_minute) < 0.1)]['prob_over'].iloc[0] if len(df[df['game_minute'].apply(lambda x: abs(x - obs_minute) < 0.1)]) > 0 else 0.5
+        obs_prob_pct = obs_prob * 100
+        
+        observation_marker_code = f'''
+  # Model comparison point marker
+  geom_vline(xintercept = {obs_minute}, color = "red", linetype = "dotted", linewidth = 1.2) +
+  annotate("text", x = {obs_minute}, y = 95, 
+           label = "Model Comparison\\n{time_str}\\n{obs_prob_pct:.1f}% prob",
+           color = "red", size = 3.5, hjust = -0.1, fontface = "bold") +
+'''
+    
+    # Add current game state marker if provided
+    current_marker_code = ""
+    if current_game_minute is not None:
+        # Calculate quarter and time remaining for current state
+        curr_minute = current_game_minute
+        if curr_minute < 12:
+            curr_quarter = 1
+            curr_time_left = 12 - curr_minute
+        elif curr_minute < 24:
+            curr_quarter = 2
+            curr_time_left = 24 - curr_minute
+        elif curr_minute < 36:
+            curr_quarter = 3
+            curr_time_left = 36 - curr_minute
+        else:
+            curr_quarter = 4
+            curr_time_left = 48 - curr_minute
+        
+        # Format time as MM:SS
+        curr_time_mins = int(curr_time_left)
+        curr_time_secs = int((curr_time_left - curr_time_mins) * 60)
+        curr_time_str = f"Q{curr_quarter} {curr_time_mins}:{curr_time_secs:02d}"
+        
+        # Get probability at current minute
+        curr_prob = df[df['game_minute'].apply(lambda x: abs(x - curr_minute) < 0.1)]['prob_over'].iloc[0] if len(df[df['game_minute'].apply(lambda x: abs(x - curr_minute) < 0.1)]) > 0 else 0.5
+        curr_prob_pct = curr_prob * 100
+        
+        current_marker_code = f'''
+  # Current game state marker
+  geom_vline(xintercept = {curr_minute}, color = "red", linetype = "dotted", linewidth = 1.2) +
+  annotate("text", x = {curr_minute}, y = 10, 
+           label = "Current\\n{curr_time_str}\\n{curr_prob_pct:.1f}% prob",
+           color = "red", size = 3.5, hjust = -0.1, fontface = "bold") +
+'''
     
     r_code = f'''
 library(ggplot2)
@@ -1384,7 +1459,7 @@ p1 <- ggplot(df) +
             color = "blue", linewidth = 1.5) +
   geom_hline(aes(yintercept = 50, linetype = "50% baseline"), 
              color = "gray40", linewidth = 0.8) +
-  
+  {observation_marker_code}{current_marker_code}
   # Styling
   scale_fill_manual(values = c("Prob > 50%" = "green", "Prob < 50%" = "red"), 
                     name = "", na.translate = FALSE, guide = "none") +
