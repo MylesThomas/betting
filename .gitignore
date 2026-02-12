@@ -128,3 +128,6 @@ src/pbp_data/tmp/plots/*.csv
 src/pbp_data/tmp/plots/*.png
 src/pbp_data/tmp/plots/*.csv
 src/pbp_data/tmp/plots/*.png
+
+# Live game PBP test data (temporary JSON files)
+src/pbp_data/tmp/live_game_*.json
