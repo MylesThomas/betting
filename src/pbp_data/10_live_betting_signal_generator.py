@@ -1257,6 +1257,7 @@ def main():
             else:
                 # Calculate time to next minute boundary
                 now = datetime.now()
+                elapsed_this_iteration = (now - iteration_start_time).total_seconds()
                 current_minute = now.replace(second=0, microsecond=0)
                 next_target = current_minute + timedelta(seconds=interval)
                 
@@ -1265,7 +1266,7 @@ def main():
                 
                 sleep_seconds = (next_target - now).total_seconds()
                 
-                print(f"   ⏳ Waiting {sleep_seconds:.1f}s (current: {now.strftime('%H:%M:%S.%f')[:-3]})")
+                print(f"   ⏳ Waiting {sleep_seconds:.1f}s (current: {now.strftime('%H:%M:%S.%f')[:-3]}, iteration: {elapsed_this_iteration:.1f}s)")
                 print()
                 time.sleep(sleep_seconds)
                 continue
