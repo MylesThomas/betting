@@ -79,6 +79,7 @@ GITHUB_EMAIL = os.environ['GITHUB_EMAIL']
 SECRET_NAME = os.environ['SECRET_NAME']
 SNS_TOPIC_ARN = os.environ['SNS_TOPIC_ARN']
 AWS_REGION = os.environ.get('AWS_REGION_NAME', 'us-east-2')
+ODDS_API_KEY = os.environ['ODDS_API_KEY']  # The Odds API key for fetching props
 
 # Lambda temp directory
 WORK_DIR = Path('/tmp/betting')
@@ -139,7 +140,9 @@ def run_cmd(cmd: list, cwd=None, check=True, env=None) -> subprocess.CompletedPr
             capture_output=True,
             text=True,
             check=False,  # Don't raise yet, we want to print output first
-            env=full_env
+            env=full_env,
+            stdin=subprocess.DEVNULL,  # Prevent subprocess from waiting on STDIN
+            timeout=240  # 4 minute timeout (Lambda has 5 min total)
         )
         
         if result.stdout:
@@ -157,6 +160,14 @@ def run_cmd(cmd: list, cwd=None, check=True, env=None) -> subprocess.CompletedPr
             )
         
         return result
+        
+    except subprocess.TimeoutExpired as e:
+        print(f"   ⚠️  Command timed out after 240 seconds")
+        print(f"   stdout: {e.stdout if e.stdout else '(none)'}")
+        print(f"   stderr: {e.stderr if e.stderr else '(none)'}")
+        if check:
+            raise
+        return subprocess.CompletedProcess(cmd, 124, stdout=e.stdout or '', stderr=e.stderr or '')
         
     except subprocess.CalledProcessError as e:
         # Re-raise with output already printed
@@ -360,8 +371,13 @@ def lambda_handler(event, context):
         # Layer structure: /opt/python/lib/python3.11/site-packages/requests/
         # Without this: ModuleNotFoundError: No module named 'requests'
         # With this: subprocess finds packages in layers
+        #
+        # ALSO CRITICAL: Pass ODDS_API_KEY so the script can authenticate
+        # Set PYTHONUNBUFFERED=1 to see output in real-time (no buffering)
         python_env = {
-            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages'
+            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages',
+            'ODDS_API_KEY': ODDS_API_KEY,
+            'PYTHONUNBUFFERED': '1'  # Disable output buffering
         }
         
         # Debug: Verify ALL required packages are accessible
@@ -419,10 +435,13 @@ def lambda_handler(event, context):
         print(f"STEP 6: Fetching player props for TODAY ({today})...")
         print("="*80)
         
-        # CRITICAL: Same PYTHONPATH setup as STEP 5 (see comment above)
+        # CRITICAL: Same PYTHONPATH + ODDS_API_KEY setup as STEP 5 (see comment above)
         # Lambda layers: /opt/python/lib/python3.11/site-packages
+        # Set PYTHONUNBUFFERED=1 to see output in real-time (no buffering)
         python_env = {
-            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages'
+            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages',
+            'ODDS_API_KEY': ODDS_API_KEY,
+            'PYTHONUNBUFFERED': '1'  # Disable output buffering
         }
         
         run_cmd([

@@ -262,10 +262,15 @@ def setup_logging(log_prefix='fetch_player_props'):
 
 setup_logging()
 
+# Print to stdout for Lambda visibility (logging goes to file)
+print(f"🚀 Script starting at {datetime.now().isoformat()}", flush=True)
+print(f"📍 Working directory: {os.getcwd()}", flush=True)
+
 # ============================================================================
 # GLOBAL CONFIGURATION
 # ============================================================================
 API_KEY = os.getenv('ODDS_API_KEY') or os.getenv('THE_ODDS_API_KEY')
+print(f"🔑 API_KEY loaded: {'Yes' if API_KEY else 'No'}", flush=True)
 BASE_URL = 'https://api.the-odds-api.com/v4'
 SPORT_KEY = 'basketball_nba'
 DEFAULT_REGION = 'us'
