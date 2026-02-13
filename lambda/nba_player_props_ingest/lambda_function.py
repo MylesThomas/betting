@@ -405,7 +405,8 @@ def lambda_handler(event, context):
             '--date', yesterday,
             '--s3',
             '--season', season,
-            '--force'
+            '--force',
+            '--fetch-games'
         ], cwd=repo_path, env=python_env)
         
         print(f"   ✅ Props fetched for {yesterday}")
@@ -430,7 +431,8 @@ def lambda_handler(event, context):
             '--date', today,
             '--s3',
             '--season', season,
-            '--force'
+            '--force',
+            '--fetch-games'
         ], cwd=repo_path, env=python_env)
         
         print(f"   ✅ Props fetched for {today}")

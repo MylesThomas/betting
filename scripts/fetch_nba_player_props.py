@@ -675,7 +675,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         force: Force overwrite existing files (overrides skip_if_exists)
     
     Returns:
-        Tuple of (props_df, games_df)
+        Tuple of (props_df, games_df, game_lines_df)
     """
     # Force flag overrides skip_if_exists
     if force:
@@ -703,7 +703,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         
         if not all_events:
             logging.error(f"No events found for {date_str}")
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
         
         # Filter to games that start on this date (ET timezone)
         et_tz = ZoneInfo('America/New_York')
@@ -724,7 +724,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         
         if not events:
             logging.warning(f"No games actually start on {date_str}")
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
         
         # Fetch props for each event
         all_props = []
@@ -748,7 +748,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         
         if not all_props:
             logging.warning(f"No props data collected for {date_str}")
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
         
         df = pd.DataFrame(all_props)
         
