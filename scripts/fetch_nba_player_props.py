@@ -147,6 +147,7 @@ from io import StringIO
 import sys
 import yaml
 from nba_api.stats.endpoints import playergamelogs #leaguegamefinder is wrong
+from functools import wraps
 
 # Add src to path
 project_root = Path(__file__).parent.parent
@@ -168,6 +169,31 @@ load_dotenv()
 
 # Add src to path for config loader
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+# ============================================================================
+# TIMING DECORATOR
+# ============================================================================
+
+def timed(func):
+    """Decorator to time function execution and log results"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        func_name = func.__name__
+        start_time = time.time()
+        logging.info(f"⏱️  [{func_name}] Starting...")
+        
+        try:
+            result = func(*args, **kwargs)
+            elapsed = time.time() - start_time
+            logging.info(f"⏱️  [{func_name}] Completed in {elapsed:.2f}s")
+            return result
+        except Exception as e:
+            elapsed = time.time() - start_time
+            logging.error(f"⏱️  [{func_name}] Failed after {elapsed:.2f}s: {e}")
+            raise
+    
+    return wrapper
+
 
 # ============================================================================
 # ARGUMENT PARSING
@@ -364,6 +390,7 @@ def generate_season_date_range(season):
 # API FUNCTIONS (from fetch_historical_nba_prop_markets.py)
 # ============================================================================
 
+@timed
 def get_historical_events(date_str, sport=SPORT_KEY):
     """Get list of events for a specific date"""
     global credits_remaining, credits_used
@@ -408,6 +435,7 @@ def get_historical_events(date_str, sport=SPORT_KEY):
         return []
 
 
+@timed
 def get_historical_event_odds(sport, event_id, date_str, markets=DEFAULT_MARKETS, regions=DEFAULT_REGION):
     """Get historical odds for a specific event"""
     global credits_remaining, credits_used
@@ -512,6 +540,7 @@ def parse_player_props(odds_data):
 # NBA API GAME RESULTS FUNCTIONS
 # ============================================================================
 
+@timed
 def fetch_games_for_date(date_str, max_retries=3):
     """
     Fetch player game results for a specific date from NBA API
@@ -609,6 +638,7 @@ def check_s3_file_exists(bucket, key):
         return False
 
 
+@timed
 def save_props_to_s3(df, date_str):
     """Save props DataFrame to the-odds-api-mt bucket"""
     s3_key = f"{S3_PREFIX_PROPS}/{date_str}.csv"
@@ -634,6 +664,7 @@ def save_props_to_s3(df, date_str):
         return None
 
 
+@timed
 def save_games_to_s3(df, date_str):
     """Save game results DataFrame to nba-api-mt bucket"""
     s3_key = f"{S3_PREFIX_GAMES}/{date_str}.csv"
@@ -663,6 +694,7 @@ def save_games_to_s3(df, date_str):
 # MAIN FETCH FUNCTION
 # ============================================================================
 
+@timed
 def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists=True, force=False):
     """
     Fetch player props for a specific date
@@ -827,9 +859,16 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
             logging.info(f"FETCHING GAME LINES FOR {date_str}")
             logging.info("="*80)
             
+            # Time the game lines fetch
+            game_lines_start = time.time()
+            logging.info(f"⏱️  [fetch_date_lines] Starting...")
+            
             # Use fetch_date_lines from fetch_historical_nba_season_lines.py
             # It handles S3 upload internally when save=True
             game_lines_df = fetch_date_lines(date_str, save=upload_s3, local_backup=False, force=force)
+            
+            game_lines_elapsed = time.time() - game_lines_start
+            logging.info(f"⏱️  [fetch_date_lines] Completed in {game_lines_elapsed:.2f}s")
             
             if not game_lines_df.empty:
                 num_games = game_lines_df['game_id'].nunique()

@@ -346,10 +346,10 @@ def lambda_handler(event, context):
         print()
         
         # =====================================================================
-        # STEP 5: Fetch props for YESTERDAY
+        # STEP 5: Fetch props + games for YESTERDAY
         # =====================================================================
         print("="*80)
-        print(f"STEP 5: Fetching player props for YESTERDAY ({yesterday})...")
+        print(f"STEP 5: Fetching player props + games for YESTERDAY ({yesterday})...")
         print("="*80)
         
         # CRITICAL: Lambda layers are mounted at /opt/python, but subprocess.run()
@@ -409,11 +409,11 @@ def lambda_handler(event, context):
             '--fetch-games'
         ], cwd=repo_path, env=python_env)
         
-        print(f"   ✅ Props fetched for {yesterday}")
+        print(f"   ✅ Props + games fetched for {yesterday}")
         print()
         
         # =====================================================================
-        # STEP 6: Fetch props for TODAY
+        # STEP 6: Fetch props ONLY for TODAY (no games - they haven't finished)
         # =====================================================================
         print("="*80)
         print(f"STEP 6: Fetching player props for TODAY ({today})...")
@@ -431,8 +431,7 @@ def lambda_handler(event, context):
             '--date', today,
             '--s3',
             '--season', season,
-            '--force',
-            '--fetch-games'
+            '--force'
         ], cwd=repo_path, env=python_env)
         
         print(f"   ✅ Props fetched for {today}")
