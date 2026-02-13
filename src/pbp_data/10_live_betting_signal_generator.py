@@ -44,6 +44,7 @@ Output:
 
 import sys
 import requests
+import urllib3
 import boto3
 import pandas as pd
 import numpy as np
@@ -57,6 +58,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 
+# Disable SSL warnings (we use verify=False for ESPN API)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # Load .env file from project root
 project_root = Path(__file__).parent.parent.parent
 load_dotenv(project_root / ".env")
@@ -67,9 +71,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from pbp_data.monte_carlo_utils import (
     load_player_profile,
     monte_carlo_simulate_bet,
+    monte_carlo_get_distribution,
     find_vegas_adjustment,
     get_consensus_prop_line,
     get_data_paths
+)
+from player_team_history.name_normalization import (
+    normalize_from_odds_api,
+    normalize_from_espn_api
 )
 
 # =============================================================================
@@ -77,7 +86,7 @@ from pbp_data.monte_carlo_utils import (
 # =============================================================================
 
 # The Odds API configuration
-ODDS_API_KEY = os.environ.get('THE_ODDS_API_KEY', '')  # Set in environment
+ODDS_API_KEY = os.environ.get('ODDS_API_KEY', '')  # Set in .env file
 ODDS_API_BASE_URL = "https://api.the-odds-api.com/v4"
 
 # S3 configuration
@@ -98,13 +107,90 @@ LOCAL_SIGNALS_DIR.mkdir(exist_ok=True, parents=True)
 MIN_EDGE_THRESHOLD = 0.10  # 15% minimum edge
 N_SIMULATIONS = 1000  # Default simulations (balance speed vs accuracy)
 MAX_PLAYERS_PER_GAME = 20  # Only check top scorers to save time
-MAX_DATA_AGE_SECONDS = 60  # Maximum age for fresh data (PBP and odds)
+MAX_PBP_AGE_SECONDS = 300  # Maximum age for PBP data (5 minutes - ESPN can lag during timeouts, halftime, etc.)
+MAX_ODDS_AGE_SECONDS = 60  # Maximum age for odds data (1 minute - must be fresh ie. within this 1 min interval)
 
 # ESPN API
 ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
 
 # Initialize boto3
 s3_client = boto3.client('s3')
+
+# Create a requests session with SSL certificate verification disabled
+# (ESPN API has certificate issues, but we trust the endpoint)
+SESSION = requests.Session()
+SESSION.verify = False
+SESSION.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'})
+
+
+# =============================================================================
+# TEAM NAME NORMALIZATION (Odds API → ESPN format)
+# =============================================================================
+
+# Map Odds API team names to ESPN team names (ESPN is source of truth)
+ODDS_TO_ESPN_TEAM_MAPPING = {
+    # Odds API uses "LA", ESPN uses "Los Angeles"
+    'LA Lakers': 'Los Angeles Lakers',
+    'LA Clippers': 'Los Angeles Clippers',
+    
+    # Trail Blazers variations
+    'Portland Trail Blazers': 'Portland Trail Blazers',
+    'Portland Trailblazers': 'Portland Trail Blazers',
+    
+    # All other teams (map to themselves for completeness)
+    'Atlanta Hawks': 'Atlanta Hawks',
+    'Boston Celtics': 'Boston Celtics',
+    'Brooklyn Nets': 'Brooklyn Nets',
+    'Charlotte Hornets': 'Charlotte Hornets',
+    'Chicago Bulls': 'Chicago Bulls',
+    'Cleveland Cavaliers': 'Cleveland Cavaliers',
+    'Dallas Mavericks': 'Dallas Mavericks',
+    'Denver Nuggets': 'Denver Nuggets',
+    'Detroit Pistons': 'Detroit Pistons',
+    'Golden State Warriors': 'Golden State Warriors',
+    'Houston Rockets': 'Houston Rockets',
+    'Indiana Pacers': 'Indiana Pacers',
+    'Memphis Grizzlies': 'Memphis Grizzlies',
+    'Miami Heat': 'Miami Heat',
+    'Milwaukee Bucks': 'Milwaukee Bucks',
+    'Minnesota Timberwolves': 'Minnesota Timberwolves',
+    'New Orleans Pelicans': 'New Orleans Pelicans',
+    'New York Knicks': 'New York Knicks',
+    'Oklahoma City Thunder': 'Oklahoma City Thunder',
+    'Orlando Magic': 'Orlando Magic',
+    'Philadelphia 76ers': 'Philadelphia 76ers',
+    'Phoenix Suns': 'Phoenix Suns',
+    'Sacramento Kings': 'Sacramento Kings',
+    'San Antonio Spurs': 'San Antonio Spurs',
+    'Toronto Raptors': 'Toronto Raptors',
+    'Utah Jazz': 'Utah Jazz',
+    'Washington Wizards': 'Washington Wizards',
+}
+
+
+def normalize_odds_team_to_espn(odds_team_name: str) -> str:
+    """
+    Normalize Odds API team name to match ESPN format (ground truth).
+    
+    ESPN is our ground truth - external APIs conform to ESPN names.
+    
+    Handles common mismatches like "LA Lakers" → "Los Angeles Lakers".
+    
+    Args:
+        odds_team_name: Team name from Odds API
+    
+    Returns:
+        Normalized team name matching ESPN format
+        
+    Examples:
+        >>> normalize_odds_team_to_espn('LA Lakers')
+        'Los Angeles Lakers'
+        
+        >>> normalize_odds_team_to_espn('Milwaukee Bucks')
+        'Milwaukee Bucks'
+    """
+    return ODDS_TO_ESPN_TEAM_MAPPING.get(odds_team_name, odds_team_name)
+
 
 
 # =============================================================================
@@ -423,7 +509,7 @@ def fetch_live_games(test_mode: bool = False) -> List[Dict]:
         return generate_fake_live_games()
     
     try:
-        response = requests.get(ESPN_SCOREBOARD_URL, timeout=10, verify=False)
+        response = SESSION.get(ESPN_SCOREBOARD_URL, timeout=10)
         response.raise_for_status()
         data = response.json()
         
@@ -436,6 +522,12 @@ def fetch_live_games(test_mode: bool = False) -> List[Dict]:
             if status == 'STATUS_IN_PROGRESS':
                 competition = event['competitions'][0]
                 
+                # Convert game date from UTC to ET
+                # ESPN returns dates in UTC (e.g., "2026-02-13T02:30:00Z")
+                # We need ET date for pregame line lookup
+                game_date_utc = pd.to_datetime(event['date'])
+                game_date_et = game_date_utc.tz_convert('US/Eastern')
+                
                 game_info = {
                     'game_id': event['id'],
                     'away_team': competition['competitors'][1]['team']['displayName'],
@@ -444,7 +536,7 @@ def fetch_live_games(test_mode: bool = False) -> List[Dict]:
                     'home_score': int(competition['competitors'][0]['score']),
                     'quarter': event['status']['period'],
                     'clock': event['status']['displayClock'],
-                    'game_date': event['date'][:10],  # YYYY-MM-DD
+                    'game_date': game_date_et.strftime('%Y-%m-%d'),  # YYYY-MM-DD in ET
                 }
                 
                 live_games.append(game_info)
@@ -461,7 +553,7 @@ def fetch_live_games(test_mode: bool = False) -> List[Dict]:
 # =============================================================================
 
 @timed
-def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_DATA_AGE_SECONDS, test_mode: bool = False) -> Optional[Dict]:
+def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_PBP_AGE_SECONDS, test_mode: bool = False) -> Optional[Dict]:
     """
     Fetch play-by-play data and validate it's fresh (Gate 2).
     
@@ -474,12 +566,44 @@ def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_DATA_AGE_SEC
         PBP data dict if fresh, None if stale or API fails
     """
     if test_mode:
-        # In test mode, return a minimal valid structure
-        return {'plays': [{'clock': {'timestamp': datetime.now(timezone.utc).isoformat()}}]}
+        # In test mode, return realistic fake PBP data with scoring plays
+        # Match the current_points from generate_fake_active_players:
+        # Jokic: 9 pts, Murray: 6 pts, LeBron: 8 pts
+        plays = []
+        
+        # Nikola Jokic scoring plays (9 pts total: 3+3+2+1)
+        plays.extend([
+            {'text': 'Nikola Jokic makes 3-pt jump shot', 'period': {'number': 1}, 'clock': {'displayValue': '10:30'}},
+            {'text': 'Nikola Jokic makes 3-pt jump shot', 'period': {'number': 1}, 'clock': {'displayValue': '8:15'}},
+            {'text': 'Nikola Jokic makes 2-pt layup', 'period': {'number': 2}, 'clock': {'displayValue': '9:45'}},
+            {'text': 'Nikola Jokic makes free throw', 'period': {'number': 2}, 'clock': {'displayValue': '9:45'}},
+        ])
+        
+        # Jamal Murray scoring plays (6 pts total: 3+2+1)
+        plays.extend([
+            {'text': 'Jamal Murray makes 3-pt jump shot', 'period': {'number': 1}, 'clock': {'displayValue': '9:20'}},
+            {'text': 'Jamal Murray makes 2-pt jumper', 'period': {'number': 2}, 'clock': {'displayValue': '10:15'}},
+            {'text': 'Jamal Murray makes free throw', 'period': {'number': 2}, 'clock': {'displayValue': '8:30'}},
+        ])
+        
+        # LeBron James scoring plays (8 pts total: 3+3+2)
+        plays.extend([
+            {'text': 'LeBron James makes 3-pt jump shot', 'period': {'number': 1}, 'clock': {'displayValue': '11:00'}},
+            {'text': 'LeBron James makes 3-pt jump shot', 'period': {'number': 1}, 'clock': {'displayValue': '6:45'}},
+            {'text': 'LeBron James makes 2-pt dunk', 'period': {'number': 2}, 'clock': {'displayValue': '11:30'}},
+        ])
+        
+        # Add some non-scoring plays for realism
+        plays.extend([
+            {'text': 'Anthony Davis defensive rebound', 'period': {'number': 1}, 'clock': {'displayValue': '7:00'}},
+            {'text': 'Nikola Jokic missed 2-pt jump shot', 'period': {'number': 2}, 'clock': {'displayValue': '5:00'}},
+        ])
+        
+        return {'plays': plays}
     
     try:
         url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event={game_id}"
-        response = requests.get(url, timeout=10, verify=False)
+        response = SESSION.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
         
@@ -523,6 +647,27 @@ def fetch_and_validate_pbp(game_id: str, max_age_seconds: int = MAX_DATA_AGE_SEC
 # STEP 3: GET ACTIVE PLAYERS (GATE 1)
 # =============================================================================
 
+def get_active_players_from_odds(live_odds_df: pd.DataFrame) -> List[str]:
+    """
+    Get active player names from live odds data.
+    
+    If bookmakers are offering odds on a player, they're active/playing.
+    This is more reliable than ESPN boxscore which can lag.
+    
+    Args:
+        live_odds_df: DataFrame with live odds (from fetch_live_odds)
+    
+    Returns:
+        List of unique player names with odds available
+    """
+    if live_odds_df is None or len(live_odds_df) == 0:
+        return []
+    
+    # Get unique player names from odds data
+    player_names = live_odds_df['player_name'].unique().tolist()
+    return player_names
+
+
 @timed
 def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
     """
@@ -540,37 +685,74 @@ def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
     
     try:
         url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event={game_id}"
-        response = requests.get(url, timeout=10)
+        response = SESSION.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
         
         players = []
         
         # Parse boxscore for both teams
+        # CRITICAL: ESPN API has TWO keys in boxscore - DO NOT MIX THEM UP:
+        #   1. boxscore['teams'] = TEAM-level stats (FG%, turnovers, etc.) - NO player data
+        #   2. boxscore['players'] = PLAYER-level stats (individual athletes with points, minutes, etc.)
+        # 
+        # This API works for BOTH live and completed games (STATUS_FINAL).
+        # ALWAYS use boxscore['players'] to get individual player statistics.
         boxscore = data.get('boxscore', {})
-        teams = boxscore.get('teams', [])
         
-        for team in teams:
+        # Grab both for visibility (even though we only use 'players')
+        teams_data = boxscore.get('teams', [])
+        players_data = boxscore.get('players', [])
+        
+        # Print what we found in each
+        print(f"      📊 Boxscore data fetched:")
+        print(f"         - boxscore['teams']: {len(teams_data)} team(s) with TEAM-level stats (FG%, turnovers, etc.)")
+        if teams_data:
+            team_stats = teams_data[0].get('statistics', [])
+            has_athletes = any('athletes' in stat for stat in team_stats)
+            print(f"           → {len(team_stats)} stat group(s), has athletes: {has_athletes}")
+        
+        print(f"         - boxscore['players']: {len(players_data)} team(s) with PLAYER-level stats")
+        if players_data:
+            player_stats = players_data[0].get('statistics', [])
+            has_athletes = any('athletes' in stat for stat in player_stats)
+            if has_athletes and player_stats:
+                num_athletes = len(player_stats[0].get('athletes', []))
+                print(f"           → {len(player_stats)} stat group(s), athletes in first group: {num_athletes}")
+        
+        # Use players_data (NOT teams_data) for actual parsing
+        for team in players_data:
             team_name = team['team']['displayName']
             statistics = team.get('statistics', [])
             
             # Find athletes in statistics
             for stat_group in statistics:
+                # Get stat labels to know which position is which
+                labels = stat_group.get('labels', [])
+                
                 for athlete in stat_group.get('athletes', []):
-                    # Get stats
+                    # Get stats array (matches order of labels)
                     stats = athlete.get('stats', [])
                     
-                    # Parse points and minutes
+                    if not stats or len(stats) == 0:
+                        continue
+                    
+                    # Parse stats by matching with labels
                     points = 0
                     minutes = 0
                     
-                    for stat_val in stats:
-                        if 'PTS' in str(stat_val):
+                    for i, label in enumerate(labels):
+                        if i >= len(stats):
+                            break
+                        
+                        stat_val = stats[i]
+                        
+                        if label == 'PTS':
                             try:
                                 points = float(stat_val) if stat_val != '--' else 0
                             except:
                                 points = 0
-                        if 'MIN' in str(stat_val):
+                        elif label == 'MIN':
                             try:
                                 # Minutes might be "25:30" format
                                 if ':' in str(stat_val):
@@ -583,8 +765,16 @@ def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
                     
                     # Only include players who are playing
                     if minutes > 0:
+                        raw_name = athlete['athlete']['displayName']
+                        # Normalize ESPN player name to match odds data normalization
+                        normalized_name = normalize_from_espn_api(raw_name)
+                        
+                        # Skip if normalization failed
+                        if not normalized_name:
+                            continue
+                        
                         player_info = {
-                            'player_name': athlete['athlete']['displayName'],
+                            'player_name': normalized_name,  # Use normalized name
                             'player_id': athlete['athlete'].get('id'),
                             'team': team_name,
                             'current_points': points,
@@ -605,13 +795,101 @@ def get_active_players(game_id: str, test_mode: bool = False) -> List[Dict]:
 # STEP 3: FETCH LIVE ODDS
 # =============================================================================
 
+def fetch_odds_api_events() -> Dict[Tuple[str, str], str]:
+    """
+    Fetch all NBA events from The Odds API and return a lookup dict.
+    
+    Normalizes Odds API team names to ESPN format (ground truth) before creating lookup.
+    This way we can match directly with ESPN team names without transformation.
+    
+    Returns:
+        Dict mapping (away_team, home_team) in ESPN format -> odds_event_id
+    """
+    if not ODDS_API_KEY:
+        return {}
+    
+    url = f"{ODDS_API_BASE_URL}/sports/basketball_nba/events"
+    params = {'apiKey': ODDS_API_KEY}
+    
+    try:
+        response = SESSION.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        events = response.json()
+        
+        # Build lookup with ESPN team names (ground truth)
+        lookup = {}
+        for event in events:
+            odds_away = event.get('away_team')
+            odds_home = event.get('home_team')
+            event_id = event.get('id')
+            
+            if odds_away and odds_home and event_id:
+                # Normalize Odds API team names to ESPN format
+                espn_away = normalize_odds_team_to_espn(odds_away)
+                espn_home = normalize_odds_team_to_espn(odds_home)
+                
+                # Store with ESPN team names as keys
+                lookup[(espn_away, espn_home)] = event_id
+        
+        return lookup
+        
+    except Exception as e:
+        print(f"⚠️  Error fetching Odds API events: {e}")
+        return {}
+
+
+def match_espn_to_odds_event(game: Dict, odds_lookup: Dict[Tuple[str, str], str], verbose: bool = False) -> Optional[str]:
+    """
+    Match ESPN game to Odds API event by team names.
+    
+    Since odds_lookup already uses ESPN team names (normalized when fetched),
+    we can do direct matching without transformation.
+    
+    Args:
+        game: ESPN game dict with 'home_team' and 'away_team' (ESPN format)
+        odds_lookup: Dict mapping (away_team, home_team) in ESPN format -> odds_event_id
+        verbose: If True, print debug info when matching fails
+    
+    Returns:
+        Odds API event ID or None if no match
+    """
+    espn_away = game.get('away_team')
+    espn_home = game.get('home_team')
+    
+    if not espn_away or not espn_home:
+        return None
+    
+    # Try exact match (should work now since lookup uses ESPN names)
+    if (espn_away, espn_home) in odds_lookup:
+        return odds_lookup[(espn_away, espn_home)]
+    
+    # Fallback: fuzzy match in case of minor variations
+    for (lookup_away, lookup_home), event_id in odds_lookup.items():
+        if (espn_away.lower() in lookup_away.lower() or lookup_away.lower() in espn_away.lower()) and \
+           (espn_home.lower() in lookup_home.lower() or lookup_home.lower() in espn_home.lower()):
+            if verbose:
+                print(f"   ⚠️  Fuzzy match: ESPN ({espn_away} @ {espn_home}) ↔ Lookup ({lookup_away} @ {lookup_home})")
+            return event_id
+    
+    # No match found - print debug info
+    if verbose:
+        print(f"   ❌ No match for: {espn_away} @ {espn_home}")
+        print(f"      Available games in lookup:")
+        for (lookup_away, lookup_home), event_id in odds_lookup.items():
+            print(f"        - {lookup_away} @ {lookup_home}")
+    
+    return None
+
+
 @timed
-def fetch_live_odds(game_id: str, test_mode: bool = False) -> Optional[pd.DataFrame]:
+def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mode: bool = False) -> Optional[pd.DataFrame]:
     """
     Fetch live player prop odds from The Odds API.
     
     Args:
-        game_id: ESPN game ID
+        game: ESPN game dict with 'home_team', 'away_team', 'game_id'
+        odds_lookup: Dict mapping (away_team, home_team) -> odds_event_id
         test_mode: If True, return fake data for testing
     
     Returns:
@@ -621,20 +899,27 @@ def fetch_live_odds(game_id: str, test_mode: bool = False) -> Optional[pd.DataFr
         return generate_fake_live_odds()
     
     if not ODDS_API_KEY:
-        print("⚠️  THE_ODDS_API_KEY not set in environment")
+        print("⚠️  ODDS_API_KEY not set in environment")
+        return None
+    
+    # Match ESPN game to Odds API event
+    odds_event_id = match_espn_to_odds_event(game, odds_lookup, verbose=True)
+    
+    if not odds_event_id:
+        print(f"⚠️  No matching Odds API event for {game.get('away_team')} @ {game.get('home_team')}")
         return None
     
     try:
-        # Get player props for NBA
-        url = f"{ODDS_API_BASE_URL}/sports/basketball_nba/events/{game_id}/odds"
+        # Get player props for NBA using Odds API event ID
+        url = f"{ODDS_API_BASE_URL}/sports/basketball_nba/events/{odds_event_id}/odds"
         params = {
             'apiKey': ODDS_API_KEY,
             'regions': 'us',
-            'markets': 'player_points',
+            'markets': 'player_points', # Hard-coding this for now 
             'oddsFormat': 'american'
         }
         
-        response = requests.get(url, params=params, timeout=10)
+        response = SESSION.get(url, params=params, timeout=10)
         
         if response.status_code == 404:
             # Game not found in The Odds API (might use different ID system)
@@ -652,9 +937,18 @@ def fetch_live_odds(game_id: str, test_mode: bool = False) -> Optional[pd.DataFr
             for market in bookmaker.get('markets', []):
                 if market['key'] == 'player_points':
                     for outcome in market.get('outcomes', []):
+                        raw_player_name = outcome.get('description')
+                        # Normalize player name from Odds API
+                        normalized_name = normalize_from_odds_api(raw_player_name)
+                        
+                        # Skip if normalization failed (invalid name)
+                        if not normalized_name:
+                            continue
+                        
                         odds_records.append({
                             'bookmaker': bookmaker_name,
-                            'player_name': outcome.get('description'),
+                            'raw_player_name': raw_player_name,
+                            'player_name': normalized_name,  # Use normalized name
                             'line': outcome.get('point'),
                             'side': outcome.get('name'),  # Over or Under
                             'odds': outcome.get('price'),
@@ -671,7 +965,7 @@ def fetch_live_odds(game_id: str, test_mode: bool = False) -> Optional[pd.DataFr
         return None
 
 
-def filter_stale_odds(odds_df: pd.DataFrame, max_age_seconds: int = MAX_DATA_AGE_SECONDS) -> pd.DataFrame:
+def filter_stale_odds(odds_df: pd.DataFrame, max_age_seconds: int = MAX_ODDS_AGE_SECONDS) -> pd.DataFrame:
     """
     Filter out stale odds at the bookmaker level (Gate 3 pre-check).
     If ANY odds from a bookmaker are older than max_age_seconds, remove ALL odds from that bookmaker.
@@ -967,10 +1261,74 @@ def detect_profitable_bet(
 # STEP 6: ANALYZE PLAYER BETTING OPPORTUNITY
 # =============================================================================
 
+def load_pregame_props_lookup(game_date: str, market: str = "player_points") -> Dict[str, float]:
+    """
+    Load ALL pregame props for the given date and return normalized lookup dict.
+    
+    Loads entire S3 file once, normalizes all player names, calculates median lines.
+    This is called ONCE at script start to avoid repeated S3 reads.
+    
+    Args:
+        game_date: Game date as string "YYYY-MM-DD"
+        market: Market type (default: "player_points")
+    
+    Returns:
+        Dict mapping normalized_player_name → median_pregame_line
+        Empty dict if file not found or error
+    """
+    try:
+        import duckdb
+        import boto3
+        
+        # S3 path for pregame props
+        s3_path = f"s3://the-odds-api-mt/nba/historical_player_props/2025-26/{game_date}.csv"
+        
+        # Query S3 to load all player_points props
+        con = duckdb.connect()
+        con.execute("INSTALL httpfs; LOAD httpfs;")
+        con.execute(f"SET s3_region='us-east-2';")
+        
+        # Get AWS credentials from boto3 (reads from ~/.aws/credentials or environment)
+        session = boto3.Session()
+        credentials = session.get_credentials()
+        
+        if credentials:
+            con.execute(f"SET s3_access_key_id='{credentials.access_key}';")
+            con.execute(f"SET s3_secret_access_key='{credentials.secret_key}';")
+            if credentials.token:  # For temporary credentials
+                con.execute(f"SET s3_session_token='{credentials.token}';")
+        
+        query = f"""
+        SELECT player, prop_line
+        FROM read_csv_auto('{s3_path}')
+        WHERE market = ?
+        """
+        
+        df = con.execute(query, [market]).df()
+        con.close()
+        
+        if df.empty:
+            return {}
+        
+        # Normalize all player names in S3 data using same normalization as live odds
+        df['normalized_name'] = df['player'].apply(normalize_from_odds_api)
+        
+        # Group by normalized name and calculate median line (consensus)
+        lookup = df.groupby('normalized_name')['prop_line'].median().to_dict()
+        
+        return lookup
+        
+    except Exception as e:
+        print(f"⚠️  Could not load pregame props from S3: {e}")
+        return {}
+
+
 def analyze_player_betting_opportunity(
     player: Dict,
     game: Dict,
     live_odds_df: Optional[pd.DataFrame],
+    pbp_data: Dict,  # Add PBP data to get current points
+    pregame_props_lookup: Dict[str, float],  # Pregame props loaded once at script start
     n_sims: int = N_SIMULATIONS,
     test_mode: bool = False,
     market: str = "player_points"
@@ -995,6 +1353,8 @@ def analyze_player_betting_opportunity(
         player: Player info (name, points, minutes)
         game: Game info (game_id, quarter, clock)
         live_odds_df: DataFrame with live odds (already filtered for freshness)
+        pbp_data: Play-by-play data for extracting current points
+        pregame_props_lookup: Dict mapping player_name -> pregame line (preloaded once per iteration)
         n_sims: Number of Monte Carlo simulations
         test_mode: If True, use fake pregame lines
         market: Betting market to analyze (default "player_points")
@@ -1003,7 +1363,53 @@ def analyze_player_betting_opportunity(
         Signal dictionary with best bet if profitable, None otherwise
     """
     player_name = player['player_name']
-    current_points = player['current_points']
+    
+    # Get current points from PBP data (using text parsing with proper normalization)
+    # NOTE: ESPN live PBP API structure differs from cached data:
+    # - Live: participants[0].athlete only has 'id' (no displayName)
+    # - Cached: participants[0].athlete has full object with 'displayName'
+    # Solution: Parse player names from play 'text' field with normalization
+    try:
+        plays = pbp_data.get('plays', [])
+        pbp_points = 0
+        
+        # Normalize player name from Odds API (already normalized when fetched)
+        normalized_player = normalize_from_odds_api(player_name)
+        
+        if not normalized_player:
+            pbp_points = 0
+        else:
+            for play in plays:
+                if play.get('scoringPlay', False):
+                    play_text = play.get('text', '')
+                    score_val = play.get('scoreValue', 0)
+                    
+                    # Extract scorer name from play text (always before first "makes")
+                    # Example: "P.J. Washington makes 3-foot dunk" → "P.J. Washington"
+                    if ' makes ' in play_text.lower():
+                        scorer_raw = play_text.split(' makes ')[0].strip()
+                        scorer_normalized = normalize_from_espn_api(scorer_raw)
+                        
+                        # Compare normalized names (Odds API vs ESPN API, both normalized to NBA API format)
+                        if scorer_normalized and scorer_normalized == normalized_player:
+                            pbp_points += score_val
+    except Exception as e:
+        print(f"      ⚠️  Could not extract current points from PBP: {e}")
+        pbp_points = 0
+    
+    # Get current points from boxscore for validation
+    boxscore_points = player.get('boxscore_points', None)
+    
+    # Validate PBP vs boxscore points
+    if boxscore_points is not None:
+        points_diff = abs(pbp_points - boxscore_points)
+        if points_diff > 0:
+            print(f"      ⚠️  Points mismatch: PBP={pbp_points}, Boxscore={boxscore_points} (diff={points_diff})")
+        else:
+            print(f"      ✅ Points validated: {pbp_points} pts (PBP matches boxscore)")
+    
+    # Use PBP points (more reliable as it's what we base game state on)
+    current_points = pbp_points
     
     try:
         # =====================================================================
@@ -1028,6 +1434,9 @@ def analyze_player_betting_opportunity(
         # =====================================================================
         # GATE 4: Check if player has pregame line
         # =====================================================================
+        # Normalize player name for all lookups (pregame_props_lookup and minute_by_minute both use normalized names)
+        normalized_name = normalize_from_odds_api(player_name)
+        
         if test_mode:
             # Use fake pregame lines for testing
             fake_pregame_lines = {
@@ -1039,24 +1448,39 @@ def analyze_player_betting_opportunity(
             if pregame_line:
                 print(f"      ✅ Pregame line (TEST): {pregame_line} (Gate 4 passed)")
         else:
-            pregame_line = get_consensus_prop_line(
-                player_name,
-                game['game_date'],
-                market=market
-            )
+            pregame_line = pregame_props_lookup.get(normalized_name)
+            
             if pregame_line:
                 print(f"      ✅ Pregame line: {pregame_line} (Gate 4 passed)")
+            else:
+                print(f"      ⚪ No pregame line found for '{player_name}' (normalized: '{normalized_name}') (Gate 4 failed)")
+                
+                if len(pregame_props_lookup) == 0:
+                    print(f"         🔍 DEBUG: Pregame props lookup is empty - no data for {game['game_date']}")
+                else:
+                    print(f"         🔍 DEBUG: Total players in pregame lookup: {len(pregame_props_lookup)}")
+                    
+                    # Try to find similar names
+                    similar = [name for name in pregame_props_lookup.keys() if normalized_name.lower() in name.lower() or name.lower() in normalized_name.lower()]
+                    if similar:
+                        print(f"         🔍 DEBUG: Similar names found: {similar[:5]}")
+                    else:
+                        print(f"         🔍 DEBUG: No similar names found")
+                    
+                    # Show sample of available players
+                    print(f"         🔍 DEBUG: Sample of available players:")
+                    for i, avail_name in enumerate(list(pregame_props_lookup.keys())[:5]):
+                        print(f"            - '{avail_name}' = {pregame_props_lookup[avail_name]}")
         
         if not pregame_line:
-            print(f"      ⚪ No pregame line found (Gate 4 failed)")
             return None
         
         # =====================================================================
         # ALL GATES PASSED - Proceed with expensive operations
         # =====================================================================
         
-        # Load player profile
-        player_profile = load_player_profile(player_name)
+        # Load player profile (use normalized name for minute_by_minute lookup)
+        player_profile = load_player_profile(normalized_name)
         
         # Calculate Vegas adjustment for calibration
         vegas_adjustment = find_vegas_adjustment(
@@ -1081,24 +1505,30 @@ def analyze_player_betting_opportunity(
         quarter_start = (quarter - 1) * 12
         game_minute = quarter_start + (12 - time_remaining)
         
-        # Run Monte Carlo simulation ONCE
-        print(f"      🎲 Running Monte Carlo ({n_sims:,} sims)...")
+        # Run Monte Carlo simulation ONCE to get full distribution
+        # This is calibrated with vegas_adjustment (which was set using pregame line)
+        print(f"      🎲 Running Monte Carlo ({n_sims:,} sims) - calibrated with pregame line {pregame_line}...")
         mc_start = time.time()
-        model_prob_over = monte_carlo_simulate_bet(
+        
+        from pbp_data.monte_carlo_utils import monte_carlo_get_distribution
+        
+        simulated_finals = monte_carlo_get_distribution(
             player_profile=player_profile,
             current_minute=game_minute,
             current_points=current_points,
-            prop_line=pregame_line,
             n_simulations=n_sims,
             vegas_adjustment=vegas_adjustment,
             score_differential=None,
             debug=False
         )
+        
         mc_elapsed = time.time() - mc_start
         print(f"         ⏱️  MC completed: {mc_elapsed:.2f}s")
+        print(f"         📊 Distribution: {len(simulated_finals)} simulations, range [{min(simulated_finals):.1f}, {max(simulated_finals):.1f}]")
         
         # =====================================================================
         # Analyze all (bookmaker × line × side) combinations
+        # Calculate probability for each line from the same distribution
         # =====================================================================
         all_bets = []
         combinations_checked = 0
@@ -1118,6 +1548,42 @@ def analyze_player_betting_opportunity(
                 
                 over_odds = int(over_row.iloc[0]['odds'])
                 under_odds = int(under_row.iloc[0]['odds'])
+                
+                # Calculate probability for this line from the distribution
+                # Count how many simulations went over this line
+                hits_over = sum(1 for final_pts in simulated_finals if final_pts > line_value)
+                raw_prob_over = hits_over / len(simulated_finals)
+                
+                # Apply same calibration steps as monte_carlo_simulate_bet
+                # (minimum probability floor, confidence limits, empirical calibration, conservative factor)
+                from pbp_data.monte_carlo_utils import (
+                    apply_confidence_limits,
+                    apply_calibration,
+                    get_game_state,
+                    CONSERVATIVE_FACTOR
+                )
+                
+                game_state = get_game_state(game_minute)
+                
+                # Apply minimum probability floor
+                MIN_PROB = 0.001
+                if raw_prob_over < MIN_PROB and game_minute < 63:
+                    prob_over_floored = MIN_PROB
+                else:
+                    prob_over_floored = raw_prob_over
+                
+                # Apply confidence limits
+                prob_over_limited = apply_confidence_limits(
+                    prob_over_floored, game_minute, current_points, line_value
+                )
+                
+                # Apply empirical calibration
+                prob_over_calibrated = apply_calibration(
+                    prob_over_limited, game_state['quarter']
+                )
+                
+                # Apply conservative bias
+                model_prob_over = prob_over_calibrated * CONSERVATIVE_FACTOR
                 
                 # Analyze this specific (bookmaker × line) combination
                 # detect_profitable_bet checks BOTH over and under internally
@@ -1192,17 +1658,20 @@ def main():
     print()
     print("📋 Process Overview (with Performance Gates):")
     print("   1. Fetch live games from ESPN")
-    print("   2. Validate PBP data freshness (Gate 2: <1min)")
-    print("   3. Fetch live odds from The Odds API")
-    print("   4. Filter stale odds (Gate 3: <1min at bookmaker level)")
-    print("   5. Get active players (Gate 1: in live game)")
-    print("   6. For each player:")
-    print("      - Check Gates 3 & 4 (has odds + pregame line)")
-    print("      - Run MC simulation (only if all gates pass)")
-    print("      - Analyze all (bookmaker × line × side) combinations")
-    print("      - Return best bet by EV")
-    print("   7. Display profitable signals with specific bookmakers")
-    print("   8. Save live odds to S3")
+    print("   2. Load pregame props from S3 (once for all games)")
+    print("   3. Fetch Odds API events for team name matching")
+    print("   4. For each game:")
+    print("      a. Validate PBP data freshness (Gate 2: <5min)")
+    print("      b. Fetch live odds from The Odds API")
+    print("      c. Filter stale odds (Gate 3: <1min at bookmaker level)")
+    print("      d. Get active players (Gate 1: in live game)")
+    print("      e. For each player:")
+    print("         - Check Gates 3 & 4 (has odds + pregame line)")
+    print("         - Run MC simulation (only if all gates pass)")
+    print("         - Analyze all (bookmaker × line × side) combinations")
+    print("         - Return best bet by EV")
+    print("   5. Display profitable signals with specific bookmakers")
+    print("   6. Save signals to parquet")
     print()
     print(f"⚙️  Configuration:")
     print(f"   - Mode: {'TEST (Fake Data)' if test_mode else 'LIVE (Real Data)'}")
@@ -1210,7 +1679,8 @@ def main():
     print(f"   - Min Edge Threshold: {MIN_EDGE_THRESHOLD:.1%}")
     print(f"   - MC Simulations: {N_SIMULATIONS:,}")
     print(f"   - Max Players Per Game: {MAX_PLAYERS_PER_GAME}")
-    print(f"   - Max Data Age: {MAX_DATA_AGE_SECONDS}s")
+    print(f"   - Max PBP Age: {MAX_PBP_AGE_SECONDS}s (ESPN can lag)")
+    print(f"   - Max Odds Age: {MAX_ODDS_AGE_SECONDS}s (must be fresh)")
     print()
     
     # Sync to top of minute if in loop mode
@@ -1277,6 +1747,52 @@ def main():
             print(f"      Q{game['quarter']} - {game['clock']}")
         print()
         
+        # =====================================================================
+        # STEP 1.5: LOAD PREGAME PROPS (ONCE FOR ALL GAMES)
+        # =====================================================================
+        if not test_mode:
+            print("="*80)
+            print("STEP 1.5: Loading pregame props from S3...")
+            print("="*80)
+            
+            # Get game date in ET timezone (all NBA games use ET)
+            et_tz = pytz.timezone('US/Eastern')
+            game_date_et = datetime.now(et_tz).strftime('%Y-%m-%d')
+            
+            pregame_props_lookup = load_pregame_props_lookup(game_date_et)
+            print(f"✅ Loaded pregame lines for {len(pregame_props_lookup)} player(s) from {game_date_et}")
+            
+            # If empty or past midnight ET (games might be from yesterday), try yesterday too
+            if len(pregame_props_lookup) == 0 or datetime.now(et_tz).hour < 6:  # Before 6am ET, try yesterday
+                yesterday_et = (datetime.now(et_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
+                print(f"   ⚠️  Trying yesterday's pregame lines ({yesterday_et}) as fallback...")
+                pregame_props_yesterday = load_pregame_props_lookup(yesterday_et)
+                
+                if len(pregame_props_yesterday) > 0:
+                    # Merge yesterday's data (if today was empty, use yesterday; otherwise merge)
+                    pregame_props_lookup.update(pregame_props_yesterday)
+                    print(f"   ✅ Loaded {len(pregame_props_yesterday)} additional player(s) from {yesterday_et}")
+                    print(f"   📊 Total pregame lines: {len(pregame_props_lookup)} player(s)")
+            
+            print()
+        else:
+            # In test mode, we don't need pregame props (will use fake data)
+            pregame_props_lookup = {}
+        
+        # =====================================================================
+        # STEP 1.6: FETCH ODDS API EVENTS FOR MATCHING
+        # =====================================================================
+        if not test_mode:
+            print("="*80)
+            print("STEP 1.6: Fetching Odds API events for matching...")
+            print("="*80)
+            odds_lookup = fetch_odds_api_events()
+            print(f"✅ Found {len(odds_lookup)} Odds API event(s)")
+            print()
+        else:
+            # In test mode, we don't need the lookup
+            odds_lookup = {}
+        
         # Collect all signals
         all_signals = []
         
@@ -1290,7 +1806,7 @@ def main():
             print(f"STEP 2: Validating PBP data for {game['away_team']} @ {game['home_team']} (Gate 2)...")
             print("="*80)
             
-            pbp_data = fetch_and_validate_pbp(game_id, max_age_seconds=MAX_DATA_AGE_SECONDS, test_mode=test_mode)
+            pbp_data = fetch_and_validate_pbp(game_id, max_age_seconds=MAX_PBP_AGE_SECONDS, test_mode=test_mode)
             
             if not pbp_data:
                 print("   ⏭️  Skipping game (PBP data stale or unavailable)")
@@ -1306,7 +1822,7 @@ def main():
             print(f"STEP 3: Fetching live odds {'(TEST MODE)' if test_mode else 'from The Odds API'}...")
             print("="*80)
             
-            live_odds_df = fetch_live_odds(game_id, test_mode=test_mode)
+            live_odds_df = fetch_live_odds(game, odds_lookup, test_mode=test_mode)
             
             if live_odds_df is None or len(live_odds_df) == 0:
                 print("⚠️  No live odds available for this game")
@@ -1316,7 +1832,7 @@ def main():
             print(f"✅ Fetched odds for {live_odds_df['player_name'].nunique()} player(s)")
             
             # Filter stale odds (Gate 3 pre-check at bookmaker level)
-            live_odds_df = filter_stale_odds(live_odds_df, max_age_seconds=MAX_DATA_AGE_SECONDS)
+            live_odds_df = filter_stale_odds(live_odds_df, max_age_seconds=MAX_ODDS_AGE_SECONDS)
             
             if len(live_odds_df) == 0:
                 print("⚠️  No fresh odds available (all bookmakers stale)")
@@ -1341,22 +1857,108 @@ def main():
             print()
             
             # =================================================================
-            # STEP 5: GET ACTIVE PLAYERS (GATE 1)
+            # STEP 5: GET ACTIVE PLAYERS FROM ODDS (GATE 1) + FETCH BOXSCORE
             # =================================================================
             print("="*80)
-            print(f"STEP 5: Getting active players {'(TEST MODE)' if test_mode else ''} (Gate 1)...")
+            print(f"STEP 5: Getting active players from odds data (Gate 1)...")
             print("="*80)
             
-            players = get_active_players(game_id, test_mode=test_mode)
+            # Use players who have live odds (more reliable than boxscore)
+            active_player_names = get_active_players_from_odds(live_odds_df)
             
-            if not players:
-                print("⚠️  No active players found")
+            if not active_player_names:
+                print("⚠️  No players with odds available")
                 print()
                 continue
             
-            print(f"✅ Found {len(players)} active player(s)")
-            for p in players:
-                print(f"   - {p['player_name']} ({p['team']}): {p['current_points']} pts, {p['minutes_played']:.1f} min")
+            print(f"✅ Found {len(active_player_names)} player(s) with live odds")
+            
+            # Fetch boxscore for validation (optional - won't block if fails)
+            print()
+            print("   📊 Fetching boxscore for points validation...")
+            boxscore_players = get_active_players(game_id, test_mode=test_mode)
+            
+            # Build lookup: player_name -> {current_points, team, minutes_played}
+            boxscore_lookup = {}
+            if boxscore_players:
+                for p in boxscore_players:
+                    boxscore_lookup[p['player_name']] = {
+                        'current_points': p['current_points'],
+                        'team': p['team'],
+                        'minutes_played': p['minutes_played']
+                    }
+                print(f"   ✅ Boxscore fetched: {len(boxscore_players)} players")
+            else:
+                print(f"   ⚠️  Boxscore unavailable (will use PBP points only)")
+            
+            # Build PBP points lookup for display
+            # NOTE: ESPN live PBP API structure differs from cached data:
+            # - Live: participants[0].athlete only has 'id' (no displayName)
+            # - Cached: participants[0].athlete has full object with 'displayName'
+            # Solution: Parse player names from play 'text' field
+            # Play text format: "Player Name makes 3-foot dunk (Assist Name assists)"
+            # Scorer is always at START of text before "makes"
+            print("   📊 Extracting PBP points...")
+            pbp_lookup = {}
+            try:
+                plays = pbp_data['plays']
+                
+                for player_name in active_player_names:
+                    points = 0
+                    
+                    # Normalize player name from Odds API
+                    # (already normalized when fetched, but be explicit)
+                    normalized_player = normalize_from_odds_api(player_name)
+                    
+                    if not normalized_player:
+                        continue
+                    
+                    for play in plays:
+                        if play.get('scoringPlay', False):
+                            play_text = play.get('text', '')
+                            score_val = play.get('scoreValue', 0)
+                            
+                            # Extract scorer name from play text (always before first "makes")
+                            # Example: "P.J. Washington makes 3-foot dunk" → "P.J. Washington"
+                            if ' makes ' in play_text.lower():
+                                scorer_raw = play_text.split(' makes ')[0].strip()
+                                scorer_normalized = normalize_from_espn_api(scorer_raw)
+                                
+                                # Compare normalized names
+                                if scorer_normalized and scorer_normalized == normalized_player:
+                                    points += score_val
+                    
+                    pbp_lookup[player_name] = points
+                
+                print(f"   ✅ PBP points extracted for {len(pbp_lookup)} players")
+                
+                # Show any players with 0 points for debugging
+                zero_point_players = [name for name, pts in pbp_lookup.items() if pts == 0]
+                if zero_point_players and len(zero_point_players) <= 3:
+                    print(f"   🔍 Players with 0 points: {', '.join(zero_point_players)}")
+                    print(f"      (This is normal if they haven't scored yet)")
+                    
+            except Exception as e:
+                import traceback
+                print(f"   ⚠️  Could not extract PBP points: {e}")
+                print(f"   🔍 DEBUG: Traceback: {traceback.format_exc()}")
+            
+            # Show players with both PBP and boxscore points (ALL players)
+            for name in active_player_names:
+                pbp_pts = pbp_lookup.get(name, '?')
+                boxscore_info = boxscore_lookup.get(name, {})
+                boxscore_pts = boxscore_info.get('current_points', '?')
+                
+                # Show validation status
+                if pbp_pts != '?' and boxscore_pts != '?':
+                    if pbp_pts == boxscore_pts:
+                        status = '✅'
+                    else:
+                        status = f'⚠️ (diff: {abs(pbp_pts - boxscore_pts)})'
+                else:
+                    status = '❓'
+                
+                print(f"   - {name}: PBP={pbp_pts} pts, Boxscore={boxscore_pts} pts {status}")
             print()
             
             # =================================================================
@@ -1366,11 +1968,22 @@ def main():
             print(f"STEP 6: Analyzing players (Gates 3 & 4, then MC if passed)...")
             print("="*80)
             
-            for player in players:
-                print(f"   🔄 Analyzing {player['player_name']}...")
+            for player_name in active_player_names:
+                print(f"   🔄 Analyzing {player_name}...")
+                
+                # Get boxscore data for this player
+                boxscore_info = boxscore_lookup.get(player_name, {})
+                
+                # Build player dict with all required fields
+                player = {
+                    'player_name': player_name,
+                    'boxscore_points': boxscore_info.get('current_points'),  # None if not available
+                    'team': boxscore_info.get('team', 'Unknown'),
+                    'minutes_played': boxscore_info.get('minutes_played', 0),
+                }
                 
                 signal = analyze_player_betting_opportunity(
-                    player, game, live_odds_df, n_sims=N_SIMULATIONS, test_mode=test_mode
+                    player, game, live_odds_df, pbp_data, pregame_props_lookup, n_sims=N_SIMULATIONS, test_mode=test_mode
                 )
                 
                 if signal:

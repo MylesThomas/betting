@@ -320,10 +320,16 @@ def create_blank_image(size=(100, 100)):
 
 def load_player_profile(player_name, minute_by_minute_path=None):
     """
-    Load player's historical data (quarterly distributions) using DuckDB.
+    Load player's historical data (quarterly distributions) using DuckDB + pandas.
+    
+    Strategy:
+    1. Use DuckDB to read parquet (fast: 2MB file, 687k rows)
+    2. Add normalized_name column using Python normalization utils
+    3. Filter to player using normalized name
+    4. Aggregate in pandas
     
     Args:
-        player_name: Player name
+        player_name: Normalized player name (e.g., "Lebron James", "Pj Washington")
         minute_by_minute_path: Optional path to minute_by_minute.parquet
     
     Returns:
@@ -332,132 +338,119 @@ def load_player_profile(player_name, minute_by_minute_path=None):
     if minute_by_minute_path is None:
         minute_by_minute_path = get_data_paths()['minute_by_minute']
     
+    # Import normalization function
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from player_team_history.name_normalization import normalize_from_nba_api
+    
+    # STEP 1: Use DuckDB to read parquet into pandas (FAST)
     con = duckdb.connect()
+    df = con.execute(f"SELECT * FROM '{minute_by_minute_path}'").df()
+    con.close()
     
-    # Build player profiles from minute_by_minute data
-    con.execute(f"""
-        -- Step 1: Game-level stats
-        CREATE OR REPLACE TEMP TABLE game_level_stats AS
-        SELECT 
-            game_id,
-            game_date,
-            player_id,
-            player_name,
-            MAX(playing_seconds) / 60.0 AS total_minutes,
-            MAX(cumulative_points) AS total_points
-        FROM '{minute_by_minute_path}'
-        GROUP BY game_id, game_date, player_id, player_name;
-        
-        CREATE OR REPLACE TEMP TABLE game_stats_with_ppm AS
-        SELECT 
-            *,
-            CASE 
-                WHEN total_minutes > 0 THEN total_points / total_minutes 
-                ELSE 0 
-            END AS points_per_minute
-        FROM game_level_stats;
-        
-        -- Step 2: Quarterly splits
-        CREATE OR REPLACE TEMP TABLE quarter_splits AS
-        SELECT 
-            game_id,
-            game_date,
-            player_id,
-            player_name,
-            
-            -- Q1 (minutes 0-11)
-            MAX(CASE WHEN minute <= 11 THEN playing_seconds ELSE 0 END) / 60.0 AS q1_minutes,
-            MAX(CASE WHEN minute <= 11 THEN cumulative_points ELSE 0 END) AS q1_points,
-            
-            -- Q2 (minutes 12-23)
-            (MAX(CASE WHEN minute <= 23 THEN playing_seconds ELSE 0 END) - 
-             MAX(CASE WHEN minute <= 11 THEN playing_seconds ELSE 0 END)) / 60.0 AS q2_minutes,
-            (MAX(CASE WHEN minute <= 23 THEN cumulative_points ELSE 0 END) - 
-             MAX(CASE WHEN minute <= 11 THEN cumulative_points ELSE 0 END)) AS q2_points,
-            
-            -- Q3 (minutes 24-35)
-            (MAX(CASE WHEN minute <= 35 THEN playing_seconds ELSE 0 END) - 
-             MAX(CASE WHEN minute <= 23 THEN playing_seconds ELSE 0 END)) / 60.0 AS q3_minutes,
-            (MAX(CASE WHEN minute <= 35 THEN cumulative_points ELSE 0 END) - 
-             MAX(CASE WHEN minute <= 23 THEN cumulative_points ELSE 0 END)) AS q3_points,
-            
-            -- Q4 (minutes 36-47)
-            (MAX(CASE WHEN minute <= 47 THEN playing_seconds ELSE 0 END) - 
-             MAX(CASE WHEN minute <= 35 THEN playing_seconds ELSE 0 END)) / 60.0 AS q4_minutes,
-            (MAX(CASE WHEN minute <= 47 THEN cumulative_points ELSE 0 END) - 
-             MAX(CASE WHEN minute <= 35 THEN cumulative_points ELSE 0 END)) AS q4_points
-            
-        FROM '{minute_by_minute_path}'
-        GROUP BY game_id, game_date, player_id, player_name;
-        
-        CREATE OR REPLACE TEMP TABLE quarter_splits_with_ppm AS
-        SELECT 
-            *,
-            CASE WHEN q1_minutes > 0 THEN q1_points / q1_minutes ELSE 0 END AS q1_ppm,
-            CASE WHEN q2_minutes > 0 THEN q2_points / q2_minutes ELSE 0 END AS q2_ppm,
-            CASE WHEN q3_minutes > 0 THEN q3_points / q3_minutes ELSE 0 END AS q3_ppm,
-            CASE WHEN q4_minutes > 0 THEN q4_points / q4_minutes ELSE 0 END AS q4_ppm
-        FROM quarter_splits;
-    """)
+    # STEP 2: Add normalized_name column using our Python normalization utils
+    df['normalized_name'] = df['player_name'].apply(normalize_from_nba_api)
     
-    # Get player profile with full game PPM history
-    query = """
-    SELECT 
-        g.player_id,
-        g.player_name,
-        COUNT(*) AS num_games,
-        
-        -- Summary stats
-        AVG(g.total_points) AS avg_points_per_game,
-        AVG(g.total_minutes) AS avg_minutes_per_game,
-        
-        -- Q1 minutes distribution
-        LIST(q.q1_minutes ORDER BY q.game_date DESC) AS q1_minutes_history,
-        
-        -- Q2 minutes distribution
-        LIST(q.q2_minutes ORDER BY q.game_date DESC) AS q2_minutes_history,
-        
-        -- Q3 minutes distribution
-        LIST(q.q3_minutes ORDER BY q.game_date DESC) AS q3_minutes_history,
-        
-        -- Q4 minutes distribution
-        LIST(q.q4_minutes ORDER BY q.game_date DESC) AS q4_minutes_history,
-        
-        -- Q4 PPM distribution (v8 addition for clutch time modeling)
-        LIST(q.q4_ppm ORDER BY q.game_date DESC) AS q4_points_per_minute_history,
-        
-        -- Full game PPM history (used for sampling PPM in Q1-Q3)
-        LIST(g.points_per_minute ORDER BY q.game_date DESC) AS points_per_minute_history
-        
-    FROM game_stats_with_ppm g
-    LEFT JOIN quarter_splits_with_ppm q 
-        ON g.game_id = q.game_id 
-        AND g.player_id = q.player_id
-    WHERE g.player_name = ?
-    GROUP BY g.player_id, g.player_name
-    """
+    # STEP 3: Filter to just our player
+    player_df = df[df['normalized_name'] == player_name].copy()
     
-    result = con.execute(query, [player_name]).fetchone()
-    
-    if not result:
-        con.close()
+    if len(player_df) == 0:
         raise ValueError(f"Player {player_name} not found")
     
-    profile = {
-        'player_id': result[0],
-        'player_name': result[1],
-        'num_games': result[2],
-        'avg_points_per_game': result[3],
-        'avg_minutes_per_game': result[4],
-        'q1_minutes_history': result[5],
-        'q2_minutes_history': result[6],
-        'q3_minutes_history': result[7],
-        'q4_minutes_history': result[8],
-        'q4_points_per_minute_history': result[9],  # v8 addition
-        'points_per_minute_history': result[10],
-    }
+    # STEP 4: Calculate game-level stats
+    game_stats = player_df.groupby(['game_id', 'game_date', 'player_id', 'player_name']).agg({
+        'playing_seconds': 'max',
+        'cumulative_points': 'max'
+    }).reset_index()
     
-    con.close()
+    game_stats['total_minutes'] = game_stats['playing_seconds'] / 60.0
+    game_stats['total_points'] = game_stats['cumulative_points']
+    game_stats['points_per_minute'] = game_stats.apply(
+        lambda row: row['total_points'] / row['total_minutes'] if row['total_minutes'] > 0 else 0,
+        axis=1
+    )
+    
+    # STEP 5: Calculate quarterly splits for each game
+    quarter_data = []
+    for game_id in player_df['game_id'].unique():
+        game_data = player_df[player_df['game_id'] == game_id].copy()
+        game_date = game_data['game_date'].iloc[0]
+        player_id = game_data['player_id'].iloc[0]
+        original_name = game_data['player_name'].iloc[0]
+        
+        # Get cumulative values at end of each quarter
+        q1_data = game_data[game_data['minute'] <= 11]
+        q2_data = game_data[game_data['minute'] <= 23]
+        q3_data = game_data[game_data['minute'] <= 35]
+        q4_data = game_data[game_data['minute'] <= 47]
+        
+        # Q1 stats (0-11 minutes)
+        q1_seconds = q1_data['playing_seconds'].max() if len(q1_data) > 0 else 0
+        q1_points = q1_data['cumulative_points'].max() if len(q1_data) > 0 else 0
+        q1_minutes = q1_seconds / 60.0
+        
+        # Q2 stats (12-23 minutes) - incremental
+        q2_end_seconds = q2_data['playing_seconds'].max() if len(q2_data) > 0 else 0
+        q2_end_points = q2_data['cumulative_points'].max() if len(q2_data) > 0 else 0
+        q2_minutes = (q2_end_seconds - q1_seconds) / 60.0
+        q2_points = q2_end_points - q1_points
+        
+        # Q3 stats (24-35 minutes) - incremental
+        q3_end_seconds = q3_data['playing_seconds'].max() if len(q3_data) > 0 else 0
+        q3_end_points = q3_data['cumulative_points'].max() if len(q3_data) > 0 else 0
+        q3_minutes = (q3_end_seconds - q2_end_seconds) / 60.0
+        q3_points = q3_end_points - q2_end_points
+        
+        # Q4 stats (36-47 minutes) - incremental
+        q4_end_seconds = q4_data['playing_seconds'].max() if len(q4_data) > 0 else 0
+        q4_end_points = q4_data['cumulative_points'].max() if len(q4_data) > 0 else 0
+        q4_minutes = (q4_end_seconds - q3_end_seconds) / 60.0
+        q4_points = q4_end_points - q3_end_points
+        
+        # Calculate PPM for each quarter
+        q1_ppm = q1_points / q1_minutes if q1_minutes > 0 else 0
+        q2_ppm = q2_points / q2_minutes if q2_minutes > 0 else 0
+        q3_ppm = q3_points / q3_minutes if q3_minutes > 0 else 0
+        q4_ppm = q4_points / q4_minutes if q4_minutes > 0 else 0
+        
+        quarter_data.append({
+            'game_id': game_id,
+            'game_date': game_date,
+            'player_id': player_id,
+            'player_name': original_name,
+            'q1_minutes': q1_minutes,
+            'q2_minutes': q2_minutes,
+            'q3_minutes': q3_minutes,
+            'q4_minutes': q4_minutes,
+            'q1_ppm': q1_ppm,
+            'q2_ppm': q2_ppm,
+            'q3_ppm': q3_ppm,
+            'q4_ppm': q4_ppm,
+        })
+    
+    quarter_df = pd.DataFrame(quarter_data)
+    
+    # STEP 6: Merge game stats with quarter stats
+    full_df = game_stats.merge(quarter_df, on=['game_id', 'game_date', 'player_id', 'player_name'])
+    
+    # Sort by game_date descending (most recent first)
+    full_df = full_df.sort_values('game_date', ascending=False)
+    
+    # STEP 7: Build profile dict (same format as before)
+    profile = {
+        'player_id': full_df['player_id'].iloc[0],
+        'player_name': full_df['player_name'].iloc[0],  # Original unnormalized name
+        'num_games': len(full_df),
+        'avg_points_per_game': full_df['total_points'].mean(),
+        'avg_minutes_per_game': full_df['total_minutes'].mean(),
+        'q1_minutes_history': full_df['q1_minutes'].tolist(),
+        'q2_minutes_history': full_df['q2_minutes'].tolist(),
+        'q3_minutes_history': full_df['q3_minutes'].tolist(),
+        'q4_minutes_history': full_df['q4_minutes'].tolist(),
+        'q4_points_per_minute_history': full_df['q4_ppm'].tolist(),
+        'points_per_minute_history': full_df['points_per_minute'].tolist(),
+    }
     
     return profile
 
@@ -466,73 +459,26 @@ def load_player_profile(player_name, minute_by_minute_path=None):
 # LOAD PROP LINES
 # =============================================================================
 
-def get_consensus_prop_line(player_name, game_date, market="player_points"):
+def get_consensus_prop_line(player_name, pregame_props_lookup=None, **kwargs):
     """
-    Get consensus (median) prop line from locally synced S3 data.
+    Get consensus (median) prop line from preloaded lookup dict.
     
     Args:
         player_name: Player name (e.g., "Luka Doncic")
-        game_date: Game date as string "YYYY-MM-DD"
-        market: Market type (default: "player_points")
+        pregame_props_lookup: Dict mapping normalized_player_name -> pregame_line
+        **kwargs: Ignored (for backwards compatibility with old signature)
     
     Returns:
         float: Consensus prop line (median), or None if not found
     """
-    paths = get_data_paths()
-    player_props_dir = paths['player_props_dir']
+    if pregame_props_lookup is None:
+        return None
     
-    try:
-        # Convert game_date to ET datetime for matching
-        game_dt = pd.to_datetime(game_date).tz_localize("America/New_York")
-        
-        # Search for prop files on the game date
-        date_str = game_dt.strftime("%Y%m%d")
-        
-        files = list(player_props_dir.glob(f"*{date_str}*.parquet"))
-        
-        if not files:
-            return None
-        
-        # Load all files for this date
-        con = duckdb.connect()
-        
-        for file in files:
-            try:
-                df = con.execute(f"""
-                    SELECT 
-                        player_name,
-                        market,
-                        point,
-                        commence_time_et
-                    FROM '{file}'
-                    WHERE player_name = ?
-                    AND market = ?
-                """, [player_name, market]).df()
-                
-                if len(df) > 0:
-                    # Calculate consensus: median, but if median is average of two values,
-                    # take the higher of the two (more conservative for betting)
-                    points = sorted(df['point'].values)
-                    n = len(points)
-                    
-                    if n % 2 == 1:
-                        # Odd number: median is the middle value
-                        consensus = points[n // 2]
-                    else:
-                        # Even number: take the higher of the two middle values
-                        consensus = points[n // 2]  # This is the higher one after sorting
-                    
-                    con.close()
-                    return float(consensus)
-            except Exception:
-                continue
-        
-        con.close()
-        return None
-        
-    except Exception as e:
-        print(f"⚠️  Error loading prop line: {e}")
-        return None
+    # Normalize player name to match the lookup dict keys
+    from player_team_history.name_normalization import normalize_from_odds_api
+    normalized_name = normalize_from_odds_api(player_name)
+    
+    return pregame_props_lookup.get(normalized_name)
 
 
 # =============================================================================
@@ -1180,6 +1126,124 @@ def monte_carlo_simulate_bet(
     prob_final = prob_calibrated * CONSERVATIVE_FACTOR
     
     return prob_final
+
+
+def monte_carlo_get_distribution(
+    player_profile,
+    current_minute,
+    current_points,
+    n_simulations=10000,
+    vegas_adjustment=1.0,
+    score_differential=None,
+    debug=False
+):
+    """
+    Run Monte Carlo simulation and return full distribution of projected final points.
+    
+    This is more efficient than calling monte_carlo_simulate_bet multiple times
+    for different lines - we can calculate probabilities for all lines from one distribution.
+    
+    Args:
+        player_profile: dict with quarterly distributions
+        current_minute: Current game minute (0-48+, OT possible)
+        current_points: Points scored so far
+        n_simulations: Number of simulations
+        vegas_adjustment: PPM multiplier (default 1.0 = no adjustment)
+        score_differential: Point differential for OT estimation (optional)
+        debug: If True, print first 5 simulations
+    
+    Returns:
+        List of simulated final points (length = n_simulations)
+    """
+    # Get game state (handles OT detection)
+    game_state = get_game_state(current_minute)
+    
+    # If past 3OT, return current points for all simulations
+    if game_state['is_ot'] and game_state['ot_period'] >= 3 and game_state['time_remaining'] <= 0:
+        return [current_points] * n_simulations
+    
+    simulated_finals = []
+    
+    for sim_num in range(n_simulations):
+        projected_final_points = current_points
+        
+        # 1. Project remainder of current quarter/OT period
+        if game_state['time_remaining'] > 0:
+            if not game_state['is_ot']:
+                # Regular quarter projection
+                current_quarter = game_state['quarter']
+                time_remaining = game_state['time_remaining']
+                minutes_key = f'q{current_quarter}_minutes_history'
+                
+                minutes_history = player_profile.get(minutes_key, [])
+                
+                # Use quarter-specific PPM for Q4
+                if current_quarter == 4:
+                    ppm_key = 'q4_points_per_minute_history'
+                    ppm_history = player_profile[ppm_key]
+                else:
+                    ppm_history = player_profile['points_per_minute_history']
+                
+                # Keep zeros for Q4, filter for Q1-Q3
+                if current_quarter == 4:
+                    minutes_history_filtered = minutes_history if minutes_history else []
+                    ppm_history_filtered = ppm_history if ppm_history else []
+                else:
+                    minutes_history_filtered = [m for m in minutes_history if m > 0]
+                    ppm_history_filtered = [p for p in ppm_history if p > 0]
+                
+                if minutes_history_filtered and ppm_history_filtered:
+                    typical_minutes = random.choice(minutes_history_filtered)
+                    
+                    if typical_minutes > 0:
+                        quarter_length = 12.0
+                        proportion_remaining = time_remaining / quarter_length
+                        projected_minutes = typical_minutes * proportion_remaining
+                        ppm = random.choice(ppm_history_filtered) * vegas_adjustment
+                        projected_final_points += ppm * projected_minutes
+            else:
+                # In OT - project remainder using Q4 stats
+                time_remaining = game_state['time_remaining']
+                ot_length = 5.0
+                proportion_remaining = time_remaining / ot_length
+                ot_points = project_ot_points(player_profile, vegas_adjustment, proportion_remaining)
+                projected_final_points += ot_points
+        
+        # 2. Project future quarters (if in regulation)
+        if not game_state['is_ot'] and game_state['quarter'] < 4:
+            for future_quarter in range(game_state['quarter'] + 1, 5):
+                minutes_key = f'q{future_quarter}_minutes_history'
+                minutes_history = player_profile.get(minutes_key, [])
+                
+                # Use Q4 PPM for Q4 projections
+                if future_quarter == 4:
+                    ppm_key = 'q4_points_per_minute_history'
+                    ppm_history = player_profile[ppm_key]
+                else:
+                    ppm_history = player_profile['points_per_minute_history']
+                
+                # Keep zeros for Q4, filter for Q1-Q3
+                if future_quarter == 4:
+                    minutes_history_filtered = minutes_history if minutes_history else []
+                    ppm_history_filtered = ppm_history if ppm_history else []
+                else:
+                    minutes_history_filtered = [m for m in minutes_history if m > 0]
+                    ppm_history_filtered = [p for p in ppm_history if p > 0]
+                
+                if minutes_history_filtered and ppm_history_filtered:
+                    future_minutes = random.choice(minutes_history_filtered)
+                    
+                    if future_minutes > 0:
+                        future_ppm = random.choice(ppm_history_filtered) * vegas_adjustment
+                        projected_final_points += future_ppm * future_minutes
+        
+        # Store this simulation's result
+        simulated_finals.append(projected_final_points)
+        
+        if debug and sim_num < 5:
+            print(f"Simulation {sim_num + 1}: {projected_final_points:.1f} points")
+    
+    return simulated_finals
 
 
 def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
