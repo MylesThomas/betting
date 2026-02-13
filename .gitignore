@@ -83,9 +83,9 @@ data/nfl_research/nfl_week*_scraped_*.txt
 .cursor/launch.json
 .cursor/plans/
 
-# Lambda deployment artifacts
-lambda_function.zip
-lambda_function.py
+# Lambda deployment artifacts (at root only, not in subdirectories)
+/lambda_function.zip
+/lambda_function.py
 current_policy.json
 
 # Removing from local
