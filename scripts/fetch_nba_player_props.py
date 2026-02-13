@@ -965,8 +965,8 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         df = pd.DataFrame()  # Empty dataframe since we're not fetching
     else:
         logging.info("="*80)
-        logging.info(f"FETCHING PROPS FOR {date_str} ({day_of_week})")
-        logging.info(f"Source: The Odds API (player props - all markets)")
+        logging.info(f"FETCHING PLAYER PROPS FOR {date_str} ({day_of_week})")
+        logging.info(f"Source: The Odds API - 9 markets (points, rebounds, assists, threes, blocks, steals, double_double, triple_double, PRA)")
         logging.info("="*80)
         
         # Get events for that date
