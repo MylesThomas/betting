@@ -129,6 +129,8 @@ Updated: 2026-02-10 (switched to config-based date range, removed calendar depen
 Author: Thomas Myles
 """
 
+print("DEBUG: Script import started", flush=True)
+
 import argparse
 import requests
 import pandas as pd
@@ -231,10 +233,16 @@ requests.Session.request = patched_request
 # LOGGING CONFIGURATION
 # ============================================================================
 
+# CRITICAL: Print before setup_logging() to debug Lambda hanging
+print("DEBUG: Script reached logging section", flush=True)
+
 def setup_logging(log_prefix='fetch_player_props'):
     """Configure logging to file and console"""
+    print(f"DEBUG: setup_logging() called with prefix={log_prefix}", flush=True)
     log_dir = Path(__file__).parent.parent / 'logs'
+    print(f"DEBUG: log_dir={log_dir}", flush=True)
     log_dir.mkdir(exist_ok=True)
+    print(f"DEBUG: log_dir created", flush=True)
     
     log_filename = f"{log_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     log_filepath = log_dir / log_filename
@@ -258,9 +266,12 @@ def setup_logging(log_prefix='fetch_player_props'):
     logger.addHandler(console_handler)
     
     logging.info(f"Logging initialized - log file: {log_filepath}")
+    print(f"DEBUG: Logging initialized successfully", flush=True)
     return log_filepath
 
+print("DEBUG: About to call setup_logging()", flush=True)
 setup_logging()
+print("DEBUG: setup_logging() completed", flush=True)
 
 # Print to stdout for Lambda visibility (logging goes to file)
 print(f"🚀 Script starting at {datetime.now().isoformat()}", flush=True)
@@ -269,6 +280,7 @@ print(f"📍 Working directory: {os.getcwd()}", flush=True)
 # ============================================================================
 # GLOBAL CONFIGURATION
 # ============================================================================
+print("DEBUG: Loading API_KEY", flush=True)
 API_KEY = os.getenv('ODDS_API_KEY') or os.getenv('THE_ODDS_API_KEY')
 print(f"🔑 API_KEY loaded: {'Yes' if API_KEY else 'No'}", flush=True)
 BASE_URL = 'https://api.the-odds-api.com/v4'
