@@ -491,7 +491,7 @@ def lambda_handler(event, context):
             'PYTHONUNBUFFERED': '1'  # Disable output buffering
         }
         
-        run_cmd([
+        today_result = run_cmd([
             'python3',
             'scripts/fetch_nba_player_props.py',
             '--date', today,
@@ -499,6 +499,9 @@ def lambda_handler(event, context):
             '--season', season,
             '--force'
         ], cwd=repo_path, env=python_env, stream_output=True)
+        
+        # Check if today's fetch found any games (detect "Props fetch complete" in output)
+        today_has_games = "Props fetch complete" in today_result.stdout
         
         print(f"   ✅ Props fetched for {today}")
         print()
@@ -509,14 +512,45 @@ def lambda_handler(event, context):
         end_time = datetime.now()
         elapsed = (end_time - start_time).total_seconds()
         
-        print("="*80)
-        print("✅ SUCCESS")
-        print("="*80)
-        print(f"⏱️  Total time: {elapsed:.1f}s")
-        print()
-        
-        # Send success SNS
-        message = f"""NBA Player Props Ingest - Success
+        # Determine if we should send warning for 0 games today
+        if not today_has_games:
+            print("="*80)
+            print("⚠️  WARNING: No games found for today")
+            print("="*80)
+            print(f"⏱️  Total time: {elapsed:.1f}s")
+            print()
+            
+            # Send warning SNS (treat as partial success)
+            message = f"""NBA Player Props Ingest - WARNING: No games today
+
+⚠️  No games scheduled for today ({today})
+This is expected on days with no NBA games (e.g., All-Star break, off-days).
+
+Dates Processed:
+- Yesterday: {yesterday} ✅
+- Today: {today} ⚠️  (0 games found)
+
+NBA Season: {season}
+
+Execution Time: {elapsed:.1f}s
+Function: {context.function_name}
+Request ID: {context.aws_request_id}
+"""
+            
+            send_sns(
+                subject=f"Props Ingest Warning - No games on {today}",
+                message=message,
+                success=False  # Use warning emoji ⚠️
+            )
+        else:
+            print("="*80)
+            print("✅ SUCCESS")
+            print("="*80)
+            print(f"⏱️  Total time: {elapsed:.1f}s")
+            print()
+            
+            # Send success SNS
+            message = f"""NBA Player Props Ingest - Success
 
 Dates Processed:
 - Yesterday: {yesterday}
@@ -528,12 +562,12 @@ Execution Time: {elapsed:.1f}s
 Function: {context.function_name}
 Request ID: {context.aws_request_id}
 """
-        
-        send_sns(
-            subject=f"Props Ingest Success - {today}",
-            message=message,
-            success=True
-        )
+            
+            send_sns(
+                subject=f"Props Ingest Success - {today}",
+                message=message,
+                success=True
+            )
         
         return {
             'statusCode': 200,
@@ -541,6 +575,7 @@ Request ID: {context.aws_request_id}
                 'success': True,
                 'yesterday': yesterday,
                 'today': today,
+                'today_has_games': today_has_games,
                 'season': season,
                 'elapsed_seconds': elapsed
             })
