@@ -372,10 +372,11 @@ def lambda_handler(event, context):
         # Without this: ModuleNotFoundError: No module named 'requests'
         # With this: subprocess finds packages in layers
         #
+        # ALSO ADD: /var/runtime for boto3 (Lambda's built-in AWS SDK)
         # ALSO CRITICAL: Pass ODDS_API_KEY so the script can authenticate
         # Set PYTHONUNBUFFERED=1 to see output in real-time (no buffering)
         python_env = {
-            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages',
+            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages:/var/runtime',
             'ODDS_API_KEY': ODDS_API_KEY,
             'PYTHONUNBUFFERED': '1'  # Disable output buffering
         }
@@ -391,6 +392,7 @@ def lambda_handler(event, context):
             ('dotenv', 'python-dotenv', 'requests-nba-api-python311:1'),
             ('pandas', 'pandas', 'pandas-numpy-python311:1'),
             ('numpy', 'numpy', 'pandas-numpy-python311:1'),
+            ('boto3', 'boto3', 'Lambda runtime (/var/runtime)'),
         ]
         
         all_packages_found = True
@@ -437,9 +439,10 @@ def lambda_handler(event, context):
         
         # CRITICAL: Same PYTHONPATH + ODDS_API_KEY setup as STEP 5 (see comment above)
         # Lambda layers: /opt/python/lib/python3.11/site-packages
+        # Lambda runtime (boto3): /var/runtime
         # Set PYTHONUNBUFFERED=1 to see output in real-time (no buffering)
         python_env = {
-            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages',
+            'PYTHONPATH': '/opt/python/lib/python3.11/site-packages:/var/runtime',
             'ODDS_API_KEY': ODDS_API_KEY,
             'PYTHONUNBUFFERED': '1'  # Disable output buffering
         }
