@@ -230,6 +230,207 @@ def patched_request(self, *args, **kwargs):
 requests.Session.request = patched_request
 
 # ============================================================================
+# ESPN API HELPER FUNCTIONS (Fallback for NBA API when Lambda IPs blocked)
+# ============================================================================
+
+def parse_made(fg_string):
+    """Parse '7-12' to get made (7)"""
+    if not fg_string or '-' not in str(fg_string):
+        return 0
+    return int(str(fg_string).split('-')[0])
+
+
+def parse_attempts(fg_string):
+    """Parse '7-12' to get attempts (12)"""
+    if not fg_string or '-' not in str(fg_string):
+        return 0
+    return int(str(fg_string).split('-')[1])
+
+
+def calculate_pct(fg_string):
+    """Parse '7-12' to calculate percentage (0.583)"""
+    made = parse_made(fg_string)
+    attempts = parse_attempts(fg_string)
+    if attempts == 0:
+        return 0.0
+    return round(made / attempts, 3)
+
+
+def safe_int(value):
+    """Safely parse int, handling empty/None/dash values"""
+    if not value or value == '':
+        return 0
+    try:
+        # If it contains a dash, take the first number (made, not attempted)
+        if '-' in str(value):
+            return parse_made(value)
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
+
+
+def parse_minutes(min_string):
+    """Parse '35:24' to get total minutes as float (35.4)"""
+    if not min_string or ':' not in str(min_string):
+        return 0.0
+    try:
+        parts = str(min_string).split(':')
+        minutes = int(parts[0])
+        seconds = int(parts[1]) if len(parts) > 1 else 0
+        return round(minutes + seconds / 60, 2)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def parse_espn_box_score(box_data, date_str, away_abbr, home_abbr):
+    """
+    Parse ESPN box score into NBA API format (29 key columns).
+    
+    ESPN stats order: [0]=MIN, [1]=PTS, [2]=FG, [3]=3PT, [4]=FT, [5]=REB, [6]=AST,
+                      [7]=TO, [8]=STL, [9]=BLK, [10]=OREB, [11]=DREB, [12]=PF, [13]=+/-
+    """
+    players = []
+    
+    boxscore = box_data.get('boxscore', {})
+    if not boxscore:
+        return players
+    
+    teams_data = boxscore.get('players', [])
+    
+    for team_data in teams_data:
+        team_info = team_data.get('team', {})
+        team_abbr = team_info.get('abbreviation', '')
+        team_name = team_info.get('displayName', '')
+        
+        # Determine if home or away
+        is_home = (team_abbr == home_abbr)
+        matchup = f"{team_abbr} vs. {away_abbr}" if is_home else f"{team_abbr} @ {home_abbr}"
+        
+        # Get statistics section
+        statistics = team_data.get('statistics', [])
+        if not statistics:
+            continue
+        
+        # Usually statistics[0] has the player stats
+        stat_section = statistics[0]
+        athletes = stat_section.get('athletes', [])
+        
+        for athlete_data in athletes:
+            athlete = athlete_data.get('athlete', {})
+            stats = athlete_data.get('stats', [])
+            
+            if not stats:
+                continue
+            
+            # ESPN stats order (confirmed from API labels):
+            # [0]=MIN, [1]=PTS, [2]=FG, [3]=3PT, [4]=FT, [5]=REB, [6]=AST,
+            # [7]=TO, [8]=STL, [9]=BLK, [10]=OREB, [11]=DREB, [12]=PF, [13]=+/-
+            
+            player_dict = {
+                # IDs and names
+                'PLAYER_ID': athlete.get('id', ''),
+                'PLAYER_NAME': athlete.get('displayName', ''),
+                'TEAM_ID': team_info.get('id', ''),
+                'TEAM_NAME': team_name,
+                'TEAM_ABBREVIATION': team_abbr,
+                
+                # Game info
+                'GAME_ID': box_data.get('header', {}).get('id', ''),
+                'GAME_DATE': date_str,
+                'MATCHUP': matchup,
+                
+                # Stats (using correct ESPN order)
+                'MIN': parse_minutes(stats[0]) if len(stats) > 0 else 0,
+                'PTS': safe_int(stats[1]) if len(stats) > 1 else 0,
+                'REB': safe_int(stats[5]) if len(stats) > 5 else 0,
+                'AST': safe_int(stats[6]) if len(stats) > 6 else 0,
+                'TOV': safe_int(stats[7]) if len(stats) > 7 else 0,
+                'STL': safe_int(stats[8]) if len(stats) > 8 else 0,
+                'BLK': safe_int(stats[9]) if len(stats) > 9 else 0,
+                'OREB': safe_int(stats[10]) if len(stats) > 10 else 0,
+                'DREB': safe_int(stats[11]) if len(stats) > 11 else 0,
+                'PF': safe_int(stats[12]) if len(stats) > 12 else 0,
+                'PLUS_MINUS': safe_int(stats[13]) if len(stats) > 13 else 0,
+                
+                # Field goals (index 2: "7-12" format)
+                'FGM': parse_made(stats[2]) if len(stats) > 2 else 0,
+                'FGA': parse_attempts(stats[2]) if len(stats) > 2 else 0,
+                'FG_PCT': calculate_pct(stats[2]) if len(stats) > 2 else 0.0,
+                
+                # 3-pointers (index 3: "2-5" format)
+                'FG3M': parse_made(stats[3]) if len(stats) > 3 else 0,
+                'FG3A': parse_attempts(stats[3]) if len(stats) > 3 else 0,
+                'FG3_PCT': calculate_pct(stats[3]) if len(stats) > 3 else 0.0,
+                
+                # Free throws (index 4: "4-4" format)
+                'FTM': parse_made(stats[4]) if len(stats) > 4 else 0,
+                'FTA': parse_attempts(stats[4]) if len(stats) > 4 else 0,
+                'FT_PCT': calculate_pct(stats[4]) if len(stats) > 4 else 0.0,
+                
+                # Win/Loss (placeholder)
+                'WL': 'TBD',
+            }
+            
+            players.append(player_dict)
+    
+    return players
+
+
+def fetch_games_from_espn(date_str):
+    """
+    Fetch game results from ESPN API (fallback when NBA API blocked).
+    Returns DataFrame with same 29 columns as NBA API.
+    """
+    logging.info(f"   📡 ESPN API: Fetching scoreboard...")
+    
+    # Convert date format: 2026-02-12 → 20260212
+    espn_date = date_str.replace('-', '')
+    
+    # Get scoreboard
+    scoreboard_url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates={espn_date}"
+    response = requests.get(scoreboard_url, timeout=10)
+    response.raise_for_status()
+    scoreboard = response.json()
+    
+    events = scoreboard.get('events', [])
+    logging.info(f"   📡 ESPN API: Found {len(events)} games")
+    
+    if not events:
+        return pd.DataFrame()
+    
+    # Fetch box score for each game
+    all_players = []
+    
+    for i, event in enumerate(events, 1):
+        game_id = event['id']
+        competition = event['competitions'][0]
+        
+        # Get team info
+        away_team = competition['competitors'][1]  # Away is index 1
+        home_team = competition['competitors'][0]  # Home is index 0
+        
+        away_abbr = away_team['team']['abbreviation']
+        home_abbr = home_team['team']['abbreviation']
+        
+        logging.debug(f"   ESPN game {i}/{len(events)}: {away_abbr} @ {home_abbr}")
+        
+        # Fetch detailed box score
+        box_url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event={game_id}"
+        box_response = requests.get(box_url, timeout=10)
+        box_response.raise_for_status()
+        box_data = box_response.json()
+        
+        # Parse players
+        players = parse_espn_box_score(box_data, date_str, away_abbr, home_abbr)
+        all_players.extend(players)
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(all_players)
+    
+    return df
+
+
+# ============================================================================
 # LOGGING CONFIGURATION
 # ============================================================================
 
@@ -560,13 +761,13 @@ def parse_player_props(odds_data):
 @timed
 def fetch_games_for_date(date_str, max_retries=1):
     """
-    Fetch player game results for a specific date from NBA API
+    Fetch player game results for a specific date.
+    Tries NBA API first, falls back to ESPN API if NBA is blocked.
     
     IMPORTANT: NBA API player game logs have a 12+ HOUR publishing delay!
     If games ended at 1am ET, data won't be available until ~2pm ET same day.
-    Running this too early will result in JSONDecodeError or empty results.
     
-    NOTE: NBA API blocks Lambda IPs - max_retries=1 to fail fast
+    NOTE: NBA API blocks Lambda IPs - ESPN fallback ensures reliability
     
     Args:
         date_str: Date in YYYY-MM-DD format
@@ -577,7 +778,9 @@ def fetch_games_for_date(date_str, max_retries=1):
     """
     logging.info(f"📡 Fetching NBA game results for {date_str}...")
     
-    # Retry logic for flaky NBA API (or Lambda IP blocking)
+    # =========================================================================
+    # ATTEMPT 1: NBA API (preferred source)
+    # =========================================================================
     for attempt in range(max_retries):
         try:
             # Fetch player game logs for the season
@@ -618,7 +821,7 @@ def fetch_games_for_date(date_str, max_retries=1):
             num_games = games['GAME_ID'].nunique()
             num_players = len(games)
             
-            logging.info(f"   ✅ Found {num_games} games with {num_players} player performances")
+            logging.info(f"   ✅ Source: NBA API - Found {num_games} games with {num_players} players")
             
             # Rate limiting for NBA API
             time.sleep(RATE_LIMIT_DELAY)
@@ -628,16 +831,37 @@ def fetch_games_for_date(date_str, max_retries=1):
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
             if attempt < max_retries - 1:
                 wait_time = 1  # 1 second between retries - fail fast
-                logging.warning(f"   ⚠️  Request timed out (attempt {attempt + 1}/{max_retries})")
+                logging.warning(f"   ⚠️  NBA API timeout (attempt {attempt + 1}/{max_retries})")
                 logging.warning(f"   Waiting {wait_time} seconds before retry...")
                 time.sleep(wait_time)
             else:
-                logging.error(f"   ❌ Failed after {max_retries} attempts: {e}", exc_info=True)
-                return pd.DataFrame()
+                logging.warning(f"   ⚠️  NBA API failed after {max_retries} attempts")
                 
         except Exception as e:
-            logging.error(f"❌ Error fetching games for {date_str}: {e}", exc_info=True)
-            return pd.DataFrame()
+            logging.warning(f"   ⚠️  NBA API error: {e}")
+            break  # Don't retry on non-timeout errors
+    
+    # =========================================================================
+    # ATTEMPT 2: ESPN API (fallback when NBA API blocked)
+    # =========================================================================
+    logging.info(f"   🔄 Falling back to ESPN API...")
+    try:
+        games_df = fetch_games_from_espn(date_str)
+        
+        if not games_df.empty:
+            num_games = games_df['GAME_ID'].nunique()
+            num_players = len(games_df)
+            logging.info(f"   ✅ Source: ESPN API - Found {num_games} games with {num_players} players")
+            return games_df
+        else:
+            logging.warning(f"   ⚠️  ESPN API returned no data")
+            
+    except Exception as e:
+        logging.error(f"   ❌ ESPN API also failed: {e}")
+    
+    # Both sources failed
+    logging.error(f"❌ Both NBA API and ESPN API failed for {date_str}")
+    return pd.DataFrame()
 
 
 # ============================================================================
