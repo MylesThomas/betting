@@ -225,7 +225,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 original_request = requests.Session.request
 def patched_request(self, *args, **kwargs):
     kwargs['verify'] = False
-    kwargs.setdefault('timeout', 120)  # 120 second timeout for NBA API
+    kwargs.setdefault('timeout', 3)  # 3 second timeout - fail fast
     return original_request(self, *args, **kwargs)
 requests.Session.request = patched_request
 
@@ -558,7 +558,7 @@ def parse_player_props(odds_data):
 # ============================================================================
 
 @timed
-def fetch_games_for_date(date_str, max_retries=3):
+def fetch_games_for_date(date_str, max_retries=10):
     """
     Fetch player game results for a specific date from NBA API
     
@@ -575,7 +575,7 @@ def fetch_games_for_date(date_str, max_retries=3):
     """
     logging.info(f"📡 Fetching NBA game results for {date_str}...")
     
-    # Retry logic for flaky NBA API
+    # Retry logic for flaky NBA API (or Lambda IP blocking)
     for attempt in range(max_retries):
         try:
             # Parse date
@@ -628,7 +628,7 @@ def fetch_games_for_date(date_str, max_retries=3):
             
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
             if attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
+                wait_time = 1  # 1 second between retries - fail fast
                 logging.warning(f"   ⚠️  Request timed out (attempt {attempt + 1}/{max_retries})")
                 logging.warning(f"   Waiting {wait_time} seconds before retry...")
                 time.sleep(wait_time)

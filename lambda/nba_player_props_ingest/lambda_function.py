@@ -393,6 +393,7 @@ def lambda_handler(event, context):
             ('pandas', 'pandas', 'pandas-numpy-python311:1'),
             ('numpy', 'numpy', 'pandas-numpy-python311:1'),
             ('boto3', 'boto3', 'Lambda runtime (/var/runtime)'),
+            ('zoneinfo', 'zoneinfo', 'Python 3.11 stdlib'),
         ]
         
         all_packages_found = True
