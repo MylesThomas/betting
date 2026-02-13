@@ -129,8 +129,6 @@ Updated: 2026-02-10 (switched to config-based date range, removed calendar depen
 Author: Thomas Myles
 """
 
-print("DEBUG: Script import started", flush=True)
-
 import argparse
 import requests
 import pandas as pd
@@ -435,15 +433,15 @@ def fetch_games_from_espn(date_str):
 # ============================================================================
 
 # CRITICAL: Print before setup_logging() to debug Lambda hanging
-print("DEBUG: Script reached logging section", flush=True)
+logging.debug("DEBUG: Script reached logging section")
 
 def setup_logging(log_prefix='fetch_player_props'):
     """Configure logging to file and console"""
-    print(f"DEBUG: setup_logging() called with prefix={log_prefix}", flush=True)
+    logging.debug(f"DEBUG: setup_logging() called with prefix={log_prefix}")
     log_dir = Path(__file__).parent.parent / 'logs'
-    print(f"DEBUG: log_dir={log_dir}", flush=True)
+    logging.debug(f"DEBUG: log_dir={log_dir}")
     log_dir.mkdir(exist_ok=True)
-    print(f"DEBUG: log_dir created", flush=True)
+    logging.debug(f"DEBUG: log_dir created")
     
     log_filename = f"{log_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     log_filepath = log_dir / log_filename
@@ -467,23 +465,23 @@ def setup_logging(log_prefix='fetch_player_props'):
     logger.addHandler(console_handler)
     
     logging.info(f"Logging initialized - log file: {log_filepath}")
-    print(f"DEBUG: Logging initialized successfully", flush=True)
+    logging.debug(f"DEBUG: Logging initialized successfully")
     return log_filepath
 
-print("DEBUG: About to call setup_logging()", flush=True)
+logging.debug("DEBUG: About to call setup_logging()")
 setup_logging()
-print("DEBUG: setup_logging() completed", flush=True)
+logging.debug("DEBUG: setup_logging() completed")
 
 # Print to stdout for Lambda visibility (logging goes to file)
-print(f"🚀 Script starting at {datetime.now().isoformat()}", flush=True)
-print(f"📍 Working directory: {os.getcwd()}", flush=True)
+logging.info(f"🚀 Script starting at {datetime.now().isoformat()}")
+logging.info(f"📍 Working directory: {os.getcwd()}")
 
 # ============================================================================
 # GLOBAL CONFIGURATION
 # ============================================================================
-print("DEBUG: Loading API_KEY", flush=True)
+logging.debug("DEBUG: Loading API_KEY")
 API_KEY = os.getenv('ODDS_API_KEY') or os.getenv('THE_ODDS_API_KEY')
-print(f"🔑 API_KEY loaded: {'Yes' if API_KEY else 'No'}", flush=True)
+logging.info(f"🔑 API_KEY loaded: {'Yes' if API_KEY else 'No'}")
 BASE_URL = 'https://api.the-odds-api.com/v4'
 SPORT_KEY = 'basketball_nba'
 DEFAULT_REGION = 'us'
@@ -1310,18 +1308,18 @@ def main():
     if args.mode is not None:
         choice = str(args.mode)
     else:
-        print("\n" + "="*80)
-        print("MODE SELECTION")
-        print("="*80)
-        print("1. Test mode (fetch most recent game date)")
-        print("2. Full season mode (fetch all past dates)")
-        print("="*80)
+        logging.info("\n" + "="*80)
+        logging.info("MODE SELECTION")
+        logging.info("="*80)
+        logging.info("1. Test mode (fetch most recent game date)")
+        logging.info("2. Full season mode (fetch all past dates)")
+        logging.info("="*80)
         
         while True:
             choice = input("Select mode (1 or 2): ").strip()
             if choice in ['1', '2']:
                 break
-            print("Invalid choice. Please enter 1 or 2.")
+            logging.info("Invalid choice. Please enter 1 or 2.")
     
     if choice == '1':
         # Test mode - get most recent date in season

@@ -59,6 +59,7 @@ import boto3
 from io import StringIO
 import sys
 from pathlib import Path
+import logging
 
 # Add src to path
 project_root = Path(__file__).parent.parent
@@ -228,7 +229,7 @@ def save_df_to_s3(df: pd.DataFrame, date_str: str) -> bool:
         
         return True
     except Exception as e:
-        print(f"  ❌ S3 upload failed: {e}")
+        logging.error(f"  ❌ S3 upload failed: {e}")
         return False
 
 
@@ -256,8 +257,8 @@ def save_df_locally(df: pd.DataFrame, date_str: str) -> str:
 def check_api_key():
     """Verify API key is loaded"""
     if not API_KEY or API_KEY == 'your_api_key_here':
-        print("❌ ERROR: No valid API key found!")
-        print("Make sure ODDS_API_KEY is set in your .env file")
+        logging.error("❌ ERROR: No valid API key found!")
+        logging.error("Make sure ODDS_API_KEY is set in your .env file")
         return False
     return True
 
@@ -310,10 +311,10 @@ def get_historical_nba_events(date_str):
         if e.response.status_code == 422:
             # No data for this date (common for non-game days)
             return {'events': [], 'cost': 0, 'remaining': credits_remaining}
-        print(f"❌ HTTP Error for {date_str}: {e}")
+        logging.error(f"❌ HTTP Error for {date_str}: {e}")
         return None
     except Exception as e:
-        print(f"❌ Error for {date_str}: {e}")
+        logging.error(f"❌ Error for {date_str}: {e}")
         return None
 
 
@@ -399,13 +400,13 @@ def get_historical_event_odds(event_id, game_commence_time_et):
         # 404 means no odds data for this event (common for some games)
         # Don't print full error, just note it
         if e.response.status_code == 404:
-            print(f"\n  ⚠️  No odds data for event {event_id[:8]} (404)")
+            logging.warning(f"\n  ⚠️  No odds data for event {event_id[:8]} (404)")
         else:
-            print(f"\n  ❌ HTTP {e.response.status_code}: {error_msg}")
+            logging.error(f"\n  ❌ HTTP {e.response.status_code}: {error_msg}")
         
         return None
     except Exception as e:
-        print(f"\n  ❌ Error: {e}")
+        logging.error(f"\n  ❌ Error: {e}")
         return None
 
 
@@ -523,15 +524,15 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
     day_of_week = date_obj.strftime('%A')
     
-    print(f"\n{'='*80}")
-    print(f"🏀 FETCHING GAME LINES FOR {date_str} ({day_of_week})")
-    print(f"{'='*80}")
+    logging.info(f"\n{'='*80}")
+    logging.info(f"🏀 FETCHING GAME LINES FOR {date_str} ({day_of_week})")
+    logging.info(f"{'='*80}")
     
     # Check if file already exists in S3 (skip if force=True)
     if not force and file_exists_in_s3(date_str):
         s3_key = get_s3_key_from_date(date_str)
-        print(f"  ✅ File already exists in S3: s3://{S3_BUCKET}/{s3_key}")
-        print(f"     Skipping (0 credits used)")
+        logging.info(f"  ✅ File already exists in S3: s3://{S3_BUCKET}/{s3_key}")
+        logging.info(f"     Skipping (0 credits used)")
         # Try to load from S3 to return
         try:
             s3_client = get_s3_client()
@@ -539,25 +540,24 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
             existing_df = pd.read_csv(obj['Body'])
             if not existing_df.empty:
                 num_games = existing_df['game_id'].nunique()
-                print(f"     {num_games} games, {len(existing_df)} lines")
+                logging.info(f"     {num_games} games, {len(existing_df)} lines")
             return existing_df
         except:
-            print(f"     (Could not read from S3, will re-fetch)")
+            logging.info(f"     (Could not read from S3, will re-fetch)")
             pass
     
     # Get events for that date
-    print(f"  📡 API CALL 1: Checking for events on {date_str}... (1 credit)", end=" ")
     result = get_historical_nba_events(date_str)
     
     if result is None:
-        print(f"❌ API Error")
+        logging.error(f"  📡 API CALL 1: Checking for events on {date_str}... (1 credit) ❌ API Error")
         return pd.DataFrame()
     
-    print(f"✓ (Remaining: {result['remaining']:,})")
+    logging.info(f"  📡 API CALL 1: Checking for events on {date_str}... (1 credit) ✓ (Remaining: {result['remaining']:,})")
     all_events = result['events']
     
     if not all_events:
-        print(f"  ℹ️  No games found on this date")
+        logging.info(f"  ℹ️  No games found on this date")
         # Save empty file so we don't check this date again
         if save:
             empty_df = pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 
@@ -566,7 +566,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
             save_df_to_s3(empty_df, date_str)
             if local_backup:
                 save_df_locally(empty_df, date_str)
-            print(f"  💾 Saved empty file to S3 → next run will SKIP this date (0 credits)")
+            logging.info(f"  💾 Saved empty file to S3 → next run will SKIP this date (0 credits)")
         return pd.DataFrame()
     
     # Filter to only games on this specific date (in ET timezone)
@@ -585,7 +585,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
                 events.append(event)
     
     if not events:
-        print(f"  ℹ️  No games in the {date_str} ET window (found {len(all_events)} but different date)")
+        logging.info(f"  ℹ️  No games in the {date_str} ET window (found {len(all_events)} but different date)")
         if save:
             empty_df = pd.DataFrame(columns=['game_id', 'game_time', 'away_team', 'home_team', 
                                             'bookmaker', 'bookmaker_key', 'last_update', 'market',
@@ -595,7 +595,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
                 save_df_locally(empty_df, date_str)
         return pd.DataFrame()
     
-    print(f"\n  🎯 Found {len(events)} games on {date_str}:")
+    logging.info(f"\n  🎯 Found {len(events)} games on {date_str}:")
     for event in events:
         away = event.get('away_team', '?')
         home = event.get('home_team', '?')
@@ -604,11 +604,11 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
             game_time_et = pd.to_datetime(commence).tz_convert(et_tz).strftime('%I:%M %p ET')
         else:
             game_time_et = '?'
-        print(f"     - {away} @ {home} ({game_time_et})")
+        logging.info(f"     - {away} @ {home} ({game_time_et})")
     
     # Cost estimate: 2 markets (h2h + spreads) × 10 credits = 20 credits per game
     estimated_cost = len(events) * 20
-    print(f"\n  💰 Estimated cost: {len(events)} games × 20 (h2h+spreads) = {estimated_cost} credits")
+    logging.info(f"\n  💰 Estimated cost: {len(events)} games × 20 (h2h+spreads) = {estimated_cost} credits")
     
     # Fetch odds for each event individually (per-game, not per-day)
     # Each game gets odds from the last full hour before its specific tipoff
@@ -622,7 +622,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
         # Get game tipoff time (comes from API in UTC)
         commence_time_str = event.get('commence_time')
         if not commence_time_str:
-            print(f"  ⚠️  No commence time for {game_desc}, skipping")
+            logging.warning(f"  ⚠️  No commence time for {game_desc}, skipping")
             continue
         
         # Convert to ET for all calculations
@@ -641,14 +641,12 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
         # Store the odds fetch time for this game (in UTC for consistency)
         odds_fetch_times[event['id']] = odds_time_et.tz_convert('UTC').isoformat()
         
-        print(f"  📡 [{i}/{len(events)}] {game_desc} (Tip:{tipoff_time_et}, Odds:{odds_time_str}, {mins_before}m before)... ", end="")
-        
         # Fetch odds for this specific game at its calculated time
         odds_result = get_historical_event_odds(event['id'], game_commence_time_et)
         
         if odds_result and odds_result['data']:
             games_with_odds.append(odds_result['data'])
-            print(f"✓ (Rem:{odds_result['remaining']:,})")
+            logging.info(f"  📡 [{i}/{len(events)}] {game_desc} (Tip:{tipoff_time_et}, Odds:{odds_time_str}, {mins_before}m before)... ✓ (Rem:{odds_result['remaining']:,})")
         else:
             # No odds data for this game (404 or other error)
             # Track the failure
@@ -663,9 +661,9 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
             })
             # Continue to next game - we'll save what we got
             if not odds_result:
-                print("⚠️ skip")
+                logging.warning(f"  📡 [{i}/{len(events)}] {game_desc} (Tip:{tipoff_time_et}, Odds:{odds_time_str}, {mins_before}m before)... ⚠️ skip")
             else:
-                print("❌")
+                logging.error(f"  📡 [{i}/{len(events)}] {game_desc} (Tip:{tipoff_time_et}, Odds:{odds_time_str}, {mins_before}m before)... ❌")
     
     # Parse successful games
     if games_with_odds:
@@ -682,7 +680,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
     num_failed = len(failed_games)
     
     if num_failed > 0:
-        print(f"\n  ℹ️  Retrieved {successful_games}/{len(events)} games ({num_failed} games had no odds data)")
+        logging.info(f"\n  ℹ️  Retrieved {successful_games}/{len(events)} games ({num_failed} games had no odds data)")
     
     # Save successful games to main file
     if save and not df.empty:
@@ -692,15 +690,15 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
             num_games = df['game_id'].nunique()
             num_spread_lines = len(df[df['market'] == 'spread'])
             num_ml_lines = len(df[df['market'] == 'moneyline'])
-            print(f"\n  💾 Saved {num_games} games to S3: s3://{S3_BUCKET}/{s3_key}")
-            print(f"     Spread lines: {num_spread_lines}")
-            print(f"     Moneyline lines: {num_ml_lines}")
-            print(f"     Bookmakers: {df['bookmaker'].nunique()}")
+            logging.info(f"\n  💾 Saved {num_games} games to S3: s3://{S3_BUCKET}/{s3_key}")
+            logging.info(f"     Spread lines: {num_spread_lines}")
+            logging.info(f"     Moneyline lines: {num_ml_lines}")
+            logging.info(f"     Bookmakers: {df['bookmaker'].nunique()}")
             
             # Optional local backup
             if local_backup:
                 local_path = save_df_locally(df, date_str)
-                print(f"     Local backup: {local_path}")
+                logging.info(f"     Local backup: {local_path}")
     
     # Save failed games log if any failures occurred
     # Append to season-level failures file
@@ -718,7 +716,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
             except Exception as e:
                 # File doesn't exist yet or other error, that's fine
                 if 'NoSuchKey' not in str(e):
-                    print(f"  ⚠️  Note: {e}")
+                    logging.warning(f"  ⚠️  Note: {e}")
                 pass
             
             # Append to existing data or create new
@@ -738,10 +736,10 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
                 Body=csv_buffer.getvalue(),
                 ContentType='text/csv'
             )
-            print(f"  📝 Logged {len(failed_games)} failed games to: s3://{S3_BUCKET}/{failed_s3_key}")
-            print(f"     Total failures for season: {len(combined_df)}")
+            logging.info(f"  📝 Logged {len(failed_games)} failed games to: s3://{S3_BUCKET}/{failed_s3_key}")
+            logging.info(f"     Total failures for season: {len(combined_df)}")
         except Exception as e:
-            print(f"  ⚠️  Failed to save failures log: {e}")
+            logging.warning(f"  ⚠️  Failed to save failures log: {e}")
     
     return df
 
@@ -788,7 +786,7 @@ def check_past_season_complete(season_start, season_end):
         csv_files = [obj for obj in response['Contents'] if obj['Key'].endswith('.csv')]
         return len(csv_files) >= expected_dates, expected_dates, len(csv_files)
     except Exception as e:
-        print(f"⚠️  Error checking S3: {e}")
+        logging.warning(f"⚠️  Error checking S3: {e}")
         return False, expected_dates, 0
 
 
@@ -821,34 +819,34 @@ def fetch_full_season(season_start, season_end, dry_run=True, force=False):
     is_past_season = season < current_season
     
     if is_past_season and not force:
-        print(f"\n📅 Checking if past season {season} is already complete...")
+        logging.info(f"\n📅 Checking if past season {season} is already complete...")
         is_complete, expected_dates, files_found = check_past_season_complete(season_start, season_end)
         
         if is_complete:
-            print(f"\n{'='*80}")
-            print(f"✅ PAST SEASON COMPLETE - SKIPPING")
-            print(f"{'='*80}")
-            print(f"Season: {season}")
-            print(f"Found: {files_found}/{expected_dates} files in S3")
-            print(f"S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
-            print(f"\nNo fetch needed - all historical data exists!")
-            print(f"\n💡 TIP: Use --force to re-check and fetch any missing dates")
-            print(f"{'='*80}\n")
+            logging.info(f"\n{'='*80}")
+            logging.info(f"✅ PAST SEASON COMPLETE - SKIPPING")
+            logging.info(f"{'='*80}")
+            logging.info(f"Season: {season}")
+            logging.info(f"Found: {files_found}/{expected_dates} files in S3")
+            logging.info(f"S3 Path: s3://{S3_BUCKET}/{S3_PREFIX}/{season}/")
+            logging.info(f"\nNo fetch needed - all historical data exists!")
+            logging.info(f"\n💡 TIP: Use --force to re-check and fetch any missing dates")
+            logging.info(f"{'='*80}\n")
             return {'skipped': True, 'reason': 'Past season complete', 'files_found': files_found}
         else:
-            print(f"   Found {files_found}/{expected_dates} files - will fetch missing dates")
+            logging.info(f"   Found {files_found}/{expected_dates} files - will fetch missing dates")
     elif is_past_season and force:
-        print(f"\n🔄 Force mode enabled - will check all dates for {season} season")
+        logging.info(f"\n🔄 Force mode enabled - will check all dates for {season} season")
     else:
-        print(f"\n🔄 Current season {season} - checking for updates...")
+        logging.info(f"\n🔄 Current season {season} - checking for updates...")
     
     # Don't fetch data for future dates
     today = datetime.today()
     if end_date > today:
         original_end = end_date.strftime('%Y-%m-%d')
         end_date = today
-        print(f"\n⚠️  Adjusted end date from {original_end} to {today.strftime('%Y-%m-%d')} (today)")
-        print(f"   Cannot fetch historical data for future dates")
+        logging.warning(f"\n⚠️  Adjusted end date from {original_end} to {today.strftime('%Y-%m-%d')} (today)")
+        logging.warning(f"   Cannot fetch historical data for future dates")
     
     # Get all dates in range
     all_dates = []
@@ -857,29 +855,29 @@ def fetch_full_season(season_start, season_end, dry_run=True, force=False):
         all_dates.append(current.strftime('%Y-%m-%d'))
         current += timedelta(days=1)
     
-    print(f"\n{'='*80}")
-    print(f"📅 SEASON DATE RANGE: {season_start} to {end_date.strftime('%Y-%m-%d')}")
-    print(f"{'='*80}")
-    print(f"Total days in range: {len(all_dates)}")
+    logging.info(f"\n{'='*80}")
+    logging.info(f"📅 SEASON DATE RANGE: {season_start} to {end_date.strftime('%Y-%m-%d')}")
+    logging.info(f"{'='*80}")
+    logging.info(f"Total days in range: {len(all_dates)}")
     
     if dry_run:
-        print("\n🔍 DRY RUN MODE - Estimating costs...")
-        print("\nEstimated costs (assuming ~82 games per team × 30 teams / 2 = ~1,230 games):")
-        print("  - Regular season: ~1,230 games × 20 credits = 24,600 credits")
-        print("  - Playoffs: ~90 games × 20 credits = 1,800 credits")
-        print("  - Total estimate: ~26,400 credits per season")
-        print("\nTo proceed with actual fetching, run with --prod-run flag")
+        logging.info("\n🔍 DRY RUN MODE - Estimating costs...")
+        logging.info("\nEstimated costs (assuming ~82 games per team × 30 teams / 2 = ~1,230 games):")
+        logging.info("  - Regular season: ~1,230 games × 20 credits = 24,600 credits")
+        logging.info("  - Playoffs: ~90 games × 20 credits = 1,800 credits")
+        logging.info("  - Total estimate: ~26,400 credits per season")
+        logging.info("\nTo proceed with actual fetching, run with --prod-run flag")
         return
     
     # Production run
-    print("\n🚀 PRODUCTION RUN - Fetching data...")
+    logging.info("\n🚀 PRODUCTION RUN - Fetching data...")
     
     total_games = 0
     total_lines = 0
     dates_with_games = 0
     
     for i, date_str in enumerate(all_dates, 1):
-        print(f"\n[{i}/{len(all_dates)}] Processing {date_str}...")
+        logging.info(f"\n[{i}/{len(all_dates)}] Processing {date_str}...")
         
         df = fetch_date_lines(date_str, save=True)
         
@@ -891,17 +889,17 @@ def fetch_full_season(season_start, season_end, dry_run=True, force=False):
         # Rate limiting
         time.sleep(0.2)
     
-    print(f"\n{'='*80}")
-    print(f"✅ SEASON FETCH COMPLETE")
-    print(f"{'='*80}")
-    print(f"Dates processed: {len(all_dates)}")
-    print(f"Dates with games: {dates_with_games}")
-    print(f"Total games: {total_games}")
-    print(f"Total betting lines: {total_lines}")
+    logging.info(f"\n{'='*80}")
+    logging.info(f"✅ SEASON FETCH COMPLETE")
+    logging.info(f"{'='*80}")
+    logging.info(f"Dates processed: {len(all_dates)}")
+    logging.info(f"Dates with games: {dates_with_games}")
+    logging.info(f"Total games: {total_games}")
+    logging.info(f"Total betting lines: {total_lines}")
     if credits_remaining is not None:
-        print(f"Credits remaining: {credits_remaining:,}")
+        logging.info(f"Credits remaining: {credits_remaining:,}")
     else:
-        print(f"Credits remaining: Unknown (all files existed, no API calls made)")
+        logging.info(f"Credits remaining: Unknown (all files existed, no API calls made)")
 
 
 
@@ -927,23 +925,23 @@ def main():
     
     # Test single date
     if args.test_date:
-        print(f"\n🧪 TEST MODE - Single date: {args.test_date}")
-        print(f"S3 Bucket: s3://{S3_BUCKET}/{S3_PREFIX}/")
+        logging.info(f"\n🧪 TEST MODE - Single date: {args.test_date}")
+        logging.info(f"S3 Bucket: s3://{S3_BUCKET}/{S3_PREFIX}/")
         local_backup = not args.no_local_backup
         df = fetch_date_lines(args.test_date, save=True, local_backup=local_backup)
         if not df.empty:
-            print(f"\n✅ Successfully fetched {len(df)} lines for {df['game_id'].nunique()} games")
+            logging.info(f"\n✅ Successfully fetched {len(df)} lines for {df['game_id'].nunique()} games")
             s3_key = get_s3_key_from_date(args.test_date)
-            print(f"   S3: s3://{S3_BUCKET}/{s3_key}")
+            logging.info(f"   S3: s3://{S3_BUCKET}/{s3_key}")
         return
     
     # Season fetch
     if not args.season:
-        print("Please specify --season (e.g., --season 2024-25)")
+        logging.error("Please specify --season (e.g., --season 2024-25)")
         return
     
     if args.season not in SEASON_DATES:
-        print(f"Season {args.season} not available. Available: {', '.join(SEASON_DATES.keys())}")
+        logging.error(f"Season {args.season} not available. Available: {', '.join(SEASON_DATES.keys())}")
         return
     
     season_start, season_end = SEASON_DATES[args.season]
