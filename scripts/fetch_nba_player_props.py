@@ -558,13 +558,15 @@ def parse_player_props(odds_data):
 # ============================================================================
 
 @timed
-def fetch_games_for_date(date_str, max_retries=10):
+def fetch_games_for_date(date_str, max_retries=1):
     """
     Fetch player game results for a specific date from NBA API
     
     IMPORTANT: NBA API player game logs have a 12+ HOUR publishing delay!
     If games ended at 1am ET, data won't be available until ~2pm ET same day.
     Running this too early will result in JSONDecodeError or empty results.
+    
+    NOTE: NBA API blocks Lambda IPs - max_retries=1 to fail fast
     
     Args:
         date_str: Date in YYYY-MM-DD format
