@@ -578,9 +578,6 @@ def fetch_games_for_date(date_str, max_retries=10):
     # Retry logic for flaky NBA API (or Lambda IP blocking)
     for attempt in range(max_retries):
         try:
-            # Parse date
-            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-            
             # Configure NBA API to look like browser request (prevents Lambda IP blocking)
             from nba_api.library.http import NBAStatsHTTP
             http_service = NBAStatsHTTP()
@@ -758,6 +755,7 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
     else:
         logging.info("="*80)
         logging.info(f"FETCHING PROPS FOR {date_str} ({day_of_week})")
+        logging.info(f"Source: The Odds API (player props - all markets)")
         logging.info("="*80)
         
         # Get events for that date
@@ -840,39 +838,9 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         else:
             logging.info("⚠️  Skipping S3 upload (--no-s3 flag)")
     
-    # Fetch game results if requested (independent of props fetch)
-    games_df = pd.DataFrame()
-    if fetch_games:
-        # Check if game logs already exist in S3
-        games_s3_key = f"{S3_PREFIX_GAMES}/{date_str}.csv"
-        if skip_if_exists and upload_s3 and check_s3_file_exists(S3_BUCKET_GAMES, games_s3_key):
-            logging.info("")
-            logging.info("="*80)
-            logging.info(f"⏭️  GAME RESULTS ALREADY EXIST FOR {date_str} - SKIPPING GAME FETCH")
-            logging.info(f"   S3: s3://{S3_BUCKET_GAMES}/{games_s3_key}")
-            logging.info("="*80)
-        else:
-            logging.info("")
-            logging.info("="*80)
-            logging.info(f"FETCHING GAME RESULTS FOR {date_str}")
-            logging.info("="*80)
-            
-            games_df = fetch_games_for_date(date_str)
-            
-            if not games_df.empty:
-                # Upload to S3
-                if upload_s3:
-                    save_games_to_s3(games_df, date_str)
-                else:
-                    logging.info("⚠️  Skipping game results S3 upload")
-            else:
-                error_msg = f"❌ CRITICAL: Game fetch returned 0 rows for {date_str}"
-                logging.error(error_msg)
-                logging.error(f"Expected games file: s3://{S3_BUCKET_GAMES}/{games_s3_key}")
-                # Exit with error code to signal failure to Lambda
-                sys.exit(1)
-    
-    # Fetch game lines if requested (when fetch_games=True)
+    # =========================================================================
+    # FETCH GAME LINES (The Odds API) - Spread, Moneyline
+    # =========================================================================
     game_lines_df = pd.DataFrame()
     if fetch_games:
         # Check if game lines already exist in S3
@@ -881,12 +849,14 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
             logging.info("")
             logging.info("="*80)
             logging.info(f"⏭️  GAME LINES ALREADY EXIST FOR {date_str} - SKIPPING LINES FETCH")
+            logging.info(f"   Source: The Odds API (spreads, moneylines)")
             logging.info(f"   S3: s3://{GAME_LINES_S3_BUCKET}/{game_lines_s3_key}")
             logging.info("="*80)
         else:
             logging.info("")
             logging.info("="*80)
             logging.info(f"FETCHING GAME LINES FOR {date_str}")
+            logging.info(f"Source: The Odds API (spreads, moneylines)")
             logging.info("="*80)
             
             # Time the game lines fetch
@@ -907,6 +877,44 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
                 logging.info(f"✅ Fetched game lines: {num_games} games, {num_spread_lines} spread lines, {num_ml_lines} ML lines")
             else:
                 logging.info("ℹ️  No games on this date (no game lines)")
+    
+    # =========================================================================
+    # FETCH GAME RESULTS (NBA API) - Actual player stats (LAST, can fail)
+    # =========================================================================
+    games_df = pd.DataFrame()
+    if fetch_games:
+        # Check if game logs already exist in S3
+        games_s3_key = f"{S3_PREFIX_GAMES}/{date_str}.csv"
+        if skip_if_exists and upload_s3 and check_s3_file_exists(S3_BUCKET_GAMES, games_s3_key):
+            logging.info("")
+            logging.info("="*80)
+            logging.info(f"⏭️  GAME RESULTS ALREADY EXIST FOR {date_str} - SKIPPING GAME FETCH")
+            logging.info(f"   Source: NBA API (actual player stats)")
+            logging.info(f"   S3: s3://{S3_BUCKET_GAMES}/{games_s3_key}")
+            logging.info("="*80)
+        else:
+            logging.info("")
+            logging.info("="*80)
+            logging.info(f"FETCHING GAME RESULTS FOR {date_str}")
+            logging.info(f"Source: NBA API (actual player stats)")
+            logging.info(f"⚠️  Note: NBA API may block Lambda IPs - failure is non-critical")
+            logging.info("="*80)
+            
+            games_df = fetch_games_for_date(date_str)
+            
+            if not games_df.empty:
+                # Upload to S3
+                if upload_s3:
+                    save_games_to_s3(games_df, date_str)
+                else:
+                    logging.info("⚠️  Skipping game results S3 upload")
+            else:
+                # NBA API failed - log warning but continue (don't fail entire Lambda)
+                error_msg = f"⚠️  WARNING: Game fetch returned 0 rows for {date_str}"
+                logging.warning(error_msg)
+                logging.warning(f"   NBA API may be blocking Lambda IPs or data not ready")
+                logging.warning(f"   Continuing without game results...")
+                # Don't exit - props and game lines are more important
     
     return df, games_df, game_lines_df
 

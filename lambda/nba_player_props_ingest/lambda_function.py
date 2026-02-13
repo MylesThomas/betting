@@ -111,7 +111,7 @@ def get_secret(secret_name: str) -> dict:
         raise
 
 
-def run_cmd(cmd: list, cwd=None, check=True, env=None) -> subprocess.CompletedProcess:
+def run_cmd(cmd: list, cwd=None, check=True, env=None, stream_output=False) -> subprocess.CompletedProcess:
     """
     Run shell command and return result.
     
@@ -120,11 +120,13 @@ def run_cmd(cmd: list, cwd=None, check=True, env=None) -> subprocess.CompletedPr
         cwd: Working directory (default: None)
         check: Raise exception on non-zero exit (default: True)
         env: Environment variables dict (default: None, inherits from parent)
+        stream_output: If True, stream output line-by-line in real-time (default: False)
     
     Returns:
         CompletedProcess with stdout, stderr, returncode
     """
     print(f"   Running: {' '.join(cmd)}")
+    sys.stdout.flush()  # Ensure the "Running" message appears immediately
     
     # Merge environment variables
     if env:
@@ -134,32 +136,73 @@ def run_cmd(cmd: list, cwd=None, check=True, env=None) -> subprocess.CompletedPr
         full_env = None
     
     try:
-        result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            check=False,  # Don't raise yet, we want to print output first
-            env=full_env,
-            stdin=subprocess.DEVNULL,  # Prevent subprocess from waiting on STDIN
-            timeout=240  # 4 minute timeout (Lambda has 5 min total)
-        )
-        
-        if result.stdout:
-            print(f"   stdout: {result.stdout.strip()}")
-        if result.stderr:
-            print(f"   stderr: {result.stderr.strip()}")
-        
-        # Now raise if check=True and command failed
-        if check and result.returncode != 0:
-            raise subprocess.CalledProcessError(
-                result.returncode, 
-                cmd, 
-                output=result.stdout, 
-                stderr=result.stderr
+        if stream_output:
+            # Stream output in real-time (line by line)
+            process = subprocess.Popen(
+                cmd,
+                cwd=cwd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Merge stderr into stdout
+                text=True,
+                env=full_env,
+                stdin=subprocess.DEVNULL,
+                bufsize=1  # Line buffered
             )
-        
-        return result
+            
+            # Stream output line by line
+            stdout_lines = []
+            for line in process.stdout:
+                print(line, end='', flush=True)  # Print immediately
+                stdout_lines.append(line)
+            
+            # Wait for completion
+            returncode = process.wait(timeout=240)
+            stdout = ''.join(stdout_lines)
+            stderr = ''
+            
+            # Check return code
+            if check and returncode != 0:
+                raise subprocess.CalledProcessError(
+                    returncode,
+                    cmd,
+                    output=stdout,
+                    stderr=stderr
+                )
+            
+            return subprocess.CompletedProcess(
+                cmd,
+                returncode,
+                stdout=stdout,
+                stderr=stderr
+            )
+        else:
+            # Original behavior: capture all output, print after completion
+            result = subprocess.run(
+                cmd,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=False,  # Don't raise yet, we want to print output first
+                env=full_env,
+                stdin=subprocess.DEVNULL,  # Prevent subprocess from waiting on STDIN
+                timeout=240  # 4 minute timeout (Lambda has 5 min total)
+            )
+            
+            if result.stdout:
+                print(f"   stdout: {result.stdout.strip()}")
+            if result.stderr:
+                print(f"   stderr: {result.stderr.strip()}")
+            
+            # Now raise if check=True and command failed
+            if check and result.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    result.returncode, 
+                    cmd, 
+                    output=result.stdout, 
+                    stderr=result.stderr
+                )
+            
+            return result
         
     except subprocess.TimeoutExpired as e:
         print(f"   ⚠️  Command timed out after 240 seconds")
@@ -426,7 +469,7 @@ def lambda_handler(event, context):
             '--season', season,
             '--force',
             '--fetch-games'
-        ], cwd=repo_path, env=python_env)
+        ], cwd=repo_path, env=python_env, stream_output=True)
         
         print(f"   ✅ Props + games fetched for {yesterday}")
         print()
@@ -455,7 +498,7 @@ def lambda_handler(event, context):
             '--s3',
             '--season', season,
             '--force'
-        ], cwd=repo_path, env=python_env)
+        ], cwd=repo_path, env=python_env, stream_output=True)
         
         print(f"   ✅ Props fetched for {today}")
         print()
