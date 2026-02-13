@@ -578,19 +578,6 @@ def fetch_games_for_date(date_str, max_retries=10):
     # Retry logic for flaky NBA API (or Lambda IP blocking)
     for attempt in range(max_retries):
         try:
-            # Configure NBA API to look like browser request (prevents Lambda IP blocking)
-            from nba_api.library.http import NBAStatsHTTP
-            http_service = NBAStatsHTTP()
-            http_service.headers.update({
-                'Referer': 'https://www.nba.com/',
-                'Origin': 'https://www.nba.com',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Connection': 'keep-alive',
-            })
-            logging.debug(f"   NBA API headers configured for attempt {attempt + 1}")
-            
             # Fetch player game logs for the season
             season_str = SEASON  # e.g., '2025-26'
             

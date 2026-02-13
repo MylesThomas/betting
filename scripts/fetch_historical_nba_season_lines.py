@@ -524,7 +524,7 @@ def fetch_date_lines(date_str, save=True, local_backup=True, force=False):
     day_of_week = date_obj.strftime('%A')
     
     print(f"\n{'='*80}")
-    print(f"🏀 FETCHING LINES FOR {date_str} ({day_of_week})")
+    print(f"🏀 FETCHING GAME LINES FOR {date_str} ({day_of_week})")
     print(f"{'='*80}")
     
     # Check if file already exists in S3 (skip if force=True)
