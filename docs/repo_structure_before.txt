@@ -1,0 +1,701 @@
+/Users/thomasmyles/dev/betting
+|-- IMPLEMENTATION_PLAN.md
+|-- README.md
+|-- SETUP.md
+|-- analysis
+|   |-- analyze_all_markets_odds_and_ev.py
+|   |-- analyze_all_nba_guards_paint_scoring.py
+|   |-- analyze_bovada_phantom_arbs.py
+|   |-- analyze_defensive_disruptors.py
+|   |-- analyze_futures.py
+|   |-- analyze_homecoming_top_scorers.py
+|   |-- analyze_line_movement_predictiveness.py
+|   |-- analyze_nba_ats_records.py
+|   |-- analyze_nba_championship_futures_vig.py
+|   |-- analyze_nba_close_range_shooting.py
+|   |-- analyze_nba_mvp_vig.py
+|   |-- analyze_nba_player_props_coverage.py
+|   |-- analyze_nba_props_stability_and_predictive_power.py
+|   |-- analyze_ncaab_championship_futures_vig.py
+|   |-- analyze_ncaaf_championship_futures_vig.py
+|   |-- analyze_nfl_championship_futures_vig.py
+|   |-- analyze_payton_pritchard_paint_scoring.py
+|   |-- analyze_points_props_role_spread_6feet_scorer_model.py
+|   |-- analyze_points_props_role_spread_model.py
+|   |-- analyze_qb_first_playoff_rush.py
+|   |-- analyze_rim_shot_scoring_variance.py
+|   |-- analyze_spread_binning_strategy.py
+|   |-- build_nba_player_id_map.py
+|   |-- conference_inefficiency_hunt.py
+|   |-- detect_nba_dnp_scenarios.py
+|   |-- find_conference_inefficiencies.py
+|   |-- find_mc_failures.py
+|   |-- find_profitable_3pt_unders.py
+|   |-- grid_search_L1_to_L10.py
+|   |-- grid_search_player_level.py
+|   |-- load_qb_playoff_rushing_data.py
+|   |-- ml_pricing_ncaab_games.py
+|   |-- ml_pricing_ncaab_games_v2.py
+|   |-- ml_pricing_ncaab_totals.py
+|   |-- nba_props_vs_actuals.py
+|   |-- nba_rim_efficiency_screener.py
+|   |-- optimize_spread_ml_weights.py
+|   |-- plots
+|   |   |-- spread_binning_continuous_analysis.png
+|   |   `-- spread_binning_current_bins.png
+|   |-- spread_ml_optimizer
+|   |-- validate_stability_hypothesis.py
+|   |-- visualize_nfl_futures_vig.py
+|   |-- visualize_payton_pritchard_paint_scoring.py
+|   |-- viz_futures.py
+|   |-- viz_nba_defensive_disruptors_gt.py
+|   |-- viz_nba_dnp_scenarios_gt.py
+|   |-- viz_nba_futures_gt_single.py
+|   |-- viz_nba_mvp_gt.py
+|   |-- viz_ncaab_futures_gt_single.py
+|   |-- viz_ncaaf_futures_gt_single.py
+|   |-- viz_nfl_futures_gt_sidebyside.py
+|   |-- viz_nfl_futures_gt_single.py
+|   |-- viz_nfl_futures_matplotlib.py
+|   `-- viz_payton_pritchard_paint_scoring_r.py
+|-- api_setup
+|   |-- ALGORITHM.md
+|   |-- QUICKSTART.md
+|   |-- README.md
+|   |-- README_SHOT_DISTANCE.md
+|   |-- fixing_ssl.md
+|   |-- nba_api_setup.py
+|   |-- nba_shot_chart_setup.py
+|   |-- odds_api_efficient.py
+|   |-- odds_api_setup.py
+|   |-- requirements.txt
+|   `-- the-odds-api
+|       |-- README.md
+|       |-- algo.txt
+|       `-- samples-python
+|-- automation
+|   |-- README.md
+|   |-- draftkings_bet_placer.py
+|   |-- fanduel_bet_placer.py
+|   |-- requirements.txt
+|   `-- test_playwright_setup.py
+|-- backtesting
+|   |-- 20251121_nba_3pt_prop_miss_streaks_24_25.py
+|   |-- 20251124_nba_3pt_prop_modeling_ou_half_point_lines.py
+|   |-- 20251125_nfl_overperformance_next_week_analysis.py
+|   |-- 20251126_nfl_all_score_differential_analysis.py
+|   |-- 20251126_nfl_game_level_luck_analysis.py
+|   |-- 20251126_nfl_spread_covering_vs_score_differential.py
+|   |-- 20251129_nfl_final_model.py
+|   |-- 20251202_nfl_both_teams_luck_analysis.py
+|   |-- 20251203_nfl_categorical_luck_model.py
+|   |-- 20251203_nfl_lucky_vs_unlucky_only.py
+|   |-- 20260108_nba_points_props_strategy_backtest.py
+|   |-- README_BACKTEST_WORKFLOW.md
+|   `-- fetch_historical_data_for_backtest.py
+|-- books
+|   |-- IMPLEMENTATION_REFERENCE.md
+|   |-- MONTE_CARLO_IMPLEMENTATION_STRATEGY.md
+|   |-- README.md
+|   |-- monte_carlo_implementation_guide.md
+|   |-- monte_carlo_or_bust.md
+|   |-- monte_carlo_prediction_models.md
+|   |-- transcribe_screenshots.py
+|   `-- transcribe_with_ocr.py
+|-- config
+|   |-- config.yaml
+|   |-- futures_config.yaml
+|   |-- line_steam_config.yaml
+|   |-- season_dates.yaml
+|   |-- the-odds-api_config.yaml
+|   `-- viz_config.yaml
+|-- content
+|   |-- 20260204_nba_championship_futures_tweet.md
+|   |-- 20260204_ncaab_championship_futures_tweet.md
+|   |-- 20260206_late_game_scratch_tweet_thread.md
+|   |-- 20260210_tweet_draft_nba_mvp_week19.md
+|   |-- 20260212_nba_championship_futures_tweet.md
+|   |-- 20260212_ncaab_championship_futures_tweet.md
+|   |-- README.md
+|   |-- game_books
+|   |   `-- week_15
+|   |-- tweets
+|   |-- viz
+|   |   |-- nba
+|   |   |-- ncaab
+|   |   |-- ncaaf
+|   |   `-- nfl
+|   `-- writing
+|       |-- substack
+|       `-- x
+|-- data
+|   |-- 01_input
+|   |   |-- fanduel
+|   |   |-- nba_api
+|   |   |-- nba_calendar
+|   |   |-- the-odds-api
+|   |   `-- unexpected_points
+|   |-- 02_cache
+|   |-- 03_intermediate
+|   |   |-- combined_props_2025_26_player_threes.csv
+|   |   |-- combined_props_player_threes.csv
+|   |   |-- consensus_props_2025_26_player_threes.csv
+|   |   |-- consensus_props_player_threes.csv
+|   |   |-- consensus_props_with_game_results_2024_25.csv
+|   |   |-- consensus_props_with_game_results_min10_2024_25.csv
+|   |   |-- consensus_props_with_game_results_min5_2024_25.csv
+|   |   |-- merged_data.csv
+|   |   |-- nba_props_analysis
+|   |   |-- nfl_both_teams_luck_analysis_season_2020_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2020_threshold_7.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2021_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2021_threshold_7.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2022_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2022_threshold_7.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2023_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2023_threshold_7.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2024_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2024_threshold_7.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2025_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_season_2025_threshold_7.csv
+|   |   |-- nfl_both_teams_luck_analysis_threshold_10.csv
+|   |   |-- nfl_both_teams_luck_analysis_threshold_3.csv
+|   |   |-- nfl_both_teams_luck_analysis_threshold_5.csv
+|   |   |-- nfl_both_teams_luck_analysis_threshold_7.csv
+|   |   |-- nfl_game_by_game_tracking_threshold_7.csv
+|   |   |-- nfl_games_with_spreads_and_results.csv
+|   |   |-- player_level_data_filled
+|   |   `-- props_with_game_results_2024_25.csv
+|   |-- 04_output
+|   |   |-- backtests
+|   |   |-- line_movement
+|   |   |-- nba
+|   |   |-- nba_ats_analysis
+|   |   |-- ncaab
+|   |   |-- nfl
+|   |   |-- prediction_markets
+|   |   |-- rim_efficiency_analysis_2025-26.csv
+|   |   `-- todays_plays
+|   |-- 99_tmp
+|   |   |-- ggplot_chart.png
+|   |   |-- headshot_samples
+|   |   |-- test_crossed_zero_chart.png
+|   |   |-- test_email_preview.html
+|   |   `-- test_steam_move_chart.png
+|   |-- metadata
+|   |   `-- validation_results.parquet
+|   |-- minute_by_minute.parquet
+|   |-- monte_carlo_validation
+|   |-- nfl_research
+|   |   |-- EXAMPLE_RESEARCH_TO_POST.md
+|   |   |-- README.md
+|   |   |-- nfl_week16_research_checklist_20251217_115218.md
+|   |   |-- nfl_week16_research_guide_20251217_115218.json
+|   |   |-- nfl_week16_scraped_20251217_132009.json
+|   |   |-- nfl_week16_scraped_20251217_132009.txt
+|   |   `-- nfl_week16_search_queries_20251217_115218.csv
+|   `-- player_profiles.parquet
+|-- docs
+|   |-- AWS_AUTOMATION_CHECKLIST.md
+|   |-- AWS_NBA_ALERT_SETUP.md
+|   |-- AWS_NFL_LAMBDA_SETUP.md
+|   |-- AWS_QUICK_REFERENCE.md
+|   |-- AWS_SETUP_TLDR.md
+|   |-- DAILY_BETTING_SETUP.md
+|   |-- GOOGLE_SHEETS_AUTH_SETUP.md
+|   |-- PLAYER_NAME_MATCHING.md
+|   |-- lambda_function_dashboard.py
+|   |-- lambda_function_nba_alerts.py
+|   |-- lambda_function_nfl.py
+|   |-- lambda_requirements.txt
+|   |-- monte_carlo_bet_prediction_variables.md
+|   |-- monte_carlo_validation_ideas.md
+|   |-- ncaab_market_efficiency_spreads_vs_totals.md
+|   |-- repo_structure_before.txt
+|   |-- strategies
+|   |   |-- top3_unders_strategies_nba_points_props.json
+|   |   |-- top3_unders_strategies_nba_points_props_v2.json
+|   |   |-- top3_unders_strategies_nba_points_props_v3.json
+|   |   `-- top3_unders_strategies_nba_points_props_v4.json
+|   |-- strategy_performance_plots_implementation.md
+|   |-- strategy_performance_summary_2026-01-25.md
+|   |-- strategy_upgrade_v5_summary.md
+|   `-- tweet_draft_underdog_spread_analysis.md
+|-- implementation
+|   |-- README_find_nfl_regression_plays.md
+|   |-- fetch_live_data.py
+|   |-- fetch_nba_props_all_markets.py
+|   |-- find_3pt_underdog_unders_today.py
+|   |-- find_nba_points_overs.py
+|   |-- find_nfl_luck_regression_plays_both_teams.py
+|   |-- find_nfl_regression_plays.py
+|   `-- find_todays_plays.py
+|-- lambda
+|   `-- nba_player_props_ingest
+|       `-- lambda_function.py
+|-- logs
+|   |-- errors
+|   |   |-- fetch_historical_props_test_20251120_150139.log
+|   |   |-- fetch_historical_props_test_20251120_150351.log
+|   |   `-- fetch_historical_props_test_20251120_151215.log
+|   |-- fetch_historical_props_test_20251203_175239.log
+|   |-- fetch_historical_props_test_20251203_175523.log
+|   |-- fetch_historical_props_test_20251203_180114.log
+|   |-- fetch_historical_props_test_20251203_180132.log
+|   |-- fetch_historical_props_test_20251203_180955.log
+|   |-- fetch_historical_props_test_20251205_181914.log
+|   |-- fetch_historical_props_test_20251205_182110.log
+|   |-- fetch_historical_props_test_20251205_182204.log
+|   |-- fetch_historical_props_test_20251205_185208.log
+|   |-- fetch_historical_props_test_20260105_202121.log
+|   |-- fetch_player_points_props_20260105_081410.log
+|   |-- fetch_player_props_20260105_082843.log
+|   |-- fetch_player_props_20260105_082957.log
+|   |-- fetch_player_props_20260105_083006.log
+|   |-- fetch_player_props_20260105_083058.log
+|   |-- fetch_player_props_20260105_083246.log
+|   |-- fetch_player_props_20260105_083323.log
+|   |-- fetch_player_props_20260105_083412.log
+|   |-- fetch_player_props_20260105_083852.log
+|   |-- fetch_player_props_20260105_083908.log
+|   |-- fetch_player_props_20260105_083942.log
+|   |-- fetch_player_props_20260105_085735.log
+|   |-- fetch_player_props_20260105_090131.log
+|   |-- fetch_player_props_20260105_204405.log
+|   |-- fetch_player_props_20260105_213641.log
+|   |-- fetch_player_props_20260105_214602.log
+|   |-- fetch_player_props_20260106_083015.log
+|   |-- fetch_player_props_20260106_113933.log
+|   |-- fetch_player_props_20260106_161353.log
+|   |-- fetch_player_props_20260107_123847.log
+|   |-- fetch_player_props_20260108_131124.log
+|   |-- fetch_player_props_20260108_131526.log
+|   |-- fetch_player_props_20260108_135813.log
+|   |-- fetch_player_props_20260108_140704.log
+|   |-- fetch_player_props_20260108_140744.log
+|   |-- fetch_player_props_20260108_140950.log
+|   |-- fetch_player_props_20260108_150218.log
+|   |-- fetch_player_props_20260108_150238.log
+|   |-- fetch_player_props_20260108_150402.log
+|   |-- fetch_player_props_20260108_150407.log
+|   |-- fetch_player_props_20260109_115737.log
+|   |-- fetch_player_props_20260110_112806.log
+|   |-- fetch_player_props_20260111_123838.log
+|   |-- fetch_player_props_20260112_120842.log
+|   |-- fetch_player_props_20260113_095034.log
+|   |-- fetch_player_props_20260113_105620.log
+|   |-- fetch_player_props_20260113_110739.log
+|   |-- fetch_player_props_20260113_111043.log
+|   |-- fetch_player_props_20260113_111052.log
+|   |-- fetch_player_props_20260113_112838.log
+|   |-- fetch_player_props_20260113_113101.log
+|   |-- fetch_player_props_20260114_094251.log
+|   |-- fetch_player_props_20260115_073021.log
+|   |-- fetch_player_props_20260115_082303.log
+|   |-- fetch_player_props_20260116_092737.log
+|   |-- fetch_player_props_20260117_135053.log
+|   |-- fetch_player_props_20260118_140242.log
+|   |-- fetch_player_props_20260118_183921.log
+|   |-- fetch_player_props_20260119_075257.log
+|   |-- fetch_player_props_20260119_075439.log
+|   |-- fetch_player_props_20260119_145820.log
+|   |-- fetch_player_props_20260119_223950.log
+|   |-- fetch_player_props_20260119_224433.log
+|   |-- fetch_player_props_20260119_224546.log
+|   |-- fetch_player_props_20260119_224826.log
+|   |-- fetch_player_props_20260120_103214.log
+|   |-- fetch_player_props_20260120_104329.log
+|   |-- fetch_player_props_20260121_125953.log
+|   |-- fetch_player_props_20260122_092907.log
+|   |-- fetch_player_props_20260123_080731.log
+|   |-- fetch_player_props_20260124_112440.log
+|   |-- fetch_player_props_20260125_115003.log
+|   |-- fetch_player_props_20260125_134021.log
+|   |-- fetch_player_props_20260125_184331.log
+|   |-- fetch_player_props_20260126_092100.log
+|   |-- fetch_player_props_20260126_125524.log
+|   |-- fetch_player_props_20260127_083739.log
+|   |-- fetch_player_props_20260127_135958.log
+|   |-- fetch_player_props_20260128_080648.log
+|   |-- fetch_player_props_20260128_113510.log
+|   |-- fetch_player_props_20260129_092304.log
+|   |-- fetch_player_props_20260129_173510.log
+|   |-- fetch_player_props_20260129_183033.log
+|   |-- fetch_player_props_20260130_050103.log
+|   |-- fetch_player_props_20260131_113041.log
+|   |-- fetch_player_props_20260201_100228.log
+|   |-- fetch_player_props_20260201_100237.log
+|   |-- fetch_player_props_20260202_101601.log
+|   |-- fetch_player_props_20260203_103148.log
+|   |-- fetch_player_props_20260204_090639.log
+|   |-- fetch_player_props_20260205_110911.log
+|   |-- fetch_player_props_20260205_155804.log
+|   |-- fetch_player_props_20260206_091614.log
+|   |-- fetch_player_props_20260207_120754.log
+|   |-- fetch_player_props_20260208_111927.log
+|   |-- fetch_player_props_20260208_153429.log
+|   |-- fetch_player_props_20260208_153948.log
+|   |-- fetch_player_props_20260208_154958.log
+|   |-- fetch_player_props_20260208_155725.log
+|   |-- fetch_player_props_20260208_155958.log
+|   |-- fetch_player_props_20260208_160204.log
+|   |-- fetch_player_props_20260208_161247.log
+|   |-- fetch_player_props_20260208_162534.log
+|   |-- fetch_player_props_20260208_162545.log
+|   |-- fetch_player_props_20260208_162559.log
+|   |-- fetch_player_props_20260208_162948.log
+|   |-- fetch_player_props_20260208_163113.log
+|   |-- fetch_player_props_20260208_163215.log
+|   |-- fetch_player_props_20260208_230018.log
+|   |-- fetch_player_props_20260208_230039.log
+|   |-- fetch_player_props_20260208_232008.log
+|   |-- fetch_player_props_20260208_232022.log
+|   |-- fetch_player_props_20260208_232052.log
+|   |-- fetch_player_props_20260208_234836.log
+|   |-- fetch_player_props_20260209_084849.log
+|   |-- fetch_player_props_20260210_001233.log
+|   |-- fetch_player_props_20260210_001416.log
+|   |-- fetch_player_props_20260210_001453.log
+|   |-- fetch_player_props_20260210_015744.log
+|   |-- fetch_player_props_20260210_090914.log
+|   |-- fetch_player_props_20260210_091109.log
+|   |-- fetch_player_props_20260210_091312.log
+|   |-- fetch_player_props_20260211_105640.log
+|   |-- fetch_player_props_20260211_115701.log
+|   |-- fetch_player_props_20260211_115719.log
+|   |-- fetch_player_props_20260211_115903.log
+|   |-- fetch_player_props_20260212_100518.log
+|   |-- fetch_player_props_20260212_210135.log
+|   |-- fetch_player_props_20260212_212932.log
+|   |-- fetch_player_props_20260213_110620.log
+|   |-- fetch_player_props_20260213_112535.log
+|   |-- fetch_player_props_20260213_142500.log
+|   |-- nba_fetch_2020.log
+|   |-- nba_fetch_all_seasons.log
+|   |-- nfl_all_weeks_validation_20251128_104300.log
+|   |-- nfl_all_weeks_validation_20251128_104316.log
+|   |-- nfl_cat_luck_model_20251203_173958.log
+|   |-- nfl_compare_3_models_20251128_103356.log
+|   |-- nfl_compare_3_models_20251128_103406.log
+|   |-- nfl_debug_GB_GBM_20251128_105927.log
+|   |-- nfl_debug_GB_GBM_20251128_112024.log
+|   |-- nfl_final_model_20251128_194644.log
+|   |-- nfl_final_model_20251128_194659.log
+|   |-- nfl_final_model_20251129_132626.log
+|   |-- nfl_fixed_luck_20251128_103849.log
+|   |-- nfl_ml_full_trace_20251128_084831.log
+|   |-- nfl_ml_full_trace_20251128_084840.log
+|   |-- nfl_ml_full_trace_20251128_085345.log
+|   |-- nfl_ml_verbose_20251128_084056.log
+|   |-- nfl_simplified_20251128_122834.log
+|   |-- nfl_trace_predictions_20251128_103035.log
+|   |-- nfl_trace_predictions_20251128_103053.log
+|   `-- upload_shot_charts_20260105_080706.log
+|-- notebooks
+|   |-- 20251120\ see\ if\ the-odds-api\ has\ bookmaker\ line\ posted\ time\ (found\ arbs).ipynb
+|   |-- 20251120_verify_82_games_for_each_team.ipynb
+|   |-- 20251120_verify_date_columns_nba_calendar_csv.ipynb
+|   |-- 20251123\ programatically\ access\ aws\ secrets.ipynb
+|   |-- 20251214_bovada_update_frequency_analysis.ipynb
+|   |-- 20260105\ join\ 2025\ player\ game\ results\ on\ alt\ data.ipynb
+|   |-- 20260106\ join\ 2025\ player\ game\ results\ on\ alt\ data\ added\ 0-6\ scoring\ data.ipynb
+|   |-- 20260108\ looking\ at\ backtest\ results\ for\ nba\ points\ strat.ipynb
+|   |-- 20260112\ nfl\ qb\ first\ playoff\ game\ rushing\ props.ipynb
+|   |-- 20260113\ looking\ at\ big\ line\ moves\ in\ nba\ games.ipynb
+|   |-- 20260115\ find\ match\ between\ ncaab\ teams\ espn\ to\ the-odds-api.ipynb
+|   |-- 20260118\ see\ if\ all\ players\ have\ scoring_type\ classification.ipynb
+|   |-- profitable_strategies_summary.csv
+|   `-- resilient_strategies_summary.csv
+|-- output
+|   `-- kalshi_charts
+|-- pyproject.toml
+|-- ref
+|   |-- r
+|   |   |-- ColorPalette.jpg
+|   |   |-- README.md
+|   |   |-- cheatsheets
+|   |   `-- ggplot2-cheatsheet.pdf
+|   |-- shot-quality
+|   |   |-- Logos
+|   |   |-- README.md
+|   |   |-- SQ\ Model\ (ShotQualityBets)
+|   |   |-- ShotQualityResearch
+|   |   |-- Winning\ metrics
+|   |   |-- data-viz
+|   |   `-- win-probability-project
+|   `-- wisconsin-stats
+|       |-- README.md
+|       |-- datasets
+|       |-- plots
+|       `-- rmds
+|-- screenshots
+|   `-- 20251124_arbitrage_dashboard.png
+|-- scripts
+|   |-- analyze_all_strategies_performance.py
+|   |-- archive
+|   |   |-- find_role_spread_points_model_plays.py.original
+|   |   |-- find_role_spread_scorer_points_model_plays.py
+|   |   `-- lambda_function_nba_line_movement_stream_alerts.py
+|   |-- backtest_strategy_analyzer.py
+|   |-- build_arb_cache.py
+|   |-- build_consensus_props.py
+|   |-- build_full_roster_cache.py
+|   |-- build_nba_season_player_level_game_logs.py
+|   |-- build_player_team_cache_from_odds.py
+|   |-- calculate_line_steam_results.py
+|   |-- check_line_steam.py
+|   |-- check_nba_line_steam.py
+|   |-- compare_kelly_fractions.py
+|   |-- compare_strategy_performance.py
+|   |-- create_preseason_baseline_files.py
+|   |-- fetch_all_nba_shot_charts.py
+|   |-- fetch_and_build_season_props.py
+|   |-- fetch_championship_futures.py
+|   |-- fetch_historical_game_results_espn_api.py
+|   |-- fetch_historical_nba_prop_markets.py
+|   |-- fetch_historical_nba_season_lines.py
+|   |-- fetch_historical_ncaab_season_lines.py
+|   |-- fetch_historical_nfl_season_lines.py
+|   |-- fetch_nba_game_results_for_3pm_props.py
+|   |-- fetch_nba_mvp_odds_fanduel.py
+|   |-- fetch_nba_player_props.py
+|   |-- fetch_nba_team_game_results.py
+|   |-- fetch_nfl_player_props_historical.py
+|   |-- find_nba_arb_opportunities.py
+|   |-- find_nba_role_spread_plays.py
+|   |-- find_nfl_arb_opportunities.py
+|   |-- generate_role_spread_points_model_daily_email.py
+|   |-- install_r_packages.sh
+|   |-- join_nba_points_props_actuals_charts_gamelines.py
+|   |-- kalshi
+|   |   |-- ORDER_BOOK_QUANTIFICATION.md
+|   |   |-- PREDICTION_MARKETS_TRADING_TOOLS.md
+|   |   |-- README.md
+|   |   |-- SCALING_STRATEGY.md
+|   |   |-- analyze_order_book_metrics.py
+|   |   |-- find_kalshi_markets.py
+|   |   |-- monitor_kalshi_markets.py
+|   |   |-- view_kalshi_order_book.py
+|   |   |-- visualize_kalshi_snapshots.py
+|   |   `-- visualize_tracked_order_books.py
+|   |-- kalshi_order_book_tracker.py
+|   |-- lambda_function_all_sports_line_steam_alerts_tracking.py
+|   |-- lambda_function_game_results_fetcher.py
+|   |-- lambda_function_nba_player_scoring_props.py
+|   |-- lambda_function_refresh_strategy_statistics.py
+|   |-- lambda_function_track_game_line_movements.py
+|   |-- lambda_function_track_live_odds.py
+|   |-- nba_arbitrage_finder.py
+|   |-- nba_calendar_builder.py
+|   |-- nfl_arbitrage_finder.py
+|   |-- quick_futures_summary.py
+|   |-- setup_arb_cache.py
+|   |-- tmp_test_espn_fallback.py
+|   |-- track_daily_plays_performance.py
+|   |-- transcribe_audio_with_whisper.py
+|   |-- update_kelly_bankroll_tracker.py
+|   |-- update_kelly_settings.py
+|   `-- visualize_line_movements_from_s3.py
+|-- src
+|   |-- config.py
+|   |-- config_loader.py
+|   |-- futures_analysis.py
+|   |-- kelly_criterion.py
+|   |-- line_steam_utils.py
+|   |-- nba_gamelog_utils.py
+|   |-- nba_team_colors.py
+|   |-- ncaa_team_utils.py
+|   |-- ncaab_conference_data.py
+|   |-- nfl_luck_utils.py
+|   |-- nfl_team_utils.py
+|   |-- odds_utils.py
+|   |-- pbp_data
+|   |   |-- 01_get_game_ids.py
+|   |   |-- 02_get_pbp_data.py
+|   |   |-- 03_process_data.py
+|   |   |-- 04_build_profiles.py
+|   |   |-- 05_validate.py
+|   |   |-- 06_run_monte_carlo_validation.py
+|   |   |-- 07_analyze_monte_carlo_performance.py
+|   |   |-- 08_save_current_monte_carlo_performance.py
+|   |   |-- 09_compare_monte_carlo_versions.py
+|   |   |-- 10_live_betting_signal_generator.py
+|   |   |-- 11_generate_live_betting_plots.py
+|   |   |-- README.md
+|   |   |-- __init__.py
+|   |   |-- adhoc_run_monte_carlo_simulation.py
+|   |   |-- config.py
+|   |   |-- monte_carlo_utils.py
+|   |   |-- sql
+|   |   |-- tmp
+|   |   `-- utils.py
+|   |-- player_name_utils.py
+|   |-- player_team_history
+|   |   |-- 01_build.py
+|   |   |-- 02_analyze_failures.py
+|   |   |-- 03_cache.py
+|   |   |-- 04_validate.py
+|   |   |-- README.md
+|   |   |-- __init__.py
+|   |   |-- builder.py
+|   |   |-- discovery.py
+|   |   |-- name_normalization.py
+|   |   |-- team_normalization.py
+|   |   |-- tmp
+|   |   `-- utils.py
+|   |-- r_viz.py
+|   |-- s3_utils.py
+|   |-- season_utils.py
+|   |-- team_utils.py
+|   `-- team_utils_simple.py
+|-- streamlit_app
+|   |-- app.py
+|   |-- pages
+|   |   |-- 1_NBA_Arbs.py
+|   |   `-- 2_NFL_Arbs.py
+|   |-- requirements.txt
+|   `-- utils
+|       |-- __init__.py
+|       |-- arb_cache.py
+|       |-- formatters.py
+|       `-- timing.py
+|-- testing
+|   |-- quick_test_nfl_rush_props.py
+|   |-- scrape_all_nfl_playoff_qbs.py
+|   |-- scrape_espn_qb_playoff_gamelogs.py
+|   |-- scrape_nfl_context_selenium.py
+|   |-- test_2024_playoff_games.py
+|   |-- test_base64_headshots.py
+|   |-- test_college_logo_mapping.py
+|   |-- test_espn_ncaaf_records.py
+|   |-- test_find_all_playoff_games.py
+|   |-- test_historical_data_availability.py
+|   |-- test_mvp_headshot_sources.py
+|   |-- test_nba_defensive_stats.py
+|   |-- test_nba_line_movement_coverage.py
+|   |-- test_nba_player_headshots.py
+|   |-- test_nfl_rushing_props_availability.py
+|   |-- test_odds_api_historical_availability.py
+|   |-- test_odds_api_historical_data_availability.py
+|   |-- test_r_image_loading.R
+|   |-- test_s3_historical_data_availability.py
+|   `-- test_the-odds-api_prop_markets.py
+|-- tests
+|   |-- README.md
+|   |-- __init__.py
+|   `-- unit
+|       |-- __init__.py
+|       `-- test_line_movement_analysis.py
+|-- tmp
+|   |-- 20251120_analyze_duplicate_props.py
+|   |-- 20251120_analyze_historical_nba_3pt_props.py
+|   |-- 20251120_compare_wikihoops_vs_oddsapi.py
+|   |-- 20251120_debug_player_name_mismatches.py
+|   |-- 20251120_get_nba_game_results.py
+|   |-- 20251120_scrape_wikihoops_games_count.py
+|   |-- 20251120_verify_overlap_w_2425_3pt_prop_data.py
+|   |-- 20251121_check_kristaps_games.py
+|   |-- 20251125_analyze_nfl_lines.py
+|   |-- 2026-01-18_2d_full.csv
+|   |-- 2026-01-18_2d_top3.csv
+|   |-- 2026-01-18_3d_full.csv
+|   |-- 2026-01-18_3d_top3.csv
+|   |-- 2d_strategy_returns_over_time.png
+|   |-- 3d_strategy_returns_over_time.png
+|   |-- ESPN_DATA_SOLUTION.md
+|   |-- LeBron_James_headshot.png
+|   |-- analyze_ats_records.py
+|   |-- analyze_bench_pickem_overlap.py
+|   |-- analyze_consensus_lines.py
+|   |-- analyze_lawler_law_espn_pbp.py
+|   |-- analyze_line_movement_summary.py
+|   |-- analyze_live_line_movement.py
+|   |-- analyze_ncaab_book_coverage.py
+|   |-- analyze_nfl_lines.py
+|   |-- analyze_player_team_changes.py
+|   |-- analyze_profitable_backtest_strategies.py
+|   |-- bam_adebayo_middle_ev_simulation.py
+|   |-- bench_pickem_overlap_findings.md
+|   |-- build_ncaab_team_name_mapping.py
+|   |-- build_ncaab_team_name_mapping_v2.py
+|   |-- check_kristaps_games.py
+|   |-- check_spread_distribution.py
+|   |-- check_ytd_bench_pickem_perimeter.py
+|   |-- cleanup_futures_local.py
+|   |-- cleanup_live_odds_parquet.py
+|   |-- collect_live_game_data.py
+|   |-- create_conference_mapping.py
+|   |-- debug_2023_24_spread_4.py
+|   |-- debug_backtest_kawhi.py
+|   |-- debug_dejounte_murray.py
+|   |-- debug_scoring_mismatch.py
+|   |-- debug_spread_cover_logic.py
+|   |-- debug_unclassified_players.py
+|   |-- demo_player_headshot_timeseries.R
+|   |-- dev_line_movement_viz.py
+|   |-- espn_playbyplay.json
+|   |-- example_r_viz_with_gt_package_in_python.py
+|   |-- explore_nba_data_sources.py
+|   |-- extract_bench_pickem_perimeter_backtest_data.py
+|   |-- fetch_adhoc_odds.py
+|   |-- fetch_anthony_davis_gamelog_nba_api.py
+|   |-- fetch_cfp_championship_odds.py
+|   |-- fill_player_missing_games.py
+|   |-- find_d1_team_matches.py
+|   |-- find_resilient_strategies.py
+|   |-- find_team_name_mapping.py
+|   |-- fix_old_parquet_columns.py
+|   |-- generate_ncaaf_futures_viz.py
+|   |-- generate_under_points_strategy_plots.py
+|   |-- get_bucks_pelicans_game.py
+|   |-- get_lambda_logs.py
+|   |-- investigate_date_mismatches.py
+|   |-- investigate_espn_outcomes_coverage.py
+|   |-- investigate_game_results_lines_join.py
+|   |-- join_ncaab_outcomes_and_lines.py
+|   |-- migrate_futures_to_s3.py
+|   |-- migrate_local_arbs_to_s3.py
+|   |-- migrate_nfl_arbs_to_s3.py
+|   |-- migrate_nfl_lines_to_s3.py
+|   |-- nba_player_headshots_helper.py
+|   |-- paint_scoring_gradient_explanation.md
+|   |-- parse_to_monte_carlo_format.py
+|   |-- plot_strategy_returns_over_time.py
+|   |-- plots
+|   |   `-- demo_headshot_timeseries_LeBron_James.png
+|   |-- quarter_boxscores
+|   |   |-- game_0022500729_OT.csv
+|   |   |-- game_0022500729_Q1.csv
+|   |   |-- game_0022500729_Q2.csv
+|   |   |-- game_0022500729_Q3.csv
+|   |   |-- game_0022500729_Q4.csv
+|   |   |-- game_0022500729_full.csv
+|   |   |-- game_0022500729_playbyplay.csv
+|   |   `-- game_0022500729_quarter_stats_from_pbp.csv
+|   |-- query_player_team_history.py
+|   |-- quick_check_join_quality.py
+|   |-- read_all_live_odds_parquet.py
+|   |-- scrape_ncaab_conference_data.py
+|   |-- scrape_trade_value_rankings.py
+|   |-- test_bookmaker_odds_logic.py
+|   |-- test_espn_load.py
+|   |-- test_lambda_matplotlib.py
+|   |-- test_live_odds_and_scores.py
+|   |-- test_nfl_s3_loading.py
+|   |-- test_single_player.py
+|   |-- trade_value_raw.html
+|   |-- upload_shot_charts_to_s3.py
+|   `-- visualize_model_snapshots.py
+|-- transcripts
+|   |-- README.md
+|   |-- podcasts
+|   |   |-- 20260204_bill_simmons_trade_value_pod.txt
+|   |   |-- 20260204_bill_simmons_trade_value_rankings.csv
+|   |   `-- 20260204_bill_simmons_trade_value_rankings.md
+|   `-- youtube
+|       |-- 20251218\ odds\ on\ podcast\ Domer\ on\ Trading\ Global\ Political\ Events.txt
+|       |-- 20251223\ Where\ Market\ Making\ Meets\ Market.md
+|       `-- 20251223\ Where\ Market\ Making\ Meets\ Market.txt
+`-- uv.lock
+
+94 directories, 605 files
