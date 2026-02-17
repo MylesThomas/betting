@@ -1,181 +1,322 @@
 """
-Build NCAAB Team Name Mapping (ESPN → Odds API)
+Build NCAAB Team Name Mapping (Odds API → ESPN)
 
-Does a left join of ESPN outcomes with Odds API lines, then extracts:
-1. Matched teams (ESPN → Odds API mapping)
-2. ESPN teams with no Odds API match
-3. Odds API teams with no ESPN match
+Purpose:
+Extract unique team names from historical data (both Odds API and ESPN),
+then create a mapping dictionary where Odds API names are keys and ESPN names are values.
 
-Returns 3 dataframes for manual review to complete the mapping.
+Context:
+- The Odds API uses abbreviations: "Boston Univ.", "Coppin St", "Miss Valley St"
+- ESPN uses full names: "Boston University", "Coppin State", "Mississippi Valley State"
+- ESPN is the source of truth
+- Mapping needed for lambda_function_track_live_odds.py to match games to scores
 
-Usage (in notebook or script):
-    from tmp.build_ncaab_team_name_mapping import build_team_mapping
-    
-    df_mapping, df_espn_only, df_odds_only = build_team_mapping(season='2024-25', use_cache=True)
-    
-    # Review unmatched
-    print(df_espn_only)  # ESPN teams missing from Odds API
-    print(df_odds_only)  # Odds API teams missing from ESPN
+Data Sources:
+1. Odds API data: data/01_input/the-odds-api/ncaab/ (historical game lines)
+2. ESPN data: Need to scrape or use existing game results data
 
-Author: Thomas Myles
-Date: 2026-01-15
+Created: 2026-02-16
 """
 
+import os
 import sys
-import pandas as pd
-import boto3
 from pathlib import Path
-from io import StringIO
+import pandas as pd
+from collections import defaultdict
 
 # Find project root
-def find_project_root():
-    """Find project root by looking for .gitignore file."""
-    current = Path.cwd()
-    while current != current.parent:
-        if (current / '.gitignore').exists():
-            return current
-        current = current.parent
-    return Path.cwd()
+current_file = Path(__file__).resolve()
+project_root = current_file.parent.parent
+sys.path.insert(0, str(project_root))
 
-PROJECT_ROOT = find_project_root()
-sys.path.insert(0, str(PROJECT_ROOT / 'src'))
+DATA_ROOT = project_root / 'data'
 
-from config_loader import get_config
-CONFIG = get_config()
 
-# Import functions from join script
-sys.path.insert(0, str(PROJECT_ROOT / 'tmp'))
-from join_ncaab_outcomes_and_lines import (
-    load_game_outcomes,
-    load_game_lines,
-    SEASON_DATES
-)
+def extract_odds_api_teams():
+    """Extract all unique team names from Odds API data."""
+    print("="*80)
+    print("EXTRACTING ODDS API TEAM NAMES")
+    print("="*80)
+    
+    teams = set()
+    
+    # Check multiple potential data sources
+    sources = [
+        DATA_ROOT / '01_input/the-odds-api/ncaab/futures',
+        DATA_ROOT / '01_input/the-odds-api/ncaab/game_lines',
+        DATA_ROOT / '04_output/ncaab',
+    ]
+    
+    files_found = 0
+    for source_dir in sources:
+        if not source_dir.exists():
+            print(f"⚠️  Directory not found: {source_dir}")
+            continue
+        
+        # Process CSV files
+        csv_files = list(source_dir.glob('*.csv'))
+        for csv_file in csv_files:
+            try:
+                df = pd.read_csv(csv_file)
+                
+                # Look for team name columns
+                team_cols = [col for col in df.columns if 'team' in col.lower()]
+                
+                for col in team_cols:
+                    # Convert to string and filter out non-string values
+                    team_values = df[col].dropna().astype(str).unique()
+                    teams.update(team_values)
+                
+                files_found += 1
+                if files_found <= 3:  # Show first few files
+                    print(f"✅ Processed: {csv_file.name} ({len(team_cols)} team columns)")
+            except Exception as e:
+                print(f"⚠️  Error reading {csv_file.name}: {e}")
+        
+        # Process Parquet files
+        parquet_files = list(source_dir.glob('*.parquet'))
+        for pq_file in parquet_files:
+            try:
+                df = pd.read_parquet(pq_file)
+                
+                # Look for team name columns
+                team_cols = [col for col in df.columns if 'team' in col.lower()]
+                
+                for col in team_cols:
+                    # Convert to string and filter out non-string values
+                    team_values = df[col].dropna().astype(str).unique()
+                    teams.update(team_values)
+                
+                files_found += 1
+                if files_found <= 3:
+                    print(f"✅ Processed: {pq_file.name} ({len(team_cols)} team columns)")
+            except Exception as e:
+                print(f"⚠️  Error reading {pq_file.name}: {e}")
+    
+    if files_found > 3:
+        print(f"... and {files_found - 3} more files")
+    
+    print(f"\n✅ Found {len(teams)} unique teams from Odds API\n")
+    return sorted(teams)
 
-# =============================================================================
-# MAIN FUNCTION
-# =============================================================================
 
-def build_team_mapping(season='2024-25', use_cache=True):
+def extract_espn_teams():
+    """Extract all unique team names from ESPN data."""
+    print("="*80)
+    print("EXTRACTING ESPN TEAM NAMES")
+    print("="*80)
+    
+    teams = set()
+    
+    # Check for ESPN game results data
+    sources = [
+        DATA_ROOT / '01_input/espn',
+        DATA_ROOT / '02_cache/espn',
+        DATA_ROOT / '01_input/game_results',
+    ]
+    
+    files_found = 0
+    for source_dir in sources:
+        if not source_dir.exists():
+            print(f"⚠️  Directory not found: {source_dir}")
+            continue
+        
+        # Look for NCAAB files
+        all_files = list(source_dir.rglob('*.csv')) + list(source_dir.rglob('*.parquet'))
+        ncaab_files = [f for f in all_files if 'ncaab' in str(f).lower() or 'college' in str(f).lower()]
+        
+        for data_file in ncaab_files:
+            try:
+                if data_file.suffix == '.csv':
+                    df = pd.read_csv(data_file)
+                else:
+                    df = pd.read_parquet(data_file)
+                
+                # Look for team name columns
+                team_cols = [col for col in df.columns if 'team' in col.lower()]
+                
+                for col in team_cols:
+                    # Convert to string and filter out non-string values
+                    team_values = df[col].dropna().astype(str).unique()
+                    teams.update(team_values)
+                
+                files_found += 1
+                if files_found <= 3:
+                    print(f"✅ Processed: {data_file.name} ({len(team_cols)} team columns)")
+            except Exception as e:
+                print(f"⚠️  Error reading {data_file.name}: {e}")
+    
+    if files_found == 0:
+        print("⚠️  No ESPN data found - will need to fetch from API")
+    else:
+        if files_found > 3:
+            print(f"... and {files_found - 3} more files")
+        print(f"\n✅ Found {len(teams)} unique teams from ESPN\n")
+    
+    return sorted(teams)
+
+
+def build_mapping(odds_teams, espn_teams):
     """
-    Build team name mapping from ESPN to Odds API.
+    Build mapping dictionary: Odds API team name → ESPN team name.
     
-    Args:
-        season: Season string (e.g., '2024-25')
-        use_cache: Whether to use cached data
-    
-    Returns:
-        df_mapping: DataFrame with columns [espn_team, odds_team] for matched teams
-        df_espn_only: ESPN teams with no Odds API match (sorted A-Z)
-        df_odds_only: Odds API teams with no ESPN match (sorted A-Z)
+    Strategy:
+    1. Exact matches (most teams)
+    2. Fuzzy matches (expand abbreviations)
+    3. Manual review list (couldn't auto-match)
     """
+    print("="*80)
+    print("BUILDING MAPPING")
+    print("="*80)
     
-    if season not in SEASON_DATES:
-        raise ValueError(f"Unknown season: {season}")
+    mapping = {}
+    exact_matches = 0
+    fuzzy_matches = 0
+    unmatched = []
     
-    start_date, end_date = SEASON_DATES[season]
+    # Create normalized lookup for ESPN teams
+    espn_lookup = {team.lower(): team for team in espn_teams}
     
-    print(f"Building team mapping for {season}...")
-    print(f"Date range: {start_date} to {end_date}")
+    for odds_team in odds_teams:
+        # Try exact match first
+        if odds_team in espn_teams:
+            mapping[odds_team] = odds_team
+            exact_matches += 1
+            continue
+        
+        # Try case-insensitive match
+        if odds_team.lower() in espn_lookup:
+            mapping[odds_team] = espn_lookup[odds_team.lower()]
+            exact_matches += 1
+            continue
+        
+        # Try fuzzy matching (expand abbreviations)
+        normalized = odds_team
+        
+        # "St " → "State "
+        if " St " in normalized:
+            normalized = normalized.replace(" St ", " State ")
+        
+        # "Univ." → "University"
+        if "Univ." in normalized:
+            normalized = normalized.replace("Univ.", "University")
+        
+        # "Miss " → "Mississippi " (at start)
+        if normalized.startswith("Miss "):
+            normalized = normalized.replace("Miss ", "Mississippi ", 1)
+        
+        # Check if normalized version matches
+        if normalized in espn_teams:
+            mapping[odds_team] = normalized
+            fuzzy_matches += 1
+            print(f"🔄 Fuzzy match: '{odds_team}' → '{normalized}'")
+            continue
+        
+        if normalized.lower() in espn_lookup:
+            mapping[odds_team] = espn_lookup[normalized.lower()]
+            fuzzy_matches += 1
+            print(f"🔄 Fuzzy match: '{odds_team}' → '{espn_lookup[normalized.lower()]}'")
+            continue
+        
+        # Couldn't match - add to review list
+        unmatched.append(odds_team)
     
-    # Load data
-    outcomes_df = load_game_outcomes(start_date, end_date, use_cache=use_cache)
-    lines_df = load_game_lines(start_date, end_date, use_cache=use_cache)
+    print(f"\n✅ Exact matches: {exact_matches}")
+    print(f"🔄 Fuzzy matches: {fuzzy_matches}")
+    print(f"⚠️  Unmatched: {len(unmatched)}")
     
-    if outcomes_df.empty or lines_df.empty:
-        raise ValueError("No data loaded")
+    if unmatched:
+        print(f"\n🔍 Teams needing manual review:")
+        for team in unmatched[:20]:
+            print(f"   '{team}'")
+        if len(unmatched) > 20:
+            print(f"   ... and {len(unmatched) - 20} more")
     
-    print(f"\nLoaded:")
-    print(f"  Outcomes: {len(outcomes_df)} games")
-    print(f"  Lines: {len(lines_df)} games")
-    
-    # Get all unique team names
-    espn_home = outcomes_df[['GAME_DATE', 'HOME_TEAM']].rename(columns={'HOME_TEAM': 'espn_team'})
-    espn_away = outcomes_df[['GAME_DATE', 'AWAY_TEAM']].rename(columns={'AWAY_TEAM': 'espn_team'})
-    espn_teams_df = pd.concat([espn_home, espn_away]).drop_duplicates()
-    espn_teams_df.columns = ['date', 'espn_team']
-    
-    odds_home = lines_df[['date', 'home_team']].rename(columns={'home_team': 'odds_team'})
-    odds_away = lines_df[['date', 'away_team']].rename(columns={'away_team': 'odds_team'})
-    odds_teams_df = pd.concat([odds_home, odds_away]).drop_duplicates()
-    
-    print(f"\nUnique teams:")
-    print(f"  ESPN: {espn_teams_df['espn_team'].nunique()}")
-    print(f"  Odds API: {odds_teams_df['odds_team'].nunique()}")
-    
-    # LEFT JOIN: ESPN teams on left
-    joined = espn_teams_df.merge(
-        odds_teams_df,
-        left_on=['date', 'espn_team'],
-        right_on=['date', 'odds_team'],
-        how='left'
-    )
-    
-    # 1. Matched teams (has both espn_team and odds_team)
-    matched = joined[joined['odds_team'].notna()].copy()
-    df_mapping = matched[['espn_team', 'odds_team']].drop_duplicates().sort_values('espn_team')
-    
-    # 2. ESPN teams with no Odds API match (odds_team is null)
-    unmatched_espn = joined[joined['odds_team'].isna()].copy()
-    df_espn_only = unmatched_espn[['espn_team']].drop_duplicates().sort_values('espn_team')
-    
-    # 3. Odds API teams with no ESPN match (do RIGHT join to find these)
-    joined_right = espn_teams_df.merge(
-        odds_teams_df,
-        left_on=['date', 'espn_team'],
-        right_on=['date', 'odds_team'],
-        how='right'
-    )
-    unmatched_odds = joined_right[joined_right['espn_team'].isna()].copy()
-    df_odds_only = unmatched_odds[['odds_team']].drop_duplicates().sort_values('odds_team')
-    
-    print(f"\nResults:")
-    print(f"  Matched teams: {len(df_mapping)}")
-    print(f"  ESPN only: {len(df_espn_only)}")
-    print(f"  Odds API only: {len(df_odds_only)}")
-    
-    return df_mapping, df_espn_only, df_odds_only
+    return mapping, unmatched
 
 
-# =============================================================================
-# CLI EXECUTION
-# =============================================================================
+def generate_mapping_code(mapping):
+    """Generate Python dictionary code for the mapping."""
+    print("\n" + "="*80)
+    print("GENERATED MAPPING CODE")
+    print("="*80)
+    print("\nODDS_API_TO_ESPN_NCAAB = {")
+    for odds_name, espn_name in sorted(mapping.items()):
+        if odds_name != espn_name:  # Only include non-identical mappings
+            print(f'    "{odds_name}": "{espn_name}",')
+    print("}")
+    print()
+
+
+def main():
+    print("\n" + "="*80)
+    print("NCAAB TEAM NAME MAPPING BUILDER")
+    print("="*80)
+    print("\nThis script builds a mapping dictionary:")
+    print("  Odds API team name → ESPN team name")
+    print("\nESPN is the source of truth (for game scores/status)")
+    print("Odds API names need to be normalized to match ESPN\n")
+    
+    # Extract team names from both sources
+    odds_teams = extract_odds_api_teams()
+    espn_teams = extract_espn_teams()
+    
+    if not odds_teams:
+        print("❌ No Odds API teams found. Check data directory structure.")
+        return
+    
+    if not espn_teams:
+        print("⚠️  No ESPN teams found in local data.")
+        print("   Options:")
+        print("   1. Fetch from ESPN API (will gather teams from live scoreboards)")
+        print("   2. Use existing game results data")
+        print("   3. Continue with Odds API only (will generate fuzzy rules)")
+        print()
+        
+        response = input("Fetch from ESPN API now? (y/n): ").lower()
+        if response == 'y':
+            print("\n🔄 Fetching NCAAB teams from ESPN API...")
+            import requests
+            
+            url = 'http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard'
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            
+            events = data.get('events', [])
+            for event in events:
+                competition = event['competitions'][0]
+                for competitor in competition['competitors']:
+                    espn_teams.append(competitor['team']['displayName'])
+            
+            espn_teams = sorted(set(espn_teams))
+            print(f"✅ Fetched {len(espn_teams)} teams from ESPN (today's games only)\n")
+    
+    # Build mapping
+    mapping, unmatched = build_mapping(odds_teams, espn_teams)
+    
+    # Generate code
+    generate_mapping_code(mapping)
+    
+    # Summary
+    print("="*80)
+    print("SUMMARY")
+    print("="*80)
+    print(f"Odds API teams: {len(odds_teams)}")
+    print(f"ESPN teams: {len(espn_teams)}")
+    print(f"Mapped: {len(mapping)}")
+    print(f"Unmatched: {len(unmatched)}")
+    print(f"Coverage: {len(mapping)/len(odds_teams)*100:.1f}%")
+    print()
+    
+    if unmatched:
+        print("⚠️  Action required:")
+        print("   1. Review unmatched teams above")
+        print("   2. Add manual mappings to ODDS_API_TO_ESPN_NCAAB dict")
+        print("   3. Re-run this script to verify 100% coverage")
+    else:
+        print("✅ All teams mapped successfully!")
+    print()
+
 
 if __name__ == '__main__':
-    import argparse
-    
-    parser = argparse.ArgumentParser(description='Build NCAAB team name mapping')
-    parser.add_argument('--season', type=str, default='2024-25',
-                       help='Season to process (e.g., "2024-25")')
-    parser.add_argument('--use-cache', action='store_true',
-                       help='Load data from cache')
-    
-    args = parser.parse_args()
-    
-    print("=" * 80)
-    print("BUILD NCAAB TEAM NAME MAPPING (ESPN → Odds API)")
-    print("=" * 80)
-    
-    df_mapping, df_espn_only, df_odds_only = build_team_mapping(
-        season=args.season,
-        use_cache=args.use_cache
-    )
-    
-    print(f"\n{'='*80}")
-    print("MATCHED TEAMS (ESPN → Odds API)")
-    print(f"{'='*80}")
-    print(df_mapping.to_string(index=False))
-    
-    print(f"\n{'='*80}")
-    print("ESPN TEAMS WITH NO ODDS API MATCH (sorted A-Z)")
-    print(f"{'='*80}")
-    print(df_espn_only.to_string(index=False))
-    
-    print(f"\n{'='*80}")
-    print("ODDS API TEAMS WITH NO ESPN MATCH (sorted A-Z)")
-    print(f"{'='*80}")
-    print(df_odds_only.to_string(index=False))
-    
-    print(f"\n{'='*80}")
-    print("✅ Mapping complete!")
-    print(f"{'='*80}")
-
+    main()
