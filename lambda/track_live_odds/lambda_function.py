@@ -232,7 +232,7 @@ EventBridge Schedule Setup (for automated per-minute execution):
 TESTING:
 
 Local testing:
-  python scripts/lambda_function_track_live_odds.py --sport nba --prod-run
+  python lambda/track_live_odds/lambda_function.py --sport nba --prod-run
 
 Lambda testing:
   1. Manual invoke via AWS Console (use empty test event {})

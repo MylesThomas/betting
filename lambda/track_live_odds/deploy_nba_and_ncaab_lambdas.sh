@@ -133,15 +133,17 @@ pip install -q --target ./package requests
 
 # Add our code to package
 echo "Adding application code..."
-cp scripts/lambda_function_track_live_odds.py package/
+# Now that we're in lambda/track_live_odds/, lambda_function.py is in same directory
+cp lambda_function.py package/
 mkdir -p package/src
 
 # CRITICAL: Include BOTH team name mapping files
 # NBA mapping normalizes "Los Angeles Clippers" → "LA Clippers" for ESPN matching
 # NCAAB mapping normalizes "St" → "State", "Univ." → "University", etc.
 # Without these, Lambda falls back to string matching which misses games
-cp src/nba_team_name_mapping.py package/src/
-cp src/ncaab_team_name_mapping.py package/src/
+# These are in the repo root src/ folder, so go up two levels
+cp ../../src/nba_team_name_mapping.py package/src/
+cp ../../src/ncaab_team_name_mapping.py package/src/
 
 # Create deployment package
 echo "Creating lambda_live_odds.zip..."
@@ -198,7 +200,7 @@ if aws lambda get-function --function-name "$LAMBDA_NBA" --region "$REGION" &> /
     aws lambda update-function-configuration \
         --function-name "$LAMBDA_NBA" \
         --runtime "$RUNTIME" \
-        --handler lambda_function_track_live_odds.lambda_handler \
+        --handler lambda_function.lambda_handler \
         --timeout 30 \
         --memory-size 512 \
         --layers "$PANDAS_LAYER_ARN" \
@@ -211,7 +213,7 @@ else
         --function-name "$LAMBDA_NBA" \
         --runtime "$RUNTIME" \
         --role "$IAM_ROLE_ARN" \
-        --handler lambda_function_track_live_odds.lambda_handler \
+        --handler lambda_function.lambda_handler \
         --zip-file fileb://lambda_live_odds.zip \
         --timeout 30 \
         --memory-size 512 \
@@ -261,7 +263,7 @@ if aws lambda get-function --function-name "$LAMBDA_NCAAB" --region "$REGION" &>
     aws lambda update-function-configuration \
         --function-name "$LAMBDA_NCAAB" \
         --runtime "$RUNTIME" \
-        --handler lambda_function_track_live_odds.lambda_handler \
+        --handler lambda_function.lambda_handler \
         --timeout 45 \
         --memory-size 1024 \
         --layers "$PANDAS_LAYER_ARN" \
@@ -274,7 +276,7 @@ else
         --function-name "$LAMBDA_NCAAB" \
         --runtime "$RUNTIME" \
         --role "$IAM_ROLE_ARN" \
-        --handler lambda_function_track_live_odds.lambda_handler \
+        --handler lambda_function.lambda_handler \
         --zip-file fileb://lambda_live_odds.zip \
         --timeout 45 \
         --memory-size 1024 \

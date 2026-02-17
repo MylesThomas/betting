@@ -18,12 +18,6 @@ This document will cover:
 - S3 bucket policies
 - Principle of least privilege
 
-## Data Privacy
-
-- PII handling (if any)
-- Data retention policies
-- GDPR considerations (if applicable)
-
 ## Secrets in Config
 
 Currently API keys are in `config/config.yaml` which is `.gitignore`d.

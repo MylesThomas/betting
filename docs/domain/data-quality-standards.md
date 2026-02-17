@@ -301,11 +301,8 @@ else:
 
 ### Warning-Level Validations
 
-### Warning-Level Validations
-
 ```python
 ⚠️ Odds outside typical NBA prop range (-300 to +300)
-⚠️ Pre-game timestamp 5-15 min old (getting stale)
 ⚠️ Line at extreme end of sanity bounds (but possible)
 ⚠️ Unknown market type (flag for review)
 ⚠️ Heavy juice discrepancy between sides
