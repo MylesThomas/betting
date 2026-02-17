@@ -30,14 +30,14 @@ Packaged:
 
 ## Deployment
 
-**From this directory:**
+Either way works (script switches to its own directory):
 
 ```bash
 cd lambda/track_live_odds
 bash deploy_nba_and_ncaab_lambdas.sh
 ```
 
-**From repo root:**
+Or from repo root:
 
 ```bash
 bash lambda/track_live_odds/deploy_nba_and_ncaab_lambdas.sh

@@ -47,6 +47,10 @@ echo "DEPLOY LIVE ODDS TRACKING LAMBDAS"
 echo "================================================================================"
 echo ""
 
+# Run from script directory so paths (lambda_function.py, ../../src) work from repo root or lambda/track_live_odds
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 ###############################################################################
 # STEP 1: Verify Prerequisites
 ###############################################################################
@@ -133,7 +137,6 @@ pip install -q --target ./package requests
 
 # Add our code to package
 echo "Adding application code..."
-# Now that we're in lambda/track_live_odds/, lambda_function.py is in same directory
 cp lambda_function.py package/
 mkdir -p package/src
 
