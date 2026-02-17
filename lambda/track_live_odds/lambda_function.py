@@ -551,30 +551,37 @@ def fetch_game_scores(sport: str = 'nba') -> dict:
     Fetch live game scores from ESPN API.
     
     Gets scores, period, time remaining, game status.
-    
+    For NCAAB uses groups=50 so we get all D1 games for the date (not just featured/top 25).
+
     Args:
         sport: 'nba' or 'ncaab'
-    
+
     Returns:
         ESPN scoreboard dict
-    
+
     Raises:
         NotImplementedError if sport not supported
         requests.HTTPError if API call fails
     """
     if sport == 'nba':
         url = ESPN_NBA_SCOREBOARD
+        params = None
     elif sport == 'ncaab':
         url = ESPN_NCAAB_SCOREBOARD
+        # groups=50 = all D1 games for the date (same as fetch_historical_game_results_espn_api)
+        today_et = get_current_time_et().strftime('%Y%m%d')
+        params = {'dates': today_et, 'limit': 500, 'groups': '50'}
     else:
         raise NotImplementedError(f"ESPN endpoint for {sport} not implemented yet")
-    
+
     print(f"{EMOJI['refresh']} Fetching scores from ESPN API...")
     print(f"   Endpoint: {url}")
-    
-    response = requests.get(url, timeout=10)
+    if params:
+        print(f"   Params: {params}")
+
+    response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     return response.json()
 
 

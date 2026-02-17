@@ -59,6 +59,23 @@ def get_date_str(days_ago: int = 0) -> str:
     return dt.strftime('%Y%m%d')
 
 
+def events_to_game_list(data: dict) -> list[tuple[str, str]]:
+    """Extract (away_team, home_team) from ESPN scoreboard response."""
+    out = []
+    for event in data.get('events', []):
+        comps = event.get('competitions', [{}])
+        if not comps:
+            continue
+        competitors = comps[0].get('competitors', [])
+        away = next((c for c in competitors if c.get('homeAway') == 'away'), None)
+        home = next((c for c in competitors if c.get('homeAway') == 'home'), None)
+        if away and home:
+            away_name = away.get('team', {}).get('displayName', '?')
+            home_name = home.get('team', {}).get('displayName', '?')
+            out.append((away_name, home_name))
+    return out
+
+
 def call_espn_ncaab_scoreboard(date_str: str, groups: str | None) -> tuple[dict, int]:
     """
     Call ESPN NCAAB scoreboard for one day.
@@ -118,33 +135,45 @@ def main():
     print('1. ESPN NCAAB scoreboard – DEFAULT (no groups)')
     print('   (Same style as live odds tracker: no groups param)')
     try:
-        _, count_default = call_espn_ncaab_scoreboard(date_str, groups=None)
+        data_default, count_default = call_espn_ncaab_scoreboard(date_str, groups=None)
         print(f'   Games returned: {count_default}')
+        games_default = events_to_game_list(data_default)
+        for i, (away, home) in enumerate(games_default, 1):
+            print(f'      {i}. {away} @ {home}')
     except Exception as e:
         print(f'   Error: {e}')
         count_default = None
+        games_default = []
     print()
 
     # 2) ESPN – groups=50 (all D1)
     print('2. ESPN NCAAB scoreboard – groups=50 (all D1)')
     print('   (Same as fetch_historical_game_results_espn_api.py for NCAAB)')
     try:
-        _, count_50 = call_espn_ncaab_scoreboard(date_str, groups='50')
+        data_50, count_50 = call_espn_ncaab_scoreboard(date_str, groups='50')
         print(f'   Games returned: {count_50}')
+        games_50 = events_to_game_list(data_50)
+        for i, (away, home) in enumerate(games_50, 1):
+            print(f'      {i}. {away} @ {home}')
     except Exception as e:
         print(f'   Error: {e}')
         count_50 = None
+        games_50 = []
     print()
 
     # 3) The Odds API – reference
     print('3. The Odds API – basketball_ncaab/odds')
     print('   (No top25 vs all D1 param; current/upcoming games only)')
     try:
-        _, count_odds = call_odds_api_ncaab()
+        odds_games, count_odds = call_odds_api_ncaab()
         if count_odds == 0 and not os.getenv('ODDS_API_KEY'):
             print('   Skipped (ODDS_API_KEY not set)')
         else:
             print(f'   Games returned: {count_odds}')
+            for i, g in enumerate(odds_games if isinstance(odds_games, list) else [], 1):
+                away = g.get('away_team', '?')
+                home = g.get('home_team', '?')
+                print(f'      {i}. {away} @ {home}')
     except Exception as e:
         print(f'   Error: {e}')
         count_odds = None
