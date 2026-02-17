@@ -92,6 +92,7 @@ current_policy.json
 lambda_live_odds.zip
 response_nba.json
 response_ncaab.json
+package/
 
 # Removing from local
 # Shot charts: 456MB (on S3: nba-api-mt bucket)
