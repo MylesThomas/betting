@@ -274,20 +274,23 @@ After collecting data, analyze:
 MODULAR DESIGN:
 Currently implemented:
   ✅ NBA (basketball_nba)
+     - Team normalization: "Los Angeles Clippers" (Odds API) → "LA Clippers" (ESPN)
+  ✅ NCAAB (basketball_ncaab)
+     - Team normalization: "St" → "State", "Univ." → "University", "Miss" → "Mississippi"
 
 Not yet implemented (but ready for extension):
   ⚠️ NFL (americanfootball_nfl)
   ⚠️ NCAAF (americanfootball_ncaaf)
-  ⚠️ NCAAB (basketball_ncaab)
 
 To add new sport:
   1. Add sport key to SUPPORTED_SPORTS dict
   2. Add ESPN endpoint for that sport
-  3. Test during live games
+  3. Create team name normalization mapping if needed (see src/nba_team_name_mapping.py)
+  4. Test during live games
 
 AUTHOR: Thomas Myles
 CREATED: 2026-01-31
-UPDATED: 2026-02-01 (Added ESPN-first optimization, S3 structure, Lambda deployment instructions)
+UPDATED: 2026-02-16 (Added NBA team name normalization for Clippers)
 """
 
 import os
@@ -310,6 +313,36 @@ while not (project_root / '.git').exists() and project_root != project_root.pare
 
 sys.path.insert(0, str(project_root))
 
+# Import team name normalization
+try:
+    from src.ncaab_team_name_mapping import normalize_ncaab_team_name
+except ImportError:
+    print("⚠️  WARNING: ncaab_team_name_mapping.py not found - using fallback normalization")
+    # Fallback if import fails (Lambda environment)
+    def normalize_ncaab_team_name(name: str) -> str:
+        """Fallback normalization if mapping module not available."""
+        # Basic normalization rules
+        normalized = name
+        if " St " in normalized:
+            normalized = normalized.replace(" St ", " State ")
+        if "Univ." in normalized:
+            normalized = normalized.replace("Univ.", "University")
+        if normalized.startswith("Miss "):
+            normalized = normalized.replace("Miss ", "Mississippi ", 1)
+        return normalized
+
+try:
+    from src.nba_team_name_mapping import normalize_nba_team_name
+except ImportError:
+    print("⚠️  WARNING: nba_team_name_mapping.py not found - using fallback normalization")
+    # Fallback if import fails (Lambda environment)
+    def normalize_nba_team_name(name: str) -> str:
+        """Fallback normalization if mapping module not available."""
+        # Handle LA Clippers difference between Odds API and ESPN
+        if name == "Los Angeles Clippers":
+            return "LA Clippers"
+        return name
+
 
 # =============================================================================
 # CONFIGURATION
@@ -319,12 +352,17 @@ sys.path.insert(0, str(project_root))
 ODDS_API_KEY = os.getenv('ODDS_API_KEY')
 ODDS_API_BASE = 'https://api.the-odds-api.com/v4'
 ESPN_NBA_SCOREBOARD = 'http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard'
+ESPN_NCAAB_SCOREBOARD = 'http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard'
 
 # Data paths
 DATA_ROOT = project_root / 'data'
 
 # S3 Configuration
-S3_BUCKET = 'nba-betting-mt'
+# Bucket varies by sport
+S3_BUCKETS = {
+    'nba': 'nba-betting-mt',
+    'ncaab': 'ncaab-betting-mt',
+}
 S3_BASE_PATH = 'data/01_input/live_odds'
 IS_LAMBDA = bool(os.getenv('AWS_LAMBDA_FUNCTION_NAME'))
 
@@ -335,14 +373,14 @@ TRACK_UPCOMING_GAMES = os.getenv('TRACK_UPCOMING_GAMES', 'false').lower() == 'tr
 
 # Sports
 SPORT_NBA = 'basketball_nba'
+SPORT_NCAAB = 'basketball_ncaab'
 # SPORT_NFL = 'americanfootball_nfl'
-# SPORT_NCAAB = 'basketball_ncaab'
 # SPORT_NCAAF = 'americanfootball_ncaaf'
 
 SUPPORTED_SPORTS = {
     'nba': SPORT_NBA,
+    'ncaab': SPORT_NCAAB,
     # 'nfl': SPORT_NFL,      # NOT IMPLEMENTED YET
-    # 'ncaab': SPORT_NCAAB,  # NOT IMPLEMENTED YET
     # 'ncaaf': SPORT_NCAAF,  # NOT IMPLEMENTED YET
 }
 
@@ -515,7 +553,7 @@ def fetch_game_scores(sport: str = 'nba') -> dict:
     Gets scores, period, time remaining, game status.
     
     Args:
-        sport: 'nba' (others not implemented yet)
+        sport: 'nba' or 'ncaab'
     
     Returns:
         ESPN scoreboard dict
@@ -526,6 +564,8 @@ def fetch_game_scores(sport: str = 'nba') -> dict:
     """
     if sport == 'nba':
         url = ESPN_NBA_SCOREBOARD
+    elif sport == 'ncaab':
+        url = ESPN_NCAAB_SCOREBOARD
     else:
         raise NotImplementedError(f"ESPN endpoint for {sport} not implemented yet")
     
@@ -538,7 +578,92 @@ def fetch_game_scores(sport: str = 'nba') -> dict:
     return response.json()
 
 
-def match_game_to_score(game: dict, espn_data: dict) -> dict:
+def match_game_to_score(game: dict, espn_data: dict, sport: str = 'basketball_nba') -> dict:
+    """
+    Match Odds API game to ESPN score data by team names.
+    
+    Uses team name normalization to handle format differences between APIs.
+    - NCAAB: The Odds API uses abbreviations (St, Univ., Miss) that ESPN expands.
+    - NBA: The Odds API uses "Los Angeles Clippers" while ESPN uses "LA Clippers"
+    
+    Args:
+        game: Game dict from Odds API (has away_team, home_team)
+        espn_data: ESPN scoreboard dict
+        sport: Sport key (e.g., 'basketball_nba', 'basketball_ncaab')
+    
+    Returns:
+        Dict with score info, or empty dict if no match found
+        {
+            'away_score': int,
+            'home_score': int,
+            'period': str (e.g., '2Q', '3Q'),
+            'time_remaining': float (minutes),
+            'game_status': str (e.g., 'in', 'halftime')
+        }
+    """
+    # Get team names from Odds API and normalize for ESPN matching
+    odds_away_team = game['away_team']
+    odds_home_team = game['home_team']
+    
+    # Normalize Odds API names to match ESPN format (sport-specific)
+    if sport == 'basketball_ncaab':
+        away_team_normalized = normalize_ncaab_team_name(odds_away_team)
+        home_team_normalized = normalize_ncaab_team_name(odds_home_team)
+    else:  # basketball_nba
+        away_team_normalized = normalize_nba_team_name(odds_away_team)
+        home_team_normalized = normalize_nba_team_name(odds_home_team)
+    
+    events = espn_data['events']
+    
+    for event in events:
+        competition = event['competitions'][0]
+        competitors = competition['competitors']
+        
+        espn_away = next((c for c in competitors if c['homeAway'] == 'away'), None)
+        espn_home = next((c for c in competitors if c['homeAway'] == 'home'), None)
+        
+        # Get ESPN team names
+        espn_away_name = espn_away['team']['displayName']
+        espn_home_name = espn_home['team']['displayName']
+        
+        # Try exact match first (most common case)
+        if espn_away_name == odds_away_team and espn_home_name == odds_home_team:
+            # Direct match - no normalization needed
+            pass
+        # Try normalized match
+        elif espn_away_name == away_team_normalized and espn_home_name == home_team_normalized:
+            # Matched after normalization
+            pass
+        else:
+            # No match for this game
+            continue
+        
+        # Match found - extract score info
+        status = event['status']
+        
+        # Parse time remaining
+        time_remaining = None
+        if 'displayClock' in status:
+            clock_str = status['displayClock']
+            try:
+                parts = clock_str.split(':')
+                if len(parts) == 2:
+                    mins = int(parts[0])
+                    secs = int(parts[1])
+                    time_remaining = mins + secs / 60
+            except:
+                time_remaining = None
+        
+        return {
+            'away_score': int(espn_away['score']),
+            'home_score': int(espn_home['score']),
+            'period': str(status.get('period', '')),
+            'time_remaining': time_remaining,
+            'game_status': status['type']['state'],
+        }
+    
+    # No match found
+    return {}
     """
     Match Odds API game to ESPN score data by team names.
     
@@ -896,16 +1021,20 @@ def parse_espn_data(espn_data: dict, collection_timestamp: str) -> list:
             'time_remaining_minutes': time_remaining_minutes,
         })
     
+    # Filter out pre-game records - only track live ('in') and finished ('post') games
+    records = [r for r in records if r['game_status'] in ['in', 'post']]
+    
     return records
 
 
-def write_parquet_to_s3(records: list, s3_key: str):
+def write_parquet_to_s3(records: list, s3_key: str, bucket: str):
     """
     Write records to S3 as Parquet file.
     
     Args:
         records: List of dicts to write
         s3_key: S3 key (path) for the file
+        bucket: S3 bucket name
         
     Raises:
         Exception if write fails
@@ -929,11 +1058,11 @@ def write_parquet_to_s3(records: list, s3_key: str):
         import boto3
         s3_client = boto3.client('s3')
         s3_client.put_object(
-            Bucket=S3_BUCKET,
+            Bucket=bucket,
             Key=s3_key,
             Body=parquet_buffer.getvalue()
         )
-        print(f"{EMOJI['save']} Wrote {len(records)} records to s3://{S3_BUCKET}/{s3_key}")
+        print(f"{EMOJI['save']} Wrote {len(records)} records to s3://{bucket}/{s3_key}")
     else:
         # Local testing - write to local filesystem
         local_path = DATA_ROOT / s3_key
@@ -999,6 +1128,9 @@ def main(sport: str = 'nba', prod_run: bool = False):
     
     sport_key = SUPPORTED_SPORTS[sport]
     
+    # Get S3 bucket for this sport
+    s3_bucket = S3_BUCKETS.get(sport, 'nba-betting-mt')  # Default to NBA bucket
+    
     # Check API key
     if not ODDS_API_KEY:
         error_msg = "ODDS_API_KEY not found in environment"
@@ -1031,38 +1163,44 @@ def main(sport: str = 'nba', prod_run: bool = False):
         espn_data = fetch_game_scores(sport)
         espn_records = parse_espn_data(espn_data, collection_timestamp)
         
-        # Count live games
+        # Count live and finished games
         num_live = sum(1 for r in espn_records if r['game_status'] == 'in')
+        num_post = sum(1 for r in espn_records if r['game_status'] == 'post')
+        num_trackable = num_live + num_post
         
-        print(f"{EMOJI['success']} ESPN API: Retrieved {len(espn_records)} games ({num_live} live)")
+        print(f"{EMOJI['success']} ESPN API: Retrieved {len(espn_records)} games ({num_live} live, {num_post} finished)")
         
         # Step 2: Only call Odds API if there are live games
         if num_live == 0:
             print(f"\n{EMOJI['info']} No live games - skipping Odds API call (saved 1 API credit)")
             
-            if not TRACK_UPCOMING_GAMES:
-                print(f"{EMOJI['info']} No live games - skipping file write (no data to save)\n")
+            # Check if we have any finished games to save
+            if num_post == 0:
+                print(f"{EMOJI['info']} No live or finished games - skipping file write (no data to save)\n")
                 return {
                     'statusCode': 200,
                     'body': {
-                        'message': 'No live games - no files written',
+                        'message': 'No live or finished games - no files written',
                         'num_games': len(espn_records),
                         'num_live_games': 0,
+                        'num_post_games': 0,
                         'odds_api_calls': 0,
                         'api_calls_saved': 1,
                     }
                 }
             else:
-                # TRACK_UPCOMING_GAMES=true: Write all ESPN data
-                print(f"{EMOJI['save']} Writing ESPN data only (TRACK_UPCOMING_GAMES=true)...\n")
-                write_parquet_to_s3(espn_records, espn_s3_key)
+                # We have finished games - save ESPN data only (no odds)
+                print(f"{EMOJI['save']} Saving ESPN data for {num_post} finished game(s) (final scores)...")
+                write_parquet_to_s3(espn_records, espn_s3_key, s3_bucket)
+                print(f"{EMOJI['success']} Wrote {len(espn_records)} records to {espn_s3_key}\n")
                 
                 return {
                     'statusCode': 200,
                     'body': {
-                        'message': 'No live games - wrote upcoming games only',
+                        'message': f'No live games - saved {num_post} finished game(s) for final scores',
                         'num_games': len(espn_records),
                         'num_live_games': 0,
+                        'num_post_games': num_post,
                         'odds_api_calls': 0,
                         'api_calls_saved': 1,
                     }
@@ -1087,10 +1225,15 @@ def main(sport: str = 'nba', prod_run: bool = False):
                 if r['game_status'] == 'in'
             }
             
-            # Filter odds records to only live games
+            # Normalize Odds API team names for comparison with ESPN
+            # NBA: "Los Angeles Clippers" -> "LA Clippers"
+            # NCAAB: "Alabama St Hornets" -> "Alabama State Hornets"
+            normalize_fn = normalize_nba_team_name if sport_key == 'basketball_nba' else normalize_ncaab_team_name
+            
+            # Filter odds records to only live games (with normalization)
             odds_records_filtered = [
                 r for r in odds_records
-                if (r['away_team'], r['home_team']) in live_game_teams
+                if (normalize_fn(r['away_team']), normalize_fn(r['home_team'])) in live_game_teams
             ]
             
             # Also filter ESPN records to only live games
@@ -1113,8 +1256,8 @@ def main(sport: str = 'nba', prod_run: bool = False):
         
         # Step 4: Write both files to S3
         print(f"\n{EMOJI['save']} Step 3: Writing to S3...")
-        write_parquet_to_s3(odds_records, odds_s3_key)
-        write_parquet_to_s3(espn_records, espn_s3_key)
+        write_parquet_to_s3(odds_records, odds_s3_key, s3_bucket)
+        write_parquet_to_s3(espn_records, espn_s3_key, s3_bucket)
         
         # Skip detailed display if no records to show
         if not odds_records:
@@ -1145,10 +1288,15 @@ def main(sport: str = 'nba', prod_run: bool = False):
             'home_ml': 'median',
         }).reset_index()
         
-        # Join with ESPN to get game status
+        # Normalize odds team names for joining with ESPN data
+        normalize_fn = normalize_nba_team_name if sport_key == 'basketball_nba' else normalize_ncaab_team_name
+        consensus['away_team_normalized'] = consensus['away_team'].apply(normalize_fn)
+        consensus['home_team_normalized'] = consensus['home_team'].apply(normalize_fn)
+        
+        # Join with ESPN to get game status (using normalized team names)
         consensus = consensus.merge(
             espn_df[['away_team_espn', 'home_team_espn', 'game_status', 'away_score', 'home_score']],
-            left_on=['away_team', 'home_team'],
+            left_on=['away_team_normalized', 'home_team_normalized'],
             right_on=['away_team_espn', 'home_team_espn'],
             how='left'
         )
@@ -1200,6 +1348,7 @@ def main(sport: str = 'nba', prod_run: bool = False):
                 'message': 'Snapshot collected successfully',
                 'num_games': len({(r['away_team'], r['home_team']) for r in odds_records}),
                 'num_live_games': len({(r['away_team'], r['home_team']) for r in odds_records}),
+                'num_post_games': num_post,
                 'odds_records': len(odds_records),
                 'espn_records': len(espn_records),
                 'odds_api_calls': 1,
@@ -1227,13 +1376,21 @@ def lambda_handler(event, context):
     
     Args:
         event: Lambda event dict (from EventBridge)
+               Can include: {"sport": "nba"} or {"sport": "ncaab"}
         context: Lambda context object
         
     Returns:
         Dict with statusCode and body
     """
+    # Get sport from event, fall back to environment variable, default to NBA
+    sport = event.get('sport') if event else None
+    if not sport:
+        sport = os.getenv('DEFAULT_SPORT', 'nba')
+    
+    print(f"Lambda invoked for sport: {sport}")
+    
     # Lambda runs in production mode (no prompts)
-    return main(sport='nba', prod_run=True)
+    return main(sport=sport, prod_run=True)
 
 
 if __name__ == '__main__':
