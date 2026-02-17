@@ -1,6 +1,8 @@
 """
 NBA Player Props Ingest Lambda Function
 
+Lambda function: nba-player-props-ingest
+
 Purpose:
 Scheduled Lambda function (EventBridge) that fetches NBA player props data
 for yesterday and today (ET timezone) and uploads to S3.
@@ -461,7 +463,7 @@ def lambda_handler(event, context):
         print("   ✅ All packages verified! Running script...")
         print()
         
-        run_cmd([
+        yesterday_result = run_cmd([
             'python3',
             'scripts/fetch_nba_player_props.py',
             '--date', yesterday,
@@ -470,6 +472,7 @@ def lambda_handler(event, context):
             '--force',
             '--fetch-games'
         ], cwd=repo_path, env=python_env, stream_output=True)
+        yesterday_has_games = "Props fetch complete" in yesterday_result.stdout
         
         print(f"   ✅ Props + games fetched for {yesterday}")
         print()
@@ -521,13 +524,14 @@ def lambda_handler(event, context):
             print()
             
             # Send warning SNS (treat as partial success)
+            yesterday_label = f"{yesterday} ✅" if yesterday_has_games else f"{yesterday} (0 games)"
             message = f"""NBA Player Props Ingest - WARNING: No games today
 
 ⚠️  No games scheduled for today ({today})
 This is expected on days with no NBA games (e.g., All-Star break, off-days).
 
 Dates Processed:
-- Yesterday: {yesterday} ✅
+- Yesterday: {yesterday_label}
 - Today: {today} ⚠️  (0 games found)
 
 NBA Season: {season}
@@ -575,6 +579,7 @@ Request ID: {context.aws_request_id}
                 'success': True,
                 'yesterday': yesterday,
                 'today': today,
+                'yesterday_has_games': yesterday_has_games,
                 'today_has_games': today_has_games,
                 'season': season,
                 'elapsed_seconds': elapsed
