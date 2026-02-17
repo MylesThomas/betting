@@ -135,6 +135,12 @@ pip install -q --target ./package requests
 echo "Adding application code..."
 cp scripts/lambda_function_track_live_odds.py package/
 mkdir -p package/src
+
+# CRITICAL: Include BOTH team name mapping files
+# NBA mapping normalizes "Los Angeles Clippers" → "LA Clippers" for ESPN matching
+# NCAAB mapping normalizes "St" → "State", "Univ." → "University", etc.
+# Without these, Lambda falls back to string matching which misses games
+cp src/nba_team_name_mapping.py package/src/
 cp src/ncaab_team_name_mapping.py package/src/
 
 # Create deployment package
@@ -176,10 +182,16 @@ if aws lambda get-function --function-name "$LAMBDA_NBA" --region "$REGION" &> /
     
     echo ""
     echo "Waiting for code update to complete..."
-    aws lambda wait function-updated \
+    # CRITICAL: Verify upload succeeded before proceeding
+    # If update fails, we'll deploy broken code and waste time debugging
+    if ! aws lambda wait function-updated \
         --function-name "$LAMBDA_NBA" \
-        --region "$REGION"
-    echo "✅ Code update complete"
+        --region "$REGION"; then
+        echo -e "${RED}❌ Lambda update failed for $LAMBDA_NBA${NC}"
+        echo "Deployment aborted - check AWS console for errors"
+        exit 1
+    fi
+    echo "✅ Code update complete and verified"
     
     echo ""
     echo "Updating configuration..."
@@ -233,10 +245,16 @@ if aws lambda get-function --function-name "$LAMBDA_NCAAB" --region "$REGION" &>
     
     echo ""
     echo "Waiting for code update to complete..."
-    aws lambda wait function-updated \
+    # CRITICAL: Verify upload succeeded before proceeding
+    # NCAAB Lambda has larger memory/timeout due to more games to process
+    if ! aws lambda wait function-updated \
         --function-name "$LAMBDA_NCAAB" \
-        --region "$REGION"
-    echo "✅ Code update complete"
+        --region "$REGION"; then
+        echo -e "${RED}❌ Lambda update failed for $LAMBDA_NCAAB${NC}"
+        echo "Deployment aborted - check AWS console for errors"
+        exit 1
+    fi
+    echo "✅ Code update complete and verified"
     
     echo ""
     echo "Updating configuration..."
@@ -380,26 +398,45 @@ echo "==========================================================================
 echo ""
 
 echo "Testing NBA Lambda..."
-aws lambda invoke \
+# Invoke Lambda and capture response + logs
+# Using --log-type Tail to verify deployment worked and see any warnings
+INVOKE_RESULT=$(aws lambda invoke \
     --function-name "$LAMBDA_NBA" \
     --region "$REGION" \
     --log-type Tail \
     --query 'LogResult' \
     --output text \
-    response_nba.json | base64 --decode | tail -20
+    response_nba.json | base64 --decode)
+
+# Check for the missing mapping warning (should be gone after fix)
+if echo "$INVOKE_RESULT" | grep -q "WARNING.*nba_team_name_mapping.py not found"; then
+    echo -e "${YELLOW}⚠️  WARNING: NBA team mapping file missing in package${NC}"
+    echo "This will cause team matching failures - check package contents"
+fi
+
+echo "$INVOKE_RESULT" | tail -20
 
 echo ""
 echo "NBA Lambda response saved to: response_nba.json"
 echo ""
 
 echo "Testing NCAAB Lambda..."
-aws lambda invoke \
+# Same verification for NCAAB
+INVOKE_RESULT=$(aws lambda invoke \
     --function-name "$LAMBDA_NCAAB" \
     --region "$REGION" \
     --log-type Tail \
     --query 'LogResult' \
     --output text \
-    response_ncaab.json | base64 --decode | tail -20
+    response_ncaab.json | base64 --decode)
+
+# Check for the missing mapping warning
+if echo "$INVOKE_RESULT" | grep -q "WARNING.*ncaab_team_name_mapping.py not found"; then
+    echo -e "${YELLOW}⚠️  WARNING: NCAAB team mapping file missing in package${NC}"
+    echo "This will cause team matching failures - check package contents"
+fi
+
+echo "$INVOKE_RESULT" | tail -20
 
 echo ""
 echo "NCAAB Lambda response saved to: response_ncaab.json"
