@@ -475,3 +475,38 @@ echo "     aws events disable-rule --name $EVENTBRIDGE_NCAAB  # Disable NCAAB (A
 echo "     aws events enable-rule --name $EVENTBRIDGE_NCAAB   # Re-enable NCAAB (Nov)"
 echo ""
 echo "================================================================================"
+
+###############################################################################
+# STEP 8: Cleanup Temporary Files
+###############################################################################
+
+echo ""
+echo "================================================================================"
+echo "🧹 Step 8: Cleaning up temporary files..."
+echo "================================================================================"
+echo ""
+
+# Clean up test response files (always)
+# These are overwritten on each deploy and serve no long-term purpose
+if [ -f response_nba.json ]; then
+    rm response_nba.json
+    echo "✅ Removed response_nba.json"
+fi
+
+if [ -f response_ncaab.json ]; then
+    rm response_ncaab.json
+    echo "✅ Removed response_ncaab.json"
+fi
+
+# Keep lambda_live_odds.zip for debugging/inspection
+# It's in .gitignore so won't pollute git status
+# Users can manually delete if needed: rm lambda_live_odds.zip
+echo "ℹ️  Keeping lambda_live_odds.zip for inspection/debugging"
+echo "   Size: $(du -h lambda_live_odds.zip | cut -f1)"
+echo "   To inspect: unzip -l lambda_live_odds.zip"
+echo "   To remove: rm lambda_live_odds.zip"
+
+echo ""
+echo -e "${GREEN}✅ Cleanup complete${NC}"
+echo ""
+

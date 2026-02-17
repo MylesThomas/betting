@@ -88,6 +88,11 @@ data/nfl_research/nfl_week*_scraped_*.txt
 /lambda_function.py
 current_policy.json
 
+# Live odds Lambda deployment artifacts
+lambda_live_odds.zip
+response_nba.json
+response_ncaab.json
+
 # Removing from local
 # Shot charts: 456MB (on S3: nba-api-mt bucket)
 data/01_input/nba_api/shot_charts/
