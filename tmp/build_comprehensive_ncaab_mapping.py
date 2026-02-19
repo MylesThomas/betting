@@ -9,6 +9,10 @@ Context:
 - Need to capture all teams, not just the ~109 from futures data
 - Each team plays throughout season, so a month of data should capture all active teams
 
+Workflow: (1) tmp/debug_ncaab_outcomes_lines_join.py --date all --season → writes suggestions to
+~/Downloads/tmp/ncaab_teams_to_add_to_mapping.json. (2) Review. (3) Add confirmed entries to
+ODDS_API_ESPN_OVERRIDES in this file. (4) Run this script. Builder is idempotent (no file read).
+
 Created: 2026-02-16
 """
 
@@ -143,6 +147,50 @@ def generate_mapping_dict(odds_api_teams):
             mapping[team] = normalized
             print(f"  {team:<50} → {normalized}")
     
+    # ESPN overrides: Odds API → ESPN (single source of truth).
+    # Workflow: (1) Run debug script → suggestions to JSON. (2) Review. (3) Add confirmed
+    # entries here. (4) Run this builder. Builder is idempotent (no file read).
+    ODDS_API_ESPN_OVERRIDES = {
+        "Sam Houston St Bearkats": "Sam Houston Bearkats",
+        "American Eagles": "American University Eagles",
+        "Appalachian St Mountaineers": "App State Mountaineers",
+        "Army Knights": "Army Black Knights",
+        "Central Connecticut St Blue Devils": "Central Connecticut Blue Devils",
+        "Fort Wayne Mastodons": "Purdue Fort Wayne Mastodons",
+        "Grambling St Tigers": "Grambling Tigers",
+        "Long Beach St 49ers": "Long Beach State Beach",
+        "Loyola (Chi) Ramblers": "Loyola Chicago Ramblers",
+        "Loyola (MD) Greyhounds": "Loyola Maryland Greyhounds",
+        "Seattle Redhawks": "Seattle U Redhawks",
+        # Below: confirmed from debug script (--date all) and baked in
+        "Albany Great Danes": "UAlbany Great Danes",
+        "Arkansas-Little Rock Trojans": "Little Rock Trojans",
+        "Cal Baptist Lancers": "California Baptist Lancers",
+        "Florida Int'l Golden Panthers": "Florida International Panthers",
+        "Gardner-Webb Bulldogs": "Gardner-Webb Runnin' Bulldogs",
+        "Grand Canyon Antelopes": "Grand Canyon Lopes",
+        "GW Revolutionaries": "George Washington Revolutionaries",
+        "IUPUI Jaguars": "IU Indianapolis Jaguars",
+        "LIU Sharks": "Long Island University Sharks",
+        "Maryland-Eastern Shore Hawks": "Maryland Eastern Shore Hawks",
+        "Mt. St. Mary's Mountaineers": "Mount St. Mary's Mountaineers",
+        "N Colorado Bears": "Northern Colorado Bears",
+        "Nicholls St Colonels": "Nicholls Colonels",
+        "Prairie View Panthers": "Prairie View A&M Panthers",
+        "SE Missouri St Redhawks": "Southeast Missouri State Redhawks",
+        "SIU-Edwardsville Cougars": "SIU Edwardsville Cougars",
+        "St. Francis (PA) Red Flash": "Saint Francis Red Flash",
+        "St. Thomas (MN) Tommies": "St. Thomas-Minnesota Tommies",
+        "Tenn-Martin Skyhawks": "UT Martin Skyhawks",
+        "Texas A&M-CC Islanders": "Texas A&M-Corpus Christi Islanders",
+        "UMKC Kangaroos": "Kansas City Roos",
+        "UT-Arlington Mavericks": "UT Arlington Mavericks",
+    }
+    for odds_name, espn_name in ODDS_API_ESPN_OVERRIDES.items():
+        mapping[odds_name] = espn_name
+        if odds_name in odds_api_teams:
+            print(f"  [ESPN override] {odds_name:<50} → {espn_name}")
+
     print()
     print(f"✅ Created {len(mapping)} mappings")
     print(f"   {len(odds_api_teams) - len(mapping)} teams don't need normalization")
@@ -182,13 +230,18 @@ def save_to_file(mapping, odds_api_teams, output_file='src/ncaab_team_name_mappi
     else:
         docstring = '"""\nNCAA Team Name Mapping\n\nAuto-generated mapping from Odds API to ESPN team names.\n"""'
     
+    # Include any keys from mapping that weren't in S3 (e.g. from ODDS_API_ESPN_OVERRIDES)
+    all_teams = set(odds_api_teams) | set(mapping.keys())
+    teams_with_mapping = set(mapping.keys())
+    identical_teams = sorted(all_teams - teams_with_mapping)
+
     # Generate new file content
     lines = [
         docstring,
         "\n\n",
         "# Complete mapping: Odds API → ESPN (all NCAAB teams)",
-        f"# Generated from {len(odds_api_teams)} teams in historical data",
-        f"# {len(mapping)} teams require normalization, {len(odds_api_teams) - len(mapping)} are identical",
+        f"# Generated from {len(all_teams)} teams (S3 + suggestions file if present)",
+        f"# {len(mapping)} teams require normalization, {len(identical_teams)} are identical",
         "ODDS_API_TO_ESPN_NCAAB = {",
         f"    # ============================================================================",
         f"    # TEAMS REQUIRING NORMALIZATION ({len(mapping)} teams)",
@@ -202,14 +255,11 @@ def save_to_file(mapping, odds_api_teams, output_file='src/ncaab_team_name_mappi
     lines.extend([
         "",
         f"    # ============================================================================",
-        f"    # TEAMS WITH IDENTICAL NAMES ({len(odds_api_teams) - len(mapping)} teams)",
+        f"    # TEAMS WITH IDENTICAL NAMES ({len(identical_teams)} teams)",
         f"    # ============================================================================",
     ])
     
     # Then add all identical teams
-    all_teams = set(odds_api_teams)
-    teams_with_mapping = set(mapping.keys())
-    identical_teams = sorted(all_teams - teams_with_mapping)
     
     for team_name in identical_teams:
         lines.append(f'    "{team_name}": "{team_name}",')
