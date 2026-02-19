@@ -2,7 +2,9 @@
 Plot live odds movement for all games of a specified team.
 
 Creates publication-quality plots with:
-- Separate lines for each bookmaker (spread + moneyline)
+- Team colors for lines (not bookmaker colors)
+- Team logos in top corners
+- Separate lines for each bookmaker with alpha transparency
 - Score progression with color-coded leader
 - Saves locally to ~/Downloads/tmp/live_odds_plots/
 - Uploads to S3 for backup
@@ -19,11 +21,121 @@ import subprocess
 import tempfile
 import os
 import argparse
+import requests
+import urllib3
 from pathlib import Path
+from PIL import Image
+from io import BytesIO
+
+# Suppress SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuration
 S3_BUCKET = "nba-betting-mt"
 S3_PREFIX = "data/04_output/live_odds_plots"
+
+# Image cache directory
+IMAGE_CACHE_DIR = Path.home() / "Downloads" / "tmp" / "live_odds_plots" / "logos"
+IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+# NBA Team Colors (primary colors)
+TEAM_COLORS = {
+    "Atlanta Hawks": "#E03A3E",
+    "Boston Celtics": "#007A33",
+    "Brooklyn Nets": "#000000",
+    "Charlotte Hornets": "#1D1160",
+    "Chicago Bulls": "#CE1141",
+    "Cleveland Cavaliers": "#860038",
+    "Dallas Mavericks": "#00538C",
+    "Denver Nuggets": "#0E2240",
+    "Detroit Pistons": "#C8102E",
+    "Golden State Warriors": "#1D428A",
+    "Houston Rockets": "#CE1141",
+    "Indiana Pacers": "#002D62",
+    "LA Clippers": "#C8102E",
+    "Los Angeles Lakers": "#552583",
+    "Memphis Grizzlies": "#5D76A9",
+    "Miami Heat": "#98002E",
+    "Milwaukee Bucks": "#00471B",
+    "Minnesota Timberwolves": "#0C2340",
+    "New Orleans Pelicans": "#0C2340",
+    "New York Knicks": "#006BB6",
+    "Oklahoma City Thunder": "#007AC1",
+    "Orlando Magic": "#0077C0",
+    "Philadelphia 76ers": "#006BB6",
+    "Phoenix Suns": "#1D1160",
+    "Portland Trail Blazers": "#E03A3E",
+    "Sacramento Kings": "#5A2D81",
+    "San Antonio Spurs": "#C4CED4",
+    "Toronto Raptors": "#CE1141",
+    "Utah Jazz": "#002B5C",
+    "Washington Wizards": "#002B5C",
+}
+
+# Team Logos (ESPN CDN)
+TEAM_LOGOS = {
+    "Atlanta Hawks": "https://a.espncdn.com/i/teamlogos/nba/500/atl.png",
+    "Boston Celtics": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
+    "Brooklyn Nets": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png",
+    "Charlotte Hornets": "https://a.espncdn.com/i/teamlogos/nba/500/cha.png",
+    "Chicago Bulls": "https://a.espncdn.com/i/teamlogos/nba/500/chi.png",
+    "Cleveland Cavaliers": "https://a.espncdn.com/i/teamlogos/nba/500/cle.png",
+    "Dallas Mavericks": "https://a.espncdn.com/i/teamlogos/nba/500/dal.png",
+    "Denver Nuggets": "https://a.espncdn.com/i/teamlogos/nba/500/den.png",
+    "Detroit Pistons": "https://a.espncdn.com/i/teamlogos/nba/500/det.png",
+    "Golden State Warriors": "https://a.espncdn.com/i/teamlogos/nba/500/gsw.png",
+    "Houston Rockets": "https://a.espncdn.com/i/teamlogos/nba/500/hou.png",
+    "Indiana Pacers": "https://a.espncdn.com/i/teamlogos/nba/500/ind.png",
+    "LA Clippers": "https://a.espncdn.com/i/teamlogos/nba/500/lac.png",
+    "Los Angeles Lakers": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
+    "Memphis Grizzlies": "https://a.espncdn.com/i/teamlogos/nba/500/mem.png",
+    "Miami Heat": "https://a.espncdn.com/i/teamlogos/nba/500/mia.png",
+    "Milwaukee Bucks": "https://a.espncdn.com/i/teamlogos/nba/500/mil.png",
+    "Minnesota Timberwolves": "https://a.espncdn.com/i/teamlogos/nba/500/min.png",
+    "New Orleans Pelicans": "https://a.espncdn.com/i/teamlogos/nba/500/no.png",
+    "New York Knicks": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
+    "Oklahoma City Thunder": "https://a.espncdn.com/i/teamlogos/nba/500/okc.png",
+    "Orlando Magic": "https://a.espncdn.com/i/teamlogos/nba/500/orl.png",
+    "Philadelphia 76ers": "https://a.espncdn.com/i/teamlogos/nba/500/phi.png",
+    "Phoenix Suns": "https://a.espncdn.com/i/teamlogos/nba/500/phx.png",
+    "Portland Trail Blazers": "https://a.espncdn.com/i/teamlogos/nba/500/por.png",
+    "Sacramento Kings": "https://a.espncdn.com/i/teamlogos/nba/500/sac.png",
+    "San Antonio Spurs": "https://a.espncdn.com/i/teamlogos/nba/500/sa.png",
+    "Toronto Raptors": "https://a.espncdn.com/i/teamlogos/nba/500/tor.png",
+    "Utah Jazz": "https://a.espncdn.com/i/teamlogos/nba/500/utah.png",
+    "Washington Wizards": "https://a.espncdn.com/i/teamlogos/nba/500/wsh.png",
+}
+
+
+def download_team_logo(team_name, size=(100, 100)):
+    """Download team logo from ESPN CDN and return cached file path."""
+    # Check cache first
+    cache_filename = f"team_{team_name.replace(' ', '_')}_{size[0]}x{size[1]}.png"
+    cache_path = IMAGE_CACHE_DIR / cache_filename
+    
+    if cache_path.exists():
+        return str(cache_path)
+    
+    if team_name not in TEAM_LOGOS:
+        print(f"⚠️  Team '{team_name}' not found in TEAM_LOGOS dict")
+        return None
+    
+    url = TEAM_LOGOS[team_name]
+    
+    try:
+        response = requests.get(url, timeout=5, verify=False)
+        response.raise_for_status()
+        
+        img = Image.open(BytesIO(response.content))
+        img = img.convert("RGBA")
+        img = img.resize(size, Image.Resampling.LANCZOS)
+        img.save(cache_path, "PNG")
+        
+        print(f"   ✅ Downloaded logo: {team_name}")
+        return str(cache_path)
+    except Exception as e:
+        print(f"⚠️  Failed to download logo for {team_name}: {e}")
+        return None
 
 
 def main(team_name):
@@ -89,6 +201,14 @@ def main(team_name):
         print(f"📊 Game {idx+1}/{len(games_df)}: {away_team} @ {home_team}")
         print(f"{'='*80}")
         
+        # Download team logos
+        away_logo_path = download_team_logo(away_team, size=(100, 100))
+        home_logo_path = download_team_logo(home_team, size=(100, 100))
+        
+        # Get team colors
+        away_color = TEAM_COLORS.get(away_team, "#000000")
+        home_color = TEAM_COLORS.get(home_team, "#666666")
+        
         # Get odds data with all bookmakers (NOT aggregated)
         odds_df = con.execute(f"""
             SELECT 
@@ -125,10 +245,23 @@ def main(team_name):
         odds_df['fetched_at'] = pd.to_datetime(odds_df['fetched_at'])
         espn_df['fetched_at'] = pd.to_datetime(espn_df['fetched_at'])
         
+        # Calculate consensus (median) for each timestamp
+        consensus_df = odds_df.groupby('fetched_at').agg({
+            'away_spread': 'median',
+            'home_spread': 'median',
+            'away_ml': 'median',
+            'home_ml': 'median'
+        }).reset_index()
+        
         # Save odds data to temp CSV for R
         temp_odds_csv = tempfile.NamedTemporaryFile(delete=False, suffix="_odds.csv", mode='w')
         odds_df.to_csv(temp_odds_csv.name, index=False)
         temp_odds_csv.close()
+        
+        # Save consensus data to temp CSV for R
+        temp_consensus_csv = tempfile.NamedTemporaryFile(delete=False, suffix="_consensus.csv", mode='w')
+        consensus_df.to_csv(temp_consensus_csv.name, index=False)
+        temp_consensus_csv.close()
         
         # Save ESPN data to temp CSV for R
         temp_espn_csv = tempfile.NamedTemporaryFile(delete=False, suffix="_espn.csv", mode='w')
@@ -140,55 +273,91 @@ def main(team_name):
         safe_filename = f"{away_team.replace(' ', '_')}_at_{home_team.replace(' ', '_')}_{game_date_str}.png"
         plot_file = LOCAL_DIR / safe_filename
         
-        # R code for publication-quality plots
+        # R code for publication-quality plots with team colors and logos
         r_code = f'''
 library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(patchwork)
 library(scales)
+library(png)
+library(grid)
 
 # Read data
 odds <- read.csv("{temp_odds_csv.name}")
+consensus <- read.csv("{temp_consensus_csv.name}")
 espn <- read.csv("{temp_espn_csv.name}")
 
 # Convert timestamps
 odds$fetched_at <- as.POSIXct(odds$fetched_at, format="%Y-%m-%d %H:%M:%OS")
+consensus$fetched_at <- as.POSIXct(consensus$fetched_at, format="%Y-%m-%d %H:%M:%OS")
 espn$fetched_at <- as.POSIXct(espn$fetched_at, format="%Y-%m-%d %H:%M:%OS")
 
-# Define color palette for bookmakers (distinct colors)
-bookmaker_colors <- c(
-  "fanduel" = "#4169E1",      # Royal blue
-  "draftkings" = "#53D337",   # Green
-  "betmgm" = "#FFD700",       # Gold  
-  "williamhill_us" = "#FF6347", # Tomato
-  "betrivers" = "#9370DB",    # Medium purple
-  "mybookieag" = "#FF1493",   # Deep pink
-  "fanatics" = "#00CED1",     # Dark turquoise
-  "pointsbetus" = "#FF8C00",  # Dark orange
-  "bovada" = "#32CD32",       # Lime green
-  "betonlineag" = "#DC143C"   # Crimson
+# Team colors
+away_color <- "{away_color}"
+home_color <- "{home_color}"
+
+# Define alpha levels for bookmakers (to distinguish them)
+bookmaker_alphas <- c(
+  "fanduel" = 0.9,
+  "draftkings" = 0.8,
+  "betmgm" = 0.7,
+  "williamhill_us" = 0.6,
+  "betrivers" = 0.9,
+  "mybookieag" = 0.8,
+  "fanatics" = 0.7,
+  "pointsbetus" = 0.6,
+  "bovada" = 0.9,
+  "betonlineag" = 0.8
 )
 
-# Plot 1: Both teams spreads (each bookmaker separate line)
-# Reshape data to long format for both teams
+# Plot 1: Both teams spreads - colored by TEAM + CONSENSUS LINE
 odds_spread_long <- odds %>%
   select(fetched_at, bookmaker, away_spread, home_spread) %>%
   pivot_longer(cols = c(away_spread, home_spread), 
-               names_to = "team", 
+               names_to = "team_side", 
                values_to = "spread") %>%
-  mutate(team = ifelse(team == "away_spread", "{away_team}", "{home_team}"),
-         bookmaker_team = paste0(bookmaker, " (", team, ")"))
+  mutate(
+    team = ifelse(team_side == "away_spread", "{away_team}", "{home_team}"),
+    team_color = ifelse(team_side == "away_spread", away_color, home_color),
+    linetype_val = ifelse(team_side == "away_spread", "solid", "dashed"),
+    alpha_val = bookmaker_alphas[bookmaker]
+  )
 
-p1 <- ggplot(odds_spread_long, aes(x = fetched_at, y = spread, color = bookmaker, 
-                                     linetype = team, group = bookmaker_team)) +
-  geom_line(linewidth = 1.2, alpha = 0.8) +
-  geom_hline(yintercept = 0, linetype = "dotted", color = "gray50") +
-  scale_color_manual(values = bookmaker_colors, name = "Bookmaker") +
-  scale_linetype_manual(values = c("solid", "dashed"), name = "Team") +
+# Prepare consensus for plotting
+consensus_spread_long <- consensus %>%
+  select(fetched_at, away_spread, home_spread) %>%
+  pivot_longer(cols = c(away_spread, home_spread),
+               names_to = "team_side",
+               values_to = "spread") %>%
+  mutate(
+    team_color = ifelse(team_side == "away_spread", away_color, home_color),
+    linetype_val = ifelse(team_side == "away_spread", "solid", "dashed")
+  )
+
+p1 <- ggplot() +
+  # Individual bookmaker lines (thin, transparent)
+  geom_line(data = odds_spread_long, 
+            aes(x = fetched_at, y = spread, 
+                color = team_color, 
+                linetype = linetype_val,
+                alpha = alpha_val,
+                group = interaction(bookmaker, team)),
+            linewidth = 0.8) +
+  # Consensus lines (thick, opaque)
+  geom_line(data = consensus_spread_long,
+            aes(x = fetched_at, y = spread,
+                color = team_color,
+                linetype = linetype_val,
+                group = team_side),
+            linewidth = 2.5, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "gray50", linewidth = 0.5) +
+  scale_color_identity() +
+  scale_linetype_identity() +
+  scale_alpha_identity() +
   labs(
     title = paste0("{away_team} @ {home_team} - Live Odds Movement"),
-    subtitle = "Spreads (Both Teams)",
+    subtitle = "Spreads (Both Teams) - Thick line = Consensus",
     y = "Spread"
   ) +
   theme_minimal(base_size = 14) +
@@ -199,29 +368,66 @@ p1 <- ggplot(odds_spread_long, aes(x = fetched_at, y = spread, color = bookmaker
     axis.text = element_text(size = 11),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "gray90"),
-    legend.position = "right"
-  )
+    plot.margin = margin(t = 80, r = 10, b = 10, l = 10)
+  ) +
+  # Manual legend
+  annotate("text", x = Inf, y = Inf, label = "{away_team}", 
+           color = away_color, hjust = 1.1, vjust = 2, size = 4, fontface = "bold") +
+  annotate("text", x = Inf, y = Inf, label = "{home_team}", 
+           color = home_color, hjust = 1.1, vjust = 3.5, size = 4, fontface = "bold") +
+  annotate("text", x = Inf, y = Inf, label = "(solid = away, dashed = home)", 
+           color = "gray40", hjust = 1.1, vjust = 5, size = 3)
 
-# Plot 2: Both teams moneylines (each bookmaker separate line)
+# Plot 2: Both teams moneylines - colored by TEAM + CONSENSUS
 odds_ml_long <- odds %>%
   filter(!is.na(away_ml) | !is.na(home_ml)) %>%
   select(fetched_at, bookmaker, away_ml, home_ml) %>%
   pivot_longer(cols = c(away_ml, home_ml), 
-               names_to = "team", 
+               names_to = "team_side", 
                values_to = "moneyline") %>%
   filter(!is.na(moneyline)) %>%
-  mutate(team = ifelse(team == "away_ml", "{away_team}", "{home_team}"),
-         bookmaker_team = paste0(bookmaker, " (", team, ")"))
+  mutate(
+    team = ifelse(team_side == "away_ml", "{away_team}", "{home_team}"),
+    team_color = ifelse(team_side == "away_ml", away_color, home_color),
+    linetype_val = ifelse(team_side == "away_ml", "solid", "dashed"),
+    alpha_val = bookmaker_alphas[bookmaker]
+  )
 
-p2 <- ggplot(odds_ml_long, aes(x = fetched_at, y = moneyline, color = bookmaker,
-                                 linetype = team, group = bookmaker_team)) +
-  geom_line(linewidth = 1.2, alpha = 0.8) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  scale_color_manual(values = bookmaker_colors, name = "Bookmaker") +
-  scale_linetype_manual(values = c("solid", "dashed"), name = "Team") +
+consensus_ml_long <- consensus %>%
+  filter(!is.na(away_ml) | !is.na(home_ml)) %>%
+  select(fetched_at, away_ml, home_ml) %>%
+  pivot_longer(cols = c(away_ml, home_ml),
+               names_to = "team_side",
+               values_to = "moneyline") %>%
+  filter(!is.na(moneyline)) %>%
+  mutate(
+    team_color = ifelse(team_side == "away_ml", away_color, home_color),
+    linetype_val = ifelse(team_side == "away_ml", "solid", "dashed")
+  )
+
+p2 <- ggplot() +
+  # Individual bookmaker lines
+  geom_line(data = odds_ml_long,
+            aes(x = fetched_at, y = moneyline,
+                color = team_color,
+                linetype = linetype_val,
+                alpha = alpha_val,
+                group = interaction(bookmaker, team)),
+            linewidth = 0.8) +
+  # Consensus lines (thick)
+  geom_line(data = consensus_ml_long,
+            aes(x = fetched_at, y = moneyline,
+                color = team_color,
+                linetype = linetype_val,
+                group = team_side),
+            linewidth = 2.5, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", linewidth = 0.5) +
+  scale_color_identity() +
+  scale_linetype_identity() +
+  scale_alpha_identity() +
   scale_y_continuous(limits = c(-1500, 1500), breaks = seq(-1500, 1500, 500)) +
   labs(
-    subtitle = "Moneylines (Both Teams)",
+    subtitle = "Moneylines (Both Teams) - Thick line = Consensus",
     y = "Moneyline"
   ) +
   theme_minimal(base_size = 14) +
@@ -230,18 +436,17 @@ p2 <- ggplot(odds_ml_long, aes(x = fetched_at, y = moneyline, color = bookmaker,
     axis.title.x = element_blank(),
     axis.text = element_text(size = 11),
     panel.grid.minor = element_blank(),
-    panel.grid.major = element_line(color = "gray90"),
-    legend.position = "right"
+    panel.grid.major = element_line(color = "gray90")
   )
 
 # Plot 3: Score progression (if ESPN data available)
 if (nrow(espn) > 0 && !all(is.na(espn$away_score))) {{
   p3 <- ggplot(espn, aes(x = fetched_at)) +
-    geom_line(aes(y = away_score), color = "#4169E1", linewidth = 1.5) +
-    geom_line(aes(y = home_score), color = "#DC143C", linewidth = 1.5) +
+    geom_line(aes(y = away_score), color = away_color, linewidth = 1.5) +
+    geom_line(aes(y = home_score), color = home_color, linewidth = 1.5) +
     geom_ribbon(aes(ymin = pmin(away_score, home_score), ymax = pmax(away_score, home_score),
                     fill = away_score > home_score), alpha = 0.2) +
-    scale_fill_manual(values = c("TRUE" = "#4169E1", "FALSE" = "#DC143C"),
+    scale_fill_manual(values = c("TRUE" = away_color, "FALSE" = home_color),
                      labels = c("TRUE" = "{away_team} ahead", "FALSE" = "{home_team} ahead"),
                      name = "") +
     labs(
@@ -259,16 +464,33 @@ if (nrow(espn) > 0 && !all(is.na(espn$away_score))) {{
     )
   
   # Combine all 3 plots
-  combined <- p1 / p2 / p3 + plot_layout(heights = c(1.2, 1, 1), guides = "collect") &
-    theme(legend.position = "right")
+  combined <- p1 / p2 / p3 + plot_layout(heights = c(1.2, 1, 1))
 }} else {{
   # No ESPN data - just show odds
-  combined <- p1 / p2 + plot_layout(heights = c(1.2, 1), guides = "collect") &
-    theme(legend.position = "right")
+  combined <- p1 / p2 + plot_layout(heights = c(1.2, 1))
 }}
 
 # Save plot
-ggsave("{plot_file}", combined, width = 16, height = 12, dpi = 150, bg = "white")
+png("{plot_file}", width = 16, height = 12, units = "in", res = 150, bg = "white")
+
+# Create viewport for entire plot
+grid.newpage()
+pushViewport(viewport(width = 1, height = 1))
+
+# Draw the combined ggplot
+print(combined)
+
+# Add team logos at top (if available)'''
+        
+        # Add logo rendering code if logos exist
+        if away_logo_path and home_logo_path:
+            r_code += f'''
+grid.raster(readPNG("{away_logo_path}"), x = 0.12, y = 0.95, width = 0.06, height = 0.06, just = c("center", "top"))
+grid.raster(readPNG("{home_logo_path}"), x = 0.88, y = 0.95, width = 0.06, height = 0.06, just = c("center", "top"))'''
+        
+        r_code += '''
+
+dev.off()
 
 cat("✅ Plot saved\\n")
 '''
@@ -299,6 +521,7 @@ cat("✅ Plot saved\\n")
             
             # Clean up temp files
             os.unlink(temp_odds_csv.name)
+            os.unlink(temp_consensus_csv.name)
             os.unlink(temp_espn_csv.name)
             
         except Exception as e:
@@ -306,6 +529,8 @@ cat("✅ Plot saved\\n")
             # Clean up temp files
             if os.path.exists(temp_odds_csv.name):
                 os.unlink(temp_odds_csv.name)
+            if os.path.exists(temp_consensus_csv.name):
+                os.unlink(temp_consensus_csv.name)
             if os.path.exists(temp_espn_csv.name):
                 os.unlink(temp_espn_csv.name)
             continue
