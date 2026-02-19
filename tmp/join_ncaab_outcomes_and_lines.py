@@ -72,8 +72,12 @@ PROJECT_ROOT = find_project_root()
 sys.path.insert(0, str(PROJECT_ROOT / 'src'))
 
 from config_loader import get_config
+from ncaab_team_name_mapping import ODDS_API_TO_ESPN_NCAAB
 
 CONFIG = get_config()
+
+# Case-insensitive Odds API → ESPN lookup (lines data may have varying case)
+_ODDS_TO_ESPN_LOWER = {k.lower(): v for k, v in ODDS_API_TO_ESPN_NCAAB.items()}
 
 # =============================================================================
 # CONFIGURATION
@@ -500,6 +504,15 @@ def load_game_lines(start_date, end_date, use_cache=False):
 # HELPER FUNCTIONS - TEAM NAME NORMALIZATION
 # =============================================================================
 
+
+def odds_api_name_to_espn(odds_api_name: str) -> str:
+    """Convert Odds API team name to ESPN name using ODDS_API_TO_ESPN_NCAAB (case-insensitive)."""
+    if pd.isna(odds_api_name):
+        return ""
+    key = str(odds_api_name).lower().strip()
+    return _ODDS_TO_ESPN_LOWER.get(key, odds_api_name)
+
+
 def normalize_team_name(team_name, use_mapping=True):
     """
     Normalize team names for matching.
@@ -603,9 +616,12 @@ def find_team_name_mismatches(outcomes_df, lines_df):
         if col in lines_df.columns:
             lines_teams.update(lines_df[col].dropna().unique())
     
-    # Normalize for matching
+    # Normalize for matching (lines: Odds API → ESPN first, then same norm as join)
     outcomes_normalized = {normalize_team_name(t): t for t in outcomes_teams}
-    lines_normalized = {normalize_team_name(t): t for t in lines_teams}
+    lines_normalized = {
+        normalize_team_name(odds_api_name_to_espn(t), use_mapping=False): t
+        for t in lines_teams
+    }
     
     # Find mismatches
     outcomes_only_norm = set(outcomes_normalized.keys()) - set(lines_normalized.keys())
@@ -683,10 +699,33 @@ def join_outcomes_and_lines(outcomes_df, lines_df, min_games=5):
     outcomes_df['date_key'] = outcomes_df['GAME_DATE']
     
     lines_df = lines_df.copy()
-    lines_df['home_norm'] = lines_df['home_team'].apply(normalize_team_name)
-    lines_df['away_norm'] = lines_df['away_team'].apply(normalize_team_name)
+    # Odds API → ESPN mapping: track usage before we apply it
+    unique_lines_teams = set(lines_df['home_team'].dropna().unique()) | set(lines_df['away_team'].dropna().unique())
+    in_map = {t for t in unique_lines_teams if str(t).lower().strip() in _ODDS_TO_ESPN_LOWER}
+    not_in_map = unique_lines_teams - in_map
+    lines_df['_home_in_map'] = lines_df['home_team'].apply(lambda t: str(t).lower().strip() in _ODDS_TO_ESPN_LOWER if pd.notna(t) else False)
+    lines_df['_away_in_map'] = lines_df['away_team'].apply(lambda t: str(t).lower().strip() in _ODDS_TO_ESPN_LOWER if pd.notna(t) else False)
+    n_both_mapped = (lines_df['_home_in_map'] & lines_df['_away_in_map']).sum()
+    n_one_mapped = (lines_df['_home_in_map'] != lines_df['_away_in_map']).sum()
+    n_neither_mapped = (~lines_df['_home_in_map'] & ~lines_df['_away_in_map']).sum()
+    print(f"\n📋 Odds API → ESPN mapping (ncaab_team_name_mapping):")
+    print(f"   Unique team names in lines: {len(unique_lines_teams)}")
+    print(f"   In mapping (converted to ESPN): {len(in_map)}")
+    print(f"   Not in mapping (used as-is): {len(not_in_map)}")
+    if not_in_map:
+        print(f"   Unmapped names (first 15): {sorted(not_in_map)[:15]}")
+    print(f"   Line rows: both teams mapped={n_both_mapped:,}, one mapped={n_one_mapped:,}, neither={n_neither_mapped:,}")
+    lines_df.drop(columns=['_home_in_map', '_away_in_map'], inplace=True)
+
+    # Convert Odds API names → ESPN first (so join matches outcomes), then normalize for key
+    lines_df['home_norm'] = lines_df['home_team'].apply(
+        lambda t: normalize_team_name(odds_api_name_to_espn(t), use_mapping=False)
+    )
+    lines_df['away_norm'] = lines_df['away_team'].apply(
+        lambda t: normalize_team_name(odds_api_name_to_espn(t), use_mapping=False)
+    )
     lines_df['date_key'] = lines_df['date']
-    
+
     # LEFT JOIN on outcomes
     joined_df = outcomes_df.merge(
         lines_df,
