@@ -137,3 +137,10 @@ src/pbp_data/tmp/plots/*.png
 
 # Live game PBP test data (temporary JSON files)
 src/pbp_data/tmp/live_game_*.json
+
+# Decided to get rid of all outputs no in S3
+data/04_output/
+
+# NCAAB fade revenge Lambda deploy artifact (built by deploy script)
+lambda/ncaab_fade_revenge_daily/lambda_ncaab_fade_revenge.zip
+
