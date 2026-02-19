@@ -4,7 +4,7 @@ NCAAB Fade Revenge Spot – daily Lambda (9am ET).
 Run time: ~9am ET.
 1. Run fetch scripts for yesterday only (lines + game results to S3).
 2. Load outcomes + lines from S3 (season start through yesterday), join, normalize.
-3. Find rematch spots (team 0-N vs opponent); focal = team to fade.
+3. Find rematch spots (team 0-N vs opponent); focal = rematch team we bet on (when focal is away only).
 4. Get today's games from ESPN scoreboard; optionally enrich with Odds API spread; write plays to S3; send SNS.
 
 Plays CSV and email include conference for each team (home_conference, away_conference).
@@ -247,8 +247,8 @@ def _winner(row) -> str:
 def build_rematch_spots(joined: pd.DataFrame) -> dict:
     """
     For each pair (team_a, team_b) that has played, compute wins per team.
-    If one team has 0 wins, the next meeting is a rematch spot: focal = that team.
-    Return dict: tuple(sorted([h, a])) -> focal_team (to fade).
+    If one team has 0 wins, the next meeting is a rematch spot: focal = that team (we bet on focal when focal is away).
+    Return dict: tuple(sorted([h, a])) -> focal_team.
     """
     if joined.empty or 'HOME_TEAM' not in joined.columns:
         return {}
@@ -393,12 +393,51 @@ def fetch_today_events_espn(target_date_et: str) -> list[dict]:
     return out
 
 
+def load_today_lines_from_s3(s3, today_et: str) -> tuple[dict, pd.DataFrame]:
+    """
+    Load today's game lines from S3 (data/01_input/the-odds-api/ncaab/game_lines/{date}.csv).
+    Returns (lookup, df): lookup = (home_espn, away_espn) -> consensus_spread; df has per-book *_spread columns.
+    If file missing or empty, returns ({}, empty DataFrame).
+    """
+    key = f"{LINES_PREFIX}{today_et}.csv"
+    df = _read_s3_csv(s3, BUCKET, key)
+    if df is None or df.empty or "home_team" not in df.columns or "away_team" not in df.columns:
+        return {}, pd.DataFrame()
+    lookup = {}
+    for _, row in df.iterrows():
+        home_espn = _odds_to_espn(row.get("home_team") or "").strip()
+        away_espn = _odds_to_espn(row.get("away_team") or "").strip()
+        if not home_espn or not away_espn:
+            continue
+        val = row.get("consensus_spread")
+        lookup[(home_espn, away_espn)] = None if pd.isna(val) else float(val)
+    return lookup, df
+
+
+def _log_per_book_from_game_lines_row(row: pd.Series) -> None:
+    """Print one line per book spread for a game (from game_lines CSV row)."""
+    away = (row.get("away_team") or "").strip()
+    home = (row.get("home_team") or "").strip()
+    cons = row.get("consensus_spread")
+    cons_str = f"{float(cons):.2f}" if cons is not None and not pd.isna(cons) else "N/A"
+    print(f"  {away} @ {home} (consensus_spread_home {cons_str})")
+    spread_cols = [c for c in row.index if str(c).endswith("_spread") and c != "consensus_spread"]
+    for col in sorted(spread_cols):
+        v = row.get(col)
+        if pd.isna(v):
+            print(f"    {col}: NULL")
+        else:
+            print(f"    {col}: {float(v):.2f}")
+
+
 def fetch_odds_api_spreads(api_key: str) -> dict:
     """
     GET /v4/sports/basketball_ncaab/odds (US). Build lookup (home_espn, away_espn) -> spread_home.
-    Used only to enrich plays with line when available (low-major games may have no line at 9am).
+    spread_home = consensus (median) of all books' home spread; rounded to nearest 0.5.
+    Fallback when today's game_lines are not in S3.
     """
     import json
+    import statistics
     from urllib.parse import urlencode
     import urllib.request
     params = {"regions": "us", "markets": "spreads", "apiKey": api_key}
@@ -411,6 +450,7 @@ def fetch_odds_api_spreads(api_key: str) -> dict:
         LOG.warning("Odds API request failed: %s", e)
         return {}
     lookup = {}
+    print("Odds API per-book home spreads (away @ home; then each book):")
     for event in raw:
         home_odds = (event.get("home_team") or "").strip()
         away_odds = (event.get("away_team") or "").strip()
@@ -418,20 +458,40 @@ def fetch_odds_api_spreads(api_key: str) -> dict:
             continue
         home_espn = _odds_to_espn(home_odds).strip()
         away_espn = _odds_to_espn(away_odds).strip()
-        spread_home = None
+        book_spreads = []
         for book in event.get("bookmakers") or []:
+            book_key = book.get("key") or book.get("title") or "?"
             for m in book.get("markets") or []:
                 if m.get("key") != "spreads":
                     continue
-                for o in m.get("outcomes") or []:
-                    if o.get("name") == home_odds and "point" in o:
-                        spread_home = o["point"]
-                        break
-                if spread_home is not None:
-                    break
-            if spread_home is not None:
+                outcomes = m.get("outcomes") or []
+                home_pt = None
+                for o in outcomes:
+                    if (o.get("name") or "").strip() == home_odds and "point" in o:
+                        try:
+                            home_pt = float(o["point"])
+                            break
+                        except (TypeError, ValueError):
+                            pass
+                if home_pt is None and len(outcomes) == 2 and all("point" in o for o in outcomes):
+                    try:
+                        home_pt = float(outcomes[0]["point"])
+                    except (TypeError, ValueError, KeyError):
+                        pass
+                if home_pt is not None:
+                    book_spreads.append((book_key, home_pt))
                 break
+        if not book_spreads:
+            spread_home = None
+        else:
+            spreads_home = [pt for _, pt in book_spreads]
+            med = statistics.median(spreads_home)
+            spread_home = round(med * 2) / 2.0
         lookup[(home_espn, away_espn)] = spread_home
+        if book_spreads:
+            print(f"  {away_espn} @ {home_espn} (consensus home spread {spread_home})")
+            for book_key, pt in book_spreads:
+                print(f"    {book_key}: {pt:.1f}")
     return lookup
 
 
@@ -514,17 +574,22 @@ def build_today_plays(
             wh = wins.get(home_espn, 0)
             wa = wins.get(away_espn, 0)
             record = f"{home_espn} {wh}-{wa} {away_espn}"
-        spread_today = odds_lookup.get((home_espn, away_espn))
+        consensus_spread_home = odds_lookup.get((home_espn, away_espn))
         focal = rematch_spots.get(pair)
         if focal is None:
             bet_team = None
             side = None
             prior_meetings_str = None
         else:
-            bet_team = away_espn if focal == home_espn else home_espn
-            side = "fade revenge (bet " + bet_team + ")"
+            # Strategy filter: only include when focal is away (52.6% ATS segment)
+            if focal == away_espn:
+                bet_team = focal
+                side = "bet revenge (rematch – lost first meeting)"
+            else:
+                bet_team = None
+                side = None
             prior_games = pair_prior_games.get(pair, [])
-            prior_meetings_str = _format_prior_meetings(prior_games)
+            prior_meetings_str = _format_prior_meetings(prior_games) if focal is not None else None
         rows.append({
             "game_date": today_str,
             "home_team": home_espn,
@@ -533,7 +598,7 @@ def build_today_plays(
             "away_conference": _conference(away_espn) or "",
             "meetings_count": meetings_count,
             "record": record,
-            "spread_today": spread_today if spread_today is not None else None,
+            "consensus_spread_home": consensus_spread_home if consensus_spread_home is not None else None,
             "focal_team": focal,
             "bet_team": bet_team,
             "side": side,
@@ -599,7 +664,7 @@ def write_plays_s3(s3, today_et: str, plays_df: pd.DataFrame) -> str:
     buf = StringIO()
     columns = [
         "game_date", "home_team", "away_team", "home_conference", "away_conference",
-        "meetings_count", "record", "spread_today",
+        "meetings_count", "record", "consensus_spread_home",
         "focal_team", "bet_team", "side", "prior_meetings",
     ]
     if plays_df.empty:
@@ -669,13 +734,17 @@ def lambda_handler(event=None, context=None):
 
     rematch_spots = build_rematch_spots(joined)
     today_events = fetch_today_events_espn(today_et)
-    odds_lookup = fetch_odds_api_spreads(api_key) if api_key else {}
-    print(f"Rematch spots: {len(rematch_spots)} pairs with a winless team; Today's events (ESPN): {len(today_events)}; Odds API lines: {len(odds_lookup)}")
-    if odds_lookup:
-        sample = list(odds_lookup.items())[:100]
-        print("Odds API lookup sample (key=(home_espn, away_espn), spread_home):")
-        for (h, a), spread in sample:
-            print(f"  ({h!r}, {a!r}) -> {spread}")
+    odds_lookup, today_lines_df = load_today_lines_from_s3(s3, today_et)
+    if not odds_lookup or today_lines_df.empty:
+        key = f"{LINES_PREFIX}{today_et}.csv"
+        raise FileNotFoundError(
+            f"Today's game lines missing or empty: s3://{BUCKET}/{key} "
+            "Run fetch_historical_ncaab_season_lines.py --s3 --season <season> --start-date <today> --end-date <today> first."
+        )
+    print(f"Rematch spots: {len(rematch_spots)} pairs with a winless team; Today's events (ESPN): {len(today_events)}; Lines: {len(odds_lookup)}")
+    print("Game lines from S3 (consensus_spread_home; per-book):")
+    for _, row in today_lines_df.iterrows():
+        _log_per_book_from_game_lines_row(row)
     sys.stdout.flush()
 
     pair_stats = build_pair_stats(joined)
@@ -691,10 +760,10 @@ def lambda_handler(event=None, context=None):
     print(f"Wrote plays: {plays_path} ({len(plays_df)} games, {rematch_count} rematch plays; filter WHERE bet_team IS NOT NULL)")
     if not plays_df.empty and rematch_count > 0:
         rematch_rows = plays_df[plays_df["bet_team"].notna() & (plays_df["bet_team"].astype(str).str.strip() != "")]
-        with_spread = rematch_rows["spread_today"].notna().sum()
-        print(f"Rematch plays with spread_today: {with_spread}/{len(rematch_rows)}")
+        with_spread = rematch_rows["consensus_spread_home"].notna().sum()
+        print(f"Rematch plays with consensus_spread_home: {with_spread}/{len(rematch_rows)}")
         for _, row in rematch_rows.head(5).iterrows():
-            print(f"  {row['away_team']} @ {row['home_team']} -> spread_today={row.get('spread_today')}")
+            print(f"  {row['away_team']} @ {row['home_team']} -> consensus_spread_home={row.get('consensus_spread_home')}")
     sys.stdout.flush()
 
     yesterday_plays, yesterday_outcomes = load_yesterday_results(s3, yesterday_et)
@@ -704,6 +773,11 @@ def lambda_handler(event=None, context=None):
     lines_email = [f"NCAAB Fade Revenge Spot – {today_et}", ""]
     if yesterday_results:
         lines_email.append("Yesterday's results:")
+        resolved = [r for r in yesterday_results if r.get("result") != "no_result"]
+        if resolved:
+            wins = sum(1 for r in resolved if r.get("su_win"))
+            losses = len(resolved) - wins
+            lines_email.append(f"  {yesterday_et}: {wins}-{losses}")
         for r in yesterday_results:
             if r.get("result") == "no_result":
                 lines_email.append(f"  {r['game']}: no result")
@@ -721,7 +795,14 @@ def lambda_handler(event=None, context=None):
     )
     if not plays_only.empty:
         plays_only = plays_only.sort_values("bet_team").reset_index(drop=True)
-    lines_email.append("Today's plays (fade revenge):")
+
+    # Add divide
+    lines_email.append("")
+    lines_email.append("--------------")
+    lines_email.append("")
+
+    # Continue with today
+    lines_email.append("Today's plays (bet revenge – focal away only):")
     if plays_only.empty:
         lines_email.append("  None.")
     else:
@@ -730,13 +811,13 @@ def lambda_handler(event=None, context=None):
             ac = row.get("away_conference", "") or ""
             conf = f" ({ac} @ {hc})" if (hc or ac) else ""
             prior = row.get("prior_meetings", "") or ""
-            spread = row.get("spread_today", None)
+            spread = row.get("consensus_spread_home", None)
             if spread is None or pd.isna(spread):
                 line_str = "line NA"
             else:
                 bet_line = spread if row["bet_team"] == row["home_team"] else -spread
                 line_str = f"{bet_line:+.1f}" if isinstance(bet_line, (int, float)) else str(bet_line)
-            lines_email.append(f"  Bet {row['bet_team']} {line_str} (fade {row['focal_team']}) – {row['away_team']} @ {row['home_team']}{conf}")
+            lines_email.append(f"  Bet {row['bet_team']} {line_str} (rematch – lost first meeting) – {row['away_team']} @ {row['home_team']}{conf}")
             if prior:
                 lines_email.append(f"    Prior: {prior}")
     lines_email.append("")
@@ -744,7 +825,7 @@ def lambda_handler(event=None, context=None):
 
     body = "\n".join(lines_email)
     if sns_client and sns_topic:
-        send_sns(sns_client, sns_topic, f"NCAAB Fade Revenge – {today_et}", body)
+        send_sns(sns_client, sns_topic, f"NCAAB Bet Revenge (focal away) – {today_et}", body)
 
     return {
         "status": "ok",
