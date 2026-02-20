@@ -22,6 +22,7 @@ Located in `design-docs/`:
 Located in `domain/`:
 
 - **[betting-fundamentals.md](domain/betting-fundamentals.md)** - Props, moneyline, spreads, over/under
+- **[spread-cover-rule.md](domain/spread-cover-rule.md)** - ATS cover logic: single source of truth in `src/odds_utils.did_cover_spread` (do not reimplement)
 - **[market-mechanics.md](domain/market-mechanics.md)** - Vig, line movement, steam, arbitrage
 - **[data-quality-standards.md](domain/data-quality-standards.md)** - What makes data "good"
 - **[edge-cases.md](domain/edge-cases.md)** - Postponed games, injuries, line freezes
@@ -39,6 +40,7 @@ Located in `exec-plans/`:
 
 Located in `references/`:
 
+- **[duckdb-s3-queries.md](references/duckdb-s3-queries.md)** - How to run DuckDB queries against S3 (httpfs setup, region, credentials for `-c` calls). Use when inspecting schemas or data in S3.
 - API documentation (DraftKings, The Odds API, NBA API)
 - AWS Lambda patterns and best practices
 - Third-party library references (uv, pandas, etc.)

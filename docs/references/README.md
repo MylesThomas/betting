@@ -2,6 +2,10 @@
 
 This directory contains references for external APIs and tools used in the codebase.
 
+## Current reference files
+
+- **[duckdb-s3-queries.md](duckdb-s3-queries.md)** - How to run DuckDB against S3: `INSTALL httpfs`, `LOAD httpfs`, `SET s3_region='us-east-2'`, and credentials for one-off `duckdb -c "..."` calls. Agents should use this when they need to query or inspect S3 data (e.g. schemas, sample rows).
+
 ## Structure
 
 Each reference file should be:

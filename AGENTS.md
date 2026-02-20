@@ -141,6 +141,9 @@ prob = american_to_probability(-110)  # → 0.5238
 **API usage questions?**
 → `docs/references/` (DraftKings, The Odds API, NBA API)
 
+**Querying or inspecting S3 data (e.g. schema, sample rows)?**
+→ `docs/references/duckdb-s3-queries.md` — how to run DuckDB with httpfs and credentials for `duckdb -c "..."` calls.
+
 **Architecture questions?**
 → `docs/design-docs/` or `docs/ARCHITECTURE.md`
 
@@ -165,6 +168,7 @@ prob = american_to_probability(-110)  # → 0.5238
 | File | Purpose |
 |------|---------|
 | `docs/ARCHITECTURE.md` | System map |
+| `docs/references/duckdb-s3-queries.md` | How to run DuckDB queries against S3 (httpfs, region, credentials) |
 | `docs/QUALITY_SCORE.md` | Current health metrics |
 | `docs/design-docs/golden-principles.md` | Coding standards (enforced) |
 | `docs/design-docs/dependency-boundaries.md` | Layer rules |
