@@ -911,6 +911,8 @@ def main():
                        help='Season (e.g., 2024-25 or 2025-26)')
     parser.add_argument('--prod-run', action='store_true',
                        help='Actually fetch data (otherwise just shows cost estimate)')
+    parser.add_argument('--date', type=str,
+                       help='Single date (YYYY-MM-DD) for daily/Lambda fetch')
     parser.add_argument('--test-date', type=str,
                        help='Test single date (YYYY-MM-DD format)')
     parser.add_argument('--no-local-backup', action='store_true',
@@ -922,19 +924,23 @@ def main():
     
     if not check_api_key():
         return
-    
-    # Test single date
-    if args.test_date:
-        logging.info(f"\n🧪 TEST MODE - Single date: {args.test_date}")
+
+    # Single date (--date for Lambda/daily, --test-date for ad-hoc test)
+    single_date = args.date or args.test_date
+    if single_date:
+        if args.date:
+            logging.info(f"\n📅 Single date fetch: {single_date}")
+        else:
+            logging.info(f"\n🧪 TEST MODE - Single date: {single_date}")
         logging.info(f"S3 Bucket: s3://{S3_BUCKET}/{S3_PREFIX}/")
         local_backup = not args.no_local_backup
-        df = fetch_date_lines(args.test_date, save=True, local_backup=local_backup)
+        df = fetch_date_lines(single_date, save=True, local_backup=local_backup)
         if not df.empty:
             logging.info(f"\n✅ Successfully fetched {len(df)} lines for {df['game_id'].nunique()} games")
-            s3_key = get_s3_key_from_date(args.test_date)
+            s3_key = get_s3_key_from_date(single_date)
             logging.info(f"   S3: s3://{S3_BUCKET}/{s3_key}")
         return
-    
+
     # Season fetch
     if not args.season:
         logging.error("Please specify --season (e.g., --season 2024-25)")

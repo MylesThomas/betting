@@ -6,8 +6,9 @@ Lambda function name: multi-sport-game-results-fetcher
 What it does:
 1. Git clone repo
 2. Fetch yesterday's game results for active sports:
-   - NBA: Player props (Odds API) + game results (NBA API)
-   - NCAAB/NFL/NCAAF: Game results (ESPN API)
+   - NBA: Player props (Odds API) + game results (NBA API) + game lines (Odds API historical)
+   - NCAAB: Game results (ESPN API) + game lines (Odds API historical)
+   - NFL/NCAAF: Game results (ESPN API)
 3. Upload to S3 (sport-specific buckets)
 4. Send SNS notification per sport (success or failure)
 
@@ -17,13 +18,16 @@ Runs at 9am ET daily to fetch yesterday's game results.
 Isolates data fetching into its own retriable function.
 
 SPORTS SUPPORT:
-- NBA: Uses fetch_nba_player_props.py (props + game results)
+- NBA: Uses fetch_nba_player_props.py (props + game results) + fetch_historical_nba_season_lines.py (game lines)
   - Props: s3://the-odds-api-mt/nba/historical_player_props/{season}/{date}.csv
   - Games: s3://nba-api-mt/player_game_logs/{season}/{date}.csv
+  - Game lines: s3://the-odds-api-mt/nba/historical_game_lines/{season}/nba_game_lines_{date}.csv
   - Note: NBA API player game logs take 12+ hours to become available
 
-- NCAAB/NFL/NCAAF: Uses fetch_historical_game_results_espn_api.py
-  - NCAAB: s3://ncaab-betting-mt/data/01_input/historical_game_results/{timestamp}.csv
+- NCAAB: Uses fetch_historical_game_results_espn_api.py (results) + fetch_historical_ncaab_season_lines.py (game lines)
+  - Results: s3://ncaab-betting-mt/data/01_input/historical_game_results/{timestamp}.csv
+  - Game lines: s3://ncaab-betting-mt/data/01_input/the-odds-api/ncaab/game_lines/{date}.csv
+- NFL/NCAAF: Uses fetch_historical_game_results_espn_api.py
   - NFL: s3://nfl-betting-mt/data/01_input/historical_game_results/{timestamp}.csv
   - NCAAF: s3://ncaaf-betting-mt/data/01_input/historical_game_results/{timestamp}.csv
   - Note: ESPN API data available within 1-2 hours after games finish
@@ -550,12 +554,35 @@ def lambda_handler(event, context):
                         continue
                     
                     print(f"✅ {sport_upper} - Props + games fetched successfully")
-                    all_results.append({
+                    nba_result = {
                         'sport': sport,
                         'status': 'success',
                         's3_props': f"s3://the-odds-api-mt/nba/historical_player_props/{season}/{yesterday}.csv",
                         's3_games': f"s3://nba-api-mt/player_game_logs/{season}/{yesterday}.csv"
-                    })
+                    }
+                    # NBA game lines (spread + moneyline) for same date
+                    print(f"📥 Fetching NBA game lines for {yesterday}...")
+                    lines_start = time.time()
+                    _, lines_stderr, lines_code = run_cmd(
+                        [
+                            'python3', 'scripts/fetch_historical_nba_season_lines.py',
+                            '--date', yesterday,
+                            '--no-local-backup'
+                        ],
+                        cwd=repo_dir,
+                        extra_env={'ODDS_API_KEY': odds_api_key},
+                        stream_output=True
+                    )
+                    TIMING_DATA['fetch_nba_game_lines'] = time.time() - lines_start
+                    if lines_code == 0:
+                        nba_result['s3_game_lines'] = (
+                            f"s3://the-odds-api-mt/nba/historical_game_lines/{season}/nba_game_lines_{yesterday}.csv"
+                        )
+                        print(f"✅ NBA game lines completed\n")
+                    else:
+                        nba_result['game_lines_error'] = (lines_stderr or '')[:150]
+                        print(f"⚠️ NBA game lines failed (results still saved)\n")
+                    all_results.append(nba_result)
                 
                 # =============================================================================
                 # NCAAB - Uses fetch_historical_game_results_espn_api.py
@@ -593,11 +620,35 @@ def lambda_handler(event, context):
                             break
                     
                     print(f"✅ {sport_upper} - Game results fetched successfully")
-                    all_results.append({
+                    ncaab_result = {
                         'sport': sport,
                         'status': 'success',
                         's3_games': s3_path or f"s3://ncaab-betting-mt/data/01_input/historical_game_results/"
-                    })
+                    }
+                    # NCAAB game lines (spread + totals) for same date
+                    print(f"📥 Fetching NCAAB game lines for {yesterday}...")
+                    lines_start = time.time()
+                    _, lines_stderr, lines_code = run_cmd(
+                        [
+                            'python3', 'scripts/fetch_historical_ncaab_season_lines.py',
+                            '--date', yesterday,
+                            '--s3',
+                            '--skip-existing'
+                        ],
+                        cwd=repo_dir,
+                        extra_env={'ODDS_API_KEY': odds_api_key},
+                        stream_output=True
+                    )
+                    TIMING_DATA['fetch_ncaab_game_lines'] = time.time() - lines_start
+                    if lines_code == 0:
+                        ncaab_result['s3_game_lines'] = (
+                            f"s3://ncaab-betting-mt/data/01_input/the-odds-api/ncaab/game_lines/{yesterday}.csv"
+                        )
+                        print(f"✅ NCAAB game lines completed\n")
+                    else:
+                        ncaab_result['game_lines_error'] = (lines_stderr or '')[:150]
+                        print(f"⚠️ NCAAB game lines failed (results still saved)\n")
+                    all_results.append(ncaab_result)
                 
                 # =============================================================================
                 # NFL / NCAAF - Not Implemented Yet
@@ -668,6 +719,10 @@ def lambda_handler(event, context):
                     msg.append(f"  Props: ✅ Uploaded to {result['s3_props']}")
                 if 's3_games' in result:
                     msg.append(f"  Games: ✅ Uploaded to {result['s3_games']}")
+                if 's3_game_lines' in result:
+                    msg.append(f"  Game lines: ✅ Uploaded to {result['s3_game_lines']}")
+                if 'game_lines_error' in result:
+                    msg.append(f"  Game lines: ⚠️ Failed ({result['game_lines_error']})")
             elif result['status'] == 'error':
                 if 'error' in result:
                     # Truncate long errors for email readability
