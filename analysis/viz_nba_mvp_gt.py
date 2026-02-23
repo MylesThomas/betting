@@ -138,9 +138,9 @@ COL_WIDTH_LAST_WEEK_IMPLIED = 115
 COL_WIDTH_CURRENT = 85
 COL_WIDTH_CURRENT_IMPLIED = 105
 COL_WIDTH_FAIR_ODDS = 90
-COL_WIDTH_DIFF_PRESEASON = 135 # Needed wider for 'Pre-Season -> Current'
-COL_WIDTH_DIFF_LAST_WEEK = 135 # Needed wider for 'Last Week -> Current'
-COL_WIDTH_VIG_PCT = 75
+COL_WIDTH_DIFF_PRESEASON = 100  # Same as Vig so Difference/Vig columns balanced
+COL_WIDTH_DIFF_LAST_WEEK = 100
+COL_WIDTH_VIG_PCT = 100
 
 HEADSHOT_HEIGHT = 25  # Height of player headshots in pixels (smaller = sharper with tight padding)
 
@@ -597,11 +597,11 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       # Add player headshots using gtExtras
       gt_img_rows(columns = headshot_url, height = {HEADSHOT_HEIGHT}) %>%
       
-      # Format Difference columns as percentage points with + sign
+      # Format Difference columns as percentage change with + sign
       fmt_number(
         columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
         decimals = 1,
-        pattern = "{{x}}pp",
+        pattern = "{{x}}%",
         force_sign = TRUE
       ) %>%
       

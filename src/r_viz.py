@@ -308,11 +308,11 @@ def create_futures_table(
     if has_historical:
         # Historical odds table: Format difference columns + vig column
         format_code = f"""
-      # Format Difference columns as percentage points with + sign
+      # Format Difference columns as percentage change with + sign
       fmt_number(
         columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
         decimals = 1,
-        pattern = "{{{{x}}}}pp",
+        pattern = "{{{{x}}}}%",
         force_sign = TRUE
       ) %>%
       
@@ -366,11 +366,18 @@ def create_futures_table(
       ) %>%"""
         
         label_code = """
-      # Rename column headers with HTML line breaks
+      # Sub-labels under spanners: "Odds" and "Implied Odds" (no repeat of spanner name)
       cols_label(
         logo_url = "",
-        `Difference<br>(Pre → Current)` = html("Difference<br>(Pre → Current)"),
-        `Difference<br>(LW → Current)` = html("Difference<br>(LW → Current)")
+        Preseason = "Odds",
+        `Preseason Implied` = "Implied Odds",
+        `Last Week` = "Odds",
+        `Last Week Implied` = "Implied Odds",
+        Current = "Odds",
+        `Current Implied` = "Implied Odds",
+        `Fair Odds` = "Fair Odds",
+        `Difference<br>(Pre → Current)` = html("Pre → Current"),
+        `Difference<br>(LW → Current)` = html("LW → Current")
       ) %>%"""
         
     else:
@@ -424,7 +431,44 @@ def create_futures_table(
         label_code = """
       # Hide logo column header
       cols_label(logo_url = "") %>%"""
-    
+
+    # Column spanners (only when historical odds: Preseason / Last Week / Current)
+    if has_historical:
+        spanner_code = """
+      # Column spanners: Team | Preseason | Last Week | Current | Difference | Vig
+      tab_spanner(
+        label = "Team",
+        columns = c(Rank, Team, logo_url, Record),
+        id = "spanner_team"
+      ) %>%
+      tab_spanner(
+        label = "Preseason",
+        columns = c(Preseason, `Preseason Implied`),
+        id = "spanner_preseason"
+      ) %>%
+      tab_spanner(
+        label = "Last Week",
+        columns = c(`Last Week`, `Last Week Implied`),
+        id = "spanner_last_week"
+      ) %>%
+      tab_spanner(
+        label = "Current",
+        columns = c(Current, `Current Implied`, `Fair Odds`),
+        id = "spanner_current"
+      ) %>%
+      tab_spanner(
+        label = "Difference",
+        columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
+        id = "spanner_difference"
+      ) %>%
+      tab_spanner(
+        label = "Vig",
+        columns = c(`Vig %`),
+        id = "spanner_vig"
+      ) %>%"""
+    else:
+        spanner_code = ""
+
     # Generate R code for gt table
     r_code = f"""
     # Set library path
@@ -446,6 +490,7 @@ def create_futures_table(
         title = md("**{title}**"),
         subtitle = md("{subtitle}")
       ) %>%
+      {spanner_code}
       
       # Column alignment
       cols_align(align = "center", columns = everything()) %>%

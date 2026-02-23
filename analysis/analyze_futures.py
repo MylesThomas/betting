@@ -88,8 +88,7 @@ def build_analysis_dataframe(preseason_df, last_week_df, current_df):
     current_median = get_median_odds_per_team(current_df)
     
     # Get current records per team (take first record for each team since it's the same across bookmakers)
-    # Fill NaN with "NA" for teams not in ESPN API data
-    current_records = current_df.groupby('team')['record'].first().fillna("NA").to_dict()
+    current_records = current_df.groupby('team')['record'].first().to_dict()
     
     # Get all unique teams
     all_teams = set()
@@ -139,13 +138,8 @@ def build_analysis_dataframe(preseason_df, last_week_df, current_df):
     df['vig_pct'] = (df['current_implied_prob'] - df['fair_prob']) * 100
     
     # Calculate differences (in percentage points)
-    # Treat missing historical data as 0% implied probability (not on the board = 0%)
-    df['diff_preseason'] = (
-        df['current_implied_prob'] - df['preseason_implied_prob'].fillna(0)
-    ) * 100
-    df['diff_last_week'] = (
-        df['current_implied_prob'] - df['last_week_implied_prob'].fillna(0)
-    ) * 100
+    df['diff_preseason'] = (df['current_implied_prob'] - df['preseason_implied_prob']) * 100
+    df['diff_last_week'] = (df['current_implied_prob'] - df['last_week_implied_prob']) * 100
     
     # Sort by fair probability (best teams first)
     df = df.sort_values('fair_prob', ascending=False, na_position='last').reset_index(drop=True)

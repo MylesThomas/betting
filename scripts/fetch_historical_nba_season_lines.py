@@ -78,6 +78,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Load environment variables
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+
 API_KEY = os.getenv('ODDS_API_KEY')
 BASE_URL = 'https://api.the-odds-api.com/v4'
 SPORT = 'basketball_nba'

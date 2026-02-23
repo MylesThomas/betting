@@ -185,11 +185,11 @@ visualization:
   col_width_current_implied: 105
   col_width_fair_odds: 90
   col_width_fair_pct: 70
-  col_width_diff_preseason: 135
-  col_width_diff_last_week: 135
+  col_width_diff_preseason: 100
+  col_width_diff_last_week: 100
   col_width_avg_odds: 90
   col_width_implied_pct: 90
-  col_width_vig_pct: 75
+  col_width_vig_pct: 100
   col_width_best_book: 110
   col_width_best_odds: 90
   col_width_best_vig_pct: 100

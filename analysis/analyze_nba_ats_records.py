@@ -960,18 +960,60 @@ def create_ats_visualization(summary_df, season):
         force_sign = TRUE
       ) %>%
       
-      # Title
+      # Title (no subtitle; definitions moved to footer)
       tab_header(
         title = md("**NBA {season} Against The Spread (ATS) Rankings**"),
-        subtitle = md("**Game Margin** = avg margin of victory/defeat | **Spread Margin** = avg pts beat/miss spread by")
+        subtitle = ""
       ) %>%
       
+      # Column spanners: Team (all identity columns), Overall, As Favorite, As Underdog
+      tab_spanner(
+        label = "Team",
+        columns = c(Rank, Team, logo_url, `W-L`, `Win%`),
+        id = "spanner_team"
+      ) %>%
+      tab_spanner(
+        label = "Overall",
+        columns = c(ATS, `ATS%`, `Avg Spread`, `Avg Game Margin`, `Avg Spread Margin`),
+        id = "spanner_overall"
+      ) %>%
+      tab_spanner(
+        label = "As Favorite",
+        columns = c(`Fav ATS`, `Fav ATS%`, `Avg Fav Spread`, `Avg Fav Game Margin`, `Avg Fav Spread Margin`),
+        id = "spanner_fav"
+      ) %>%
+      tab_spanner(
+        label = "As Underdog",
+        columns = c(`Dog ATS`, `Dog ATS%`, `Avg Dog Spread`, `Avg Dog Game Margin`, `Avg Dog Spread Margin`),
+        id = "spanner_dog"
+      ) %>%
+      # To hide Team spanner: uncomment next line (R comments in Python strings use #)
+      # rm_spanners(spanners = "spanner_team") %>%
       # Column alignment
       cols_align(align = "center", columns = everything()) %>%
       cols_align(align = "left", columns = c(Team)) %>%
       
-      # Hide logo column header
-      cols_label(logo_url = "") %>%
+      # Sub-labels: no labels under Team spanner; under Overall/Fav/Dog use short names (spanner gives context)
+      cols_label(
+        Rank = "",
+        Team = "",
+        logo_url = "",
+        `W-L` = "",
+        `Win%` = "",
+        `Avg Spread` = "Spread",
+        `Avg Game Margin` = "Game Margin",
+        `Avg Spread Margin` = "Spread Margin",
+        `Fav ATS` = "ATS",
+        `Fav ATS%` = "ATS%",
+        `Avg Fav Spread` = "Spread",
+        `Avg Fav Game Margin` = "Game Margin",
+        `Avg Fav Spread Margin` = "Spread Margin",
+        `Dog ATS` = "ATS",
+        `Dog ATS%` = "ATS%",
+        `Avg Dog Spread` = "Spread",
+        `Avg Dog Game Margin` = "Game Margin",
+        `Avg Dog Spread Margin` = "Spread Margin"
+      ) %>%
       
       # Color gradients for percentage columns (0% red -> 100% green)
       data_color(
@@ -1059,28 +1101,28 @@ def create_ats_visualization(summary_df, season):
       # NO gradient for line columns - they're descriptive, not evaluative
       # (Being a -12 favorite doesn't mean "bad", it just means strong team)
       
-      # Column widths (make narrower to fit all columns)
+      # Column widths (Game/Spread Margin narrower now that labels are short)
       cols_width(
         Rank ~ px(50),
-        Team ~ px(140),
+        Team ~ px(125),
         logo_url ~ px(45),
-        `W-L` ~ px(65),
+        `W-L` ~ px(55),
         `Win%` ~ px(55),
-        ATS ~ px(75),
+        ATS ~ px(55),
         `ATS%` ~ px(55),
-        `Avg Spread` ~ px(70),
-        `Avg Game Margin` ~ px(85),
-        `Avg Spread Margin` ~ px(90),
-        `Fav ATS` ~ px(65),
+        `Avg Spread` ~ px(55),
+        `Avg Game Margin` ~ px(55),
+        `Avg Spread Margin` ~ px(55),
+        `Fav ATS` ~ px(55),
         `Fav ATS%` ~ px(55),
-        `Avg Fav Spread` ~ px(75),
-        `Avg Fav Game Margin` ~ px(90),
-        `Avg Fav Spread Margin` ~ px(95),
-        `Dog ATS` ~ px(65),
+        `Avg Fav Spread` ~ px(55),
+        `Avg Fav Game Margin` ~ px(55),
+        `Avg Fav Spread Margin` ~ px(55),
+        `Dog ATS` ~ px(55),
         `Dog ATS%` ~ px(55),
-        `Avg Dog Spread` ~ px(75),
-        `Avg Dog Game Margin` ~ px(90),
-        `Avg Dog Spread Margin` ~ px(95)
+        `Avg Dog Spread` ~ px(55),
+        `Avg Dog Game Margin` ~ px(55),
+        `Avg Dog Spread Margin` ~ px(55)
       ) %>%
       
       # Add vertical dividers between sections
@@ -1164,7 +1206,10 @@ def create_ats_visualization(summary_df, season):
         row.striping.background_color = "#f0f0f0"
       ) %>%
       
-      # Footer
+      # Footer (bottom left: definitions first, then data source)
+      tab_source_note(
+        source_note = md("**Game Margin** = avg margin of victory/defeat | **Spread Margin** = avg pts beat/miss spread by")
+      ) %>%
       tab_source_note(
         source_note = md("**Data:** DraftKings (The Odds API) & nba_api | {datetime.now().strftime('%B %d, %Y')}")
       )
