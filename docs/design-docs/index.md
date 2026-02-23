@@ -20,6 +20,7 @@ This directory contains architectural decisions, design rationale, and technical
 
 ## Domain-Specific Designs
 
+- **[live-mc-ec2-s3.md](live-mc-ec2-s3.md)** - Live Monte Carlo on EC2 (loop every 5 min); minute_by_minute from S3; email off for now
 - **Monte Carlo simulation approach** - How we model game outcomes (TBD)
 - **Line steam detection** - Threshold-based significance testing (TBD)
 - **Player name matching** - Fuzzy matching across data sources (TBD)
@@ -34,6 +35,7 @@ This directory contains architectural decisions, design rationale, and technical
 | dependency-boundaries.md | ✅ Active | 2026-02-13 | ✅ |
 | golden-principles.md | 🚧 Draft | - | - |
 | data-pipeline-architecture.md | 📝 Planned | - | - |
+| live-mc-ec2-s3.md | 🚧 Draft | 2026-02-20 | - |
 
 **Legend:**
 - ✅ Active: Current and verified
