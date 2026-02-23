@@ -755,7 +755,7 @@ def main():
     if args.date:
         df = fetch_date(args.date, upload_s3=args.s3, test_mode=args.test, skip_existing=args.skip_existing)
         
-        if not df.empty:
+        if df is not None and not df.empty:
             print(f"\n📋 Results ({len(df)} games):")
             print(df[['home_team', 'away_team', 'consensus_spread', 'consensus_total']].to_string(index=False))
     
