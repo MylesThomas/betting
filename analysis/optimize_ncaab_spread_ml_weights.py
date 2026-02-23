@@ -36,10 +36,17 @@ Usage:
 
   # Empirical + fractional bankroll (bet 1%% of bankroll per game); real risk of ruin
   python analysis/optimize_ncaab_spread_ml_weights.py --seasons 2025-26 --mode all --underdog-only --unit-fraction 0.01 --bankroll-mode both
+
+  # Generate plots (saved to content/viz/ncaab/ or --plot-dir)
+  python analysis/optimize_ncaab_spread_ml_weights.py --seasons 2025-26 --mode all --underdog-only --plot
 """
 
 import argparse
+import shutil
+import ssl
+import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -89,6 +96,16 @@ IMPLIED_PROB_BUCKETS = [
 ODDS_TO_ESPN = {k.lower(): v for k, v in ODDS_API_TO_ESPN_NCAAB.items()}
 
 CACHE_DIR = Path.home() / "Downloads" / "tmp"
+
+# Plot defaults (16:9 aspect)
+PLOT_WIDTH_IN = 16
+PLOT_HEIGHT_IN = 9
+NCAA_LOGO_URL = "https://raw.githubusercontent.com/MylesThomas/shot-quality/main/Logos/NCAA_logo.png"
+# Caption on plot (bottom left) and suggested tweet copy when --plot is used
+PLOT_CAPTION = "6 seasons NCAAB underdogs, spread vs ML weight | @TQSLabs"
+SUGGESTED_TWEET = """NCAAB underdogs: how much to weight spread vs ML? Grid search over 6 seasons.
+Big underdogs (0-10% implied) get crushed on ML; mixing in spread helps. Charts: ROI by bucket + optimal weight by bucket.
+@TQSLabs"""
 
 
 def _cache_path_for_season(season: str) -> Path:
@@ -528,6 +545,21 @@ def _log_implied_above_50(underdogs: pd.DataFrame) -> None:
         m = ((above["implied_win_prob"] >= lo) & (above["implied_win_prob"] < hi)).sum()
         if m > 0:
             print(f"    {int(lo*100)}-{int(hi*100)}%: {m}")
+    _debug_high_implied(underdogs)
+
+
+def _debug_high_implied(underdogs: pd.DataFrame) -> None:
+    """Print rows in 80-90% and 90-100% implied buckets (underdog by spread but ML says heavy favorite — likely data bug)."""
+    if underdogs.empty or "implied_win_prob" not in underdogs.columns:
+        return
+    high = underdogs[underdogs["implied_win_prob"] >= 0.80].copy()
+    if high.empty:
+        return
+    high = high.sort_values(["implied_win_prob", "game_date"])
+    cols = ["game_date", "home_team", "away_team", "bet_team_name", "bet_team_spread", "ml_odds", "implied_win_prob", "implied_prob_bucket"]
+    cols = [c for c in cols if c in high.columns]
+    print("\n  [DEBUG] Underdog rows with implied_win_prob >= 80% (spread says dog, ML says big favorite — check spread/ML alignment):")
+    print(high[cols].to_string(index=False))
 
 
 def run_by_bucket(
@@ -584,6 +616,190 @@ def run_weight_combos_by_bucket(underdogs: pd.DataFrame) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
+def _download_ncaa_logo(plot_dir: Path) -> Path:
+    """Download NCAA logo to plot_dir/NCAA_logo.png, or use repo-bundled copy. Returns path."""
+    plot_dir = Path(plot_dir)
+    logo_path = plot_dir / "NCAA_logo.png"
+    if logo_path.exists():
+        return logo_path
+
+    # Prefer repo-bundled logo so SSL issues (e.g. macOS Python 3.13) don't block plots.
+    bundled = ROOT / "content" / "viz" / "ncaab" / "NCAA_logo.png"
+    if bundled.exists():
+        shutil.copy2(bundled, logo_path)
+        return logo_path
+
+    # Try download: default SSL, then certifi bundle (often fixes macOS "Basic Constraints" / issuer errors).
+    last_error = None
+    try:
+        urllib.request.urlretrieve(NCAA_LOGO_URL, logo_path)
+        return logo_path
+    except OSError as e:
+        last_error = e
+    if logo_path.exists():
+        logo_path.unlink()  # remove partial file from failed urlretrieve
+
+    try:
+        import certifi
+        ctx = ssl.create_default_context(cafile=certifi.where())
+        with urllib.request.urlopen(NCAA_LOGO_URL, timeout=15, context=ctx) as resp:
+            logo_path.write_bytes(resp.read())
+        return logo_path
+    except Exception as e:
+        last_error = e
+    if logo_path.exists():
+        logo_path.unlink()
+
+    print(f"  Warning: could not download NCAA logo: {last_error}")
+    print(f"  To show the logo: place NCAA_logo.png at {bundled.resolve()}")
+    return logo_path
+
+
+def generate_plots(
+    by_bucket: pd.DataFrame,
+    combos: pd.DataFrame,
+    plot_dir: Path,
+) -> None:
+    """Generate plots when --plot is set. Uses R/ggplot2; saves PNGs at 16:9, with NCAA logo."""
+    plot_dir = Path(plot_dir)
+    plot_dir.mkdir(parents=True, exist_ok=True)
+
+    # Export data for R
+    bucket_cols = ["implied_prob_bucket", "spread_cover_rate", "ml_win_rate", "flat_return_pct"]
+    bucket_csv = plot_dir / "by_bucket.csv"
+    by_bucket[[c for c in bucket_cols if c in by_bucket.columns]].to_csv(bucket_csv, index=False)
+
+    if not combos.empty:
+        combo_cols = ["implied_prob_bucket", "w_ml", "w_spread", "flat_return_pct"]
+        combos[[c for c in combo_cols if c in combos.columns]].to_csv(plot_dir / "combos.csv", index=False)
+
+    logo_path = _download_ncaa_logo(plot_dir)
+    logo_path_str = str(logo_path.resolve()).replace("\\", "/")
+    plot_dir_str = str(plot_dir.resolve()).replace("\\", "/")
+    plot_caption_str = PLOT_CAPTION.replace('"', '\\"')  # safe for R string
+
+    r_script = f'''
+.libPaths(c("~/R/library", .libPaths()))
+if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2", repos = "https://cran.rstudio.com/")
+if (!requireNamespace("png", quietly = TRUE)) install.packages("png", repos = "https://cran.rstudio.com/")
+if (!requireNamespace("ggthemes", quietly = TRUE)) install.packages("ggthemes", repos = "https://cran.rstudio.com/")
+library(ggplot2)
+library(png)
+library(grid)
+library(ggthemes)
+
+plot_dir <- "{plot_dir_str}"
+logo_path <- "{logo_path_str}"
+plot_caption <- "{plot_caption_str}"
+by_bucket <- read.csv(file.path(plot_dir, "by_bucket.csv"))
+bucket_order <- c("0-10%", "10-20%", "20-30%", "30-40%", "40-50%", "50-60%", "60-70%", "70-80%", "80-90%", "90-100%")
+by_bucket$bucket <- factor(by_bucket$implied_prob_bucket, levels = intersect(bucket_order, by_bucket$implied_prob_bucket))
+
+# Logo grob: flush top-right corner (right-aligned with last bucket, top of y-range)
+add_logo_bar <- function(dat) {{
+  if (!file.exists(logo_path)) return(list())
+  img <- readPNG(logo_path)
+  g <- rasterGrob(img, width = unit(1, "inch"), height = unit(1, "inch"))
+  n <- nrow(dat)
+  annotation_custom(g, xmin = n - 0.3, xmax = n + 0.7, ymin = 3.2, ymax = 5)
+}}
+add_logo_line <- function(dat) {{
+  if (!file.exists(logo_path)) return(list())
+  img <- readPNG(logo_path)
+  g <- rasterGrob(img, width = unit(1, "inch"), height = unit(1, "inch"))
+  xmax <- max(dat$w_ml, 1)
+  ymax <- max(dat$flat_return_pct, 0) + 2
+  annotation_custom(g, xmin = xmax - 0.25, xmax = xmax + 0.35, ymin = ymax - 3, ymax = ymax)
+}}
+
+# Plot 1: ROI by bucket (bar); y-axis fixed -5 to 5
+p1 <- ggplot(by_bucket, aes(x = bucket, y = flat_return_pct, fill = flat_return_pct >= 0)) +
+  geom_col() +
+  geom_hline(yintercept = 0, linewidth = 0.5) +
+  scale_fill_manual(values = c("TRUE" = "#2ecc71", "FALSE" = "#e74c3c"), guide = "none") +
+  coord_cartesian(ylim = c(-5, 5)) +
+  labs(title = "Blindly betting underdog spreads is negative EV", subtitle = "Blind 1u spread per game (6 seasons); 10-20%% slightly positive", caption = plot_caption, x = "Implied win prob bucket", y = "Flat ROI (%)") +
+  theme_fivethirtyeight(base_size = 14) +
+  theme(axis.line = element_line(color = "gray30", linewidth = 0.5), axis.title = element_text(size = 12, color = "gray20"), axis.text.x = element_text(angle = 45, hjust = 1), plot.caption = element_text(hjust = 0, size = 10)) +
+  add_logo_bar(by_bucket)
+ggsave(file.path(plot_dir, "ncaab_roi_by_bucket.png"), p1, width = {PLOT_WIDTH_IN}, height = {PLOT_HEIGHT_IN}, dpi = 150, bg = "white")
+cat("Saved:", file.path(plot_dir, "ncaab_roi_by_bucket.png"), "\\n")
+'''
+
+    if not combos.empty:
+        r_script += f'''
+combos <- read.csv(file.path(plot_dir, "combos.csv"))
+
+# Plot 2: Weight combos 0-10% (11 rows)
+c1 <- combos[combos$implied_prob_bucket == "0-10%", ]
+if (nrow(c1) > 0) {{
+  p2 <- ggplot(c1, aes(x = w_ml, y = flat_return_pct)) +
+    geom_col(fill = "#3498db") +
+    geom_hline(yintercept = 0, linewidth = 0.5) +
+    scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+    coord_cartesian(ylim = c(-50, 0)) +
+    labs(title = "Heavy underdogs get crushed on ML; spread-only is the least bad strategy and nearly breaks even", subtitle = "0 = all spread (best), 1 = all ML (worst)", caption = plot_caption, x = "ML weight", y = "Flat ROI (%)") +
+    theme_fivethirtyeight(base_size = 14) +
+    theme(axis.line = element_line(color = "gray30", linewidth = 0.5), axis.title = element_text(size = 12, color = "gray20"), plot.caption = element_text(hjust = 0, size = 10)) +
+    add_logo_line(c1)
+  ggsave(file.path(plot_dir, "ncaab_weight_combos_0_10.png"), p2, width = {PLOT_WIDTH_IN}, height = {PLOT_HEIGHT_IN}, dpi = 150, bg = "white")
+  cat("Saved:", file.path(plot_dir, "ncaab_weight_combos_0_10.png"), "\\n")
+}}
+
+# Plot 3: Weight combos 40-50%
+c2 <- combos[combos$implied_prob_bucket == "40-50%", ]
+if (nrow(c2) > 0) {{
+  p3 <- ggplot(c2, aes(x = w_ml, y = flat_return_pct)) +
+    geom_col(fill = "#9b59b6") +
+    geom_hline(yintercept = 0, linewidth = 0.5) +
+    scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+    coord_cartesian(ylim = c(-50, 0)) +
+    labs(title = "Near-even underdogs still do worse on ML, although only slightly", subtitle = "0 = all spread (best), 1 = all ML (worst)", caption = plot_caption, x = "ML weight", y = "Flat ROI (%)") +
+    theme_fivethirtyeight(base_size = 14) +
+    theme(axis.line = element_line(color = "gray30", linewidth = 0.5), axis.title = element_text(size = 12, color = "gray20"), plot.caption = element_text(hjust = 0, size = 10)) +
+    add_logo_line(c2)
+  ggsave(file.path(plot_dir, "ncaab_weight_combos_40_50.png"), p3, width = {PLOT_WIDTH_IN}, height = {PLOT_HEIGHT_IN}, dpi = 150, bg = "white")
+  cat("Saved:", file.path(plot_dir, "ncaab_weight_combos_40_50.png"), "\\n")
+}}
+'''
+
+    r_file = plot_dir / "_plot_ncaab_optimizer.R"
+    r_file.write_text(r_script, encoding="utf-8")
+
+    try:
+        result = subprocess.run(
+            ["Rscript", str(r_file)],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=str(ROOT),
+        )
+        if result.returncode != 0:
+            print(f"  --plot Rscript failed: {result.stderr or result.stdout}")
+            return
+        if result.stdout:
+            print(result.stdout.strip())
+    except FileNotFoundError:
+        print("  --plot: Rscript not found. Install R and ensure Rscript is on PATH.")
+        return
+    except subprocess.TimeoutExpired:
+        print("  --plot: Rscript timed out.")
+        return
+
+    pngs = sorted(plot_dir.glob("ncaab_*.png"))
+    if pngs:
+        paths_str = " ".join(str(p.resolve()) for p in pngs)
+        print(f"  --plot: saved to {plot_dir.resolve()}")
+        print(f"  Open with: open {paths_str}")
+        print()
+        print("  Suggested tweet copy:")
+        print("-" * 50)
+        for line in SUGGESTED_TWEET.strip().splitlines():
+            print(f"  {line}")
+        print("-" * 50)
+    return
+
+
 def main():
     ap = argparse.ArgumentParser(description="NCAAB spread/ML weight optimizer")
     ap.add_argument("--seasons", nargs="+", help="Seasons e.g. 2024-25 2025-26")
@@ -596,6 +812,9 @@ def main():
                     help="empirical=flat 1u/game (unlimited $); fractional=bet unit_fraction of bankroll each game; both=run and print both")
     ap.add_argument("--unit-fraction", type=float, default=0.01, metavar="F",
                     help="Fraction of current bankroll risked per game in fractional mode (default 0.01 = 1%%)")
+    ap.add_argument("--plot", action="store_true", help="Generate plots (saved to --plot-dir)")
+    ap.add_argument("--plot-dir", type=str, default=None, metavar="DIR",
+                    help="Directory to save plot(s); default: content/viz/ncaab/")
     args = ap.parse_args()
 
     if args.test:
@@ -775,6 +994,9 @@ def main():
                 combo_round = {"w_ml": 2, "w_spread": 2, "log_growth": 3, "flat_return_pct": 2}
                 combos_print = combos[combo_cols].round(combo_round).rename(columns={"implied_prob_bucket": "bucket", "log_growth": "log_g", "flat_return_pct": "flat_roi"})
                 print(combos_print.to_string(index=False))
+            if args.plot:
+                out_dir = Path(args.plot_dir) if args.plot_dir else ROOT / "content" / "viz" / "ncaab"
+                generate_plots(by_bucket, combos if not combos.empty else pd.DataFrame(), out_dir)
         else:
             print("\nNo implied_prob_bucket groups (all underdog rows had no bucket?).")
 
