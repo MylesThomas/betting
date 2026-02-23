@@ -387,6 +387,7 @@ def fetch_today_events_espn(target_date_et: str) -> list[dict]:
     out = []
     for event in events:
         date_iso = event.get("date") or ""
+        dt_et = None
         if date_iso:
             try:
                 dt_utc = datetime.fromisoformat(date_iso.replace("Z", "+00:00"))
@@ -406,7 +407,12 @@ def fetch_today_events_espn(target_date_et: str) -> list[dict]:
         away_name = (away_comp.get("team") or {}).get("displayName") or ""
         if not home_name or not away_name:
             continue
-        out.append({"home_team": home_name.strip(), "away_team": away_name.strip()})
+        row = {"home_team": home_name.strip(), "away_team": away_name.strip()}
+        if dt_et is not None:
+            h = dt_et.hour % 12 or 12
+            row["start_time_et"] = f"{h}:{dt_et.minute:02d} {'AM' if dt_et.hour < 12 else 'PM'} ET"
+            row["start_time_et_dt"] = dt_et
+        out.append(row)
     return out
 
 
@@ -622,6 +628,8 @@ def build_today_plays(
             "bet_team": bet_team,
             "side": side,
             "prior_meetings": prior_meetings_str,
+            "start_time_et": ev.get("start_time_et"),
+            "start_time_et_dt": ev.get("start_time_et_dt"),
         })
     return pd.DataFrame(rows)
 
@@ -684,7 +692,7 @@ def write_plays_s3(s3, today_et: str, plays_df: pd.DataFrame) -> str:
     columns = [
         "game_date", "home_team", "away_team", "home_conference", "away_conference",
         "meetings_count", "record", "consensus_spread_home",
-        "focal_team", "bet_team", "side", "prior_meetings",
+        "focal_team", "bet_team", "side", "prior_meetings", "start_time_et",
     ]
     if plays_df.empty:
         pd.DataFrame(columns=columns).to_csv(buf, index=False)
@@ -813,13 +821,15 @@ def lambda_handler(event=None, context=None):
     else:
         lines_email.append("Yesterday's results: None.")
 
-    # Only list rows that are actual plays (bet_team not null/empty), sorted A-Z by bet_team
+    # Only list rows that are actual plays (bet_team not null/empty), sorted by tip-off
     plays_only = (
         plays_df[plays_df["bet_team"].notna() & (plays_df["bet_team"].astype(str).str.strip() != "")]
         if not plays_df.empty else pd.DataFrame()
     )
     if not plays_only.empty:
-        plays_only = plays_only.sort_values("bet_team").reset_index(drop=True)
+        plays_only = plays_only.sort_values(
+            "start_time_et_dt", na_position="last"
+        ).reset_index(drop=True)
 
     # Add divide
     lines_email.append("")
@@ -832,6 +842,8 @@ def lambda_handler(event=None, context=None):
         lines_email.append("  None.")
     else:
         for _, row in plays_only.iterrows():
+            tip = (row.get("start_time_et") or "").strip()
+            tip_str = f"  {tip}  " if tip else "  "
             hc = row.get("home_conference", "") or ""
             ac = row.get("away_conference", "") or ""
             conf = f" ({ac} @ {hc})" if (hc or ac) else ""
@@ -842,7 +854,7 @@ def lambda_handler(event=None, context=None):
             else:
                 bet_line = spread if row["bet_team"] == row["home_team"] else -spread
                 line_str = f"{bet_line:+.1f}" if isinstance(bet_line, (int, float)) else str(bet_line)
-            lines_email.append(f"  Bet {row['bet_team']} {line_str} (rematch – lost first meeting) – {row['away_team']} @ {row['home_team']}{conf}")
+            lines_email.append(f"  {tip_str}Bet {row['bet_team']} {line_str} (rematch – lost first meeting) – {row['away_team']} @ {row['home_team']}{conf}")
             if prior:
                 lines_email.append(f"    Prior: {prior}")
     lines_email.append("")
