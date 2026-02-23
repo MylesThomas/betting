@@ -655,6 +655,7 @@ def load_yesterday_results(s3, yesterday_et: str) -> tuple[pd.DataFrame, pd.Data
 
 
 def evaluate_yesterday_plays(plays: pd.DataFrame, outcomes: pd.DataFrame) -> list[dict]:
+    """Evaluate only rows that are actual plays (bet_team set). Uses spread cover for W/L when line exists."""
     if plays.empty or outcomes.empty:
         return []
     results = []
@@ -662,23 +663,59 @@ def evaluate_yesterday_plays(plays: pd.DataFrame, outcomes: pd.DataFrame) -> lis
         home = str(row.get('home_team', '')).strip()
         away = str(row.get('away_team', '')).strip()
         bet_team = row.get('bet_team')
+        spread_home = row.get('consensus_spread_home')
+        spread_str = str(spread_home) if spread_home is not None and pd.notna(spread_home) else "N/A"
         mask = (
             (outcomes['HOME_TEAM'].astype(str).str.strip() == home) &
             (outcomes['AWAY_TEAM'].astype(str).str.strip() == away)
         )
         if not mask.any():
-            results.append({"game": f"{away} @ {home}", "bet_team": bet_team, "result": "no_result"})
+            results.append({
+                "game": f"{away} @ {home}",
+                "bet_team": bet_team,
+                "consensus_spread_home": spread_str,
+                "result": "no_result",
+            })
             continue
         oc = outcomes.loc[mask].iloc[0]
         hs, aws = int(oc['HOME_SCORE']), int(oc['AWAY_SCORE'])
-        winner = (oc['HOME_TEAM'] if hs > aws else oc['AWAY_TEAM'])
-        su_win = str(winner).strip() == str(bet_team).strip()
-        results.append({
-            "game": f"{away} @ {home}",
-            "bet_team": bet_team,
-            "score": f"{hs}-{aws}",
-            "su_win": su_win,
-        })
+        bet_team_str = str(bet_team).strip()
+        # W/L by spread cover when we have a line (consensus_spread_home = home spread)
+        if spread_home is not None and pd.notna(spread_home):
+            try:
+                sh = float(spread_home)
+                if bet_team_str == home:
+                    spread_cover = (hs + sh) > aws
+                else:
+                    spread_cover = (aws - sh) > hs
+                results.append({
+                    "game": f"{away} @ {home}",
+                    "bet_team": bet_team,
+                    "consensus_spread_home": spread_str,
+                    "score": f"{hs}-{aws}",
+                    "spread_cover": spread_cover,
+                    "su_win": (oc['HOME_TEAM'] if hs > aws else oc['AWAY_TEAM']).strip() == bet_team_str,
+                })
+            except (TypeError, ValueError):
+                su_win = (oc['HOME_TEAM'] if hs > aws else oc['AWAY_TEAM']).strip() == bet_team_str
+                results.append({
+                    "game": f"{away} @ {home}",
+                    "bet_team": bet_team,
+                    "consensus_spread_home": spread_str,
+                    "score": f"{hs}-{aws}",
+                    "spread_cover": None,
+                    "su_win": su_win,
+                })
+        else:
+            su_win = (oc['HOME_TEAM'] if hs > aws else oc['AWAY_TEAM']).strip() == bet_team_str
+            results.append({
+                "game": f"{away} @ {home}",
+                "bet_team": bet_team,
+                "consensus_spread_home": spread_str,
+                "score": f"{hs}-{aws}",
+                "spread_cover": None,
+                "su_win": su_win,
+            })
     return results
 
 
@@ -800,23 +837,40 @@ def lambda_handler(event=None, context=None):
     sys.stdout.flush()
 
     yesterday_plays, yesterday_outcomes = load_yesterday_results(s3, yesterday_et)
-    yesterday_results = evaluate_yesterday_plays(yesterday_plays, yesterday_outcomes)
+    # Only evaluate actual plays (bet_team set); plays file has one row per game, many with bet_team null
+    yesterday_plays_only = (
+        yesterday_plays[
+            yesterday_plays["bet_team"].notna()
+            & (yesterday_plays["bet_team"].astype(str).str.strip() != "")
+        ]
+        if not yesterday_plays.empty
+        else pd.DataFrame()
+    )
+    yesterday_results = evaluate_yesterday_plays(yesterday_plays_only, yesterday_outcomes)
 
     # Email
     lines_email = [f"NCAAB Fade Revenge Spot – {today_et}", ""]
     if yesterday_results:
-        lines_email.append("Yesterday's results:")
+        lines_email.append("Yesterday's results (our plays only, spread W/L when line exists):")
         resolved = [r for r in yesterday_results if r.get("result") != "no_result"]
         if resolved:
-            wins = sum(1 for r in resolved if r.get("su_win"))
+            wins = sum(
+                1 for r in resolved
+                if (r.get("spread_cover") if r.get("spread_cover") is not None else r.get("su_win"))
+            )
             losses = len(resolved) - wins
             lines_email.append(f"  {yesterday_et}: {wins}-{losses}")
         for r in yesterday_results:
+            spread_str = r.get("consensus_spread_home", "N/A")
             if r.get("result") == "no_result":
-                lines_email.append(f"  {r['game']}: no result")
+                lines_email.append(f"  {r['game']}: no result (bet {r['bet_team']}, home spread {spread_str})")
             else:
-                w = "W" if r.get("su_win") else "L"
-                lines_email.append(f"  {w} {r['game']} (bet {r['bet_team']}) {r.get('score', '')}")
+                spread_cover = r.get("spread_cover")
+                win = spread_cover if spread_cover is not None else r.get("su_win")
+                w = "W" if win else "L"
+                lines_email.append(
+                    f"  {w} {r['game']} (bet {r['bet_team']}, home spread {spread_str}) {r.get('score', '')}"
+                )
         lines_email.append("")
     else:
         lines_email.append("Yesterday's results: None.")
