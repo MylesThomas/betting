@@ -85,16 +85,18 @@ def _conference(team_name: str) -> str:
 
 
 # -----------------------------------------------------------------------------
-# Step 1: Run fetch scripts for yesterday
+# Step 1: Run fetch scripts for yesterday (outcomes + lines) and today (lines only)
 # -----------------------------------------------------------------------------
 
-def run_fetch_scripts(yesterday: str, season: str) -> tuple[bool, str]:
-    """Run fetch_historical_ncaab_season_lines and fetch_historical_game_results_espn_api for yesterday."""
+def run_fetch_scripts(yesterday: str, today: str, season: str) -> tuple[bool, str]:
+    """
+    Run fetch scripts so S3 has the data we need:
+    - Yesterday: game lines + game results (ESPN). Used for backtest/joined data.
+    - Today: game lines only. Written so load_today_lines_from_s3 finds today's file.
+    """
     env = os.environ.copy()
-    # Subprocess must find: (1) package root for requests/pyyaml; (2) Lambda layer for pandas (/opt/python)
     path_parts = [str(PACKAGE_ROOT), '/opt/python']
     env['PYTHONPATH'] = os.pathsep.join(path_parts)
-    # Ensure fetch scripts get ODDS_API_KEY (lines script uses it for The Odds API)
     api_key = os.environ.get('ODDS_API_KEY', '')
     if api_key:
         env['ODDS_API_KEY'] = api_key
@@ -107,19 +109,33 @@ def run_fetch_scripts(yesterday: str, season: str) -> tuple[bool, str]:
     if not lines_script.exists() or not espn_script.exists():
         return False, f"Scripts not found: {scripts_dir}"
 
-    # Lines: --s3 --season X --start-date Y --end-date Y
-    cmd_lines = [
+    all_ok = True
+
+    # Lines for yesterday (historical closing lines)
+    cmd_lines_yesterday = [
         sys.executable, str(lines_script),
         '--s3', '--season', season,
         '--start-date', yesterday, '--end-date', yesterday,
     ]
-    LOG.info("Running: %s", ' '.join(cmd_lines))
-    r1 = subprocess.run(cmd_lines, cwd=str(PACKAGE_ROOT), env=env, capture_output=True, text=True, timeout=300)
+    LOG.info("Running: %s", ' '.join(cmd_lines_yesterday))
+    r1 = subprocess.run(cmd_lines_yesterday, cwd=str(PACKAGE_ROOT), env=env, capture_output=True, text=True, timeout=300)
     if r1.returncode != 0:
-        LOG.warning("Lines fetch failed: %s", r1.stderr[-500:] if r1.stderr else r1.stdout[-500:])
-        # Continue anyway; we may still have data
+        LOG.warning("Lines fetch (yesterday) failed: %s", r1.stderr[-500:] if r1.stderr else r1.stdout[-500:])
+        all_ok = False
 
-    # ESPN: --s3 --season X --start-date Y --end-date Y --sport ncaab
+    # Lines for today (so load_today_lines_from_s3 finds s3://.../game_lines/{today}.csv)
+    cmd_lines_today = [
+        sys.executable, str(lines_script),
+        '--s3', '--season', season,
+        '--start-date', today, '--end-date', today,
+    ]
+    LOG.info("Running: %s", ' '.join(cmd_lines_today))
+    r_today = subprocess.run(cmd_lines_today, cwd=str(PACKAGE_ROOT), env=env, capture_output=True, text=True, timeout=300)
+    if r_today.returncode != 0:
+        LOG.warning("Lines fetch (today) failed: %s", r_today.stderr[-500:] if r_today.stderr else r_today.stdout[-500:])
+        all_ok = False
+
+    # ESPN: yesterday's game results only (today's games not played yet)
     cmd_espn = [
         sys.executable, str(espn_script),
         '--s3', '--season', season,
@@ -130,8 +146,9 @@ def run_fetch_scripts(yesterday: str, season: str) -> tuple[bool, str]:
     r2 = subprocess.run(cmd_espn, cwd=str(PACKAGE_ROOT), env=env, capture_output=True, text=True, timeout=120)
     if r2.returncode != 0:
         LOG.warning("ESPN fetch failed: %s", r2.stderr[-500:] if r2.stderr else r2.stdout[-500:])
+        all_ok = False
 
-    return r1.returncode == 0 and r2.returncode == 0, ""
+    return all_ok, ""
 
 
 # -----------------------------------------------------------------------------
@@ -534,8 +551,10 @@ def log_today_games(
             print(f"  [lookup] key={lookup_key!r} -> line={line_str}")
         focal = rematch_spots.get(pair)
         if focal is not None:
-            bet_team = away_espn if focal == home_espn else home_espn
-            decision = f"REMATCH -> Bet {bet_team} (fade {focal})"
+            if focal == away_espn:
+                decision = f"REMATCH -> Bet {focal} (focal=revenge team, away)"
+            else:
+                decision = "REMATCH -> skip (focal home; we only bet focal away)"
         else:
             decision = "NOT A REMATCH -> skip"
         print(
@@ -709,8 +728,8 @@ def lambda_handler(event=None, context=None):
     sns_topic = os.environ.get('SNS_TOPIC_ARN', '')
     sns_client = boto3.client('sns') if sns_topic else None
 
-    # Step 1: Run fetch scripts for yesterday
-    ok, err = run_fetch_scripts(yesterday_et, season)
+    # Step 1: Run fetch scripts for yesterday (outcomes + lines) and today (lines only)
+    ok, err = run_fetch_scripts(yesterday_et, today_et, season)
     if not ok and err:
         LOG.warning("Fetch step had issues: %s", err)
     LOG.info("Fetch scripts completed (ok=%s)", ok)
@@ -737,10 +756,16 @@ def lambda_handler(event=None, context=None):
     odds_lookup, today_lines_df = load_today_lines_from_s3(s3, today_et)
     if not odds_lookup or today_lines_df.empty:
         key = f"{LINES_PREFIX}{today_et}.csv"
-        raise FileNotFoundError(
-            f"Today's game lines missing or empty: s3://{BUCKET}/{key} "
-            "Run fetch_historical_ncaab_season_lines.py --s3 --season <season> --start-date <today> --end-date <today> first."
+        body = (
+            f"NCAAB Fade Revenge Spot – {today_et}\n\n"
+            "Something is broken: today's game lines are missing or empty.\n\n"
+            f"Expected: s3://{BUCKET}/{key}\n\n"
+            "The Lambda fetches today's lines at the start of the run (fetch_historical_ncaab_season_lines.py for today). "
+            "If this file is still missing, the fetch step may have failed (check ODDS_API_KEY, API credits, or script errors in logs)."
         )
+        if sns_client and sns_topic:
+            send_sns(sns_client, sns_topic, f"NCAAB Fade Revenge – {today_et} (broken: no lines)", body)
+        return {"status": "no_lines", "today_et": today_et}
     print(f"Rematch spots: {len(rematch_spots)} pairs with a winless team; Today's events (ESPN): {len(today_events)}; Lines: {len(odds_lookup)}")
     print("Game lines from S3 (consensus_spread_home; per-book):")
     for _, row in today_lines_df.iterrows():
