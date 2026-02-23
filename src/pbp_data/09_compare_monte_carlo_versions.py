@@ -16,11 +16,13 @@ Usage:
 
 import argparse
 import pandas as pd
+import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 from datetime import datetime
 import pytz
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 
 # =============================================================================

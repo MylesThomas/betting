@@ -27,6 +27,7 @@ import pandas as pd
 import boto3
 import json
 import argparse
+import logging
 from io import StringIO
 from typing import List, Dict, Tuple
 from datetime import datetime
@@ -34,6 +35,7 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 
 # =============================================================================

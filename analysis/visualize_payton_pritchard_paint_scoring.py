@@ -6,10 +6,12 @@ horizontal bar chart showing paint FG% comparison.
 """
 
 import pandas as pd
+import logging
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pathlib import Path
 import numpy as np
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Configuration
 repo_root = Path(__file__).parent.parent
@@ -86,7 +88,7 @@ plt.text(0.5, 0.95, subtitle_text, transform=fig.transFigure,
          fontsize=12, ha='center', va='top', style='italic', color='#555555')
 
 # Footer
-footer_text = "Paint = shots within 6 feet | Data: NBA API | Analysis: @mylesinthomas"
+footer_text = "Paint = shots within 6 feet | Data: NBA API | Analysis: @TQSLabs"
 plt.text(0.5, 0.02, footer_text, transform=fig.transFigure,
          fontsize=9, ha='center', va='bottom', color='#666666')
 

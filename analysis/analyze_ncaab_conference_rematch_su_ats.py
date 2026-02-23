@@ -56,6 +56,7 @@ from join_ncaab_outcomes_and_lines import (
     SEASON_DATES,
 )
 from ncaab_conference_data import NCAAB_CONFERENCE_MAPPING_2025_26
+from odds_utils import did_cover_spread
 
 # All conferences in the mapping (for --conferences all)
 ALL_CONFERENCES = sorted(set(NCAAB_CONFERENCE_MAPPING_2025_26.values()))
@@ -315,15 +316,10 @@ def add_focal_and_results(df: pd.DataFrame) -> pd.DataFrame:
                 opp_score = row['AWAY_SCORE'] if r['focal_was_home'] else row['HOME_SCORE']
                 r['focal_su_win'] = focal_score > opp_score
                 spread = row.get('consensus_spread')
-                if pd.notna(spread):
-                    home_margin = row['HOME_SCORE'] - row['AWAY_SCORE']
-                    if r['focal_was_home']:
-                        diff = home_margin - spread
-                    else:
-                        diff = (-home_margin) + spread
-                    r['focal_ats_cover'] = diff > 0 if diff != 0 else None
-                else:
-                    r['focal_ats_cover'] = None
+                spread_val = None if pd.isna(spread) else spread
+                r['focal_ats_cover'] = did_cover_spread(
+                    row['HOME_SCORE'], row['AWAY_SCORE'], spread_val, r['focal_was_home']
+                )
             rows.append(r)
     out = pd.DataFrame(rows)
     return out

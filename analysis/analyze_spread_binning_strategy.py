@@ -62,6 +62,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import argparse
+import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
@@ -69,6 +70,7 @@ from scipy.interpolate import UnivariateSpline
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
 import warnings
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 warnings.filterwarnings('ignore')
 
 # =============================================================================

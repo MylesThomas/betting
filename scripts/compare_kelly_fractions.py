@@ -11,9 +11,11 @@ Date: 2026-01-25
 """
 
 import pandas as pd
+import logging
 import matplotlib.pyplot as plt
 import argparse
 from pathlib import Path
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 
 def load_latest_results():

@@ -1,11 +1,57 @@
 """
-Utility functions for working with American odds.
+Utility functions for working with American odds and spread bets.
 
 This module provides functions for:
 - Converting odds to implied probabilities
 - Calculating bet amounts and profits
 - Working with American odds format
+- Spread cover: single source of truth for "did this side cover?" (see did_cover_spread)
 """
+
+
+def did_cover_spread(home_score: float, away_score: float, home_spread: float, bet_home: bool):
+    """
+    Whether the bet side covered the spread. SINGLE SOURCE OF TRUTH for spread-cover logic.
+
+    Convention: home_spread is the HOME team's spread (negative when home is favored).
+    E.g. home_spread = -10.5 means home is favored by 10.5; home covers only when
+    (home_score - away_score) > 10.5.
+
+    Formula:
+      - Bet home: cover when (home_score - away_score) + home_spread > 0  => margin > -home_spread
+      - Bet away: cover when (away_score - home_score) - home_spread > 0  => away_margin > home_spread
+      (away's line is -home_spread; away covers when away_margin > home_spread, e.g. -7 > -10.5)
+
+    Args:
+        home_score: Home team final score.
+        away_score: Away team final score.
+        home_spread: Home team's spread (e.g. -10.5 = home favored by 10.5). Use None/NaN if no line.
+        bet_home: True if evaluating whether home covered, False for away.
+
+    Returns:
+        True if that side covered, False if they did not, None if home_spread is None or NaN.
+
+    Examples:
+        >>> did_cover_spread(75, 68, -10.5, True)   # Arizona 75-68, bet home -10.5 → margin 7, need >10.5
+        False
+        >>> did_cover_spread(76, 68, -10.5, True)   # margin 8, still no cover
+        False
+        >>> did_cover_spread(79, 68, -10.5, True)   # margin 11, cover
+        True
+        >>> did_cover_spread(68, 75, -10.5, False)  # bet away +10.5, away lost by 7 → away_margin -7, -7+10.5=3.5>0
+        True
+    """
+    import math
+    if home_spread is None or (isinstance(home_spread, float) and math.isnan(home_spread)):
+        return None
+    home_margin = home_score - away_score
+    if bet_home:
+        diff = home_margin + home_spread
+    else:
+        diff = -home_margin - home_spread
+    if diff == 0:
+        return None  # push
+    return diff > 0
 
 
 def calculate_bet_amount(odds, target_win=100):

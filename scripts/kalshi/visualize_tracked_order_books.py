@@ -19,6 +19,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
+import logging
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -28,6 +29,7 @@ import argparse
 import os
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Setup
 plt.style.use('seaborn-v0_8-whitegrid')

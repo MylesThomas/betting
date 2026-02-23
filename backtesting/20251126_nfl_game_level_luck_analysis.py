@@ -16,8 +16,10 @@ Analyzes 2025 Adjusted Scores sheet from Unexpected Points Subscriber Data
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Read the data
 data_path = Path("/Users/thomasmyles/dev/betting/data/01_input/unexpected_points/Unexpected Points Subscriber Data.xlsx")

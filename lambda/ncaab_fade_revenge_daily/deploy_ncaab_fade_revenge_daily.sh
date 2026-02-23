@@ -18,6 +18,8 @@
 #
 # Verify:
 #   python tmp/get_lambda_logs.py --lambda-function-name ncaab-fade-revenge-daily
+# Per-book spread logs (Away @ Home, then each book's home spread) appear in CloudWatch
+# after "Odds API lines: N". Deploy does a test invoke; tail shows last 40 log lines.
 ###############################################################################
 
 set -e

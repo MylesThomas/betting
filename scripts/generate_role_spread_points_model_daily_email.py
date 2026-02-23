@@ -199,9 +199,11 @@ def generate_strategy_performance_plot(strategy, strategy_type, seasons, output_
         bool: True if successful
     """
     try:
+        import logging as _log
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
         from datetime import datetime
+        _log.getLogger('matplotlib.font_manager').setLevel(_log.WARNING)
     except ImportError:
         print(f"   ⚠️  matplotlib not available - cannot generate plot")
         return False

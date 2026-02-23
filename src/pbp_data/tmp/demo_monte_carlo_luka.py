@@ -17,9 +17,11 @@ Usage:
 import duckdb
 import pandas as pd
 import numpy as np
+import logging
 import matplotlib.pyplot as plt
 from pathlib import Path
 import random
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 
 # =============================================================================

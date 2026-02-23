@@ -59,7 +59,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 repo_root = Path(__file__).parent.parent
 sys.path.insert(0, str(repo_root / 'src'))
 
-from odds_utils import odds_to_implied_probability
+from odds_utils import odds_to_implied_probability, implied_probability_to_odds
 from s3_utils import get_latest_file_from_s3, read_df_from_s3
 
 
@@ -80,7 +80,7 @@ TITLE = "NBA MVP Odds: Preseason to Now"
 # SUBTITLE is generated dynamically
 
 FOOTER_NOTES = """
-1. 'Fair Odds' = true odds with vig removed. 'Vig %' = FanDuel's edge (green = low, red = high).  
+1. For each period (Preseason / Last Week / Current): Odds = FanDuel American odds; Implied % = implied probability; Fair Odds = vig removed from implied % (proportional method). 'Vig %' = FanDuel's edge on current odds (green = low, red = high).
 2. 'Difference' columns show change in implied probability (green = improved, red = worsened). Players with '-' = removed from board.
 """
 FOOTER_DATA_SOURCE = "FanDuel Sportsbook"
@@ -91,9 +91,9 @@ FOOTER_DATA_SOURCE = "FanDuel Sportsbook"
 # -----------------------------------------------------------------------------
 OUTPUT_FILENAME = "nba_mvp_vig.png"
 
-# Larger table now (showing all ~20 players + more columns including Last Week and 2 Difference columns)
-OUTPUT_WIDTH = 2000   # pixels (increased for 2 Difference columns)
-OUTPUT_HEIGHT = 1800  # pixels (increased for more rows)
+# Larger table (Preseason / Last Week / Current each have Odds, Implied %, Fair Odds + Difference + Vig %)
+OUTPUT_WIDTH = 2180   # pixels (3 cols per period × 3 periods + diff + vig)
+OUTPUT_HEIGHT = 1800  # pixels
 OUTPUT_DPI = 300
 
 # -----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ DIFF_COLOR_PALETTE = ["#d62728", "#ffcccc", "#ffffff", "#90EE90", "#4CAF50"]  # 
 # Vig % column: Green = low vig (good), Red = high vig (bad)
 VIG_COLOR_PALETTE = ["#4CAF50", "#90EE90", "#ffffff", "#ffcccc", "#d62728"]  # green -> white -> red
 VIG_COLOR_DOMAIN_MIN = 0.0      # No vig (green)
-VIG_COLOR_DOMAIN_MAX = 5.0      # High vig (red)
+VIG_COLOR_DOMAIN_MAX = 7.5      # High vig (red); 5.2% no longer grayed out
 
 # -----------------------------------------------------------------------------
 # Typography
@@ -308,10 +308,20 @@ def prepare_data_for_visualization(df):
         df_display['preseason_implied_str'] = df_display['preseason_implied_prob'].apply(
             lambda x: f"{x*100:.1f}%" if pd.notna(x) else "-"
         )
+        # Fair odds for preseason: remove vig proportionally (normalize implied probs to sum to 1)
+        total_preseason = df_display['preseason_implied_prob'].sum()
+        if total_preseason > 0:
+            df_display['preseason_fair_prob'] = df_display['preseason_implied_prob'] / total_preseason
+            df_display['preseason_fair_odds_str'] = df_display['preseason_fair_prob'].apply(
+                lambda p: f"{int(implied_probability_to_odds(p)):+d}" if pd.notna(p) and p > 0 else "-"
+            )
+        else:
+            df_display['preseason_fair_odds_str'] = "-"
         season_start_date = df_display['season_start_date'].iloc[0] if 'season_start_date' in df_display.columns else None
     else:
         df_display['preseason_odds_str'] = "N/A"
         df_display['preseason_implied_str'] = "N/A"
+        df_display['preseason_fair_odds_str'] = "N/A"
         season_start_date = None
     
     # Format last week odds
@@ -326,10 +336,20 @@ def prepare_data_for_visualization(df):
         df_display['last_week_implied_str'] = df_display['last_week_implied_prob'].apply(
             lambda x: f"{x*100:.1f}%" if pd.notna(x) else "-"
         )
+        # Fair odds for last week: remove vig proportionally
+        total_last_week = df_display['last_week_implied_prob'].sum()
+        if total_last_week > 0:
+            df_display['last_week_fair_prob'] = df_display['last_week_implied_prob'] / total_last_week
+            df_display['last_week_fair_odds_str'] = df_display['last_week_fair_prob'].apply(
+                lambda p: f"{int(implied_probability_to_odds(p)):+d}" if pd.notna(p) and p > 0 else "-"
+            )
+        else:
+            df_display['last_week_fair_odds_str'] = "-"
         last_week_date = df_display['last_week_date'].iloc[0] if 'last_week_date' in df_display.columns else None
     else:
         df_display['last_week_odds_str'] = "N/A"
         df_display['last_week_implied_str'] = "N/A"
+        df_display['last_week_fair_odds_str'] = "N/A"
         last_week_date = None
     
     # Format current odds
@@ -434,23 +454,22 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
     else:
         footer_date = datetime.now().strftime('%B %d, %Y')
     
-    # Select columns for display - preseason / last week / current comparison + vig metrics
+    # Select columns for display - preseason / last week / current each have Odds, Implied %, Fair Odds
     # Keep difference columns and vig_pct as numeric for gradient coloring
-    # Move Vig % to the far right
-    columns_to_include = ['rank', 'headshot_url', 'player', 
-                          'preseason_odds_str', 'preseason_implied_str',
-                          'last_week_odds_str', 'last_week_implied_str',
-                          'current_odds_str', 'current_implied_str', 
-                          'fair_odds_str', 'diff_preseason', 'diff_last_week', 'vig_pct']
+    columns_to_include = ['rank', 'headshot_url', 'player',
+                          'preseason_odds_str', 'preseason_implied_str', 'preseason_fair_odds_str',
+                          'last_week_odds_str', 'last_week_implied_str', 'last_week_fair_odds_str',
+                          'current_odds_str', 'current_implied_str', 'fair_odds_str',
+                          'diff_preseason', 'diff_last_week', 'vig_pct']
     
     table_df = df_display[columns_to_include].copy()
     
     # Rename columns for display (use <br> for line breaks in headers)
-    column_names = ['Rank', 'headshot_url', 'Player', 
-                    'Preseason', 'Preseason Implied',
-                    'Last Week', 'Last Week Implied',
-                    'Current', 'Current Implied', 
-                    'Fair Odds', 'Difference<br>(Pre → Current)', 'Difference<br>(LW → Current)', 'Vig %']
+    column_names = ['Rank', 'headshot_url', 'Player',
+                    'Preseason', 'Preseason Implied', 'Preseason Fair Odds',
+                    'Last Week', 'Last Week Implied', 'Last Week Fair Odds',
+                    'Current', 'Current Implied', 'Fair Odds',
+                    'Difference<br>(Pre → Current)', 'Difference<br>(LW → Current)', 'Vig %']
     
     table_df.columns = column_names
     
@@ -484,8 +503,10 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         'Player': 'character',
         'Preseason': 'character',
         'Preseason Implied': 'character',
+        'Preseason Fair Odds': 'character',
         'Last Week': 'character',
         'Last Week Implied': 'character',
+        'Last Week Fair Odds': 'character',
         'Current': 'character',
         'Current Implied': 'character',
         'Fair Odds': 'character',
@@ -503,8 +524,10 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
         f"Player ~ px({COL_WIDTH_PLAYER})",
         f"`Preseason` ~ px({COL_WIDTH_PRESEASON})",
         f"`Preseason Implied` ~ px({COL_WIDTH_PRESEASON_IMPLIED})",
+        f"`Preseason Fair Odds` ~ px({COL_WIDTH_FAIR_ODDS})",
         f"`Last Week` ~ px({COL_WIDTH_LAST_WEEK})",
         f"`Last Week Implied` ~ px({COL_WIDTH_LAST_WEEK_IMPLIED})",
+        f"`Last Week Fair Odds` ~ px({COL_WIDTH_FAIR_ODDS})",
         f"`Current` ~ px({COL_WIDTH_CURRENT})",
         f"`Current Implied` ~ px({COL_WIDTH_CURRENT_IMPLIED})",
         f"`Fair Odds` ~ px({COL_WIDTH_FAIR_ODDS})",
@@ -537,6 +560,38 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       tab_header(
         title = md("**{TITLE}**"),
         subtitle = md("{subtitle}")
+      ) %>%
+      
+      # Column spanners: every column under a spanner (Player → Preseason → Last Week → Current → Difference → Vig)
+      tab_spanner(
+        label = "Player",
+        columns = c(Rank, headshot_url, Player),
+        id = "spanner_player"
+      ) %>%
+      tab_spanner(
+        label = "Preseason",
+        columns = c(`Preseason`, `Preseason Implied`, `Preseason Fair Odds`),
+        id = "spanner_preseason"
+      ) %>%
+      tab_spanner(
+        label = "Last Week",
+        columns = c(`Last Week`, `Last Week Implied`, `Last Week Fair Odds`),
+        id = "spanner_last_week"
+      ) %>%
+      tab_spanner(
+        label = "Current",
+        columns = c(`Current`, `Current Implied`, `Fair Odds`),
+        id = "spanner_current"
+      ) %>%
+      tab_spanner(
+        label = "Difference",
+        columns = c(`Difference<br>(Pre → Current)`, `Difference<br>(LW → Current)`),
+        id = "spanner_difference"
+      ) %>%
+      tab_spanner(
+        label = "Vig",
+        columns = c(`Vig %`),
+        id = "spanner_vig"
       ) %>%
       
       # Add player headshots using gtExtras
@@ -574,11 +629,22 @@ def create_gt_table_with_r(df_display, average_vig_pct, fetch_date, season_start
       ) %>%
       
       
-      # Rename headshot_url column header to empty
+      # Sub-labels: Player spanner has no sub-labels (Rank/Player not needed); others keep Odds, Implied %, Fair Odds
       cols_label(
+        Rank = "",
         headshot_url = "",
-        `Difference<br>(Pre → Current)` = html("Difference<br>(Pre → Current)"),
-        `Difference<br>(LW → Current)` = html("Difference<br>(LW → Current)")
+        Player = "",
+        Preseason = "Odds",
+        `Preseason Implied` = "Implied %",
+        `Preseason Fair Odds` = "Fair Odds",
+        `Last Week` = "Odds",
+        `Last Week Implied` = "Implied %",
+        `Last Week Fair Odds` = "Fair Odds",
+        Current = "Odds",
+        `Current Implied` = "Implied %",
+        `Fair Odds` = "Fair Odds",
+        `Difference<br>(Pre → Current)` = html("Pre → Current"),
+        `Difference<br>(LW → Current)` = html("LW → Current")
       ) %>%
       
       # Style headers

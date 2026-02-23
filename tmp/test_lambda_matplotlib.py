@@ -9,6 +9,7 @@ Usage:
 """
 
 import json
+import logging
 import sys
 
 def lambda_handler(event, context):
@@ -53,6 +54,7 @@ def lambda_handler(event, context):
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
+        logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
         results['tests']['matplotlib'] = {
             'available': True,
             'version': matplotlib.__version__,

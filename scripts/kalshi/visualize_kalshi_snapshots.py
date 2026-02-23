@@ -152,12 +152,14 @@ TODO / FUTURE ENHANCEMENTS
 
 import pandas as pd
 import numpy as np
+import logging
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from pathlib import Path
 import sys
 import argparse
 import os
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv

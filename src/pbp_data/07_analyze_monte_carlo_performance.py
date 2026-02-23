@@ -33,9 +33,11 @@ import pandas as pd
 import numpy as np
 import sys
 import argparse
+import logging
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Import path functions
 sys.path.insert(0, str(Path(__file__).parent.parent))

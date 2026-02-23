@@ -203,11 +203,13 @@ except ImportError:
 
 # Try to import matplotlib for plotting
 try:
+    import logging as _logging
     import matplotlib
     matplotlib.use('Agg')  # Non-interactive backend for Lambda
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
     import matplotlib.gridspec as gridspec
+    _logging.getLogger('matplotlib.font_manager').setLevel(_logging.WARNING)
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False

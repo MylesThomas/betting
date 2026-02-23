@@ -52,6 +52,42 @@ API_KEY = os.environ.get("ODDS_API_KEY")
 BASE = "https://api.the-odds-api.com/v4"
 SPORT = "basketball_ncaab"
 
+# Retries for transient SSL/connection errors when calling Odds API
+ODDS_API_RETRIES = 3
+ODDS_API_BACKOFF_SEC = 2
+
+
+def _get_odds_api(url, params):
+    """GET with retries on SSL/connection errors and 5xx. Raises on final failure."""
+    last_exc = None
+    for attempt in range(ODDS_API_RETRIES):
+        try:
+            r = requests.get(url, params=params, verify=False)
+            if r.status_code >= 500 and attempt < ODDS_API_RETRIES - 1:
+                time.sleep(ODDS_API_BACKOFF_SEC * (attempt + 1))
+                continue
+            return r
+        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as e:
+            last_exc = e
+            if attempt < ODDS_API_RETRIES - 1:
+                log.warning("  Odds API connection error (attempt %s/%s), retrying in %ss: %s", attempt + 1, ODDS_API_RETRIES, ODDS_API_BACKOFF_SEC * (attempt + 1), e)
+                time.sleep(ODDS_API_BACKOFF_SEC * (attempt + 1))
+            else:
+                raise
+    if last_exc:
+        raise last_exc
+    return None
+
+
+def _s3_key_exists(bucket, key):
+    """Return True if key exists in bucket, False otherwise (e.g. 404)."""
+    try:
+        import boto3
+        boto3.client("s3").head_object(Bucket=bucket, Key=key)
+        return True
+    except Exception:
+        return False
+
 
 def _upload_csv_to_s3(local_path):
     """Upload CSV to s3://ncaab-betting-mt/data/01_input/the-odds-api/ncaab/game_ml_odds/<filename>. Logs warning on failure."""
@@ -147,7 +183,7 @@ def _fetch_events_and_odds_for_date(date_et, date_str, ts_noon_iso, limit_odds_c
     params_events = {"apiKey": API_KEY, "date": ts_noon_iso, "dateFormat": "iso"}
     if verbose:
         log.info("  API: GET %s (historical events for date=%s)", url_events, ts_noon_iso)
-    r_ev = requests.get(url_events, params=params_events, verify=False)
+    r_ev = _get_odds_api(url_events, params_events)
     if verbose:
         log.info("  Status: %s", r_ev.status_code)
         log.info("  x-requests-remaining: %s", r_ev.headers.get("x-requests-remaining", "N/A"))
@@ -187,7 +223,7 @@ def _fetch_events_and_odds_for_date(date_et, date_str, ts_noon_iso, limit_odds_c
             "dateFormat": "iso",
         }
         time.sleep(0.1)
-        r_o = requests.get(url_odds, params=params_odds, verify=False)
+        r_o = _get_odds_api(url_odds, params_odds)
         if r_o.status_code != 200:
             log.warning("    [%s/%s] %s @ %s: error %s", i, len(events_list), away, home, r_o.status_code)
             rows.append({
@@ -266,6 +302,7 @@ def _parse_args():
     p.add_argument("--date", type=str, default=None, metavar="YYYY-MM-DD", help="Fetch only this date (ET). Mutually exclusive with --seasons.")
     p.add_argument("--limit-calls-per-day", type=int, default=None, metavar="N", help="Max odds API calls per date (for testing). Events call always runs; only first N events get odds.")
     p.add_argument("--verbose", action="store_true", help="Log per-matchup books/consensus (default when --date; off by default when --seasons).")
+    p.add_argument("--overwrite", action="store_true", help="Re-fetch and overwrite even if date already exists in S3 (default: skip existing).")
     return p.parse_args()
 
 
@@ -294,6 +331,10 @@ def main():
         verbose = args.verbose
         for idx, (d, season_str) in enumerate(dates_with_season, 1):
             date_str = d.isoformat()
+            s3_key = f"{S3_PREFIX}/{date_str}.csv"
+            if not args.overwrite and _s3_key_exists(S3_BUCKET, s3_key):
+                log.info("[%s/%s] %s (season %s) - skipped (exists in S3, use --overwrite to re-fetch)", idx, len(dates_with_season), date_str, season_str)
+                continue
             ts_noon = datetime(d.year, d.month, d.day, 12, 0, 0, tzinfo=ET)
             ts_noon_iso = ts_noon.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
             log.info("[%s/%s] %s (season %s)", idx, len(dates_with_season), date_str, season_str)
@@ -361,7 +402,7 @@ def main():
     params_yesterday = {"apiKey": API_KEY, "date": ts_yesterday_iso, "dateFormat": "iso"}
     log.info("--- Yesterday's games + ML (historical API) ---")
     log.info("  API: GET %s (historical events for date=%s)", url_historical_events, ts_yesterday_iso)
-    r_yesterday = requests.get(url_historical_events, params=params_yesterday, verify=False)
+    r_yesterday = _get_odds_api(url_historical_events, params_yesterday)
     log.info("  Status: %s", r_yesterday.status_code)
     log.info("  x-requests-remaining: %s", r_yesterday.headers.get("x-requests-remaining", "N/A"))
     if r_yesterday.status_code != 200:
@@ -403,7 +444,7 @@ def main():
             "dateFormat": "iso",
         }
         time.sleep(0.1)
-        r_o = requests.get(url_odds, params=params_odds, verify=False)
+        r_o = _get_odds_api(url_odds, params_odds)
         if r_o.status_code != 200:
             log.warning("    [%s/%s] %s @ %s: error %s", i, len(yesterday_rows), away, home, r_o.status_code)
             row["home_ml_odds"] = None

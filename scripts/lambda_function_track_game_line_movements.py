@@ -1144,6 +1144,7 @@ from pathlib import Path
 import sys
 import argparse
 import glob
+import logging
 import os
 import requests
 from datetime import datetime, timedelta, timezone
@@ -1163,6 +1164,7 @@ import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend for Lambda
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Load environment variables
 load_dotenv()

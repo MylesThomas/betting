@@ -39,6 +39,7 @@ import duckdb
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # -----------------------------------------------------------------------------
 # Project root and path setup (no parent-based sys.path per cursor rules)
@@ -66,6 +67,7 @@ from join_ncaab_outcomes_and_lines import (
     SEASON_DATES,
 )
 from ncaab_conference_data import NCAAB_CONFERENCE_MAPPING_2025_26
+from odds_utils import did_cover_spread
 
 # All conferences in the mapping (for --conferences all)
 ALL_CONFERENCES = sorted(set(NCAAB_CONFERENCE_MAPPING_2025_26.values()))
@@ -390,15 +392,10 @@ def add_focal_and_results(df: pd.DataFrame) -> pd.DataFrame:
                 opp_score = row['AWAY_SCORE'] if r['focal_was_home'] else row['HOME_SCORE']
                 r['focal_su_win'] = focal_score > opp_score
                 spread = row.get('consensus_spread')
-                if pd.notna(spread):
-                    home_margin = row['HOME_SCORE'] - row['AWAY_SCORE']
-                    if r['focal_was_home']:
-                        diff = home_margin - spread
-                    else:
-                        diff = (-home_margin) + spread
-                    r['focal_ats_cover'] = diff > 0 if diff != 0 else None
-                else:
-                    r['focal_ats_cover'] = None
+                spread_val = None if pd.isna(spread) else spread
+                r['focal_ats_cover'] = did_cover_spread(
+                    row['HOME_SCORE'], row['AWAY_SCORE'], spread_val, r['focal_was_home']
+                )
             rows.append(r)
     out = pd.DataFrame(rows)
     return out
@@ -678,20 +675,31 @@ def _all_games_summary_row(df: pd.DataFrame, season_label: str) -> dict:
         row['r2_ats'] = None
         row['r2_mrg'] = None
         row['r2_move'] = None
+        row['r2_su_fav'] = row['r2_ats_fav'] = row['r2_su_dog'] = row['r2_ats_dog'] = None
     else:
         n = len(r)
         row['r2_su'] = round(100.0 * r['focal_su_win'].sum() / n, 1)
         ats_valid = r['focal_ats_cover'].notna()
         row['r2_ats'] = round(100.0 * (r.loc[ats_valid, 'focal_ats_cover'] == True).sum() / ats_valid.sum(), 1) if ats_valid.sum() else None
+        focal_spread_2nd = np.where(r['focal_was_home'], r['spread_2nd_meeting'], -r['spread_2nd_meeting'])
         if 'home_1st_meeting' in r.columns:
             focal_margin = np.where(r['focal_was_home'], r['HOME_SCORE'] - r['AWAY_SCORE'], r['AWAY_SCORE'] - r['HOME_SCORE'])
-            focal_spread_2nd = np.where(r['focal_was_home'], r['spread_2nd_meeting'], -r['spread_2nd_meeting'])
             row['r2_mrg'] = round(float((focal_margin + focal_spread_2nd).mean()), 2)
             focal_spread_1st = np.where(r['focal_team'] == r['home_1st_meeting'], r['spread_1st_meeting'], -r['spread_1st_meeting'])
             row['r2_move'] = round(float((focal_spread_1st - focal_spread_2nd).mean()), 2)
         else:
             row['r2_mrg'] = None
             row['r2_move'] = None
+        r_fav = r[focal_spread_2nd < 0]
+        r_dog = r[focal_spread_2nd > 0]
+        for label, sub in [('fav', r_fav), ('dog', r_dog)]:
+            if sub.empty:
+                row[f'r2_su_{label}'] = None
+                row[f'r2_ats_{label}'] = None
+            else:
+                row[f'r2_su_{label}'] = round(100.0 * sub['focal_su_win'].sum() / len(sub), 1)
+                ats_sub = sub['focal_ats_cover'].notna()
+                row[f'r2_ats_{label}'] = round(100.0 * (sub.loc[ats_sub, 'focal_ats_cover'] == True).sum() / ats_sub.sum(), 1) if ats_sub.sum() else None
 
     # ----- Rematch 3rd -----
     r3 = df[df['rematch_type'] == 'rematch 3rd']
@@ -703,6 +711,7 @@ def _all_games_summary_row(df: pd.DataFrame, season_label: str) -> dict:
         row['r3_su'] = None
         row['r3_ats'] = None
         row['r3_mrg'] = None
+        row['r3_su_fav'] = row['r3_ats_fav'] = row['r3_su_dog'] = row['r3_ats_dog'] = None
     else:
         n3 = len(r3_sub)
         row['r3_su'] = round(100.0 * r3_sub['focal_su_win'].sum() / n3, 1)
@@ -711,8 +720,87 @@ def _all_games_summary_row(df: pd.DataFrame, season_label: str) -> dict:
         focal_margin_3 = np.where(r3_sub['focal_was_home'], r3_sub['HOME_SCORE'] - r3_sub['AWAY_SCORE'], r3_sub['AWAY_SCORE'] - r3_sub['HOME_SCORE'])
         focal_spread_3rd = np.where(r3_sub['focal_was_home'], r3_sub['spread_3rd_meeting'], -r3_sub['spread_3rd_meeting'])
         row['r3_mrg'] = round(float((focal_margin_3 + focal_spread_3rd).mean()), 2)
+        r3_fav = r3_sub[focal_spread_3rd < 0]
+        r3_dog = r3_sub[focal_spread_3rd > 0]
+        for label, sub in [('fav', r3_fav), ('dog', r3_dog)]:
+            if sub.empty:
+                row[f'r3_su_{label}'] = None
+                row[f'r3_ats_{label}'] = None
+            else:
+                row[f'r3_su_{label}'] = round(100.0 * sub['focal_su_win'].sum() / len(sub), 1)
+                ats_sub = sub['focal_ats_cover'].notna()
+                row[f'r3_ats_{label}'] = round(100.0 * (sub.loc[ats_sub, 'focal_ats_cover'] == True).sum() / ats_sub.sum(), 1) if ats_sub.sum() else None
 
     return row
+
+
+def _strategy_segments_r2(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    ATS (and SU) by strategy segment for rematch 2nd — to find slices with >52% ATS.
+    Focal = loser of game 1; we bet on focal. line_move = focal_spread_1st - focal_spread_2nd (positive = line moved toward focal).
+    """
+    r2 = df[df['rematch_type'] == 'rematch 2nd'].copy()
+    with_both = r2['spread_1st_meeting'].notna() & r2['spread_2nd_meeting'].notna()
+    r2 = r2[with_both]
+    if 'home_1st_meeting' in r2.columns:
+        r2 = r2[r2['home_1st_meeting'].notna()]
+    r2 = r2.dropna(subset=['focal_team', 'focal_ats_cover'])
+    if r2.empty:
+        return pd.DataFrame(columns=['segment', 'n', 'ats_pct', 'su_pct'])
+
+    focal_spread_2nd = np.where(r2['focal_was_home'], r2['spread_2nd_meeting'], -r2['spread_2nd_meeting'])
+    focal_spread_1st = np.where(r2['focal_team'] == r2['home_1st_meeting'], r2['spread_1st_meeting'], -r2['spread_1st_meeting'])
+    line_move = focal_spread_1st - focal_spread_2nd
+
+    r2 = r2.copy()
+    r2['_focal_spread_2nd'] = focal_spread_2nd
+    r2['_line_move'] = line_move
+
+    def row_for_mask(mask: pd.Series, name: str) -> dict:
+        sub = r2[mask]
+        n = len(sub)
+        if n == 0:
+            return {'segment': name, 'n': 0, 'ats_pct': None, 'su_pct': None}
+        ats_pct = round(100.0 * (sub['focal_ats_cover'] == True).sum() / n, 1)
+        su_pct = round(100.0 * sub['focal_su_win'].sum() / n, 1)
+        return {'segment': name, 'n': n, 'ats_pct': ats_pct, 'su_pct': su_pct}
+
+    fav = r2['_focal_spread_2nd'] < 0
+    dog = r2['_focal_spread_2nd'] > 0
+    line_toward = r2['_line_move'] > 0.5
+    line_away = r2['_line_move'] < -0.5
+    line_neutral = (r2['_line_move'] >= -0.5) & (r2['_line_move'] <= 0.5)
+    home = r2['focal_was_home'] == True
+    away = r2['focal_was_home'] == False
+    big_dog = r2['_focal_spread_2nd'] >= 5
+    small_dog = (r2['_focal_spread_2nd'] > 0) & (r2['_focal_spread_2nd'] < 5)
+    big_fav = r2['_focal_spread_2nd'] <= -5
+    small_fav = (r2['_focal_spread_2nd'] < 0) & (r2['_focal_spread_2nd'] > -5)
+
+    segments = [
+        ('all', np.ones(len(r2), dtype=bool)),
+        ('fav', fav),
+        ('dog', dog),
+        ('focal_home', home),
+        ('focal_away', away),
+        ('line_toward_focal', line_toward),
+        ('line_away_focal', line_away),
+        ('line_neutral', line_neutral),
+        ('dog_line_toward', dog & line_toward),
+        ('dog_line_away', dog & line_away),
+        ('fav_line_toward', fav & line_toward),
+        ('fav_line_away', fav & line_away),
+        ('big_dog_5plus', big_dog),
+        ('small_dog_0_5', small_dog),
+        ('big_fav_5plus', big_fav),
+        ('small_fav_0_5', small_fav),
+        ('dog_focal_home', dog & home),
+        ('dog_focal_away', dog & away),
+        ('dog_line_toward_focal_home', dog & line_toward & home),
+        ('dog_line_toward_focal_away', dog & line_toward & away),
+    ]
+    rows = [row_for_mask(mask, name) for name, mask in segments]
+    return pd.DataFrame(rows)
 
 
 def _log_conference_dates(conf_name: str, conf_df: pd.DataFrame) -> None:
@@ -731,29 +819,94 @@ def _log_conference_dates(conf_name: str, conf_df: pd.DataFrame) -> None:
 
 
 # -----------------------------------------------------------------------------
+# Verbose: daily record by season and date (for backtest vs prod verification)
+# -----------------------------------------------------------------------------
+
+
+def _daily_record_row(day_df: pd.DataFrame) -> dict:
+    """
+    One day's combined strategy record (rematch 2nd + rematch 3rd).
+    Returns n, su_w, su_l, ats_w, ats_l, su_pct (or None), ats_pct (or None).
+    """
+    agg = aggregate_rematch_stats(day_df)
+    r2 = agg.get('rematch_2nd')
+    r3 = agg.get('rematch_3rd')
+    n = 0
+    su_w = su_l = ats_w = ats_l = ats_resolved = 0
+    for s in (r2, r3):
+        if s is None:
+            continue
+        n += s['n']
+        su_w += s['su_w']
+        su_l += s['su_l']
+        ats_w += s['ats_w']
+        ats_l += s['ats_l']
+        ats_resolved += (s['ats_n'] - s['ats_p'])
+    su_pct = (100.0 * su_w / n) if n else None
+    ats_pct = (100.0 * ats_w / ats_resolved) if ats_resolved else None
+    return {
+        'n': n,
+        'su_w': su_w,
+        'su_l': su_l,
+        'ats_w': ats_w,
+        'ats_l': ats_l,
+        'su_pct': su_pct,
+        'ats_pct': ats_pct,
+    }
+
+
+def _print_verbose_daily_records(df: pd.DataFrame, seasons_list: list) -> None:
+    """
+    When --verbose and --all-games: print one line per (season, date) with that day's
+    strategy record (rematch 2nd + 3rd combined). Use to verify backtest vs prod.
+    """
+    print()
+    print("=" * 80)
+    print("Daily record by season and date (strategy = rematch 2nd + 3rd, focal = loser of prior meeting(s))")
+    print("=" * 80)
+    print(f"{'season':<8} {'date':<12} {'n':>4}  {'SU':>8}  {'ATS':>8}  {'SU%':>6}  {'ATS%':>6}")
+    print("-" * 80)
+    for season in seasons_list:
+        sub = df[df['season'] == season]
+        dates = sorted(sub['GAME_DATE'].unique())
+        for d in dates:
+            day_df = sub[sub['GAME_DATE'] == d]
+            row = _daily_record_row(day_df)
+            su_str = f"{row['su_w']}-{row['su_l']}"
+            ats_str = f"{row['ats_w']}-{row['ats_l']}"
+            su_pct_str = f"{row['su_pct']:.1f}" if row['su_pct'] is not None else "NA"
+            ats_pct_str = f"{row['ats_pct']:.1f}" if row['ats_pct'] is not None else "NA"
+            date_str = d.isoformat() if hasattr(d, 'isoformat') else str(d)
+            print(f"{season:<8} {date_str:<12} {row['n']:>4}  {su_str:>8}  {ats_str:>8}  {su_pct_str:>6}  {ats_pct_str:>6}")
+    print()
+
+
+# -----------------------------------------------------------------------------
 # ATS verification and PnL plot (fade rematch team)
 # -----------------------------------------------------------------------------
 
 
 def verify_focal_ats_cover(df: pd.DataFrame) -> int:
     """
-    Recompute focal ATS cover from first principles and return number of mismatches.
-    consensus_spread = home spread (home covers when home_margin > spread).
-    Focal home: cover when (HOME_SCORE - AWAY_SCORE) - spread > 0.
-    Focal away: cover when (AWAY_SCORE - HOME_SCORE) - (-spread) > 0 => -home_margin + spread > 0.
+    Recompute focal ATS cover using odds_utils.did_cover_spread and return number of mismatches.
     """
     rematch = df[df['rematch_type'].isin(('rematch 2nd', 'rematch 3rd'))].copy()
     rematch = rematch.dropna(subset=['focal_ats_cover', 'consensus_spread'])
     if rematch.empty:
         return 0
-    home_margin = rematch['HOME_SCORE'] - rematch['AWAY_SCORE']
-    spread = rematch['consensus_spread']
-    # Focal cover: focal margin - focal spread > 0. Focal home => margin = home_margin, focal spread = spread.
-    # Focal away => margin = -home_margin, focal spread = -spread => diff = -home_margin + spread.
-    diff = np.where(rematch['focal_was_home'], home_margin - spread, -home_margin + spread)
-    recomputed_cover = (diff > 0).astype(bool)
-    existing = rematch['focal_ats_cover'].values.astype(bool)
-    n_mismatch = int((recomputed_cover != existing).sum())
+    recomputed = rematch.apply(
+        lambda row: did_cover_spread(
+            row['HOME_SCORE'], row['AWAY_SCORE'],
+            row['consensus_spread'], row['focal_was_home']
+        ),
+        axis=1,
+    )
+    mask = recomputed.notna()
+    if not mask.any():
+        return 0
+    existing = rematch.loc[mask, 'focal_ats_cover'].values.astype(bool)
+    recomputed_bool = recomputed.loc[mask].astype(bool)
+    n_mismatch = int((recomputed_bool != existing).sum())
     if n_mismatch:
         LOG.warning("ATS verification: %s mismatches out of %s rematch games with spread", n_mismatch, len(rematch))
     else:
@@ -903,6 +1056,8 @@ def main():
                     continue
                 agg = aggregate_rematch_stats(sub)
                 print_summary(agg, f"all games — {period}", one_season)
+            if args.verbose:
+                _print_verbose_daily_records(df, [one_season])
             out_dir = PROJECT_ROOT / 'data' / '04_output'
             if args.csv:
                 out_dir.mkdir(parents=True, exist_ok=True)
@@ -945,7 +1100,17 @@ def main():
             print(f"NCAAB REMATCH (all games) — {period}: summary by season")
             print("=" * 80)
             print(summary_df.to_string(index=False))
+        # Strategy segments: which slice of rematch-2nd has best ATS (for upgrading the strat)
+        seg_df = _strategy_segments_r2(combined)
+        if not seg_df.empty:
+            print()
+            print("=" * 80)
+            print("Strategy segments (rematch 2nd, bet on focal): n and ATS% / SU% — find slices >52%")
+            print("=" * 80)
+            print(seg_df.to_string(index=False))
         print()
+        if args.verbose:
+            _print_verbose_daily_records(combined, seasons_list)
         out_dir = PROJECT_ROOT / 'data' / '04_output'
         if args.csv:
             out_dir.mkdir(parents=True, exist_ok=True)

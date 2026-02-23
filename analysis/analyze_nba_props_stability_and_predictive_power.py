@@ -81,6 +81,8 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import r2_score, accuracy_score, roc_auc_score
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import logging
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 warnings.filterwarnings('ignore')
 

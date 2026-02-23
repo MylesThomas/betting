@@ -56,6 +56,7 @@ Date: 2026-02-04
 
 import argparse
 import boto3
+import logging
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -66,6 +67,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 import duckdb
 import hashlib
 import json

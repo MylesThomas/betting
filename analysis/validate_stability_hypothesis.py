@@ -33,6 +33,7 @@ Date: 2026-02-10
 """
 
 import sys
+import logging
 from pathlib import Path
 import argparse
 import warnings
@@ -44,6 +45,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 from scipy import stats
 
 warnings.filterwarnings('ignore')

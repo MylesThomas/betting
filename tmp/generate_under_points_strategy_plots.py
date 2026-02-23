@@ -27,10 +27,12 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 # Matplotlib setup (non-interactive backend)
+import logging
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # =============================================================================
 # CONFIGURATION

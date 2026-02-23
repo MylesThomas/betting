@@ -20,11 +20,13 @@ Usage:
 """
 
 import pandas as pd
+import logging
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.colors import LinearSegmentedColormap
 import requests
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 from io import BytesIO
 from PIL import Image
 from pathlib import Path

@@ -951,9 +951,12 @@ def apply_calibration(raw_prob, quarter, calibration_map=None):
     
     # Find nearest bin center (0.05, 0.15, 0.25, ..., 0.95)
     # Bins are [0-0.1) -> 0.05, [0.1-0.2) -> 0.15, etc.
+    # raw_prob in [0.95, 1.0] yields bin_center 1.05 which is not in the map; clamp to 0.95.
     bin_start = math.floor(raw_prob * 10) / 10.0
     bin_center = round(bin_start + 0.05, 2)
-    
+    if bin_center > 0.95:
+        bin_center = 0.95
+
     # Lookup correction factor (no fallback - should always exist)
     key = (period, bin_center)
     correction_factor = calibration_map[key]  # Will raise KeyError if missing

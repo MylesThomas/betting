@@ -5,9 +5,11 @@ Shows how model performance and coefficients change as we train on more data.
 """
 
 import pandas as pd
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Load results
 data_path = Path.home() / 'Downloads' / 'tmp' / 'model_snapshot_comparison_all.csv'

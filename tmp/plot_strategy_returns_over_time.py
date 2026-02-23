@@ -11,10 +11,12 @@
 # %%
 import pandas as pd
 import boto3
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 from io import StringIO
 import json
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)

@@ -93,6 +93,34 @@ For ad-hoc CSV analysis, load the output CSV in DuckDB and filter by `conference
 
 ---
 
+## Strategy segments TL;DR (rematch 2nd — bet on focal)
+
+From the “Strategy segments” table (rematch 2nd, 6 seasons). Focal = loser of game 1; we bet on focal.
+
+**Use (ATS > 52%, decent n):**
+- **focal_away** — Focal is road team. **52.6%** ATS, n=2738. Simplest filter.
+- **dog_line_away** — Focal is dog and line moved away from focal. **52.8%** ATS, n=2235. Best edge + volume.
+- **dog_focal_away** — Focal dog on the road. **52.7%** ATS, n=2416.
+- **line_away_focal** — Line moved away from focal (any role). **52.6%** ATS, n=2542.
+- **big_fav_5plus** / **big_dog_5plus** — Focal favored by 5+ (52.6%, n=778) or dog 5+ (52.3%, n=2620).
+
+**Avoid (ATS &lt; 50%):**
+- **dog_line_toward** — 49.7%. **dog_line_toward_focal_home** — 49.8%. Skip when focal is dog and line moved toward focal (especially at home).
+
+**Summary:** Bet rematch (focal) when **focal is away** and/or **line moved away from focal**; skip when focal is dog and the line moved toward them.
+
+---
+
+## Production emails: what goes in
+
+- **Direction:** Analysis was **bet on** the rematch team (focal) at 52%+ ATS. Lambda currently **fades** focal (bets the other side) → ~48% ATS. **Switch production to “bet on focal”.**
+- **Filter (what to include):** Use the **focal_away** segment only: include a play only when the rematch team (focal) is the **away** team today. That gives 52.6% ATS with no need for first-meeting line in the Lambda.
+- **Copy:** Email should say “Bet [focal]” (rematch/revenge spot), not “fade [focal]”. Example: `Bet Away Team +4.5 (rematch – lost first meeting) – Away @ Home`.
+
+Optional later: add line move (first-meeting spread from joined) and use **dog_line_away** (52.8%) or **exclude dog_line_toward** for more edge.
+
+---
+
 ## Out of scope (v1)
 
 - Multiple conferences/seasons in one run; conference-tournament split.

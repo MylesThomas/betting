@@ -38,6 +38,7 @@ Date: 2026-02-10
 
 import sys
 import os
+import logging
 from pathlib import Path
 import argparse
 from io import StringIO
@@ -52,6 +53,7 @@ import boto3
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 warnings.filterwarnings('ignore')
 

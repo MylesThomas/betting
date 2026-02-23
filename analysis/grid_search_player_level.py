@@ -49,6 +49,7 @@ Date: 2026-02-10
 
 import sys
 import os
+import logging
 from pathlib import Path
 import argparse
 import warnings
@@ -63,6 +64,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 warnings.filterwarnings('ignore')
 

@@ -447,8 +447,10 @@ from collections import defaultdict
 import argparse
 import sys
 import os
+import logging
 import matplotlib.pyplot as plt
 from scipy import stats
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))

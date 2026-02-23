@@ -25,6 +25,7 @@ python scripts/dev_line_movement_viz.py --ggplot
 """
 
 import pandas as pd
+import logging
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
@@ -34,6 +35,7 @@ import base64
 import argparse
 import sys
 from pathlib import Path
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 # =============================================================================
 # FAKE DATA GENERATION

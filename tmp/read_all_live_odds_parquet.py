@@ -27,12 +27,14 @@ Date: 2026-02-01
 import argparse
 import boto3
 import duckdb
+import logging
 import pandas as pd
 from pathlib import Path
 import tempfile
 import shutil
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import subprocess
