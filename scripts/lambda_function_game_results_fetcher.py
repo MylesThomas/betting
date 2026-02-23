@@ -563,7 +563,7 @@ def lambda_handler(event, context):
                     # NBA game lines (spread + moneyline) for same date
                     print(f"📥 Fetching NBA game lines for {yesterday}...")
                     lines_start = time.time()
-                    _, lines_stderr, lines_code = run_cmd(
+                    lines_stdout, lines_stderr, lines_code = run_cmd(
                         [
                             'python3', 'scripts/fetch_historical_nba_season_lines.py',
                             '--date', yesterday,
@@ -580,7 +580,8 @@ def lambda_handler(event, context):
                         )
                         print(f"✅ NBA game lines completed\n")
                     else:
-                        nba_result['game_lines_error'] = (lines_stderr or '')[:150]
+                        err_src = (lines_stderr or lines_stdout or f'exit code {lines_code}').strip()
+                        nba_result['game_lines_error'] = err_src[:200] if err_src else f'exit code {lines_code}'
                         print(f"⚠️ NBA game lines failed (results still saved)\n")
                     all_results.append(nba_result)
                 
@@ -612,11 +613,12 @@ def lambda_handler(event, context):
                         })
                         continue
                     
-                    # Extract S3 path from stdout
+                    # Extract S3 URL from stdout (script prints "   ✅ Uploaded to s3://...")
                     s3_path = None
                     for line in stdout.split('\n'):
                         if 's3://ncaab-betting-mt' in line and '.csv' in line:
-                            s3_path = line.strip()
+                            idx = line.find('s3://')
+                            s3_path = line[idx:].strip() if idx >= 0 else line.strip()
                             break
                     
                     print(f"✅ {sport_upper} - Game results fetched successfully")
@@ -628,7 +630,7 @@ def lambda_handler(event, context):
                     # NCAAB game lines (spread + totals) for same date
                     print(f"📥 Fetching NCAAB game lines for {yesterday}...")
                     lines_start = time.time()
-                    _, lines_stderr, lines_code = run_cmd(
+                    lines_stdout, lines_stderr, lines_code = run_cmd(
                         [
                             'python3', 'scripts/fetch_historical_ncaab_season_lines.py',
                             '--date', yesterday,
@@ -646,7 +648,8 @@ def lambda_handler(event, context):
                         )
                         print(f"✅ NCAAB game lines completed\n")
                     else:
-                        ncaab_result['game_lines_error'] = (lines_stderr or '')[:150]
+                        err_src = (lines_stderr or lines_stdout or f'exit code {lines_code}').strip()
+                        ncaab_result['game_lines_error'] = err_src[:200] if err_src else f'exit code {lines_code}'
                         print(f"⚠️ NCAAB game lines failed (results still saved)\n")
                     all_results.append(ncaab_result)
                 
@@ -718,11 +721,11 @@ def lambda_handler(event, context):
                 if 's3_props' in result:
                     msg.append(f"  Props: ✅ Uploaded to {result['s3_props']}")
                 if 's3_games' in result:
-                    msg.append(f"  Games: ✅ Uploaded to {result['s3_games']}")
+                    msg.append(f"  Game outcomes: ✅ Uploaded to {result['s3_games']}")
                 if 's3_game_lines' in result:
-                    msg.append(f"  Game lines: ✅ Uploaded to {result['s3_game_lines']}")
+                    msg.append(f"  Pregame lines: ✅ Uploaded to {result['s3_game_lines']}")
                 if 'game_lines_error' in result:
-                    msg.append(f"  Game lines: ⚠️ Failed ({result['game_lines_error']})")
+                    msg.append(f"  Pregame lines: ⚠️ Failed ({result['game_lines_error']})")
             elif result['status'] == 'error':
                 if 'error' in result:
                     # Truncate long errors for email readability
