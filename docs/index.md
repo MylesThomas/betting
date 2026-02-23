@@ -32,6 +32,7 @@ Located in `domain/`:
 
 Located in `exec-plans/`:
 
+- **[agent-first-repo-improvement-plan.md](exec-plans/agent-first-repo-improvement-plan.md)** - Master plan for agent-first repo transformation (phases 0–2+)
 - **[active/](exec-plans/active/)** - Current work streams and in-progress tasks
 - **[completed/](exec-plans/completed/)** - Historical context and finished projects
 - **[tech-debt-tracker.md](exec-plans/tech-debt-tracker.md)** - Known issues and improvement opportunities
