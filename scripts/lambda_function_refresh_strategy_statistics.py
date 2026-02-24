@@ -18,6 +18,9 @@ It loads raw data directly from source buckets and joins them in memory:
 
 This eliminates the circular dependency on external join scripts.
 
+Date/season bounds: We do NOT use any NBA calendar file (e.g. nba_calendar/, daily_summary_*.csv).
+When date bounds are needed, use config/season_dates.yaml.
+
 Steps:
 1. Load raw player props, game logs, shot charts, and game lines from S3
 2. Join them in memory to create player_props_with_actuals dataset
@@ -443,6 +446,22 @@ def generate_all_strategy_combinations(strategy_type: str) -> List[Dict]:
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+# Date/season bounds: We do NOT use any NBA calendar file (e.g. nba_calendar/ or
+# daily_summary_*.csv). When date bounds are needed, use config/season_dates.yaml.
+
+
+def list_s3_objects_paginated(s3_client, bucket: str, prefix: str):
+    """
+    List all S3 objects under prefix, handling pagination (list_objects_v2 returns max 1000 per call).
+    Yields each object dict from the 'Contents' array.
+    """
+    paginator = s3_client.get_paginator('list_objects_v2')
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        if 'Contents' not in page:
+            continue
+        for obj in page['Contents']:
+            yield obj
+
 
 def get_yesterday_et() -> str:
     """Get yesterday's date in ET timezone."""
@@ -472,16 +491,14 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     
     print(f"\n   🔄 Loading and joining fresh data from source buckets...")
     
-    # Step 1: Load player props
+    # Step 1: Load player props (all objects under prefix; no nba_calendar, use config/season_dates.yaml if date bounds needed)
     print(f"   📊 Loading props from s3://{S3_BUCKET_PROPS}/nba/historical_player_props/{season}/...")
     prefix = f"nba/historical_player_props/{season}/"
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
-    
-    if 'Contents' not in response:
+    props_objects = list(list_s3_objects_paginated(s3_client, S3_BUCKET_PROPS, prefix))
+    if not props_objects:
         raise RuntimeError(f"No props files found in s3://{S3_BUCKET_PROPS}/nba/historical_player_props/{season}/")
-    
     all_props = []
-    for obj in response['Contents']:
+    for obj in props_objects:
         if obj['Key'].endswith('.csv'):
             try:
                 obj_data = s3_client.get_object(Bucket=S3_BUCKET_PROPS, Key=obj['Key'])
@@ -501,16 +518,15 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     df_props['player_normalized'] = df_props['player'].apply(normalize_player_name)
     print(f"   ✅ Loaded {len(df_props):,} prop rows ({df_props['game_date'].min()} to {df_props['game_date'].max()})")
     
-    # Step 2: Load game logs (actuals)
+    # Step 2: Load game logs (actuals); paginated so we load all dates (no calendar filter)
     print(f"   🏀 Loading game logs from s3://{S3_BUCKET_NBA}/player_game_logs/{season}/...")
     prefix = f"player_game_logs/{season}/"
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
-    
-    if 'Contents' not in response:
+    game_log_objects = list(list_s3_objects_paginated(s3_client, S3_BUCKET_NBA, prefix))
+    if not game_log_objects:
         raise RuntimeError(f"No game log files found in s3://{S3_BUCKET_NBA}/player_game_logs/{season}/")
-    
+    print(f"   📂 Found {len(game_log_objects)} game log files under prefix")
     all_game_logs = []
-    for obj in response['Contents']:
+    for obj in game_log_objects:
         if obj['Key'].endswith('.csv'):
             try:
                 obj_data = s3_client.get_object(Bucket=S3_BUCKET_NBA, Key=obj['Key'])
@@ -527,7 +543,10 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'], format='mixed')
     df_games['game_date'] = df_games['GAME_DATE'].dt.date.astype(str)
     df_games['player_normalized'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
-    df_games = df_games[df_games['MIN'].notna() & (df_games['MIN'] > 0)].copy()
+    # Keep rows where player played: MIN > 0, or MIN is 0/NaN but they have PTS (some CSVs have MIN=0 for all rows)
+    min_played = df_games['MIN'].notna() & (df_games['MIN'].astype(float) > 0)
+    has_stats = (df_games['PTS'].fillna(0).astype(float) > 0) if 'PTS' in df_games.columns else pd.Series(False, index=df_games.index)
+    df_games = df_games[min_played | has_stats].copy()
     print(f"   ✅ Loaded {len(df_games):,} player-game rows ({df_games['game_date'].min()} to {df_games['game_date'].max()})")
     
     # Step 3: Load shot charts (only for 3d)
@@ -535,11 +554,10 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     if strategy_type == '3d':
         print(f"   🎯 Loading shot charts from s3://{S3_BUCKET_NBA}/player_shot_charts/{season}/...")
         prefix = f"player_shot_charts/{season}/"
-        response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NBA, Prefix=prefix)
-        
-        if 'Contents' in response:
+        shot_objects = list(list_s3_objects_paginated(s3_client, S3_BUCKET_NBA, prefix))
+        if shot_objects:
             all_shot_data = []
-            for obj in response['Contents']:
+            for obj in shot_objects:
                 if obj['Key'].endswith('.csv'):
                     try:
                         file_name = obj['Key'].split('/')[-1].replace('.csv', '')
@@ -577,12 +595,11 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
     # Step 4: Load game lines (spreads)
     print(f"   📈 Loading game lines from s3://{S3_BUCKET_PROPS}/nba/historical_game_lines/{season}/...")
     prefix = f"nba/historical_game_lines/{season}/"
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_PROPS, Prefix=prefix)
-    
+    line_objects = list(list_s3_objects_paginated(s3_client, S3_BUCKET_PROPS, prefix))
     df_lines = None
-    if 'Contents' in response:
+    if line_objects:
         all_lines = []
-        for obj in response['Contents']:
+        for obj in line_objects:
             if obj['Key'].endswith('.csv') and 'nba_game_lines' in obj['Key']:
                 try:
                     obj_data = s3_client.get_object(Bucket=S3_BUCKET_PROPS, Key=obj['Key'])
@@ -1691,11 +1708,11 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
         
         # Combine all v5 plays
         df_all = pd.concat(all_v5_plays, ignore_index=True)
-        df_all['game_date'] = pd.to_datetime(df_all['game_date'])
+        df_all['game_date'] = pd.to_datetime(df_all['game_date'], format='mixed').dt.normalize()
         df_all = df_all.sort_values('game_date')
         
-        # Filter to yesterday's plays
-        yesterday_date = pd.to_datetime(yesterday)
+        # Filter to yesterday's plays (compare normalized dates so date-only strings match)
+        yesterday_date = pd.to_datetime(yesterday).normalize()
         df_yesterday = df_all[df_all['game_date'] == yesterday_date].copy()
         
         print(f"   📅 Found {len(df_yesterday)} plays from yesterday ({yesterday})")
@@ -2537,9 +2554,9 @@ def print_yesterday_plays_summary(season: str, yesterday: str) -> None:
             print(f"   ⚠️  Could not load backtest plays: {e}")
             return
         
-        # Filter to yesterday's plays
-        df['game_date'] = pd.to_datetime(df['game_date'])
-        yesterday_date = pd.to_datetime(yesterday)
+        # Filter to yesterday's plays (parse mixed formats, compare normalized dates)
+        df['game_date'] = pd.to_datetime(df['game_date'], format='mixed').dt.normalize()
+        yesterday_date = pd.to_datetime(yesterday).normalize()
         df_yesterday = df[df['game_date'] == yesterday_date].copy()
         
         if len(df_yesterday) == 0:
