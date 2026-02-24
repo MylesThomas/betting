@@ -51,6 +51,21 @@ SELECT * FROM 's3://ncaab-betting-mt/data/01_input/historical_game_results/2026-
 
 **List / glob:** Use `read_csv_auto` with a glob pattern if the backend supports it, or query known paths. For date-partitioned data we typically know the path pattern (e.g. `.../2026-02-14.csv`).
 
+**Which files have which columns (per-file):** When reading many CSVs with `union_by_name=true`, DuckDB merges schemas so the result has every column that appears in any file. To see **which files** actually contain a given column (e.g. `TEAM_ABBREVIATION`), group by `filename` and count non-nulls for that column. Files that never had the column will have all NULLs for it.
+
+```sql
+-- Per-file: row count and whether TEAM_ABBREVIATION is present (any non-null)
+SELECT
+  filename,
+  COUNT(*) AS rows,
+  COUNT(*) FILTER (WHERE "TEAM_ABBREVIATION" IS NOT NULL AND TRIM("TEAM_ABBREVIATION") <> '') AS has_team_abbr
+FROM read_csv_auto('s3://nba-api-mt/player_game_logs/2025-26/*.csv', union_by_name=true, filename=true)
+GROUP BY filename
+ORDER BY filename;
+```
+
+To get **exact column set per file**, run `DESCRIBE` on each file (e.g. in a loop over `aws s3 ls` output).
+
 ---
 
 ## Reference
