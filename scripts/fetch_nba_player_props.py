@@ -816,6 +816,15 @@ def fetch_games_for_date(date_str, max_retries=1):
             else:
                 games = games[available_cols]
             
+            # NBA API returns MIN as string "MM:SS" (e.g. "35:24"). Parse to float minutes
+            # so S3 CSV has numeric MIN; otherwise downstream (lambda backtest) drops rows.
+            if 'MIN' in games.columns:
+                min_vals = games['MIN']
+                if min_vals.dtype == object or min_vals.dtype.kind in ('U', 'O', 'S'):
+                    games['MIN'] = min_vals.apply(
+                        lambda x: parse_minutes(x) if pd.notna(x) and str(x).strip() else 0.0
+                    )
+            
             num_games = games['GAME_ID'].nunique()
             num_players = len(games)
             
