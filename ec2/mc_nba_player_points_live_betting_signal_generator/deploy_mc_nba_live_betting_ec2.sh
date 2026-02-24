@@ -123,7 +123,7 @@ sudo -u ubuntu aws s3 cp s3://nba-betting-mt/data/01_input/pbp_data/minute_by_mi
 if [ -f /home/ubuntu/betting/requirements.txt ]; then
     sudo -u ubuntu /usr/bin/python3 -m pip install --user -q -r /home/ubuntu/betting/requirements.txt || true
 else
-    sudo -u ubuntu /usr/bin/python3 -m pip install --user -q requests pandas boto3 duckdb pytz python-dotenv || true
+    sudo -u ubuntu /usr/bin/python3 -m pip install --user -q requests pandas boto3 duckdb pytz python-dotenv pyarrow || true
 fi
 
 # Systemd unit: run live signal generator in a loop (from repo so redeploy = git pull + install_service.sh)
