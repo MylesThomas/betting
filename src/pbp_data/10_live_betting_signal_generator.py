@@ -105,9 +105,9 @@ LOCAL_ODDS_DIR.mkdir(exist_ok=True, parents=True)
 LOCAL_SIGNALS_DIR.mkdir(exist_ok=True, parents=True)
 
 # Betting parameters
-MIN_EDGE_THRESHOLD = 0.10  # 15% minimum edge
+MIN_EDGE_THRESHOLD = 0.10  # 10% minimum edge
 N_SIMULATIONS = 500  # Default simulations (balance speed vs accuracy; lower = faster iterations)
-MAX_PLAYERS_PER_GAME = 12  # Max players to run MC on per game (main lever for iteration time)
+MAX_PLAYERS_PER_GAME = 30  # Max players to run MC on per game (try all; some skip for 0 min / no pregame)
 # Cap model probability to avoid overconfident extreme edges (e.g. 84% UNDER on low-minute players)
 MODEL_PROB_FLOOR = 0.15
 MODEL_PROB_CAP = 0.85
@@ -1656,6 +1656,8 @@ def analyze_player_betting_opportunity(
             return None
         
         print(f"         ✅ Found {len(all_bets)} profitable bet(s)")
+        for i, bet in enumerate(sorted(all_bets, key=lambda x: -x['ev']), 1):
+            print(f"            {i}. {bet['bookmaker']} {bet['bet_side']} {bet['live_line']}  EV ${bet['ev']:.2f}")
         best_bet = max(all_bets, key=lambda x: x['ev'])
         print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']} {best_bet['bet_side']} {best_bet['live_line']})")
         return best_bet
@@ -1671,17 +1673,21 @@ def analyze_player_betting_opportunity(
 
 def main():
     """Main execution loop with performance gates."""
-    
+    global MIN_EDGE_THRESHOLD, N_SIMULATIONS, MAX_PLAYERS_PER_GAME
+    # Parser defaults from module constants
+    _d_min_edge = MIN_EDGE_THRESHOLD
+    _d_n_sims = N_SIMULATIONS
+    _d_max_players = MAX_PLAYERS_PER_GAME
+
     parser = argparse.ArgumentParser(description="Live betting signal generator")
-    parser.add_argument("--min-edge", type=float, default=0.15, help="Minimum edge threshold (default 0.15)")
-    parser.add_argument("--n-sims", type=int, default=500, help="Number of MC simulations (default 500; lower = faster)")
-    parser.add_argument("--max-players", type=int, default=12, help="Max players to analyze per game (default 12; main lever for speed)")
+    parser.add_argument("--min-edge", type=float, default=_d_min_edge, help=f"Minimum edge threshold (default {_d_min_edge})")
+    parser.add_argument("--n-sims", type=int, default=_d_n_sims, help=f"Number of MC simulations (default {_d_n_sims}; lower = faster)")
+    parser.add_argument("--max-players", type=int, default=_d_max_players, help=f"Max players to analyze per game (default {_d_max_players}; try all, some skip)")
     parser.add_argument("--test-with-fake-data", action="store_true", help="Run in test mode with fake data")
     parser.add_argument("--loop", action="store_true", help="Run continuously (scan every N seconds)")
     parser.add_argument("--interval", type=int, default=60, help="Seconds between scans when in loop mode (default 60)")
     args = parser.parse_args()
-    
-    global MIN_EDGE_THRESHOLD, N_SIMULATIONS, MAX_PLAYERS_PER_GAME
+
     MIN_EDGE_THRESHOLD = args.min_edge
     N_SIMULATIONS = args.n_sims
     MAX_PLAYERS_PER_GAME = args.max_players
