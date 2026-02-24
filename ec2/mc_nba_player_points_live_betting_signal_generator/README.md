@@ -41,6 +41,14 @@ cd ~/dev/betting && bash ec2/mc_nba_player_points_live_betting_signal_generator/
 
 Then on the instance: create `/etc/mc-live-betting/env` (plain file named `env`, not `.env`) with one line e.g. `ODDS_API_KEY=your-key`, then `sudo systemctl start mc-live-betting`. Logs: `journalctl -u mc-live-betting -f`.
 
+**Redeploy (update code + service on existing instance):** SSH in, then:
+```bash
+cd /home/ubuntu/betting
+git pull
+sudo bash ec2/mc_nba_player_points_live_betting_signal_generator/install_service.sh
+```
+That copies the systemd unit from the repo, reloads systemd, and restarts the service. No manual sed needed.
+
 **SSH and changing IPs:** The instance security group needs an inbound rule for SSH (22) from your IP. If your public IP changes (e.g. different network), either add a new inbound rule for the new IP (Custom → `your.ip.here/32`) or allow a range (e.g. `170.85.0.0/16`) or **0.0.0.0/0** (any IP; key auth still required). Check your IP with `curl -s ifconfig.me`.
 
 ---

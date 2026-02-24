@@ -1,0 +1,16 @@
+[Unit]
+Description=MC NBA Live Betting Signal Generator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/betting
+EnvironmentFile=-/etc/mc-live-betting/env
+ExecStart=/usr/bin/python3 -u src/pbp_data/10_live_betting_signal_generator.py --loop --interval 60
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

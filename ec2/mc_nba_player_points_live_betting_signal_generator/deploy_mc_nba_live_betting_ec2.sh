@@ -126,10 +126,13 @@ else
     sudo -u ubuntu /usr/bin/python3 -m pip install --user -q requests pandas boto3 duckdb pytz python-dotenv || true
 fi
 
-# Systemd unit: run live signal generator in a loop
+# Systemd unit: run live signal generator in a loop (from repo so redeploy = git pull + install_service.sh)
 # ODDS_API_KEY must be in /etc/mc-live-betting/env (create after first boot if not set at launch)
 mkdir -p /etc/mc-live-betting
-cat > /etc/systemd/system/mc-live-betting.service << 'UNIT'
+if [ -f /home/ubuntu/betting/ec2/mc_nba_player_points_live_betting_signal_generator/mc-live-betting.service ]; then
+  cp /home/ubuntu/betting/ec2/mc_nba_player_points_live_betting_signal_generator/mc-live-betting.service /etc/systemd/system/
+else
+  cat > /etc/systemd/system/mc-live-betting.service << 'UNIT'
 [Unit]
 Description=MC NBA Live Betting Signal Generator
 After=network-online.target
@@ -140,14 +143,14 @@ Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/betting
 EnvironmentFile=-/etc/mc-live-betting/env
-ExecStart=/usr/bin/python3 -u src/pbp_data/10_live_betting_signal_generator.py --loop --interval 300 --n-sims 500 --min-edge 0.15
+ExecStart=/usr/bin/python3 -u src/pbp_data/10_live_betting_signal_generator.py --loop --interval 60
 Restart=always
 RestartSec=60
 
 [Install]
 WantedBy=multi-user.target
 UNIT
-
+fi
 systemctl daemon-reload
 # Do not start yet: ODDS_API_KEY may not be in /etc/mc-live-betting/env. User can start after setting it.
 # systemctl enable --now mc-live-betting
