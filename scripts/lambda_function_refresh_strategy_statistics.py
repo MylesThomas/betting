@@ -524,7 +524,7 @@ def load_player_props_from_s3(s3_client, season: str, strategy_type: str) -> 'pd
         raise RuntimeError(f"No game logs loaded for {season}")
     
     df_games = pd.concat(all_game_logs, ignore_index=True)
-    df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'])
+    df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'], format='mixed')
     df_games['game_date'] = df_games['GAME_DATE'].dt.date.astype(str)
     df_games['player_normalized'] = df_games['PLAYER_NAME'].apply(normalize_player_name)
     df_games = df_games[df_games['MIN'].notna() & (df_games['MIN'] > 0)].copy()
