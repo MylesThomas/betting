@@ -1712,6 +1712,10 @@ def generate_v5_yesterday_summary_plot(strategy_rankings: Dict, season: str, yes
         df_all = df_all.sort_values('game_date')
         
         # Filter to yesterday's plays (compare normalized dates so date-only strings match)
+        # NOTE: This table shows exactly what was written to plays.csv by the backtest in this run.
+        # If a player appears in the "Top 3" email but not here, the backtest likely ran when game
+        # logs were stale (e.g. MIN=0 for that date before re-fetch). Re-run the refresh after
+        # re-fetching game logs so all plays with actuals are included.
         yesterday_date = pd.to_datetime(yesterday).normalize()
         df_yesterday = df_all[df_all['game_date'] == yesterday_date].copy()
         
