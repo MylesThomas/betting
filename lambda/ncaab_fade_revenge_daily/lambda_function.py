@@ -898,6 +898,8 @@ def lambda_handler(event=None, context=None):
     if not ok and err:
         LOG.warning("Fetch step had issues: %s", err)
     LOG.info("Fetch scripts completed (ok=%s)", ok)
+    print(f"Fetch scripts completed: ok={ok}")
+    sys.stdout.flush()
 
     # Load outcomes and lines (season start through yesterday)
     outcomes = load_outcomes(s3, start_date, yesterday_et)
@@ -919,6 +921,8 @@ def lambda_handler(event=None, context=None):
     rematch_spots = build_rematch_spots(joined)
     today_events = fetch_today_events_espn(today_et)
     odds_lookup, today_lines_df = load_today_lines_from_s3(s3, today_et)
+    print(f"Today lines from S3: {len(today_lines_df)} games")
+    sys.stdout.flush()
     if not odds_lookup or today_lines_df.empty:
         key = f"{LINES_PREFIX}{today_et}.csv"
         body = (

@@ -132,15 +132,62 @@ def check_api_key():
     return True
 
 
+def get_in_season_odds_today(date_str: str) -> list | None:
+    """
+    Fetch today's NCAAB events and odds via in-season API (not historical).
+
+    Use when date_str is today (ET). Historical API returns no events for future/same-day games.
+    Cost: 1 request (all events with odds in one call).
+
+    Args:
+        date_str: Date string 'YYYY-MM-DD' (must be today in ET).
+
+    Returns:
+        List of event dicts (same shape as historical for parse_game_lines), or None on error.
+    """
+    url = f"{BASE_URL}/sports/{SPORT}/odds"
+    params = {
+        'apiKey': API_KEY,
+        'regions': REGIONS,
+        'markets': MARKETS,
+        'oddsFormat': ODDS_FORMAT,
+    }
+    global credits_remaining
+    try:
+        response = requests.get(url, params=params, verify=False)
+        response.raise_for_status()
+        events = response.json()
+        credits_remaining = int(float(response.headers.get('x-requests-remaining', 0)))
+
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        et = ZoneInfo('America/New_York')
+        out = []
+        for ev in events:
+            commence_time = ev.get('commence_time')
+            if not commence_time:
+                continue
+            commence_dt = datetime.fromisoformat(commence_time.replace('Z', '+00:00'))
+            commence_et = commence_dt.astimezone(et)
+            if commence_et.date() == target_date:
+                out.append(ev)
+        return out
+    except requests.exceptions.HTTPError as e:
+        print(f"❌ In-season odds HTTP Error: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ In-season odds Error: {e}")
+        return None
+
+
 def get_historical_ncaab_events(date_str):
     """
     Get historical NCAAB events for a specific date.
-    
+
     Cost: 1 credit per request
-    
+
     Args:
         date_str: Date string in format 'YYYY-MM-DD'
-    
+
     Returns:
         Dict with events list, cost, remaining credits (or None on error)
     """
@@ -466,10 +513,29 @@ def fetch_date(date_str, upload_s3=False, test_mode=False, skip_existing=False):
         if check_s3_file_exists(date_str):
             print(f"\n⏭️  Skipping {date_str} (already exists in S3)")
             return None
-    
+
+    today_et = datetime.now(ZoneInfo('America/New_York')).date().strftime('%Y-%m-%d')
+    if date_str == today_et:
+        # Historical API has no data for today; use in-season odds endpoint
+        print(f"\n📥 Fetching NCAAB game lines for {date_str} (today – in-season API)...")
+        events_list = get_in_season_odds_today(date_str)
+        if events_list is None:
+            print("   ❌ Failed to fetch in-season odds")
+            return pd.DataFrame()
+        if not events_list:
+            print(f"   ℹ️  No games found for {date_str}")
+            if upload_s3:
+                save_to_s3(pd.DataFrame(), date_str)
+            return pd.DataFrame()
+        df = parse_game_lines(events_list)
+        print(f"   ✅ Found {len(df)} games (in-season API)")
+        if upload_s3:
+            save_to_s3(df, date_str)
+        return df
+
     print(f"\n📥 Fetching NCAAB game lines for {date_str}...")
-    
-    # Step 1: Get events for this date
+
+    # Step 1: Get events for this date (historical API)
     events_result = get_historical_ncaab_events(date_str)
     
     if not events_result:
