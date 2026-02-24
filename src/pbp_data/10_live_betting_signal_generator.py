@@ -947,8 +947,11 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
         # Parse odds data
         odds_records = []
         
+        fetch_time_utc = datetime.now(timezone.utc)
         for bookmaker in data.get('bookmakers', []):
             bookmaker_name = bookmaker['key']
+            # API provides last_update at bookmaker level (when that book's odds were last updated)
+            bookmaker_last_update = bookmaker.get('last_update')  # ISO string or None
             
             for market in bookmaker.get('markets', []):
                 if market['key'] == 'player_points':
@@ -968,7 +971,8 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
                             'line': outcome.get('point'),
                             'side': outcome.get('name'),  # Over or Under
                             'odds': outcome.get('price'),
-                            'timestamp': datetime.now(timezone.utc).isoformat()
+                            'timestamp': fetch_time_utc.isoformat(),
+                            'bookmaker_last_update': bookmaker_last_update,
                         })
         
         if odds_records:
@@ -984,6 +988,9 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
 def filter_stale_odds(odds_df: pd.DataFrame, max_age_seconds: int = MAX_ODDS_AGE_SECONDS) -> pd.DataFrame:
     """
     Filter out stale odds at the bookmaker level (Gate 3 pre-check).
+    Gate 3 = API/bookmaker fetch freshness (we got this payload recently). It does NOT guarantee
+    each line has been updated for current game state; already-decided lines (current_points > line)
+    are skipped later when analyzing, and we log those with last_update + age.
     If ANY odds from a bookmaker are older than max_age_seconds, remove ALL odds from that bookmaker.
     
     Args:
@@ -1551,7 +1558,24 @@ def analyze_player_betting_opportunity(
                 # Skip already-decided / stale lines: if player already has more than the line, OVER has hit.
                 # Books shouldn't still offer this; if the API returns it, treat as stale and skip.
                 if current_points > line_value:
-                    print(f"         🔍 DEBUG: Skipping stale line {line_value} (player has {current_points} pts)")
+                    row = line_odds.iloc[0]
+                    last_update_raw = row.get('bookmaker_last_update') or row.get('timestamp')
+                    try:
+                        if last_update_raw:
+                            if isinstance(last_update_raw, str):
+                                last_dt = datetime.fromisoformat(last_update_raw.replace('Z', '+00:00'))
+                            else:
+                                last_dt = pd.to_datetime(last_update_raw, utc=True).to_pydatetime()
+                            if last_dt.tzinfo is None:
+                                last_dt = last_dt.replace(tzinfo=timezone.utc)
+                            now_utc = datetime.now(timezone.utc)
+                            age_sec = (now_utc - last_dt).total_seconds()
+                            age_str = f"{age_sec:.0f}s ago" if age_sec < 60 else f"{age_sec / 60:.1f} min ago"
+                            print(f"         🔍 DEBUG: Skipping stale line {line_value} (player has {current_points} pts) | last_update={last_dt.strftime('%H:%M:%S')} UTC, {age_str}")
+                        else:
+                            print(f"         🔍 DEBUG: Skipping stale line {line_value} (player has {current_points} pts) | no last_update")
+                    except Exception:
+                        print(f"         🔍 DEBUG: Skipping stale line {line_value} (player has {current_points} pts)")
                     continue
                 
                 # Calculate probability for this line from the distribution
