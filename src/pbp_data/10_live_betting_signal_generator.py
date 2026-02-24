@@ -1538,6 +1538,7 @@ def analyze_player_betting_opportunity(
         # =====================================================================
         all_bets = []
         combinations_checked = 0
+        combos_analyzed = []  # (bookmaker, line) for logging
         
         for bookmaker in player_odds['bookmaker'].unique():
             book_odds = player_odds[player_odds['bookmaker'] == bookmaker]
@@ -1626,6 +1627,7 @@ def analyze_player_betting_opportunity(
                 )
                 
                 combinations_checked += 1
+                combos_analyzed.append((bookmaker, line_value, over_odds, under_odds))
                 
                 if signal['action'] != 'PASS':
                     # Package signal with all context
@@ -1645,6 +1647,8 @@ def analyze_player_betting_opportunity(
                     all_bets.append(signal)
         
         print(f"         📊 Analyzed {combinations_checked} (bookmaker × line) combinations")
+        for i, (bm, line, over_odds, under_odds) in enumerate(combos_analyzed, 1):
+            print(f"            {i}. {bm} {line}  (OVER {over_odds:+d} / UNDER {under_odds:+d})")
         
         # Return bet with highest EV
         if not all_bets:
@@ -2010,6 +2014,7 @@ def main():
             
             with timed_step("Step 6: Analyze players (MC)"):
                 for player_name in active_player_names:
+                    print("=" * 60)
                     print(f"   🔄 Analyzing {player_name}...")
                     
                     # Get boxscore data for this player
@@ -2022,6 +2027,11 @@ def main():
                         'team': boxscore_info.get('team', 'Unknown'),
                         'minutes_played': boxscore_info.get('minutes_played', 0),
                     }
+                    
+                    # Skip players with 0 minutes (possible DNP; don't suggest live points bets)
+                    if not player['minutes_played']:
+                        print(f"      ⏭️  Skipping (0 min played – possible DNP)")
+                        continue
                     
                     signal = analyze_player_betting_opportunity(
                         player, game, live_odds_df, pbp_data, pregame_props_lookup, n_sims=N_SIMULATIONS, test_mode=test_mode
