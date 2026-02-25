@@ -31,7 +31,7 @@ python tmp/get_lambda_logs.py --lambda-function-name ncaab-fade-revenge-daily
 
 - `lambda_function.py`
 - `scripts/`: `fetch_historical_ncaab_season_lines.py`, `fetch_historical_game_results_espn_api.py`
-- `src/`: `config_loader.py`, `ncaab_team_name_mapping.py`, `ncaab_conference_data.py`
+- `src/`: `config_loader.py`, `ncaab_team_name_mapping.py`, `ncaab_conference_data.py`, `ncaab_conference_inferred.py`
 - `config/config.yaml`
 - `.gitignore` (so fetch scripts’ `find_project_root()` resolves to package root)
 

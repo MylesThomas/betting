@@ -554,6 +554,11 @@ NCAAB_CONFERENCE_MAPPING_2025_26 = {
     'the Pacific Tigers': 'West Coast',
 }
 
+try:
+    from src.ncaab_conference_inferred import NCAAB_CONFERENCE_INFERRED_2025_26
+except ImportError:
+    NCAAB_CONFERENCE_INFERRED_2025_26 = {}
+
 
 def get_team_conference(team_name: str, season: str = '2025-26') -> str:
     """
@@ -575,14 +580,14 @@ def get_team_conference(team_name: str, season: str = '2025-26') -> str:
             f"Conference mappings are only available for 2025-26 season. "
             f"Requested season: {season}. Please update NCAAB_CONFERENCE_MAPPING_{season.replace('-', '_')}."
         )
-    
-    if team_name not in NCAAB_CONFERENCE_MAPPING_2025_26:
+    # Inferred (schedule-based) first so realignment (e.g. Texas -> SEC) is correct
+    conf = NCAAB_CONFERENCE_INFERRED_2025_26.get(team_name) or NCAAB_CONFERENCE_MAPPING_2025_26.get(team_name)
+    if not conf:
         raise ValueError(
             f"Team '{team_name}' not found in conference mapping. "
             f"This may be due to an unmatched team name or missing manual mapping."
         )
-    
-    return NCAAB_CONFERENCE_MAPPING_2025_26[team_name]
+    return conf
 
 
 def is_conference_game(team1: str, team2: str, season: str = '2025-26') -> bool:

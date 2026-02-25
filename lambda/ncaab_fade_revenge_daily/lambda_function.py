@@ -40,6 +40,11 @@ try:
 except ImportError:
     NCAAB_CONFERENCE_MAPPING_2025_26 = {}
 
+try:
+    from src.ncaab_conference_inferred import NCAAB_CONFERENCE_INFERRED_2025_26
+except ImportError:
+    NCAAB_CONFERENCE_INFERRED_2025_26 = {}
+
 ET = ZoneInfo('America/New_York')
 LOG = logging.getLogger(__name__)
 
@@ -80,8 +85,9 @@ def _odds_to_espn(name: str) -> str:
 
 
 def _conference(team_name: str) -> str:
+    """Conference lookup: inferred (schedule-based, reflects realignment) first, then primary (wiki)."""
     t = str(team_name).strip()
-    return NCAAB_CONFERENCE_MAPPING_2025_26.get(t, "")
+    return NCAAB_CONFERENCE_INFERRED_2025_26.get(t) or NCAAB_CONFERENCE_MAPPING_2025_26.get(t, "")
 
 
 # -----------------------------------------------------------------------------

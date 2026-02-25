@@ -103,6 +103,7 @@ cp lambda_function.py package/
 cp "$REPO_ROOT/src/config_loader.py" package/src/
 cp "$REPO_ROOT/src/ncaab_team_name_mapping.py" package/src/
 cp "$REPO_ROOT/src/ncaab_conference_data.py" package/src/
+cp "$REPO_ROOT/src/ncaab_conference_inferred.py" package/src/
 
 # Fetch scripts (run for yesterday inside Lambda)
 cp "$REPO_ROOT/scripts/fetch_historical_ncaab_season_lines.py" package/scripts/
