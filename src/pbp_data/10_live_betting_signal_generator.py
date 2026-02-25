@@ -8,7 +8,7 @@ simulation to detect edges between our model and live betting markets.
 Process:
 1. Fetch live games from ESPN API
 2. Validate PBP data freshness (Gate 2: <1min old)
-3. Fetch live odds from The Odds API
+3. Fetch live odds from The Odds API (exclude bookmakers that don't update in-game, e.g. Bovada; see EXCLUDED_BOOKMAKERS)
 4. Filter stale odds (Gate 3: <1min at bookmaker level)
 5. Get active players (Gate 1: in live game)
 6. For each player with fresh odds and pregame line (Gates 3 & 4):
@@ -113,6 +113,13 @@ MODEL_PROB_FLOOR = 0.15
 MODEL_PROB_CAP = 0.85
 MAX_PBP_AGE_SECONDS = 300  # Maximum age for PBP data (5 minutes - ESPN can lag during timeouts, halftime, etc.)
 MAX_ODDS_AGE_SECONDS = 60  # Maximum age for odds data (1 minute - must be fresh ie. within this 1 min interval)
+# Bookmakers to exclude: API returns them with recent last_update but lines are often pregame, not live (e.g. Bovada).
+# Set via env EXCLUDED_BOOKMAKERS=bovada or bovada,mybookieag (comma-separated, case-insensitive).
+EXCLUDED_BOOKMAKERS = [
+    k.strip().lower() for k in os.environ.get('EXCLUDED_BOOKMAKERS', 'bovada').split(',') if k.strip()
+]
+# Flag and skip lines that are 5+ points off current or pregame (likely stale/wrong market).
+LINE_OFF_THRESHOLD_POINTS = 5
 
 # ESPN API
 ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
@@ -948,11 +955,15 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
         odds_records = []
         
         fetch_time_utc = datetime.now(timezone.utc)
+        excluded_skipped = []
         for bookmaker in data.get('bookmakers', []):
             bookmaker_name = bookmaker['key']
+            if bookmaker_name.lower() in EXCLUDED_BOOKMAKERS:
+                excluded_skipped.append(bookmaker_name)
+                continue
             # API provides last_update at bookmaker level (when that book's odds were last updated)
             bookmaker_last_update = bookmaker.get('last_update')  # ISO string or None
-            
+
             for market in bookmaker.get('markets', []):
                 if market['key'] == 'player_points':
                     for outcome in market.get('outcomes', []):
@@ -974,7 +985,9 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
                             'timestamp': fetch_time_utc.isoformat(),
                             'bookmaker_last_update': bookmaker_last_update,
                         })
-        
+
+        if excluded_skipped:
+            print(f"   ⚠️  Excluded bookmaker(s) (live lines not updated in-game): {', '.join(excluded_skipped)}")
         if odds_records:
             return pd.DataFrame(odds_records)
         else:
@@ -1578,6 +1591,12 @@ def analyze_player_betting_opportunity(
                     except Exception:
                         print(f"         🔍 DEBUG: Skipping stale line {line_value} (player has {current_points} pts)")
                     continue
+                
+                # Flag (log only) lines 5+ points off current or pregame — may be stale; we still analyze them.
+                off_current = abs(line_value - current_points)
+                off_pregame = abs(line_value - pregame_line)
+                if off_current >= LINE_OFF_THRESHOLD_POINTS or off_pregame >= LINE_OFF_THRESHOLD_POINTS:
+                    print(f"         ⚠️  Line {line_value} is {off_current:.1f} pts off current ({current_points}), {off_pregame:.1f} off pregame ({pregame_line}) — possible stale")
                 
                 # Calculate probability for this line from the distribution
                 # Count how many simulations went over this line
