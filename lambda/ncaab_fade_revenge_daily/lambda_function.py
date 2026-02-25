@@ -1087,14 +1087,14 @@ def lambda_handler(event=None, context=None):
     if plays_only.empty:
         lines_email.append("  None.")
     else:
-        for i, (_, row) in enumerate(plays_only.iterrows(), start=1):
+        for _, row in plays_only.iterrows():
             spread = row.get("consensus_spread_home", None)
             if spread is None or pd.isna(spread):
                 line_str = "line NA"
             else:
                 bet_line = spread if row["bet_team"] == row["home_team"] else -spread
                 line_str = f"{bet_line:+.1f}" if isinstance(bet_line, (int, float)) else str(bet_line)
-            lines_email.append(f"- {i} {row['bet_team']} {line_str}")
+            lines_email.append(f"- {row['bet_team']} {line_str}")
 
     body = "\n".join(lines_email)
     if sns_client and sns_topic:
