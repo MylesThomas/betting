@@ -1078,31 +1078,23 @@ def lambda_handler(event=None, context=None):
     lines_email.append("")
     lines_email.append(f"Plays CSV: {plays_path}")
 
-    # Tweet section: same plays in copy-paste format for Twitter
+    # Tweet / Quick Summary: one line per play (team + line) for quick copy-paste
     lines_email.append("")
     lines_email.append("--------------")
-    lines_email.append("Tweet / Quick Summarysection:")
+    lines_email.append("Tweet / Quick Summary section:")
     lines_email.append("")
-    lines_email.append(f"Today's plays (bet revenge – focal away only) (n = {n_plays}):")
+    lines_email.append("ncaab sides:")
     if plays_only.empty:
         lines_email.append("  None.")
     else:
-        for _, row in plays_only.iterrows():
-            tip = (row.get("start_time_et") or "").strip()
-            tip_str = f"  {tip}  " if tip else "  "
-            hc = row.get("home_conference", "") or ""
-            ac = row.get("away_conference", "") or ""
-            conf = f" ({ac} @ {hc})" if (hc or ac) else ""
-            prior = row.get("prior_meetings", "") or ""
+        for i, (_, row) in enumerate(plays_only.iterrows(), start=1):
             spread = row.get("consensus_spread_home", None)
             if spread is None or pd.isna(spread):
                 line_str = "line NA"
             else:
                 bet_line = spread if row["bet_team"] == row["home_team"] else -spread
                 line_str = f"{bet_line:+.1f}" if isinstance(bet_line, (int, float)) else str(bet_line)
-            lines_email.append(f"  {tip_str}Bet {row['bet_team']} {line_str} (rematch – lost first meeting) – {row['away_team']} @ {row['home_team']}{conf}")
-            if prior:
-                lines_email.append(f"    Prior: {prior}")
+            lines_email.append(f"- {i} {row['bet_team']} {line_str}")
 
     body = "\n".join(lines_email)
     if sns_client and sns_topic:
