@@ -107,7 +107,7 @@ LOCAL_SIGNALS_DIR.mkdir(exist_ok=True, parents=True)
 
 # Betting parameters
 MIN_EDGE_THRESHOLD = 0.10  # 10% minimum edge
-N_SIMULATIONS = 500  # Default simulations (balance speed vs accuracy; lower = faster iterations)
+N_SIMULATIONS = 5000  # Default simulations (balance speed vs accuracy; lower = faster iterations)
 MAX_PLAYERS_PER_GAME = 30  # Max players to run MC on per game (try all; some skip for 0 min / no pregame)
 # Cap model probability to avoid overconfident extreme edges (e.g. 84% UNDER on low-minute players)
 MODEL_PROB_FLOOR = 0.15
@@ -145,6 +145,7 @@ def timed_step(name: str):
     yield
     elapsed = time.perf_counter() - t0
     _iteration_timings[name] = _iteration_timings.get(name, 0) + elapsed
+    print(f"   ⏱️  {name}: {elapsed:.2f}s")
 
 
 # =============================================================================
@@ -1523,9 +1524,10 @@ def analyze_player_betting_opportunity(
         vegas_adjustment = find_vegas_adjustment(
             player_profile,
             pregame_line,
-            n_simulations=5000
+            n_simulations=n_sims
         )
         vegas_elapsed = time.time() - vegas_start
+        print(f"      [calibration] vegas_adjustment={vegas_adjustment:.4f} (pregame_line={pregame_line}, {vegas_elapsed:.1f}s)")
         
         # Calculate current game minute
         quarter = game['quarter']
@@ -1854,9 +1856,9 @@ def main():
             print("✅ Ready")
             print()
 
-    # Sync to top of minute if in loop mode (when we didn't load during wait, e.g. test_mode)
-    if loop_mode and preloaded_mbm_con is None and not test_mode:
-        pass  # already did sync above when we loaded
+    # Sync to top of minute if in loop mode only when we didn't already sync (e.g. test_mode, no preload)
+    if loop_mode and preloaded_mbm_con is not None:
+        pass  # already synced at startup (load-during-wait or load-at-boundary)
     elif loop_mode:
         now = datetime.now()
         seconds_into_minute = now.second + now.microsecond / 1_000_000
@@ -1873,461 +1875,453 @@ def main():
 
     try:
         while True:
-        iteration += 1
-        iteration_start_time = datetime.now()
-        _iteration_timings.clear()
-        
-        if loop_mode:
+            iteration += 1
+            iteration_start_time = datetime.now()
+            _iteration_timings.clear()
+            
+            if loop_mode:
+                print("="*80)
+                print(f"ITERATION #{iteration} - {iteration_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                print("="*80)
+                print()
+            
+            # =====================================================================
+            # STEP 1: FETCH LIVE GAMES
+            # =====================================================================
             print("="*80)
-            print(f"ITERATION #{iteration} - {iteration_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"STEP 1: Fetching live games {'(TEST MODE)' if test_mode else 'from ESPN'}...")
             print("="*80)
+            
+            with timed_step("Step 1: Fetch live games"):
+                live_games = fetch_live_games(test_mode=test_mode)
+            
+            if not live_games:
+                print("❌ No live games found")
+                if not loop_mode:
+                    return
+                else:
+                    # Calculate time to next minute boundary
+                    now = datetime.now()
+                    elapsed_this_iteration = (now - iteration_start_time).total_seconds()
+                    current_minute = now.replace(second=0, microsecond=0)
+                    next_target = current_minute + timedelta(seconds=interval)
+                    
+                    if next_target <= now:
+                        next_target = next_target + timedelta(seconds=interval)
+                    
+                    sleep_seconds = (next_target - now).total_seconds()
+                    
+                    print(f"   ⏳ Waiting {sleep_seconds:.1f}s (current: {now.strftime('%H:%M:%S.%f')[:-3]}, iteration: {elapsed_this_iteration:.1f}s)")
+                    print()
+                    time.sleep(sleep_seconds)
+                    continue
+            
+            print(f"✅ Found {len(live_games)} live game(s)")
+            for game in live_games:
+                print(f"   🏀 {game['away_team']} ({game['away_score']}) @ {game['home_team']} ({game['home_score']})")
+                print(f"      Q{game['quarter']} - {game['clock']}")
             print()
-        
-        # =====================================================================
-        # STEP 1: FETCH LIVE GAMES
-        # =====================================================================
-        print("="*80)
-        print(f"STEP 1: Fetching live games {'(TEST MODE)' if test_mode else 'from ESPN'}...")
-        print("="*80)
-        
-        with timed_step("Step 1: Fetch live games"):
-            live_games = fetch_live_games(test_mode=test_mode)
-        
-        if not live_games:
-            print("❌ No live games found")
-            if not loop_mode:
-                return
+            
+            # =====================================================================
+            # STEP 1.5: LOAD PREGAME PROPS (ONCE FOR ALL GAMES)
+            # =====================================================================
+            if not test_mode:
+                print("="*80)
+                print("STEP 1.5: Loading pregame props from S3...")
+                print("="*80)
+                
+                with timed_step("Step 1.5: Load pregame props"):
+                    et_tz = pytz.timezone('US/Eastern')
+                    game_date_et = datetime.now(et_tz).strftime('%Y-%m-%d')
+                    pregame_props_lookup = load_pregame_props_lookup(game_date_et)
+                    if len(pregame_props_lookup) == 0 or datetime.now(et_tz).hour < 6:
+                        yesterday_et = (datetime.now(et_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
+                        print(f"   ⚠️  Trying yesterday's pregame lines ({yesterday_et}) as fallback...")
+                        pregame_props_yesterday = load_pregame_props_lookup(yesterday_et)
+                        if len(pregame_props_yesterday) > 0:
+                            pregame_props_lookup.update(pregame_props_yesterday)
+                            print(f"   ✅ Loaded {len(pregame_props_yesterday)} additional player(s) from {yesterday_et}")
+                            print(f"   📊 Total pregame lines: {len(pregame_props_lookup)} player(s)")
+                
+                print(f"✅ Loaded pregame lines for {len(pregame_props_lookup)} player(s) from {game_date_et}")
+                print()
             else:
-                # Calculate time to next minute boundary
-                now = datetime.now()
-                elapsed_this_iteration = (now - iteration_start_time).total_seconds()
-                current_minute = now.replace(second=0, microsecond=0)
-                next_target = current_minute + timedelta(seconds=interval)
-                
-                if next_target <= now:
-                    next_target = next_target + timedelta(seconds=interval)
-                
-                sleep_seconds = (next_target - now).total_seconds()
-                
-                print(f"   ⏳ Waiting {sleep_seconds:.1f}s (current: {now.strftime('%H:%M:%S.%f')[:-3]}, iteration: {elapsed_this_iteration:.1f}s)")
+                # In test mode, we don't need pregame props (will use fake data)
+                pregame_props_lookup = {}
+            
+            # =====================================================================
+            # STEP 1.6: FETCH ODDS API EVENTS FOR MATCHING
+            # =====================================================================
+            if not test_mode:
+                print("="*80)
+                print("STEP 1.6: Fetching Odds API events for matching...")
+                print("="*80)
+                with timed_step("Step 1.6: Fetch Odds API events"):
+                    odds_lookup = fetch_odds_api_events()
+                print(f"✅ Found {len(odds_lookup)} Odds API event(s)")
                 print()
-                time.sleep(sleep_seconds)
-                continue
-        
-        print(f"✅ Found {len(live_games)} live game(s)")
-        for game in live_games:
-            print(f"   🏀 {game['away_team']} ({game['away_score']}) @ {game['home_team']} ({game['home_score']})")
-            print(f"      Q{game['quarter']} - {game['clock']}")
-        print()
-        
-        # =====================================================================
-        # STEP 1.5: LOAD PREGAME PROPS (ONCE FOR ALL GAMES)
-        # =====================================================================
-        if not test_mode:
-            print("="*80)
-            print("STEP 1.5: Loading pregame props from S3...")
-            print("="*80)
+            else:
+                # In test mode, we don't need the lookup
+                odds_lookup = {}
             
-            with timed_step("Step 1.5: Load pregame props"):
-                et_tz = pytz.timezone('US/Eastern')
-                game_date_et = datetime.now(et_tz).strftime('%Y-%m-%d')
-                pregame_props_lookup = load_pregame_props_lookup(game_date_et)
-                if len(pregame_props_lookup) == 0 or datetime.now(et_tz).hour < 6:
-                    yesterday_et = (datetime.now(et_tz) - timedelta(days=1)).strftime('%Y-%m-%d')
-                    print(f"   ⚠️  Trying yesterday's pregame lines ({yesterday_et}) as fallback...")
-                    pregame_props_yesterday = load_pregame_props_lookup(yesterday_et)
-                    if len(pregame_props_yesterday) > 0:
-                        pregame_props_lookup.update(pregame_props_yesterday)
-                        print(f"   ✅ Loaded {len(pregame_props_yesterday)} additional player(s) from {yesterday_et}")
-                        print(f"   📊 Total pregame lines: {len(pregame_props_lookup)} player(s)")
-            
-            print(f"✅ Loaded pregame lines for {len(pregame_props_lookup)} player(s) from {game_date_et}")
-            print()
-        else:
-            # In test mode, we don't need pregame props (will use fake data)
-            pregame_props_lookup = {}
-        
-        # =====================================================================
-        # STEP 1.6: FETCH ODDS API EVENTS FOR MATCHING
-        # =====================================================================
-        if not test_mode:
-            print("="*80)
-            print("STEP 1.6: Fetching Odds API events for matching...")
-            print("="*80)
-            with timed_step("Step 1.6: Fetch Odds API events"):
-                odds_lookup = fetch_odds_api_events()
-            print(f"✅ Found {len(odds_lookup)} Odds API event(s)")
-            print()
-        else:
-            # In test mode, we don't need the lookup
-            odds_lookup = {}
-        
-        # Collect all signals
-        all_signals = []
-
-        # Preload minute_by_minute once per iteration; DuckDB connection for fast per-player SELECT
-        if not test_mode and len(live_games) > 0:
-            with timed_step("Step 1.7: Load minute_by_minute (profile preload)"):
-                preloaded_mbm_con = get_minute_by_minute_with_normalized_names()
-        else:
-            preloaded_mbm_con = None
-
-        try:
+            # Collect all signals (preloaded_mbm_con set at startup, reused each iteration)
+            all_signals = []
+    
             for game_idx, game in enumerate(live_games, 1):
-                game_id = game['game_id']
-                print()
-                print("="*80)
-                print(f"LIVE GAME {game_idx} OF {len(live_games)}: {game['away_team']} @ {game['home_team']}")
-                print("="*80)
-                # =================================================================
-                # STEP 2: VALIDATE PBP FRESHNESS (GATE 2)
-                # =================================================================
-                print()
-                print(f"STEP 2: Validating PBP data (Gate 2)...")
-                print("-"*80)
-                
-                with timed_step("Step 2: PBP validate"):
-                    pbp_data = fetch_and_validate_pbp(game_id, max_age_seconds=MAX_PBP_AGE_SECONDS, test_mode=test_mode)
-                
-                if not pbp_data:
-                    print("   ⏭️  Skipping game (PBP data stale or unavailable)")
+                    game_id = game['game_id']
                     print()
-                    continue
-                
-                print()
-                
-                # =================================================================
-                # STEP 3: FETCH LIVE ODDS
-                # =================================================================
-                print("="*80)
-                print(f"STEP 3: Fetching live odds {'(TEST MODE)' if test_mode else 'from The Odds API'}...")
-                print("="*80)
-                
-                with timed_step("Step 3: Fetch live odds"):
-                    live_odds_df = fetch_live_odds(game, odds_lookup, test_mode=test_mode)
-                
-                if live_odds_df is None or len(live_odds_df) == 0:
-                    print("⚠️  No live odds available for this game")
+                    print("="*80)
+                    print(f"LIVE GAME {game_idx} OF {len(live_games)}: {game['away_team']} @ {game['home_team']}")
+                    print("="*80)
+                    # =================================================================
+                    # STEP 2: VALIDATE PBP FRESHNESS (GATE 2)
+                    # =================================================================
                     print()
-                    continue
-                
-                print(f"✅ Fetched odds for {live_odds_df['player_name'].nunique()} player(s)")
-                
-                with timed_step("Step 3b: Filter stale odds"):
-                    live_odds_df = filter_stale_odds(live_odds_df, max_age_seconds=MAX_ODDS_AGE_SECONDS)
-                
-                if len(live_odds_df) == 0:
-                    print("⚠️  No fresh odds available (all bookmakers stale)")
+                    print(f"STEP 2: Validating PBP data (Gate 2)...")
+                    print("-"*80)
+                    
+                    with timed_step("Step 2: PBP validate"):
+                        pbp_data = fetch_and_validate_pbp(game_id, max_age_seconds=MAX_PBP_AGE_SECONDS, test_mode=test_mode)
+                    
+                    if not pbp_data:
+                        print("   ⏭️  Skipping game (PBP data stale or unavailable)")
+                        print()
+                        continue
+                    
                     print()
-                    continue
-                
-                print()
-                
-                # =================================================================
-                # STEP 4: SAVE ODDS TO S3
-                # =================================================================
-                print("="*80)
-                print(f"STEP 4: Saving live odds to S3...")
-                print("="*80)
-                
-                if test_mode:
-                    print("⏭️  Skipped (test mode)")
-                else:
-                    with timed_step("Step 4: Save odds to S3"):
-                        if save_live_odds_to_s3(live_odds_df):
-                            print("✅ Saved to S3")
-                        else:
-                            print("⚠️  Failed to save to S3")
-                print()
-                
-                # =================================================================
-                # STEP 5: GET ACTIVE PLAYERS FROM ODDS (GATE 1) + FETCH BOXSCORE
-                # =================================================================
-                print("="*80)
-                print(f"STEP 5: Getting active players from odds data (Gate 1)...")
-                print("="*80)
-                
-                with timed_step("Step 5: Active players + boxscore + PBP"):
-                    active_player_names = get_active_players_from_odds(live_odds_df)
-                
-                if not active_player_names:
-                    print("⚠️  No players with odds available")
+                    
+                    # =================================================================
+                    # STEP 3: FETCH LIVE ODDS
+                    # =================================================================
+                    print("="*80)
+                    print(f"STEP 3: Fetching live odds {'(TEST MODE)' if test_mode else 'from The Odds API'}...")
+                    print("="*80)
+                    
+                    with timed_step("Step 3: Fetch live odds"):
+                        live_odds_df = fetch_live_odds(game, odds_lookup, test_mode=test_mode)
+                    
+                    if live_odds_df is None or len(live_odds_df) == 0:
+                        print("⚠️  No live odds available for this game")
+                        print()
+                        continue
+                    
+                    print(f"✅ Fetched odds for {live_odds_df['player_name'].nunique()} player(s)")
+                    
+                    with timed_step("Step 3b: Filter stale odds"):
+                        live_odds_df = filter_stale_odds(live_odds_df, max_age_seconds=MAX_ODDS_AGE_SECONDS)
+                    
+                    if len(live_odds_df) == 0:
+                        print("⚠️  No fresh odds available (all bookmakers stale)")
+                        print()
+                        continue
+                    
                     print()
-                    continue
-                
-                # Cap players analyzed per game to control iteration time (MC is the bottleneck)
-                total_with_odds = len(active_player_names)
-                active_player_names = active_player_names[:MAX_PLAYERS_PER_GAME]
-                if total_with_odds > MAX_PLAYERS_PER_GAME:
-                    print(f"✅ Found {total_with_odds} player(s) with live odds, analyzing first {len(active_player_names)} (--max-players={MAX_PLAYERS_PER_GAME})")
-                else:
-                    print(f"✅ Found {len(active_player_names)} player(s) with live odds")
-                
-                # Fetch boxscore for validation (optional - won't block if fails)
-                print()
-                print("   📊 Fetching boxscore for points validation...")
-                with timed_step("Step 5: Active players + boxscore + PBP"):
-                    boxscore_players = get_active_players(game_id, test_mode=test_mode)
-                
-                # Build lookup: player_name -> {current_points, team, minutes_played}
-                boxscore_lookup = {}
-                if boxscore_players:
-                    for p in boxscore_players:
-                        boxscore_lookup[p['player_name']] = {
-                            'current_points': p['current_points'],
-                            'team': p['team'],
-                            'minutes_played': p['minutes_played']
-                        }
-                    print(f"   ✅ Boxscore fetched: {len(boxscore_players)} players")
-                else:
-                    print(f"   ⚠️  Boxscore unavailable (will use PBP points only)")
-                
-                # Build PBP points lookup for display
-                # NOTE: ESPN live PBP API structure differs from cached data:
-                # - Live: participants[0].athlete only has 'id' (no displayName)
-                # - Cached: participants[0].athlete has full object with 'displayName'
-                # Solution: Parse player names from play 'text' field
-                # Play text format: "Player Name makes 3-foot dunk (Assist Name assists)"
-                # Scorer is always at START of text before "makes"
-                print("   📊 Extracting PBP points...")
-                with timed_step("Step 5: Active players + boxscore + PBP"):
-                    pbp_lookup = {}
-                    try:
-                        plays = pbp_data['plays']
+                    
+                    # =================================================================
+                    # STEP 4: SAVE ODDS TO S3
+                    # =================================================================
+                    print("="*80)
+                    print(f"STEP 4: Saving live odds to S3...")
+                    print("="*80)
+                    
+                    if test_mode:
+                        print("⏭️  Skipped (test mode)")
+                    else:
+                        with timed_step("Step 4: Save odds to S3"):
+                            if save_live_odds_to_s3(live_odds_df):
+                                print("✅ Saved to S3")
+                            else:
+                                print("⚠️  Failed to save to S3")
+                    print()
+                    
+                    # =================================================================
+                    # STEP 5: GET ACTIVE PLAYERS FROM ODDS (GATE 1) + FETCH BOXSCORE
+                    # =================================================================
+                    print("="*80)
+                    print(f"STEP 5: Getting active players from odds data (Gate 1)...")
+                    print("="*80)
+                    
+                    with timed_step("Step 5: Active players + boxscore + PBP"):
+                        active_player_names = get_active_players_from_odds(live_odds_df)
+                    
+                    if not active_player_names:
+                        print("⚠️  No players with odds available")
+                        print()
+                        continue
+                    
+                    # Cap players analyzed per game to control iteration time (MC is the bottleneck)
+                    total_with_odds = len(active_player_names)
+                    active_player_names = active_player_names[:MAX_PLAYERS_PER_GAME]
+                    if total_with_odds > MAX_PLAYERS_PER_GAME:
+                        print(f"✅ Found {total_with_odds} player(s) with live odds, analyzing first {len(active_player_names)} (--max-players={MAX_PLAYERS_PER_GAME})")
+                    else:
+                        print(f"✅ Found {len(active_player_names)} player(s) with live odds")
+                    
+                    # Fetch boxscore for validation (optional - won't block if fails)
+                    print()
+                    print("   📊 Fetching boxscore for points validation...")
+                    with timed_step("Step 5: Active players + boxscore + PBP"):
+                        boxscore_players = get_active_players(game_id, test_mode=test_mode)
+                    
+                    # Build lookup: player_name -> {current_points, team, minutes_played}
+                    boxscore_lookup = {}
+                    if boxscore_players:
+                        for p in boxscore_players:
+                            boxscore_lookup[p['player_name']] = {
+                                'current_points': p['current_points'],
+                                'team': p['team'],
+                                'minutes_played': p['minutes_played']
+                            }
+                        print(f"   ✅ Boxscore fetched: {len(boxscore_players)} players")
+                    else:
+                        print(f"   ⚠️  Boxscore unavailable (will use PBP points only)")
+                    
+                    # Build PBP points lookup for display
+                    # NOTE: ESPN live PBP API structure differs from cached data:
+                    # - Live: participants[0].athlete only has 'id' (no displayName)
+                    # - Cached: participants[0].athlete has full object with 'displayName'
+                    # Solution: Parse player names from play 'text' field
+                    # Play text format: "Player Name makes 3-foot dunk (Assist Name assists)"
+                    # Scorer is always at START of text before "makes"
+                    print("   📊 Extracting PBP points...")
+                    with timed_step("Step 5: Active players + boxscore + PBP"):
+                        pbp_lookup = {}
+                        try:
+                            plays = pbp_data['plays']
+                            
+                            for player_name in active_player_names:
+                                points = 0
+                                
+                                # Normalize player name from Odds API
+                                # (already normalized when fetched, but be explicit)
+                                normalized_player = normalize_from_odds_api(player_name)
+                                
+                                if not normalized_player:
+                                    continue
+                                
+                                for play in plays:
+                                    if play.get('scoringPlay', False):
+                                        play_text = play.get('text', '')
+                                        score_val = play.get('scoreValue', 0)
+                                        
+                                        # Extract scorer name from play text (always before first "makes")
+                                        # Example: "P.J. Washington makes 3-foot dunk" → "P.J. Washington"
+                                        if ' makes ' in play_text.lower():
+                                            scorer_raw = play_text.split(' makes ')[0].strip()
+                                            scorer_normalized = normalize_from_espn_api(scorer_raw)
+                                            
+                                            # Compare normalized names
+                                            if scorer_normalized and scorer_normalized == normalized_player:
+                                                points += score_val
+                                
+                                pbp_lookup[player_name] = points
+                        except Exception as e:
+                            print(f"   ⚠️  Could not extract PBP points: {e}")
+                    
+                    if pbp_lookup:
+                        print(f"   ✅ PBP points extracted for {len(pbp_lookup)} players")
+                        zero_point_players = [name for name, pts in pbp_lookup.items() if pts == 0]
+                        if zero_point_players and len(zero_point_players) <= 3:
+                            print(f"   🔍 Players with 0 points: {', '.join(zero_point_players)}")
+                            print(f"      (This is normal if they haven't scored yet)")
+                    
+                    # Show players with both PBP and boxscore points (ALL players)
+                    for name in active_player_names:
+                        pbp_pts = pbp_lookup.get(name, '?')
+                        boxscore_info = boxscore_lookup.get(name, {})
+                        boxscore_pts = boxscore_info.get('current_points', '?')
                         
+                        # Show validation status
+                        if pbp_pts != '?' and boxscore_pts != '?':
+                            if pbp_pts == boxscore_pts:
+                                status = '✅'
+                            else:
+                                status = f'⚠️ (diff: {abs(pbp_pts - boxscore_pts)})'
+                        else:
+                            status = '❓'
+                        
+                        print(f"   - {name}: PBP={pbp_pts} pts, Boxscore={boxscore_pts} pts {status}")
+                    print()
+                    
+                    # =================================================================
+                    # STEP 6: ANALYZE EACH PLAYER (GATES 3 & 4, THEN MC)
+                    # =================================================================
+                    print("="*80)
+                    print(f"STEP 6: Analyzing players (Gates 3 & 4, then MC if passed)...")
+                    print("="*80)
+                    et_tz = pytz.timezone("US/Eastern")
+                    fetch_dt = pd.to_datetime(live_odds_df["timestamp"].iloc[0], utc=True)
+                    if fetch_dt.tzinfo is None:
+                        fetch_dt = fetch_dt.replace(tzinfo=timezone.utc)
+                    fetch_et = fetch_dt.astimezone(et_tz)
+                    now_et = datetime.now(et_tz)
+                    last_updates = live_odds_df["bookmaker_last_update"].dropna()
+                    if len(last_updates):
+                        parsed = pd.to_datetime(live_odds_df["bookmaker_last_update"], utc=True)
+                        min_ts = parsed.min()
+                        max_ts = parsed.max()
+                        books_with_min = live_odds_df.loc[parsed == min_ts, "bookmaker"].unique().tolist()
+                        books_with_max = live_odds_df.loc[parsed == max_ts, "bookmaker"].unique().tolist()
+                        def _to_et(t):
+                            if hasattr(t, "to_pydatetime"):
+                                t = t.to_pydatetime()
+                            if t.tzinfo is None:
+                                t = t.replace(tzinfo=timezone.utc)
+                            return t.astimezone(et_tz)
+                        min_et = _to_et(min_ts)
+                        max_et = _to_et(max_ts)
+                        bookmaker_str = (
+                            "oldest: " + ", ".join(sorted(books_with_min)) + " " + min_et.strftime("%I:%M:%S%p") + " ET"
+                            + "  |  latest: " + ", ".join(sorted(books_with_max)) + " " + max_et.strftime("%I:%M:%S%p") + " ET"
+                        )
+                    else:
+                        bookmaker_str = "(not available)"
+                    print(f"   Odds fetch: {fetch_et.strftime('%b %d %I:%M:%S%p')} ET  |  Now: {now_et.strftime('%b %d %I:%M:%S%p')} ET  |  Bookmaker updates: {bookmaker_str}")
+                    print()
+                    with timed_step("Step 6: Analyze players (MC)"):
                         for player_name in active_player_names:
-                            points = 0
+                            print("=" * 60)
+                            print(f"   🔄 Analyzing {player_name}...")
                             
-                            # Normalize player name from Odds API
-                            # (already normalized when fetched, but be explicit)
-                            normalized_player = normalize_from_odds_api(player_name)
+                            # Get boxscore data for this player
+                            boxscore_info = boxscore_lookup.get(player_name, {})
                             
-                            if not normalized_player:
+                            # Build player dict with all required fields
+                            player = {
+                                'player_name': player_name,
+                                'boxscore_points': boxscore_info.get('current_points'),  # None if not available
+                                'team': boxscore_info.get('team', 'Unknown'),
+                                'minutes_played': boxscore_info.get('minutes_played', 0),
+                            }
+                            
+                            # Skip players with 0 minutes (possible DNP; don't suggest live points bets)
+                            if not player['minutes_played']:
+                                print(f"      ⏭️  Skipping (0 min played – possible DNP)")
                                 continue
                             
-                            for play in plays:
-                                if play.get('scoringPlay', False):
-                                    play_text = play.get('text', '')
-                                    score_val = play.get('scoreValue', 0)
-                                    
-                                    # Extract scorer name from play text (always before first "makes")
-                                    # Example: "P.J. Washington makes 3-foot dunk" → "P.J. Washington"
-                                    if ' makes ' in play_text.lower():
-                                        scorer_raw = play_text.split(' makes ')[0].strip()
-                                        scorer_normalized = normalize_from_espn_api(scorer_raw)
-                                        
-                                        # Compare normalized names
-                                        if scorer_normalized and scorer_normalized == normalized_player:
-                                            points += score_val
-                            
-                            pbp_lookup[player_name] = points
-                    except Exception as e:
-                        print(f"   ⚠️  Could not extract PBP points: {e}")
-                
-                if pbp_lookup:
-                    print(f"   ✅ PBP points extracted for {len(pbp_lookup)} players")
-                    zero_point_players = [name for name, pts in pbp_lookup.items() if pts == 0]
-                    if zero_point_players and len(zero_point_players) <= 3:
-                        print(f"   🔍 Players with 0 points: {', '.join(zero_point_players)}")
-                        print(f"      (This is normal if they haven't scored yet)")
-                
-                # Show players with both PBP and boxscore points (ALL players)
-                for name in active_player_names:
-                    pbp_pts = pbp_lookup.get(name, '?')
-                    boxscore_info = boxscore_lookup.get(name, {})
-                    boxscore_pts = boxscore_info.get('current_points', '?')
+                            signals = analyze_player_betting_opportunity(
+                                player, game, live_odds_df, pbp_data, pregame_props_lookup,
+                                n_sims=N_SIMULATIONS, test_mode=test_mode, preloaded_mbm_con=preloaded_mbm_con
+                            )
+                            if signals:
+                                all_signals.extend(signals)
                     
-                    # Show validation status
-                    if pbp_pts != '?' and boxscore_pts != '?':
-                        if pbp_pts == boxscore_pts:
-                            status = '✅'
-                        else:
-                            status = f'⚠️ (diff: {abs(pbp_pts - boxscore_pts)})'
-                    else:
-                        status = '❓'
-                    
-                    print(f"   - {name}: PBP={pbp_pts} pts, Boxscore={boxscore_pts} pts {status}")
-                print()
-                
-                # =================================================================
-                # STEP 6: ANALYZE EACH PLAYER (GATES 3 & 4, THEN MC)
-                # =================================================================
-                print("="*80)
-                print(f"STEP 6: Analyzing players (Gates 3 & 4, then MC if passed)...")
-                print("="*80)
-                et_tz = pytz.timezone("US/Eastern")
-                fetch_dt = pd.to_datetime(live_odds_df["timestamp"].iloc[0], utc=True)
-                if fetch_dt.tzinfo is None:
-                    fetch_dt = fetch_dt.replace(tzinfo=timezone.utc)
-                fetch_et = fetch_dt.astimezone(et_tz)
-                now_et = datetime.now(et_tz)
-                last_updates = live_odds_df["bookmaker_last_update"].dropna()
-                if len(last_updates):
-                    parsed = pd.to_datetime(live_odds_df["bookmaker_last_update"], utc=True)
-                    min_ts = parsed.min()
-                    max_ts = parsed.max()
-                    books_with_min = live_odds_df.loc[parsed == min_ts, "bookmaker"].unique().tolist()
-                    books_with_max = live_odds_df.loc[parsed == max_ts, "bookmaker"].unique().tolist()
-                    def _to_et(t):
-                        if hasattr(t, "to_pydatetime"):
-                            t = t.to_pydatetime()
-                        if t.tzinfo is None:
-                            t = t.replace(tzinfo=timezone.utc)
-                        return t.astimezone(et_tz)
-                    min_et = _to_et(min_ts)
-                    max_et = _to_et(max_ts)
-                    bookmaker_str = (
-                        "oldest: " + ", ".join(sorted(books_with_min)) + " " + min_et.strftime("%I:%M:%S%p") + " ET"
-                        + "  |  latest: " + ", ".join(sorted(books_with_max)) + " " + max_et.strftime("%I:%M:%S%p") + " ET"
-                    )
-                else:
-                    bookmaker_str = "(not available)"
-                print(f"   Odds fetch: {fetch_et.strftime('%b %d %I:%M:%S%p')} ET  |  Now: {now_et.strftime('%b %d %I:%M:%S%p')} ET  |  Bookmaker updates: {bookmaker_str}")
-                print()
-                with timed_step("Step 6: Analyze players (MC)"):
-                    for player_name in active_player_names:
-                        print("=" * 60)
-                        print(f"   🔄 Analyzing {player_name}...")
-                        
-                        # Get boxscore data for this player
-                        boxscore_info = boxscore_lookup.get(player_name, {})
-                        
-                        # Build player dict with all required fields
-                        player = {
-                            'player_name': player_name,
-                            'boxscore_points': boxscore_info.get('current_points'),  # None if not available
-                            'team': boxscore_info.get('team', 'Unknown'),
-                            'minutes_played': boxscore_info.get('minutes_played', 0),
-                        }
-                        
-                        # Skip players with 0 minutes (possible DNP; don't suggest live points bets)
-                        if not player['minutes_played']:
-                            print(f"      ⏭️  Skipping (0 min played – possible DNP)")
-                            continue
-                        
-                        signals = analyze_player_betting_opportunity(
-                            player, game, live_odds_df, pbp_data, pregame_props_lookup,
-                            n_sims=N_SIMULATIONS, test_mode=test_mode, preloaded_mbm_con=preloaded_mbm_con
-                        )
-                        if signals:
-                            all_signals.extend(signals)
-                
-                print()
-
-        finally:
-            if preloaded_mbm_con is not None:
-                preloaded_mbm_con.close()
-
-        # =====================================================================
-        # STEP 7: DISPLAY SIGNALS
-        # =====================================================================
-        print("="*80)
-        print("PROFITABLE BETTING SIGNALS")
-        print("="*80)
-        print()
-        
-        with timed_step("Step 7: Display + save signals"):
-            display_signals = [s for s in all_signals if not s.get("bookmaker_stale", False)]
-            if not display_signals:
-                print("❌ No profitable betting opportunities found")
-            else:
-                print(f"🎯 Found {len(display_signals)} profitable signal(s):")
-                print()
-                # Summary: book, line/odds, model prob vs implied (non-stale only)
-                print("   Book            | Line & odds              | Model prob | Implied (book)  | Player")
-                print("   ----------------|---------------------------|------------|-----------------|-------")
-                for signal in display_signals:
-                    if signal['bet_side'] == 'OVER':
-                        line_odds = f"OVER {signal['live_line']} @ {signal['over_odds']:+d}"
-                    else:
-                        line_odds = f"UNDER {signal['live_line']} @ {signal['under_odds']:+d}"
-                    model_pct = signal['model_prob']
-                    implied = signal['market_prob_implied']
-                    print(f"   {signal['bookmaker']:<14} | {line_odds:<25} | {model_pct:>9.1%} | {implied:>14.1%} | {signal['player_name']}")
-                print()
-                
-                for i, signal in enumerate(display_signals, 1):
-                    # Build odds display showing both sides
-                    if signal['bet_side'] == 'OVER':
-                        odds_display = f"OVER {signal['live_line']} @ {signal['over_odds']:+d} (UNDER {signal['live_line']} @ {signal['under_odds']:+d})"
-                        model_display = f"{signal['model_prob']:.1%} (OVER)"
-                    else:
-                        odds_display = f"UNDER {signal['live_line']} @ {signal['under_odds']:+d} (OVER {signal['live_line']} @ {signal['over_odds']:+d})"
-                        model_display = f"{signal['model_prob']:.1%} (1 - {signal['model_prob_over']:.1%} over = UNDER)"
-                    
-                    # Get EV breakdown
-                    ev = signal['ev_breakdown']
-                    
-                    print(f"Signal #{i} | {signal['player_name']} | {signal['team']}")
-                    print(f"{'─'*80}")
-                    print(f"Game:         {signal['game_info']} ({signal['game_state']})")
-                    print(f"Model Inputs: {signal['current_points']} pts | {signal['game_minute']:.1f} game min | {signal['minutes_played']:.1f} played")
-                    print(f"Lines:        {signal['pregame_line']} (pregame) → {signal['live_line']} (live)")
-                    print(f"Bet:          {odds_display} on {signal['bookmaker']}")
-                    print(f"Probabilities:")
-                    print(f"  Model:      {model_display}")
-                    print(f"  Market:     {signal['market_prob_fair_before']:.1%} → {signal['market_prob_fair_after']:.1%} (longshot adj)")
-                    print(f"  Edge:       {signal['edge_before']:.1%} → {signal['edge_after']:.1%}")
-                    print(f"EV Breakdown:")
-                    print(f"  Decimal Odds:     {ev['decimal_odds']:.3f}")
-                    print(f"  Win Amount:       ${ev['win_amount']:.2f} (per ${ev['bet_amount']:.0f} bet)")
-                    print(f"  Expected Win:     {ev['prob_win']:.1%} × ${ev['win_amount']:.2f} = ${ev['expected_win']:.2f}")
-                    print(f"  Expected Loss:    {ev['prob_lose']:.1%} × ${ev['bet_amount']:.0f} = ${ev['expected_loss']:.2f}")
-                    print(f"  Expected Value:   ${ev['expected_win']:.2f} - ${ev['expected_loss']:.2f} = ${signal['ev']:.2f}")
-                    print(f"{'─'*80}")
                     print()
-            
-            # Save all signals to parquet (local + S3)
+    
+            # =====================================================================
+            # STEP 7: DISPLAY SIGNALS
+            # =====================================================================
             print("="*80)
-            print("SAVING SIGNALS TO PARQUET...")
+            print("PROFITABLE BETTING SIGNALS")
             print("="*80)
-            save_signals_to_parquet(all_signals)
             print()
-        
-        print("="*80)
-        print("✅ SCAN COMPLETE")
-        print("="*80)
-        
-        # Calculate and show iteration timing
-        iteration_end_time = datetime.now()
-        elapsed_seconds = (iteration_end_time - iteration_start_time).total_seconds()
-        
-        print()
-        print(f"⏱️  Iteration Summary:")
-        print(f"   Total time: {elapsed_seconds:.1f}s")
-        print(f"   Games processed: {len(live_games)}")
-        print(f"   Signals found: {len(all_signals)}")
-        if _iteration_timings:
-            print(f"   Step timings (slowest first):")
-            for name, secs in sorted(_iteration_timings.items(), key=lambda x: -x[1]):
-                print(f"      {name}: {secs:.2f}s")
-        
-        if loop_mode and elapsed_seconds > interval * 0.9:
-            print(f"   ⚠️  WARNING: Iteration took {elapsed_seconds:.1f}s (>{interval*0.9:.0f}s)")
-            print(f"       Consider reducing --n-sims or increasing --interval")
-        
-        print()
-        
-        # Exit or continue loop
-        if not loop_mode:
-            break
-        else:
-            # Calculate time to next interval boundary
-            # Round up to next interval boundary
-            current_minute = iteration_end_time.replace(second=0, microsecond=0)
-            next_target = current_minute + timedelta(seconds=interval)
             
-            # If we're already past the next target, go to the one after
-            if next_target <= iteration_end_time:
-                next_target = next_target + timedelta(seconds=interval)
+            with timed_step("Step 7: Display + save signals"):
+                display_signals = [s for s in all_signals if not s.get("bookmaker_stale", False)]
+                if not display_signals:
+                    print("❌ No profitable betting opportunities found")
+                else:
+                    print(f"🎯 Found {len(display_signals)} profitable signal(s):")
+                    print()
+                    # Summary: book, line/odds, model prob vs implied (non-stale only)
+                    print("   Book            | Line & odds              | Model prob | Implied (book)  | Player")
+                    print("   ----------------|---------------------------|------------|-----------------|-------")
+                    for signal in display_signals:
+                        if signal['bet_side'] == 'OVER':
+                            line_odds = f"OVER {signal['live_line']} @ {signal['over_odds']:+d}"
+                        else:
+                            line_odds = f"UNDER {signal['live_line']} @ {signal['under_odds']:+d}"
+                        model_pct = signal['model_prob']
+                        implied = signal['market_prob_implied']
+                        print(f"   {signal['bookmaker']:<14} | {line_odds:<25} | {model_pct:>9.1%} | {implied:>14.1%} | {signal['player_name']}")
+                    print()
+                    
+                    for i, signal in enumerate(display_signals, 1):
+                        # Build odds display showing both sides
+                        if signal['bet_side'] == 'OVER':
+                            odds_display = f"OVER {signal['live_line']} @ {signal['over_odds']:+d} (UNDER {signal['live_line']} @ {signal['under_odds']:+d})"
+                            model_display = f"{signal['model_prob']:.1%} (OVER)"
+                        else:
+                            odds_display = f"UNDER {signal['live_line']} @ {signal['under_odds']:+d} (OVER {signal['live_line']} @ {signal['over_odds']:+d})"
+                            model_display = f"{signal['model_prob']:.1%} (1 - {signal['model_prob_over']:.1%} over = UNDER)"
+                        
+                        # Get EV breakdown
+                        ev = signal['ev_breakdown']
+                        
+                        print(f"Signal #{i} | {signal['player_name']} | {signal['team']}")
+                        print(f"{'─'*80}")
+                        print(f"Game:         {signal['game_info']} ({signal['game_state']})")
+                        print(f"Model Inputs: {signal['current_points']} pts | {signal['game_minute']:.1f} game min | {signal['minutes_played']:.1f} played")
+                        print(f"Lines:        {signal['pregame_line']} (pregame) → {signal['live_line']} (live)")
+                        print(f"Bet:          {odds_display} on {signal['bookmaker']}")
+                        print(f"Probabilities:")
+                        print(f"  Model:      {model_display}")
+                        print(f"  Market:     {signal['market_prob_fair_before']:.1%} → {signal['market_prob_fair_after']:.1%} (longshot adj)")
+                        print(f"  Edge:       {signal['edge_before']:.1%} → {signal['edge_after']:.1%}")
+                        print(f"EV Breakdown:")
+                        print(f"  Decimal Odds:     {ev['decimal_odds']:.3f}")
+                        print(f"  Win Amount:       ${ev['win_amount']:.2f} (per ${ev['bet_amount']:.0f} bet)")
+                        print(f"  Expected Win:     {ev['prob_win']:.1%} × ${ev['win_amount']:.2f} = ${ev['expected_win']:.2f}")
+                        print(f"  Expected Loss:    {ev['prob_lose']:.1%} × ${ev['bet_amount']:.0f} = ${ev['expected_loss']:.2f}")
+                        print(f"  Expected Value:   ${ev['expected_win']:.2f} - ${ev['expected_loss']:.2f} = ${signal['ev']:.2f}")
+                        print(f"{'─'*80}")
+                        print()
+                
+                # Save all signals to parquet (local + S3)
+                print("="*80)
+                print("SAVING SIGNALS TO PARQUET...")
+                print("="*80)
+                save_signals_to_parquet(all_signals)
+                print()
             
-            sleep_seconds = (next_target - iteration_end_time).total_seconds()
+            print("="*80)
+            print("✅ SCAN COMPLETE")
+            print("="*80)
             
-            print(f"⏳ Next scan at {next_target.strftime('%H:%M:%S')}")
-            print(f"   Current time: {iteration_end_time.strftime('%H:%M:%S.%f')[:-3]} (sleeping {sleep_seconds:.1f}s)")
+            # Calculate and show iteration timing
+            iteration_end_time = datetime.now()
+            elapsed_seconds = (iteration_end_time - iteration_start_time).total_seconds()
+            
             print()
-            time.sleep(sleep_seconds)
+            print(f"⏱️  Iteration Summary:")
+            print(f"   Total time: {elapsed_seconds:.1f}s")
+            print(f"   Games processed: {len(live_games)}")
+            print(f"   Signals found: {len(all_signals)}")
+            if _iteration_timings:
+                print(f"   Step timings (slowest first):")
+                for name, secs in sorted(_iteration_timings.items(), key=lambda x: -x[1]):
+                    print(f"      {name}: {secs:.2f}s")
+            
+            if loop_mode and elapsed_seconds > interval * 0.9:
+                print(f"   ⚠️  WARNING: Iteration took {elapsed_seconds:.1f}s (>{interval*0.9:.0f}s)")
+                print(f"       Consider reducing --n-sims or increasing --interval")
+            
+            print()
+            
+            # Exit or continue loop
+            if not loop_mode:
+                break
+            else:
+                # Calculate time to next interval boundary
+                # Round up to next interval boundary
+                current_minute = iteration_end_time.replace(second=0, microsecond=0)
+                next_target = current_minute + timedelta(seconds=interval)
+                
+                # If we're already past the next target, go to the one after
+                if next_target <= iteration_end_time:
+                    next_target = next_target + timedelta(seconds=interval)
+                
+                sleep_seconds = (next_target - iteration_end_time).total_seconds()
+                
+                print(f"⏳ Next scan at {next_target.strftime('%H:%M:%S')}")
+                print(f"   Current time: {iteration_end_time.strftime('%H:%M:%S.%f')[:-3]} (sleeping {sleep_seconds:.1f}s)")
+                print()
+                time.sleep(sleep_seconds)
 
+    finally:
+        if preloaded_mbm_con is not None:
+            preloaded_mbm_con.close()
+    
 
 if __name__ == "__main__":
     main()

@@ -1271,28 +1271,26 @@ def monte_carlo_get_distribution(
 
 def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
     """
-    Use binary search to find a PPM adjustment that makes the starting 
+    Use binary search to find a PPM adjustment that makes the starting
     probability exactly 50% (game minute 0, 0 points scored).
-    
+
     This calibrates the model to market efficiency (Vegas consensus).
-    
+
     Args:
         player_profile: dict with quarterly distributions
         prop_line: Target prop line
         n_simulations: Number of simulations for calibration
-    
+
     Returns:
         float: PPM adjustment factor (multiplier)
     """
-    # Binary search bounds
     low, high = 0.5, 1.5
     tolerance = 0.01  # Target 50% ± 1%
     max_iterations = 20
-    
+
     for iteration in range(max_iterations):
         mid = (low + high) / 2
-        
-        # Run simulation at game start with this adjustment
+
         prob = monte_carlo_simulate_bet(
             player_profile,
             current_minute=0,
@@ -1302,16 +1300,14 @@ def find_vegas_adjustment(player_profile, prop_line, n_simulations=10000):
             vegas_adjustment=mid,
             debug=False
         )
-        
-        # Adjust bounds
+
         if abs(prob - 0.5) < tolerance:
             return mid
         elif prob < 0.5:
-            low = mid  # Need more points → increase PPM
+            low = mid
         else:
-            high = mid  # Need fewer points → decrease PPM
-    
-    # Return best guess
+            high = mid
+
     return (low + high) / 2
 
 

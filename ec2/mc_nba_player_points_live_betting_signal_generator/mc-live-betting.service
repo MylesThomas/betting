@@ -8,7 +8,7 @@ Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/betting
 EnvironmentFile=-/etc/mc-live-betting/env
-ExecStart=/usr/bin/python3 -u src/pbp_data/10_live_betting_signal_generator.py --loop --interval 60
+ExecStart=/usr/bin/python3 -u src/pbp_data/10_live_betting_signal_generator.py --loop --interval 60 --n-sims 5000
 Restart=always
 RestartSec=60
 
