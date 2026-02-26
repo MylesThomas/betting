@@ -1651,7 +1651,17 @@ def analyze_player_betting_opportunity(
                 
                 combinations_checked += 1
                 combos_analyzed.append((bookmaker, line_value, over_odds, under_odds))
-                
+                # Maths for every combo (sanity check: different lines => different P(over))
+                p_over = model_prob_over
+                p_under = 1 - p_over
+                win_over = (american_odds_to_decimal(over_odds) - 1) * 100
+                win_under = (american_odds_to_decimal(under_odds) - 1) * 100
+                ev_over = p_over * win_over + p_under * (-100)
+                ev_under = p_over * (-100) + p_under * win_under
+                term_o1, term_o2 = p_over * win_over, p_under * (-100)
+                term_u1, term_u2 = p_over * (-100), p_under * win_under
+                print(f"            {bookmaker} {line_value}: P(over)={p_over:.1%}×(${win_over:+.2f}) + P(under)={p_under:.1%}×(-$100) = EV(OVER) ${ev_over:.2f}  [{term_o1:.2f}+({term_o2:.2f})]")
+                print(f"               P(over)={p_over:.1%}×(-$100) + P(under)={p_under:.1%}×(${win_under:+.2f}) = EV(UNDER) ${ev_under:.2f}  [{term_u1:.2f}+({term_u2:.2f})]")
                 if signal['action'] != 'PASS':
                     # Package signal with all context
                     signal.update({
