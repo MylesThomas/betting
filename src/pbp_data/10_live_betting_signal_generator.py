@@ -1255,6 +1255,8 @@ def detect_profitable_bet(
             'edge_before': edge_over_before,
             'edge_after': edge_over_after,
             'ev': ev_over,
+            'ev_over': ev_over,
+            'ev_under': ev_under,
             'model_prob': model_prob_over,
             'model_prob_over': model_prob_over,
             'market_prob_fair_before': market_prob_over_fair,
@@ -1273,6 +1275,8 @@ def detect_profitable_bet(
             'edge_before': edge_under_before,
             'edge_after': edge_under_after,
             'ev': ev_under,
+            'ev_over': ev_over,
+            'ev_under': ev_under,
             'model_prob': 1 - model_prob_over,
             'model_prob_over': model_prob_over,
             'market_prob_fair_before': market_prob_under_fair,
@@ -1676,7 +1680,9 @@ def analyze_player_betting_opportunity(
         
         print(f"         ✅ Found {len(all_bets)} profitable bet(s)")
         for i, bet in enumerate(sorted(all_bets, key=lambda x: -x['ev']), 1):
-            print(f"            {i}. {bet['bookmaker']} {bet['bet_side']} {bet['live_line']}  EV ${bet['ev']:.2f}")
+            ev_o = bet.get('ev_over', 0)
+            ev_u = bet.get('ev_under', 0)
+            print(f"            {i}. {bet['bookmaker']} {bet['bet_side']} {bet['live_line']}  EV OVER ${ev_o:.2f} + EV UNDER ${ev_u:.2f} → bet taken: ${bet['ev']:.2f}")
         best_bet = max(all_bets, key=lambda x: x['ev'])
         print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']} {best_bet['bet_side']} {best_bet['live_line']})")
         return best_bet
