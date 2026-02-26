@@ -1510,16 +1510,20 @@ def analyze_player_betting_opportunity(
         # =====================================================================
         # ALL GATES PASSED - Proceed with expensive operations
         # =====================================================================
-        
+        expensive_start = time.time()
+
         # Load player profile (use normalized name for minute_by_minute lookup)
         player_profile = load_player_profile(normalized_name)
-        
+        profile_elapsed = time.time() - expensive_start
+
         # Calculate Vegas adjustment for calibration
+        vegas_start = time.time()
         vegas_adjustment = find_vegas_adjustment(
             player_profile,
             pregame_line,
             n_simulations=5000
         )
+        vegas_elapsed = time.time() - vegas_start
         
         # Calculate current game minute
         quarter = game['quarter']
@@ -1555,9 +1559,11 @@ def analyze_player_betting_opportunity(
         )
         
         mc_elapsed = time.time() - mc_start
-        print(f"         ⏱️  MC completed: {mc_elapsed:.2f}s")
+        mc_str = f"{mc_elapsed*1000:.1f}ms" if mc_elapsed < 1 else f"{mc_elapsed:.2f}s"
+        print(f"         ⏱️  MC completed: {mc_str}")
         print(f"         📊 Distribution: {len(simulated_finals)} simulations, range [{min(simulated_finals):.1f}, {max(simulated_finals):.1f}]")
-        
+        combo_start = time.time()
+
         # =====================================================================
         # Analyze all (bookmaker × line × side) combinations
         # Calculate probability for each line from the same distribution
@@ -1699,7 +1705,10 @@ def analyze_player_betting_opportunity(
                         'bookmaker_stale': bookmaker_stale,
                     })
                     all_bets.append(signal)
-        
+
+        combo_elapsed = time.time() - combo_start
+        total_elapsed = time.time() - expensive_start
+        print(f"         ⏱️  Profile: {profile_elapsed:.2f}s | Vegas: {vegas_elapsed:.2f}s | MC: {mc_str} | Combo: {combo_elapsed:.2f}s | Total: {total_elapsed:.2f}s")
         print(f"         📊 Analyzed {combinations_checked} (bookmaker × line) combinations")
         for i, (bm, line, over_odds, under_odds) in enumerate(combos_analyzed, 1):
             print(f"            {i}. {bm} {line}  (OVER {over_odds:+d} / UNDER {under_odds:+d})")
