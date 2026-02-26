@@ -1682,6 +1682,9 @@ def analyze_player_betting_opportunity(
                 if signal['action'] != 'PASS':
                     # Flag if bookmaker update was stale at signal time (eval will exclude these from ROI/Brier)
                     bookmaker_stale = age_seconds is not None and age_seconds > MAX_ODDS_AGE_SECONDS
+                    # Don't recommend or display stale bets — they're already logged above with ⚠️ stale
+                    if bookmaker_stale:
+                        continue
                     # Package signal with all context
                     signal.update({
                         'bookmaker': bookmaker,
@@ -1695,7 +1698,7 @@ def analyze_player_betting_opportunity(
                         'pregame_line': pregame_line,
                         'game_id': game['game_id'],
                         'game_info': f"{game['away_team']} @ {game['home_team']}",
-                        'bookmaker_stale': bookmaker_stale,
+                        'bookmaker_stale': False,
                     })
                     all_bets.append(signal)
         
