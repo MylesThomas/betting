@@ -961,11 +961,13 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
             if bookmaker_name.lower() in EXCLUDED_BOOKMAKERS:
                 excluded_skipped.append(bookmaker_name)
                 continue
-            # API provides last_update at bookmaker level (when that book's odds were last updated)
-            bookmaker_last_update = bookmaker.get('last_update')  # ISO string or None
+            # API may provide last_update at bookmaker or market level (ISO string); try both key styles
+            bookmaker_last_update = bookmaker.get('last_update') or bookmaker.get('lastUpdate')
 
             for market in bookmaker.get('markets', []):
                 if market['key'] == 'player_points':
+                    market_last_update = market.get('last_update') or market.get('lastUpdate')
+                    last_update_value = bookmaker_last_update or market_last_update
                     for outcome in market.get('outcomes', []):
                         raw_player_name = outcome.get('description')
                         # Normalize player name from Odds API
@@ -983,11 +985,18 @@ def fetch_live_odds(game: Dict, odds_lookup: Dict[Tuple[str, str], str], test_mo
                             'side': outcome.get('name'),  # Over or Under
                             'odds': outcome.get('price'),
                             'timestamp': fetch_time_utc.isoformat(),
-                            'bookmaker_last_update': bookmaker_last_update,
+                            'bookmaker_last_update': last_update_value,
                         })
 
         if excluded_skipped:
             print(f"   ⚠️  Excluded bookmaker(s) (live lines not updated in-game): {', '.join(excluded_skipped)}")
+        has_any_last_update = any(r.get("bookmaker_last_update") for r in odds_records)
+        if odds_records and not has_any_last_update and data.get("bookmakers"):
+            bm = data["bookmakers"][0]
+            print(f"   🔍 DEBUG (no last_update in response): first bookmaker keys: {list(bm.keys())}")
+            if bm.get("markets"):
+                m = bm["markets"][0]
+                print(f"   🔍 DEBUG: first market keys: {list(m.keys())}")
         if odds_records:
             return pd.DataFrame(odds_records)
         else:
@@ -1024,17 +1033,16 @@ def filter_stale_odds(odds_df: pd.DataFrame, max_age_seconds: int = MAX_ODDS_AGE
     odds_df['age_seconds'] = (now - odds_df['timestamp_dt']).dt.total_seconds()
     
     # Find bookmakers with ANY stale data
-    stale_bookmakers = odds_df[odds_df['age_seconds'] > max_age_seconds]['bookmaker'].unique()
+    stale_bookmakers = odds_df[odds_df['age_seconds'] > max_age_seconds]['bookmaker'].unique().tolist()
+    fresh_bookmakers = odds_df[~odds_df['bookmaker'].isin(stale_bookmakers)]['bookmaker'].unique().tolist()
     
-    if len(stale_bookmakers) > 0:
-        print(f"   ⚠️  Filtering out stale bookmakers: {', '.join(stale_bookmakers)}")
+    print(f"   Books with fresh odds (<{max_age_seconds}s): {', '.join(sorted(fresh_bookmakers)) if fresh_bookmakers else '(none)'}")
+    if stale_bookmakers:
+        print(f"   Books without (stale, ≥{max_age_seconds}s): {', '.join(sorted(stale_bookmakers))}")
     
     # Keep only fresh bookmakers
     fresh_df = odds_df[~odds_df['bookmaker'].isin(stale_bookmakers)].copy()
     fresh_df = fresh_df.drop(columns=['timestamp_dt', 'age_seconds'])
-    
-    num_fresh_books = len(fresh_df['bookmaker'].unique()) if len(fresh_df) > 0 else 0
-    print(f"   ✅ {num_fresh_books} bookmaker(s) with fresh odds (<{max_age_seconds}s)")
     
     return fresh_df
 
@@ -1651,7 +1659,26 @@ def analyze_player_betting_opportunity(
                 win_under = (american_odds_to_decimal(under_odds) - 1) * 100
                 ev_over = p_over * win_over + (1 - p_over) * (-100)
                 ev_under = p_over * (-100) + (1 - p_over) * win_under
-                combo_maths.append((p_over, ev_over, ev_under))
+                # Per (bookmaker, line): when this bookmaker last updated, for staleness
+                row0 = line_odds.iloc[0]
+                last_update_raw = row0.get("bookmaker_last_update")
+                bookmaker_et_str = None
+                age_seconds = None
+                if last_update_raw:
+                    try:
+                        last_dt = pd.to_datetime(last_update_raw, utc=True)
+                        if hasattr(last_dt, "to_pydatetime"):
+                            last_dt = last_dt.to_pydatetime()
+                        if last_dt.tzinfo is None:
+                            last_dt = last_dt.replace(tzinfo=timezone.utc)
+                        et_tz = pytz.timezone("US/Eastern")
+                        last_et = last_dt.astimezone(et_tz)
+                        bookmaker_et_str = last_et.strftime("%b %d %I:%M:%S%p") + " ET"
+                        now_utc = datetime.now(timezone.utc)
+                        age_seconds = (now_utc - last_dt).total_seconds()
+                    except Exception:
+                        pass
+                combo_maths.append((p_over, ev_over, ev_under, bookmaker_et_str, age_seconds))
                 if signal['action'] != 'PASS':
                     # Package signal with all context
                     signal.update({
@@ -1673,8 +1700,17 @@ def analyze_player_betting_opportunity(
         for i, (bm, line, over_odds, under_odds) in enumerate(combos_analyzed, 1):
             print(f"            {i}. {bm} {line}  (OVER {over_odds:+d} / UNDER {under_odds:+d})")
             if i <= len(combo_maths):
-                p_over, ev_o, ev_u = combo_maths[i - 1]
+                entry = combo_maths[i - 1]
+                p_over, ev_o, ev_u = entry[0], entry[1], entry[2]
+                bookmaker_et_str = entry[3] if len(entry) > 3 else None
+                age_seconds = entry[4] if len(entry) > 4 else None
                 print(f"               P(over)={p_over:.1%} → EV(OVER) ${ev_o:.2f}, EV(UNDER) ${ev_u:.2f}")
+                if bookmaker_et_str is not None and age_seconds is not None:
+                    age_str = f"{age_seconds:.0f}s ago" if age_seconds < 60 else f"{age_seconds / 60:.1f}m ago"
+                    stale_flag = "  ⚠️ stale" if age_seconds > MAX_ODDS_AGE_SECONDS else ""
+                    print(f"               Bookmaker updated: {bookmaker_et_str} ({age_str}){stale_flag}")
+                else:
+                    print(f"               Bookmaker updated: (not available)")
         print()
         # Return bet with highest EV
         if not all_bets:
@@ -1875,15 +1911,18 @@ def main():
         # Collect all signals
         all_signals = []
         
-        for game in live_games:
+        for game_idx, game in enumerate(live_games, 1):
             game_id = game['game_id']
-            
+            print()
+            print("="*80)
+            print(f"LIVE GAME {game_idx} OF {len(live_games)}: {game['away_team']} @ {game['home_team']}")
+            print("="*80)
             # =================================================================
             # STEP 2: VALIDATE PBP FRESHNESS (GATE 2)
             # =================================================================
-            print("="*80)
-            print(f"STEP 2: Validating PBP data for {game['away_team']} @ {game['home_team']} (Gate 2)...")
-            print("="*80)
+            print()
+            print(f"STEP 2: Validating PBP data (Gate 2)...")
+            print("-"*80)
             
             with timed_step("Step 2: PBP validate"):
                 pbp_data = fetch_and_validate_pbp(game_id, max_age_seconds=MAX_PBP_AGE_SECONDS, test_mode=test_mode)
