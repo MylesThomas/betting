@@ -202,9 +202,10 @@ def evaluate_signals(df: pd.DataFrame, date_str: str, simulate_manual: bool = Fa
         if dropped:
             print(f"   Excluded {dropped} signal(s) from bookmaker(s): {', '.join(EXCLUDED_BOOKMAKERS)} (measurement only)")
     # Exclude signals where odds were stale at signal time (don't count toward ROI/Brier)
+    # NA/missing = unknown era (pre-column) → treat as stale
     stale_col = "stale" if "stale" in df.columns else ("bookmaker_stale" if "bookmaker_stale" in df.columns else None)
     if stale_col is not None:
-        is_stale = (df[stale_col] == True)
+        is_stale = (df[stale_col] == True) | df[stale_col].isna()
         stale_count = is_stale.sum()
         if stale_count:
             df = df[~is_stale].copy()
