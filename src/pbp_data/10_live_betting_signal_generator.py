@@ -1136,35 +1136,35 @@ def save_signals_to_parquet(signals: List[Dict]) -> bool:
         # File paths
         local_file = LOCAL_SIGNALS_DIR / f"{date_str}.parquet"
         s3_key = f"{S3_SIGNALS_PREFIX}/{date_str}.parquet"
-        
-        # Use DuckDB to append or create
         con = duckdb.connect(database=':memory:')
-        
+        con.register("signals_df", signals_df)
         if local_file.exists():
-            # Load existing data and append
-            con.execute(f"""
-                CREATE TABLE existing AS 
-                SELECT * FROM read_parquet('{local_file}')
-            """)
-            
-            con.execute("""
-                CREATE TABLE new_signals AS 
-                SELECT * FROM signals_df
-            """)
-            
+            # Align schema: existing may lack columns (e.g. bookmaker_stale). Add missing as NA so UNION ALL matches.
+            existing_df = pd.read_parquet(local_file)
+            missing = [c for c in signals_df.columns if c not in existing_df.columns]
+            if missing:
+                print(f"      [save_parquet] Aligning schema: adding columns {missing} (NA) to existing ({len(existing_df)} rows)")
+            for col in signals_df.columns:
+                if col not in existing_df.columns:
+                    if col == "bookmaker_stale":
+                        existing_df[col] = pd.array([pd.NA] * len(existing_df), dtype="boolean")
+                    else:
+                        existing_df[col] = pd.NA
+            existing_df = existing_df[signals_df.columns]
+            con.register("existing_aligned", existing_df)
+            con.execute("CREATE TABLE new_signals AS SELECT * FROM signals_df")
             con.execute(f"""
                 COPY (
-                    SELECT * FROM existing
+                    SELECT * FROM existing_aligned
                     UNION ALL
                     SELECT * FROM new_signals
                 ) TO '{local_file}' (FORMAT PARQUET)
             """)
         else:
-            # Create new file
+            print(f"      [save_parquet] No existing file for {date_str}, creating new")
             con.execute(f"""
-                COPY signals_df TO '{local_file}' (FORMAT PARQUET)
+                COPY (SELECT * FROM signals_df) TO '{local_file}' (FORMAT PARQUET)
             """)
-        
         con.close()
         
         # Upload to S3
