@@ -1680,6 +1680,8 @@ def analyze_player_betting_opportunity(
                         pass
                 combo_maths.append((p_over, ev_over, ev_under, bookmaker_et_str, age_seconds))
                 if signal['action'] != 'PASS':
+                    # Flag if bookmaker update was stale at signal time (eval will exclude these from ROI/Brier)
+                    bookmaker_stale = age_seconds is not None and age_seconds > MAX_ODDS_AGE_SECONDS
                     # Package signal with all context
                     signal.update({
                         'bookmaker': bookmaker,
@@ -1692,7 +1694,8 @@ def analyze_player_betting_opportunity(
                         'game_state': f"Q{quarter} {clock}",
                         'pregame_line': pregame_line,
                         'game_id': game['game_id'],
-                        'game_info': f"{game['away_team']} @ {game['home_team']}"
+                        'game_info': f"{game['away_team']} @ {game['home_team']}",
+                        'bookmaker_stale': bookmaker_stale,
                     })
                     all_bets.append(signal)
         

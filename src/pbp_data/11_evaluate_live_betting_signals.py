@@ -201,6 +201,11 @@ def evaluate_signals(df: pd.DataFrame, date_str: str, simulate_manual: bool = Fa
         dropped = before - len(df)
         if dropped:
             print(f"   Excluded {dropped} signal(s) from bookmaker(s): {', '.join(EXCLUDED_BOOKMAKERS)} (measurement only)")
+    if "bookmaker_stale" in df.columns:
+        stale_count = (df["bookmaker_stale"] == True).sum()
+        if stale_count:
+            df = df[df["bookmaker_stale"] != True].copy()
+            print(f"   Excluded {stale_count} signal(s) (bookmaker update was stale at signal time — don't count)")
     df = _filter_stale_and_dedupe(df, simulate_manual=simulate_manual)
     if len(df) == 0:
         print("   No signals left after stale/dedupe filters.")
