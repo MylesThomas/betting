@@ -243,6 +243,20 @@ def evaluate_signals(df: pd.DataFrame, date_str: str, simulate_manual: bool = Fa
     )
     evaluated["outcome"] = evaluated["win"].astype(int)
     evaluated["brier"] = (evaluated["model_prob"] - evaluated["outcome"]) ** 2
+    # Derive quarter for by-quarter breakdown (game_state "Q3 7:30" or game_minute 0-48)
+    def _quarter(row):
+        gs = row.get("game_state")
+        if pd.notna(gs) and isinstance(gs, str) and gs.strip().upper().startswith("Q"):
+            q = gs.strip().upper().split()[0]
+            if q in ("Q1", "Q2", "Q3", "Q4"):
+                return q
+        gm = row.get("game_minute")
+        if pd.notna(gm) and isinstance(gm, (int, float)):
+            qnum = min(4, max(1, int(gm // 12) + 1))
+            return f"Q{qnum}"
+        return None
+
+    evaluated["quarter"] = evaluated.apply(_quarter, axis=1)
     n = len(evaluated)
     wins = evaluated["win"].sum()
     total_staked = n * BET_AMOUNT
@@ -264,6 +278,28 @@ def evaluate_signals(df: pd.DataFrame, date_str: str, simulate_manual: bool = Fa
     print(f"  ROI:                   {roi:+.1%}")
     print(f"  Mean Brier score:      {mean_brier:.4f} (lower is better)")
     print("=" * 60)
+    # By-quarter breakdown: Q1–Q4, n, n_over, n_under, brier_score, hit_rate, roi (ranked by brier)
+    quarters_order = ["Q1", "Q2", "Q3", "Q4"]
+    q_rows = []
+    for q in quarters_order:
+        eq = evaluated[evaluated["quarter"] == q]
+        n_q = len(eq)
+        n_over = int((eq["bet_side"] == "OVER").sum()) if n_q else 0
+        n_under = int((eq["bet_side"] == "UNDER").sum()) if n_q else 0
+        brier_q = eq["brier"].mean() if n_q else float("nan")
+        wins_q = int(eq["win"].sum()) if n_q else 0
+        hit_rate_q = wins_q / n_q if n_q else 0.0
+        staked_q = n_q * BET_AMOUNT if n_q else 0
+        profit_q = eq["profit"].sum() if n_q else 0.0
+        roi_q = profit_q / staked_q if staked_q else 0.0
+        q_rows.append({"quarter": q, "n": n_q, "n_over": n_over, "n_under": n_under, "brier_score": brier_q, "hit_rate": hit_rate_q, "roi": roi_q})
+    q_df = pd.DataFrame(q_rows)
+    # Rank by brier (lower = better); NaN brier last
+    q_df["brier_rank"] = q_df["brier_score"].rank(ascending=True, method="min").astype("Int64")
+    display_cols = ["quarter", "n", "n_over", "n_under", "brier_score", "hit_rate", "roi", "brier_rank"]
+    print()
+    print("  By quarter (Q1–Q4): n, n_over, n_under, brier_score, hit_rate, roi, brier_rank (1=best)")
+    print(q_df[[c for c in display_cols if c in q_df.columns]].to_string(index=False))
     print()
     print("  Per-signal summary (first 20):")
     cols = ["player_name", "bet_side", "bookmaker", "game_state", "current_points", "live_line", "odds_bet", "final_points", "model_prob", "win", "profit", "brier"]
