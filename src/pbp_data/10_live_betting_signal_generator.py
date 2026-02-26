@@ -1555,7 +1555,8 @@ def analyze_player_betting_opportunity(
         # =====================================================================
         all_bets = []
         combinations_checked = 0
-        combos_analyzed = []  # (bookmaker, line) for logging
+        combos_analyzed = []  # (bookmaker, line, over_odds, under_odds) for logging
+        combo_maths = []  # (p_over, ev_over, ev_under) per combo, for print after list
         
         for bookmaker in player_odds['bookmaker'].unique():
             book_odds = player_odds[player_odds['bookmaker'] == bookmaker]
@@ -1651,17 +1652,12 @@ def analyze_player_betting_opportunity(
                 
                 combinations_checked += 1
                 combos_analyzed.append((bookmaker, line_value, over_odds, under_odds))
-                # Maths for every combo (sanity check: different lines => different P(over))
                 p_over = model_prob_over
-                p_under = 1 - p_over
                 win_over = (american_odds_to_decimal(over_odds) - 1) * 100
                 win_under = (american_odds_to_decimal(under_odds) - 1) * 100
-                ev_over = p_over * win_over + p_under * (-100)
-                ev_under = p_over * (-100) + p_under * win_under
-                term_o1, term_o2 = p_over * win_over, p_under * (-100)
-                term_u1, term_u2 = p_over * (-100), p_under * win_under
-                print(f"            {bookmaker} {line_value}: P(over)={p_over:.1%}×(${win_over:+.2f}) + P(under)={p_under:.1%}×(-$100) = EV(OVER) ${ev_over:.2f}  [{term_o1:.2f}+({term_o2:.2f})]")
-                print(f"               P(over)={p_over:.1%}×(-$100) + P(under)={p_under:.1%}×(${win_under:+.2f}) = EV(UNDER) ${ev_under:.2f}  [{term_u1:.2f}+({term_u2:.2f})]")
+                ev_over = p_over * win_over + (1 - p_over) * (-100)
+                ev_under = p_over * (-100) + (1 - p_over) * win_under
+                combo_maths.append((p_over, ev_over, ev_under))
                 if signal['action'] != 'PASS':
                     # Package signal with all context
                     signal.update({
@@ -1682,7 +1678,10 @@ def analyze_player_betting_opportunity(
         print(f"         📊 Analyzed {combinations_checked} (bookmaker × line) combinations")
         for i, (bm, line, over_odds, under_odds) in enumerate(combos_analyzed, 1):
             print(f"            {i}. {bm} {line}  (OVER {over_odds:+d} / UNDER {under_odds:+d})")
-        
+            if i <= len(combo_maths):
+                p_over, ev_o, ev_u = combo_maths[i - 1]
+                print(f"               P(over)={p_over:.1%} → EV(OVER) ${ev_o:.2f}, EV(UNDER) ${ev_u:.2f}")
+        print()
         # Return bet with highest EV
         if not all_bets:
             print(f"      ⚪ No profitable signals found")

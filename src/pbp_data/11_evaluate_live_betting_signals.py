@@ -306,7 +306,23 @@ def evaluate_signals(df: pd.DataFrame, date_str: str, simulate_manual: bool = Fa
     subset = [c for c in cols if c in evaluated.columns]
     print(evaluated[subset].head(20).to_string(index=False))
     print()
-    return {"n": n, "wins": int(wins), "total_staked": total_staked, "total_profit": total_profit, "brier_sum": brier_sum}
+    # Return quarter-level stats for aggregate-by-quarter when --date all
+    quarter_stats = []
+    for _, r in q_df.iterrows():
+        q = r["quarter"]
+        eq = evaluated[evaluated["quarter"] == q]
+        n_q = len(eq)
+        quarter_stats.append({
+            "quarter": q,
+            "n": n_q,
+            "n_over": int(r["n_over"]),
+            "n_under": int(r["n_under"]),
+            "wins": int(eq["win"].sum()) if n_q else 0,
+            "total_staked": n_q * BET_AMOUNT,
+            "total_profit": eq["profit"].sum() if n_q else 0.0,
+            "brier_sum": eq["brier"].sum() if n_q else 0.0,
+        })
+    return {"n": n, "wins": int(wins), "total_staked": total_staked, "total_profit": total_profit, "brier_sum": brier_sum, "quarter_stats": quarter_stats}
 
 
 def list_signal_dates_from_s3() -> list:
@@ -346,6 +362,7 @@ def main():
             return
         print(f"Evaluating {len(date_list)} date(s): {date_list[0]} .. {date_list[-1]}" + (" (--simulate-manual)" if simulate_manual else ""))
         agg = {"n": 0, "wins": 0, "total_staked": 0.0, "total_profit": 0.0, "brier_sum": 0.0}
+        agg_quarters = {q: {"n": 0, "n_over": 0, "n_under": 0, "wins": 0, "total_staked": 0.0, "total_profit": 0.0, "brier_sum": 0.0} for q in ["Q1", "Q2", "Q3", "Q4"]}
         for date_str in date_list:
             print(f"\n--- {date_str} ---")
             print(f"Loading signals from s3://{S3_BUCKET}/{S3_SIGNALS_PREFIX}/{date_str}.parquet ...")
@@ -358,6 +375,16 @@ def main():
                 agg["total_staked"] += stats["total_staked"]
                 agg["total_profit"] += stats["total_profit"]
                 agg["brier_sum"] += stats["brier_sum"]
+                for qs in stats.get("quarter_stats", []):
+                    q = qs["quarter"]
+                    if q in agg_quarters:
+                        agg_quarters[q]["n"] += qs["n"]
+                        agg_quarters[q]["n_over"] += qs["n_over"]
+                        agg_quarters[q]["n_under"] += qs["n_under"]
+                        agg_quarters[q]["wins"] += qs["wins"]
+                        agg_quarters[q]["total_staked"] += qs["total_staked"]
+                        agg_quarters[q]["total_profit"] += qs["total_profit"]
+                        agg_quarters[q]["brier_sum"] += qs["brier_sum"]
         if agg["n"] > 0:
             agg_roi = agg["total_profit"] / agg["total_staked"]
             agg_brier = agg["brier_sum"] / agg["n"]
@@ -371,6 +398,21 @@ def main():
             print(f"  Total profit:          ${agg['total_profit']:+,.2f}")
             print(f"  ROI:                   {agg_roi:+.1%}")
             print(f"  Mean Brier score:      {agg_brier:.4f} (lower is better)")
+            print("=" * 60)
+            # By-quarter table for aggregate
+            q_rows = []
+            for q in ["Q1", "Q2", "Q3", "Q4"]:
+                aq = agg_quarters[q]
+                n_q = aq["n"]
+                brier_q = (aq["brier_sum"] / n_q) if n_q else float("nan")
+                hit_rate_q = (aq["wins"] / n_q) if n_q else 0.0
+                roi_q = (aq["total_profit"] / aq["total_staked"]) if aq["total_staked"] else 0.0
+                q_rows.append({"quarter": q, "n": n_q, "n_over": aq["n_over"], "n_under": aq["n_under"], "brier_score": brier_q, "hit_rate": hit_rate_q, "roi": roi_q})
+            agg_q_df = pd.DataFrame(q_rows)
+            agg_q_df["brier_rank"] = agg_q_df["brier_score"].rank(ascending=True, method="min").astype("Int64")
+            print()
+            print("  By quarter (Q1–Q4): n, n_over, n_under, brier_score, hit_rate, roi, brier_rank (1=best)")
+            print(agg_q_df.to_string(index=False))
             print("=" * 60)
         return
     date_str = date_in.replace("-", "")  # YYYYMMDD
