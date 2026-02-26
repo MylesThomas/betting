@@ -1408,7 +1408,8 @@ def analyze_player_betting_opportunity(
         market: Betting market to analyze (default "player_points")
     
     Returns:
-        Signal dictionary with best bet if profitable, None otherwise
+        List of signal dicts (all profitable bookmaker×line combos, including stale) for saving;
+        [] if no profitable signals. Stale signals are excluded from per-player display but included here.
     """
     player_name = player['player_name']
     
@@ -1504,8 +1505,8 @@ def analyze_player_betting_opportunity(
                 print(f"      ⚪ No pregame line found for '{player_name}' (normalized: '{normalized_name}') (Gate 4 failed)")
         
         if not pregame_line:
-            return None
-        
+            return []
+
         # =====================================================================
         # ALL GATES PASSED - Proceed with expensive operations
         # =====================================================================
@@ -1680,12 +1681,9 @@ def analyze_player_betting_opportunity(
                         pass
                 combo_maths.append((p_over, ev_over, ev_under, bookmaker_et_str, age_seconds))
                 if signal['action'] != 'PASS':
-                    # Flag if bookmaker update was stale at signal time (eval will exclude these from ROI/Brier)
+                    # Flag if bookmaker update was stale at signal time (saved to parquet; eval excludes from ROI/Brier)
                     bookmaker_stale = age_seconds is not None and age_seconds > MAX_ODDS_AGE_SECONDS
-                    # Don't recommend or display stale bets — they're already logged above with ⚠️ stale
-                    if bookmaker_stale:
-                        continue
-                    # Package signal with all context
+                    # Package signal with all context (include stale so evals can report "excluded N stale")
                     signal.update({
                         'bookmaker': bookmaker,
                         'live_line': line_value,
@@ -1698,7 +1696,7 @@ def analyze_player_betting_opportunity(
                         'pregame_line': pregame_line,
                         'game_id': game['game_id'],
                         'game_info': f"{game['away_team']} @ {game['home_team']}",
-                        'bookmaker_stale': False,
+                        'bookmaker_stale': bookmaker_stale,
                     })
                     all_bets.append(signal)
         
@@ -1718,18 +1716,23 @@ def analyze_player_betting_opportunity(
                 else:
                     print(f"               Bookmaker updated: (not available)")
         print()
-        # Return bet with highest EV
+        # Non-stale only for display/recommendation; all_bets (including stale) returned for saving
         if not all_bets:
             print(f"      ⚪ No profitable signals found")
-            return None
-        
-        print(f"         ✅ Found {len(all_bets)} profitable bet(s)")
-        for i, bet in enumerate(sorted(all_bets, key=lambda x: -x['ev']), 1):
-            p_over = bet['model_prob_over']
+            return []
+
+        non_stale_bets = [b for b in all_bets if not b.get("bookmaker_stale", False)]
+        if not non_stale_bets:
+            print(f"      ⚪ No profitable signals found (all {len(all_bets)} combo(s) stale)")
+            return all_bets
+
+        print(f"         ✅ Found {len(non_stale_bets)} profitable bet(s)")
+        for i, bet in enumerate(sorted(non_stale_bets, key=lambda x: -x["ev"]), 1):
+            p_over = bet["model_prob_over"]
             p_under = 1 - p_over
-            win_over = (american_odds_to_decimal(bet['over_odds']) - 1) * 100
-            win_under = (american_odds_to_decimal(bet['under_odds']) - 1) * 100
-            if bet['bet_side'] == 'OVER':
+            win_over = (american_odds_to_decimal(bet["over_odds"]) - 1) * 100
+            win_under = (american_odds_to_decimal(bet["under_odds"]) - 1) * 100
+            if bet["bet_side"] == "OVER":
                 outcome_over, outcome_under = win_over, -100
             else:
                 outcome_over, outcome_under = -100, win_under
@@ -1737,13 +1740,13 @@ def analyze_player_betting_opportunity(
             term2 = p_under * outcome_under
             print(f"            {i}. {bet['bookmaker']} {bet['bet_side']} {bet['live_line']}  P(over)={p_over:.1%}×(${outcome_over:+.2f}) + P(under)={p_under:.1%}×(${outcome_under:+.2f}) = ${bet['ev']:.2f}")
             print(f"               EV({bet['bet_side']}) = {term1:.2f} + ({term2:.2f}) = ${bet['ev']:.2f}")
-        best_bet = max(all_bets, key=lambda x: x['ev'])
+        best_bet = max(non_stale_bets, key=lambda x: x["ev"])
         print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']} {best_bet['bet_side']} {best_bet['live_line']})")
-        return best_bet
-    
+        return all_bets
+
     except Exception as e:
         print(f"   ⚠️  Error analyzing {player_name}: {e}")
-        return None
+        return []
 
 
 # =============================================================================
@@ -2149,12 +2152,11 @@ def main():
                         print(f"      ⏭️  Skipping (0 min played – possible DNP)")
                         continue
                     
-                    signal = analyze_player_betting_opportunity(
+                    signals = analyze_player_betting_opportunity(
                         player, game, live_odds_df, pbp_data, pregame_props_lookup, n_sims=N_SIMULATIONS, test_mode=test_mode
                     )
-                    
-                    if signal:
-                        all_signals.append(signal)
+                    if signals:
+                        all_signals.extend(signals)
             
             print()
         
@@ -2167,15 +2169,16 @@ def main():
         print()
         
         with timed_step("Step 7: Display + save signals"):
-            if not all_signals:
+            display_signals = [s for s in all_signals if not s.get("bookmaker_stale", False)]
+            if not display_signals:
                 print("❌ No profitable betting opportunities found")
             else:
-                print(f"🎯 Found {len(all_signals)} profitable signal(s):")
+                print(f"🎯 Found {len(display_signals)} profitable signal(s):")
                 print()
-                # Summary: book, line/odds, model prob vs implied
+                # Summary: book, line/odds, model prob vs implied (non-stale only)
                 print("   Book            | Line & odds              | Model prob | Implied (book)  | Player")
                 print("   ----------------|---------------------------|------------|-----------------|-------")
-                for signal in all_signals:
+                for signal in display_signals:
                     if signal['bet_side'] == 'OVER':
                         line_odds = f"OVER {signal['live_line']} @ {signal['over_odds']:+d}"
                     else:
@@ -2185,7 +2188,7 @@ def main():
                     print(f"   {signal['bookmaker']:<14} | {line_odds:<25} | {model_pct:>9.1%} | {implied:>14.1%} | {signal['player_name']}")
                 print()
                 
-                for i, signal in enumerate(all_signals, 1):
+                for i, signal in enumerate(display_signals, 1):
                     # Build odds display showing both sides
                     if signal['bet_side'] == 'OVER':
                         odds_display = f"OVER {signal['live_line']} @ {signal['over_odds']:+d} (UNDER {signal['live_line']} @ {signal['under_odds']:+d})"
