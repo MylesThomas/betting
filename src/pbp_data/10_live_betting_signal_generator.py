@@ -2101,16 +2101,26 @@ def main():
             now_et = datetime.now(et_tz)
             last_updates = live_odds_df["bookmaker_last_update"].dropna()
             if len(last_updates):
-                bookmaker_dt = pd.to_datetime(last_updates, utc=True).max()
-                if hasattr(bookmaker_dt, "to_pydatetime"):
-                    bookmaker_dt = bookmaker_dt.to_pydatetime()
-                if bookmaker_dt.tzinfo is None:
-                    bookmaker_dt = bookmaker_dt.replace(tzinfo=timezone.utc)
-                bookmaker_et = bookmaker_dt.astimezone(et_tz)
-                bookmaker_str = bookmaker_et.strftime("%b %d %I:%M:%S%p") + " ET"
+                parsed = pd.to_datetime(live_odds_df["bookmaker_last_update"], utc=True)
+                min_ts = parsed.min()
+                max_ts = parsed.max()
+                books_with_min = live_odds_df.loc[parsed == min_ts, "bookmaker"].unique().tolist()
+                books_with_max = live_odds_df.loc[parsed == max_ts, "bookmaker"].unique().tolist()
+                def _to_et(t):
+                    if hasattr(t, "to_pydatetime"):
+                        t = t.to_pydatetime()
+                    if t.tzinfo is None:
+                        t = t.replace(tzinfo=timezone.utc)
+                    return t.astimezone(et_tz)
+                min_et = _to_et(min_ts)
+                max_et = _to_et(max_ts)
+                bookmaker_str = (
+                    "oldest: " + ", ".join(sorted(books_with_min)) + " " + min_et.strftime("%I:%M:%S%p") + " ET"
+                    + "  |  latest: " + ", ".join(sorted(books_with_max)) + " " + max_et.strftime("%I:%M:%S%p") + " ET"
+                )
             else:
                 bookmaker_str = "(not available)"
-            print(f"   Odds fetch: {fetch_et.strftime('%b %d %I:%M:%S%p')} ET  |  Now: {now_et.strftime('%b %d %I:%M:%S%p')} ET  |  Bookmaker last update: {bookmaker_str}")
+            print(f"   Odds fetch: {fetch_et.strftime('%b %d %I:%M:%S%p')} ET  |  Now: {now_et.strftime('%b %d %I:%M:%S%p')} ET  |  Bookmaker updates: {bookmaker_str}")
             print()
             with timed_step("Step 6: Analyze players (MC)"):
                 for player_name in active_player_names:
