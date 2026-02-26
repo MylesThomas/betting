@@ -1680,9 +1680,18 @@ def analyze_player_betting_opportunity(
         
         print(f"         ✅ Found {len(all_bets)} profitable bet(s)")
         for i, bet in enumerate(sorted(all_bets, key=lambda x: -x['ev']), 1):
-            ev_o = bet.get('ev_over', 0)
-            ev_u = bet.get('ev_under', 0)
-            print(f"            {i}. {bet['bookmaker']} {bet['bet_side']} {bet['live_line']}  EV OVER ${ev_o:.2f} + EV UNDER ${ev_u:.2f} → bet taken: ${bet['ev']:.2f}")
+            p_over = bet['model_prob_over']
+            p_under = 1 - p_over
+            win_over = (american_odds_to_decimal(bet['over_odds']) - 1) * 100
+            win_under = (american_odds_to_decimal(bet['under_odds']) - 1) * 100
+            if bet['bet_side'] == 'OVER':
+                outcome_over, outcome_under = win_over, -100
+            else:
+                outcome_over, outcome_under = -100, win_under
+            term1 = p_over * outcome_over
+            term2 = p_under * outcome_under
+            print(f"            {i}. {bet['bookmaker']} {bet['bet_side']} {bet['live_line']}  P(over)={p_over:.1%}×(${outcome_over:+.2f}) + P(under)={p_under:.1%}×(${outcome_under:+.2f}) = ${bet['ev']:.2f}")
+            print(f"               EV({bet['bet_side']}) = {term1:.2f} + ({term2:.2f}) = ${bet['ev']:.2f}")
         best_bet = max(all_bets, key=lambda x: x['ev'])
         print(f"      ✅ PROFITABLE SIGNAL (best EV: ${best_bet['ev']:.2f} on {best_bet['bookmaker']} {best_bet['bet_side']} {best_bet['live_line']})")
         return best_bet
