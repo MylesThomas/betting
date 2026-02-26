@@ -16,9 +16,11 @@ Usage:
     python src/pbp_data/11_evaluate_live_betting_signals.py 20260223
     python src/pbp_data/11_evaluate_live_betting_signals.py --date 2026-02-23
     python src/pbp_data/11_evaluate_live_betting_signals.py --date all
+    python src/pbp_data/11_evaluate_live_betting_signals.py --date all --simulate-manual   # one best per player per 60s, then dedupe
 """
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -41,6 +43,12 @@ SESSION.headers.update({"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10
 S3_BUCKET = "nba-betting-mt"
 S3_SIGNALS_PREFIX = "data/04_output/live_betting_signals/player_points"
 BET_AMOUNT = 100
+# Window (seconds) for "one best bet per player per iteration" when --simulate-manual
+ITERATION_SECONDS = 60
+# Exclude these bookmakers from measurement (e.g. Bovada lines often stale). Set EXCLUDED_BOOKMAKERS env or default bovada.
+EXCLUDED_BOOKMAKERS = [
+    k.strip().lower() for k in os.environ.get("EXCLUDED_BOOKMAKERS", "bovada").split(",") if k.strip()
+]
 
 
 def _american_to_decimal(american: int) -> float:
@@ -130,10 +138,10 @@ def fetch_espn_boxscore_final_points(game_id: str) -> dict:
     return out
 
 
-def _filter_stale_and_dedupe(df: pd.DataFrame):
+def _filter_stale_and_dedupe(df: pd.DataFrame, simulate_manual: bool = False):
     """
-    Drop stale lines (over already cleared, or under on a line already over) and dedupe to one bet per
-    (game_id, player_name, bookmaker, live_line, bet_side), keeping earliest by save_timestamp_utc.
+    Drop stale lines (over already cleared, or under on a line already over). Optionally simulate manual
+    placement: one best bet per player per iteration (by EV), then dedupe to one per (game, player, bookmaker, line, side).
     Returns filtered DataFrame and prints counts dropped.
     """
     df = df.copy()
@@ -147,14 +155,27 @@ def _filter_stale_and_dedupe(df: pd.DataFrame):
             df = df[~stale].copy()
             print(f"   Dropped {stale.sum()} stale line(s) (over already cleared or under on decided line)")
     after_stale_n = len(df)
-    # Dedupe: same (game, player, bookmaker, line, side) can appear from multiple loop iterations — keep first
+    # Optional: per-iteration best per player (simulate "place best bet per player each scan"), then dedupe
+    if simulate_manual and after_stale_n > 0:
+        need = ["save_timestamp_utc", "ev", "game_id", "player_name"]
+        missing = [k for k in need if k not in df.columns]
+        if not missing:
+            df["_iteration"] = pd.to_datetime(df["save_timestamp_utc"], utc=True).dt.floor(f"{ITERATION_SECONDS}s")
+            idx_best = df.groupby(["_iteration", "game_id", "player_name"])["ev"].idxmax()
+            df = df.loc[idx_best].drop(columns=["_iteration"]).copy()
+            after_iter_n = len(df)
+            print(f"   Per-iteration best per player ({ITERATION_SECONDS}s window): {after_iter_n} decision(s) (from {after_stale_n} after stale)")
+        else:
+            print(f"   --simulate-manual skipped (missing columns: {missing}); using standard dedupe")
+    after_before_dedupe = len(df)
+    # Dedupe: same (game, player, bookmaker, line, side) — keep first (earliest)
     dedupe_keys = ["game_id", "player_name", "bookmaker", "live_line", "bet_side"]
     if all(k in df.columns for k in dedupe_keys):
         if "save_timestamp_utc" in df.columns:
             df = df.sort_values("save_timestamp_utc").drop_duplicates(subset=dedupe_keys, keep="first")
         else:
             df = df.drop_duplicates(subset=dedupe_keys, keep="first")
-        dedupe_dropped = after_stale_n - len(df)
+        dedupe_dropped = after_before_dedupe - len(df)
         if dedupe_dropped > 0:
             print(f"   Deduped to one bet per (game, player, bookmaker, line, side): removed {dedupe_dropped} duplicate(s)")
     if len(df) < start_n:
@@ -162,10 +183,10 @@ def _filter_stale_and_dedupe(df: pd.DataFrame):
     return df
 
 
-def evaluate_signals(df: pd.DataFrame, date_str: str):
+def evaluate_signals(df: pd.DataFrame, date_str: str, simulate_manual: bool = False):
     """
     Fetch final points per game, join to signals, compute Brier, W-L, ROI.
-    Excludes stale lines (over already cleared; under on decided line) and dedupes to one bet per combo.
+    Excludes stale lines; optionally --simulate-manual (one best per player per iteration then dedupe).
     Returns dict with n, wins, total_staked, total_profit, brier_sum for aggregation, or None if nothing evaluated.
     """
     from player_team_history.name_normalization import normalize_from_odds_api
@@ -174,7 +195,13 @@ def evaluate_signals(df: pd.DataFrame, date_str: str):
     if "game_id" not in df.columns or "player_name" not in df.columns:
         print("Missing game_id or player_name in signals; aborting.")
         return None
-    df = _filter_stale_and_dedupe(df)
+    if "bookmaker" in df.columns and EXCLUDED_BOOKMAKERS:
+        before = len(df)
+        df = df[~df["bookmaker"].str.lower().isin(EXCLUDED_BOOKMAKERS)].copy()
+        dropped = before - len(df)
+        if dropped:
+            print(f"   Excluded {dropped} signal(s) from bookmaker(s): {', '.join(EXCLUDED_BOOKMAKERS)} (measurement only)")
+    df = _filter_stale_and_dedupe(df, simulate_manual=simulate_manual)
     if len(df) == 0:
         print("   No signals left after stale/dedupe filters.")
         return None
@@ -225,7 +252,10 @@ def evaluate_signals(df: pd.DataFrame, date_str: str):
     brier_sum = evaluated["brier"].sum()
     print()
     print("=" * 60)
-    print(f"  EVALUATION: {date_str} — Monte Carlo live signals")
+    title = f"  EVALUATION: {date_str} — Monte Carlo live signals"
+    if simulate_manual:
+        title += " (manual sim: one best per player per iteration)"
+    print(title)
     print("=" * 60)
     print(f"  Signals evaluated:     {n}")
     print(f"  W–L:                   {int(wins)}–{int(n - wins)}")
@@ -236,7 +266,7 @@ def evaluate_signals(df: pd.DataFrame, date_str: str):
     print("=" * 60)
     print()
     print("  Per-signal summary (first 20):")
-    cols = ["player_name", "bet_side", "live_line", "odds_bet", "final_points", "model_prob", "win", "profit", "brier"]
+    cols = ["player_name", "bet_side", "bookmaker", "game_state", "current_points", "live_line", "odds_bet", "final_points", "model_prob", "win", "profit", "brier"]
     subset = [c for c in cols if c in evaluated.columns]
     print(evaluated[subset].head(20).to_string(index=False))
     print()
@@ -266,7 +296,9 @@ def main():
     parser = argparse.ArgumentParser(description="Evaluate live betting signals (Brier, W-L, ROI)")
     parser.add_argument("date", nargs="?", help="Date YYYYMMDD (e.g. 20260223) or 'all'")
     parser.add_argument("--date", dest="date_alt", help="Date: YYYY-MM-DD, YYYYMMDD, or 'all'")
+    parser.add_argument("--simulate-manual", action="store_true", help="One best bet per player per 60s window, then dedupe; can differ from default when some bets were never 'best' in any window")
     args = parser.parse_args()
+    simulate_manual = args.simulate_manual
     date_in = args.date or args.date_alt
     if not date_in:
         parser.error("Provide date as positional arg or --date (e.g. 20260223, 2026-02-23, or all)")
@@ -276,14 +308,14 @@ def main():
         if not date_list:
             print("No signal parquet files found in S3.")
             return
-        print(f"Evaluating {len(date_list)} date(s): {date_list[0]} .. {date_list[-1]}")
+        print(f"Evaluating {len(date_list)} date(s): {date_list[0]} .. {date_list[-1]}" + (" (--simulate-manual)" if simulate_manual else ""))
         agg = {"n": 0, "wins": 0, "total_staked": 0.0, "total_profit": 0.0, "brier_sum": 0.0}
         for date_str in date_list:
             print(f"\n--- {date_str} ---")
             print(f"Loading signals from s3://{S3_BUCKET}/{S3_SIGNALS_PREFIX}/{date_str}.parquet ...")
             df = load_signals_from_s3(date_str)
             print(f"   Loaded {len(df)} signal(s)")
-            stats = evaluate_signals(df, date_str)
+            stats = evaluate_signals(df, date_str, simulate_manual=simulate_manual)
             if stats:
                 agg["n"] += stats["n"]
                 agg["wins"] += stats["wins"]
@@ -295,7 +327,7 @@ def main():
             agg_brier = agg["brier_sum"] / agg["n"]
             print()
             print("=" * 60)
-            print("  AGGREGATE (all dates)")
+            print("  AGGREGATE (all dates)" + (" [manual sim]" if simulate_manual else ""))
             print("=" * 60)
             print(f"  Signals evaluated:     {agg['n']}")
             print(f"  W–L:                   {agg['wins']}–{agg['n'] - agg['wins']}")
@@ -311,7 +343,7 @@ def main():
     print(f"Loading signals from s3://{S3_BUCKET}/{S3_SIGNALS_PREFIX}/{date_str}.parquet ...")
     df = load_signals_from_s3(date_str)
     print(f"   Loaded {len(df)} signal(s)")
-    evaluate_signals(df, date_str)
+    evaluate_signals(df, date_str, simulate_manual=simulate_manual)
 
 
 if __name__ == "__main__":
