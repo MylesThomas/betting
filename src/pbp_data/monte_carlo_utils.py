@@ -318,42 +318,62 @@ def create_blank_image(size=(100, 100)):
 # LOAD PLAYER PROFILE
 # =============================================================================
 
-def load_player_profile(player_name, minute_by_minute_path=None):
+# Table name used when preloading minute_by_minute into DuckDB for fast per-player SELECT.
+MBM_TABLE_NAME = "mbm"
+
+
+def get_minute_by_minute_with_normalized_names(minute_by_minute_path=None):
     """
-    Load player's historical data (quarterly distributions) using DuckDB + pandas.
-    
-    Strategy:
-    1. Use DuckDB to read parquet (fast: 2MB file, 687k rows)
-    2. Add normalized_name column using Python normalization utils
-    3. Filter to player using normalized name
-    4. Aggregate in pandas
-    
-    Args:
-        player_name: Normalized player name (e.g., "Lebron James", "Pj Washington")
-        minute_by_minute_path: Optional path to minute_by_minute.parquet
-    
-    Returns:
-        dict with quarterly distributions (lists) and player_id
+    Load minute_by_minute parquet with DuckDB, add normalized_name, register in DuckDB.
+    Returns a DuckDB connection with table 'mbm' (normalized_name included).
+    Call once per iteration; pass the returned con to load_player_profile(..., preloaded_duckdb_con=con).
+    Caller must close() the connection when done.
     """
     if minute_by_minute_path is None:
         minute_by_minute_path = get_data_paths()['minute_by_minute']
-    
-    # Import normalization function
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from player_team_history.name_normalization import normalize_from_nba_api
-    
-    # STEP 1: Use DuckDB to read parquet into pandas (FAST)
     con = duckdb.connect()
-    df = con.execute(f"SELECT * FROM '{minute_by_minute_path}'").df()
-    con.close()
-    
-    # STEP 2: Add normalized_name column using our Python normalization utils
+    df = con.execute(f"SELECT * FROM read_parquet('{minute_by_minute_path}')").df()
     df['normalized_name'] = df['player_name'].apply(normalize_from_nba_api)
+    con.register(MBM_TABLE_NAME, df)
+    return con
+
+
+def load_player_profile(player_name, minute_by_minute_path=None, preloaded_duckdb_con=None):
+    """
+    Load player's historical data (quarterly distributions) using DuckDB + pandas.
     
-    # STEP 3: Filter to just our player
-    player_df = df[df['normalized_name'] == player_name].copy()
+    Strategy:
+    - If preloaded_duckdb_con: run DuckDB SELECT ... WHERE normalized_name = ? (fast).
+    - Else: read parquet with DuckDB, add normalized_name, filter to player, then aggregate.
+    
+    Args:
+        player_name: Normalized player name (e.g., "Lebron James", "Pj Washington")
+        minute_by_minute_path: Optional path to minute_by_minute.parquet (ignored if preloaded_duckdb_con set)
+        preloaded_duckdb_con: Optional DuckDB connection with table 'mbm' (has normalized_name); use SELECT WHERE.
+    
+    Returns:
+        dict with quarterly distributions (lists) and player_id
+    """
+    if preloaded_duckdb_con is not None:
+        player_df = preloaded_duckdb_con.execute(
+            f"SELECT * FROM {MBM_TABLE_NAME} WHERE normalized_name = ?", [player_name]
+        ).df()
+    else:
+        if minute_by_minute_path is None:
+            minute_by_minute_path = get_data_paths()['minute_by_minute']
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from player_team_history.name_normalization import normalize_from_nba_api
+        con = duckdb.connect()
+        df = con.execute(f"SELECT * FROM read_parquet('{minute_by_minute_path}')").df()
+        con.close()
+        df['normalized_name'] = df['player_name'].apply(normalize_from_nba_api)
+        player_df = df[df['normalized_name'] == player_name].copy()
     
     if len(player_df) == 0:
         raise ValueError(f"Player {player_name} not found")
