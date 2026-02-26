@@ -1597,12 +1597,6 @@ def analyze_player_betting_opportunity(
                         print(f"         🔍 DEBUG: Skipping stale line {line_value} (player has {current_points} pts)")
                     continue
                 
-                # Flag (log only) lines 5+ points off current or pregame — may be stale; we still analyze them.
-                off_current = abs(line_value - current_points)
-                off_pregame = abs(line_value - pregame_line)
-                if off_current >= LINE_OFF_THRESHOLD_POINTS or off_pregame >= LINE_OFF_THRESHOLD_POINTS:
-                    print(f"         ⚠️  Line {line_value} is {off_current:.1f} pts off current ({current_points}), {off_pregame:.1f} off pregame ({pregame_line}) — possible stale")
-                
                 # Calculate probability for this line from the distribution
                 # Count how many simulations went over this line
                 hits_over = sum(1 for final_pts in simulated_finals if final_pts > line_value)
@@ -2060,7 +2054,25 @@ def main():
             print("="*80)
             print(f"STEP 6: Analyzing players (Gates 3 & 4, then MC if passed)...")
             print("="*80)
-            
+            et_tz = pytz.timezone("US/Eastern")
+            fetch_dt = pd.to_datetime(live_odds_df["timestamp"].iloc[0], utc=True)
+            if fetch_dt.tzinfo is None:
+                fetch_dt = fetch_dt.replace(tzinfo=timezone.utc)
+            fetch_et = fetch_dt.astimezone(et_tz)
+            now_et = datetime.now(et_tz)
+            last_updates = live_odds_df["bookmaker_last_update"].dropna()
+            if len(last_updates):
+                bookmaker_dt = pd.to_datetime(last_updates, utc=True).max()
+                if hasattr(bookmaker_dt, "to_pydatetime"):
+                    bookmaker_dt = bookmaker_dt.to_pydatetime()
+                if bookmaker_dt.tzinfo is None:
+                    bookmaker_dt = bookmaker_dt.replace(tzinfo=timezone.utc)
+                bookmaker_et = bookmaker_dt.astimezone(et_tz)
+                bookmaker_str = bookmaker_et.strftime("%b %d %I:%M:%S%p") + " ET"
+            else:
+                bookmaker_str = "(not available)"
+            print(f"   Odds fetch: {fetch_et.strftime('%b %d %I:%M:%S%p')} ET  |  Now: {now_et.strftime('%b %d %I:%M:%S%p')} ET  |  Bookmaker last update: {bookmaker_str}")
+            print()
             with timed_step("Step 6: Analyze players (MC)"):
                 for player_name in active_player_names:
                     print("=" * 60)
