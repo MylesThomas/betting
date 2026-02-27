@@ -54,6 +54,10 @@ from src.player_team_history.utils import load_team_history
 from src.player_team_history.team_normalization import normalize_team_name_from_odds_api
 from src.team_utils import NBA_TEAMS
 
+# Exactly 30 NBA teams; canonical full names for assert
+NBA_TEAMS_COUNT = 30
+CANONICAL_TEAM_NAMES = set(NBA_TEAMS.values())
+
 # S3
 S3_BETTING = "nba-betting-mt"
 S3_ODDS = "the-odds-api-mt"
@@ -63,8 +67,36 @@ GAME_RESULTS_PREFIX = "data/01_input/historical_game_results/"
 
 OUTPUT_DIR = Path.home() / "Downloads" / "tmp"
 
+# Cache for each dataset so re-runs skip already-fetched data (e.g. game results ok, props failed → only re-fetch props)
+CACHE_DIR = REPO_ROOT / "data" / "02_cache" / "nba_strategy_build"
+
 # Default: 3 seasons for strategy discovery and backtesting
 DEFAULT_SEASONS = ["2023-24", "2024-25", "2025-26"]
+
+# Retry S3 reads on transient failures (timeout, connection reset)
+S3_GET_RETRIES = 3
+S3_GET_RETRY_DELAY_SEC = 2
+
+
+def _s3_read_csv_with_retry(s3, bucket: str, key: str):
+    """Get S3 object body as decoded UTF-8 string; retry on timeout/connection errors."""
+    last_err = None
+    for attempt in range(S3_GET_RETRIES):
+        try:
+            body = s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")
+            return body
+        except Exception as e:
+            last_err = e
+            # Retry on typical transient errors (read timeout, connection reset)
+            if attempt < S3_GET_RETRIES - 1 and (
+                "timeout" in str(e).lower()
+                or "Connection reset" in str(e)
+                or "Connection broken" in str(e)
+            ):
+                time.sleep(S3_GET_RETRY_DELAY_SEC * (attempt + 1))
+                continue
+            raise
+    raise last_err
 
 
 def timed(f):
@@ -77,6 +109,94 @@ def timed(f):
         print(f"   ⏱  {f.__name__}: {elapsed:.2f}s")
         return result
     return wrapper
+
+
+def _seasons_cache_key(seasons: list[str]) -> str:
+    """Stable key for cache filenames from season list."""
+    return "_".join(sorted(seasons))
+
+
+def _assert_30_teams(
+    df: pd.DataFrame,
+    source_name: str,
+    columns: list[str],
+    *,
+    use_abbr: bool = False,
+) -> None:
+    """Assert that the union of unique team values across columns has exactly 30 NBA teams (after normalization if full names)."""
+    if df.empty:
+        return
+    uniq = set()
+    for col in columns:
+        if col not in df.columns:
+            continue
+        vals = df[col].dropna().unique()
+        if use_abbr:
+            uniq.update(str(v) for v in vals)
+        else:
+            uniq.update(normalize_team_name_from_odds_api(str(v)) for v in vals)
+    if use_abbr:
+        extra = uniq - set(NBA_TEAMS.keys())
+        missing = set(NBA_TEAMS.keys()) - uniq
+        if extra or missing or len(uniq) != NBA_TEAMS_COUNT:
+            print(f"DEBUG {source_name}: len(uniq)={len(uniq)}, extra abbrs={sorted(extra)}, missing abbrs={sorted(missing)}")
+        assert len(uniq) == NBA_TEAMS_COUNT and uniq == set(NBA_TEAMS.keys()), (
+            f"{source_name}: expected 30 team abbrs, got {len(uniq)}: extra={uniq - set(NBA_TEAMS.keys())} missing={set(NBA_TEAMS.keys()) - uniq}"
+        )
+    else:
+        extra = uniq - CANONICAL_TEAM_NAMES
+        missing = CANONICAL_TEAM_NAMES - uniq
+        if extra or missing or len(uniq) != NBA_TEAMS_COUNT:
+            print(f"DEBUG {source_name}: len(uniq)={len(uniq)}")
+            print(f"  extra (not in canonical 30): {sorted(extra)}")
+            print(f"  missing (canonical not in data): {sorted(missing)}")
+        assert len(uniq) == NBA_TEAMS_COUNT and uniq == CANONICAL_TEAM_NAMES, (
+            f"{source_name}: expected 30 canonical team names, got {len(uniq)}"
+        )
+
+
+def _cache_filename(cache_name: str, seasons_key: str | None) -> str:
+    if seasons_key:
+        return f"{cache_name}_{seasons_key}.parquet"
+    return f"{cache_name}.parquet"
+
+
+def _load_with_cache(
+    cache_name: str,
+    loader,
+    loader_args: tuple,
+    use_cache: bool,
+    seasons_key: str | None = None,
+    output_cache_dir: Path | None = None,
+) -> pd.DataFrame:
+    """Load from cache (output dir first, then CACHE_DIR) if present; else run loader and write cache to both CACHE_DIR and output_cache_dir."""
+    fname = _cache_filename(cache_name, seasons_key)
+    # Prefer output dir cache, then repo CACHE_DIR
+    read_candidates = []
+    if output_cache_dir is not None:
+        read_candidates.append(output_cache_dir / fname)
+    read_candidates.append(CACHE_DIR / fname)
+
+    if use_cache:
+        for path in read_candidates:
+            if path.exists():
+                df = pd.read_parquet(path)
+                if cache_name == "player_team_history" and not df.empty:
+                    df["valid_from"] = pd.to_datetime(df["valid_from"]).dt.date
+                    df["valid_to"] = pd.to_datetime(df["valid_to"], errors="coerce").dt.date
+                print(f"✅ {cache_name}: loaded from cache ({len(df):,} rows)")
+                return df
+
+    df = loader(*loader_args)
+    if use_cache and not df.empty:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cache_path_repo = CACHE_DIR / fname
+        df.to_parquet(cache_path_repo, index=False)
+        if output_cache_dir is not None:
+            output_cache_dir.mkdir(parents=True, exist_ok=True)
+            df.to_parquet(output_cache_dir / fname, index=False)
+        print(f"   💾 Cached {cache_name} to {fname} (CACHE_DIR + output dir)")
+    return df
 
 
 def _season_date_range(season: str) -> tuple[str, str]:
@@ -128,7 +248,10 @@ def load_game_results(seasons: list[str]) -> pd.DataFrame:
                     print(f"  ⚠️  Skip {key}: {e}")
     if not all_dfs:
         return pd.DataFrame()
-    out = pd.concat(all_dfs, ignore_index=True)
+    non_empty = [df for df in all_dfs if not df.empty]
+    if not non_empty:
+        return pd.DataFrame()
+    out = pd.concat(non_empty, ignore_index=True)
     print(f"✅ Game results: {len(out)} games, seasons {seasons}, {out['game_date'].min()} to {out['game_date'].max()}")
     return out
 
@@ -150,7 +273,7 @@ def load_player_props(seasons: list[str]) -> pd.DataFrame:
                 continue
             date_str = key.split("/")[-1].replace(".csv", "")
             try:
-                body = s3.get_object(Bucket=S3_ODDS, Key=key)["Body"].read().decode("utf-8")
+                body = _s3_read_csv_with_retry(s3, S3_ODDS, key)
                 df = pd.read_csv(StringIO(body))
                 df["game_date"] = date_str
                 df["season"] = season
@@ -162,7 +285,10 @@ def load_player_props(seasons: list[str]) -> pd.DataFrame:
                 print(f"  ⚠️  Skip {key}: {e}")
     if not all_dfs:
         return pd.DataFrame()
-    out = pd.concat(all_dfs, ignore_index=True)
+    non_empty = [df for df in all_dfs if not df.empty]
+    if not non_empty:
+        return pd.DataFrame()
+    out = pd.concat(non_empty, ignore_index=True)
     print(f"✅ Player props: {len(out):,} rows, seasons {seasons}, markets: {out['market'].unique().tolist()[:10]}...")
     return out
 
@@ -230,7 +356,7 @@ def load_game_lines(seasons: list[str]) -> pd.DataFrame:
                 else:
                     date_str = fn.replace(".csv", "")
                 try:
-                    body = s3.get_object(Bucket=S3_ODDS, Key=key)["Body"].read().decode("utf-8")
+                    body = _s3_read_csv_with_retry(s3, S3_ODDS, key)
                     df = pd.read_csv(StringIO(body))
                     df["game_date"] = date_str
                     df["season"] = season
@@ -239,7 +365,10 @@ def load_game_lines(seasons: list[str]) -> pd.DataFrame:
                     print(f"  ⚠️  Skip {key}: {e}")
     if not all_dfs:
         return pd.DataFrame()
-    raw = pd.concat(all_dfs, ignore_index=True)
+    non_empty = [df for df in all_dfs if not df.empty]
+    if not non_empty:
+        return pd.DataFrame()
+    raw = pd.concat(non_empty, ignore_index=True)
     # Consensus by game/market (per season we keep game_date, away_team, home_team; season in raw but drop in groupby then re-merge if needed)
     if "market" not in raw.columns:
         return raw
@@ -274,7 +403,7 @@ def load_player_game_logs(seasons: list[str]) -> pd.DataFrame:
             if not key.endswith(".csv"):
                 continue
             try:
-                body = s3.get_object(Bucket=S3_NBA_API, Key=key)["Body"].read().decode("utf-8")
+                body = _s3_read_csv_with_retry(s3, S3_NBA_API, key)
                 df = pd.read_csv(StringIO(body))
                 df["GAME_DATE"] = pd.to_datetime(df["GAME_DATE"])
                 df["game_date"] = df["GAME_DATE"].dt.date.astype(str)
@@ -285,7 +414,10 @@ def load_player_game_logs(seasons: list[str]) -> pd.DataFrame:
                 print(f"  ⚠️  Skip {key}: {e}")
     if not all_dfs:
         return pd.DataFrame()
-    out = pd.concat(all_dfs, ignore_index=True)
+    non_empty = [df for df in all_dfs if not df.empty]
+    if not non_empty:
+        return pd.DataFrame()
+    out = pd.concat(non_empty, ignore_index=True)
     print(f"✅ Game logs: {len(out):,} player-game rows, seasons {seasons}")
     return out
 
@@ -305,13 +437,14 @@ def join_all(
         return pd.DataFrame()
 
     # Props have game_date, team_full, season. Games have game_date, home_team, away_team, GAME_ID, season, etc.
+    # Build one row per (game, team) so we can join props on team_full; keep both home_team and away_team on every row for the game-lines merge.
     base_cols = ["game_date", "GAME_ID", "home_team", "away_team", "HOME_SCORE", "AWAY_SCORE"]
     if "season" in games_df.columns:
         base_cols.append("season")
     home = games_df[base_cols].copy()
-    home = home.rename(columns={"home_team": "team_full"})
+    home["team_full"] = home["home_team"]
     away = games_df[base_cols].copy()
-    away = away.rename(columns={"away_team": "team_full"})
+    away["team_full"] = away["away_team"]
     games_long = pd.concat([home, away], ignore_index=True).drop_duplicates()
 
     join_keys = ["game_date", "team_full"]
@@ -356,23 +489,46 @@ def main():
     parser = argparse.ArgumentParser(description="Build NBA multi-market strategy dataset (game results + props + game lines + actuals)")
     parser.add_argument("--seasons", nargs="*", default=DEFAULT_SEASONS, help=f"Seasons to include (default: {' '.join(DEFAULT_SEASONS)})")
     parser.add_argument("--output", type=Path, default=None, help="Output parquet path (default: ~/Downloads/tmp/nba_strategy_3seasons.parquet)")
+    parser.add_argument("--no-cache", action="store_true", help="Ignore and do not write cache; always fetch from S3")
     args = parser.parse_args()
     seasons = args.seasons
     out_path = args.output or (OUTPUT_DIR / f"nba_strategy_{len(seasons)}seasons.parquet")
     out_path = Path(out_path).expanduser()
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    use_cache = not args.no_cache
+    seasons_key = _seasons_cache_key(seasons)
+    output_cache_dir = out_path.parent / "nba_strategy_build"
 
     print("=" * 60)
     print(f"Building NBA strategy dataset — seasons {seasons}")
+    if use_cache:
+        print(f"Cache: {CACHE_DIR} and {output_cache_dir}")
+    else:
+        print("Cache disabled (--no-cache)")
     print("=" * 60)
     main_start = time.perf_counter()
 
-    games_df = load_game_results(seasons)
-    props_df = load_player_props(seasons)
-    history_df = load_player_team_history()
+    games_df = _load_with_cache("game_results", load_game_results, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    # ESPN includes All-Star/exhibition (Team Shaq, Eastern Conf All-Stars, etc.); keep only NBA-vs-NBA games
+    n_before = len(games_df)
+    teams_in_data = set(games_df["home_team"].dropna()) | set(games_df["away_team"].dropna())
+    dropped_teams = sorted(teams_in_data - CANONICAL_TEAM_NAMES)
+    games_df = games_df[
+        games_df["home_team"].isin(CANONICAL_TEAM_NAMES) & games_df["away_team"].isin(CANONICAL_TEAM_NAMES)
+    ].copy()
+    if dropped_teams:
+        print(f"   Filtered game_results to NBA-only: {n_before} → {len(games_df)} games")
+        print(f"   Dropped non-NBA teams ({len(dropped_teams)}): {dropped_teams}")
+    _assert_30_teams(games_df, "game_results", ["home_team", "away_team"])
+    props_df = _load_with_cache("player_props", load_player_props, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    history_df = _load_with_cache("player_team_history", load_player_team_history, (), use_cache, seasons_key=None, output_cache_dir=output_cache_dir)
+    _assert_30_teams(history_df, "player_team_history", ["team"], use_abbr=True)
     props_df = add_team_to_props(props_df, history_df)
-    lines_df = load_game_lines(seasons)
-    logs_df = load_player_game_logs(seasons)
+    _assert_30_teams(props_df, "player_props (team_full)", ["team_full"])
+    lines_df = _load_with_cache("game_lines", load_game_lines, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    _assert_30_teams(lines_df, "game_lines", ["away_team", "home_team"])
+    logs_df = _load_with_cache("game_logs", load_player_game_logs, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    _assert_30_teams(logs_df, "game_logs", ["TEAM_NAME"])
 
     merged = join_all(games_df, props_df, lines_df, logs_df)
     if merged.empty:
