@@ -43,6 +43,7 @@ import functools
 import sys
 import time
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import boto3
 import pandas as pd
@@ -297,6 +298,14 @@ def load_player_props(seasons: list[str], max_files: int | None = None) -> pd.Da
                 body = _s3_read_csv_with_retry(s3, S3_ODDS, key)
                 df = pd.read_csv(StringIO(body))
                 df["game_date"] = date_str
+                # Align with ESPN/game results: derive game_date from game_time (ET) when present
+                # so late-night UTC games (e.g. 03:00 UTC = 22:00 ET prev day) join correctly.
+                if "game_time" in df.columns:
+                    gt = pd.to_datetime(df["game_time"], utc=True)
+                    if gt.dt.tz is None:
+                        gt = gt.dt.tz_localize("UTC")
+                    game_date_et = gt.dt.tz_convert(ZoneInfo("America/New_York")).dt.date.astype(str)
+                    df["game_date"] = game_date_et
                 df["season"] = season
                 if "player" not in df.columns:
                     continue

@@ -195,6 +195,8 @@ def fix_reversed_names(name: str) -> str:
         'Highsmith Haywood': 'Haywood Highsmith',
         'Huerter Kevin': 'Kevin Huerter',
         'Love Kevin': 'Kevin Love',
+        'Martin Kenyon Jr': 'Kenyon Martin Jr',
+        'Martin Kenyon Jr.': 'Kenyon Martin Jr.',
         'Murray Dejounte': 'Dejounte Murray',
         'Portis Bobby': 'Bobby Portis',
         'Wembanyama Victor': 'Victor Wembanyama',
@@ -366,7 +368,8 @@ def get_odds_api_to_nba_mappings() -> dict:
         # Format: 'Any variation' → 'NBA API name (WITH suffix)'
         # =================================================================
         'Bj Boston': 'Bj Boston Jr',              # NBA API: B.J. Boston Jr.
-        'Kenyon Martin Jr': 'Kj Martin',          # NBA API canonical: KJ Martin (son of Kenyon Martin)
+        'Jabari Smith': 'Jabari Smith Jr',        # Odds API sometimes omits Jr; NBA API: Jabari Smith Jr.
+        'Kenyon Martin Jr': 'Kj Martin',         # NBA API canonical: KJ Martin (son of Kenyon Martin)
         
         # =================================================================
         # NAME CHANGES / ROOKIES: Pre-draft → NBA names
