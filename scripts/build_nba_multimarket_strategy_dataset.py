@@ -16,7 +16,7 @@ canonical, e.g. LA Clippers → Los Angeles Clippers) so joins match.
 Also joins player game logs (s3://nba-api-mt/player_game_logs/{season}/) to attach
 actual stats (PTS, REB, AST, etc.) for each player-game so you can compare line vs actual.
 
-Output: Single .parquet in ~/Downloads/tmp (default: nba_strategy_3seasons.parquet).
+Output: Single .parquet in ~/Downloads/tmp (default: nba_strategy_3seasons.parquet). One row per player-game-bookmaker with props in wide form: market_1..market_9 (market name) and value_1..value_9 (prop_line).
 
 Uses 3 seasons by default (2023-24, 2024-25, 2025-26). Player names normalized via
 src/player_team_history/name_normalization (Odds API for props, NBA API for game logs).
@@ -26,6 +26,16 @@ Usage:
     python scripts/build_nba_multimarket_strategy_dataset.py --seasons 2024-25 2025-26
     python scripts/build_nba_multimarket_strategy_dataset.py --output ~/Downloads/tmp/nba_strategy.parquet
     python scripts/build_nba_multimarket_strategy_dataset.py   # single parquet; filter GAME_ID.isna() for non-joins
+
+When name_normalization changes (e.g. Jr/Sr exceptions in src/player_team_history/name_normalization.py):
+    1. Rebuild player team history so history.parquet has correct player_normalized names:
+           python src/player_team_history/01_build.py --no-cache
+       (Or clear cache for affected players via src/player_team_history/03_cache.py --clear "Jabari Smith" "Gary Trent" ...)
+    2. Upload the new history.parquet to S3 (nba-betting-mt, nba/player_team_history/history.parquet) if that is your source.
+    3. Delete the strategy build caches for player_team_history so this script re-fetches from S3:
+           rm -f data/02_cache/nba_strategy_build/player_team_history.parquet
+           rm -f ~/Downloads/tmp/nba_strategy_build/player_team_history.parquet
+       Or run this script with --no-cache once to bypass cache and re-download history.
 """
 
 import argparse
@@ -214,17 +224,20 @@ def _normalize_team_for_join(name):
 
 
 @timed
-def load_game_results(seasons: list[str]) -> pd.DataFrame:
-    """Load ESPN game results for all given seasons from S3; filter by season date range."""
+def load_game_results(seasons: list[str], max_files: int | None = None) -> pd.DataFrame:
+    """Load ESPN game results for all given seasons from S3; filter by season date range. If max_files set, stop after that many files (dry run)."""
     all_dfs = []
     s3 = boto3.client("s3")
     paginator = s3.get_paginator("list_objects_v2")
+    n_loaded = 0
     for season in seasons:
         start, end = _season_date_range(season)
         start_dt = pd.to_datetime(start).date()
         end_dt = pd.to_datetime(end).date()
         for page in paginator.paginate(Bucket=S3_BETTING, Prefix=GAME_RESULTS_PREFIX):
             for obj in page.get("Contents", []):
+                if max_files is not None and n_loaded >= max_files:
+                    break
                 key = obj["Key"]
                 if not key.endswith(".csv"):
                     continue
@@ -244,8 +257,13 @@ def load_game_results(seasons: list[str]) -> pd.DataFrame:
                     df["away_team"] = df["AWAY_TEAM"].apply(_normalize_team_for_join)
                     df["season"] = season
                     all_dfs.append(df)
+                    n_loaded += 1
                 except Exception as e:
                     print(f"  ⚠️  Skip {key}: {e}")
+            if max_files is not None and n_loaded >= max_files:
+                break
+        if max_files is not None and n_loaded >= max_files:
+            break
     if not all_dfs:
         return pd.DataFrame()
     non_empty = [df for df in all_dfs if not df.empty]
@@ -257,17 +275,20 @@ def load_game_results(seasons: list[str]) -> pd.DataFrame:
 
 
 @timed
-def load_player_props(seasons: list[str]) -> pd.DataFrame:
-    """Load all player props (all markets) from S3; add game_date from filename, player_normalized. Uses Odds API normalization."""
+def load_player_props(seasons: list[str], max_files: int | None = None) -> pd.DataFrame:
+    """Load all player props (all markets) from S3; add game_date from filename, player_normalized. If max_files set, stop after that many files (dry run)."""
     from src.player_team_history.name_normalization import normalize_from_odds_api
     all_dfs = []
     s3 = boto3.client("s3")
+    n_loaded = 0
     for season in seasons:
         prefix = f"nba/historical_player_props/{season}/"
         resp = s3.list_objects_v2(Bucket=S3_ODDS, Prefix=prefix)
         if "Contents" not in resp:
             continue
         for obj in resp["Contents"]:
+            if max_files is not None and n_loaded >= max_files:
+                break
             key = obj["Key"]
             if not key.endswith(".csv"):
                 continue
@@ -281,8 +302,11 @@ def load_player_props(seasons: list[str]) -> pd.DataFrame:
                     continue
                 df["player_normalized"] = df["player"].apply(normalize_from_odds_api)
                 all_dfs.append(df)
+                n_loaded += 1
             except Exception as e:
                 print(f"  ⚠️  Skip {key}: {e}")
+        if max_files is not None and n_loaded >= max_files:
+            break
     if not all_dfs:
         return pd.DataFrame()
     non_empty = [df for df in all_dfs if not df.empty]
@@ -335,22 +359,22 @@ def add_team_to_props(props_df: pd.DataFrame, history_df: pd.DataFrame) -> pd.Da
 
 
 @timed
-def load_game_lines(seasons: list[str]) -> pd.DataFrame:
-    """Load game lines (spread, moneyline) from S3.
-    S3 keys: nba/historical_game_lines/{season}/nba_game_lines_YYYY-MM-DD.csv (or YYYY-MM-DD.csv).
-    Lists by prefix and uses returned keys; supports both filename patterns."""
+def load_game_lines(seasons: list[str], max_files: int | None = None) -> pd.DataFrame:
+    """Load game lines (spread, moneyline) from S3. If max_files set, stop after that many files (dry run)."""
     all_dfs = []
     s3 = boto3.client("s3")
+    n_loaded = 0
     for season in seasons:
         prefix = f"nba/historical_game_lines/{season}/"
         paginator = s3.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=S3_ODDS, Prefix=prefix):
             for obj in page.get("Contents", []):
+                if max_files is not None and n_loaded >= max_files:
+                    break
                 key = obj["Key"]
                 if not key.endswith(".csv") or "failed" in key.lower():
                     continue
                 fn = key.split("/")[-1]
-                # Filenames are nba_game_lines_YYYY-MM-DD.csv (not plain YYYY-MM-DD.csv)
                 if "nba_game_lines_" in fn:
                     date_str = fn.replace("nba_game_lines_", "").replace(".csv", "")
                 else:
@@ -361,8 +385,13 @@ def load_game_lines(seasons: list[str]) -> pd.DataFrame:
                     df["game_date"] = date_str
                     df["season"] = season
                     all_dfs.append(df)
+                    n_loaded += 1
                 except Exception as e:
                     print(f"  ⚠️  Skip {key}: {e}")
+            if max_files is not None and n_loaded >= max_files:
+                break
+        if max_files is not None and n_loaded >= max_files:
+            break
     if not all_dfs:
         return pd.DataFrame()
     non_empty = [df for df in all_dfs if not df.empty]
@@ -388,17 +417,20 @@ def load_game_lines(seasons: list[str]) -> pd.DataFrame:
 
 
 @timed
-def load_player_game_logs(seasons: list[str]) -> pd.DataFrame:
-    """Load player game logs from S3 for actuals (PTS, REB, AST, etc.). Uses NBA API name normalization."""
+def load_player_game_logs(seasons: list[str], max_files: int | None = None) -> pd.DataFrame:
+    """Load player game logs from S3 for actuals (PTS, REB, AST, etc.). If max_files set, stop after that many files (dry run)."""
     from src.player_team_history.name_normalization import normalize_from_nba_api
     all_dfs = []
     s3 = boto3.client("s3")
+    n_loaded = 0
     for season in seasons:
         prefix = f"player_game_logs/{season}/"
         resp = s3.list_objects_v2(Bucket=S3_NBA_API, Prefix=prefix)
         if "Contents" not in resp:
             continue
         for obj in resp["Contents"]:
+            if max_files is not None and n_loaded >= max_files:
+                break
             key = obj["Key"]
             if not key.endswith(".csv"):
                 continue
@@ -410,8 +442,11 @@ def load_player_game_logs(seasons: list[str]) -> pd.DataFrame:
                 df["player_normalized"] = df["PLAYER_NAME"].apply(normalize_from_nba_api)
                 df["season"] = season
                 all_dfs.append(df)
+                n_loaded += 1
             except Exception as e:
                 print(f"  ⚠️  Skip {key}: {e}")
+        if max_files is not None and n_loaded >= max_files:
+            break
     if not all_dfs:
         return pd.DataFrame()
     non_empty = [df for df in all_dfs if not df.empty]
@@ -420,6 +455,26 @@ def load_player_game_logs(seasons: list[str]) -> pd.DataFrame:
     out = pd.concat(non_empty, ignore_index=True)
     print(f"✅ Game logs: {len(out):,} player-game rows, seasons {seasons}")
     return out
+
+
+def _debug_null_game_id(props_with_game: pd.DataFrame, games_long: pd.DataFrame, join_keys: list[str]) -> None:
+    """Print why some props have null GAME_ID."""
+    un = props_with_game[props_with_game["GAME_ID"].isna()]
+    if un.empty:
+        return
+    keys_df = un[join_keys].drop_duplicates()
+    games_keys = games_long[join_keys].drop_duplicates()
+    merged = keys_df.merge(games_keys, on=join_keys, how="left", indicator=True)
+    missing = merged[merged["_merge"] == "left_only"].drop(columns=["_merge"])
+    print(f"   DEBUG null GAME_ID: {len(un):,} rows in {len(keys_df):,} distinct (game_date, team_full, ...)")
+    if "game_date" in missing.columns:
+        bad_dates = missing["game_date"].unique()
+        print(f"   Unmatched game_dates (sample): {sorted(bad_dates)[:15]} ... ({len(bad_dates)} total)")
+    if "team_full" in missing.columns:
+        bad_teams = missing["team_full"].dropna().unique()
+        print(f"   Unmatched team_full: {sorted(bad_teams)}")
+    by_team = un.groupby("team_full", dropna=False).size().sort_values(ascending=False)
+    print(f"   Unmatched by team_full (top 10): {by_team.head(10).to_dict()}")
 
 
 def join_all(
@@ -450,10 +505,14 @@ def join_all(
     join_keys = ["game_date", "team_full"]
     if "season" in props_df.columns and "season" in games_long.columns:
         join_keys.append("season")
-    props_with_game = props_df.merge(games_long, on=join_keys, how="left")
+    # Drop prop-level home/away so we get canonical home_team/away_team from games only (avoids _x/_y suffix and missing key for lines merge)
+    props_for_merge = props_df.drop(columns=["home_team", "away_team"], errors="ignore")
+    props_with_game = props_for_merge.merge(games_long, on=join_keys, how="left")
     matched = props_with_game["GAME_ID"].notna().sum()
-    unmatched = props_with_game["GAME_ID"].isna().sum()
-    print(f"   Props matched to games: {matched:,} | unmatched (null GAME_ID): {unmatched:,}")
+    unmatched_count = props_with_game["GAME_ID"].isna().sum()
+    print(f"   Props matched to games: {matched:,} | unmatched (null GAME_ID): {unmatched_count:,}")
+    if unmatched_count > 0:
+        _debug_null_game_id(props_with_game, games_long, join_keys)
 
     if not lines_df.empty:
         line_keys = ["game_date", "away_team", "home_team"]
@@ -485,22 +544,57 @@ def join_all(
     return props_with_game
 
 
+def pivot_props_long_to_wide(df: pd.DataFrame, n_markets: int = 9) -> pd.DataFrame:
+    """
+    Pivot props from long (one row per player-game-market) to wide: one row per
+    player-game-bookmaker with market_1..market_n (market name) and value_1..value_n (prop_line).
+    Markets are sorted by name for deterministic column order; first n_markets are kept.
+    """
+    if df.empty or "market" not in df.columns or "prop_line" not in df.columns:
+        return df
+    key_cols = ["player", "game_date", "game_time", "bookmaker", "season"]
+    key_cols = [c for c in key_cols if c in df.columns]
+    pivot_cols = ["market", "prop_line", "over_odds", "under_odds"]
+    rows = []
+    for _, g in df.groupby(key_cols, dropna=False):
+        first = g.iloc[0]
+        row = first.drop(pivot_cols, errors="ignore").to_dict()
+        pairs = sorted(zip(g["market"].tolist(), g["prop_line"].tolist()), key=lambda x: (x[0], x[1]))
+        for i in range(n_markets):
+            if i < len(pairs):
+                row[f"market_{i + 1}"] = pairs[i][0]
+                row[f"value_{i + 1}"] = pairs[i][1]
+            else:
+                row[f"market_{i + 1}"] = None
+                row[f"value_{i + 1}"] = None
+        rows.append(row)
+    out = pd.DataFrame(rows)
+    print(f"   Pivoted long → wide: {len(df):,} rows → {len(out):,} rows (one per player-game-bookmaker, {n_markets} market slots)")
+    return out
+
+
 def main():
     parser = argparse.ArgumentParser(description="Build NBA multi-market strategy dataset (game results + props + game lines + actuals)")
     parser.add_argument("--seasons", nargs="*", default=DEFAULT_SEASONS, help=f"Seasons to include (default: {' '.join(DEFAULT_SEASONS)})")
     parser.add_argument("--output", type=Path, default=None, help="Output parquet path (default: ~/Downloads/tmp/nba_strategy_3seasons.parquet)")
     parser.add_argument("--no-cache", action="store_true", help="Ignore and do not write cache; always fetch from S3")
+    parser.add_argument("--max-files", type=int, default=None, metavar="N", help="Dry run: only load N files per source (skips cache for file-based sources)")
     args = parser.parse_args()
     seasons = args.seasons
     out_path = args.output or (OUTPUT_DIR / f"nba_strategy_{len(seasons)}seasons.parquet")
     out_path = Path(out_path).expanduser()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     use_cache = not args.no_cache
+    max_files = getattr(args, "max_files", None)
+    if max_files is not None:
+        use_cache = False  # dry run: don't use cache so we actually limit files
     seasons_key = _seasons_cache_key(seasons)
     output_cache_dir = out_path.parent / "nba_strategy_build"
 
     print("=" * 60)
     print(f"Building NBA strategy dataset — seasons {seasons}")
+    if max_files is not None:
+        print(f"Dry run: max {max_files} files per source (cache disabled)")
     if use_cache:
         print(f"Cache: {CACHE_DIR} and {output_cache_dir}")
     else:
@@ -508,7 +602,8 @@ def main():
     print("=" * 60)
     main_start = time.perf_counter()
 
-    games_df = _load_with_cache("game_results", load_game_results, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    games_loader_args = (seasons,) if max_files is None else (seasons, max_files)
+    games_df = _load_with_cache("game_results", load_game_results, games_loader_args, use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
     # ESPN includes All-Star/exhibition (Team Shaq, Eastern Conf All-Stars, etc.); keep only NBA-vs-NBA games
     n_before = len(games_df)
     teams_in_data = set(games_df["home_team"].dropna()) | set(games_df["away_team"].dropna())
@@ -519,20 +614,32 @@ def main():
     if dropped_teams:
         print(f"   Filtered game_results to NBA-only: {n_before} → {len(games_df)} games")
         print(f"   Dropped non-NBA teams ({len(dropped_teams)}): {dropped_teams}")
-    _assert_30_teams(games_df, "game_results", ["home_team", "away_team"])
-    props_df = _load_with_cache("player_props", load_player_props, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    if max_files is None:
+        _assert_30_teams(games_df, "game_results", ["home_team", "away_team"])
+    props_loader_args = (seasons,) if max_files is None else (seasons, max_files)
+    props_df = _load_with_cache("player_props", load_player_props, props_loader_args, use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
     history_df = _load_with_cache("player_team_history", load_player_team_history, (), use_cache, seasons_key=None, output_cache_dir=output_cache_dir)
-    _assert_30_teams(history_df, "player_team_history", ["team"], use_abbr=True)
+    if max_files is None:
+        _assert_30_teams(history_df, "player_team_history", ["team"], use_abbr=True)
     props_df = add_team_to_props(props_df, history_df)
-    _assert_30_teams(props_df, "player_props (team_full)", ["team_full"])
-    lines_df = _load_with_cache("game_lines", load_game_lines, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
-    _assert_30_teams(lines_df, "game_lines", ["away_team", "home_team"])
-    logs_df = _load_with_cache("game_logs", load_player_game_logs, (seasons,), use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
-    _assert_30_teams(logs_df, "game_logs", ["TEAM_NAME"])
+    if max_files is None:
+        _assert_30_teams(props_df, "player_props (team_full)", ["team_full"])
+    lines_loader_args = (seasons,) if max_files is None else (seasons, max_files)
+    lines_df = _load_with_cache("game_lines", load_game_lines, lines_loader_args, use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    if max_files is None:
+        _assert_30_teams(lines_df, "game_lines", ["away_team", "home_team"])
+    logs_loader_args = (seasons,) if max_files is None else (seasons, max_files)
+    logs_df = _load_with_cache("game_logs", load_player_game_logs, logs_loader_args, use_cache, seasons_key=seasons_key, output_cache_dir=output_cache_dir)
+    if max_files is None:
+        _assert_30_teams(logs_df, "game_logs", ["TEAM_NAME"])
 
     merged = join_all(games_df, props_df, lines_df, logs_df)
     if merged.empty:
         print("No data to write.")
+        return
+    merged = pivot_props_long_to_wide(merged, n_markets=9)
+    if merged.empty:
+        print("No data to write after pivot.")
         return
     t0 = time.perf_counter()
     merged.to_parquet(out_path, index=False)

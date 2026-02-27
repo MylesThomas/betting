@@ -226,6 +226,11 @@ def get_jr_sr_exceptions() -> set:
         These exceptions are critical for data integrity. Without them,
         father and son will be collapsed into a single player in the cache,
         causing incorrect team histories.
+
+    When you add or change entries here, rebuild player_team_history (01_build.py)
+    and delete strategy-build caches (player_team_history.parquet in
+    data/02_cache/nba_strategy_build/ and output_dir/nba_strategy_build/).
+    See scripts/build_nba_multimarket_strategy_dataset.py docstring for steps.
     """
     return {
         # Current/recent players with father who also played in NBA
@@ -241,6 +246,13 @@ def get_jr_sr_exceptions() -> set:
         'Kevin Porter Jr',       # NBA API: "Kevin Porter Jr." | Father: Kevin Porter (1972-1983)
         'Scotty Pippen Jr',      # NBA API: "Scotty Pippen Jr." (CORRECT spelling - his real name) | Father: Scottie Pippen (1987-2004)
         'Scottie Pippen Jr',     # Odds API: "Scottie Pippen Jr" (INCORRECT spelling, normalize to Scotty) | Same player, both spellings needed
+        'Gary Trent Jr',         # NBA API: "Gary Trent Jr." | Father: Gary Trent (1995-2006, POR/MIL/DAL/etc.)
+        'Jabari Smith Jr',       # NBA API: "Jabari Smith Jr." | Father: Jabari Smith Sr (2000-2004, SAC/NOP/PHI)
+        'Marvin Bagley Iii',     # NBA API: "Marvin Bagley III" | Father: Marvin Bagley II (1999-2006, multiple teams)
+        'Michael Porter Jr',     # NBA API: "Michael Porter Jr." | Keep Jr for consistency (only one Michael Porter in NBA)
+        'Wendell Carter Jr',     # NBA API: "Wendell Carter Jr." | Keep Jr for consistency with API
+        'Kelly Oubre Jr',        # NBA API: "Kelly Oubre Jr." | Keep Jr for consistency with API
+        'Jaime Jaquez Jr',       # NBA API: "Jaime Jaquez Jr." | Keep Jr for consistency with API
     }
 
 
