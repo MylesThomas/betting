@@ -28,8 +28,11 @@ all Golden State games to be "GSW", all OKC games to be "OKC", etc.
 
 SOLUTION:
 ---------
-This module provides `normalize_team_code()` to map historical abbreviations
-to current team codes.
+This module provides:
+- normalize_team_code(): map historical abbreviations to current codes (e.g. GOS → GSW).
+- normalize_team_name_from_odds_api(): map Odds API full team names to ESPN/NBA canonical
+  full names (e.g. "LA Clippers" → "Los Angeles Clippers") for joining game results, game
+  lines, and props.
 
 Author: Myles Thomas
 Date: 2025-02-05
@@ -37,6 +40,81 @@ Date: 2025-02-05
 
 import pandas as pd
 from typing import Optional
+
+
+# =============================================================================
+# ODDS API → ESPN/NBA CANONICAL FULL NAMES (for joins)
+# =============================================================================
+# Use when joining data from The Odds API with ESPN game results or NBA API.
+# ESPN/NBA use "Los Angeles Clippers"; Odds API often uses "LA Clippers".
+# Canonical form matches team_utils.NBA_TEAMS values.
+
+ODDS_API_TO_ESPN_TEAM_NAMES = {
+    "LA Clippers": "Los Angeles Clippers",
+    "LA Lakers": "Los Angeles Lakers",
+    "Portland Trailblazers": "Portland Trail Blazers",
+    # Identity entries for canonical names so .get(x, x) leaves them unchanged
+    "Atlanta Hawks": "Atlanta Hawks",
+    "Boston Celtics": "Boston Celtics",
+    "Brooklyn Nets": "Brooklyn Nets",
+    "Charlotte Hornets": "Charlotte Hornets",
+    "Chicago Bulls": "Chicago Bulls",
+    "Cleveland Cavaliers": "Cleveland Cavaliers",
+    "Dallas Mavericks": "Dallas Mavericks",
+    "Denver Nuggets": "Denver Nuggets",
+    "Detroit Pistons": "Detroit Pistons",
+    "Golden State Warriors": "Golden State Warriors",
+    "Houston Rockets": "Houston Rockets",
+    "Indiana Pacers": "Indiana Pacers",
+    "Los Angeles Clippers": "Los Angeles Clippers",
+    "Los Angeles Lakers": "Los Angeles Lakers",
+    "Memphis Grizzlies": "Memphis Grizzlies",
+    "Miami Heat": "Miami Heat",
+    "Milwaukee Bucks": "Milwaukee Bucks",
+    "Minnesota Timberwolves": "Minnesota Timberwolves",
+    "New Orleans Pelicans": "New Orleans Pelicans",
+    "New York Knicks": "New York Knicks",
+    "Oklahoma City Thunder": "Oklahoma City Thunder",
+    "Orlando Magic": "Orlando Magic",
+    "Philadelphia 76ers": "Philadelphia 76ers",
+    "Phoenix Suns": "Phoenix Suns",
+    "Portland Trail Blazers": "Portland Trail Blazers",
+    "Sacramento Kings": "Sacramento Kings",
+    "San Antonio Spurs": "San Antonio Spurs",
+    "Toronto Raptors": "Toronto Raptors",
+    "Utah Jazz": "Utah Jazz",
+    "Washington Wizards": "Washington Wizards",
+}
+
+
+def normalize_team_name_from_odds_api(team_name: str) -> str:
+    """
+    Normalize Odds API team name to ESPN/NBA canonical full name.
+
+    Use when joining props, game lines, or any Odds API data to ESPN game results
+    or NBA API data. Ensures e.g. "LA Clippers" → "Los Angeles Clippers" so
+    joins on team_full / home_team / away_team match.
+
+    Args:
+        team_name: Team name from Odds API (or ESPN if already canonical)
+
+    Returns:
+        Canonical full name matching team_utils.NBA_TEAMS values.
+
+    Examples:
+        >>> normalize_team_name_from_odds_api('LA Clippers')
+        'Los Angeles Clippers'
+        >>> normalize_team_name_from_odds_api('Los Angeles Clippers')
+        'Los Angeles Clippers'
+    """
+    if pd.isna(team_name):
+        return team_name
+    return ODDS_API_TO_ESPN_TEAM_NAMES.get(team_name, team_name)
+
+
+# =============================================================================
+# HISTORICAL TEAM CODES (abbreviations)
+# =============================================================================
 
 
 def normalize_team_code(team_code: str) -> Optional[str]:
