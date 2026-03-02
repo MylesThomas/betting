@@ -368,8 +368,10 @@ def get_odds_api_to_nba_mappings() -> dict:
         # Format: 'Any variation' → 'NBA API name (WITH suffix)'
         # =================================================================
         'Bj Boston': 'Bj Boston Jr',              # NBA API: B.J. Boston Jr.
+        'Gary Trent': 'Gary Trent Jr',           # Odds API sometimes omits Jr; recent data is son (father retired 2006)
         'Jabari Smith': 'Jabari Smith Jr',        # Odds API sometimes omits Jr; NBA API: Jabari Smith Jr.
         'Kenyon Martin Jr': 'Kj Martin',         # NBA API canonical: KJ Martin (son of Kenyon Martin)
+        'Tim Hardaway': 'Tim Hardaway Jr',       # Odds API sometimes omits Jr; recent data is son (father retired 2003)
         
         # =================================================================
         # NAME CHANGES / ROOKIES: Pre-draft → NBA names
@@ -399,6 +401,7 @@ def get_odds_api_to_nba_mappings() -> dict:
         # =================================================================
         'Bojan Bogdanovich': 'Bojan Bogdanovic',  # Typo: ch → c
         'Mil Bridges': 'Miles Bridges',           # NBA API canonical: Miles
+        'Og Anunoby': 'OG Anunoby',               # O.G. → Og from title case; NBA API uses OG
         'Xavier Tillman Sr': 'Xavier Tillman',    # NBA API canonical: Xavier Tillman (no Sr)
         
         # =================================================================
