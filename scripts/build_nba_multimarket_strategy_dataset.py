@@ -786,6 +786,11 @@ def main():
         print("No data to write after pivot.")
         return
     _debug_nulls_after_pivot(merged, seasons)
+    before = len(merged)
+    merged = merged[merged["GAME_ID"].notna()].copy()
+    dropped = before - len(merged)
+    if dropped:
+        print(f"   Dropped {dropped:,} rows with null GAME_ID (output has matched player-games only)")
     t0 = time.perf_counter()
     merged.to_parquet(out_path, index=False)
     print(f"   ⏱  to_parquet: {time.perf_counter() - t0:.2f}s")
