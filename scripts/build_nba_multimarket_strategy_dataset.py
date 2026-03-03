@@ -606,20 +606,27 @@ def join_all(
         print(f"   Game lines attached")
 
     if not logs_df.empty:
-        # Attach actuals: PTS, REB, AST, etc. by (game_date, player_normalized)
-        log_cols = ["game_date", "player_normalized", "PTS", "REB", "AST", "STL", "BLK", "TOV", "MIN"]
-        have = [c for c in log_cols if c in logs_df.columns]
-        log_sub = logs_df[have].copy()
-        log_sub = log_sub.rename(columns={c: f"actual_{c.lower()}" for c in have if c != "game_date" and c != "player_normalized"})
-        log_sub = log_sub.rename(columns={"PTS": "actual_pts", "REB": "actual_reb", "AST": "actual_ast", "STL": "actual_stl", "BLK": "actual_blk", "TOV": "actual_tov", "MIN": "actual_min"})
-        if "actual_pts" not in log_sub.columns and "PTS" in logs_df.columns:
-            log_sub["actual_pts"] = logs_df["PTS"].values
+        # Attach all game-log columns by (game_date, player_normalized). Stats as actual_* for pivot; rest as log_* to keep.
+        # Game log schema (NBA API): PLAYER_ID, PLAYER_NAME, TEAM_ID, TEAM_NAME, GAME_ID, GAME_DATE, MATCHUP, WL, MIN, PTS, FGM, FGA, FG_PCT, FG3M, FG3A, FG3_PCT, FTM, FTA, FT_PCT, OREB, DREB, REB, AST, STL, BLK, TOV, PF, PLUS_MINUS
+        log_sub = logs_df.copy()
+        merge_keys = ["game_date", "player_normalized"]
+        actual_rename = {
+            "PTS": "actual_pts", "REB": "actual_reb", "AST": "actual_ast", "STL": "actual_stl",
+            "BLK": "actual_blk", "TOV": "actual_tov", "MIN": "actual_min", "FG3M": "actual_threes",
+        }
+        renames = {k: v for k, v in actual_rename.items() if k in log_sub.columns}
+        for col in log_sub.columns:
+            if col in merge_keys or col in renames:
+                continue
+            renames[col] = f"log_{col.lower()}"
+        log_sub = log_sub.rename(columns=renames)
         props_with_game = props_with_game.merge(
             log_sub,
-            on=["game_date", "player_normalized"],
+            on=merge_keys,
             how="left",
         )
-        print(f"   Actuals attached: {props_with_game['actual_pts'].notna().sum():,} rows with actual_pts")
+        n_with_pts = props_with_game["actual_pts"].notna().sum() if "actual_pts" in props_with_game.columns else 0
+        print(f"   Actuals attached: {n_with_pts:,} rows with actual_pts ({len(renames)} log columns kept)")
 
     return props_with_game
 
@@ -643,7 +650,7 @@ MARKET_TO_ACTUAL = {
     "player_points": "actual_points",  # from actual_pts
     "player_rebounds": "actual_rebounds",  # from actual_reb
     "player_assists": "actual_assists",  # from actual_ast
-    "player_threes": "actual_threes",  # no 3PM in logs -> null
+    "player_threes": "actual_threes",  # from FG3M in game logs
     "player_steals": "actual_steals",  # from actual_stl
     "player_blocks": "actual_blocks",  # from actual_blk
     "player_points_rebounds_assists": "actual_points_rebounds_assists",  # computed
@@ -666,7 +673,8 @@ def _actual_stat(row: dict, market: str) -> float | None:
     if market == "player_assists":
         return float(ast) if ast is not None and not pd.isna(ast) else None
     if market == "player_threes":
-        return None  # no 3PM in game logs
+        threes = row.get("actual_threes")
+        return float(threes) if threes is not None and not pd.isna(threes) else None
     if market == "player_steals":
         return float(stl) if stl is not None and not pd.isna(stl) else None
     if market == "player_blocks":

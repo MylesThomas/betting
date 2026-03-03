@@ -4,6 +4,14 @@ This directory contains work currently in progress.
 
 ## Current Active Plans
 
+### NBA multimarket strategy analysis (2026-02-25)
+
+**File:** [nba-multimarket-strategy-analysis.md](nba-multimarket-strategy-analysis.md)  
+**Goal:** Top-down analysis on the unified strategy parquet: which variables matter per market, then derive and backtest signals.  
+**Next:** Add script in `analysis/` to load parquet, summarize hit rate/error by market, segment by spread and line tier.
+
+---
+
 ### Agent-First Repository Transformation (2026-02-13)
 
 **File:** `IMPLEMENTATION_PLAN.md` (root of repo)

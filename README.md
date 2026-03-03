@@ -108,6 +108,19 @@ streamlit run streamlit_app/app.py
 
 Dashboard opens at `http://localhost:8501` and displays real-time arbitrage opportunities.
 
+### Live local arb finder (terminal, no email)
+
+Run the arb finders every 60 seconds during "awake" hours (e.g. 8am–11pm ET). Output is terminal-only.
+
+```bash
+# From repo root; requires ODDS_API_KEY in .env
+python scripts/run_live_arb_finder.py
+# Optional: --sport nba|nfl|both, --interval 60, --start-hour 8, --end-hour 23
+# Stop with Ctrl+C
+```
+
+See docstring in `scripts/run_live_arb_finder.py` for full options and steps.
+
 ---
 
 **Note**: This is a personal analytics project. Strategies are based on historical analysis and are not guaranteed to be profitable. Always gamble responsibly.
