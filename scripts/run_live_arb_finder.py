@@ -132,7 +132,8 @@ def get_event_odds(api_key, event_id, markets):
     return r.json(), {"remaining": r.headers.get("x-requests-remaining", "unknown")}
 
 
-def parse_event_props_to_df(event_data, api_fetch_time):
+def parse_event_props_to_df(event_data, api_fetch_time, excluded_books=None):
+    excluded = excluded_books if excluded_books is not None else EXCLUDED_BOOKMAKERS
     if "data" in event_data:
         event_data = event_data["data"]
     game_info = f"{event_data['away_team']} @ {event_data['home_team']}"
@@ -142,7 +143,7 @@ def parse_event_props_to_df(event_data, api_fetch_time):
     rows = []
     for book in event_data.get("bookmakers", []):
         bkey = book["key"]
-        if bkey in EXCLUDED_BOOKMAKERS:
+        if bkey in excluded:
             continue
         for market in book.get("markets", []):
             mkey = market["key"]
@@ -257,7 +258,9 @@ def _tip_off_et(game_time):
         et = dt.astimezone(ET)
         h = et.hour % 12 or 12
         suf = "am" if et.hour < 12 else "pm"
-        return f"{h}{suf} ET"
+        if et.minute == 0:
+            return f"{h}{suf} ET"
+        return f"{h}:{et.minute:02d}{suf} ET"
     except Exception:
         return str(game_time)
 
@@ -304,7 +307,8 @@ def display_arbs(df, min_profit_pct=0.0, inline=False):
         print("=" * 80 + "\n")
     for _, row in arbs.iterrows():
         mkt = MARKET_DISPLAY.get(row["market"], row["market"])
-        print(f"🏀 {row['player']} → {row['line']} {mkt}")
+        edge_pct = row["expected_profit_pct"]
+        print(f"🏀 {row['player']} → {row['line']} {mkt} (EDGE: {edge_pct:.1f}%)")
         print(f"{_short_game(row['game'])}, tip off at {_tip_off_et(row['game_time'])}")
         bet = calculate_bet_amounts(row["best_over_odds"], row["best_under_odds"], BASE_WAGER)
         for side, line_val, odds, book, implied, last_up, stake in [
@@ -316,7 +320,8 @@ def display_arbs(df, min_profit_pct=0.0, inline=False):
     return len(arbs)
 
 
-def run_nba_live(api_key: str, markets, profit_threshold: float, max_staleness_minutes: float = 1.0, verbose: bool = False):
+def run_nba_live(api_key: str, markets, profit_threshold: float, max_staleness_minutes: float = 1.0, verbose: bool = False, excluded_books=None):
+    excluded_books = excluded_books if excluded_books is not None else EXCLUDED_BOOKMAKERS
     markets_str = markets or NBA_DEFAULT_MARKETS
     markets_order = _markets_list(markets_str)
     events, _ = get_todays_nba_events(api_key)
@@ -327,10 +332,11 @@ def run_nba_live(api_key: str, markets, profit_threshold: float, max_staleness_m
     n = len(events)
     for i, event in enumerate(events, 1):
         label = f"{event['away_team']} @ {event['home_team']}"
-        print(f"--- Game {i}/{n}: {label} ---")
+        tip = _tip_off_et(event.get("commence_time"))
+        print(f"--- Game {i}/{n}: {label} (tip off: {tip}) ---")
         try:
             odds, _ = get_event_odds(api_key, event["id"], markets_str)
-            props = parse_event_props_to_df(odds, fetch_time)
+            props = parse_event_props_to_df(odds, fetch_time, excluded_books=excluded_books)
         except Exception as e:
             print(f"   Fetch error: {e}\n")
             continue
@@ -376,6 +382,7 @@ def main():
     parser.add_argument("--nba-markets", type=str, default=None, help="NBA markets (default: points, rebounds, assists, threes, blocks, steals, pts+reb+ast)")
     parser.add_argument("--profit-threshold", type=float, default=0.0, metavar="PCT", help="Min profit %% to show arbs (default 0)")
     parser.add_argument("--verbose", action="store_true", help="Log each player-line combo with combined implied %% (<= 100%% = arb, > 100%% = book edge)")
+    parser.add_argument("--exclude-books", type=str, default="bovada,williamhill_us", metavar="LIST", help="Comma-separated bookmaker keys to exclude (default: bovada,williamhill_us)")
     parser.add_argument("--nfl-all-markets", action="store_true", help="NFL: all markets")
     args = parser.parse_args()
     os.chdir(REPO_ROOT)
@@ -398,6 +405,7 @@ def main():
 
     nba_markets_str = args.nba_markets or NBA_DEFAULT_MARKETS
     nba_markets_display = [MARKET_DISPLAY.get(m.strip(), m.strip()) for m in nba_markets_str.split(",") if m.strip()]
+    excluded_books = {b.strip() for b in args.exclude_books.split(",") if b.strip()}
 
     print("=" * 60)
     print("LIVE ARB FINDER (terminal only)")
@@ -409,7 +417,8 @@ def main():
         print(f"   --nba-markets {args.nba_markets}")
     else:
         print(f"   --nba-markets (default)")
-    print("Excluded books:", ", ".join(sorted(EXCLUDED_BOOKMAKERS)))
+    print(f"   --exclude-books {args.exclude_books}")
+    print("Excluded books:", ", ".join(sorted(excluded_books)) if excluded_books else "(none)")
     print("Markets participating:", ", ".join(nba_markets_display))
     print("Stop with Ctrl+C.")
     print("=" * 60)
@@ -426,7 +435,7 @@ def main():
         print("-" * 60)
         if args.sport in ("nba", "both"):
             if api_key:
-                run_nba_live(api_key, args.nba_markets, args.profit_threshold, max_staleness_minutes=1.0, verbose=args.verbose)
+                run_nba_live(api_key, args.nba_markets, args.profit_threshold, max_staleness_minutes=1.0, verbose=args.verbose, excluded_books=excluded_books)
             else:
                 print("No ODDS_API_KEY. Add to .env.")
         if args.sport in ("nfl", "both"):
