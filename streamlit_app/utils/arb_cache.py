@@ -263,6 +263,22 @@ def get_cache_metadata(sport: str, s3_client) -> dict:
     return None
 
 
+def normalize_since_date(since_date: str) -> str:
+    """
+    Normalize cache metadata date to YYYY-MM-DD.
+
+    Some historical metadata files contain placeholders like "N/A".
+    When that happens, fall back to a safe baseline date.
+    """
+    fallback_date = '2020-01-01'
+    try:
+        datetime.strptime(since_date, '%Y-%m-%d')
+        return since_date
+    except Exception:
+        print(f"⚠️  Invalid cache newest_date '{since_date}', using {fallback_date}")
+        return fallback_date
+
+
 @timed
 def list_new_files_since_date(sport: str, since_date: str, s3_client) -> list:
     """
@@ -284,8 +300,9 @@ def list_new_files_since_date(sport: str, since_date: str, s3_client) -> list:
     bucket = config['bucket']
     prefix = config['prefix']
     
-    # Parse since_date
-    since_date_obj = datetime.strptime(since_date, '%Y-%m-%d').date()
+    # Parse since_date (metadata may contain placeholder values like "N/A")
+    normalized_since_date = normalize_since_date(since_date)
+    since_date_obj = datetime.strptime(normalized_since_date, '%Y-%m-%d').date()
     
     # Only check last 30 days of folders (optimization)
     today = datetime.now().date()
