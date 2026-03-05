@@ -401,7 +401,7 @@ def get_odds_api_to_nba_mappings() -> dict:
         # =================================================================
         'Bojan Bogdanovich': 'Bojan Bogdanovic',  # Typo: ch → c
         'Mil Bridges': 'Miles Bridges',           # NBA API canonical: Miles
-        'Og Anunoby': 'OG Anunoby',               # O.G. → Og from title case; NBA API uses OG
+        'Og Anunoby': 'Og Anunoby',               # Keep case aligned with normalize_from_nba_api output
         'Xavier Tillman Sr': 'Xavier Tillman',    # NBA API canonical: Xavier Tillman (no Sr)
         
         # =================================================================

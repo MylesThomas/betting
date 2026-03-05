@@ -50,7 +50,11 @@ def parse_failure_report():
     failures = {
         'not_found_in_nba': [],
         'no_game_logs': [],
+        'player_info_errors': [],
         'no_history_created': [],
+        'no_box_scores_created': [],
+        'duplicate_box_rows': [],
+        'box_schema_errors': [],
         'processing_errors': []
     }
     
@@ -61,8 +65,16 @@ def parse_failure_report():
             current_section = 'not_found_in_nba'
         elif 'NO GAME LOGS' in line:
             current_section = 'no_game_logs'
+        elif 'PLAYER INFO ERRORS' in line:
+            current_section = 'player_info_errors'
         elif 'NO HISTORY CREATED' in line:
             current_section = 'no_history_created'
+        elif 'NO BOX SCORES CREATED' in line:
+            current_section = 'no_box_scores_created'
+        elif 'DUPLICATE BOX GAME ROWS' in line:
+            current_section = 'duplicate_box_rows'
+        elif 'BOX SCHEMA ERRORS' in line:
+            current_section = 'box_schema_errors'
         elif 'PROCESSING ERRORS' in line:
             current_section = 'processing_errors'
         elif line.strip().startswith('- ') and current_section:
@@ -123,6 +135,15 @@ def suggest_fixes(failures):
     print()
     
     # Analyze NOT FOUND IN NBA API
+    categories = {
+        'college_players': [],
+        'garbage_data': [],
+        'reversed_names': [],
+        'full_legal_names': [],
+        'typos': [],
+        'missing_mappings': []
+    }
+
     if failures['not_found_in_nba']:
         print(f"{EMOJI['warning']} NOT FOUND IN NBA API ({len(failures['not_found_in_nba'])} players)")
         print("-"*80)
@@ -197,6 +218,38 @@ def suggest_fixes(failures):
         print("This indicates a bug in create_team_history_from_gamelogs()")
         print()
         for name in sorted(failures['no_history_created']):
+            print(f"   • {name}")
+
+    if failures['player_info_errors']:
+        print(f"\n{EMOJI['warning']} PLAYER INFO ERRORS ({len(failures['player_info_errors'])} players)")
+        print("-"*80)
+        print("These players matched in NBA API but player metadata fetch failed.")
+        print()
+        for name in sorted(failures['player_info_errors'])[:10]:
+            print(f"   • {name}")
+
+    if failures['no_box_scores_created']:
+        print(f"\n{EMOJI['error']} NO BOX SCORES CREATED ({len(failures['no_box_scores_created'])} players)")
+        print("-"*80)
+        print("Game logs existed but no per-game box rows were written.")
+        print()
+        for name in sorted(failures['no_box_scores_created'])[:10]:
+            print(f"   • {name}")
+
+    if failures['duplicate_box_rows']:
+        print(f"\n{EMOJI['error']} DUPLICATE BOX GAME ROWS ({len(failures['duplicate_box_rows'])} players)")
+        print("-"*80)
+        print("Duplicate rows were detected for (player_normalized, Game_ID).")
+        print()
+        for name in sorted(failures['duplicate_box_rows'])[:10]:
+            print(f"   • {name}")
+
+    if failures['box_schema_errors']:
+        print(f"\n{EMOJI['error']} BOX SCHEMA ERRORS ({len(failures['box_schema_errors'])} players)")
+        print("-"*80)
+        print("Required box score fields were missing during box row creation.")
+        print()
+        for name in sorted(failures['box_schema_errors'])[:10]:
             print(f"   • {name}")
     
     # Summary

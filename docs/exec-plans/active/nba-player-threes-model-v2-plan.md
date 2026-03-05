@@ -101,15 +101,16 @@ Tasks:
 
 ## Implementation task checklist
 
-- [ ] Add v2 plan-aware docs entry in active README
-- [ ] Implement 3-input mean model in `01_signal_discovery`
-- [ ] Implement recency-weighted player-history uncertainty model in `02_probability_engine`
-- [ ] Wire model/uncertainty selection through backtest config
-- [ ] Add or update tests for:
+- [x] Add v2 plan-aware docs entry in active README
+- [x] Implement 3-input mean model in `01_signal_discovery`
+- [x] Implement recency-weighted player-history uncertainty model in `02_probability_engine`
+- [x] Wire model/uncertainty selection through backtest config
+- [x] Add one-player full-history fetch utility for `s3://nba-api-mt/full_player_history/{full name}.csv`
+- [x] Add or update tests for:
   - model interface contracts
   - weighted sampling behavior (weights sum to 1, recent games have higher mass)
   - reproducibility assumptions for backtest outputs
-- [ ] Run targeted test suite for `tests/analysis/player_threes_v1/` plus any v2 tests
+- [x] Run targeted test suite for `tests/analysis/player_threes_v1/` plus any v2 tests
 
 ## Deliverables
 
@@ -136,3 +137,60 @@ Plan is complete when:
 - `src/nba_three_point_modeling/01_signal_discovery/`
 - `src/nba_three_point_modeling/02_probability_engine/`
 - `src/nba_three_point_modeling/03_backtesting/current_config.yaml`
+
+---
+
+## 2026-03-05 add-on: player_team_history dual-artifact pipeline
+
+This active plan now also tracks a supporting data-pipeline extension under `src/player_team_history/` to keep player-team joins and box-score coverage in sync for downstream model features.
+
+### Goal
+
+Extend `src/player_team_history/01_build.py` from one artifact to two:
+- `history.parquet` (team stints)
+- `box_scores.parquet` (one row per `player_normalized + Game_ID`, with `PLAYER_INFO_*` metadata)
+
+### Locked decisions
+
+- Keep current `src/player_team_history/` workflow (`01_build.py`, `02_analyze_failures.py`, `03_cache.py`, `04_validate.py`)
+- Reuse normalized player universe and existing season/player cache logic
+- Keep build resumable with checkpoints and cache reuse
+- Fail fast for required fields (`Player_ID`, `Game_ID`, `GAME_DATE`, `SEASON_ID`, `TEAM`)
+- Keep failures actionable (mapping issues vs expected no-games vs processing/schema errors)
+
+### Implementation tasks
+
+- [x] Extend `01_build.py` to build both team stints and player/game box rows
+- [x] Persist `box_scores.parquet` and `box_scores_checkpoint.parquet` under `~/Downloads/tmp/player_team_history/`
+- [x] Add `cache/player_info/*.parquet` and include `PLAYER_INFO_*` metadata in box rows
+- [x] Extend failure report categories for box-score-specific failures
+- [x] Extend `02_analyze_failures.py` parsing/reporting for new failure sections
+- [x] Extend `03_cache.py --stats` to include player_info cache + box artifact summary
+- [x] Extend `04_validate.py` to validate both history and box-score outputs
+
+### Runbook
+
+Sample run:
+```bash
+python src/player_team_history/01_build.py --sample 100 --verbose
+```
+
+Larger sample:
+```bash
+python src/player_team_history/01_build.py --sample 1000
+```
+
+Validate outputs:
+```bash
+python src/player_team_history/04_validate.py
+```
+
+Inspect caches and box artifact:
+```bash
+python src/player_team_history/03_cache.py --stats
+```
+
+Analyze failures for mapping iteration:
+```bash
+python src/player_team_history/02_analyze_failures.py
+```

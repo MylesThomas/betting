@@ -4,11 +4,19 @@ This directory contains work currently in progress.
 
 ## Current Active Plans
 
+### Player team history + box scores pipeline extension (2026-03-05)
+
+**File:** [nba-player-threes-model-v2-plan.md](nba-player-threes-model-v2-plan.md)  
+**Goal:** Extend `src/player_team_history/01_build.py` into a two-artifact pipeline that writes both `history.parquet` (team stints) and `box_scores.parquet` (player/game rows with `PLAYER_INFO_*` metadata) using shared normalization + cache logic.  
+**Next:** Run sample build (`--sample 100`), run larger sample (`--sample 1000`), then validate with `python src/player_team_history/04_validate.py` and inspect cache/artifacts with `python src/player_team_history/03_cache.py --stats`.
+
+---
+
 ### NBA player_threes model v2 plan (2026-03-05)
 
 **File:** [nba-player-threes-model-v2-plan.md](nba-player-threes-model-v2-plan.md)  
 **Goal:** Launch a v2 run with a 3-input mean model (`mean_3pm`, `predicted_3pa`, `predicted_minutes`) and recency-weighted player-history uncertainty sampling in the probability engine.  
-**Next:** Implement v2 model + uncertainty modules, wire config knobs, run backtest, and compare v2 vs v1 metrics.
+**Next:** Run and validate v2 (`v2_three_input_regression` + `v2_weighted_history_sampler`), then compare deltas vs latest stable v1 baseline and tune recency parameters (`history_n`, `decay_alpha`).
 
 ---
 

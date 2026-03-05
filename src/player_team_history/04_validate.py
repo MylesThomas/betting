@@ -31,6 +31,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 from datetime import date, timedelta
+import duckdb
 
 # Add src to path
 repo_root = Path(__file__).resolve()
@@ -41,6 +42,7 @@ sys.path.insert(0, str(repo_root))
 from src.config import EMOJI
 
 HISTORY_FILE = Path.home() / 'Downloads' / 'tmp' / 'player_team_history' / 'history.parquet'
+BOX_FILE = Path.home() / 'Downloads' / 'tmp' / 'player_team_history' / 'box_scores.parquet'
 
 # Valid NBA team abbreviations (current and historical)
 VALID_TEAMS = {
@@ -60,10 +62,24 @@ def load_history():
         return None
     
     try:
-        df = pd.read_parquet(HISTORY_FILE)
+        df = duckdb.sql(f"SELECT * FROM read_parquet('{HISTORY_FILE.as_posix()}')").df()
         return df
     except Exception as e:
         print(f"{EMOJI['error']} Error loading history file: {e}")
+        return None
+
+
+def load_box_scores():
+    """Load player/game box score output."""
+    if not BOX_FILE.exists():
+        print(f"{EMOJI['error']} Box score file not found: {BOX_FILE}")
+        print("   Run 01_build.py first to generate box scores.")
+        return None
+
+    try:
+        return duckdb.sql(f"SELECT * FROM read_parquet('{BOX_FILE.as_posix()}')").df()
+    except Exception as e:
+        print(f"{EMOJI['error']} Error loading box score file: {e}")
         return None
 
 
@@ -273,11 +289,13 @@ def check_date_sanity(df):
     
     nba_founding = date(1946, 6, 6)
     max_future = date.today() + timedelta(days=365)
+    valid_from_dates = pd.to_datetime(df['valid_from']).dt.date
+    valid_to_dates = pd.to_datetime(df['valid_to'], errors='coerce').dt.date
     
     issues = []
     
     # Check valid_from dates
-    too_early = df[df['valid_from'] < nba_founding]
+    too_early = df[valid_from_dates < nba_founding]
     for _, row in too_early.iterrows():
         issues.append({
             'player': row['player_normalized'],
@@ -286,7 +304,7 @@ def check_date_sanity(df):
             'issue': f"Date before NBA founding ({nba_founding})"
         })
     
-    too_late = df[df['valid_from'] > max_future]
+    too_late = df[valid_from_dates > max_future]
     for _, row in too_late.iterrows():
         issues.append({
             'player': row['player_normalized'],
@@ -296,8 +314,9 @@ def check_date_sanity(df):
         })
     
     # Check valid_to dates
-    df_with_end = df[df['valid_to'].notna()]
-    too_late_end = df_with_end[df_with_end['valid_to'] > max_future]
+    df_with_end = df[valid_to_dates.notna()]
+    valid_to_with_end = pd.to_datetime(df_with_end['valid_to'], errors='coerce').dt.date
+    too_late_end = df_with_end[valid_to_with_end > max_future]
     for _, row in too_late_end.iterrows():
         issues.append({
             'player': row['player_normalized'],
@@ -361,6 +380,68 @@ def check_consecutive_same_team(df):
 def show_statistics(df):
     """Show summary statistics."""
     print()
+
+
+def check_box_required_columns(box_df):
+    """Validate required box score columns are present."""
+    print(f"{EMOJI['test']} Checking box score required columns...")
+    required_columns = [
+        'player_normalized', 'Player_ID', 'Game_ID', 'GAME_DATE', 'SEASON_ID',
+        'SEASON_STR', 'TEAM'
+    ]
+    missing = [column for column in required_columns if column not in box_df.columns]
+    if not missing:
+        print(f"   {EMOJI['success']} Required box score columns present")
+        return True
+    print(f"   {EMOJI['error']} Missing required box score columns: {missing}")
+    return False
+
+
+def check_box_uniqueness(box_df):
+    """Validate one row per player/game."""
+    print(f"{EMOJI['test']} Checking box score uniqueness (player + Game_ID)...")
+    duplicates = box_df[
+        box_df.duplicated(subset=['player_normalized', 'Game_ID'], keep=False)
+    ]
+    if duplicates.empty:
+        print(f"   {EMOJI['success']} No duplicate player/game rows")
+        return True
+    print(f"   {EMOJI['error']} Found {len(duplicates)} duplicate player/game rows")
+    return False
+
+
+def check_box_coverage(history_df, box_df):
+    """Validate every history player has at least one box row."""
+    print(f"{EMOJI['test']} Checking box score coverage vs history players...")
+    history_players = set(history_df['player_normalized'].unique())
+    box_players = set(box_df['player_normalized'].unique())
+    missing_players = sorted(history_players - box_players)
+    if not missing_players:
+        print(f"   {EMOJI['success']} All history players have box rows")
+        return True
+    print(f"   {EMOJI['error']} Missing box rows for {len(missing_players)} history players")
+    for player_name in missing_players[:10]:
+        print(f"      {player_name}")
+    if len(missing_players) > 10:
+        print(f"      ... and {len(missing_players) - 10} more")
+    return False
+
+
+def check_box_season_sanity(box_df):
+    """Validate basic row-count sanity by season."""
+    print(f"{EMOJI['test']} Checking box score row-count sanity by season...")
+    season_counts = (
+        box_df.groupby('SEASON_STR')
+        .size()
+        .sort_values(ascending=False)
+    )
+    if season_counts.empty:
+        print(f"   {EMOJI['error']} No box rows found")
+        return False
+    print(f"   {EMOJI['success']} Box rows by season (top 5):")
+    for season, count in season_counts.head(5).items():
+        print(f"      {season}: {count}")
+    return True
     print("="*80)
     print(f"{EMOJI['chart']} SUMMARY STATISTICS")
     print("="*80)
@@ -402,30 +483,38 @@ def main():
     print("="*80)
     print()
     
-    # Load history
-    df = load_history()
-    if df is None:
+    history_df = load_history()
+    if history_df is None:
+        return
+
+    box_df = load_box_scores()
+    if box_df is None:
         return
     
-    print(f"Loaded {len(df)} records for {df['player_normalized'].nunique()} players")
+    print(f"Loaded history: {len(history_df)} records for {history_df['player_normalized'].nunique()} players")
+    print(f"Loaded box scores: {len(box_df)} records for {box_df['player_normalized'].nunique()} players")
     print()
     
     # Run validation checks
     all_passed = True
-    all_passed &= check_duplicates(df)
-    all_passed &= check_date_validity(df)
-    all_passed &= check_team_codes(df)
-    all_passed &= check_overlapping_stints(df)
-    all_passed &= check_null_consistency(df)
-    all_passed &= check_chronological_order(df)
-    all_passed &= check_date_sanity(df)
+    all_passed &= check_duplicates(history_df)
+    all_passed &= check_date_validity(history_df)
+    all_passed &= check_team_codes(history_df)
+    all_passed &= check_overlapping_stints(history_df)
+    all_passed &= check_null_consistency(history_df)
+    all_passed &= check_chronological_order(history_df)
+    all_passed &= check_date_sanity(history_df)
+    all_passed &= check_box_required_columns(box_df)
+    all_passed &= check_box_uniqueness(box_df)
+    all_passed &= check_box_coverage(history_df, box_df)
+    all_passed &= check_box_season_sanity(box_df)
     
     # Warning checks (don't affect pass/fail)
-    check_short_stints(df)
-    check_consecutive_same_team(df)
+    check_short_stints(history_df)
+    check_consecutive_same_team(history_df)
     
     # Show statistics
-    show_statistics(df)
+    show_statistics(history_df)
     
     # Final result
     print("="*80)

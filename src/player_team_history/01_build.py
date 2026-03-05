@@ -1,706 +1,722 @@
 """
-STEP 1: Build player team history from S3 betting data.
+STEP 1: Build player team history and box score artifacts.
 
-This is the MAIN script for building player team history.
-Discovers players from S3, fetches their game logs from NBA API,
-and creates team history with date ranges.
+Context from Thomas (2026-03-05):
+- Preserve existing player-team-history flow and caches.
+- Extend to a second artifact with one row per player/game.
+- Include PLAYER_INFO_* metadata fields on box score rows.
+- Keep the process resumable and fail fast for required fields.
 
-Usage:
-    # Full build (all players from S3)
-    python src/player_team_history/01_build.py
-    
-    # Test with sample
-    python src/player_team_history/01_build.py --sample 100
-    
-    # Resume from checkpoint
-    python src/player_team_history/01_build.py --resume
-    
-    # Force fresh fetch (bypass cache)
-    python src/player_team_history/01_build.py --no-cache
-    
-    # Verbose logging
-    python src/player_team_history/01_build.py --verbose
-
-Output:
+Outputs:
     ~/Downloads/tmp/player_team_history/
-    ├── history.parquet         # THE OUTPUT - final team history
-    ├── checkpoint.parquet      # For resuming builds
-    ├── failures.txt            # Detailed failure report
-    └── cache/                  # Game log cache (speeds up subsequent runs)
-        ├── Anthony_Davis.parquet
-        └── ...
-
-Next Steps:
-    1. Run this script
-    2. Analyze failures: python src/player_team_history/02_analyze_failures.py
-    3. Fix name mappings in name_normalization.py
-    4. Re-run this script
+    ├── history.parquet            # Team stint history
+    ├── box_scores.parquet         # Player game box scores
+    ├── checkpoint.parquet         # Team history checkpoint
+    ├── box_scores_checkpoint.parquet
+    ├── failures.txt               # Detailed failure report
+    └── cache/
+        ├── seasons/*.parquet
+        ├── players/*.parquet
+        └── player_info/*.parquet
 """
 
-import pandas as pd
 from pathlib import Path
-import time
-from datetime import datetime
 import argparse
 import ssl
+import sys
+import time
 import urllib3
 import requests
-import sys
+
+import duckdb
+import pandas as pd
 
 # Fix SSL - must be done BEFORE importing nba_api
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Patch requests globally
 original_request = requests.Session.request
+
+
 def patched_request(self, *args, **kwargs):
-    kwargs['verify'] = False
+    kwargs["verify"] = False
     return original_request(self, *args, **kwargs)
+
+
 requests.Session.request = patched_request
 
-# Also patch the default Session
 import requests.sessions
+
 original_init = requests.sessions.Session.__init__
+
+
 def patched_init(self, *args, **kwargs):
     original_init(self, *args, **kwargs)
     self.verify = False
+
+
 requests.sessions.Session.__init__ = patched_init
 
-# Add src to path
 repo_root = Path(__file__).resolve()
-while not (repo_root / '.gitignore').exists():
+while not (repo_root / ".gitignore").exists():
     repo_root = repo_root.parent
 sys.path.insert(0, str(repo_root))
 
-from src.player_team_history.name_normalization import normalize_from_odds_api, normalize_from_nba_api
+from src.player_team_history.name_normalization import normalize_from_nba_api
 from src.player_team_history.team_normalization import normalize_team_code
 from src.config import CURRENT_NBA_SEASON, EMOJI
 
 try:
-    from nba_api.stats.endpoints import playergamelog, commonplayerinfo
+    from nba_api.stats.endpoints import commonplayerinfo, playergamelog
     from nba_api.stats.static import players
 except ImportError:
     print(f"{EMOJI['error']} nba_api not found. Install with: pip install nba_api")
     sys.exit(1)
 
-# Output directory
-OUTPUT_DIR = Path.home() / 'Downloads' / 'tmp' / 'player_team_history'
+OUTPUT_DIR = Path.home() / "Downloads" / "tmp" / "player_team_history"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Output files
-CHECKPOINT_FILE = OUTPUT_DIR / 'checkpoint.parquet'
-FINAL_OUTPUT = OUTPUT_DIR / 'history.parquet'
-FAILURE_REPORT = OUTPUT_DIR / 'failures.txt'
-CACHE_DIR = OUTPUT_DIR / 'cache'
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+CHECKPOINT_FILE = OUTPUT_DIR / "checkpoint.parquet"
+BOX_CHECKPOINT_FILE = OUTPUT_DIR / "box_scores_checkpoint.parquet"
+FINAL_HISTORY_OUTPUT = OUTPUT_DIR / "history.parquet"
+FINAL_BOX_OUTPUT = OUTPUT_DIR / "box_scores.parquet"
+FAILURE_REPORT = OUTPUT_DIR / "failures.txt"
 
-# Two-tier cache: seasons and players
-SEASON_CACHE_DIR = CACHE_DIR / 'seasons'
-PLAYER_CACHE_DIR = CACHE_DIR / 'players'
+CACHE_DIR = OUTPUT_DIR / "cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+SEASON_CACHE_DIR = CACHE_DIR / "seasons"
+PLAYER_CACHE_DIR = CACHE_DIR / "players"
+PLAYER_INFO_CACHE_DIR = CACHE_DIR / "player_info"
 SEASON_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 PLAYER_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+PLAYER_INFO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-# Rate limiting
-RATE_LIMIT = 0.1  # seconds between API requests
+RATE_LIMIT = 0.1
+TEAM_HISTORY_COLS = ["player_normalized", "team", "valid_from", "valid_to"]
+REQUIRED_GAMELOG_COLS = ["Player_ID", "Game_ID", "GAME_DATE", "SEASON_ID", "MATCHUP", "TEAM"]
+REQUIRED_BOX_COLS = ["player_normalized", "Player_ID", "Game_ID", "GAME_DATE", "SEASON_ID", "TEAM"]
 
 
-# =============================================================================
-# HELPER FUNCTIONS (in execution order)
-# =============================================================================
+def get_safe_player_name(player_name):
+    return player_name.replace(" ", "_").replace("'", "").replace(".", "")
+
 
 def get_player_cache_filename(player_name):
-    """Get cache filename for complete player data."""
-    safe_name = player_name.replace(' ', '_').replace("'", '').replace('.', '')
-    return PLAYER_CACHE_DIR / f"{safe_name}.parquet"
+    return PLAYER_CACHE_DIR / f"{get_safe_player_name(player_name)}.parquet"
 
 
 def get_season_cache_filename(player_name, season):
-    """Get cache filename for a specific season."""
-    safe_name = player_name.replace(' ', '_').replace("'", '').replace('.', '')
-    return SEASON_CACHE_DIR / f"{safe_name}_{season}.parquet"
+    return SEASON_CACHE_DIR / f"{get_safe_player_name(player_name)}_{season}.parquet"
+
+
+def get_player_info_cache_filename(player_name):
+    return PLAYER_INFO_CACHE_DIR / f"{get_safe_player_name(player_name)}.parquet"
+
+
+def load_parquet_with_duckdb(path):
+    return duckdb.sql(f"SELECT * FROM read_parquet('{path.as_posix()}')").df()
+
+
+def atomic_write_parquet(df, target_path):
+    temp_path = target_path.with_suffix(target_path.suffix + ".tmp")
+    df.to_parquet(temp_path, index=False)
+    temp_path.replace(target_path)
+
+
+def enforce_required_columns(df, columns, context):
+    missing = [column for column in columns if column not in df.columns]
+    if missing:
+        raise ValueError(f"{context}: missing required columns {missing}")
 
 
 def load_season_from_cache(player_name, season):
-    """Load a specific season from cache."""
     cache_file = get_season_cache_filename(player_name, season)
-    
     if cache_file.exists():
         try:
-            return pd.read_parquet(cache_file)
+            return load_parquet_with_duckdb(cache_file)
         except Exception:
-            # Corrupted cache file - delete it
             cache_file.unlink()
-            return None
-    
     return None
 
 
 def save_season_to_cache(player_name, season, game_logs_df):
-    """Save a specific season to cache with TEAM column."""
     if game_logs_df.empty:
         return
-    
-    # Add TEAM column from MATCHUP
     game_logs_df = game_logs_df.copy()
-    game_logs_df['TEAM'] = game_logs_df['MATCHUP'].apply(extract_team_from_matchup)
-    
-    cache_file = get_season_cache_filename(player_name, season)
-    game_logs_df.to_parquet(cache_file, index=False)
+    game_logs_df["TEAM"] = game_logs_df["MATCHUP"].apply(extract_team_from_matchup)
+    enforce_required_columns(game_logs_df, REQUIRED_GAMELOG_COLS, "save_season_to_cache")
+    atomic_write_parquet(game_logs_df, get_season_cache_filename(player_name, season))
 
 
-def load_from_cache(player_name):
-    """
-    Load complete player game logs from player-level cache only.
-    
-    Returns:
-        DataFrame of game logs, or None if not cached
-    """
-    player_cache = get_player_cache_filename(player_name)
-    
-    if player_cache.exists():
+def load_player_from_cache(player_name):
+    cache_file = get_player_cache_filename(player_name)
+    if cache_file.exists():
         try:
-            return pd.read_parquet(player_cache)
+            return load_parquet_with_duckdb(cache_file)
         except Exception:
-            # Corrupted cache file - delete it
-            player_cache.unlink()
-            return None
-    
+            cache_file.unlink()
     return None
 
 
-def save_to_cache(player_name, game_logs_df):
-    """Save complete player game logs to player-level cache (only when all seasons successful)."""
+def save_player_to_cache(player_name, game_logs_df):
     if game_logs_df.empty:
         return
-    
-    cache_file = get_player_cache_filename(player_name)
-    game_logs_df.to_parquet(cache_file, index=False)
+    atomic_write_parquet(game_logs_df, get_player_cache_filename(player_name))
+
+
+def load_player_info_from_cache(player_name):
+    cache_file = get_player_info_cache_filename(player_name)
+    if cache_file.exists():
+        try:
+            cached = load_parquet_with_duckdb(cache_file)
+            return cached.iloc[0].to_dict()
+        except Exception:
+            cache_file.unlink()
+    return None
+
+
+def save_player_info_to_cache(player_name, player_info_map):
+    info_df = pd.DataFrame([player_info_map])
+    atomic_write_parquet(info_df, get_player_info_cache_filename(player_name))
 
 
 def discover_players_from_s3(sample_size=None):
-    """Get unique players from S3 betting data."""
     from src.player_team_history.discovery import discover_all_players
-    
+
     players_set = discover_all_players(s3_sample_size=sample_size, verbose=True)
-    players = sorted(list(players_set))
-    
-    return players
+    return sorted(list(players_set))
 
 
 def find_player_id(player_name):
-    """
-    Find player ID in NBA API.
-    
-    The input player_name is already normalized from Odds API.
-    We normalize NBA API names and compare.
-    """
     all_players = players.get_players()
-    
-    search_name_normalized = player_name
-    
-    # Try exact match on normalized names
-    for p in all_players:
-        nba_name_normalized = normalize_from_nba_api(p['full_name'])
-        if nba_name_normalized == search_name_normalized:
-            return p['id']
-    
-    # Try partial match
-    for p in all_players:
-        nba_name_normalized = normalize_from_nba_api(p['full_name'])
-        if nba_name_normalized and search_name_normalized in nba_name_normalized:
-            if p.get('is_active', False):
-                return p['id']
-    
-    # Try reversed name
-    parts = search_name_normalized.split()
+    for player_record in all_players:
+        nba_name = normalize_from_nba_api(player_record["full_name"])
+        if nba_name == player_name:
+            return player_record["id"]
+
+    for player_record in all_players:
+        nba_name = normalize_from_nba_api(player_record["full_name"])
+        if nba_name and player_name in nba_name and player_record.get("is_active", False):
+            return player_record["id"]
+
+    parts = player_name.split()
     if len(parts) >= 2:
         reversed_name = f"{parts[-1]} {' '.join(parts[:-1])}"
-        for p in all_players:
-            nba_name_normalized = normalize_from_nba_api(p['full_name'])
-            if nba_name_normalized and reversed_name in nba_name_normalized:
-                return p['id']
-    
+        for player_record in all_players:
+            nba_name = normalize_from_nba_api(player_record["full_name"])
+            if nba_name and reversed_name in nba_name:
+                return player_record["id"]
     return None
 
 
 def get_career_seasons(player_id):
-    """Get all seasons for a player (only called when NOT using cache)."""
     try:
-        player_info = commonplayerinfo.CommonPlayerInfo(
-            player_id=player_id,
-            timeout=5  # Fail fast - 5 second timeout
-        )
-        df = player_info.get_data_frames()[0]
-        
-        if df.empty:
+        player_info = commonplayerinfo.CommonPlayerInfo(player_id=player_id, timeout=5)
+        info_df = player_info.get_data_frames()[0]
+        if info_df.empty:
             return [CURRENT_NBA_SEASON]
-        
-        from_year = int(df['FROM_YEAR'].iloc[0])
-        to_year = int(df['TO_YEAR'].iloc[0])
-        
+
+        from_year = int(info_df["FROM_YEAR"].iloc[0])
+        to_year = int(info_df["TO_YEAR"].iloc[0])
         seasons = []
         for year in range(from_year, to_year + 1):
-            season = f"{year}-{str(year + 1)[-2:]}"
-            seasons.append(season)
-        
+            seasons.append(f"{year}-{str(year + 1)[-2:]}")
         return seasons
     except Exception:
         return []
 
 
+def get_player_info(player_name, player_id, use_cache=True):
+    cached = load_player_info_from_cache(player_name)
+    if cached is not None:
+        return cached
+
+    first_name = player_name.split()[0]
+    last_name = " ".join(player_name.split()[1:]) if len(player_name.split()) > 1 else ""
+    fallback = {
+        "PLAYER_INFO_PERSON_ID": player_id,
+        "PLAYER_INFO_FIRST_NAME": first_name,
+        "PLAYER_INFO_LAST_NAME": last_name,
+        "PLAYER_INFO_DISPLAY_FIRST_LAST": player_name,
+    }
+
+    # For standard cached runs, avoid expensive player-info endpoint calls.
+    if use_cache:
+        save_player_info_to_cache(player_name, fallback)
+        return fallback
+
+    for attempt in range(3):
+        try:
+            player_info = commonplayerinfo.CommonPlayerInfo(player_id=player_id, timeout=5)
+            info_df = player_info.get_data_frames()[0]
+            if info_df.empty:
+                raise ValueError(f"No player info returned for {player_name}")
+
+            row = info_df.iloc[0].to_dict()
+            prefixed = {}
+            for key, value in row.items():
+                prefixed[f"PLAYER_INFO_{key}"] = value
+            save_player_info_to_cache(player_name, prefixed)
+            return prefixed
+        except Exception:
+            if attempt < 2:
+                time.sleep(0.3)
+    save_player_info_to_cache(player_name, fallback)
+    return fallback
+
+
 def extract_team_from_matchup(matchup):
-    """Extract player's team from MATCHUP string and normalize to modern codes."""
     if pd.isna(matchup):
         return None
-    
-    team_code = None
-    if '@' in matchup:
-        team_code = matchup.split('@')[0].strip()
-    elif 'vs.' in matchup:
-        team_code = matchup.split('vs.')[0].strip()
-    
-    # Normalize historical team codes
-    return normalize_team_code(team_code)
+    if "@" in matchup:
+        return normalize_team_code(matchup.split("@")[0].strip())
+    if "vs." in matchup:
+        return normalize_team_code(matchup.split("vs.")[0].strip())
+    return None
 
 
 def fetch_player_game_log(player_name, player_id, verbose=False, use_cache=True):
-    """
-    Fetch game logs with smart two-tier caching:
-    1. Check player-level cache (complete data)
-    2. If not found, check which seasons we have vs need, fetch missing ones
-    3. Once all seasons obtained, save player-level cache
-    
-    Returns:
-        Tuple of (DataFrame with game logs including TEAM column, bool indicating if from cache)
-    """
-    # Check player-level cache first (complete data)
     if use_cache:
-        cached_logs = load_from_cache(player_name)
+        cached_logs = load_player_from_cache(player_name)
         if cached_logs is not None:
             if verbose:
-                print(f"      [COMPLETE PLAYER CACHE]")
+                print("      [COMPLETE PLAYER CACHE]")
+            enforce_required_columns(cached_logs, REQUIRED_GAMELOG_COLS, "player cache")
             return cached_logs, True
-    
-    # Not in player cache - get expected seasons
+
     if verbose:
-        print(f"      [BUILDING FROM SEASONS]", flush=True)
-    
+        print("      [BUILDING FROM SEASONS]", flush=True)
+
     seasons = get_career_seasons(player_id)
-    
     if verbose:
         print(f"      Expected: {len(seasons)} seasons...")
-    
+
     all_games = []
     failed_seasons = []
     cached_count = 0
     fetched_count = 0
-    
+
     for season in seasons:
-        # Check season cache first
         season_df = load_season_from_cache(player_name, season)
-        
         if season_df is not None:
             all_games.append(season_df)
             cached_count += 1
             if verbose:
                 print(f"      💾 {season}: {len(season_df)} games [from season cache]")
             continue
-        
-        # Fetch from API
+
         try:
-            gamelog = playergamelog.PlayerGameLog(
-                player_id=player_id,
-                season=season,
-                timeout=5
-            )
-            
+            gamelog = playergamelog.PlayerGameLog(player_id=player_id, season=season, timeout=5)
             df = gamelog.get_data_frames()[0]
-            
             if not df.empty:
-                # Save this season immediately
                 save_season_to_cache(player_name, season, df)
                 all_games.append(df)
                 fetched_count += 1
                 if verbose:
                     print(f"      ✓ {season}: {len(df)} games [fetched & saved]")
-            
             time.sleep(RATE_LIMIT)
-            
-        except Exception as e:
-            failed_seasons.append((season, str(e)[:40]))
+        except Exception as exc:
+            failed_seasons.append((season, str(exc)[:40]))
             if verbose:
-                print(f"      ✗ {season}: {str(e)[:40]} [FAILED - try again later]")
-    
+                print(f"      ✗ {season}: {str(exc)[:40]} [FAILED - try again later]")
+
     if verbose:
-        print(f"      Summary: {cached_count} cached, {fetched_count} fetched, {len(failed_seasons)} failed")
-    
+        print(
+            f"      Summary: {cached_count} cached, {fetched_count} fetched, "
+            f"{len(failed_seasons)} failed"
+        )
+
     if not all_games:
         return pd.DataFrame(), False
-    
-    # Combine all seasons
+
     combined = pd.concat(all_games, ignore_index=True)
-    
-    # Add TEAM column from MATCHUP
-    combined['TEAM'] = combined['MATCHUP'].apply(extract_team_from_matchup)
-    
-    # Only save player file if we got ALL seasons (no failures)
+    combined["TEAM"] = combined["MATCHUP"].apply(extract_team_from_matchup)
+    enforce_required_columns(combined, REQUIRED_GAMELOG_COLS, "fetch_player_game_log")
+
     if not failed_seasons:
-        save_to_cache(player_name, combined)
+        save_player_to_cache(player_name, combined)
         if verbose:
             print(f"      ✅ Saved complete player cache ({len(seasons)} seasons)")
     elif verbose:
         print(f"      ⚠️ NOT saving player cache - missing {len(failed_seasons)} seasons")
-    
     return combined, False
 
 
 def create_team_history_from_gamelogs(game_logs_df, player_name):
-    """
-    Convert game logs to team history with date ranges.
-    
-    Returns:
-        DataFrame with columns: player_normalized, team, valid_from, valid_to
-    """
     if game_logs_df.empty:
-        return pd.DataFrame(columns=['player_normalized', 'team', 'valid_from', 'valid_to'])
-    
-    player_normalized = player_name
-    
-    # Convert dates
-    game_logs_df['GAME_DATE'] = pd.to_datetime(game_logs_df['GAME_DATE'], format='mixed')
-    game_logs_df = game_logs_df.sort_values('GAME_DATE')
-    
-    # Group consecutive games by team
-    game_logs_df['team_change'] = game_logs_df['TEAM'] != game_logs_df['TEAM'].shift()
-    game_logs_df['team_stint'] = game_logs_df['team_change'].cumsum()
-    
+        return pd.DataFrame(columns=TEAM_HISTORY_COLS)
+
+    enforce_required_columns(game_logs_df, REQUIRED_GAMELOG_COLS, "create_team_history_from_gamelogs")
+
+    history_input = game_logs_df.copy()
+    history_input["GAME_DATE"] = pd.to_datetime(history_input["GAME_DATE"], format="mixed")
+    history_input = history_input.sort_values("GAME_DATE")
+    history_input["team_change"] = history_input["TEAM"] != history_input["TEAM"].shift()
+    history_input["team_stint"] = history_input["team_change"].cumsum()
+
     history = []
-    
-    for stint_id, stint_games in game_logs_df.groupby('team_stint'):
-        team = stint_games['TEAM'].iloc[0]
-        
+    for stint_id, stint_games in history_input.groupby("team_stint"):
+        team = stint_games["TEAM"].iloc[0]
         if pd.isna(team):
             continue
-        
-        # Normalize historical team codes to modern abbreviations
-        team = normalize_team_code(team)
-        
-        first_game = stint_games['GAME_DATE'].min()
-        last_game = stint_games['GAME_DATE'].max()
-        
-        valid_from = first_game.date()
-        is_last_stint = stint_id == game_logs_df['team_stint'].max()
-        valid_to = None if is_last_stint else last_game.date()
-        
-        history.append({
-            'player_normalized': player_normalized,
-            'team': team,
-            'valid_from': valid_from,
-            'valid_to': valid_to
-        })
-    
-    return pd.DataFrame(history)
+        first_game = stint_games["GAME_DATE"].min()
+        last_game = stint_games["GAME_DATE"].max()
+        is_last_stint = stint_id == history_input["team_stint"].max()
+        history.append(
+            {
+                "player_normalized": player_name,
+                "team": normalize_team_code(team),
+                "valid_from": first_game.date(),
+                "valid_to": None if is_last_stint else last_game.date(),
+            }
+        )
+    return pd.DataFrame(history, columns=TEAM_HISTORY_COLS)
 
 
-def load_checkpoint():
-    """Load existing checkpoint if exists."""
-    if not CHECKPOINT_FILE.exists():
-        return pd.DataFrame(columns=['player_normalized', 'team', 'valid_from', 'valid_to'])
-    
-    df = pd.read_parquet(CHECKPOINT_FILE)
-    print(f"{EMOJI['info']} Loaded checkpoint: {len(df)} records, {df['player_normalized'].nunique()} players")
-    return df
+def season_id_to_str(season_id):
+    season_id_str = str(int(season_id))
+    start_year = int(season_id_str[-4:])
+    return f"{start_year}-{str(start_year + 1)[-2:]}"
+
+
+def create_box_scores_from_gamelogs(game_logs_df, player_name, player_info_map):
+    if game_logs_df.empty:
+        return pd.DataFrame()
+
+    box_df = game_logs_df.copy()
+    enforce_required_columns(box_df, REQUIRED_GAMELOG_COLS, "create_box_scores_from_gamelogs")
+    box_df["player_normalized"] = player_name
+    box_df["GAME_DATE"] = pd.to_datetime(box_df["GAME_DATE"], format="mixed")
+    box_df["SEASON_STR"] = box_df["SEASON_ID"].apply(season_id_to_str)
+
+    for key, value in player_info_map.items():
+        box_df[key] = value
+
+    enforce_required_columns(box_df, REQUIRED_BOX_COLS, "box score required fields")
+    box_df = box_df.sort_values(["player_normalized", "GAME_DATE", "Game_ID"])
+    box_df = box_df.drop_duplicates(subset=["player_normalized", "Game_ID"], keep="last")
+    return box_df
+
+
+def load_checkpoint(path, columns):
+    if not path.exists():
+        return pd.DataFrame(columns=columns)
+    return load_parquet_with_duckdb(path)
 
 
 def get_completed_players(checkpoint_df):
-    """Get set of players already processed."""
     if checkpoint_df.empty:
         return set()
-    return set(checkpoint_df['player_normalized'].unique())
+    return set(checkpoint_df["player_normalized"].unique())
 
 
-def save_checkpoint(history_df):
-    """Save current progress."""
-    history_df.to_parquet(CHECKPOINT_FILE, index=False)
+def save_checkpoint(path, df):
+    atomic_write_parquet(df, path)
 
 
-def generate_failure_report(not_found_in_nba, no_game_logs, no_history_created, processing_errors, total_processed, successful):
-    """Generate detailed failure report."""
-    failed = len(not_found_in_nba) + len(no_game_logs) + len(no_history_created) + len(processing_errors)
-    
-    with open(FAILURE_REPORT, 'w') as f:
-        f.write("="*80 + "\n")
-        f.write("PLAYER TEAM HISTORY BUILD - FAILURE REPORT\n")
-        f.write("="*80 + "\n\n")
-        
-        f.write(f"Total players processed: {total_processed}\n")
-        f.write(f"Successful: {successful}\n")
-        f.write(f"Failed: {failed}\n\n")
-        
-        if not_found_in_nba:
-            f.write("="*80 + "\n")
-            f.write(f"NOT FOUND IN NBA API ({len(not_found_in_nba)} players)\n")
-            f.write("="*80 + "\n")
-            f.write("These players exist in Odds API but could not be matched to NBA API.\n")
-            f.write("Action: Add name mappings to name_normalization.py\n\n")
-            for player in sorted(not_found_in_nba):
-                f.write(f"  - {player}\n")
-            f.write("\n")
-        
-        if no_game_logs:
-            f.write("="*80 + "\n")
-            f.write(f"NO GAME LOGS ({len(no_game_logs)} players)\n")
-            f.write("="*80 + "\n")
-            f.write("Found in NBA API but no game logs available.\n")
-            f.write("Possible reasons: rookies not yet played, retired players, etc.\n\n")
-            for player in sorted(no_game_logs):
-                f.write(f"  - {player}\n")
-            f.write("\n")
-        
-        if no_history_created:
-            f.write("="*80 + "\n")
-            f.write(f"NO HISTORY CREATED ({len(no_history_created)} players)\n")
-            f.write("="*80 + "\n")
-            f.write("Game logs fetched but team history could not be created.\n")
-            f.write("Possible reasons: MATCHUP parsing issues, all games have null team.\n\n")
-            for player in sorted(no_history_created):
-                f.write(f"  - {player}\n")
-            f.write("\n")
-        
-        if processing_errors:
-            f.write("="*80 + "\n")
-            f.write(f"PROCESSING ERRORS ({len(processing_errors)} players)\n")
-            f.write("="*80 + "\n")
-            f.write("Unexpected errors during processing.\n\n")
-            for player, error in sorted(processing_errors):
-                f.write(f"  - {player}\n")
-                f.write(f"    Error: {error}\n\n")
+def write_failure_section(file_handle, title, entries, description):
+    if not entries:
+        return
+    file_handle.write("=" * 80 + "\n")
+    file_handle.write(f"{title} ({len(entries)} players)\n")
+    file_handle.write("=" * 80 + "\n")
+    file_handle.write(description + "\n\n")
+    for entry in sorted(entries):
+        if isinstance(entry, tuple):
+            file_handle.write(f"  - {entry[0]}\n")
+            file_handle.write(f"    Error: {entry[1]}\n")
+        else:
+            file_handle.write(f"  - {entry}\n")
+    file_handle.write("\n")
 
 
-# =============================================================================
-# MAIN BUILD FUNCTION
-# =============================================================================
+def generate_failure_report(failures, total_processed, successful):
+    failed = sum(len(value) for value in failures.values())
+    with open(FAILURE_REPORT, "w") as file_handle:
+        file_handle.write("=" * 80 + "\n")
+        file_handle.write("PLAYER TEAM HISTORY + BOX SCORES BUILD - FAILURE REPORT\n")
+        file_handle.write("=" * 80 + "\n\n")
+        file_handle.write(f"Total players processed: {total_processed}\n")
+        file_handle.write(f"Successful: {successful}\n")
+        file_handle.write(f"Failed: {failed}\n\n")
+
+        write_failure_section(
+            file_handle,
+            "NOT FOUND IN NBA API",
+            failures["not_found_in_nba"],
+            "These players exist in Odds API but could not be matched to NBA API.",
+        )
+        write_failure_section(
+            file_handle,
+            "NO GAME LOGS",
+            failures["no_game_logs"],
+            "Found in NBA API but no game logs available.",
+        )
+        write_failure_section(
+            file_handle,
+            "PLAYER INFO ERRORS",
+            failures["player_info_errors"],
+            "Unable to fetch/player cache CommonPlayerInfo output.",
+        )
+        write_failure_section(
+            file_handle,
+            "NO HISTORY CREATED",
+            failures["no_history_created"],
+            "Game logs fetched but team history could not be built.",
+        )
+        write_failure_section(
+            file_handle,
+            "NO BOX SCORES CREATED",
+            failures["no_box_scores_created"],
+            "Game logs fetched but player/game box rows were not created.",
+        )
+        write_failure_section(
+            file_handle,
+            "DUPLICATE BOX GAME ROWS",
+            failures["duplicate_box_rows"],
+            "Duplicate rows found for (player_normalized, Game_ID).",
+        )
+        write_failure_section(
+            file_handle,
+            "BOX SCHEMA ERRORS",
+            failures["box_schema_errors"],
+            "Required fields missing while building box rows.",
+        )
+        write_failure_section(
+            file_handle,
+            "PROCESSING ERRORS",
+            failures["processing_errors"],
+            "Unexpected errors during player processing.",
+        )
+
 
 def build(resume=False, sample_size=None, verbose=False, use_cache=True):
-    """
-    Build team history incrementally with checkpoints and caching.
-    
-    Args:
-        resume: Resume from checkpoint
-        sample_size: Number of S3 files to sample (None = all)
-        verbose: Show detailed logging
-        use_cache: Use cached game logs if available
-    """
-    print("="*80)
-    print(f"{EMOJI['nba']} BUILD PLAYER TEAM HISTORY")
-    print("="*80)
+    print("=" * 80)
+    print(f"{EMOJI['nba']} BUILD PLAYER TEAM HISTORY + BOX SCORES")
+    print("=" * 80)
     print()
-    
+
     if use_cache:
-        player_cache_count = len(list(PLAYER_CACHE_DIR.glob('*.parquet')))
-        season_cache_count = len(list(SEASON_CACHE_DIR.glob('*.parquet')))
-        if player_cache_count > 0 or season_cache_count > 0:
-            print(f"{EMOJI['info']} Cache: {player_cache_count} complete players, {season_cache_count} individual seasons")
+        player_cache_count = len(list(PLAYER_CACHE_DIR.glob("*.parquet")))
+        season_cache_count = len(list(SEASON_CACHE_DIR.glob("*.parquet")))
+        player_info_cache_count = len(list(PLAYER_INFO_CACHE_DIR.glob("*.parquet")))
+        if player_cache_count > 0 or season_cache_count > 0 or player_info_cache_count > 0:
+            print(
+                f"{EMOJI['info']} Cache: {player_cache_count} complete players, "
+                f"{season_cache_count} seasons, {player_info_cache_count} player_info files"
+            )
             print()
-    
-    # Load checkpoint if resuming
-    checkpoint_df = load_checkpoint() if resume else pd.DataFrame()
-    completed_players = get_completed_players(checkpoint_df)
-    
+
+    history_checkpoint_df = load_checkpoint(CHECKPOINT_FILE, TEAM_HISTORY_COLS) if resume else pd.DataFrame(columns=TEAM_HISTORY_COLS)
+    box_checkpoint_df = load_checkpoint(BOX_CHECKPOINT_FILE, REQUIRED_BOX_COLS) if resume else pd.DataFrame(columns=REQUIRED_BOX_COLS)
+    completed_players = get_completed_players(history_checkpoint_df)
+
     if resume and completed_players:
-        print(f"{EMOJI['success']} Resuming from checkpoint: {len(completed_players)} players already done\n")
-    
-    # Discover players
+        print(
+            f"{EMOJI['success']} Resuming from checkpoint: "
+            f"{len(completed_players)} players already done\n"
+        )
+
     all_players = discover_players_from_s3(sample_size=sample_size)
-    
-    # Filter out completed
-    if completed_players:
-        players_to_process = [p for p in all_players if p not in completed_players]
-    else:
-        players_to_process = all_players
-    
+    players_to_process = [player_name for player_name in all_players if player_name not in completed_players]
+
     print(f"\n{EMOJI['info']} Players to process: {len(players_to_process)}")
     print(f"{EMOJI['info']} Already completed: {len(completed_players)}")
     print()
-    
+
     if not players_to_process:
         print(f"{EMOJI['success']} All players already processed!")
-        return checkpoint_df
-    
-    # Process each player
+        return history_checkpoint_df, box_checkpoint_df
+
     new_history = []
+    new_box_scores = []
     successful = 0
-    
-    # Track failures
-    not_found_in_nba = []
-    no_game_logs = []
-    no_history_created = []
-    processing_errors = []
-    
-    # Track timing
     start_time = time.time()
-    
-    for i, player_name in enumerate(players_to_process, 1):
+    failures = {
+        "not_found_in_nba": [],
+        "no_game_logs": [],
+        "player_info_errors": [],
+        "no_history_created": [],
+        "no_box_scores_created": [],
+        "duplicate_box_rows": [],
+        "box_schema_errors": [],
+        "processing_errors": [],
+    }
+
+    for index, player_name in enumerate(players_to_process, 1):
         player_start = time.time()
-        print(f"[{i}/{len(players_to_process)}] {player_name}...", end=' ', flush=True)
-        
+        print(f"[{index}/{len(players_to_process)}] {player_name}...", end=" ", flush=True)
         try:
-            # Find player ID
             player_id = find_player_id(player_name)
-            
             if not player_id:
                 print(f"{EMOJI['warning']} Not found in NBA API")
-                not_found_in_nba.append(player_name)
+                failures["not_found_in_nba"].append(player_name)
                 continue
-            
-            # Fetch game logs
+
             game_logs, from_cache = fetch_player_game_log(
-                player_name, 
-                player_id, 
+                player_name,
+                player_id,
                 verbose=verbose,
-                use_cache=use_cache
+                use_cache=use_cache,
             )
-            
             if game_logs.empty:
                 print(f"{EMOJI['warning']} No game logs")
-                no_game_logs.append(player_name)
+                failures["no_game_logs"].append(player_name)
                 continue
-            
-            # Create team history
+
+            try:
+                player_info_map = get_player_info(player_name, player_id, use_cache=use_cache)
+            except Exception as exc:
+                print(f"{EMOJI['warning']} Player info error")
+                failures["player_info_errors"].append((player_name, str(exc)))
+                continue
+
             player_history = create_team_history_from_gamelogs(game_logs, player_name)
-            
-            t_total = time.time() - player_start
-            
-            if not player_history.empty:
-                new_history.append(player_history)
-                teams = ', '.join(player_history['team'].unique())
-                
-                # Show if from cache or API
-                cache_indicator = "💾 CACHED" if from_cache else "🔄 API"
-                print(f"{cache_indicator} {EMOJI['success']} {len(player_history)} stints [{teams}] ({t_total:.1f}s)")
-                successful += 1
-            else:
-                print(f"{EMOJI['warning']} No history created ({t_total:.1f}s)")
-                no_history_created.append(player_name)
-        
-        except Exception as e:
-            t_total = time.time() - player_start
-            error_msg = str(e)[:60]
-            print(f"{EMOJI['error']} {error_msg} ({t_total:.1f}s)")
-            processing_errors.append((player_name, str(e)))
-            continue
-        
-        # Save checkpoint every 25 players
-        if i % 25 == 0:
-            elapsed = time.time() - start_time
-            rate = i / elapsed
-            remaining = len(players_to_process) - i
-            eta_seconds = remaining / rate if rate > 0 else 0
-            eta_minutes = eta_seconds / 60
-            
-            if new_history:
-                new_df = pd.concat(new_history, ignore_index=True)
-                combined = pd.concat([checkpoint_df, new_df], ignore_index=True)
-                save_checkpoint(combined)
-                print(f"\n{EMOJI['save']} Checkpoint saved: {successful + len(completed_players)} total players")
-                print(f"   Progress: {i}/{len(players_to_process)} ({i/len(players_to_process)*100:.1f}%)")
-                print(f"   Speed: {rate:.1f} players/sec")
-                print(f"   ETA: {eta_minutes:.1f} min\n")
-    
-    # Final save
-    if new_history:
-        new_df = pd.concat(new_history, ignore_index=True)
-        final_df = pd.concat([checkpoint_df, new_df], ignore_index=True)
-        
-        # Sort and dedupe
-        final_df = final_df.sort_values(['player_normalized', 'valid_from'])
-        final_df = final_df.drop_duplicates(subset=['player_normalized', 'team', 'valid_from'], keep='last')
-        
-        # Save final
-        save_checkpoint(final_df)
-        final_df.to_parquet(FINAL_OUTPUT, index=False)
-        
-        print()
-        print("="*80)
-        print(f"{EMOJI['success']} BUILD COMPLETE")
-        print("="*80)
-        print(f"Total players: {final_df['player_normalized'].nunique()}")
-        print(f"Total stints: {len(final_df)}")
-        print(f"Successful: {successful}")
-        print(f"Failed: {len(not_found_in_nba) + len(no_game_logs) + len(no_history_created) + len(processing_errors)}")
-        print()
-        print(f"Output: {FINAL_OUTPUT}")
-        print(f"Checkpoint: {CHECKPOINT_FILE}")
-        print()
-        
-        # Generate failure report
-        if any([not_found_in_nba, no_game_logs, no_history_created, processing_errors]):
-            generate_failure_report(
-                not_found_in_nba, no_game_logs, no_history_created, 
-                processing_errors, len(players_to_process), successful
+            if player_history.empty:
+                print(f"{EMOJI['warning']} No history created")
+                failures["no_history_created"].append(player_name)
+                continue
+
+            try:
+                player_box_scores = create_box_scores_from_gamelogs(game_logs, player_name, player_info_map)
+            except Exception as exc:
+                print(f"{EMOJI['warning']} Box schema error")
+                failures["box_schema_errors"].append((player_name, str(exc)))
+                continue
+
+            if player_box_scores.empty:
+                print(f"{EMOJI['warning']} No box scores created")
+                failures["no_box_scores_created"].append(player_name)
+                continue
+
+            duplicate_rows = player_box_scores[
+                player_box_scores.duplicated(subset=["player_normalized", "Game_ID"], keep=False)
+            ]
+            if not duplicate_rows.empty:
+                print(f"{EMOJI['warning']} Duplicate box rows")
+                failures["duplicate_box_rows"].append(player_name)
+                continue
+
+            new_history.append(player_history)
+            new_box_scores.append(player_box_scores)
+            successful += 1
+            elapsed = time.time() - player_start
+            cache_indicator = "💾 CACHED" if from_cache else "🔄 API"
+            print(
+                f"{cache_indicator} {EMOJI['success']} "
+                f"{len(player_history)} stints, {len(player_box_scores)} box rows ({elapsed:.1f}s)"
             )
+        except Exception as exc:
+            elapsed = time.time() - player_start
+            error_msg = str(exc)[:60]
+            print(f"{EMOJI['error']} {error_msg} ({elapsed:.1f}s)")
+            failures["processing_errors"].append((player_name, str(exc)))
+            continue
+
+        if index % 25 == 0 and new_history:
+            elapsed = time.time() - start_time
+            rate = index / elapsed
+            remaining = len(players_to_process) - index
+            eta_minutes = (remaining / rate) / 60 if rate > 0 else 0
+
+            incremental_history = pd.concat(new_history, ignore_index=True)
+            incremental_box = pd.concat(new_box_scores, ignore_index=True)
+            checkpoint_history = (
+                incremental_history
+                if history_checkpoint_df.empty
+                else pd.concat([history_checkpoint_df, incremental_history], ignore_index=True)
+            )
+            checkpoint_box = (
+                incremental_box
+                if box_checkpoint_df.empty
+                else pd.concat([box_checkpoint_df, incremental_box], ignore_index=True)
+            )
+            save_checkpoint(CHECKPOINT_FILE, checkpoint_history)
+            save_checkpoint(BOX_CHECKPOINT_FILE, checkpoint_box)
+            print(f"\n{EMOJI['save']} Checkpoint saved")
+            print(f"   Progress: {index}/{len(players_to_process)} ({index/len(players_to_process)*100:.1f}%)")
+            print(f"   Speed: {rate:.1f} players/sec")
+            print(f"   ETA: {eta_minutes:.1f} min\n")
+
+    if new_history:
+        incremental_history = pd.concat(new_history, ignore_index=True)
+        final_history = (
+            incremental_history
+            if history_checkpoint_df.empty
+            else pd.concat([history_checkpoint_df, incremental_history], ignore_index=True)
+        )
+        final_history = final_history.sort_values(["player_normalized", "valid_from"])
+        final_history = final_history.drop_duplicates(
+            subset=["player_normalized", "team", "valid_from"], keep="last"
+        )
+
+        incremental_box = pd.concat(new_box_scores, ignore_index=True)
+        final_box = (
+            incremental_box
+            if box_checkpoint_df.empty
+            else pd.concat([box_checkpoint_df, incremental_box], ignore_index=True)
+        )
+        final_box = final_box.sort_values(["player_normalized", "GAME_DATE", "Game_ID"])
+        final_box = final_box.drop_duplicates(
+            subset=["player_normalized", "Game_ID"], keep="last"
+        )
+
+        save_checkpoint(CHECKPOINT_FILE, final_history)
+        save_checkpoint(BOX_CHECKPOINT_FILE, final_box)
+        atomic_write_parquet(final_history, FINAL_HISTORY_OUTPUT)
+        atomic_write_parquet(final_box, FINAL_BOX_OUTPUT)
+
+        print()
+        print("=" * 80)
+        print(f"{EMOJI['success']} BUILD COMPLETE")
+        print("=" * 80)
+        print(f"Total players (history): {final_history['player_normalized'].nunique()}")
+        print(f"Total stints: {len(final_history)}")
+        print(f"Total box rows: {len(final_box)}")
+        print(f"Successful players: {successful}")
+        print(f"Failed players: {sum(len(value) for value in failures.values())}")
+        print()
+        print(f"History output: {FINAL_HISTORY_OUTPUT}")
+        print(f"Box score output: {FINAL_BOX_OUTPUT}")
+        print(f"History checkpoint: {CHECKPOINT_FILE}")
+        print(f"Box checkpoint: {BOX_CHECKPOINT_FILE}")
+        print()
+
+        if any(failures.values()):
+            generate_failure_report(failures, len(players_to_process), successful)
             print(f"{EMOJI['warning']} Failure report: {FAILURE_REPORT}")
-            print(f"   Analyze: python src/player_team_history/02_analyze_failures.py")
+            print("   Analyze: python src/player_team_history/02_analyze_failures.py")
             print()
-        
-        # Display sample
-        print("="*80)
-        print(f"{EMOJI['chart']} SAMPLE - Top 10 Players by Stints")
-        print("="*80)
-        print()
-        
-        display_df = final_df.copy()
-        display_df['valid_to'] = display_df['valid_to'].fillna('NULL')
-        
-        stint_counts = display_df.groupby('player_normalized').size().sort_values(ascending=False)
-        top_players = stint_counts.head(10).index.tolist()
-        
-        for player in top_players:
-            player_df = display_df[display_df['player_normalized'] == player].copy()
-            player_df = player_df.sort_values('valid_from')
-            
-            print(f"{player} ({len(player_df)} stints):")
-            for _, row in player_df.iterrows():
-                print(f"  {row['team']:3} | {row['valid_from']} to {row['valid_to']}")
-            print()
-        
-        print("="*80)
-        print()
-        
-        return final_df
-    else:
-        return checkpoint_df
+
+        return final_history, final_box
+
+    return history_checkpoint_df, box_checkpoint_df
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Build player team history from S3 betting data',
+        description="Build player team history + player box scores from S3 betting data",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python src/player_team_history/01_build.py
   python src/player_team_history/01_build.py --sample 100
   python src/player_team_history/01_build.py --resume
-        """
+        """,
     )
-    parser.add_argument('--resume', action='store_true',
-                       help='Resume from checkpoint')
-    parser.add_argument('--sample', type=int,
-                       help='Only process sample of S3 files (for testing)')
-    parser.add_argument('--verbose', action='store_true',
-                       help='Show detailed logging for each player')
-    parser.add_argument('--no-cache', action='store_true',
-                       help='Bypass cache and fetch fresh from NBA API')
-    
+    parser.add_argument("--resume", action="store_true", help="Resume from checkpoints")
+    parser.add_argument("--sample", type=int, help="Only process sample of S3 files (for testing)")
+    parser.add_argument("--verbose", action="store_true", help="Show detailed logs for each player")
+    parser.add_argument("--no-cache", action="store_true", help="Bypass caches and fetch fresh data")
     args = parser.parse_args()
-    
+
     build(
-        resume=args.resume, 
-        sample_size=args.sample, 
+        resume=args.resume,
+        sample_size=args.sample,
         verbose=args.verbose,
-        use_cache=not args.no_cache
+        use_cache=not args.no_cache,
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
