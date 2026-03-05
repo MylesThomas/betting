@@ -4,6 +4,14 @@ This directory contains work currently in progress.
 
 ## Current Active Plans
 
+### NBA player_threes model v1 plan (2026-03-04)
+
+**File:** [nba-player-threes-model-v1-plan.md](nba-player-threes-model-v1-plan.md)  
+**Goal:** Build a modular `01 -> 02 -> 03 -> 04` workflow for `player_threes`: mean model (`01_signal_discovery`), uncertainty/pricing (`02_probability_engine`), strategy simulation (`03_backtesting`), and run comparison (`04_validation`).  
+**Next:** Scaffold `src/nba_three_point_modeling/` modules using locked v1 defaults (no longshot-bias correction, median in implied-probability space + best contract views, `is_consensus` flag, `$100` target-win staking, standard `run_id` format).
+
+---
+
 ### NBA multimarket strategy analysis (2026-02-25)
 
 **File:** [nba-multimarket-strategy-analysis.md](nba-multimarket-strategy-analysis.md)  
