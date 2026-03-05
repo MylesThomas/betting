@@ -4,6 +4,14 @@ This directory contains work currently in progress.
 
 ## Current Active Plans
 
+### NBA player_threes model v2 plan (2026-03-05)
+
+**File:** [nba-player-threes-model-v2-plan.md](nba-player-threes-model-v2-plan.md)  
+**Goal:** Launch a v2 run with a 3-input mean model (`mean_3pm`, `predicted_3pa`, `predicted_minutes`) and recency-weighted player-history uncertainty sampling in the probability engine.  
+**Next:** Implement v2 model + uncertainty modules, wire config knobs, run backtest, and compare v2 vs v1 metrics.
+
+---
+
 ### NBA player_threes model v1 plan (2026-03-04)
 
 **File:** [nba-player-threes-model-v1-plan.md](nba-player-threes-model-v1-plan.md)  

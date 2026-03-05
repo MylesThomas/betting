@@ -1,0 +1,11 @@
+mean_model_id: baseline_ols_season_avg_3pm
+uncertainty_model_id: global_variance
+strategy_id: edge_threshold
+season: 2025-26
+player_name: Stephen Curry
+n_sims: 1000
+edge_threshold: 0.05
+edge_mode: raw
+use_all_lines: true
+evaluation_price_view: best
+run_suffix: curry_2025-26

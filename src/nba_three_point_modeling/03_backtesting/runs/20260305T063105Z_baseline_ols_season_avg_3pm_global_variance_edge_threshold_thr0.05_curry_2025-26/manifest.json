@@ -1,0 +1,13 @@
+{
+  "run_id": "20260305T063105Z_baseline_ols_season_avg_3pm_global_variance_edge_threshold_thr0.05_curry_2025-26",
+  "timestamp_utc": "2026-03-05T06:31:05.849376+00:00",
+  "git_sha": "2e14b31cafa350d3027c8ca0437c829aba1bba24",
+  "data_version": "s3-season-2025-26",
+  "files": {
+    "predictions.parquet_sha256": "0a5d66c245ed3623bd2991c3311a0d27113c02eee32a0c2f3e669238633f5a4b",
+    "bets.parquet_sha256": "87040af959ffc8e0cdc55b9d1c2a75437df1d3663aa6bfca7dff594f2cd426dc"
+  },
+  "env": {
+    "AWS_ACCESS_KEY_ID_present": true
+  }
+}

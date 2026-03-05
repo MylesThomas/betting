@@ -1,0 +1,16 @@
+{
+  "run_id": "20260305T025837Z_baseline_ols_season_avg_3pm_global_variance_edge_threshold_thr0.03_curry_2025-26",
+  "player_name": "Stephen Curry",
+  "season": "2025-26",
+  "n_predictions": 31,
+  "n_bets": 18,
+  "rmse": 1.9153302656905713,
+  "win_rate": 0.3888888888888889,
+  "roi": -0.14857474079247365,
+  "total_pnl": -306.2899262899263,
+  "total_risked": 2061.520852442517,
+  "signal_rate": 0.5806451612903226,
+  "consensus_residual_mean": 0.26421813868908023,
+  "consensus_residual_std": 0.16984874679599107,
+  "uncertainty_sigma": 2.4650945888224904
+}

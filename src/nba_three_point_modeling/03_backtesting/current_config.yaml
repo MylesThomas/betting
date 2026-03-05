@@ -1,0 +1,12 @@
+mean_model_id: baseline_ols_season_avg_3pm  # Mean model for predictions
+uncertainty_model_id: global_variance  # Uncertainty model for simulation
+strategy_id: edge_threshold  # Strategy selection key
+season: "2025-26"  # Season to backtest
+player_name: "Stephen Curry"  # Player to evaluate
+n_sims: 1000  # Monte Carlo iterations
+edge_threshold: 0.05  # Minimum edge to bet
+edge_mode: raw  # Use raw implied probabilities
+use_all_lines: true  # Evaluate all ladder lines
+evaluation_price_view: best  # Bet at best available odds
+run_suffix: "curry_2025-26"  # Human-readable run suffix
+
