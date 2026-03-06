@@ -1,0 +1,20 @@
+{
+  "run_id": "20260305T070759Z_v2_three_input_regression_v2_weighted_history_sampler_edge_threshold_thr0.05_curry_2025-26_v2",
+  "player_name": "Stephen Curry",
+  "season": "2025-26",
+  "n_games_played": 39,
+  "n_games_with_priced_lines": 39,
+  "n_predictions": 97,
+  "n_bets": 54,
+  "rmse": 2.2484220492350437,
+  "win_rate": 0.7592592592592593,
+  "roi": 0.35868135252818634,
+  "total_pnl": 2619.8297793664487,
+  "total_risked": 7304.059051022381,
+  "signal_rate": 0.5567010309278351,
+  "brier_score": 0.16967616666666666,
+  "consensus_residual_mean": -0.06410256410265444,
+  "consensus_residual_std": 0.7417704320383474,
+  "uncertainty_model_id": "v2_weighted_history_sampler",
+  "edge_mode": "raw"
+}

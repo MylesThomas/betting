@@ -1,0 +1,18 @@
+mean_model_id: v2_three_input_regression
+uncertainty_model_id: v2_weighted_history_sampler
+strategy_id: edge_threshold
+season: 2025-26
+player_name: Stephen Curry
+n_sims: 1000
+edge_threshold: 0.05
+edge_mode: raw
+use_all_lines: true
+evaluation_price_view: best
+history_seasons:
+- 2023-24
+- 2024-25
+- 2025-26
+history_n: 200
+weighting_mode: exp_decay
+decay_alpha: 0.03
+run_suffix: curry_2025-26_v2

@@ -1,0 +1,13 @@
+{
+  "run_id": "20260305T070759Z_v2_three_input_regression_v2_weighted_history_sampler_edge_threshold_thr0.05_curry_2025-26_v2",
+  "timestamp_utc": "2026-03-05T07:07:59.647105+00:00",
+  "git_sha": "5b88bee2432d4a19e0c48090bb8c9ae5f2282a9b",
+  "data_version": "s3-season-2025-26",
+  "files": {
+    "predictions.parquet_sha256": "784512e8db9c82fce75437302f65a944e4b16d0c2261712d8f7ab3a7cfcbfb85",
+    "bets.parquet_sha256": "eef2c1ec0a0790ca09064d70ac2eb0e9e054ec5026d96383963688e3a9a0e308"
+  },
+  "env": {
+    "AWS_ACCESS_KEY_ID_present": true
+  }
+}

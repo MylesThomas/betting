@@ -1,0 +1,8 @@
+{
+  "current_run": "20260305T070759Z_v2_three_input_regression_v2_weighted_history_sampler_edge_threshold_thr0.05_curry_2025-26_v2",
+  "baseline_run": "20260305T063105Z_baseline_ols_season_avg_3pm_global_variance_edge_threshold_thr0.05_curry_2025-26",
+  "roi_delta_vs_baseline": 0.013266384046627833,
+  "rmse_delta_vs_baseline": -0.00901121367343638,
+  "win_rate_delta_vs_baseline": 0.044973544973545,
+  "signal_rate_delta_vs_baseline": 0.12371134020618557
+}
