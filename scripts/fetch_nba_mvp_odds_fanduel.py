@@ -187,6 +187,25 @@ MVP_ODDS_HISTORY = [
             'Tyrese Maxey': +100000,
             'Kevin Durant': +100000,
         }
+    },
+    {
+        'date': '20260306',
+        'fetch_date': '2026-03-06',
+        'label': 'Week 21',
+        'odds': {
+            'Shai Gilgeous-Alexander': -320,
+            'Nikola Jokic': +600,
+            'Cade Cunningham': +1500,
+            'Victor Wembanyama': +2000,
+            'Jaylen Brown': +6000,
+            'Luka Doncic': +10000,
+            'Donovan Mitchell': +25000,
+            'Jalen Brunson': +50000,
+            'Anthony Edwards': +50000,
+            'Kawhi Leonard': +100000,
+            'Tyrese Maxey': +100000,
+            'Kevin Durant': +100000,
+        }
     }
 ]
 
