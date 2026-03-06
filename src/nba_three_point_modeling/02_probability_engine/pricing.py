@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -18,13 +19,12 @@ for extra_path in [str(UTILS_DIR), str(UNCERTAINTY_DIR)]:
 from odds import american_to_implied_prob
 from odds import implied_prob_to_american
 from odds import remove_vig_two_way
-from global_variance import GlobalVarianceModel
 
 
 def price_lines_with_monte_carlo(
     predictions_df: pd.DataFrame,
     lines_df: pd.DataFrame,
-    uncertainty_model: GlobalVarianceModel,
+    uncertainty_model: Any,
     n_sims: int = 1000,
     random_seed: int = 7,
 ) -> pd.DataFrame:

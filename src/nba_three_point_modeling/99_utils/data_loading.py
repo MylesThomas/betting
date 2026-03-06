@@ -126,6 +126,34 @@ def prepare_player_game_logs(raw_game_logs_df: pd.DataFrame, player_name: str) -
     return df
 
 
+def load_player_history_from_season_logs(
+    player_name: str,
+    history_seasons: list[str],
+) -> pd.DataFrame:
+    """Load and normalize player game history across one or more seasons."""
+    frames = [load_raw_player_game_logs_from_s3(season=season) for season in history_seasons]
+    raw = pd.concat(frames, ignore_index=True)
+    df = raw.copy()
+    df["player_normalized"] = df["player_name"].apply(normalize_from_nba_api)
+    target_normalized = normalize_from_nba_api(player_name)
+    df = df[df["player_normalized"] == target_normalized].copy()
+    if df.empty:
+        raise ValueError(f"No player history found for {player_name} in {history_seasons}")
+    df["date"] = pd.to_datetime(df["game_date"]).dt.date.astype(str)
+    df = df.sort_values("game_date").reset_index(drop=True)
+    return df[
+        [
+            "player_id",
+            "player_name",
+            "game_id",
+            "date",
+            "actual_fg3m",
+            "actual_fg3a",
+            "actual_min",
+        ]
+    ].copy()
+
+
 def prepare_player_props(raw_props_df: pd.DataFrame, player_name: str) -> pd.DataFrame:
     """Normalize and filter raw props for player_threes for one player."""
     df = raw_props_df.copy()

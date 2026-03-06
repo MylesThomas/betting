@@ -9,7 +9,6 @@ Reads artifacts in `03_backtesting/runs/*` and writes standardized outputs:
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pandas as pd
@@ -22,6 +21,14 @@ def _load_run_summary(run_dir: Path) -> dict:
     return json.loads((run_dir / "summary.json").read_text())
 
 
+def _is_v1_baseline(summary: dict) -> bool:
+    run_id = summary["run_id"]
+    return (
+        "baseline_ols_season_avg_3pm" in run_id
+        and "global_variance" in run_id
+    )
+
+
 def main() -> None:
     run_dirs = sorted([p for p in RUNS_DIR.iterdir() if p.is_dir()])
     if len(run_dirs) == 0:
@@ -31,13 +38,25 @@ def main() -> None:
     table = pd.DataFrame(summaries).sort_values("run_id").reset_index(drop=True)
     current = table.iloc[-1].to_dict()
 
-    baseline_ref = table.iloc[0].to_dict()
+    baseline_candidates = table[table.apply(_is_v1_baseline, axis=1)]
+    if baseline_candidates.empty:
+        baseline_ref = table.iloc[0].to_dict()
+    else:
+        baseline_ref = baseline_candidates.iloc[-1].to_dict()
     deltas = {
         "roi_delta_vs_baseline": float(current["roi"] - baseline_ref["roi"]),
         "rmse_delta_vs_baseline": float(current["rmse"] - baseline_ref["rmse"]),
         "win_rate_delta_vs_baseline": float(current["win_rate"] - baseline_ref["win_rate"]),
         "signal_rate_delta_vs_baseline": float(current["signal_rate"] - baseline_ref["signal_rate"]),
     }
+    if (
+        "brier_score" in table.columns
+        and pd.notna(current.get("brier_score"))
+        and pd.notna(baseline_ref.get("brier_score"))
+    ):
+        deltas["brier_score_delta_vs_baseline"] = float(
+            current["brier_score"] - baseline_ref["brier_score"]
+        )
     summary = {"current_run": current["run_id"], "baseline_run": baseline_ref["run_id"], **deltas}
 
     current_run_dir = RUNS_DIR / current["run_id"]

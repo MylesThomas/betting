@@ -39,10 +39,13 @@ for extra_path in [
         sys.path.insert(0, extra_path)
 
 from data_loading import build_v1_data_bundle
-from odds import american_to_implied_prob
+from data_loading import load_player_history_from_season_logs
 from odds import target_profit_stake
 from baseline import fit_baseline_model
+from v2_three_input_regression import build_v2_feature_frame
+from v2_three_input_regression import fit_v2_three_input_model
 from global_variance import fit_global_variance
+from v2_weighted_history_sampler import fit_v2_weighted_history_sampler
 from pricing import price_lines_with_monte_carlo
 
 
@@ -110,6 +113,45 @@ def _compute_pnl(result: str, odds: float, stake: float) -> float:
     return stake * (100.0 / (-odds))
 
 
+def _fit_mean_model(
+    mean_model_id: str,
+    train_df: pd.DataFrame,
+    score_df: pd.DataFrame,
+):
+    if mean_model_id == "baseline_ols_season_avg_3pm":
+        model = fit_baseline_model(train_df)
+        score_features = score_df
+    elif mean_model_id == "v2_three_input_regression":
+        train_features = build_v2_feature_frame(train_df)
+        model = fit_v2_three_input_model(train_features)
+        score_features = build_v2_feature_frame(score_df)
+    else:
+        raise ValueError(f"Unsupported mean_model_id: {mean_model_id}")
+    return model, score_features
+
+
+def _fit_uncertainty_model(
+    config: dict,
+    train_residuals: np.ndarray,
+    player_name: str,
+):
+    uncertainty_model_id = config["uncertainty_model_id"]
+    if uncertainty_model_id == "global_variance":
+        return fit_global_variance(train_residuals)
+    if uncertainty_model_id == "v2_weighted_history_sampler":
+        history_df = load_player_history_from_season_logs(
+            player_name=player_name,
+            history_seasons=config["history_seasons"],
+        )
+        return fit_v2_weighted_history_sampler(
+            history_df=history_df,
+            history_n=int(config["history_n"]),
+            weighting_mode=config["weighting_mode"],
+            decay_alpha=float(config["decay_alpha"]),
+        )
+    raise ValueError(f"Unsupported uncertainty_model_id: {uncertainty_model_id}")
+
+
 def main() -> None:
     config_path = MODULE_DIR / "current_config.yaml"
     config = yaml.safe_load(config_path.read_text())
@@ -126,8 +168,12 @@ def main() -> None:
     train_df = games.copy()
     score_df = games.copy()
 
-    model = fit_baseline_model(train_df)
-    score_df["y_hat"] = model.predict(score_df)
+    model, score_features = _fit_mean_model(
+        mean_model_id=config["mean_model_id"],
+        train_df=train_df,
+        score_df=score_df,
+    )
+    score_df["y_hat"] = model.predict(score_features)
     score_df["run_id"] = "pending"
     score_df["model_id"] = model.model_id
     score_df["model_version"] = model.model_version
@@ -137,8 +183,16 @@ def main() -> None:
         ["run_id", "game_id", "player_id", "date", "y_hat", "model_id", "model_version", "feature_version", "actual_fg3m"]
     ].copy()
 
-    train_residuals = train_df["actual_fg3m"].to_numpy(dtype=float) - model.predict(train_df)
-    uncertainty_model = fit_global_variance(train_residuals)
+    if config["mean_model_id"] == "baseline_ols_season_avg_3pm":
+        train_predictions = model.predict(train_df)
+    else:
+        train_predictions = model.predict(build_v2_feature_frame(train_df))
+    train_residuals = train_df["actual_fg3m"].to_numpy(dtype=float) - train_predictions
+    uncertainty_model = _fit_uncertainty_model(
+        config=config,
+        train_residuals=train_residuals,
+        player_name=config["player_name"],
+    )
     priced_df = price_lines_with_monte_carlo(
         predictions_df=predictions_df,
         lines_df=lines if config["use_all_lines"] else lines[lines["is_consensus"] == 1].copy(),
@@ -214,6 +268,13 @@ def main() -> None:
         if not bets_df.empty
         else 0.0
     )
+    settled_bets = bets_df[bets_df["result"] != "push"].copy() if not bets_df.empty else bets_df.copy()
+    if not settled_bets.empty:
+        observed = (settled_bets["result"] == "win").astype(float).to_numpy(dtype=float)
+        predicted_prob = settled_bets["p_model"].to_numpy(dtype=float)
+        brier_score = float(np.mean((predicted_prob - observed) ** 2))
+    else:
+        brier_score = 0.0
     rmse = float(np.sqrt(np.mean((predictions_df["y_hat"] - predictions_df["actual_fg3m"]) ** 2)))
     signal_rate = float(len(bets_df) / len(priced_df)) if len(priced_df) > 0 else 0.0
 
@@ -235,11 +296,14 @@ def main() -> None:
         "total_pnl": total_pnl,
         "total_risked": total_risked,
         "signal_rate": signal_rate,
+        "brier_score": brier_score,
         "consensus_residual_mean": consensus_residual,
         "consensus_residual_std": consensus_residual_std,
-        "uncertainty_sigma": float(uncertainty_model.sigma),
+        "uncertainty_model_id": uncertainty_model.model_id,
         "edge_mode": edge_mode,
     }
+    if hasattr(uncertainty_model, "sigma"):
+        summary["uncertainty_sigma"] = float(uncertainty_model.sigma)
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2))
 
     repo_root = ROOT_DIR.parent.parent

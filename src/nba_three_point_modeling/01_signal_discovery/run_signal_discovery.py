@@ -17,9 +17,16 @@ for extra_path in [str(UTILS_DIR), str(MODELS_DIR)]:
 
 from data_loading import build_v1_data_bundle
 from baseline import fit_baseline_model
+from v2_three_input_regression import build_v2_feature_frame
+from v2_three_input_regression import fit_v2_three_input_model
 
 
-def build_predictions_df(run_id: str, season: str, player_name: str) -> pd.DataFrame:
+def build_predictions_df(
+    run_id: str,
+    season: str,
+    player_name: str,
+    mean_model_id: str = "baseline_ols_season_avg_3pm",
+) -> pd.DataFrame:
     """Build predictions_df with required 01->02 interface columns."""
     bundle = build_v1_data_bundle(season=season, player_name=player_name)
     games = bundle.player_games_df.copy().sort_values("date")
@@ -30,8 +37,16 @@ def build_predictions_df(run_id: str, season: str, player_name: str) -> pd.DataF
     if test_df.empty:
         test_df = games.copy()
 
-    model = fit_baseline_model(train_df)
-    test_df["y_hat"] = model.predict(test_df)
+    if mean_model_id == "baseline_ols_season_avg_3pm":
+        model = fit_baseline_model(train_df)
+        test_features = test_df
+    elif mean_model_id == "v2_three_input_regression":
+        train_features = build_v2_feature_frame(train_df)
+        model = fit_v2_three_input_model(train_features)
+        test_features = build_v2_feature_frame(test_df)
+    else:
+        raise ValueError(f"Unsupported mean_model_id: {mean_model_id}")
+    test_df["y_hat"] = model.predict(test_features)
     return test_df.assign(
         run_id=run_id,
         model_id=model.model_id,

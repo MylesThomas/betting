@@ -1,5 +1,5 @@
-mean_model_id: baseline_ols_season_avg_3pm  # Mean model for predictions
-uncertainty_model_id: global_variance  # Uncertainty model for simulation
+mean_model_id: v2_three_input_regression  # v2 mean model: mean_3pm + predicted_3pa + predicted_minutes -> y_hat
+uncertainty_model_id: v2_weighted_history_sampler  # v2 uncertainty model: recency-weighted player history sampling
 strategy_id: edge_threshold  # Strategy selection key
 season: "2025-26"  # Season to backtest
 player_name: "Stephen Curry"  # Player to evaluate
@@ -8,5 +8,9 @@ edge_threshold: 0.05  # Minimum edge to bet
 edge_mode: raw  # Use raw implied probabilities
 use_all_lines: true  # Evaluate all ladder lines
 evaluation_price_view: best  # Bet at best available odds
-run_suffix: "curry_2025-26"  # Human-readable run suffix
+history_seasons: ["2023-24", "2024-25", "2025-26"]  # Player-history pool for v2 uncertainty sampling
+history_n: 200  # Number of most-recent games to keep in weighted history window
+weighting_mode: exp_decay  # Recency weighting mode: windowed_weighted or exp_decay
+decay_alpha: 0.03  # Exponential recency decay coefficient (higher -> faster downweighting)
+run_suffix: "curry_2025-26_v2"  # Optional suffix for readability
 
