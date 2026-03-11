@@ -1081,6 +1081,7 @@ def lambda_handler(event=None, context=None):
             lines_email.append(f"  {tip_str}Bet {row['bet_team']} {line_str} (rematch – lost first meeting) – {row['away_team']} @ {row['home_team']}{conf}")
             if prior:
                 lines_email.append(f"    Prior: {prior}")
+            lines_email.append("")
     lines_email.append("")
     lines_email.append(f"Plays CSV: {plays_path}")
 
