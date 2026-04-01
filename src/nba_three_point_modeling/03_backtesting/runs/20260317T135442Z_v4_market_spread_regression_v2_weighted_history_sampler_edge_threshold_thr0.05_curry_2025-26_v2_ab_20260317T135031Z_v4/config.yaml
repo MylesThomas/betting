@@ -1,0 +1,27 @@
+mean_model_id: v4_market_spread_regression
+uncertainty_model_id: v2_weighted_history_sampler
+strategy_id: edge_threshold
+season: 2025-26
+player_name: Stephen Curry
+n_sims: 1000
+edge_threshold: 0.05
+edge_mode: raw
+enable_spread_context: true
+enable_spread_context_by_target:
+  FG3M: true
+spread_summary_csv: ~/Downloads/tmp/v6_spread_model_summary.csv
+spread_bin_effects_csv: ~/Downloads/tmp/v6_spread_bin_effects.csv
+spread_gate_mode: strict
+spread_min_non_extreme_bin_n_strict: 300
+spread_min_non_extreme_bin_n_relaxed: 75
+spread_require_directional_stability_relaxed: false
+use_all_lines: true
+evaluation_price_view: best
+history_seasons:
+- 2023-24
+- 2024-25
+- 2025-26
+history_n: 200
+weighting_mode: exp_decay
+decay_alpha: 0.03
+run_suffix: curry_2025-26_v2_ab_20260317T135031Z_v4

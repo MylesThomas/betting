@@ -39,6 +39,16 @@ def price_lines_with_monte_carlo(
     merged = predictions_df.merge(lines_df, on=["date"], how="inner")
     if merged.empty:
         raise ValueError("No join between predictions and lines for pricing")
+    required_prediction_context_cols = [
+        "team_point_spread",
+        "player_consensus_prop_line",
+        "team_point_spread_abs",
+        "team_point_spread_bucket",
+        "spread_context_active_fg3m",
+    ]
+    for col in required_prediction_context_cols:
+        if col not in merged.columns:
+            raise ValueError(f"Missing required prediction context column for pricing: {col}")
 
     rng = np.random.default_rng(random_seed)
     rows = []
@@ -91,6 +101,11 @@ def price_lines_with_monte_carlo(
                 "is_consensus": int(row.is_consensus),
                 "actual_fg3m": float(row.actual_fg3m),
                 "y_hat": y_hat,
+                "team_point_spread": float(row.team_point_spread),
+                "player_consensus_prop_line": float(row.player_consensus_prop_line),
+                "team_point_spread_abs": float(row.team_point_spread_abs),
+                "team_point_spread_bucket": row.team_point_spread_bucket,
+                "spread_context_active_fg3m": int(row.spread_context_active_fg3m),
             }
         )
     return pd.DataFrame(rows)

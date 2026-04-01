@@ -43,16 +43,11 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
-TARGET = "REB"
-B_MIN_MAX_FEATS = [
-    "min_line",
-    "max_line",
-    "spread_signed",
-    "roll_reb_mean_60",
-    "roll_fg3a_mean_20",
-    "roll_reb_std_5",
-]
-GROUP_KEYS = ["season", "date", "player_normalized", "game_id"]
+from src.nba_rebounds_modeling.rebounds_feature_spec import (  # noqa: E402
+    B_MIN_MAX_FEATS,
+    GROUP_KEYS,
+    TARGET,
+)
 SIGMA_COL = "roll_reb_std_5"
 SHRINKAGE = 0.0
 MIN_EDGES = [0.05, 0.10]

@@ -1,4 +1,4 @@
-mean_model_id: v2_three_input_regression  # v2 mean model: mean_3pm + predicted_3pa + predicted_minutes -> y_hat
+mean_model_id: v4_market_spread_regression  # v4 mean model: v3 base + player_consensus_prop_line + team_point_spread
 uncertainty_model_id: v2_weighted_history_sampler  # v2 uncertainty model: recency-weighted player history sampling
 strategy_id: edge_threshold  # Strategy selection key
 season: "2025-26"  # Season to backtest
@@ -6,6 +6,15 @@ player_name: "Stephen Curry"  # Player to evaluate
 n_sims: 1000  # Monte Carlo iterations
 edge_threshold: 0.05  # Minimum edge to bet
 edge_mode: raw  # Use raw implied probabilities
+enable_spread_context: true  # Global kill switch for spread-context promotion
+enable_spread_context_by_target:
+  FG3M: true  # Per-target override (FG3M is the production target in this stack)
+spread_summary_csv: "~/Downloads/tmp/v6_spread_model_summary.csv"  # Source artifact from v6 research
+spread_bin_effects_csv: "~/Downloads/tmp/v6_spread_bin_effects.csv"  # Source artifact from v6 research
+spread_gate_mode: strict  # strict | relaxed | off
+spread_min_non_extreme_bin_n_strict: 300  # Minimum rows per non-extreme bin in strict mode
+spread_min_non_extreme_bin_n_relaxed: 75  # Minimum rows per non-extreme bin in relaxed mode
+spread_require_directional_stability_relaxed: false  # If false, relaxed mode skips directional stability gate
 use_all_lines: true  # Evaluate all ladder lines
 evaluation_price_view: best  # Bet at best available odds
 history_seasons: ["2023-24", "2024-25", "2025-26"]  # Player-history pool for v2 uncertainty sampling

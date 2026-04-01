@@ -1,0 +1,35 @@
+{
+  "run_id": "20260316T204304Z_v3_three_input_regression_v2_weighted_history_sampler_edge_threshold_thr0.05_curry_2025-26_v2_ab_20260316T204115Z_v3",
+  "timestamp_utc": "2026-03-16T20:43:04.819579+00:00",
+  "git_sha": "ff81ff3a5b01081bd92aea96258147842f99df7d",
+  "data_version": "s3-season-2025-26",
+  "files": {
+    "predictions.parquet_sha256": "639800591fba07af1096486d7fc7539554b755a6af73822579ff279e1066bc21",
+    "bets.parquet_sha256": "d0970dd9cd919c05c6e0f289ba2be180df2d7cbb862bcf59758d8e71b67540c8"
+  },
+  "env": {
+    "AWS_ACCESS_KEY_ID_present": false
+  },
+  "feature_manifest": {
+    "feature_names": {
+      "spread": "team_point_spread",
+      "market_line": "player_consensus_prop_line"
+    },
+    "spread_gate_mode": "strict",
+    "active_targets": {
+      "AST": false,
+      "FG3A": false,
+      "FG3A_per_min": false,
+      "FG3M": false,
+      "FG3_PCT": false,
+      "FGA": false,
+      "FGM": false,
+      "FTA": false,
+      "FTM": false,
+      "MIN": false,
+      "PTS": false,
+      "REB": false,
+      "TOV": false
+    }
+  }
+}

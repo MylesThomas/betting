@@ -51,6 +51,17 @@ def main() -> None:
     parser.add_argument("--run-id", type=str, default=None, help="Optional run_id folder name")
     parser.add_argument("--pred-limit", type=int, default=100, help="Rows to show for predictions table")
     parser.add_argument("--bet-limit", type=int, default=50, help="Rows to show for bets table")
+    parser.add_argument(
+        "--show-spread-diagnostics",
+        action="store_true",
+        help="Include spread gate/activation diagnostics tables.",
+    )
+    parser.add_argument(
+        "--spread-limit",
+        type=int,
+        default=10,
+        help="Row limit for spread diagnostics tables.",
+    )
     args = parser.parse_args()
 
     runs_dir = Path(__file__).resolve().parent / "runs"
@@ -63,6 +74,8 @@ def main() -> None:
     bets_path = run_dir / "bets.parquet"
     config_path = run_dir / "config.yaml"
     manifest_path = run_dir / "manifest.json"
+    promotion_path = run_dir / "target_feature_promotion.csv"
+    monitoring_path = run_dir / "spread_context_monitoring.csv"
     run_config = yaml.safe_load(config_path.read_text())
 
     print(f"run_dir: {run_dir}")
@@ -71,7 +84,17 @@ def main() -> None:
         "1) Artifact Presence",
         "Did this run produce every required output artifact for reproducibility?",
     )
-    for path in [config_path, manifest_path, predictions_path, bets_path, summary_path, validation_path, comparison_path]:
+    for path in [
+        config_path,
+        manifest_path,
+        predictions_path,
+        bets_path,
+        summary_path,
+        validation_path,
+        comparison_path,
+        promotion_path,
+        monitoring_path,
+    ]:
         print(path.name)
 
     con = duckdb.connect()
@@ -100,6 +123,50 @@ def main() -> None:
         FROM read_json_auto('{summary_path.as_posix()}');
         """,
     )
+    if args.show_spread_diagnostics:
+        _print_section(
+            "2b) Spread Diagnostics",
+            "Is spread context active, and what did the gate decision table say?",
+        )
+        _run_query(
+            con,
+            f"""
+            SELECT
+              spread_gate_mode,
+              spread_context_enabled,
+              spread_context_active_fg3m,
+              fg3m_gate_positive_lift,
+              fg3m_gate_non_extreme_bin_sample,
+              fg3m_gate_directional_stability_raw,
+              fg3m_gate_directional_stability_applied,
+              fg3m_promote_spread_context
+            FROM read_json_auto('{summary_path.as_posix()}');
+            """,
+        )
+        if promotion_path.exists():
+            _run_query(
+                con,
+                f"""
+                SELECT *
+                FROM read_csv_auto('{promotion_path.as_posix()}', header=true)
+                ORDER BY target
+                LIMIT {args.spread_limit};
+                """,
+            )
+        else:
+            print(f"Missing optional artifact: {promotion_path.name}")
+        if monitoring_path.exists():
+            _run_query(
+                con,
+                f"""
+                SELECT *
+                FROM read_csv_auto('{monitoring_path.as_posix()}', header=true)
+                ORDER BY team_point_spread_bucket
+                LIMIT {args.spread_limit};
+                """,
+            )
+        else:
+            print(f"Missing optional artifact: {monitoring_path.name}")
 
     _print_section(
         "3) Validation + Comparison",

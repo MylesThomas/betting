@@ -11,6 +11,13 @@ PREDICTIONS_COLUMNS = [
     "feature_version",
 ]
 
+SPREAD_CONTEXT_COLUMNS = [
+    "team_point_spread",
+    "team_point_spread_abs",
+    "team_point_spread_bucket",
+    "player_consensus_prop_line",
+]
+
 LINES_COLUMNS = [
     "game_id",
     "player_id",

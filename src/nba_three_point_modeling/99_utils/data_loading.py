@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 
 import pandas as pd
+import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
@@ -33,6 +34,20 @@ class V1DataBundle:
 
     player_games_df: pd.DataFrame
     lines_df: pd.DataFrame
+
+
+SPREAD_BUCKET_EDGES = [float("-inf"), -12.0, -8.0, -4.0, -1.0, 1.0, 4.0, 8.0, 12.0, float("inf")]
+SPREAD_BUCKET_LABELS = [
+    "(-inf,-12]",
+    "(-12,-8]",
+    "(-8,-4]",
+    "(-4,-1]",
+    "(-1,1]",
+    "(1,4]",
+    "(4,8]",
+    "(8,12]",
+    "(12,inf)",
+]
 
 
 def load_raw_player_game_logs_from_s3(season: str) -> pd.DataFrame:
@@ -288,4 +303,57 @@ def build_v1_data_bundle(season: str, player_name: str) -> V1DataBundle:
         raise ValueError("No joined line contracts and game line context for v1 run")
 
     return V1DataBundle(player_games_df=player_games_df, lines_df=lines_with_context)
+
+
+def build_player_game_context_features(
+    player_games_df: pd.DataFrame,
+    lines_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Build canonical game-context features for mean-model inputs.
+
+    Context:
+    - Production naming uses `team_point_spread` and `player_consensus_prop_line`.
+    - Legacy aliases (`spread_signed`, `market_consensus_line`) are also emitted
+      during transition to avoid breaking downstream scripts.
+    """
+    required_game_cols = ["date", "team_name"]
+    required_line_cols = ["date", "line", "is_consensus", "home_team", "away_team", "home_spread", "away_spread"]
+    for col in required_game_cols:
+        if col not in player_games_df.columns:
+            raise ValueError(f"Missing required player game column: {col}")
+    for col in required_line_cols:
+        if col not in lines_df.columns:
+            raise ValueError(f"Missing required lines column: {col}")
+
+    consensus_lines = lines_df[lines_df["is_consensus"] == 1].copy()
+    context = consensus_lines[
+        ["date", "line", "home_team", "away_team", "home_spread", "away_spread"]
+    ].rename(columns={"line": "player_consensus_prop_line"})
+    merged = player_games_df.merge(context, on="date", how="left")
+    if merged["player_consensus_prop_line"].isna().any():
+        raise ValueError("Missing player_consensus_prop_line for one or more game rows")
+
+    home_mask = merged["team_name"] == merged["home_team"]
+    away_mask = merged["team_name"] == merged["away_team"]
+    if (~(home_mask | away_mask)).any():
+        raise ValueError("Could not map team_name to home_team/away_team for spread assignment")
+
+    merged["team_point_spread"] = np.where(
+        home_mask,
+        merged["home_spread"].astype(float),
+        merged["away_spread"].astype(float),
+    )
+    merged["team_point_spread_abs"] = merged["team_point_spread"].abs()
+    merged["team_point_spread_bucket"] = pd.cut(
+        merged["team_point_spread"].astype(float),
+        bins=SPREAD_BUCKET_EDGES,
+        labels=SPREAD_BUCKET_LABELS,
+        right=True,
+    ).astype(str)
+
+    # Legacy aliases during migration window.
+    merged["spread_signed"] = merged["team_point_spread"]
+    merged["market_consensus_line"] = merged["player_consensus_prop_line"]
+    return merged
 

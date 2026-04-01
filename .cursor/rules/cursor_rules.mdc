@@ -175,3 +175,13 @@ def main():
 
 13. if giving me bash/code that does not materially change data (ie., it is safe for you to test before giving to me) - please test it so i don't need to debug small errors
 
+14. in notebooks, use `display(df)` for pandas DataFrames instead of `print(df.to_string(...))`
+- prefer readable notebook-native table output when showing DataFrames
+- use print for scalar/log lines, not for rendering DataFrame tables
+
+15. when printing or displaying numeric summaries (notebooks, logs, small tables), **round floats** to a fixed precision (e.g. `.round(3)` / `.round(4)` on DataFrames, or `f"{x:.4f}"` for scalars) so values don’t spam meaningless digits and stay easy to scan
+- bad: raw `0.04188599999999999` or 12-digit floats in `display(df)` / `print` summaries
+- good: `display(df.round(4))` for exploration tables; keep full precision only in **stored artifacts** (parquet, CSV exports) or **downstream calcs** where rounding would change decisions
+- reasoning: readability and diff-friendliness; rounding for display should not silently replace exact math inside core pricing / settlement logic unless you intend to
+
+16. ...

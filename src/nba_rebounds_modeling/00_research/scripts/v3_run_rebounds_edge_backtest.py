@@ -25,7 +25,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from scipy.stats import norm
+
+from src.nba_rebounds_modeling.option_a_scoring import option_a_vector_batch, pick_side
+from src.nba_rebounds_modeling.rebounds_feature_spec import (
+    B_MIN_MAX_FEATS,
+    GROUP_KEYS,
+    TARGET,
+)
 
 
 def ensure_repo_root_on_syspath() -> Path:
@@ -42,16 +48,6 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
-TARGET = "REB"
-B_MIN_MAX_FEATS = [
-    "min_line",
-    "max_line",
-    "spread_signed",
-    "roll_reb_mean_60",
-    "roll_fg3a_mean_20",
-    "roll_reb_std_5",
-]
-GROUP_KEYS = ["season", "date", "player_normalized", "game_id"]
 SIGMA_WINDOWS = [5, 10, 20]
 SHRINKAGES = [0.0, 0.25, 0.50, 0.75]
 MIN_EDGES = [0.01, 0.05, 0.10]
@@ -74,28 +70,6 @@ def american_to_implied_prob_vigged(american: float) -> float:
     if american < 0:
         return float((-american) / ((-american) + 100.0))
     return float(100.0 / (american + 100.0))
-
-
-def pick_side(
-    i: int,
-    edge_o: np.ndarray,
-    edge_u: np.ndarray,
-    min_edge: float,
-    side_policy: str,
-) -> str | None:
-    eo = edge_o[i]
-    eu = edge_u[i]
-    if side_policy == "over_only":
-        return "over" if eo > min_edge else None
-    if side_policy == "under_only":
-        return "under" if eu > min_edge else None
-    if eo > min_edge and eu > min_edge:
-        return "over" if eo >= eu else "under"
-    if eo > min_edge:
-        return "over"
-    if eu > min_edge:
-        return "under"
-    return None
 
 
 def parse_args() -> argparse.Namespace:
@@ -176,12 +150,15 @@ def main() -> None:
 
             combo_pnl = 0.0
             for shrink in SHRINKAGES:
-                mean_adj = consensus + (1.0 - shrink) * (yhat_arr - consensus)
-                z = (line - mean_adj) / sigma
-                p_over = 1.0 - norm.cdf(z)
-                p_under = norm.cdf(z)
-                edge_o = p_over - p_nov_o
-                edge_u = p_under - p_nov_u
+                mean_adj, z, p_over, p_under, edge_o, edge_u = option_a_vector_batch(
+                    consensus,
+                    yhat_arr,
+                    line,
+                    sigma,
+                    shrink,
+                    p_nov_o,
+                    p_nov_u,
+                )
 
                 for min_edge in MIN_EDGES:
                     pnl_total = 0.0

@@ -1,0 +1,35 @@
+# Copy to config/nba_rebounds_prod.yaml and fill S3/email as needed (gitignore secrets there if required).
+#
+# Champion spec: B_min_max 6 features (see src/nba_rebounds_modeling/rebounds_feature_spec.py).
+
+feature_columns:
+  - min_line
+  - max_line
+  - spread_signed
+  - roll_reb_mean_60
+  - roll_fg3a_mean_20
+  - roll_reb_std_5
+
+target: REB
+group_keys:
+  - season
+  - date
+  - player_normalized
+  - game_id
+
+sigma_column: roll_reb_std_5
+sigma_floor: 0.25
+prod_shrink: 0.0
+prod_min_edge: 0.05
+side_policy: under_only
+
+# Training: all rows in feat parquet with date <= train_end_date (ISO YYYY-MM-DD) if set; else all rows.
+train_end_date: null
+
+# Optional uploads (requires AWS creds in env or profile)
+s3_bucket: null
+s3_models_prefix: nba/rebounds/models
+s3_runs_prefix: nba/rebounds/daily_runs
+
+# Optional: SNS topic for prod_notify_rebounds_sns.py
+sns_topic_arn: null

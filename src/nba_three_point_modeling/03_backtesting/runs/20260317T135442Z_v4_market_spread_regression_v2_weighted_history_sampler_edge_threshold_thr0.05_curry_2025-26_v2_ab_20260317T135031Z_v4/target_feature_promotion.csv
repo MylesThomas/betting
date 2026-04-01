@@ -1,0 +1,14 @@
+target,selected_model,rmse_gain_vs_baseline,r2_gain_vs_baseline,spread_gate_mode,spread_min_non_extreme_bin_n_applied,gate_positive_lift,gate_non_extreme_bin_sample,gate_directional_stability_raw,gate_directional_stability_applied,promote_spread_context
+AST,consensus_plus_spread,0.0463029077336591,0.0337744286896231,strict,300,1,0,0,0,0
+FG3A,consensus_plus_spread,0.6279440808913122,0.3783562789745861,strict,300,1,0,0,0,0
+FG3A_per_min,consensus_plus_spread,0.012523931251743,0.2385181797891042,strict,300,1,0,0,0,0
+FG3M,consensus_plus_spread,0.1717635229407685,0.1999156794922694,strict,300,1,0,0,0,0
+FG3_PCT,consensus_plus_spread,0.0021637062373621,0.0165031045563418,strict,300,1,0,0,0,0
+FGA,consensus_plus_spread,0.4794128544624785,0.1688244373695456,strict,300,1,0,0,0,0
+FGM,consensus_plus_spread,0.1322260820074974,0.0828159783816038,strict,300,1,0,0,0,0
+FTA,consensus_plus_spread,0.0400685253435733,0.0256961317382486,strict,300,1,0,0,0,0
+FTM,consensus_plus_spread,0.0487989192463333,0.0367201249290577,strict,300,1,0,0,0,0
+MIN,consensus_plus_spread,0.2364239911654433,0.044365723388019,strict,300,1,0,0,0,0
+PTS,consensus_plus_spread,0.5497992844573485,0.1246369532666867,strict,300,1,0,0,0,0
+REB,spread_linear,-0.0007883097590539,-0.0004891439857257,strict,300,0,0,0,0,0
+TOV,consensus_plus_spread,0.0192305155719421,0.0252731685912167,strict,300,1,0,0,0,0
