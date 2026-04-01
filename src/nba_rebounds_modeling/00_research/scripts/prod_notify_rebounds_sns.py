@@ -85,14 +85,61 @@ def build_plays_table(df: pd.DataFrame, which: str) -> pd.DataFrame:
     return sub[cols]
 
 
+def fmt_float(value: float | int | bool | str | None, digits: int = 3) -> str:
+    if pd.isna(value):
+        return "NA"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return f"{float(value):.{digits}f}"
+    return str(value)
+
+
+def build_email_body(plays: pd.DataFrame, which: str) -> str:
+    if len(plays) == 0:
+        return f"NBA rebounds plays ({which})\n\n(no plays for this filter)"
+
+    lines: list[str] = [
+        f"NBA rebounds plays ({which})",
+        f"rows={len(plays):,}",
+        "",
+    ]
+    ordered = plays.sort_values(["date", "player_normalized", "bookmaker", "line"]).reset_index(drop=True)
+    for idx, row in ordered.iterrows():
+        lines.append(
+            f"{idx + 1}. {row['player_normalized']} | {row['date']} | {row['bookmaker']} | game_id={row['game_id']}"
+        )
+        lines.append(
+            "   line:"
+            f" book={fmt_float(row['line'])}"
+            f" consensus={fmt_float(row['consensus_reb_line'])}"
+            f" over_odds={fmt_float(row['over_odds'], 0)}"
+            f" under_odds={fmt_float(row['under_odds'], 0)}"
+        )
+        lines.append(
+            "   model:"
+            f" yhat_ols={fmt_float(row['yhat_ols'])}"
+            f" yhat_xgb={fmt_float(row['yhat_xgb'])}"
+            f" p_under_ols={fmt_float(row['p_under_ols'])}"
+            f" p_under_xgb={fmt_float(row['p_under_xgb'])}"
+        )
+        lines.append(
+            "   edge/play:"
+            f" edge_under_ols={fmt_float(row['edge_under_ols'])}"
+            f" edge_under_xgb={fmt_float(row['edge_under_xgb'])}"
+            f" play_under_ols={fmt_float(row['play_under_ols'])}"
+            f" play_under_xgb={fmt_float(row['play_under_xgb'])}"
+        )
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
+
 def main() -> None:
     args = parse_args()
     path = Path(args.scored).expanduser()
     df = pd.read_parquet(path)
     plays = build_plays_table(df, args.which)
-    body = plays.to_string(index=False)
-    if len(plays) == 0:
-        body = "(no plays for this filter)"
+    body = build_email_body(plays, args.which)
 
     topic = args.topic_arn.strip() or os.environ.get("SNS_TOPIC_ARN", "").strip()
     if not topic:
@@ -102,8 +149,14 @@ def main() -> None:
     import boto3
 
     sns = boto3.client("sns")
-    sns.publish(TopicArn=topic, Subject=args.subject[:100], Message=body[:256_000])
-    print(f"published to SNS topic (rows={len(plays):,})")
+    resp = sns.publish(TopicArn=topic, Subject=args.subject[:100], Message=body[:256_000])
+    print(
+        "published_to_sns",
+        f"topic_arn={topic}",
+        f"rows={len(plays):,}",
+        f"message_id={resp['MessageId']}",
+        sep=" | ",
+    )
 
 
 if __name__ == "__main__":

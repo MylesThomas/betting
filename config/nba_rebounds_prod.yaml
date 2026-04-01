@@ -1,0 +1,51 @@
+feature_columns:
+  - min_line
+  - max_line
+  - spread_signed
+  - roll_reb_mean_60
+  - roll_fg3a_mean_20
+  - roll_reb_std_5
+
+target: REB
+group_keys:
+  - season
+  - date
+  - player_normalized
+  - game_id
+
+sigma_column: roll_reb_std_5
+sigma_floor: 0.25
+prod_shrink: 0.0
+prod_min_edge: 0.05
+side_policy: under_only
+train_end_date: null
+
+# Keep both null unless you explicitly want model uploads in train step.
+s3_bucket: nba-betting-mt
+s3_models_prefix: nba/rebounds/models
+s3_runs_prefix: nba/rebounds/daily_runs
+
+# Optional SNS topic for notify step. Null = print to stdout.
+sns_topic_arn: arn:aws:sns:us-east-2:232692785472:betting-arb-alerts
+
+# Core inputs/outputs
+full_feature_parquet: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/rebounds_model_features_2025_26.parquet
+daily_runs_root: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/daily_runs
+
+# If build_props_scoring_input_from_live=false, this static props path is used.
+props_input_path: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/rebounds_props_scoring_input_2025_26.parquet
+
+# Prod policy
+retrain_daily: true
+max_feature_lag_days: 2
+max_model_age_days: 7
+prod_min_edge_override: null
+# Leave null to auto-generate:
+# s3://<s3_bucket>/<s3_runs_prefix>/<slate-date>/<run-id>/rebounds_scored_<slate-date>.parquet
+scored_s3_uri: null
+notify_enabled: true
+enable_pregame_feature_backfill: true
+
+# One-command live path (recommended for daily runs)
+build_props_scoring_input_from_live: true
+live_fetch_to_s3: true

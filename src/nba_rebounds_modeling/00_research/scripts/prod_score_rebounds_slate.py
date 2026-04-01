@@ -101,6 +101,15 @@ def write_parquet_s3(df: pd.DataFrame, s3_uri: str) -> None:
     print(f"uploaded {s3_uri}")
 
 
+def american_to_implied_prob_vigged(american: np.ndarray) -> np.ndarray:
+    odds = american.astype(np.float64, copy=False)
+    out = np.empty_like(odds, dtype=np.float64)
+    neg = odds < 0
+    out[neg] = (-odds[neg]) / ((-odds[neg]) + 100.0)
+    out[~neg] = 100.0 / (odds[~neg] + 100.0)
+    return out
+
+
 def main() -> None:
     args = parse_args()
     models_dir = Path(args.models_dir).expanduser()
@@ -156,14 +165,16 @@ def main() -> None:
     consensus = base["consensus_reb_line"].astype(float).to_numpy()
     line = base["line"].astype(float).to_numpy()
     sigma_raw = base[sigma_col].astype(float).to_numpy()
-    p_nov_o = base["p_over_novig"].astype(float).to_numpy()
-    p_nov_u = base["p_under_novig"].astype(float).to_numpy()
+    over_odds = base["over_odds"].astype(float).to_numpy()
+    under_odds = base["under_odds"].astype(float).to_numpy()
+    p_book_o = american_to_implied_prob_vigged(over_odds)
+    p_book_u = american_to_implied_prob_vigged(under_odds)
 
     ma_o, _, _, pu_o, _, eu_o = option_a_vector_batch(
-        consensus, yhat_ols, line, sigma_raw, prod_shrink, p_nov_o, p_nov_u, sigma_floor=sigma_floor
+        consensus, yhat_ols, line, sigma_raw, prod_shrink, p_book_o, p_book_u, sigma_floor=sigma_floor
     )
     ma_x, _, _, pu_x, _, eu_x = option_a_vector_batch(
-        consensus, yhat_xgb, line, sigma_raw, prod_shrink, p_nov_o, p_nov_u, sigma_floor=sigma_floor
+        consensus, yhat_xgb, line, sigma_raw, prod_shrink, p_book_o, p_book_u, sigma_floor=sigma_floor
     )
 
     sig_used = np.maximum(sigma_raw.astype(np.float64), sigma_floor)
@@ -178,6 +189,7 @@ def main() -> None:
     out["sigma_used"] = sig_used
     out["p_under_ols"] = pu_o
     out["p_under_xgb"] = pu_x
+    out["p_under_book_raw"] = p_book_u
     out["edge_under_ols"] = eu_o
     out["edge_under_xgb"] = eu_x
     out["play_under_ols"] = play_o
@@ -191,6 +203,7 @@ def main() -> None:
     out["score_run_id"] = run_id
     out["score_manifest_run_id"] = manifest["run_id"]
     out["score_min_edge_used"] = prod_min_edge
+    out["score_edge_basis"] = "raw_implied"
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(out_path, index=False)

@@ -5,7 +5,7 @@ Context (owner brief):
 - mean_adj = consensus + (1 - shrink) * (yhat - consensus)
 - sigma = max(roll_reb_std_N, sigma_floor); prod uses roll_reb_std_5 and floor 0.25
 - z = (line - mean_adj) / sigma; P_under = Phi(z); P_over = 1 - P_under
-- edge_under = P_under - p_under_novig; under_only play when edge_under > min_edge (strict, matches v3 pick_side)
+- edge_under = P_under - p_under_book; under_only play when edge_under > min_edge (strict, matches v3 pick_side)
 
 Not Monte Carlo: closed-form Normal. Option B (empirical player bootstrap) lives elsewhere if added later.
 """
@@ -28,8 +28,8 @@ def option_a_vector_batch(
     line: np.ndarray,
     sigma_raw: np.ndarray,
     shrink: float,
-    p_nov_o: np.ndarray,
-    p_nov_u: np.ndarray,
+    p_book_o: np.ndarray,
+    p_book_u: np.ndarray,
     *,
     sigma_floor: float = SIGMA_FLOOR_DEFAULT,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -47,8 +47,8 @@ def option_a_vector_batch(
     z = (ell - mean_adj) / sig
     p_under = norm.cdf(z)
     p_over = 1.0 - p_under
-    po = p_nov_o.astype(np.float64, copy=False)
-    pu = p_nov_u.astype(np.float64, copy=False)
+    po = p_book_o.astype(np.float64, copy=False)
+    pu = p_book_u.astype(np.float64, copy=False)
     edge_over = p_over - po
     edge_under = p_under - pu
     return mean_adj, z, p_over, p_under, edge_over, edge_under

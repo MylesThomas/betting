@@ -27,9 +27,36 @@ side_policy: under_only
 train_end_date: null
 
 # Optional uploads (requires AWS creds in env or profile)
-s3_bucket: null
+s3_bucket: nba-betting-mt
 s3_models_prefix: nba/rebounds/models
 s3_runs_prefix: nba/rebounds/daily_runs
 
 # Optional: SNS topic for prod_notify_rebounds_sns.py
 sns_topic_arn: null
+
+# Daily pipeline orchestration (`scripts/run_nba_rebounds_daily_pipeline.py`)
+# Full feature parquet used for freshness check + slicing + optional training
+full_feature_parquet: /ABSOLUTE/PATH/rebounds_model_features.parquet
+# Props scoring-input parquet for the slate date (historical or scorer-input builder output)
+props_input_path: /ABSOLUTE/PATH/rebounds_props_scoring_input.parquet
+# Root where daily run artifacts are written
+daily_runs_root: /ABSOLUTE/PATH/rebounds_daily_runs
+# Prod policy: retrain models each daily run before scoring
+retrain_daily: true
+# Guardrails
+max_feature_lag_days: 1
+max_model_age_days: 7
+# Optional score override (null => use manifest prod_min_edge)
+prod_min_edge_override: null
+# Optional scored parquet upload via scorer --s3-uri
+scored_s3_uri: null
+# Run notify step at end of pipeline
+notify_enabled: true
+# When date-slice has 0 rows pregame, build fallback feature slice using
+# latest historical player form + same-day props market context.
+enable_pregame_feature_backfill: true
+
+# Optional one-command live props ingestion + scorer-input build.
+# When true, runner ignores `props_input_path` and builds props input for --slate-date.
+build_props_scoring_input_from_live: true
+live_fetch_to_s3: true

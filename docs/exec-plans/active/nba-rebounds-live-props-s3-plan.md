@@ -96,7 +96,7 @@ Either:
 | **P1** | **`scripts/fetch_nba_player_rebounds_live.py`** | CLI: `--date`, `--dry-run` (print row counts, no S3), `--s3`, `--season`. Env: `ODDS_API_KEY` / `THE_ODDS_API_KEY`. |
 | **P2** | **S3 writes** stage A + B | boto3 `put_object`; manifest sidecar JSON (`credits_used`, row counts, event ids). |
 | **P3** | **`game_id` resolver** module + tests against one known slate | Use real API in manual test only; unit tests with **recorded fixture JSON** (check in `tests/fixtures/` if allowed) — **no fabricated odds**. |
-| **P4** | **`scripts/build_live_rebounds_scoring_input.py`** (name TBD) | Reads live CSV from S3 or local, outputs scoring-input parquet local + optional S3. |
+| **P4** | **`scripts/build_rebounds_scoring_input.py`** | Reads live CSV from S3 or local, outputs scoring-input parquet local + optional S3. |
 | **P5** | **Schedule** | EventBridge/cron **morning ET**; alarm on zero rows when scoreboard shows games. |
 | **P6** | **Docs** | Update `docs/design-docs/nba-rebounds-daily-pipeline.md` “Command sequence” with live path; link this plan. |
 
@@ -109,7 +109,7 @@ Either:
 python scripts/fetch_nba_player_rebounds_live.py --date YYYY-MM-DD --s3
 
 # 2) Build scoring-input parquet (join game_id, consensus, no-vig)
-python scripts/build_live_rebounds_scoring_input.py --live-csv s3://.../runs/{ts}.csv --output rebounds_props_scoring_input.parquet --s3-out ...
+python scripts/build_rebounds_scoring_input.py --live-csv s3://.../runs/{ts}.csv --output rebounds_props_scoring_input.parquet
 
 # 3) Features slice (after v2 universe includes that date or equivalent feat row source)
 python .../prod_slice_rebounds_features.py --feat ... --as-of-date YYYY-MM-DD --output ...

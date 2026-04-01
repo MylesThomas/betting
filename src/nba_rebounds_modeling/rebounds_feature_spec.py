@@ -31,7 +31,5 @@ V3_PROPS_SCORE_COLS = [
     "line",
     "over_odds",
     "under_odds",
-    "p_over_novig",
-    "p_under_novig",
     "consensus_reb_line",
 ]

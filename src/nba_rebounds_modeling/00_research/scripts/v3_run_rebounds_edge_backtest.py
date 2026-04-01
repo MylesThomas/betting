@@ -1,5 +1,5 @@
 """
-Option A edge backtest: Normal(mean_adj, sigma) vs book no-vig, per-book rows.
+Option A edge backtest: Normal(mean_adj, sigma) vs book raw implied prob, per-book rows.
 
 Context:
 - v3_rebounds_props_raw.parquet has one row per game/player/bookmaker/posted line
@@ -143,10 +143,10 @@ def main() -> None:
             line = base["line"].astype(float).to_numpy()
             reb = base["REB"].astype(float).to_numpy()
             yhat_arr = base["yhat"].to_numpy()
-            p_nov_o = base["p_over_novig"].astype(float).to_numpy()
-            p_nov_u = base["p_under_novig"].astype(float).to_numpy()
             over_odds = base["over_odds"].astype(float).to_numpy()
             under_odds = base["under_odds"].astype(float).to_numpy()
+            p_book_o = np.array([american_to_implied_prob_vigged(x) for x in over_odds], dtype=np.float64)
+            p_book_u = np.array([american_to_implied_prob_vigged(x) for x in under_odds], dtype=np.float64)
 
             combo_pnl = 0.0
             for shrink in SHRINKAGES:
@@ -156,8 +156,8 @@ def main() -> None:
                     line,
                     sigma,
                     shrink,
-                    p_nov_o,
-                    p_nov_u,
+                    p_book_o,
+                    p_book_u,
                 )
 
                 for min_edge in MIN_EDGES:
@@ -267,7 +267,7 @@ def main() -> None:
         except Exception as e:
             print(f"[WARN] could not save heatmap: {e}")
 
-    print("\n(OOS test season only; P&L at posted American odds; edge vs no-vig.)")
+    print("\n(OOS test season only; P&L at posted American odds; edge vs raw implied.)")
 
 
 if __name__ == "__main__":

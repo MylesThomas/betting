@@ -76,6 +76,7 @@ def parse_args():
     parser.add_argument('--s3', action='store_true', help="Upload to S3")
     parser.add_argument('--dry-run', action='store_true', help="Print stats, do not upload")
     parser.add_argument('--season', type=str, help="Override season (e.g., 2025-26)")
+    parser.add_argument('--output-csv', type=str, default="", help="Optional explicit local CSV output path")
     return parser.parse_args()
 
 
@@ -248,7 +249,12 @@ def main():
         write_to_s3(S3_BUCKET, latest_key, csv_body)
         
         logging.info("S3 upload complete.")
-    else:
+    if args.output_csv:
+        out_path = Path(args.output_csv).expanduser()
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(out_path, index=False)
+        logging.info(f"Saved locally to {out_path}")
+    elif not args.s3:
         # Local save for testing
         out_dir = project_root / 'live_props_tmp' / target_date
         out_dir.mkdir(parents=True, exist_ok=True)
