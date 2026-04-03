@@ -65,6 +65,12 @@ def parse_args() -> argparse.Namespace:
         help="How to load game-log actuals (default: duckdb).",
     )
     p.add_argument("--rollup-s3-uri", type=str, default="", help="Optional s3://bucket/key for combined strategy rollup CSV.")
+    p.add_argument(
+        "--sns-topic-arn",
+        type=str,
+        default="",
+        help="Optional SNS topic ARN to publish settlement summary text.",
+    )
     return p.parse_args()
 
 
@@ -148,6 +154,12 @@ def american_profit_on_win(american: float) -> float:
     if american >= 100:
         return float(american) / 100.0
     return 100.0 / float(abs(american))
+
+
+def american_to_implied_prob(american: float) -> float:
+    if american < 0:
+        return float(-american) / (float(-american) + 100.0)
+    return 100.0 / (float(american) + 100.0)
 
 
 def load_actuals_for_dates_duckdb(seasons: list[str], dates: list[str]) -> pd.DataFrame:
@@ -249,6 +261,29 @@ def settle_rows(scored: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
     settled = scored.copy()
     settled["game_id"] = settled["game_id"].astype(str)
     settled = settled.merge(actuals, on=keys, how="left")
+
+    # Fallback for ID-system mismatches (e.g., NBA stats IDs vs ESPN IDs):
+    # fill unresolved rows by (season, date, player_normalized) when there is
+    # exactly one matching actual row for that player-date.
+    unresolved = settled["reb_actual"].isna()
+    if unresolved.any():
+        by_player_date = (
+            actuals.groupby(["season", "date", "player_normalized"], as_index=False)
+            .agg(
+                reb_actual=("reb_actual", "first"),
+                n_actual_rows=("reb_actual", "size"),
+            )
+        )
+        unique_player_date = by_player_date.loc[by_player_date["n_actual_rows"] == 1].drop(
+            columns=["n_actual_rows"]
+        )
+        fallback = settled.loc[unresolved, ["season", "date", "player_normalized"]].merge(
+            unique_player_date,
+            on=["season", "date", "player_normalized"],
+            how="left",
+        )
+        settled.loc[unresolved, "reb_actual"] = fallback["reb_actual"].to_numpy()
+
     settled = add_strategy_bucket(settled)
     settled["is_bet"] = settled["strategy_bucket"] != "neither"
     settled["result"] = "unsettled"
@@ -267,8 +302,18 @@ def settle_rows(scored: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarize_strategy(settled: pd.DataFrame) -> pd.DataFrame:
+    summary_input = settled.copy()
+    summary_input["placed_under_implied_prob"] = summary_input["under_odds"].astype(float).apply(american_to_implied_prob)
+    summary_input["reference_pnl_units"] = 0.0
+    win_result_mask = summary_input["result"] == "win"
+    loss_result_mask = summary_input["result"] == "loss"
+    summary_input.loc[win_result_mask, "reference_pnl_units"] = summary_input.loc[
+        win_result_mask, "under_odds"
+    ].apply(american_profit_on_win)
+    summary_input.loc[loss_result_mask, "reference_pnl_units"] = -1.0
+
     summary = (
-        settled.groupby("strategy_bucket", as_index=False)
+        summary_input.groupby("strategy_bucket", as_index=False)
         .agg(
             n_rows=("strategy_bucket", "size"),
             n_bets=("is_bet", "sum"),
@@ -277,13 +322,29 @@ def summarize_strategy(settled: pd.DataFrame) -> pd.DataFrame:
             n_push=("result", lambda x: int((x == "push").sum())),
             n_unsettled=("result", lambda x: int((x == "unsettled").sum())),
             pnl_units=("pnl_units", "sum"),
+            reference_pnl_units=("reference_pnl_units", "sum"),
+            avg_implied_prob_taken=("placed_under_implied_prob", "mean"),
         )
         .sort_values("strategy_bucket")
         .reset_index(drop=True)
     )
-    settled_bets = summary["n_win"] + summary["n_loss"]
-    summary["hit_rate"] = np.where(settled_bets > 0, summary["n_win"] / settled_bets, np.nan)
-    summary["roi_units_per_bet"] = np.where(summary["n_bets"] > 0, summary["pnl_units"] / summary["n_bets"], np.nan)
+    settled_decisions = summary["n_win"] + summary["n_loss"] + summary["n_push"]
+    summary["n_settled_bets"] = settled_decisions
+    summary["hit_rate"] = np.where(
+        (summary["n_win"] + summary["n_loss"]) > 0,
+        summary["n_win"] / (summary["n_win"] + summary["n_loss"]),
+        np.nan,
+    )
+    summary["roi_units_per_settled_bet"] = np.where(
+        summary["n_settled_bets"] > 0,
+        summary["reference_pnl_units"] / summary["n_settled_bets"],
+        np.nan,
+    )
+    summary["roi_units_per_bet_all_placed"] = np.where(
+        summary["n_bets"] > 0,
+        summary["reference_pnl_units"] / summary["n_bets"],
+        summary["reference_pnl_units"] / summary["n_rows"],
+    )
     return summary
 
 
@@ -299,6 +360,94 @@ def upload_rollup_if_requested(rollup: pd.DataFrame, rollup_s3_uri: str) -> None
     body = rollup.to_csv(index=False).encode("utf-8")
     write_bytes_s3(bucket, key, body)
     print(f"uploaded {rollup_s3_uri}")
+
+
+def publish_settlement_summary_to_sns(topic_arn: str, body: str) -> str:
+    import boto3
+
+    resp = boto3.client("sns").publish(
+        TopicArn=topic_arn,
+        Subject="NBA rebounds settled results",
+        Message=body[:256_000],
+    )
+    return resp["MessageId"]
+
+
+def _fmt_metric(value: float, digits: int = 3) -> str:
+    if pd.isna(value):
+        return "NA"
+    return f"{float(value):.{digits}f}"
+
+
+def format_sns_summary_lines(rollup: pd.DataFrame) -> list[str]:
+    lines: list[str] = []
+    ordered = rollup.sort_values("strategy_bucket").reset_index(drop=True)
+    for _, row in ordered.iterrows():
+        strategy = str(row["strategy_bucket"])
+        lines.extend(
+            [
+                f"- {strategy}",
+                (
+                    "  rows={rows} bets={bets} wins={wins} losses={losses} "
+                    "pushes={pushes} unsettled={unsettled}"
+                ).format(
+                    rows=int(row["n_rows"]),
+                    bets=int(row["n_bets"]),
+                    wins=int(row["n_win"]),
+                    losses=int(row["n_loss"]),
+                    pushes=int(row["n_push"]),
+                    unsettled=int(row["n_unsettled"]),
+                ),
+                (
+                    "  pnl_units={pnl} hit_rate={hit_rate} roi_per_bet={roi}"
+                ).format(
+                    pnl=_fmt_metric(row["pnl_units"]),
+                    hit_rate=_fmt_metric(row["hit_rate"]),
+                    roi=_fmt_metric(row["roi_units_per_bet"]),
+                ),
+            ]
+        )
+    return lines
+
+
+def format_sns_source_footer(rollup: pd.DataFrame) -> list[str]:
+    unique_sources = sorted(rollup["source_scored_key"].dropna().astype(str).unique().tolist())
+    lines = ["source files"]
+    for idx, key in enumerate(unique_sources, start=1):
+        lines.append(f"{idx}. {key}")
+    return lines
+
+
+def format_strategy_summary_for_console(summary: pd.DataFrame) -> str:
+    con = duckdb.connect()
+    con.register("strategy_summary", summary)
+    formatted_summary = con.execute(
+        """
+        SELECT
+            strategy_bucket,
+            n_rows,
+            n_bets,
+            printf('%d-%d-%d', n_win, n_loss, n_push) AS "W-L-P",
+            n_unsettled,
+            round(
+                CASE
+                    WHEN strategy_bucket = 'neither' THEN reference_pnl_units
+                    ELSE pnl_units
+                END,
+                3
+            ) AS pnl_units,
+            round(hit_rate, 3) AS hit_rate,
+            round(avg_implied_prob_taken, 3) AS avg_implied_prob_taken,
+            round(roi_units_per_settled_bet, 3) AS roi_units_per_settled_bet,
+            round(roi_units_per_bet_all_placed, 3) AS roi_units_per_bet_all_placed
+        FROM strategy_summary
+        ORDER BY
+            CASE WHEN strategy_bucket = 'neither' THEN 1 ELSE 0 END,
+            strategy_bucket
+        """
+    ).fetchdf()
+    con.close()
+    return formatted_summary.to_markdown(index=False)
 
 
 def main() -> None:
@@ -353,7 +502,13 @@ def main() -> None:
         summary["source_scored_key"] = key
         rollup_rows.append(summary)
         summary_print = summary.copy()
-        for col in ["hit_rate", "roi_units_per_bet", "pnl_units"]:
+        for col in [
+            "hit_rate",
+            "pnl_units",
+            "avg_implied_prob_taken",
+            "roi_units_per_settled_bet",
+            "roi_units_per_bet_all_placed",
+        ]:
             summary_print[col] = summary_print[col].round(3)
         print(
             "settled_run",
@@ -363,10 +518,28 @@ def main() -> None:
             sep=" | ",
         )
         print("strategy_summary")
-        print(summary_print.to_string(index=False))
+        print(format_strategy_summary_for_console(summary_print))
 
     rollup = pd.concat(rollup_rows, ignore_index=True)
     upload_rollup_if_requested(rollup, args.rollup_s3_uri)
+
+    sns_topic_arn = args.sns_topic_arn.strip()
+    if sns_topic_arn:
+        summary_lines = format_sns_summary_lines(rollup)
+        source_lines = format_sns_source_footer(rollup)
+        msg_lines: list[str] = [
+            "NBA rebounds settled results",
+            f"dates={', '.join(date_list)}",
+            f"runs={len(scored_keys)}",
+            "",
+            "strategy summary",
+            *summary_lines,
+            "",
+            *source_lines,
+        ]
+        msg_id = publish_settlement_summary_to_sns(sns_topic_arn, "\n".join(msg_lines))
+        print("published_settlement_to_sns", f"topic_arn={sns_topic_arn}", f"message_id={msg_id}", sep=" | ")
+
     print("settlement_complete", f"runs={len(scored_keys)}", sep=" | ")
 
 
