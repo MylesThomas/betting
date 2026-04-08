@@ -26,6 +26,5 @@ COPY scripts ${LAMBDA_TASK_ROOT}/scripts
 COPY src ${LAMBDA_TASK_ROOT}/src
 COPY config ${LAMBDA_TASK_ROOT}/config
 COPY .gitignore ${LAMBDA_TASK_ROOT}/.gitignore
-COPY workdir_test/rebounds_prod/rebounds_model_features_2025_26.parquet ${LAMBDA_TASK_ROOT}/workdir_test/rebounds_prod/rebounds_model_features_2025_26.parquet
 
 CMD ["lambda_function.lambda_handler"]

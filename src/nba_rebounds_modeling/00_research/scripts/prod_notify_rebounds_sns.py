@@ -60,11 +60,20 @@ def build_plays_table(df: pd.DataFrame, which: str) -> pd.DataFrame:
     else:
         sub = df.loc[df["play_under_ols"] | df["play_under_xgb"]].copy()
 
+    sub["play_bucket"] = "neither"
+    sub.loc[sub["play_under_ols"] & ~sub["play_under_xgb"], "play_bucket"] = "ols_only"
+    sub.loc[~sub["play_under_ols"] & sub["play_under_xgb"], "play_bucket"] = "xgb_only"
+    sub.loc[sub["play_under_ols"] & sub["play_under_xgb"], "play_bucket"] = "both"
+
     cols = [
+        "play_bucket",
         "season",
         "date",
         "player_normalized",
         "game_id",
+        "game_id_source",
+        "nba_game_id",
+        "odds_event_id",
         "bookmaker",
         "line",
         "consensus_reb_line",
@@ -99,15 +108,30 @@ def build_email_body(plays: pd.DataFrame, which: str) -> str:
     if len(plays) == 0:
         return f"NBA rebounds plays ({which})\n\n(no plays for this filter)"
 
+    bucket_counts = (
+        plays["play_bucket"]
+        .value_counts()
+        .reindex(["both", "ols_only", "xgb_only"], fill_value=0)
+        .to_dict()
+    )
     lines: list[str] = [
         f"NBA rebounds plays ({which})",
-        f"rows={len(plays):,}",
+        "Rows are ONLY recommended under plays.",
+        "play_bucket: both=both models agree, ols_only=OLS only, xgb_only=XGB only",
+        f"rows={len(plays):,} | both={bucket_counts['both']:,} | ols_only={bucket_counts['ols_only']:,} | xgb_only={bucket_counts['xgb_only']:,}",
         "",
     ]
     ordered = plays.sort_values(["date", "player_normalized", "bookmaker", "line"]).reset_index(drop=True)
     for idx, row in ordered.iterrows():
         lines.append(
-            f"{idx + 1}. {row['player_normalized']} | {row['date']} | {row['bookmaker']} | game_id={row['game_id']}"
+            f"{idx + 1}. [{row['play_bucket']}] {row['player_normalized']} | {row['date']} | {row['bookmaker']}"
+        )
+        lines.append(
+            "   ids:"
+            f" game_id={row['game_id']}"
+            f" game_id_source={row['game_id_source']}"
+            f" nba_game_id={row['nba_game_id']}"
+            f" odds_event_id={row['odds_event_id']}"
         )
         lines.append(
             "   line:"

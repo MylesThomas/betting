@@ -22,8 +22,12 @@ train_end_date: null
 
 # Keep both null unless you explicitly want model uploads in train step.
 s3_bucket: nba-betting-mt
-s3_models_prefix: nba/rebounds/models
-s3_runs_prefix: nba/rebounds/daily_runs
+s3_models_prefix: rebounds/models
+s3_runs_prefix: rebounds/daily_runs
+feature_universe_s3_uri: s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet
+feature_universe_season: "*"
+feature_build_cache_dir: /Users/thomasmyles/Downloads/tmp
+input_universe_s3_uri: s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet
 
 # Optional SNS topic for notify step. Null = print to stdout.
 sns_topic_arn: arn:aws:sns:us-east-2:232692785472:betting-arb-alerts

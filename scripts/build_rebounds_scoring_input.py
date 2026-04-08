@@ -2,12 +2,10 @@
 Build rebounds props scoring-input parquet from live rebounds props CSV.
 
 Context:
-- This replaces ambiguous "live bridge" naming with a clearer purpose:
-  convert live props rows into scorer-ready input for
-  `prod_score_rebounds_slate.py --props`.
-- It resolves `game_id` using schedule data and reuses canonical v2 rebounds
-  transforms (`build_market_panel`, `build_v3_props_raw`) so logic remains
-  single-sourced.
+- Converts live props rows into scorer-ready input for rebounds slate scoring.
+- Resolves `game_id` from NBA schedule (team matchup + date).
+- Reuses canonical rebounds market transforms from the historical universe
+  builder so scoring-input semantics remain single-sourced.
 
 Usage:
     python scripts/build_rebounds_scoring_input.py \
@@ -64,7 +62,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_v2_functions(repo_root: Path):
+def load_rebounds_market_transform_functions(repo_root: Path):
     script_path = repo_root / "src/nba_rebounds_modeling/00_research/scripts/v2_build_rebounds_universe.py"
     spec = importlib.util.spec_from_file_location("rebounds_v2_build", script_path)
     if spec is None or spec.loader is None:
@@ -95,7 +93,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     args = parse_args()
 
-    build_market_panel, build_v3_props_raw = load_v2_functions(REPO_ROOT)
+    build_market_panel, build_props_raw = load_rebounds_market_transform_functions(REPO_ROOT)
 
     logging.info("Reading live props CSV: %s", args.live_csv)
     df = read_csv_any_path(args.live_csv)
@@ -116,16 +114,24 @@ def main() -> None:
     if "season" not in props.columns:
         raise ValueError("live csv missing required column: season")
 
-    # Prefer odds API event ids (fast, stable, and avoids hard dependency on nba_api).
-    if "odds_api_event_id" in props.columns:
-        props["game_id"] = props["odds_api_event_id"].astype(str)
-        props.loc[props["game_id"].isin(["", "nan", "None"]), "game_id"] = np.nan
-    else:
-        props["game_id"] = np.nan
+    if "home_team" not in props.columns or "away_team" not in props.columns:
+        raise ValueError("live csv missing required team columns: home_team and away_team")
 
-    unresolved_mask = props["game_id"].isna()
-    if unresolved_mask.any():
-        schedule_df = get_schedule_for_date(target_date)
+    # Keep explicit ID semantics:
+    # - odds_event_id: Odds API event identifier (fallback source)
+    # - nba_game_id: NBA schedule-resolved GAME_ID
+    # - game_id_source: nba_schedule | odds_event_fallback
+    # - game_id: canonical ID used by downstream joins
+    if "odds_api_event_id" in props.columns:
+        props["odds_event_id"] = props["odds_api_event_id"].astype(str)
+        props.loc[props["odds_event_id"].isin(["", "nan", "None"]), "odds_event_id"] = np.nan
+    else:
+        props["odds_event_id"] = np.nan
+    props["nba_game_id"] = pd.Series([None] * len(props), dtype="object")
+    props["game_id_source"] = "odds_event_fallback"
+
+    schedule_df = get_schedule_for_date(target_date)
+    if not schedule_df.empty:
         game_id_cache: dict[str, str | None] = {}
 
         def map_game_id(row: pd.Series):
@@ -136,7 +142,16 @@ def main() -> None:
                 )
             return game_id_cache[key]
 
-        props.loc[unresolved_mask, "game_id"] = props.loc[unresolved_mask].apply(map_game_id, axis=1)
+        resolved_ids = props.apply(map_game_id, axis=1)
+        props.loc[resolved_ids.notna(), "nba_game_id"] = resolved_ids[resolved_ids.notna()]
+        props.loc[resolved_ids.notna(), "game_id_source"] = "nba_schedule"
+    else:
+        logging.warning("Schedule unavailable for %s; using odds_api_event_id fallback game_id.", target_date)
+
+    props["game_id"] = props["nba_game_id"].astype("object")
+    fallback_mask = props["game_id"].isna() & props["odds_event_id"].notna()
+    props.loc[fallback_mask, "game_id"] = props.loc[fallback_mask, "odds_event_id"]
+
     props = props.loc[props["game_id"].notna()].copy()
     if props.empty:
         raise ValueError("No props rows left after game_id resolution.")
@@ -145,7 +160,24 @@ def main() -> None:
     logs_stub["REB"] = np.nan
 
     panel, book_line = build_market_panel(props, logs_stub)
-    v3_raw = build_v3_props_raw(book_line, logs_stub, panel)
+    v3_raw = build_props_raw(book_line, logs_stub, panel)
+
+    id_cols = ["odds_event_id", "nba_game_id", "game_id_source", "game_id"]
+    if "game_id_source" not in v3_raw.columns or "odds_event_id" not in v3_raw.columns:
+        join_keys = [
+            "season",
+            "date",
+            "player_normalized",
+            "bookmaker",
+            "line",
+            "over_odds",
+            "under_odds",
+            "game_id",
+        ]
+        available_join_keys = [c for c in join_keys if c in v3_raw.columns and c in props.columns]
+        id_value_cols = [c for c in id_cols if c not in available_join_keys]
+        id_map = props[available_join_keys + id_value_cols].drop_duplicates().copy()
+        v3_raw = v3_raw.merge(id_map, on=available_join_keys, how="left")
 
     out_path = Path(args.output).expanduser().resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)

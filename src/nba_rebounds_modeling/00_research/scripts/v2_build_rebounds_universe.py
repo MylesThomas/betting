@@ -311,20 +311,23 @@ def load_props(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.
 
 
 def load_v6_shot_profile(cache_dir: str) -> pd.DataFrame:
-    """Load FGA/FG3A/FTA per player/game from the cached v6 spread universe."""
-    v6_path = Path(cache_dir).expanduser() / "v6_spread_universe.parquet"
-    if not v6_path.exists():
+    """Load FGA/FG3A/FTA per player/game from rebounds input universe."""
+    input_path = Path(cache_dir).expanduser() / "rebounds_input_universe.parquet"
+    if not input_path.exists():
         raise FileNotFoundError(
-            f"v6_spread_universe.parquet not found at {v6_path}. "
-            "Run the v6 3PM build first."
+            f"rebounds_input_universe.parquet not found at {input_path}. "
+            "Run build_rebounds_input_universe.py first."
         )
-    v6 = pd.read_parquet(v6_path, columns=["season", "date", "player_normalized", "game_id", "FGA", "FG3A", "FTA"])
-    v6 = v6.drop_duplicates(subset=["season", "date", "player_normalized"])
-    v6["date"] = pd.to_datetime(v6["date"]).dt.date.astype(str)
+    input_df = pd.read_parquet(
+        input_path,
+        columns=["season", "date", "player_normalized", "game_id", "FGA", "FG3A", "FTA"],
+    )
+    input_df = input_df.drop_duplicates(subset=["season", "date", "player_normalized"])
+    input_df["date"] = pd.to_datetime(input_df["date"]).dt.date.astype(str)
     for col in ["FGA", "FG3A", "FTA"]:
-        v6[col] = pd.to_numeric(v6[col], errors="coerce")
-    print(f"v6 shot profile: loaded ({len(v6):,} rows)")
-    return v6
+        input_df[col] = pd.to_numeric(input_df[col], errors="coerce")
+    print(f"input universe shot profile: loaded ({len(input_df):,} rows)")
+    return input_df
 
 
 # =============================================================================
@@ -438,13 +441,13 @@ def build_v3_props_raw(
 def attach_spread(panel: pd.DataFrame, logs: pd.DataFrame, cache_dir: str) -> pd.DataFrame:
     """Attach spread_signed from v6 if available; otherwise fills NaN."""
     try:
-        v6_path = Path(cache_dir).expanduser() / "v6_spread_universe.parquet"
-        v6_spread = pd.read_parquet(
-            v6_path, columns=["season", "date", "player_normalized", "spread_signed"]
+        input_path = Path(cache_dir).expanduser() / "rebounds_input_universe.parquet"
+        input_spread = pd.read_parquet(
+            input_path, columns=["season", "date", "player_normalized", "spread_signed"]
         )
-        v6_spread["date"] = pd.to_datetime(v6_spread["date"]).dt.date.astype(str)
-        v6_spread = v6_spread.drop_duplicates(subset=["season", "date", "player_normalized"])
-        panel = panel.merge(v6_spread, on=["season", "date", "player_normalized"], how="left")
+        input_spread["date"] = pd.to_datetime(input_spread["date"]).dt.date.astype(str)
+        input_spread = input_spread.drop_duplicates(subset=["season", "date", "player_normalized"])
+        panel = panel.merge(input_spread, on=["season", "date", "player_normalized"], how="left")
     except Exception:
         panel["spread_signed"] = np.nan
     panel["spread_abs"] = panel["spread_signed"].abs()

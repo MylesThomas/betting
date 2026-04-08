@@ -3,8 +3,8 @@
 # Deploy NBA Rebounds Daily Lambda via container image (ECR)
 #
 # Workflow in Lambda:
-# 1) python scripts/run_nba_rebounds_daily_pipeline.py --config ...
-# 2) python scripts/rebounds_settle_runs.py --latest-only
+# 1) python src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py --config ...
+# 2) python src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py --latest-only
 #
 # Usage:
 #   export ODDS_API_KEY="your-key"
@@ -61,7 +61,6 @@ fi
 if [ -z "$SNS_TOPIC_ARN" ]; then
   echo -e "${YELLOW}⚠️  SNS_TOPIC_ARN not set${NC}"
 fi
-
 if ! aws iam get-role --role-name "$IAM_ROLE_NAME" &> /dev/null; then
   echo -e "${RED}❌ IAM role '$IAM_ROLE_NAME' not found${NC}"
   exit 1
@@ -100,7 +99,7 @@ echo "Step 3: Deploy Lambda"
 echo "================================================================================"
 echo ""
 
-ENV_VARS="ODDS_API_KEY=$ODDS_API_KEY,SNS_TOPIC_ARN=$SNS_TOPIC_ARN,CONFIG_PATH=config/nba_rebounds_prod.lambda.yaml,SETTLE_BUCKET=nba-betting-mt,SETTLE_PREFIX=nba/rebounds/daily_runs"
+ENV_VARS="ODDS_API_KEY=$ODDS_API_KEY,SNS_TOPIC_ARN=$SNS_TOPIC_ARN,CONFIG_PATH=config/nba_rebounds_prod.lambda.yaml,SETTLE_BUCKET=nba-betting-mt,SETTLE_PREFIX=rebounds/daily_runs,SETTLE_DAYS_LAG=1"
 
 if aws lambda get-function --function-name "$LAMBDA_NAME" --region "$REGION" &> /dev/null; then
   echo "Updating existing Lambda..."
@@ -148,6 +147,14 @@ aws events put-rule \
 
 LAMBDA_ARN=$(aws lambda get-function --function-name "$LAMBDA_NAME" --region "$REGION" --query 'Configuration.FunctionArn' --output text)
 
+# Keep EventBridge invoke permission in sync with the current rule ARN.
+# If the rule name changes, a stale statement can block invocations.
+aws lambda remove-permission \
+  --function-name "$LAMBDA_NAME" \
+  --statement-id EventBridgeInvokeNBAReboundsDaily \
+  --region "$REGION" \
+  --output text 2>/dev/null || true
+
 aws lambda add-permission \
   --function-name "$LAMBDA_NAME" \
   --statement-id EventBridgeInvokeNBAReboundsDaily \
@@ -155,7 +162,7 @@ aws lambda add-permission \
   --principal events.amazonaws.com \
   --source-arn "arn:aws:events:$REGION:$AWS_ACCOUNT_ID:rule/$EVENTBRIDGE_RULE" \
   --region "$REGION" \
-  --output text 2>/dev/null || echo "  (Permission already exists)"
+  --output text
 
 aws events put-targets \
   --rule "$EVENTBRIDGE_RULE" \
@@ -178,6 +185,8 @@ aws lambda wait function-active-v2 \
 aws lambda invoke \
   --function-name "$LAMBDA_NAME" \
   --region "$REGION" \
+  --cli-read-timeout 1200 \
+  --cli-connect-timeout 60 \
   --log-type Tail \
   --query 'LogResult' \
   --output text \

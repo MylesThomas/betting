@@ -2,7 +2,7 @@
 Settle rebounds scored runs in S3 with realized REB outcomes.
 
 Context:
-- Daily scoring writes run artifacts under `nba/rebounds/daily_runs/<date>/<run_id>/`.
+- Daily scoring writes run artifacts under `rebounds/daily_runs/<date>/<run_id>/`.
 - This script reads each `rebounds_scored_<date>.parquet`, joins player actual REB
   from NBA player game logs, and writes:
   - `rebounds_scored_settled_<date>.parquet` (row-level settlement)
@@ -47,7 +47,7 @@ from src.player_team_history.name_normalization import normalize_from_nba_api  #
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Settle rebounds scored run artifacts in S3.")
     p.add_argument("--bucket", type=str, required=True, help="S3 bucket with scored run artifacts.")
-    p.add_argument("--runs-prefix", type=str, required=True, help="S3 prefix root, e.g. nba/rebounds/daily_runs.")
+    p.add_argument("--runs-prefix", type=str, required=True, help="S3 prefix root, e.g. rebounds/daily_runs.")
     p.add_argument("--date", type=str, default="", help="Single slate date YYYY-MM-DD.")
     p.add_argument("--start-date", type=str, default="", help="Start date YYYY-MM-DD (inclusive).")
     p.add_argument("--end-date", type=str, default="", help="End date YYYY-MM-DD (inclusive).")
@@ -56,6 +56,11 @@ def parse_args() -> argparse.Namespace:
         "--latest-only",
         action="store_true",
         help="Settle only the latest run_id per date.",
+    )
+    p.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help="Exit 0 when no scored parquet files exist for requested date range.",
     )
     p.add_argument(
         "--actuals-loader",
@@ -261,6 +266,7 @@ def settle_rows(scored: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
     settled = scored.copy()
     settled["game_id"] = settled["game_id"].astype(str)
     settled = settled.merge(actuals, on=keys, how="left")
+    settled["actuals_match_source"] = np.where(settled["reb_actual"].notna(), "exact_game_id", "unmatched")
 
     # Fallback for ID-system mismatches (e.g., NBA stats IDs vs ESPN IDs):
     # fill unresolved rows by (season, date, player_normalized) when there is
@@ -282,7 +288,11 @@ def settle_rows(scored: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
             on=["season", "date", "player_normalized"],
             how="left",
         )
-        settled.loc[unresolved, "reb_actual"] = fallback["reb_actual"].to_numpy()
+        fallback_values = fallback["reb_actual"].to_numpy()
+        fallback_hit = pd.notna(fallback_values)
+        settled.loc[unresolved, "reb_actual"] = fallback_values
+        unresolved_indices = settled.index[unresolved]
+        settled.loc[unresolved_indices[fallback_hit], "actuals_match_source"] = "player_date_fallback"
 
     settled = add_strategy_bucket(settled)
     settled["is_bet"] = settled["strategy_bucket"] != "neither"
@@ -399,11 +409,14 @@ def format_sns_summary_lines(rollup: pd.DataFrame) -> list[str]:
                     unsettled=int(row["n_unsettled"]),
                 ),
                 (
-                    "  pnl_units={pnl} hit_rate={hit_rate} roi_per_bet={roi}"
+                    "  pnl_units={pnl} hit_rate={hit_rate} avg_implied_prob_taken={avg_prob} "
+                    "roi_per_settled_bet={roi_settled} roi_per_bet_all_placed={roi_all}"
                 ).format(
                     pnl=_fmt_metric(row["pnl_units"]),
                     hit_rate=_fmt_metric(row["hit_rate"]),
-                    roi=_fmt_metric(row["roi_units_per_bet"]),
+                    avg_prob=_fmt_metric(row["avg_implied_prob_taken"]),
+                    roi_settled=_fmt_metric(row["roi_units_per_settled_bet"]),
+                    roi_all=_fmt_metric(row["roi_units_per_bet_all_placed"]),
                 ),
             ]
         )
@@ -416,6 +429,13 @@ def format_sns_source_footer(rollup: pd.DataFrame) -> list[str]:
     for idx, key in enumerate(unique_sources, start=1):
         lines.append(f"{idx}. {key}")
     return lines
+
+
+def parse_run_id_from_key(scored_key: str) -> str:
+    parts = scored_key.split("/")
+    if len(parts) < 2:
+        return "unknown"
+    return parts[-2]
 
 
 def format_strategy_summary_for_console(summary: pd.DataFrame) -> str:
@@ -447,7 +467,11 @@ def format_strategy_summary_for_console(summary: pd.DataFrame) -> str:
         """
     ).fetchdf()
     con.close()
-    return formatted_summary.to_markdown(index=False)
+    # Avoid hard dependency on optional `tabulate` in Lambda runtime.
+    try:
+        return formatted_summary.to_markdown(index=False)
+    except ImportError:
+        return formatted_summary.to_string(index=False)
 
 
 def main() -> None:
@@ -457,6 +481,27 @@ def main() -> None:
     if args.latest_only:
         scored_keys = keep_latest_run_per_date(scored_keys)
     if len(scored_keys) == 0:
+        if args.allow_empty:
+            print("settlement_noop", f"reason=no_scored_keys", f"dates={','.join(date_list)}", sep=" | ")
+            sns_topic_arn = args.sns_topic_arn.strip()
+            if sns_topic_arn:
+                msg_lines = [
+                    "NBA rebounds settled results",
+                    f"settle_dates={', '.join(date_list)}",
+                    "status=no_scored_runs",
+                    "runs=0",
+                    "",
+                    "No scored run artifacts found for settlement window.",
+                ]
+                msg_id = publish_settlement_summary_to_sns(sns_topic_arn, "\n".join(msg_lines))
+                print(
+                    "published_settlement_to_sns",
+                    f"topic_arn={sns_topic_arn}",
+                    f"message_id={msg_id}",
+                    "mode=noop",
+                    sep=" | ",
+                )
+            return
         raise ValueError("No scored parquet files found for requested date range.")
 
     scored_frames = []
@@ -491,12 +536,22 @@ def main() -> None:
         manifest = {
             "settled_at_utc": datetime.now(timezone.utc).isoformat(),
             "source_scored_key": key,
+            "source_run_id": parse_run_id_from_key(key),
+            "settle_date": slate,
             "settled_key": settled_key,
             "summary_key": summary_key,
             "n_rows": int(len(settled)),
             "n_unsettled_rows": int((settled["result"] == "unsettled").sum()),
             "n_distinct_players": int(settled["player_normalized"].nunique()),
+            "actuals_match_source_counts": {
+                k: int(v)
+                for k, v in settled["actuals_match_source"].value_counts(dropna=False).sort_index().items()
+            },
         }
+        if "game_id_source" in settled.columns:
+            manifest["game_id_source_counts"] = {
+                k: int(v) for k, v in settled["game_id_source"].value_counts(dropna=False).sort_index().items()
+            }
         write_bytes_s3(args.bucket, manifest_key, json.dumps(manifest, indent=2).encode("utf-8"))
 
         summary["source_scored_key"] = key
@@ -529,7 +584,7 @@ def main() -> None:
         source_lines = format_sns_source_footer(rollup)
         msg_lines: list[str] = [
             "NBA rebounds settled results",
-            f"dates={', '.join(date_list)}",
+            f"settle_dates={', '.join(date_list)}",
             f"runs={len(scored_keys)}",
             "",
             "strategy summary",

@@ -28,13 +28,17 @@ train_end_date: null
 
 # Optional uploads (requires AWS creds in env or profile)
 s3_bucket: nba-betting-mt
-s3_models_prefix: nba/rebounds/models
-s3_runs_prefix: nba/rebounds/daily_runs
+s3_models_prefix: rebounds/models
+s3_runs_prefix: rebounds/daily_runs
+feature_universe_s3_uri: s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet
+feature_universe_season: "*"
+feature_build_cache_dir: /ABSOLUTE/PATH/rebounds_cache
+input_universe_s3_uri: s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet
 
 # Optional: SNS topic for prod_notify_rebounds_sns.py
 sns_topic_arn: null
 
-# Daily pipeline orchestration (`scripts/run_nba_rebounds_daily_pipeline.py`)
+# Daily pipeline orchestration (`scripts/run_rebounds_daily_pipeline.py`)
 # Full feature parquet used for freshness check + slicing + optional training
 full_feature_parquet: /ABSOLUTE/PATH/rebounds_model_features.parquet
 # Props scoring-input parquet for the slate date (historical or scorer-input builder output)
