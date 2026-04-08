@@ -10,7 +10,9 @@ Env:
 - SNS_TOPIC_ARN (required if notify_enabled=true in config)
 - CONFIG_PATH (optional; default: config/nba_rebounds_prod.yaml)
 - SETTLE_BUCKET (optional; default: nba-betting-mt)
-- SETTLE_PREFIX (optional; default: nba/rebounds/daily_runs)
+- SETTLE_PREFIX (optional; default: rebounds/daily_runs)
+- SETTLE_DAYS_LAG (optional; default: 1, so settlement end date is yesterday ET)
+- SETTLE_WINDOW_DAYS (optional; default: 3, re-settle rolling window for late actuals)
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -37,13 +39,7 @@ def _run(cmd: list[str], cwd: Path) -> None:
         cmd,
         cwd=str(cwd),
         env=os.environ.copy(),
-        capture_output=True,
-        text=True,
     )
-    if result.stdout:
-        print(result.stdout)
-    if result.stderr:
-        print(result.stderr)
     if result.returncode != 0:
         raise RuntimeError(f"Command failed ({result.returncode}): {' '.join(cmd)}")
 
@@ -56,13 +52,20 @@ def lambda_handler(event, context):
 
     config_path = os.environ.get("CONFIG_PATH", "config/nba_rebounds_prod.yaml")
     settle_bucket = os.environ.get("SETTLE_BUCKET", "nba-betting-mt")
-    settle_prefix = os.environ.get("SETTLE_PREFIX", "nba/rebounds/daily_runs")
+    settle_prefix = os.environ.get("SETTLE_PREFIX", "rebounds/daily_runs")
+    settle_days_lag = int(os.environ.get("SETTLE_DAYS_LAG", "1"))
+    settle_window_days = int(os.environ.get("SETTLE_WINDOW_DAYS", "3"))
+    if settle_window_days < 1:
+        raise ValueError("SETTLE_WINDOW_DAYS must be >= 1")
+    settle_end_date_et = (datetime.now(ET) - timedelta(days=settle_days_lag)).date()
+    settle_start_date_et = settle_end_date_et - timedelta(days=settle_window_days - 1)
+    sns_topic_arn = os.environ.get("SNS_TOPIC_ARN", "").strip()
 
     step_results = []
     try:
         pipeline_cmd = [
             sys.executable,
-            "scripts/run_nba_rebounds_daily_pipeline.py",
+            "src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py",
             "--config",
             config_path,
             "--slate-date",
@@ -73,15 +76,21 @@ def lambda_handler(event, context):
 
         settle_cmd = [
             sys.executable,
-            "scripts/rebounds_settle_runs.py",
+            "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
             "--bucket",
             settle_bucket,
             "--runs-prefix",
             settle_prefix,
-            "--date",
-            today_et,
+            "--start-date",
+            settle_start_date_et.isoformat(),
+            "--end-date",
+            settle_end_date_et.isoformat(),
             "--latest-only",
+            "--allow-empty",
+            "--overwrite",
         ]
+        if sns_topic_arn:
+            settle_cmd.extend(["--sns-topic-arn", sns_topic_arn])
         _run(settle_cmd, root)
         step_results.append({"step": "settlement", "status": "ok"})
 
@@ -91,6 +100,9 @@ def lambda_handler(event, context):
                 {
                     "status": "ok",
                     "date_et": today_et,
+                    "settle_start_date_et": settle_start_date_et.isoformat(),
+                    "settle_end_date_et": settle_end_date_et.isoformat(),
+                    "settle_window_days": settle_window_days,
                     "steps": step_results,
                 }
             ),
@@ -102,6 +114,9 @@ def lambda_handler(event, context):
                 {
                     "status": "error",
                     "date_et": today_et,
+                    "settle_start_date_et": settle_start_date_et.isoformat(),
+                    "settle_end_date_et": settle_end_date_et.isoformat(),
+                    "settle_window_days": settle_window_days,
                     "steps": step_results,
                     "error": str(exc),
                 }
