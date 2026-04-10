@@ -18,12 +18,14 @@ export AWS_PAGER=""
 REGION="us-east-2"
 IAM_ROLE_NAME="betting-dashboard-daily-update-role-ille2llh"
 LAMBDA_NAME="nba-rebounds-daily"
-EVENTBRIDGE_RULE="nba-rebounds-daily-9am-et"
+SCORE_RULE_NAME="nba-rebounds-daily-score-9am-et"
+SETTLE_RULE_NAME="nba-rebounds-daily-settle-905am-et"
 ECR_REPO_NAME="nba-rebounds-daily"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 DOCKER_PLATFORM="${DOCKER_PLATFORM:-linux/amd64}"
 # 9:00am ET = 14:00 UTC during EST (winter). Update if you prefer EDT-specific handling.
-CRON_9AM_ET="cron(0 14 * * ? *)"
+CRON_SCORE_9AM_ET="cron(0 14 * * ? *)"
+CRON_SETTLE_905AM_ET="cron(5 14 * * ? *)"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -67,6 +69,13 @@ if ! aws iam get-role --role-name "$IAM_ROLE_NAME" &> /dev/null; then
 fi
 IAM_ROLE_ARN=$(aws iam get-role --role-name "$IAM_ROLE_NAME" --query 'Role.Arn' --output text)
 echo "✅ IAM role exists"
+
+echo "Running local smoke checks..."
+python -m py_compile \
+  "lambda/nba_rebounds_daily/lambda_function.py" \
+  "scripts/rebounds_settle_runs.py"
+bash -n "lambda/nba_rebounds_daily/deploy_nba_rebounds_daily.sh"
+echo "✅ Local smoke checks passed"
 echo ""
 
 echo "================================================================================"
@@ -99,7 +108,7 @@ echo "Step 3: Deploy Lambda"
 echo "================================================================================"
 echo ""
 
-ENV_VARS="ODDS_API_KEY=$ODDS_API_KEY,SNS_TOPIC_ARN=$SNS_TOPIC_ARN,CONFIG_PATH=config/nba_rebounds_prod.lambda.yaml,SETTLE_BUCKET=nba-betting-mt,SETTLE_PREFIX=rebounds/daily_runs,SETTLE_DAYS_LAG=1"
+ENV_VARS="ODDS_API_KEY=$ODDS_API_KEY,SNS_TOPIC_ARN=$SNS_TOPIC_ARN,CONFIG_PATH=config/nba_rebounds_prod.lambda.yaml,SETTLE_BUCKET=nba-betting-mt,SETTLE_PREFIX=rebounds/daily_runs,SETTLE_DAYS_LAG=1,SETTLE_WINDOW_DAYS=1,SETTLE_ALL_TIME_DAYS=999999,SETTLE_MAX_UNMATCHED_BET_ROWS=0"
 
 if aws lambda get-function --function-name "$LAMBDA_NAME" --region "$REGION" &> /dev/null; then
   echo "Updating existing Lambda..."
@@ -133,48 +142,82 @@ echo -e "${GREEN}✅ Lambda deployed${NC}"
 echo ""
 
 echo "================================================================================"
-echo "Step 4: EventBridge rule"
+echo "Step 4: EventBridge rules"
 echo "================================================================================"
 echo ""
 
 aws events put-rule \
-  --name "$EVENTBRIDGE_RULE" \
-  --schedule-expression "$CRON_9AM_ET" \
+  --name "$SCORE_RULE_NAME" \
+  --schedule-expression "$CRON_SCORE_9AM_ET" \
+  --state DISABLED \
+  --description "Trigger NBA rebounds daily pipeline at 9:00am ET target" \
+  --region "$REGION" \
+  --output table
+
+aws events put-rule \
+  --name "$SETTLE_RULE_NAME" \
+  --schedule-expression "$CRON_SETTLE_905AM_ET" \
   --state ENABLED \
-  --description "Trigger NBA rebounds daily run+settle Lambda" \
+  --description "Trigger NBA rebounds settlement at 9:05am ET target" \
   --region "$REGION" \
   --output table
 
 LAMBDA_ARN=$(aws lambda get-function --function-name "$LAMBDA_NAME" --region "$REGION" --query 'Configuration.FunctionArn' --output text)
 
-# Keep EventBridge invoke permission in sync with the current rule ARN.
-# If the rule name changes, a stale statement can block invocations.
+# Keep EventBridge invoke permission in sync with current rule ARNs.
 aws lambda remove-permission \
   --function-name "$LAMBDA_NAME" \
-  --statement-id EventBridgeInvokeNBAReboundsDaily \
+  --statement-id EventBridgeInvokeNBAReboundsDailyScore \
+  --region "$REGION" \
+  --output text 2>/dev/null || true
+
+aws lambda remove-permission \
+  --function-name "$LAMBDA_NAME" \
+  --statement-id EventBridgeInvokeNBAReboundsDailySettle \
   --region "$REGION" \
   --output text 2>/dev/null || true
 
 aws lambda add-permission \
   --function-name "$LAMBDA_NAME" \
-  --statement-id EventBridgeInvokeNBAReboundsDaily \
+  --statement-id EventBridgeInvokeNBAReboundsDailyScore \
   --action lambda:InvokeFunction \
   --principal events.amazonaws.com \
-  --source-arn "arn:aws:events:$REGION:$AWS_ACCOUNT_ID:rule/$EVENTBRIDGE_RULE" \
+  --source-arn "arn:aws:events:$REGION:$AWS_ACCOUNT_ID:rule/$SCORE_RULE_NAME" \
+  --region "$REGION" \
+  --output text
+
+aws lambda add-permission \
+  --function-name "$LAMBDA_NAME" \
+  --statement-id EventBridgeInvokeNBAReboundsDailySettle \
+  --action lambda:InvokeFunction \
+  --principal events.amazonaws.com \
+  --source-arn "arn:aws:events:$REGION:$AWS_ACCOUNT_ID:rule/$SETTLE_RULE_NAME" \
   --region "$REGION" \
   --output text
 
 aws events put-targets \
-  --rule "$EVENTBRIDGE_RULE" \
-  --targets "Id"="1","Arn"="$LAMBDA_ARN" \
+  --rule "$SCORE_RULE_NAME" \
+  --targets "[{\"Id\":\"1\",\"Arn\":\"$LAMBDA_ARN\",\"Input\":\"{\\\"mode\\\":\\\"pipeline\\\"}\"}]" \
   --region "$REGION" \
   --output table
 
-echo -e "${GREEN}✅ EventBridge rule set: $CRON_9AM_ET (9am ET target)${NC}"
+aws events put-targets \
+  --rule "$SETTLE_RULE_NAME" \
+  --targets "[{\"Id\":\"1\",\"Arn\":\"$LAMBDA_ARN\",\"Input\":\"{\\\"mode\\\":\\\"settlement\\\"}\"}]" \
+  --region "$REGION" \
+  --output table
+
+SCORE_RULE_ARN=$(aws events describe-rule --name "$SCORE_RULE_NAME" --region "$REGION" --query 'Arn' --output text)
+SETTLE_RULE_ARN=$(aws events describe-rule --name "$SETTLE_RULE_NAME" --region "$REGION" --query 'Arn' --output text)
+
+echo -e "${GREEN}✅ EventBridge score rule: $CRON_SCORE_9AM_ET (9am ET target)${NC}"
+echo -e "${GREEN}✅ EventBridge settle rule: $CRON_SETTLE_905AM_ET (9:05am ET target)${NC}"
+echo "Score rule ARN: $SCORE_RULE_ARN"
+echo "Settle rule ARN: $SETTLE_RULE_ARN"
 echo ""
 
 echo "================================================================================"
-echo "Step 5: Test invoke"
+echo "Step 5: Lambda dry-run invoke"
 echo "================================================================================"
 echo ""
 
@@ -185,25 +228,20 @@ aws lambda wait function-active-v2 \
 aws lambda invoke \
   --function-name "$LAMBDA_NAME" \
   --region "$REGION" \
-  --cli-read-timeout 1200 \
-  --cli-connect-timeout 60 \
-  --log-type Tail \
-  --query 'LogResult' \
-  --output text \
-  response.json | base64 --decode | tail -80
-echo ""
-if [ -f response.json ]; then
-  echo "Response: $(cat response.json)"
-  rm -f response.json
-else
-  echo -e "${YELLOW}⚠️  No response.json found from invoke${NC}"
-fi
+  --invocation-type DryRun \
+  --payload '{"mode":"settlement"}' \
+  --cli-binary-format raw-in-base64-out \
+  /tmp/nba_rebounds_daily_dryrun.json \
+  --output table
+rm -f /tmp/nba_rebounds_daily_dryrun.json
+echo "✅ Lambda DryRun accepted (no side effects)"
 echo ""
 
 echo "================================================================================"
 echo -e "${GREEN}✅ DEPLOYMENT COMPLETE${NC}"
 echo "================================================================================"
 echo "Lambda: $LAMBDA_NAME"
-echo "Rule: $EVENTBRIDGE_RULE ($CRON_9AM_ET)"
+echo "Score rule: $SCORE_RULE_NAME ($CRON_SCORE_9AM_ET)"
+echo "Settle rule: $SETTLE_RULE_NAME ($CRON_SETTLE_905AM_ET)"
 echo "Image: $IMAGE_URI"
 echo ""

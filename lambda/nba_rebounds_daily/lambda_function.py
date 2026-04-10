@@ -22,15 +22,36 @@ import os
 import subprocess
 import sys
 from datetime import datetime, timedelta
+from io import BytesIO
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import boto3
+import pandas as pd
 
 
 ET = ZoneInfo("America/New_York")
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parent
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "src").exists() and (current / ".gitignore").exists():
+            return current
+        if current.parent == current:
+            raise FileNotFoundError("Could not locate repo root")
+        current = current.parent
+
+
+def _resolve_mode(event: dict | None) -> str:
+    if event is None:
+        return "both"
+    if "mode" not in event:
+        return "both"
+    mode = str(event["mode"]).strip().lower()
+    if mode not in {"pipeline", "settlement", "both"}:
+        raise ValueError(f"Unsupported mode: {mode}")
+    return mode
 
 
 def _run(cmd: list[str], cwd: Path) -> None:
@@ -44,6 +65,111 @@ def _run(cmd: list[str], cwd: Path) -> None:
         raise RuntimeError(f"Command failed ({result.returncode}): {' '.join(cmd)}")
 
 
+def _run_capture(cmd: list[str], cwd: Path) -> str:
+    print("run", " ".join(cmd), sep=" | ")
+    result = subprocess.run(
+        cmd,
+        cwd=str(cwd),
+        env=os.environ.copy(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Command failed ({result.returncode}): {' '.join(cmd)}\n{result.stdout}")
+    return result.stdout
+
+
+def _parse_s3_uri(s3_uri: str) -> tuple[str, str]:
+    if not s3_uri.startswith("s3://"):
+        raise ValueError(f"Invalid s3 uri: {s3_uri}")
+    rest = s3_uri[5:]
+    bucket, _, key = rest.partition("/")
+    if bucket == "" or key == "":
+        raise ValueError(f"Invalid s3 uri: {s3_uri}")
+    return bucket, key
+
+
+def _read_csv_s3(s3_uri: str) -> pd.DataFrame:
+    bucket, key = _parse_s3_uri(s3_uri)
+    body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
+    return pd.read_csv(BytesIO(body))
+
+
+def _format_window_section(label: str, rollup: pd.DataFrame) -> list[str]:
+    if len(rollup) == 0:
+        return [f"{label} strategy summary", "- no rows"]
+    grouped = (
+        rollup.groupby("strategy_bucket", as_index=False)
+        .agg(
+            n_rows=("n_rows", "sum"),
+            n_bets=("n_bets", "sum"),
+            n_win=("n_win", "sum"),
+            n_loss=("n_loss", "sum"),
+            n_push=("n_push", "sum"),
+            n_unsettled=("n_unsettled", "sum"),
+            pnl_units=("pnl_units", "sum"),
+        )
+        .sort_values("strategy_bucket")
+        .reset_index(drop=True)
+    )
+    grouped["hit_rate"] = grouped.apply(
+        lambda x: x["n_win"] / (x["n_win"] + x["n_loss"]) if (x["n_win"] + x["n_loss"]) > 0 else 0.0, axis=1
+    )
+    grouped["roi"] = grouped.apply(
+        lambda x: x["pnl_units"] / (x["n_win"] + x["n_loss"] + x["n_push"]) if (x["n_win"] + x["n_loss"] + x["n_push"]) > 0 else 0.0, axis=1
+    )
+    lines = [f"{label} strategy summary"]
+    for _, row in grouped.iterrows():
+        lines.append(
+            (
+                "- {strategy}: rows={rows} bets={bets} "
+                "w-l-p={wins}-{losses}-{pushes} unsettled={unsettled} pnl_units={pnl:.3f} "
+                "hit_rate={hit_rate:.3f} roi={roi:.3f}"
+            ).format(
+                strategy=str(row["strategy_bucket"]),
+                rows=int(row["n_rows"]),
+                bets=int(row["n_bets"]),
+                wins=int(row["n_win"]),
+                losses=int(row["n_loss"]),
+                pushes=int(row["n_push"]),
+                unsettled=int(row["n_unsettled"]),
+                pnl=float(row["pnl_units"]),
+                hit_rate=float(row["hit_rate"]),
+                roi=float(row["roi"]),
+            )
+        )
+    return lines
+
+
+def _publish_combined_settlement_sns(
+    topic_arn: str,
+    settle_end_date_et,
+    yesterday_rollup_uri: str,
+    all_time_rollup_uri: str,
+) -> str:
+    yesterday_rollup = _read_csv_s3(yesterday_rollup_uri)
+    all_time_rollup = _read_csv_s3(all_time_rollup_uri)
+    lines = [
+        "NBA rebounds settled results",
+        f"settle_end_date_et={settle_end_date_et.isoformat()}",
+        "",
+        *_format_window_section("yesterday", yesterday_rollup),
+        "",
+        *_format_window_section("all-time", all_time_rollup),
+        "",
+        "rollup files",
+        f"1. {yesterday_rollup_uri}",
+        f"2. {all_time_rollup_uri}",
+    ]
+    resp = boto3.client("sns").publish(
+        TopicArn=topic_arn,
+        Subject="NBA rebounds settled results",
+        Message="\n".join(lines)[:256_000],
+    )
+    return resp["MessageId"]
+
+
 def lambda_handler(event, context):
     # DuckDB httpfs expects a writable home directory in Lambda.
     os.environ.setdefault("HOME", "/tmp")
@@ -54,55 +180,106 @@ def lambda_handler(event, context):
     settle_bucket = os.environ.get("SETTLE_BUCKET", "nba-betting-mt")
     settle_prefix = os.environ.get("SETTLE_PREFIX", "rebounds/daily_runs")
     settle_days_lag = int(os.environ.get("SETTLE_DAYS_LAG", "1"))
-    settle_window_days = int(os.environ.get("SETTLE_WINDOW_DAYS", "3"))
+    settle_window_days = int(os.environ.get("SETTLE_WINDOW_DAYS", "1"))
     if settle_window_days < 1:
         raise ValueError("SETTLE_WINDOW_DAYS must be >= 1")
+    settle_all_time_days = int(os.environ.get("SETTLE_ALL_TIME_DAYS", "999999"))
+    if settle_all_time_days < 1:
+        raise ValueError("SETTLE_ALL_TIME_DAYS must be >= 1")
+    settle_max_unmatched_bet_rows = int(os.environ.get("SETTLE_MAX_UNMATCHED_BET_ROWS", "0"))
     settle_end_date_et = (datetime.now(ET) - timedelta(days=settle_days_lag)).date()
     settle_start_date_et = settle_end_date_et - timedelta(days=settle_window_days - 1)
+    if settle_all_time_days >= 999999:
+        settle_all_time_start_date_et = datetime(1900, 1, 1).date()
+    else:
+        settle_all_time_start_date_et = settle_end_date_et - timedelta(days=settle_all_time_days - 1)
     sns_topic_arn = os.environ.get("SNS_TOPIC_ARN", "").strip()
+    mode = _resolve_mode(event if isinstance(event, dict) else None)
 
     step_results = []
     try:
-        pipeline_cmd = [
-            sys.executable,
-            "src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py",
-            "--config",
-            config_path,
-            "--slate-date",
-            today_et,
-        ]
-        _run(pipeline_cmd, root)
-        step_results.append({"step": "pipeline", "status": "ok"})
+        if mode in {"pipeline", "both"}:
+            pipeline_cmd = [
+                sys.executable,
+                "src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py",
+                "--config",
+                config_path,
+                "--slate-date",
+                today_et,
+            ]
+            _run(pipeline_cmd, root)
+            step_results.append({"step": "pipeline", "status": "ok"})
 
-        settle_cmd = [
-            sys.executable,
-            "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
-            "--bucket",
-            settle_bucket,
-            "--runs-prefix",
-            settle_prefix,
-            "--start-date",
-            settle_start_date_et.isoformat(),
-            "--end-date",
-            settle_end_date_et.isoformat(),
-            "--latest-only",
-            "--allow-empty",
-            "--overwrite",
-        ]
-        if sns_topic_arn:
-            settle_cmd.extend(["--sns-topic-arn", sns_topic_arn])
-        _run(settle_cmd, root)
-        step_results.append({"step": "settlement", "status": "ok"})
+        if mode in {"settlement", "both"}:
+            stamp = datetime.now(ET).strftime("%Y%m%dT%H%M%S")
+            base_rollup_prefix = f"{settle_prefix.rstrip('/')}/_rollups/{today_et}/{stamp}"
+            yesterday_rollup_uri = f"s3://{settle_bucket}/{base_rollup_prefix}/yesterday.csv"
+            all_time_rollup_uri = f"s3://{settle_bucket}/{base_rollup_prefix}/all_time.csv"
+
+            settle_yesterday_cmd = [
+                sys.executable,
+                "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
+                "--bucket",
+                settle_bucket,
+                "--runs-prefix",
+                settle_prefix,
+                "--start-date",
+                settle_start_date_et.isoformat(),
+                "--end-date",
+                settle_end_date_et.isoformat(),
+                "--latest-only",
+                "--allow-empty",
+                "--overwrite",
+                "--max-unmatched-bet-rows",
+                str(settle_max_unmatched_bet_rows),
+                "--rollup-s3-uri",
+                yesterday_rollup_uri,
+            ]
+            _run_capture(settle_yesterday_cmd, root)
+
+            settle_all_time_cmd = [
+                sys.executable,
+                "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
+                "--bucket",
+                settle_bucket,
+                "--runs-prefix",
+                settle_prefix,
+                "--start-date",
+                settle_all_time_start_date_et.isoformat(),
+                "--end-date",
+                settle_end_date_et.isoformat(),
+                "--latest-only",
+                "--allow-empty",
+                "--overwrite",
+                "--max-unmatched-bet-rows",
+                str(settle_max_unmatched_bet_rows),
+                "--rollup-s3-uri",
+                all_time_rollup_uri,
+            ]
+            _run_capture(settle_all_time_cmd, root)
+
+            if sns_topic_arn:
+                msg_id = _publish_combined_settlement_sns(
+                    sns_topic_arn,
+                    settle_end_date_et,
+                    yesterday_rollup_uri,
+                    all_time_rollup_uri,
+                )
+                print("published_settlement_to_sns", f"topic_arn={sns_topic_arn}", f"message_id={msg_id}", sep=" | ")
+            step_results.append({"step": "settlement", "status": "ok"})
 
         return {
             "statusCode": 200,
             "body": json.dumps(
                 {
                     "status": "ok",
+                    "mode": mode,
                     "date_et": today_et,
                     "settle_start_date_et": settle_start_date_et.isoformat(),
+                    "settle_all_time_start_date_et": settle_all_time_start_date_et.isoformat(),
                     "settle_end_date_et": settle_end_date_et.isoformat(),
                     "settle_window_days": settle_window_days,
+                    "settle_all_time_days": settle_all_time_days,
                     "steps": step_results,
                 }
             ),
@@ -113,10 +290,13 @@ def lambda_handler(event, context):
             "body": json.dumps(
                 {
                     "status": "error",
+                    "mode": mode,
                     "date_et": today_et,
                     "settle_start_date_et": settle_start_date_et.isoformat(),
+                    "settle_all_time_start_date_et": settle_all_time_start_date_et.isoformat(),
                     "settle_end_date_et": settle_end_date_et.isoformat(),
                     "settle_window_days": settle_window_days,
+                    "settle_all_time_days": settle_all_time_days,
                     "steps": step_results,
                     "error": str(exc),
                 }

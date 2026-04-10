@@ -76,6 +76,12 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Optional SNS topic ARN to publish settlement summary text.",
     )
+    p.add_argument(
+        "--max-unmatched-bet-rows",
+        type=int,
+        default=0,
+        help="Guardrail: max allowed unsettled bet rows before marking run partial.",
+    )
     return p.parse_args()
 
 
@@ -104,14 +110,28 @@ def list_scored_keys(bucket: str, runs_prefix: str, dates: list[str]) -> list[st
 
     s3 = boto3.client("s3")
     keys: list[str] = []
-    for date_str in dates:
-        prefix = f"{runs_prefix.rstrip('/')}/{date_str}/"
+    dates_set = set(dates)
+
+    if len(dates) > 30:
         paginator = s3.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for page in paginator.paginate(Bucket=bucket, Prefix=f"{runs_prefix.rstrip('/')}/"):
             for item in page.get("Contents", []):
                 key = item["Key"]
                 if key.endswith(".parquet") and "/rebounds_scored_" in key and "_settled_" not in key:
-                    keys.append(key)
+                    parts = key.split("/")
+                    if len(parts) >= 4:
+                        date_part = parts[-3]
+                        if date_part in dates_set:
+                            keys.append(key)
+    else:
+        for date_str in dates:
+            prefix = f"{runs_prefix.rstrip('/')}/{date_str}/"
+            paginator = s3.get_paginator("list_objects_v2")
+            for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+                for item in page.get("Contents", []):
+                    key = item["Key"]
+                    if key.endswith(".parquet") and "/rebounds_scored_" in key and "_settled_" not in key:
+                        keys.append(key)
     return sorted(keys)
 
 
@@ -431,6 +451,26 @@ def format_sns_source_footer(rollup: pd.DataFrame) -> list[str]:
     return lines
 
 
+def format_partial_settlement_lines(partials: list[dict]) -> list[str]:
+    lines = ["partial settlement detected"]
+    for item in partials:
+        lines.append(
+            (
+                "- run_id={run_id} settle_date={slate} "
+                "unmatched_bet_rows={unmatched_bets} unmatched_total_rows={unmatched_total} "
+                "threshold={threshold}"
+            ).format(
+                run_id=item["run_id"],
+                slate=item["slate"],
+                unmatched_bets=item["unmatched_bets"],
+                unmatched_total=item["unmatched_total"],
+                threshold=item["threshold"],
+            )
+        )
+    lines.append("Strategy summary suppressed due to settlement incompleteness.")
+    return lines
+
+
 def parse_run_id_from_key(scored_key: str) -> str:
     parts = scored_key.split("/")
     if len(parts) < 2:
@@ -516,6 +556,7 @@ def main() -> None:
     actuals = load_actuals_for_dates(seasons, dates, args.actuals_loader)
 
     rollup_rows = []
+    partial_runs: list[dict] = []
     for key in scored_keys:
         run_df = all_scored.loc[all_scored["__scored_s3_key"] == key].drop(columns=["__scored_s3_key"]).copy()
         settled = settle_rows(run_df, actuals)
@@ -526,6 +567,35 @@ def main() -> None:
         settled_key = f"{run_prefix}/rebounds_scored_settled_{slate}.parquet"
         summary_key = f"{run_prefix}/strategy_summary_{slate}.csv"
         manifest_key = f"{run_prefix}/settlement_manifest.json"
+        unmatched_key = f"{run_prefix}/unmatched_rows_{slate}.csv"
+
+        unmatched_rows = settled.loc[settled["result"] == "unsettled"].copy()
+        unmatched_bet_rows = int(unmatched_rows["is_bet"].sum())
+        unmatched_total_rows = int(len(unmatched_rows))
+        is_partial = unmatched_bet_rows > int(args.max_unmatched_bet_rows)
+
+        unmatched_export_cols = [
+            c
+            for c in [
+                "season",
+                "date",
+                "player_normalized",
+                "game_id",
+                "bookmaker",
+                "line",
+                "under_odds",
+                "strategy_bucket",
+                "is_bet",
+                "result",
+                "actuals_match_source",
+            ]
+            if c in unmatched_rows.columns
+        ]
+        write_bytes_s3(
+            args.bucket,
+            unmatched_key,
+            unmatched_rows.loc[:, unmatched_export_cols].to_csv(index=False).encode("utf-8"),
+        )
 
         settled_buf = BytesIO()
         settled.to_parquet(settled_buf, index=False)
@@ -542,7 +612,11 @@ def main() -> None:
             "summary_key": summary_key,
             "n_rows": int(len(settled)),
             "n_unsettled_rows": int((settled["result"] == "unsettled").sum()),
+            "n_unsettled_bet_rows": unmatched_bet_rows,
+            "max_unmatched_bet_rows": int(args.max_unmatched_bet_rows),
+            "settlement_status": "partial" if is_partial else "complete",
             "n_distinct_players": int(settled["player_normalized"].nunique()),
+            "unmatched_rows_key": unmatched_key,
             "actuals_match_source_counts": {
                 k: int(v)
                 for k, v in settled["actuals_match_source"].value_counts(dropna=False).sort_index().items()
@@ -570,28 +644,112 @@ def main() -> None:
             f"source={key}",
             f"settled=s3://{args.bucket}/{settled_key}",
             f"summary=s3://{args.bucket}/{summary_key}",
+            f"unmatched_rows=s3://{args.bucket}/{unmatched_key}",
+            f"settlement_status={'partial' if is_partial else 'complete'}",
             sep=" | ",
         )
         print("strategy_summary")
         print(format_strategy_summary_for_console(summary_print))
+        if is_partial:
+            partial_runs.append(
+                {
+                    "run_id": parse_run_id_from_key(key),
+                    "slate": slate,
+                    "unmatched_bets": unmatched_bet_rows,
+                    "unmatched_total": unmatched_total_rows,
+                    "threshold": int(args.max_unmatched_bet_rows),
+                }
+            )
+            print(
+                "settlement_guardrail",
+                f"source={key}",
+                f"status=partial",
+                f"unmatched_bet_rows={unmatched_bet_rows}",
+                f"max_unmatched_bet_rows={int(args.max_unmatched_bet_rows)}",
+                sep=" | ",
+            )
 
     rollup = pd.concat(rollup_rows, ignore_index=True)
     upload_rollup_if_requested(rollup, args.rollup_s3_uri)
 
+    print("\n" + "=" * 80)
+    print("TOTAL AGGREGATED SUMMARY (Across all processed runs)")
+    print("=" * 80)
+    
+    rollup["_prob_sum"] = rollup["avg_implied_prob_taken"] * rollup["n_rows"]
+    
+    total_summary = (
+        rollup.groupby("strategy_bucket", as_index=False)
+        .agg(
+            n_rows=("n_rows", "sum"),
+            n_bets=("n_bets", "sum"),
+            n_win=("n_win", "sum"),
+            n_loss=("n_loss", "sum"),
+            n_push=("n_push", "sum"),
+            n_unsettled=("n_unsettled", "sum"),
+            pnl_units=("pnl_units", "sum"),
+            reference_pnl_units=("reference_pnl_units", "sum"),
+            _prob_sum=("_prob_sum", "sum"),
+        )
+        .sort_values("strategy_bucket")
+        .reset_index(drop=True)
+    )
+    
+    total_summary["avg_implied_prob_taken"] = total_summary["_prob_sum"] / total_summary["n_rows"]
+    
+    total_summary["hit_rate"] = np.where(
+        (total_summary["n_win"] + total_summary["n_loss"]) > 0,
+        total_summary["n_win"] / (total_summary["n_win"] + total_summary["n_loss"]),
+        np.nan,
+    )
+    
+    settled_decisions = total_summary["n_win"] + total_summary["n_loss"] + total_summary["n_push"]
+    total_summary["n_settled_bets"] = settled_decisions
+    
+    total_summary["roi_units_per_settled_bet"] = np.where(
+        total_summary["n_settled_bets"] > 0,
+        total_summary["reference_pnl_units"] / total_summary["n_settled_bets"],
+        np.nan,
+    )
+    
+    total_summary["roi_units_per_bet_all_placed"] = np.where(
+        total_summary["n_bets"] > 0,
+        total_summary["reference_pnl_units"] / total_summary["n_bets"],
+        total_summary["reference_pnl_units"] / total_summary["n_rows"],
+    )
+    
+    for col in ["hit_rate", "pnl_units", "roi_units_per_settled_bet", "roi_units_per_bet_all_placed", "avg_implied_prob_taken"]:
+        if col in total_summary.columns:
+            total_summary[col] = total_summary[col].round(3)
+            
+    print(format_strategy_summary_for_console(total_summary))
+    print("=" * 80 + "\n")
+
     sns_topic_arn = args.sns_topic_arn.strip()
     if sns_topic_arn:
-        summary_lines = format_sns_summary_lines(rollup)
         source_lines = format_sns_source_footer(rollup)
-        msg_lines: list[str] = [
-            "NBA rebounds settled results",
-            f"settle_dates={', '.join(date_list)}",
-            f"runs={len(scored_keys)}",
-            "",
-            "strategy summary",
-            *summary_lines,
-            "",
-            *source_lines,
-        ]
+        if len(partial_runs) > 0:
+            msg_lines = [
+                "NBA rebounds settled results",
+                f"settle_dates={', '.join(date_list)}",
+                f"runs={len(scored_keys)}",
+                "",
+                *format_partial_settlement_lines(partial_runs),
+                "",
+                *source_lines,
+            ]
+        else:
+            summary_lines = format_sns_summary_lines(rollup)
+            msg_lines = [
+                "NBA rebounds settled results",
+                f"settle_dates={', '.join(date_list)}",
+                f"runs={len(scored_keys)}",
+                "",
+                "strategy summary",
+                *summary_lines,
+                "",
+                *source_lines,
+            ]
         msg_id = publish_settlement_summary_to_sns(sns_topic_arn, "\n".join(msg_lines))
         print("published_settlement_to_sns", f"topic_arn={sns_topic_arn}", f"message_id={msg_id}", sep=" | ")
 
