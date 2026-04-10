@@ -889,6 +889,20 @@ def lambda_handler(event=None, context=None):
     today_et = now.strftime("%Y-%m-%d")
     yesterday_et = (now - timedelta(days=1)).strftime("%Y-%m-%d")
 
+    pause_until = os.environ.get('NCAAB_PAUSE_UNTIL', '').strip()
+    if pause_until:
+        pause_until_date = datetime.strptime(pause_until, "%Y-%m-%d").date()
+        today_date = datetime.strptime(today_et, "%Y-%m-%d").date()
+        if today_date < pause_until_date:
+            LOG.info(
+                "NCAAB Fade Revenge paused until %s; skipping run for %s",
+                pause_until,
+                today_et,
+            )
+            print(f"NCAAB Fade Revenge paused until {pause_until}; skipping run for {today_et}")
+            sys.stdout.flush()
+            return {"status": "paused", "today_et": today_et, "pause_until": pause_until}
+
     season = _get_current_ncaab_season()
     start_date = _season_start(season)
     print(f"NCAAB Fade Revenge run: season={season} start={start_date} yesterday={yesterday_et} today={today_et}")
