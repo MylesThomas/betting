@@ -14,6 +14,7 @@
 # Usage:
 #   export ODDS_API_KEY="your-key"
 #   export SNS_TOPIC_ARN="arn:aws:sns:us-east-2:YOUR_ACCOUNT_ID:your-topic-name"  # optional, use real account id
+#   export NCAAB_PAUSE_UNTIL="2026-11-03"  # optional, skip runs before this date (YYYY-MM-DD)
 #   cd ~/dev/betting && bash lambda/ncaab_fade_revenge_daily/deploy_ncaab_fade_revenge_daily.sh
 #
 # Verify:
@@ -138,6 +139,9 @@ echo ""
 ENV_VARS="ODDS_API_KEY=$ODDS_API_KEY"
 if [ -n "$SNS_TOPIC_ARN" ]; then
     ENV_VARS="$ENV_VARS,SNS_TOPIC_ARN=$SNS_TOPIC_ARN"
+fi
+if [ -n "$NCAAB_PAUSE_UNTIL" ]; then
+    ENV_VARS="$ENV_VARS,NCAAB_PAUSE_UNTIL=$NCAAB_PAUSE_UNTIL"
 fi
 
 if aws lambda get-function --function-name "$LAMBDA_NAME" --region "$REGION" &> /dev/null; then

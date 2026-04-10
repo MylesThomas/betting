@@ -18,7 +18,19 @@ Runs **~9am ET** daily. **Bets the away team when the away team is the revenge t
 ```bash
 export ODDS_API_KEY="your-key"
 export SNS_TOPIC_ARN="arn:aws:sns:us-east-2:ACCOUNT:topic-name"  # optional
+export NCAAB_PAUSE_UNTIL="2026-11-03"  # optional; pause offseason, auto-resume on this date
 cd ~/dev/betting && bash lambda/ncaab_fade_revenge_daily/deploy_ncaab_fade_revenge_daily.sh
+```
+
+## Offseason pause (auto-resume)
+
+Set `NCAAB_PAUSE_UNTIL` to the first date you want the Lambda active again.  
+If today's date is earlier than that value, the handler returns `status=paused` and skips fetches/SNS.
+
+For the 2026-27 season, set:
+
+```bash
+export NCAAB_PAUSE_UNTIL="2026-11-03"
 ```
 
 ## Check logs
