@@ -147,6 +147,7 @@ def _publish_combined_settlement_sns(
     settle_end_date_et,
     yesterday_rollup_uri: str,
     all_time_rollup_uri: str,
+    warnings: list[str] = None,
 ) -> str:
     yesterday_rollup = _read_csv_s3(yesterday_rollup_uri)
     all_time_rollup = _read_csv_s3(all_time_rollup_uri)
@@ -154,6 +155,15 @@ def _publish_combined_settlement_sns(
         "NBA rebounds settled results",
         f"settle_end_date_et={settle_end_date_et.isoformat()}",
         "",
+    ]
+    
+    if warnings:
+        lines.append("WARNING: partial settlement detected")
+        for w in warnings:
+            lines.append(f"- {w}")
+        lines.append("")
+        
+    lines.extend([
         *_format_window_section("yesterday", yesterday_rollup),
         "",
         *_format_window_section("all-time", all_time_rollup),
@@ -161,7 +171,7 @@ def _publish_combined_settlement_sns(
         "rollup files",
         f"1. {yesterday_rollup_uri}",
         f"2. {all_time_rollup_uri}",
-    ]
+    ])
     resp = boto3.client("sns").publish(
         TopicArn=topic_arn,
         Subject="NBA rebounds settled results",
@@ -235,7 +245,7 @@ def lambda_handler(event, context):
                 "--rollup-s3-uri",
                 yesterday_rollup_uri,
             ]
-            _run_capture(settle_yesterday_cmd, root)
+            yesterday_out = _run_capture(settle_yesterday_cmd, root)
 
             settle_all_time_cmd = [
                 sys.executable,
@@ -256,7 +266,13 @@ def lambda_handler(event, context):
                 "--rollup-s3-uri",
                 all_time_rollup_uri,
             ]
-            _run_capture(settle_all_time_cmd, root)
+            all_time_out = _run_capture(settle_all_time_cmd, root)
+
+            warnings = []
+            for line in (yesterday_out + "\n" + all_time_out).splitlines():
+                if "status=partial" in line and "settlement_guardrail" in line:
+                    warnings.append(line)
+            warnings = sorted(list(set(warnings)))
 
             if sns_topic_arn:
                 msg_id = _publish_combined_settlement_sns(
@@ -264,6 +280,7 @@ def lambda_handler(event, context):
                     settle_end_date_et,
                     yesterday_rollup_uri,
                     all_time_rollup_uri,
+                    warnings,
                 )
                 print("published_settlement_to_sns", f"topic_arn={sns_topic_arn}", f"message_id={msg_id}", sep=" | ")
             step_results.append({"step": "settlement", "status": "ok"})

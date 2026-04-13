@@ -190,6 +190,18 @@ def american_to_implied_prob(american: float) -> float:
 def load_actuals_for_dates_duckdb(seasons: list[str], dates: list[str]) -> pd.DataFrame:
     season_list = ", ".join([f"'{s}'" for s in sorted(set(seasons))])
     date_list = ", ".join([f"'{d}'" for d in sorted(set(dates))])
+    
+    # Construct exact S3 URIs to avoid DuckDB globbing issues with large buckets
+    s3_uris = []
+    for s in sorted(set(seasons)):
+        for d in sorted(set(dates)):
+            s3_uris.append(f"'s3://nba-api-mt/player_game_logs/{s}/{d}.csv'")
+    
+    if not s3_uris:
+        return pd.DataFrame(columns=["season", "date", "player_normalized", "game_id", "reb_actual"])
+        
+    s3_uri_list = ", ".join(s3_uris)
+    
     con = connect_duckdb_s3()
     q = f"""
     WITH raw AS (
@@ -200,7 +212,7 @@ def load_actuals_for_dates_duckdb(seasons: list[str], dates: list[str]) -> pd.Da
         NULLIF(GAME_ID, '') AS game_id,
         NULLIF(REB, '') AS reb
       FROM read_csv_auto(
-        's3://nba-api-mt/player_game_logs/*/*.csv',
+        [{s3_uri_list}],
         union_by_name=true,
         filename=true,
         all_varchar=true,
