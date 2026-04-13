@@ -18,7 +18,8 @@ RUN pip install --no-cache-dir \
     pyyaml \
     python-dotenv \
     duckdb==1.1.3 \
-    requests
+    requests \
+    tzdata==2024.1
 
 # Lambda task root is /var/task
 COPY lambda/nba_rebounds_daily/lambda_function.py ${LAMBDA_TASK_ROOT}/
