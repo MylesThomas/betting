@@ -104,6 +104,7 @@ def _read_csv_s3(s3_uri: str) -> pd.DataFrame | None:
 def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]:
     if rollup is None or len(rollup) == 0:
         return [f"{label} strategy summary", "- no scored runs found for this window"]
+        
     grouped = (
         rollup.groupby("strategy_bucket", as_index=False)
         .agg(
@@ -118,32 +119,60 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
         .sort_values("strategy_bucket")
         .reset_index(drop=True)
     )
-    grouped["hit_rate"] = grouped.apply(
-        lambda x: x["n_win"] / (x["n_win"] + x["n_loss"]) if (x["n_win"] + x["n_loss"]) > 0 else 0.0, axis=1
-    )
-    grouped["roi"] = grouped.apply(
-        lambda x: x["pnl_units"] / (x["n_win"] + x["n_loss"] + x["n_push"]) if (x["n_win"] + x["n_loss"] + x["n_push"]) > 0 else 0.0, axis=1
-    )
+    
+    import duckdb
+    con = duckdb.connect()
+    con.register("rollup", grouped)
+    formatted_summary = con.execute(
+        """
+        SELECT
+            strategy_bucket AS strategy,
+            n_rows AS rows,
+            n_bets AS bets,
+            printf('%d-%d-%d', n_win, n_loss, n_push) AS "w-l-p",
+            n_unsettled AS un,
+            round(pnl_units, 3) AS pnl,
+            round(CASE WHEN (n_win + n_loss) > 0 THEN n_win * 1.0 / (n_win + n_loss) ELSE 0.0 END, 3) AS hit_rate,
+            round(CASE WHEN (n_win + n_loss + n_push) > 0 THEN pnl_units / (n_win + n_loss + n_push) ELSE 0.0 END, 3) AS roi
+        FROM rollup
+        ORDER BY
+            CASE WHEN strategy_bucket = 'neither' THEN 1 ELSE 0 END,
+            strategy_bucket
+        """
+    ).fetchdf()
+    con.close()
+    
     lines = [f"{label} strategy summary"]
-    for _, row in grouped.iterrows():
+    
+    # Add the bullet point list
+    for _, row in formatted_summary.iterrows():
         lines.append(
             (
                 "- {strategy}: rows={rows} bets={bets} "
-                "w-l-p={wins}-{losses}-{pushes} unsettled={unsettled} pnl_units={pnl:.3f} "
+                "w-l-p={wlp} unsettled={un} pnl_units={pnl:.3f} "
                 "hit_rate={hit_rate:.3f} roi={roi:.3f}"
             ).format(
-                strategy=str(row["strategy_bucket"]),
-                rows=int(row["n_rows"]),
-                bets=int(row["n_bets"]),
-                wins=int(row["n_win"]),
-                losses=int(row["n_loss"]),
-                pushes=int(row["n_push"]),
-                unsettled=int(row["n_unsettled"]),
-                pnl=float(row["pnl_units"]),
+                strategy=str(row["strategy"]),
+                rows=int(row["rows"]),
+                bets=int(row["bets"]),
+                wlp=str(row["w-l-p"]),
+                un=int(row["un"]),
+                pnl=float(row["pnl"]),
                 hit_rate=float(row["hit_rate"]),
                 roi=float(row["roi"]),
             )
         )
+        
+    lines.append("")
+    
+    # Add the markdown table
+    try:
+        table_str = formatted_summary.to_markdown(index=False)
+        lines.extend(table_str.splitlines())
+    except ImportError:
+        table_str = formatted_summary.to_string(index=False)
+        lines.extend(table_str.splitlines())
+        
     return lines
 
 
