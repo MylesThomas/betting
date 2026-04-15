@@ -144,34 +144,31 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
     
     lines = [f"{label} strategy summary"]
     
-    # Add the bullet point list
+    # Format as a clean, aligned text table
+    # Calculate column widths
+    cols = list(formatted_summary.columns)
+    widths = {c: len(c) for c in cols}
     for _, row in formatted_summary.iterrows():
-        lines.append(
-            (
-                "- {strategy}: rows={rows} bets={bets} "
-                "w-l-p={wlp} unsettled={un} pnl_units={pnl:.3f} "
-                "hit_rate={hit_rate:.3f} roi={roi:.3f}"
-            ).format(
-                strategy=str(row["strategy"]),
-                rows=int(row["rows"]),
-                bets=int(row["bets"]),
-                wlp=str(row["w-l-p"]),
-                un=int(row["un"]),
-                pnl=float(row["pnl"]),
-                hit_rate=float(row["hit_rate"]),
-                roi=float(row["roi"]),
-            )
-        )
-        
-    lines.append("")
+        for c in cols:
+            val_str = f"{row[c]:.3f}" if isinstance(row[c], float) else str(row[c])
+            widths[c] = max(widths[c], len(val_str))
+            
+    # Build header
+    header = " | ".join(c.ljust(widths[c]) for c in cols)
+    lines.append(header)
+    lines.append("-" * len(header))
     
-    # Add the markdown table
-    try:
-        table_str = formatted_summary.to_markdown(index=False)
-        lines.extend(table_str.splitlines())
-    except ImportError:
-        table_str = formatted_summary.to_string(index=False)
-        lines.extend(table_str.splitlines())
+    # Build rows
+    for _, row in formatted_summary.iterrows():
+        row_strs = []
+        for c in cols:
+            val_str = f"{row[c]:.3f}" if isinstance(row[c], float) else str(row[c])
+            # Right-align numbers, left-align strings
+            if isinstance(row[c], (int, float)) or c == "w-l-p":
+                row_strs.append(val_str.rjust(widths[c]))
+            else:
+                row_strs.append(val_str.ljust(widths[c]))
+        lines.append(" | ".join(row_strs))
         
     return lines
 
