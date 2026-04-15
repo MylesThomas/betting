@@ -148,4 +148,4 @@ lambda/ncaab_fade_revenge_daily/lambda_ncaab_fade_revenge.zip
 ec2/mc_nba_player_points_live_betting_signal_generator/ec2_user_data.sh
 
 # cache
-data/02_cache/nba_strategy_build/*.parquet
+data/02_cache/nba_strategy_build/*.parquetsettlement_invoke.json
