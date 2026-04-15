@@ -101,9 +101,17 @@ def _read_csv_s3(s3_uri: str) -> pd.DataFrame | None:
             return None
         raise
 
+def _indent(lines: list[str], prefix: str = "  ") -> list[str]:
+    return [f"{prefix}{line}" if line else "" for line in lines]
+
 def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]:
+    title = label.upper()
+
     if rollup is None or len(rollup) == 0:
-        return [f"{label} strategy summary", "- no scored runs found for this window"]
+        return [
+            title,
+            "  No scored runs found for this window",
+        ]
         
     grouped = (
         rollup.groupby("strategy_bucket", as_index=False)
@@ -129,7 +137,7 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
             strategy_bucket AS strategy,
             n_rows AS rows,
             n_bets AS bets,
-            printf('%d-%d-%d', n_win, n_loss, n_push) AS "w-l-p",
+            printf('%d-%d-%d', n_win, n_loss, n_push) AS wlp,
             n_unsettled AS un,
             round(pnl_units, 3) AS pnl,
             round(CASE WHEN (n_win + n_loss) > 0 THEN n_win * 1.0 / (n_win + n_loss) ELSE 0.0 END, 3) AS hit_rate,
@@ -142,35 +150,22 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
     ).fetchdf()
     con.close()
     
-    lines = [f"{label} strategy summary"]
-    
-    # Format as a clean, aligned text table
-    # Calculate column widths
-    cols = list(formatted_summary.columns)
-    widths = {c: len(c) for c in cols}
+    lines = [title]
     for _, row in formatted_summary.iterrows():
-        for c in cols:
-            val_str = f"{row[c]:.3f}" if isinstance(row[c], float) else str(row[c])
-            widths[c] = max(widths[c], len(val_str))
-            
-    # Build header
-    header = " | ".join(c.ljust(widths[c]) for c in cols)
-    lines.append(header)
-    lines.append("-" * len(header))
-    
-    # Build rows
-    for _, row in formatted_summary.iterrows():
-        row_strs = []
-        for c in cols:
-            val_str = f"{row[c]:.3f}" if isinstance(row[c], float) else str(row[c])
-            # Right-align numbers, left-align strings
-            if isinstance(row[c], (int, float)) or c == "w-l-p":
-                row_strs.append(val_str.rjust(widths[c]))
-            else:
-                row_strs.append(val_str.ljust(widths[c]))
-        lines.append(" | ".join(row_strs))
+        strat = str(row['strategy']).upper()
+        lines.append(f"  [{strat}]")
         
-    return lines
+        # Format numbers nicely
+        pnl_val = float(row['pnl'])
+        pnl_str = f"+{pnl_val:.3f}" if pnl_val > 0 else f"{pnl_val:.3f}"
+        hr_str = f"{float(row['hit_rate']) * 100:.1f}%"
+        roi_str = f"{float(row['roi']) * 100:.1f}%"
+        
+        lines.append(f"    Rows: {row['rows']} | Bets: {row['bets']} | W-L-P: {row['wlp']} | Unsettled: {row['un']}")
+        lines.append(f"    PnL: {pnl_str}u | Hit Rate: {hr_str} | ROI: {roi_str}")
+        lines.append("")
+        
+    return lines[:-1]  # Remove trailing blank line
 
 
 def _publish_combined_settlement_sns(
@@ -184,24 +179,26 @@ def _publish_combined_settlement_sns(
     all_time_rollup = _read_csv_s3(all_time_rollup_uri)
     lines = [
         "NBA rebounds settled results",
-        f"settle_end_date_et={settle_end_date_et.isoformat()}",
+        f"settle_end_date_et: {settle_end_date_et.isoformat()}",
         "",
     ]
     
     if warnings:
-        lines.append("WARNING: partial settlement detected")
-        for w in warnings:
-            lines.append(f"- {w}")
-        lines.append("")
+        lines.extend([
+            "WARNINGS",
+            f"  Partial settlement detected ({len(warnings)} rows):",
+            *[f"    - {w}" for w in warnings],
+            "",
+        ])
         
     lines.extend([
         *_format_window_section("yesterday", yesterday_rollup),
         "",
         *_format_window_section("all-time", all_time_rollup),
         "",
-        "rollup files",
-        f"1. {yesterday_rollup_uri}",
-        f"2. {all_time_rollup_uri}",
+        "ROLLUP FILES",
+        f"  1. {yesterday_rollup_uri}",
+        f"  2. {all_time_rollup_uri}",
     ])
     resp = boto3.client("sns").publish(
         TopicArn=topic_arn,
