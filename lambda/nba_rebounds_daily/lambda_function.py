@@ -90,15 +90,20 @@ def _parse_s3_uri(s3_uri: str) -> tuple[str, str]:
     return bucket, key
 
 
-def _read_csv_s3(s3_uri: str) -> pd.DataFrame:
+def _read_csv_s3(s3_uri: str) -> pd.DataFrame | None:
+    import botocore.exceptions
     bucket, key = _parse_s3_uri(s3_uri)
-    body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
-    return pd.read_csv(BytesIO(body))
+    try:
+        body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
+        return pd.read_csv(BytesIO(body))
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] in ['NoSuchKey', '404']:
+            return None
+        raise
 
-
-def _format_window_section(label: str, rollup: pd.DataFrame) -> list[str]:
-    if len(rollup) == 0:
-        return [f"{label} strategy summary", "- no rows"]
+def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]:
+    if rollup is None or len(rollup) == 0:
+        return [f"{label} strategy summary", "- no scored runs found for this window"]
     grouped = (
         rollup.groupby("strategy_bucket", as_index=False)
         .agg(
