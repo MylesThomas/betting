@@ -133,7 +133,7 @@ import argparse
 import requests
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import os
 from dotenv import load_dotenv
 from pathlib import Path
@@ -698,6 +698,89 @@ def get_historical_event_odds(sport, event_id, date_str, markets=DEFAULT_MARKETS
         return None
 
 
+def _normalize_odds_response_for_parser(api_json: dict | None) -> dict | None:
+    """Historical odds return {'data': event}; live /events/{{id}}/odds return the event object at top level."""
+    if not api_json:
+        return None
+    if "data" in api_json:
+        return api_json
+    if "bookmakers" in api_json or "away_team" in api_json:
+        return {"data": api_json}
+    return None
+
+
+@timed
+def get_live_nba_events_list(sport=SPORT_KEY):
+    """Upcoming NBA events (same feed as run_live_arb_finder / find_nba_arb_opportunities)."""
+    global credits_remaining, credits_used
+    endpoint = f"sports/{sport}/events"
+    params = {"apiKey": API_KEY}
+    logging.info(f"Fetching live event list: {endpoint}")
+    try:
+        response = requests.get(f"{BASE_URL}/{endpoint}", params=params)
+        response.raise_for_status()
+        credits_remaining = int(float(response.headers.get("x-requests-remaining", 0)))
+        credits_used = int(float(response.headers.get("x-requests-used", 0)))
+        last_cost = int(float(response.headers.get("x-requests-last", 0)))
+        logging.info(f"Live events list - Cost: {last_cost} credits, Remaining: {credits_remaining:,}")
+        data = response.json()
+        if isinstance(data, list):
+            return data
+        logging.warning("Live events response was not a list")
+        return []
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"HTTP error fetching live NBA events: {e}")
+        return []
+    except Exception as e:
+        logging.error(f"Unexpected error fetching live NBA events: {e}", exc_info=True)
+        return []
+
+
+@timed
+def get_live_event_player_props_odds(sport, event_id, markets=DEFAULT_MARKETS, regions=DEFAULT_REGION):
+    """Player props for one event via non-historical /events/{{id}}/odds (used for same-day ET slates)."""
+    global credits_remaining, credits_used
+    endpoint = f"sports/{sport}/events/{event_id}/odds"
+    params = {
+        "apiKey": API_KEY,
+        "regions": regions,
+        "markets": markets,
+        "oddsFormat": ODDS_FORMAT,
+        "dateFormat": DATE_FORMAT,
+    }
+    logging.debug(f"Fetching live odds for event {event_id[:8]} - markets: {markets}")
+    try:
+        response = requests.get(f"{BASE_URL}/{endpoint}", params=params)
+        response.raise_for_status()
+        credits_remaining = int(float(response.headers.get("x-requests-remaining", 0)))
+        credits_used = int(float(response.headers.get("x-requests-used", 0)))
+        last_cost = int(float(response.headers.get("x-requests-last", 0)))
+        logging.info(f"Event {event_id[:8]} (live) - Cost: {last_cost} credits, Remaining: {credits_remaining:,}")
+        time.sleep(RATE_LIMIT_DELAY)
+        raw = response.json()
+        return _normalize_odds_response_for_parser(raw)
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"HTTP error fetching live odds for event {event_id[:8]}: {e}")
+        if e.response is not None and e.response.status_code == 422:
+            logging.warning(f"Props not available (live) for event {event_id[:8]}")
+        return None
+    except Exception as e:
+        logging.error(f"Unexpected error fetching live odds for event {event_id[:8]}: {e}", exc_info=True)
+        return None
+
+
+def filter_events_by_et_calendar_date(events: list, target_date: date) -> list:
+    """Keep events whose tipoff falls on target_date in America/New_York (full calendar day)."""
+    et_tz = ZoneInfo("America/New_York")
+    out = []
+    for event in events:
+        commence_time_utc = datetime.fromisoformat(event["commence_time"].replace("Z", "+00:00"))
+        commence_time_et = commence_time_utc.astimezone(et_tz)
+        if commence_time_et.date() == target_date:
+            out.append(event)
+    return out
+
+
 def parse_player_props(odds_data):
     """Parse player props from odds data (all markets)"""
     if not odds_data or 'data' not in odds_data:
@@ -978,46 +1061,51 @@ def fetch_date_props(date_str, upload_s3=True, fetch_games=False, skip_if_exists
         logging.info(f"Source: The Odds API - 9 markets (points, rebounds, assists, threes, blocks, steals, double_double, triple_double, PRA)")
         logging.info("="*80)
         
-        # Get events for that date
+        # Get events for that date (historical snapshot); fall back to live feed for "today" ET
+        et_tz = ZoneInfo("America/New_York")
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        today_et = datetime.now(et_tz).date()
+
         all_events = get_historical_events(date_str)
-        
-        if not all_events:
-            logging.error(f"No events found for {date_str}")
-            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-        
-        # Filter to games that start on this date (ET timezone)
-        et_tz = ZoneInfo('America/New_York')
-        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-        
-        start_of_window_et = datetime(date_obj.year, date_obj.month, date_obj.day, 6, 0, 0, tzinfo=et_tz)
-        end_of_window_et = datetime(date_obj.year, date_obj.month, date_obj.day, 23, 59, 59, tzinfo=et_tz)
-        
-        events = []
-        for event in all_events:
-            commence_time_utc = datetime.fromisoformat(event['commence_time'].replace('Z', '+00:00'))
-            commence_time_et = commence_time_utc.astimezone(et_tz)
-            
-            if start_of_window_et <= commence_time_et <= end_of_window_et:
-                events.append(event)
-        
-        logging.info(f"Found {len(events)} games that start on {date_str}")
-        
+        events = filter_events_by_et_calendar_date(all_events, target_date)
+        use_live_odds = False
+
+        if not events and target_date == today_et:
+            logging.warning(
+                f"No historical events for {date_str} after ET calendar filter; "
+                f"trying live /sports/{SPORT_KEY}/events (same-day ingest)"
+            )
+            live_list = get_live_nba_events_list()
+            events = filter_events_by_et_calendar_date(live_list, target_date)
+            if events:
+                use_live_odds = True
+                logging.info(f"Live feed: {len(events)} game(s) on {date_str} (ET)")
+
         if not events:
-            logging.warning(f"No games actually start on {date_str}")
+            logging.error(f"No events found for {date_str} (historical + optional live fallback)")
             return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-        
+
+        logging.info(f"Found {len(events)} games on {date_str} (ET calendar day)")
+
         # Fetch props for each event
         all_props = []
         for i, event in enumerate(events, 1):
             game_desc = f"{event['away_team']} @ {event['home_team']}"
             logging.info(f"Processing game {i}/{len(events)}: {game_desc}")
-            
-            odds_data = get_historical_event_odds(
-                sport=SPORT_KEY,
-                event_id=event['id'],
-                date_str=date_str,
-                markets=DEFAULT_MARKETS
-            )
+
+            if use_live_odds:
+                odds_data = get_live_event_player_props_odds(
+                    sport=SPORT_KEY,
+                    event_id=event["id"],
+                    markets=DEFAULT_MARKETS,
+                )
+            else:
+                odds_data = get_historical_event_odds(
+                    sport=SPORT_KEY,
+                    event_id=event["id"],
+                    date_str=date_str,
+                    markets=DEFAULT_MARKETS,
+                )
             
             if odds_data:
                 props = parse_player_props(odds_data)
