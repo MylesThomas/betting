@@ -9,6 +9,8 @@ Context:
   - `strategy_summary_<date>.csv` (ols/xgb/both/neither summary)
   - `settlement_manifest.json` (counts + diagnostics)
 - Settlement is idempotent by default (skip existing settled parquet unless --overwrite).
+- When `--rollup-s3-uri` ends with `yesterday.csv`, also writes `email_plays_yesterday.txt`
+  (monospace both/ols/xgb play grid for the daily SNS email).
 """
 
 from __future__ import annotations
@@ -404,6 +406,83 @@ def upload_rollup_if_requested(rollup: pd.DataFrame, rollup_s3_uri: str) -> None
     print(f"uploaded {rollup_s3_uri}")
 
 
+def _rollup_sibling_email_plays_key(rollup_s3_uri: str) -> tuple[str, str] | None:
+    """Same folder as yesterday.csv → email_plays_yesterday.txt (for SNS appendix)."""
+    u = rollup_s3_uri.strip()
+    if not u.startswith("s3://") or not u.endswith("yesterday.csv"):
+        return None
+    rest = u[5:]
+    bucket, _, key = rest.partition("/")
+    if bucket == "" or key == "":
+        return None
+    parent, _, _fname = key.rpartition("/")
+    if parent == "":
+        return None
+    out_key = f"{parent}/email_plays_yesterday.txt"
+    return bucket, out_key
+
+
+def format_settlement_email_plays_table(plays: pd.DataFrame, max_rows: int = 600) -> str:
+    """Monospace table for SNS: both/ols/xgb rows only, sorted like ad-hoc DuckDB checks."""
+    if plays is None or len(plays) == 0:
+        return ""
+    work = plays.copy()
+    work["diff"] = pd.to_numeric(work["reb_actual"], errors="coerce") - pd.to_numeric(
+        work["line"], errors="coerce"
+    )
+    order = {"win": 0, "loss": 1, "unsettled": 2, "push": 3}
+    work["_ord"] = work["result"].map(order).fillna(9).astype(int)
+    work = work.sort_values(
+        ["_ord", "strategy_bucket", "player_normalized", "bookmaker"],
+        kind="mergesort",
+    )
+    total = len(work)
+    truncated = total > max_rows
+    if truncated:
+        work = work.head(max_rows)
+    lines: list[str] = []
+    if truncated:
+        lines.append(
+            f"(showing first {max_rows} of {total} rows; see settled parquet in S3 for full detail)"
+        )
+        lines.append("")
+    hdr = f"{'player':<22} {'strat':<6} {'bookmaker':<16} {'line':>6} {'act':>5} {'diff':>6} {'result':<10} {'und':>5} {'date':<12}"
+    lines.append(hdr)
+    lines.append("-" * len(hdr))
+    for _, r in work.iterrows():
+        p = str(r.get("player_normalized", ""))[:20]
+        st = str(r.get("strategy_bucket", ""))[:5]
+        bk = str(r.get("bookmaker", ""))[:14]
+        ln = r.get("line")
+        act = r.get("reb_actual")
+        dfv = r.get("diff")
+        res = str(r.get("result", ""))[:9]
+        uo = r.get("under_odds")
+        dt = str(r.get("date", ""))[:12]
+        ln_s = "" if pd.isna(ln) else f"{float(ln):.1f}"
+        act_s = "" if pd.isna(act) else f"{float(act):.1f}"
+        df_s = "" if pd.isna(dfv) else f"{float(dfv):.1f}"
+        uo_s = "" if pd.isna(uo) else f"{int(float(uo))}"
+        lines.append(
+            f"{p:<22} {st:<6} {bk:<16} {ln_s:>6} {act_s:>5} {df_s:>6} {res:<10} {uo_s:>5} {dt:<12}"
+        )
+    return "\n".join(lines)
+
+
+def upload_email_plays_table_if_yesterday(plays: pd.DataFrame, rollup_s3_uri: str) -> None:
+    if plays is None or len(plays) == 0:
+        return
+    loc = _rollup_sibling_email_plays_key(rollup_s3_uri)
+    if loc is None:
+        return
+    bucket, out_key = loc
+    text = format_settlement_email_plays_table(plays)
+    if not text.strip():
+        return
+    write_bytes_s3(bucket, out_key, text.encode("utf-8"))
+    print(f"uploaded s3://{bucket}/{out_key}")
+
+
 def publish_settlement_summary_to_sns(topic_arn: str, body: str) -> str:
     import boto3
 
@@ -569,6 +648,7 @@ def main() -> None:
 
     rollup_rows = []
     partial_runs: list[dict] = []
+    email_plays_frames: list[pd.DataFrame] = []
     for key in scored_keys:
         run_df = all_scored.loc[all_scored["__scored_s3_key"] == key].drop(columns=["__scored_s3_key"]).copy()
         settled = settle_rows(run_df, actuals)
@@ -642,6 +722,23 @@ def main() -> None:
 
         summary["source_scored_key"] = key
         rollup_rows.append(summary)
+        bet_mask = settled["strategy_bucket"].isin(["both", "ols", "xgb"])
+        if bet_mask.any():
+            email_plays_frames.append(
+                settled.loc[
+                    bet_mask,
+                    [
+                        "player_normalized",
+                        "strategy_bucket",
+                        "bookmaker",
+                        "line",
+                        "reb_actual",
+                        "under_odds",
+                        "date",
+                        "result",
+                    ],
+                ].copy()
+            )
         summary_print = summary.copy()
         for col in [
             "hit_rate",
@@ -683,6 +780,9 @@ def main() -> None:
 
     rollup = pd.concat(rollup_rows, ignore_index=True)
     upload_rollup_if_requested(rollup, args.rollup_s3_uri)
+    if email_plays_frames:
+        email_plays = pd.concat(email_plays_frames, ignore_index=True)
+        upload_email_plays_table_if_yesterday(email_plays, args.rollup_s3_uri)
 
     print("\n" + "=" * 80)
     print("TOTAL AGGREGATED SUMMARY (Across all processed runs)")

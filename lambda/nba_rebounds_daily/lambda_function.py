@@ -101,6 +101,25 @@ def _read_csv_s3(s3_uri: str) -> pd.DataFrame | None:
             return None
         raise
 
+
+def _read_text_s3(s3_uri: str) -> str | None:
+    import botocore.exceptions
+    bucket, key = _parse_s3_uri(s3_uri)
+    try:
+        body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
+        return body.decode("utf-8")
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] in ["NoSuchKey", "404"]:
+            return None
+        raise
+
+
+def _email_plays_yesterday_s3_uri(yesterday_rollup_uri: str) -> str:
+    """Sibling of yesterday.csv written by rebounds_settle_runs (yesterday rollup only)."""
+    if not yesterday_rollup_uri.endswith("yesterday.csv"):
+        return ""
+    return yesterday_rollup_uri[: -len("yesterday.csv")] + "email_plays_yesterday.txt"
+
 def _indent(lines: list[str], prefix: str = "  ") -> list[str]:
     return [f"{prefix}{line}" if line else "" for line in lines]
 
@@ -112,9 +131,15 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
             title,
             "  No scored runs found for this window",
         ]
-        
+
+    # Align with scripts/rebounds_settle_runs.py: `neither` has n_bets=0 but
+    # reference_pnl_units is hypothetical PnL at listed under odds (wins/losses).
+    r = rollup.copy()
+    if "reference_pnl_units" not in r.columns:
+        r["reference_pnl_units"] = 0.0
+
     grouped = (
-        rollup.groupby("strategy_bucket", as_index=False)
+        r.groupby("strategy_bucket", as_index=False)
         .agg(
             n_rows=("n_rows", "sum"),
             n_bets=("n_bets", "sum"),
@@ -123,12 +148,14 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
             n_push=("n_push", "sum"),
             n_unsettled=("n_unsettled", "sum"),
             pnl_units=("pnl_units", "sum"),
+            reference_pnl_units=("reference_pnl_units", "sum"),
         )
         .sort_values("strategy_bucket")
         .reset_index(drop=True)
     )
-    
+
     import duckdb
+
     con = duckdb.connect()
     con.register("rollup", grouped)
     formatted_summary = con.execute(
@@ -139,9 +166,22 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
             n_bets AS bets,
             printf('%d-%d-%d', n_win, n_loss, n_push) AS wlp,
             n_unsettled AS un,
-            round(pnl_units, 3) AS pnl,
+            round(
+                CASE
+                    WHEN strategy_bucket = 'neither' THEN reference_pnl_units
+                    ELSE pnl_units
+                END,
+                3
+            ) AS pnl,
             round(CASE WHEN (n_win + n_loss) > 0 THEN n_win * 1.0 / (n_win + n_loss) ELSE 0.0 END, 3) AS hit_rate,
-            round(CASE WHEN (n_win + n_loss + n_push) > 0 THEN pnl_units / (n_win + n_loss + n_push) ELSE 0.0 END, 3) AS roi
+            round(
+                CASE
+                    WHEN (n_win + n_loss + n_push) <= 0 THEN 0.0
+                    WHEN strategy_bucket = 'neither' THEN reference_pnl_units * 1.0 / (n_win + n_loss + n_push)
+                    ELSE pnl_units * 1.0 / (n_win + n_loss + n_push)
+                END,
+                3
+            ) AS roi
         FROM rollup
         ORDER BY
             CASE WHEN strategy_bucket = 'neither' THEN 1 ELSE 0 END,
@@ -149,22 +189,23 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
         """
     ).fetchdf()
     con.close()
-    
+
     lines = [title]
     for _, row in formatted_summary.iterrows():
-        strat = str(row['strategy']).upper()
+        strat = str(row["strategy"]).upper()
         lines.append(f"  [{strat}]")
-        
-        # Format numbers nicely
-        pnl_val = float(row['pnl'])
+
+        pnl_val = float(row["pnl"])
         pnl_str = f"+{pnl_val:.3f}" if pnl_val > 0 else f"{pnl_val:.3f}"
         hr_str = f"{float(row['hit_rate']) * 100:.1f}%"
         roi_str = f"{float(row['roi']) * 100:.1f}%"
-        
+
+        ref_note = " (reference @ line odds)" if strat == "NEITHER" else ""
+
         lines.append(f"    Rows: {row['rows']} | Bets: {row['bets']} | W-L-P: {row['wlp']} | Unsettled: {row['un']}")
-        lines.append(f"    PnL: {pnl_str}u | Hit Rate: {hr_str} | ROI: {roi_str}")
+        lines.append(f"    PnL: {pnl_str}u{ref_note} | Hit Rate: {hr_str} | ROI: {roi_str}")
         lines.append("")
-        
+
     return lines[:-1]  # Remove trailing blank line
 
 
@@ -177,12 +218,15 @@ def _publish_combined_settlement_sns(
 ) -> str:
     yesterday_rollup = _read_csv_s3(yesterday_rollup_uri)
     all_time_rollup = _read_csv_s3(all_time_rollup_uri)
+    plays_uri = _email_plays_yesterday_s3_uri(yesterday_rollup_uri)
+    plays_text = _read_text_s3(plays_uri) if plays_uri else None
+
     lines = [
         "NBA rebounds settled results",
         f"settle_end_date_et: {settle_end_date_et.isoformat()}",
         "",
     ]
-    
+
     if warnings:
         lines.extend([
             "WARNINGS",
@@ -190,7 +234,7 @@ def _publish_combined_settlement_sns(
             *[f"    - {w}" for w in warnings],
             "",
         ])
-        
+
     lines.extend([
         *_format_window_section("yesterday", yesterday_rollup),
         "",
@@ -200,6 +244,16 @@ def _publish_combined_settlement_sns(
         f"  1. {yesterday_rollup_uri}",
         f"  2. {all_time_rollup_uri}",
     ])
+
+    if plays_text and plays_text.strip():
+        body = plays_text.strip()
+        max_chars = 200_000
+        if len(body) > max_chars:
+            body = body[:max_chars] + "\n...(truncated for SNS message size limit)"
+        lines.extend(["", "SETTLE-WINDOW PLAYS (both / ols / xgb)", body])
+        if plays_uri:
+            lines.extend(["", f"PLAYS SOURCE: {plays_uri}"])
+
     resp = boto3.client("sns").publish(
         TopicArn=topic_arn,
         Subject="NBA rebounds settled results",
