@@ -149,3 +149,6 @@ ec2/mc_nba_player_points_live_betting_signal_generator/ec2_user_data.sh
 
 # cache
 data/02_cache/nba_strategy_build/*.parquetsettlement_invoke.json
+
+# workdir_test
+workdir_test/
