@@ -3,7 +3,52 @@ Shared parser for The Odds API player props.
 Extracted from scripts/fetch_nba_player_props.py to keep ingestion thin and reusable.
 """
 
-from typing import Dict, List, Any
+import statistics
+from typing import Any, Dict, List, Tuple
+
+
+def median_home_away_spreads_from_event(event_data: Dict[str, Any]) -> Tuple[float | None, float | None]:
+    """
+    Median main spread (points handicap) for home and away teams across books.
+
+    Uses Odds API `spreads` market outcomes: each outcome has `name` (team) and `point`.
+    Returns (home_spread, away_spread) in the same sign convention as historical_game_lines
+    (negative = favorite from that team's perspective).
+    """
+    try:
+        from player_team_history.team_normalization import normalize_team_name_from_odds_api
+    except ModuleNotFoundError:  # noqa: PERF203
+        from src.player_team_history.team_normalization import normalize_team_name_from_odds_api
+
+    ht_raw = event_data.get("home_team") or ""
+    at_raw = event_data.get("away_team") or ""
+    if not ht_raw or not at_raw:
+        return None, None
+    ht = normalize_team_name_from_odds_api(str(ht_raw))
+    at = normalize_team_name_from_odds_api(str(at_raw))
+    home_pts: list[float] = []
+    away_pts: list[float] = []
+    for bookmaker in event_data.get("bookmakers", []) or []:
+        for market in bookmaker.get("markets", []) or []:
+            if market.get("key") != "spreads":
+                continue
+            for outcome in market.get("outcomes", []) or []:
+                name = outcome.get("name")
+                pt = outcome.get("point")
+                if name is None or pt is None:
+                    continue
+                try:
+                    val = float(pt)
+                except (TypeError, ValueError):
+                    continue
+                nm = normalize_team_name_from_odds_api(str(name))
+                if nm == ht:
+                    home_pts.append(val)
+                elif nm == at:
+                    away_pts.append(val)
+    ho = statistics.median(home_pts) if home_pts else None
+    ao = statistics.median(away_pts) if away_pts else None
+    return ho, ao
 
 
 def parse_player_props(odds_data: Dict[str, Any], target_market: str = None) -> List[Dict[str, Any]]:

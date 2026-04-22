@@ -253,6 +253,69 @@ def load_team_spreads(season: str) -> pd.DataFrame:
     return spread_df[["season", "date", "team_normalized", "spread_signed"]].drop_duplicates()
 
 
+def load_team_spreads_for_calendar_date(season: str, calendar_date: str) -> pd.DataFrame:
+    """
+    Team-level spreads for a single calendar date (YYYY-MM-DD), Odds API historical lines.
+
+    Used by pregame feature backfill so spread_signed matches the slate game, not the
+    player's last completed game.
+    """
+    con = connect_duckdb_s3()
+    date_lit = calendar_date.replace("'", "''")
+    query = f"""
+    WITH raw AS (
+      SELECT
+        home_team,
+        away_team,
+        market,
+        home_line,
+        away_line,
+        regexp_extract(filename, '/historical_game_lines/([^/]+)/', 1) AS season,
+        regexp_extract(filename, 'nba_game_lines_(\\d{{4}}-\\d{{2}}-\\d{{2}})\\.csv', 1) AS date
+      FROM read_csv_auto(
+        's3://the-odds-api-mt/nba/historical_game_lines/*/nba_game_lines_*.csv',
+        union_by_name=true,
+        filename=true,
+        all_varchar=true
+      )
+    ),
+    spread AS (
+      SELECT
+        season,
+        date,
+        home_team,
+        away_team,
+        median(CAST(home_line AS DOUBLE)) AS home_spread,
+        median(CAST(away_line AS DOUBLE)) AS away_spread
+      FROM raw r
+      WHERE {season_predicate('r', season)}
+        AND market = 'spread'
+        AND home_line IS NOT NULL
+        AND away_line IS NOT NULL
+        AND r.date = '{date_lit}'
+      GROUP BY season, date, home_team, away_team
+    )
+    SELECT
+      season,
+      date,
+      home_team AS team_raw,
+      home_spread AS spread_signed
+    FROM spread
+    UNION ALL
+    SELECT
+      season,
+      date,
+      away_team AS team_raw,
+      away_spread AS spread_signed
+    FROM spread
+    """
+    spread_df = con.execute(query).fetchdf()
+    con.close()
+    spread_df["team_normalized"] = spread_df["team_raw"].apply(normalize_team_name_from_odds_api)
+    spread_df["spread_signed"] = pd.to_numeric(spread_df["spread_signed"], errors="coerce")
+    return spread_df[["season", "date", "team_normalized", "spread_signed"]].drop_duplicates()
+
+
 def validate_output(df: pd.DataFrame) -> None:
     for col in REQUIRED_COLS:
         if col not in df.columns:

@@ -83,23 +83,21 @@ SET s3_access_key_id='$(sql_escape "${AWS_ACCESS_KEY_ID}")';
 SET s3_secret_access_key='$(sql_escape "${AWS_SECRET_ACCESS_KEY}")';
 ${TOKEN_SQL}
 SELECT
-  season,
-  CAST(date AS DATE) AS date,
-  game_id,
+  --season, CAST(date AS DATE) AS date, game_id,
   player_normalized,
   bookmaker,
-  line,
-  consensus_reb_line,
-  over_odds,
-  under_odds,
-  min_line,
-  max_line,
-  spread_signed,
-  roll_reb_mean_60,
-  roll_fg3a_mean_20,
-  roll_reb_std_5,
-  yhat_ols,
-  yhat_xgb
+  round(line, 2) AS line,
+  round(consensus_reb_line, 2) AS consensus_reb_line,
+  round(over_odds, 2) AS over_odds,
+  round(under_odds, 2) AS under_odds,
+  round(min_line, 2) AS min_line,
+  round(max_line, 2) AS max_line,
+  round(spread_signed, 2) AS spread_signed,
+  round(roll_reb_mean_60, 2) AS roll_reb_mean_60,
+  round(roll_fg3a_mean_20, 2) AS roll_fg3a_mean_20,
+  round(roll_reb_std_5, 2) AS roll_reb_std_5,
+  round(yhat_ols, 2) AS yhat_ols,
+  round(yhat_xgb::DOUBLE, 2) AS yhat_xgb
 FROM read_parquet('$(sql_escape "${SCORED_URI}")')
 WHERE trim(regexp_replace(regexp_replace(lower(player_normalized), '-', ' ', 'g'), '\s+', ' ', 'g'))
     = trim(regexp_replace(regexp_replace(lower('${P_ESC}'), '-', ' ', 'g'), '\s+', ' ', 'g'))

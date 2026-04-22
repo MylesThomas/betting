@@ -42,6 +42,60 @@ REPO_ROOT = ensure_repo_root_on_syspath()
 
 from src.nba_schedule_utils import get_schedule_for_date, resolve_game_id  # noqa: E402
 from src.player_team_history.name_normalization import normalize_from_odds_api  # noqa: E402
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api  # noqa: E402
+from src.player_team_history.utils import load_team_history  # noqa: E402
+
+
+def _load_rebounds_input_universe_module():
+    path = REPO_ROOT / "src/nba_rebounds_modeling/00_research/scripts/build_rebounds_input_universe.py"
+    spec = importlib.util.spec_from_file_location("rebounds_input_universe", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load module from {path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def attach_spread_signed_from_live_event_lines(props: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add spread_signed (player team vs closing consensus spread) when live CSV carries
+    home_spread_line / away_spread_line from the Odds API spreads market.
+    """
+    props = props.copy()
+    if "home_spread_line" not in props.columns or "away_spread_line" not in props.columns:
+        props["spread_signed"] = np.nan
+        return props
+    if not np.isfinite(pd.to_numeric(props["home_spread_line"], errors="coerce")).any():
+        props["spread_signed"] = np.nan
+        return props
+
+    biu = _load_rebounds_input_universe_module()
+    team_abbr_to_name = biu.TEAM_ABBR_TO_NAME
+    history_df = load_team_history()
+    slate_date = pd.to_datetime(props["date"].iloc[0]).normalize().date()
+
+    rows = []
+    for season, pn in props[["season", "player_normalized"]].drop_duplicates().itertuples(index=False):
+        ph = history_df[history_df["player_normalized"] == pn]
+        hit = ph[(ph["valid_from"] <= slate_date) & (ph["valid_to"].isna() | (ph["valid_to"] >= slate_date))]
+        abbr = None if hit.empty else str(hit.iloc[0]["team"])
+        full = team_abbr_to_name.get(abbr) if abbr else None
+        rows.append({"season": season, "player_normalized": pn, "player_team_full": full})
+    pt = pd.DataFrame(rows)
+
+    m = props.merge(pt, on=["season", "player_normalized"], how="left")
+    m["home_full"] = m["home_team"].map(lambda x: normalize_team_name_from_odds_api(str(x)))
+    m["away_full"] = m["away_team"].map(lambda x: normalize_team_name_from_odds_api(str(x)))
+    hs = pd.to_numeric(m["home_spread_line"], errors="coerce")
+    aws = pd.to_numeric(m["away_spread_line"], errors="coerce")
+    pf = m["player_team_full"]
+    spread = np.where(
+        pf == m["home_full"],
+        hs,
+        np.where(pf == m["away_full"], aws, np.nan),
+    )
+    props["spread_signed"] = spread
+    return props
 
 
 def parse_args() -> argparse.Namespace:
@@ -156,11 +210,19 @@ def main() -> None:
     if props.empty:
         raise ValueError("No props rows left after game_id resolution.")
 
+    props = attach_spread_signed_from_live_event_lines(props)
+    n_spread = int(pd.to_numeric(props["spread_signed"], errors="coerce").notna().sum())
+    if n_spread:
+        logging.info("Live event spreads joined: spread_signed non-null rows=%s", n_spread)
+
     logs_stub = props[["season", "date", "player_normalized", "game_id"]].drop_duplicates().copy()
     logs_stub["REB"] = np.nan
 
     panel, book_line = build_market_panel(props, logs_stub)
     v3_raw = build_props_raw(book_line, logs_stub, panel)
+
+    ss = props.groupby(["season", "date", "player_normalized", "game_id"], as_index=False)["spread_signed"].mean()
+    v3_raw = v3_raw.merge(ss, on=["season", "date", "player_normalized", "game_id"], how="left")
 
     id_cols = ["odds_event_id", "nba_game_id", "game_id_source", "game_id"]
     if "game_id_source" not in v3_raw.columns or "odds_event_id" not in v3_raw.columns:

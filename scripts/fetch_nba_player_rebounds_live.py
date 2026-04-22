@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import boto3
+import numpy as np
 import pandas as pd
 import requests
 from dotenv import load_dotenv
@@ -45,7 +46,7 @@ requests.Session.request = patched_request
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / 'src'))
 
-from odds_api_parser import parse_player_props
+from odds_api_parser import median_home_away_spreads_from_event, parse_player_props
 from season_utils import get_current_nba_season
 
 # Load environment variables
@@ -102,7 +103,8 @@ def get_event_odds(event_id: str) -> dict:
     params = {
         'apiKey': API_KEY,
         'regions': REGION,
-        'markets': MARKET,
+        # spreads: same quota as extra market; needed before historical_game_lines CSV exists for slate date
+        'markets': f'{MARKET},spreads',
         'oddsFormat': ODDS_FORMAT
     }
     
@@ -213,12 +215,26 @@ def main():
     df = pd.DataFrame(props_list)
     df['fetch_date'] = fetch_ts_utc
     df['season'] = season
+
+    df["home_spread_line"] = np.nan
+    df["away_spread_line"] = np.nan
+    for ev in odds_responses:
+        eid = str(ev.get("id") or "")
+        if not eid:
+            continue
+        hs, aws = median_home_away_spreads_from_event(ev)
+        mask = df["odds_api_event_id"].astype(str) == eid
+        if hs is not None:
+            df.loc[mask, "home_spread_line"] = hs
+        if aws is not None:
+            df.loc[mask, "away_spread_line"] = aws
     
     # Reorder columns to match historical if possible
     col_order = [
         'player', 'away_team', 'home_team', 'game_time', 'market', 
         'prop_line', 'over_odds', 'under_odds', 'bookmaker', 
         'bookmaker_last_update', 'market_last_update', 'fetch_date', 'season',
+        'home_spread_line', 'away_spread_line',
         'odds_api_event_id'
     ]
     # Ensure all columns exist
