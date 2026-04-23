@@ -36,6 +36,8 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+from src.nba_rebounds_modeling.rebounds_feature_spec import B_MIN_MAX_FEATS  # noqa: E402
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Notify rebounds plays via SNS or stdout.")
@@ -79,6 +81,7 @@ def build_plays_table(df: pd.DataFrame, which: str) -> pd.DataFrame:
         "consensus_reb_line",
         "over_odds",
         "under_odds",
+        *B_MIN_MAX_FEATS,
         "yhat_ols",
         "yhat_xgb",
         "p_under_ols",
@@ -90,7 +93,10 @@ def build_plays_table(df: pd.DataFrame, which: str) -> pd.DataFrame:
     ]
     for c in cols:
         if c not in sub.columns:
-            raise ValueError(f"scored parquet missing column: {c}")
+            raise ValueError(
+                f"scored parquet missing column: {c} "
+                f"(expected model inputs {B_MIN_MAX_FEATS} on merged scored output)"
+            )
     return sub[cols]
 
 
@@ -140,6 +146,9 @@ def build_email_body(plays: pd.DataFrame, which: str) -> str:
             f" over_odds={fmt_float(row['over_odds'], 0)}"
             f" under_odds={fmt_float(row['under_odds'], 0)}"
         )
+        lines.append("   inputs:")
+        for i, feat in enumerate(B_MIN_MAX_FEATS, start=1):
+            lines.append(f"   - x{i} {feat}={fmt_float(row[feat], digits=2)}")
         lines.append(
             "   model:"
             f" yhat_ols={fmt_float(row['yhat_ols'])}"

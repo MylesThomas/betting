@@ -6,10 +6,19 @@
 # 1) python src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py --config ...
 # 2) python src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py --latest-only
 #
-# Usage:
-#   export ODDS_API_KEY="your-key"
-#   export SNS_TOPIC_ARN="arn:aws:sns:us-east-2:232692785472:betting-arb-alerts"
+# Usage (minimum for deploy):
+#   export ODDS_API_KEY="<your Odds API key>"
+#   export SNS_TOPIC_ARN="arn:aws:sns:us-east-2:<account>:betting-arb-alerts"
 #   cd ~/dev/betting && bash lambda/nba_rebounds_daily/deploy_nba_rebounds_daily.sh
+#
+# Optional — HTML settlement email (SES multipart, same run as SNS text):
+#   export SETTLEMENT_SES_SOURCE="verified-sender@yourdomain.com"
+#   export SETTLEMENT_SES_TO="you@example.com"   # comma-separated for multiple (avoid spaces)
+# When both are set, this script also tries to attach an inline IAM policy on the Lambda role
+# (ses:SendEmail, ses:SendRawEmail). Requires iam:PutRolePolicy on your deploy principal; if it
+# fails, attach that policy manually in IAM → Roles → (role below) → Add permissions.
+#
+# Post-deploy todos: see plan_rebs_results_formatting_v2.md in repo root.
 ###############################################################################
 
 set -e
@@ -63,6 +72,12 @@ fi
 if [ -z "$SNS_TOPIC_ARN" ]; then
   echo -e "${YELLOW}⚠️  SNS_TOPIC_ARN not set${NC}"
 fi
+if [ -n "${SETTLEMENT_SES_SOURCE:-}" ] && [ -z "${SETTLEMENT_SES_TO:-}" ]; then
+  echo -e "${YELLOW}⚠️  SETTLEMENT_SES_SOURCE set but SETTLEMENT_SES_TO missing (SES send will be skipped)${NC}"
+fi
+if [ -z "${SETTLEMENT_SES_SOURCE:-}" ] && [ -n "${SETTLEMENT_SES_TO:-}" ]; then
+  echo -e "${YELLOW}⚠️  SETTLEMENT_SES_TO set but SETTLEMENT_SES_SOURCE missing (SES send will be skipped)${NC}"
+fi
 if ! aws iam get-role --role-name "$IAM_ROLE_NAME" &> /dev/null; then
   echo -e "${RED}❌ IAM role '$IAM_ROLE_NAME' not found${NC}"
   exit 1
@@ -70,10 +85,45 @@ fi
 IAM_ROLE_ARN=$(aws iam get-role --role-name "$IAM_ROLE_NAME" --query 'Role.Arn' --output text)
 echo "✅ IAM role exists"
 
+if [ -n "${SETTLEMENT_SES_SOURCE:-}" ] && [ -n "${SETTLEMENT_SES_TO:-}" ]; then
+  echo ""
+  echo "Step 1b: Lambda role → SES (inline policy, idempotent)"
+  SES_POLICY_NAME="nba-rebounds-daily-ses-send-email"
+  TMP_POL="$(mktemp)"
+  cat > "$TMP_POL" <<'SESJSON'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "NbaReboundsDailySesSend",
+      "Effect": "Allow",
+      "Action": ["ses:SendEmail", "ses:SendRawEmail"],
+      "Resource": "*"
+    }
+  ]
+}
+SESJSON
+  if aws iam put-role-policy \
+    --role-name "$IAM_ROLE_NAME" \
+    --policy-name "$SES_POLICY_NAME" \
+    --policy-document "file://$TMP_POL" \
+    --output text 2>/dev/null
+  then
+    echo -e "${GREEN}✅ IAM inline policy '${SES_POLICY_NAME}' on ${IAM_ROLE_NAME} (ses:SendEmail, ses:SendRawEmail)${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Could not attach SES policy (need iam:PutRolePolicy). Add manually to role:${NC} ${IAM_ROLE_NAME}"
+    echo "    Policy name (suggestion): ${SES_POLICY_NAME}"
+    echo "    Actions: ses:SendEmail, ses:SendRawEmail | Resource: *"
+  fi
+  rm -f "$TMP_POL"
+  echo ""
+fi
+
 echo "Running local smoke checks..."
 python -m py_compile \
   "lambda/nba_rebounds_daily/lambda_function.py" \
-  "scripts/rebounds_settle_runs.py"
+  "scripts/rebounds_settle_runs.py" \
+  "src/nba_rebounds_settlement_email.py"
 bash -n "lambda/nba_rebounds_daily/deploy_nba_rebounds_daily.sh"
 echo "✅ Local smoke checks passed"
 echo ""
@@ -109,6 +159,10 @@ echo "==========================================================================
 echo ""
 
 ENV_VARS="ODDS_API_KEY=$ODDS_API_KEY,SNS_TOPIC_ARN=$SNS_TOPIC_ARN,CONFIG_PATH=config/nba_rebounds_prod.lambda.yaml,SETTLE_BUCKET=nba-betting-mt,SETTLE_PREFIX=rebounds/daily_runs,SETTLE_DAYS_LAG=1,SETTLE_WINDOW_DAYS=1,SETTLE_ALL_TIME_DAYS=999999,SETTLE_MAX_UNMATCHED_BET_ROWS=0"
+if [ -n "${SETTLEMENT_SES_SOURCE:-}" ] && [ -n "${SETTLEMENT_SES_TO:-}" ]; then
+  ENV_VARS="${ENV_VARS},SETTLEMENT_SES_SOURCE=${SETTLEMENT_SES_SOURCE},SETTLEMENT_SES_TO=${SETTLEMENT_SES_TO}"
+  echo "Including SETTLEMENT_SES_* in Lambda environment (HTML settlement email enabled)."
+fi
 
 if aws lambda get-function --function-name "$LAMBDA_NAME" --region "$REGION" &> /dev/null; then
   echo "Updating existing Lambda..."

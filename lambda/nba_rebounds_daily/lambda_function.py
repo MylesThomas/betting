@@ -8,6 +8,8 @@ Runs two steps in order (fail-hard):
 Env:
 - ODDS_API_KEY (required by live props fetch)
 - SNS_TOPIC_ARN (required if notify_enabled=true in config)
+- SETTLEMENT_SES_SOURCE (optional; verified SES identity — multipart HTML+text settlement email)
+- SETTLEMENT_SES_TO (optional; comma-separated To addresses when SES is used; requires SETTLEMENT_SES_SOURCE)
 - CONFIG_PATH (optional; default: config/nba_rebounds_prod.yaml)
 - SETTLE_BUCKET (optional; default: nba-betting-mt)
 - SETTLE_PREFIX (optional; default: rebounds/daily_runs)
@@ -17,17 +19,25 @@ Env:
 
 from __future__ import annotations
 
+import html
 import json
 import os
 import subprocess
 import sys
 from datetime import datetime, timedelta
+from urllib.parse import quote
 from io import BytesIO
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import boto3
+import botocore.exceptions
 import pandas as pd
+
+from src.nba_rebounds_settlement_email import (
+    format_settlement_email_plays_table,
+    format_settlement_email_plays_table_html,
+)
 
 
 ET = ZoneInfo("America/New_York")
@@ -90,6 +100,20 @@ def _parse_s3_uri(s3_uri: str) -> tuple[str, str]:
     return bucket, key
 
 
+def _s3_console_object_https(s3_uri: str, region: str | None = None) -> str:
+    """HTTPS link to open one object in the S3 console (sign-in required). ``s3://`` is not a browser URL."""
+    u = (s3_uri or "").strip()
+    if not u.startswith("s3://"):
+        return u
+    try:
+        bucket, key = _parse_s3_uri(u)
+    except ValueError:
+        return u
+    r = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-2"
+    enc = quote(key, safe="")
+    return f"https://{r}.console.aws.amazon.com/s3/object/{bucket}?region={r}&prefix={enc}"
+
+
 def _read_csv_s3(s3_uri: str) -> pd.DataFrame | None:
     import botocore.exceptions
     bucket, key = _parse_s3_uri(s3_uri)
@@ -118,7 +142,14 @@ def _email_plays_yesterday_s3_uri(yesterday_rollup_uri: str) -> str:
     """Sibling of yesterday.csv written by rebounds_settle_runs (yesterday rollup only)."""
     if not yesterday_rollup_uri.endswith("yesterday.csv"):
         return ""
-    return yesterday_rollup_uri[: -len("yesterday.csv")] + "email_plays_yesterday.txt"
+    return yesterday_rollup_uri[: -len("yesterday.csv")] + "email_plays_yesterday.csv"
+
+
+def _email_plays_yesterday_html_s3_uri(csv_uri: str) -> str:
+    """Same prefix as ``email_plays_yesterday.csv`` → styled HTML artifact for browser open."""
+    if not csv_uri.endswith("email_plays_yesterday.csv"):
+        return ""
+    return csv_uri[: -len("email_plays_yesterday.csv")] + "email_plays_yesterday.html"
 
 def _indent(lines: list[str], prefix: str = "  ") -> list[str]:
     return [f"{prefix}{line}" if line else "" for line in lines]
@@ -209,24 +240,27 @@ def _format_window_section(label: str, rollup: pd.DataFrame | None) -> list[str]
     return lines[:-1]  # Remove trailing blank line
 
 
-def _publish_combined_settlement_sns(
-    topic_arn: str,
+def _build_settlement_notification_bundle(
     settle_end_date_et,
     yesterday_rollup_uri: str,
     all_time_rollup_uri: str,
-    warnings: list[str] = None,
-) -> str:
+    warnings: list[str] | None = None,
+) -> dict:
+    """Shared inputs for SNS text + optional SES HTML (same plays dataframe)."""
+    warnings = warnings or []
     yesterday_rollup = _read_csv_s3(yesterday_rollup_uri)
     all_time_rollup = _read_csv_s3(all_time_rollup_uri)
     plays_uri = _email_plays_yesterday_s3_uri(yesterday_rollup_uri)
-    plays_text = _read_text_s3(plays_uri) if plays_uri else None
+    plays_df = _read_csv_s3(plays_uri) if plays_uri else None
+
+    yesterday_lines = _format_window_section("yesterday", yesterday_rollup)
+    all_time_lines = _format_window_section("all-time", all_time_rollup)
 
     lines = [
         "NBA rebounds settled results",
         f"settle_end_date_et: {settle_end_date_et.isoformat()}",
         "",
     ]
-
     if warnings:
         lines.extend([
             "WARNINGS",
@@ -234,32 +268,260 @@ def _publish_combined_settlement_sns(
             *[f"    - {w}" for w in warnings],
             "",
         ])
-
     lines.extend([
-        *_format_window_section("yesterday", yesterday_rollup),
+        *yesterday_lines,
         "",
-        *_format_window_section("all-time", all_time_rollup),
+        *all_time_lines,
         "",
         "ROLLUP FILES",
         f"  1. {yesterday_rollup_uri}",
+        f"     Console: {_s3_console_object_https(yesterday_rollup_uri)}",
         f"  2. {all_time_rollup_uri}",
+        f"     Console: {_s3_console_object_https(all_time_rollup_uri)}",
     ])
-
-    if plays_text and plays_text.strip():
-        body = plays_text.strip()
+    plays_for_email = None
+    plays_html_uri = _email_plays_yesterday_html_s3_uri(plays_uri) if plays_uri else ""
+    if plays_df is not None and len(plays_df) > 0:
+        body = format_settlement_email_plays_table(plays_df).strip()
         max_chars = 200_000
         if len(body) > max_chars:
             body = body[:max_chars] + "\n...(truncated for SNS message size limit)"
-        lines.extend(["", "SETTLE-WINDOW PLAYS (both / ols / xgb)", body])
+        lines.extend(
+            [
+                "",
+                "SETTLE-WINDOW PLAYS (both / ols / xgb)",
+                "(SNS email is plain text — columns may not line up in Gmail. For an HTML table in your inbox, use SES; see plan_rebs_results_formatting_v2.md.)",
+                body,
+            ]
+        )
         if plays_uri:
-            lines.extend(["", f"PLAYS SOURCE: {plays_uri}"])
+            lines.extend(
+                [
+                    "",
+                    f"PLAYS SOURCE (CSV): {plays_uri}",
+                    f"  Console: {_s3_console_object_https(plays_uri)}",
+                ]
+            )
+        if plays_html_uri:
+            lines.extend(
+                [
+                    "",
+                    "PLAYS HTML (styled table — tap HTTPS link; s3:// is not valid in Safari/Chrome):",
+                    f"  {_s3_console_object_https(plays_html_uri)}",
+                    f"  S3 URI: {plays_html_uri}",
+                ]
+            )
+        plays_for_email = plays_df
 
-    resp = boto3.client("sns").publish(
-        TopicArn=topic_arn,
-        Subject="NBA rebounds settled results",
-        Message="\n".join(lines)[:256_000],
+    return {
+        "text_lines": lines,
+        "plays_df": plays_for_email,
+        "plays_uri": plays_uri,
+        "plays_html_uri": plays_html_uri,
+        "yesterday_lines": yesterday_lines,
+        "all_time_lines": all_time_lines,
+        "warnings": warnings,
+        "yesterday_rollup_uri": yesterday_rollup_uri,
+        "all_time_rollup_uri": all_time_rollup_uri,
+        "settle_end_date_et": settle_end_date_et,
+    }
+
+
+def _html_pre_block(lines: list[str], mono_font: str) -> str:
+    text = html.escape("\n".join(lines))
+    return (
+        f'<pre style="margin:0 0 16px;white-space:pre-wrap;word-break:break-word;'
+        f"font-family:{mono_font};font-size:12px;line-height:1.4;color:#1a1a1a;\">{text}</pre>"
+    )
+
+
+def _build_settlement_email_html(bundle: dict) -> str:
+    """Multipart HTML part: summary sections as pre; plays as HTML table (Phase A styling)."""
+    mono = "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
+    sans = (
+        "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif"
+    )
+    settle_end = bundle["settle_end_date_et"]
+    warnings = bundle["warnings"]
+    parts: list[str] = [
+        "<!DOCTYPE html>",
+        '<html lang="en"><head><meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        f"<title>{html.escape('NBA rebounds settled results')}</title></head>",
+        f'<body style="margin:0;padding:16px;background-color:#f4f4f5;font-family:{sans};'
+        'font-size:13px;line-height:1.45;color:#1a1a1a;">',
+        '<div style="max-width:720px;margin:0 auto;background-color:#ffffff;padding:20px 20px 24px;'
+        'border-radius:8px;border:1px solid #e2e2e4;">',
+        '<p style="margin:0 0 8px;font-size:15px;font-weight:600;">'
+        f"{html.escape('NBA rebounds settled results')}</p>",
+        '<p style="margin:0 0 16px;color:#444;font-family:'
+        f"{mono};font-size:12px;\">"
+        f"{html.escape(f'settle_end_date_et: {settle_end.isoformat()}')}</p>",
+    ]
+    if warnings:
+        parts.append('<p style="margin:0 0 8px;font-weight:600;color:#b45309;">WARNINGS</p>')
+        parts.append('<ul style="margin:0 0 16px;padding-left:20px;">')
+        for w in warnings:
+            parts.append(f'<li style="margin-bottom:4px;">{html.escape(w)}</li>')
+        parts.append("</ul>")
+    parts.append(_html_pre_block(bundle["yesterday_lines"], mono))
+    parts.append(_html_pre_block(bundle["all_time_lines"], mono))
+    rollup_lines = [
+        "ROLLUP FILES",
+        f"  1. {bundle['yesterday_rollup_uri']}",
+        f"     Console: {_s3_console_object_https(bundle['yesterday_rollup_uri'])}",
+        f"  2. {bundle['all_time_rollup_uri']}",
+        f"     Console: {_s3_console_object_https(bundle['all_time_rollup_uri'])}",
+    ]
+    parts.append(_html_pre_block(rollup_lines, mono))
+    plays_df = bundle["plays_df"]
+    if plays_df is not None and len(plays_df) > 0:
+        parts.append(
+            '<p style="margin:0 0 10px;font-weight:600;font-size:13px;">'
+            f"{html.escape('SETTLE-WINDOW PLAYS (both / ols / xgb)')}</p>"
+        )
+        parts.append(format_settlement_email_plays_table_html(plays_df))
+        plays_uri = bundle.get("plays_uri") or ""
+        plays_html_uri = bundle.get("plays_html_uri") or ""
+        if plays_uri:
+            cu = _s3_console_object_https(plays_uri)
+            parts.append(
+                '<p style="margin:14px 0 0;font-family:'
+                f'{mono};font-size:11px;word-break:break-all;color:#555;">'
+                f"{html.escape('PLAYS SOURCE (CSV): ' + plays_uri)}</p>"
+                f'<p style="margin:4px 0 0;font-size:13px;">'
+                f'<a href="{html.escape(cu, quote=True)}">Open CSV in S3 console</a>'
+                f" <span style=\"color:#666;font-size:11px;\">(sign in to AWS)</span></p>"
+            )
+        if plays_html_uri:
+            hu = _s3_console_object_https(plays_html_uri)
+            parts.append(
+                '<p style="margin:10px 0 0;font-family:'
+                f'{mono};font-size:11px;word-break:break-all;color:#555;">'
+                f"{html.escape('PLAYS HTML (S3): ' + plays_html_uri)}</p>"
+                f'<p style="margin:4px 0 0;font-size:13px;">'
+                f'<a href="{html.escape(hu, quote=True)}">Open styled table (HTML) in S3 console</a>'
+                f" <span style=\"color:#666;font-size:11px;\">(sign in to AWS)</span></p>"
+            )
+    parts.extend(["</div>", "</body></html>"])
+    return "".join(parts)
+
+
+def _send_settlement_ses_email(
+    source: str,
+    to_addresses: list[str],
+    subject: str,
+    text_body: str,
+    html_body: str,
+) -> str:
+    client = boto3.client("ses")
+    resp = client.send_email(
+        Source=source,
+        Destination={"ToAddresses": to_addresses},
+        Message={
+            "Subject": {"Data": subject, "Charset": "UTF-8"},
+            "Body": {
+                "Text": {"Data": text_body, "Charset": "UTF-8"},
+                "Html": {"Data": html_body, "Charset": "UTF-8"},
+            },
+        },
     )
     return resp["MessageId"]
+
+
+def _publish_combined_settlement_sns(
+    topic_arn: str,
+    settle_end_date_et,
+    yesterday_rollup_uri: str,
+    all_time_rollup_uri: str,
+    warnings: list[str] | None = None,
+) -> str:
+    """Try SES first (HTML inbox), then SNS plain text. If SES fails, append the reason to the SNS body."""
+    bundle = _build_settlement_notification_bundle(
+        settle_end_date_et,
+        yesterday_rollup_uri,
+        all_time_rollup_uri,
+        warnings,
+    )
+    base_text = "\n".join(bundle["text_lines"])
+
+    ses_footer = ""
+    ses_message_id = ""
+    ses_source = os.environ.get("SETTLEMENT_SES_SOURCE", "").strip()
+    ses_to_raw = os.environ.get("SETTLEMENT_SES_TO", "").strip()
+    if ses_source and ses_to_raw:
+        to_list = [a.strip() for a in ses_to_raw.split(",") if a.strip()]
+        if to_list:
+            try:
+                html_body = _build_settlement_email_html(bundle)
+                max_ses_chars = 9_000_000
+                tb = (
+                    base_text
+                    if len(base_text) <= max_ses_chars
+                    else base_text[: max_ses_chars - 80] + "\n...(truncated for email size limit)"
+                )
+                hb = (
+                    html_body
+                    if len(html_body) <= max_ses_chars
+                    else html_body[: max_ses_chars - 100] + "<!-- truncated -->"
+                )
+                ses_message_id = _send_settlement_ses_email(
+                    ses_source,
+                    to_list,
+                    "NBA rebounds settled results",
+                    tb,
+                    hb,
+                )
+                print(
+                    "published_settlement_to_ses",
+                    f"source={ses_source}",
+                    f"message_id={ses_message_id}",
+                    sep=" | ",
+                )
+                ses_footer = (
+                    "\n\n---\n[SES] Multipart email (HTML table + plain text) was accepted by AWS "
+                    f"(MessageId={ses_message_id}).\n"
+                    f"  To: {ses_to_raw}\n"
+                    f"  From: {ses_source}\n"
+                    "If you only see this SNS mail, search Gmail for that From address and check Spam / "
+                    "All Mail; Gmail may thread it separately from AWS Notifications."
+                )
+            except botocore.exceptions.ClientError as exc:
+                err = exc.response.get("Error", {})
+                detail = err.get("Message", str(exc))
+                print(
+                    "settlement_ses_send_failed",
+                    f"source={ses_source}",
+                    detail,
+                    sep=" | ",
+                )
+                ses_footer = (
+                    "\n\n---\n[SES] HTML settlement email was NOT sent. AWS says:\n"
+                    f"  {detail}\n"
+                    "Common fixes (region us-east-2): verify SETTLEMENT_SES_SOURCE in SES; in sandbox "
+                    "verify SETTLEMENT_SES_TO as well; Lambda role needs ses:SendEmail "
+                    "(deploy script Step 1b). Check Spam for mail From the source address if it succeeded."
+                )
+            except Exception as exc:
+                print("settlement_ses_send_failed", f"source={ses_source}", str(exc), sep=" | ")
+                ses_footer = (
+                    "\n\n---\n[SES] HTML settlement email was NOT sent:\n"
+                    f"  {exc!s}\n"
+                    "See CloudWatch logs for this Lambda for details."
+                )
+
+    text_message = (base_text + ses_footer)[:256_000]
+
+    last_message_id = ""
+    if topic_arn.strip():
+        resp = boto3.client("sns").publish(
+            TopicArn=topic_arn.strip(),
+            Subject="NBA rebounds settled results",
+            Message=text_message,
+        )
+        last_message_id = resp["MessageId"]
+
+    return last_message_id or ses_message_id
 
 
 def lambda_handler(event, context):
@@ -356,7 +618,10 @@ def lambda_handler(event, context):
                     warnings.append(line)
             warnings = sorted(list(set(warnings)))
 
-            if sns_topic_arn:
+            if sns_topic_arn.strip() or (
+                os.environ.get("SETTLEMENT_SES_SOURCE", "").strip()
+                and os.environ.get("SETTLEMENT_SES_TO", "").strip()
+            ):
                 msg_id = _publish_combined_settlement_sns(
                     sns_topic_arn,
                     settle_end_date_et,
@@ -364,7 +629,12 @@ def lambda_handler(event, context):
                     all_time_rollup_uri,
                     warnings,
                 )
-                print("published_settlement_to_sns", f"topic_arn={sns_topic_arn}", f"message_id={msg_id}", sep=" | ")
+                print(
+                    "published_settlement_notifications",
+                    f"topic_arn={sns_topic_arn or '(none)'}",
+                    f"message_id={msg_id or '(none)'}",
+                    sep=" | ",
+                )
             step_results.append({"step": "settlement", "status": "ok"})
 
         return {

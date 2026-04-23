@@ -502,17 +502,33 @@ def run_cmd(cmd, cwd=None, extra_env=None, stream_output=False, timeout=None):
             return '', f'Command timed out after {timeout}s', -1
 
 
+def _stderr_looks_like_transient_github(stderr: str) -> bool:
+    """True when git output suggests GitHub/network blips worth retrying."""
+    if not stderr:
+        return False
+    lower = stderr.lower()
+    if 'timed out' in lower or 'connection reset' in lower or 'could not resolve host' in lower:
+        return True
+    if 'internal server error' in lower:
+        return True
+    # e.g. "The requested URL returned error: 500"
+    for code in ('500', '502', '503', '504'):
+        if code in stderr:
+            return True
+    return False
+
+
 @timed
-def clone_repo(token, max_retries=3, timeout=30):
+def clone_repo(token, max_retries=5, timeout=60):
     """
     Clone betting repo to /tmp/betting (shallow clone for speed).
     
-    Retries with exponential backoff on transient GitHub failures (500 errors).
+    Retries with exponential backoff on transient GitHub failures (5xx, timeouts).
     
     Args:
         token: GitHub token for authentication
-        max_retries: Maximum number of clone attempts (default: 3)
-        timeout: Timeout in seconds per attempt (default: 30s)
+        max_retries: Maximum number of clone attempts (default: 5)
+        timeout: Timeout in seconds per attempt (default: 60s)
     
     Returns:
         Path to cloned repo (/tmp/betting)
@@ -539,11 +555,11 @@ def clone_repo(token, max_retries=3, timeout=30):
             print(f"   ✅ Clone succeeded on attempt {attempt}")
             return target
         
-        # Check if it's a transient GitHub error (500)
-        is_transient = '500' in stderr or 'Internal Server Error' in stderr or 'timed out' in stderr.lower()
+        is_transient = _stderr_looks_like_transient_github(stderr)
         
         if is_transient and attempt < max_retries:
-            wait_time = 2 ** attempt  # Exponential backoff: 2s, 4s, 8s
+            # Lambda timeout is 5m; allow longer pauses for GitHub incident recovery.
+            wait_time = min(60, 5 * (2**attempt))
             print(f"   ⚠️  Transient error detected (attempt {attempt}): {stderr.strip()}")
             print(f"   🔄 Retrying in {wait_time}s...")
             time.sleep(wait_time)
@@ -553,10 +569,10 @@ def clone_repo(token, max_retries=3, timeout=30):
                 subprocess.run(['rm', '-rf', target])
         else:
             # Non-transient error or final attempt failed
-            error_msg = f"Git clone failed after {attempt} attempts: {stderr.strip()}"
+            error_msg = f"Git clone failed after {attempt} attempt(s): {stderr.strip()}"
             if is_transient:
-                error_msg += "\n\nThis appears to be a GitHub service issue (500 Internal Server Error)."
-                error_msg += f"\nCheck GitHub status: https://www.githubstatus.com/"
+                error_msg += "\n\nThis appears to be a transient GitHub or network issue (e.g. 5xx or timeout)."
+                error_msg += "\nCheck GitHub status: https://www.githubstatus.com/"
             raise Exception(error_msg)
     
     # Should never reach here due to exception above, but just in case
