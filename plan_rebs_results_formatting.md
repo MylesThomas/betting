@@ -12,6 +12,8 @@ Handoff for another agent. **Do not skip Phase A** — validate layout with fake
 | Plays uploaded to S3 | `upload_email_plays_table_if_yesterday()` → `email_plays_yesterday.csv` + `email_plays_yesterday.html` |
 | Daily settlement notify | `lambda/nba_rebounds_daily/lambda_function.py` → `_publish_combined_settlement_sns()`: SNS plain text; optional SES multipart when `SETTLEMENT_SES_SOURCE` / `SETTLEMENT_SES_TO` are set |
 
+**Note (2026-04):** Feature-universe / audit work (`build_rebounds_full_universe`, S3 verify scripts) is separate from this email-formatting plan; no change to settlement HTML/SES behavior from those refactors.
+
 **Constraint:** SNS → email subscriptions use **plain text** for the message body. Raw HTML in `sns.publish(Message=...)` will **not** render as a table in the inbox. To ship real HTML tables you will likely need **Amazon SES** `send_email` with `Html` + `Text` parts (see `scripts/lambda_function_track_game_line_movements.py` → `send_email_via_ses` for a repo pattern), or another HTML-capable channel. Phase A still applies: prove the HTML snippet first, then decide SNS vs SES in Phase B.
 
 ---

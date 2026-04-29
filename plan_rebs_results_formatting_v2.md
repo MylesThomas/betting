@@ -2,6 +2,8 @@
 
 Supersedes handoff notes for anything **after** code landed. Phase A/B design and formatter details stay in `plan_rebs_results_formatting.md`.
 
+**Cross-ref:** Rebounds **model** pipeline, feature-universe build, and S3 audit verifiers are documented in `plan_rebs_model_inputs_v3.md` / `plan_rebs_model_inputs_v4_tests.md` (not this file).
+
 ---
 
 ## What shipped (summary)

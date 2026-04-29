@@ -19,7 +19,7 @@ Add six new columns on **`rebounds_scored_*`** (and, for consistency, on the **f
 | `spread_signed` | `input_spread_by_side`            | Two numbers: `[home_team_spread, away_team_spread]` from the same source as spread (historical CSV or live event), order fixed (e.g. home then away). Length 2; NA entries if missing. |
 | `roll_reb_mean_60` | `input_reb_tail_60`            | Up to **60** prior-game `REB` values (leakage-safe: only games **strictly before** slate game; same ordering as training `shift(1).rolling(60)`). Shorter early season. |
 | `roll_fg3a_mean_20` | `input_fg3a_tail_20`          | Up to **20** prior-game `FG3A` values (same leakage rules, window 20). |
-| `roll_reb_std_5`  | `input_reb_tail_5`              | Up to **5** prior-game `REB` values used for rolling std (match `min_periods=2` behavior in `v2_build_rebounds_universe.build_rolling_features`). |
+| `roll_reb_std_5`  | `input_reb_tail_5`              | Up to **5** prior-game `REB` values used for rolling std (match `min_periods=2` behavior in `build_rebounds_full_universe.build_rolling_features`). |
 
 **Refinement on min/max:** Implement **one** column `rebounds_book_lines` (list of floats) plus existing `min_line` / `max_line` scalars, **or** name it `input_reb_prop_lines` to avoid confusion with moneyline. Document that `min_line == min(list)` and `max_line == max(list)` when list non-empty.
 
@@ -31,7 +31,7 @@ Add six new columns on **`rebounds_scored_*`** (and, for consistency, on the **f
 
 | Stage | Script / module | Role |
 |-------|------------------|------|
-| Full universe | `v2_build_rebounds_universe.py` | `build_rolling_features`: rolling **scalars** only; logs sorted per player. |
+| Full universe | `build_rebounds_full_universe.py` | `build_rolling_features`: rolling **scalars** only; logs sorted per player. |
 | Panel / lines | Same file `build_market_panel` + pregame | `min_line` / `max_line` from props aggregation. |
 | Spread | `build_rebounds_input_universe.py`, live path in `build_rebounds_scoring_input.py`, pregame slice | `spread_signed` scalar. |
 | Score | `prod_score_rebounds_slate.py` | `base = props.merge(feat)` → `out = base.copy()` + predictions. **Any column on `feat` (or props) that survives merge lands on `out`.** |
@@ -44,12 +44,12 @@ Add six new columns on **`rebounds_scored_*`** (and, for consistency, on the **f
 
 ### Phase A — Rolling tails (hardest, highest value)
 
-1. **Extend `build_rolling_features`** in `v2_build_rebounds_universe.py` (or a helper called from it) to compute, per `(season, date, player_normalized, game_id)` row, **parallel list columns**:
+1. **Extend `build_rolling_features`** in `build_rebounds_full_universe.py` (or a helper called from it) to compute, per `(season, date, player_normalized, game_id)` row, **parallel list columns**:
    - After the same `sort_values` / `groupby("player_normalized")` pipeline, for each target `(name, col, window)` used in `B_MIN_MAX_FEATS` only (`reb`/REB 60, `fg3a`/FG3A 20, `reb` std 5), apply a transform that returns **Python lists** (or `object` column of `ndarray`) of length ≤ window: values are **`shift(1)` then last w values** in order oldest→newest (document order in plan + code comment).
 
 2. **Performance:** `groupby.transform` with a lambda that materializes a list per row is slow on ~40k+ rows. Prefer **vectorized or numba** window, or precompute with `rolling(...).apply(list, raw=True)` only for the three windows (profile on laptop first).
 
-3. **Join:** Existing `feat_v2 = panel.merge(logs_target).merge(rolling, ...)` must include the new list columns on `rolling` / `feat_v2` so they flow to `rebounds_model_features_*.parquet`.
+3. **Join:** Existing `feature_universe = panel.merge(logs_target).merge(rolling, ...)` must include the new list columns on `rolling` / `feature_universe` so they flow to `rebounds_model_features_*.parquet`.
 
 4. **Training:** Ensure `prod_train_rebounds_models.py` / manifest **only** uses `B_MIN_MAX_FEATS` for `X` — new columns must **not** be added to `B_MIN_MAX_FEATS` unless you intentionally retrain.
 
@@ -102,7 +102,7 @@ Add six new columns on **`rebounds_scored_*`** (and, for consistency, on the **f
 | `spread_signed` | e.g. `[home_spread, away_spread]` | Pick the element matching the player’s team side (same rule as `attach_spread_signed_from_live_event_lines` / historical join); that value must equal `spread_signed`. If list is NA, scalar should be NA. |
 | `roll_reb_mean_60` | `input_reb_tail_60` | `numpy.mean(list) == roll_reb_mean_60` (or `pandas.Series(list).mean()`), after dropping NA entries in the list if any; length ≤ 60. |
 | `roll_fg3a_mean_20` | `input_fg3a_tail_20` | Same with **mean** over ≤ 20 values vs `roll_fg3a_mean_20`. |
-| `roll_reb_std_5` | `input_reb_tail_5` | `pandas.Series(list).std(ddof=1)` (sample std, **n−1**) must match `roll_reb_std_5` wherever the rolling implementation uses `ddof=1` / pandas default — **must match `v2_build_rebounds_universe.build_rolling_features` exactly** (including `min_periods=2` behavior: when fewer than two valid prior games, both scalar std and list-derived std should agree as NA or as implemented today). |
+| `roll_reb_std_5` | `input_reb_tail_5` | `pandas.Series(list).std(ddof=1)` (sample std, **n−1**) must match `roll_reb_std_5` wherever the rolling implementation uses `ddof=1` / pandas default — **must match `build_rebounds_full_universe.build_rolling_features` exactly** (including `min_periods=2` behavior: when fewer than two valid prior games, both scalar std and list-derived std should agree as NA or as implemented today). |
 
 **How to test (automation recommended):**
 
@@ -132,3 +132,10 @@ Add six new columns on **`rebounds_scored_*`** (and, for consistency, on the **f
 | **Low** | Pass-through to `prod_score`, Parquet validation, notify truncation, config flag |
 
 **Single hardest piece:** leakage-correct **aligned rolling windows as lists** at universe scale without blowing runtime — prototype the three windows first, then wire min/max/spread lists.
+
+---
+
+## Status (2026-04)
+
+- Full historical feature universe is built by **`build_rebounds_full_universe.py`** (renamed from the old `v2_build_*` name). Six list columns and audit invariants are implemented there and checked in `rebounds_audit_list_verify` during the build (strict on by default).
+- DuckDB S3 access for those builds **uses boto3** via `src/nba_rebounds_modeling/duckdb_s3_creds.py` so SSO/session tokens match the AWS CLI. See `plan_rebs_model_inputs_v3.md` (local build / 403) if a run fails on `the-odds-api-mt` objects.
