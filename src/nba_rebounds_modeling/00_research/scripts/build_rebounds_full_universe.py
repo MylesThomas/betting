@@ -1,13 +1,13 @@
 """
-Build v2 rebounds model feature universe.
+Build the full (historical) rebounds model feature universe.
 
 Context:
-- v1 built a minimal universe with MIN/OREB/DREB/REB + canonical bookmaker line.
-- v2 extends that by computing a full leakage-safe rolling feature table ready
-  for regression modeling.
+- v1 was a minimal universe (MIN/OREB/DREB/REB + canonical bookmaker line). This
+  script is the current full pipeline: a leakage-safe rolling feature table for
+  regression, plus per-book v3-style props for backtesting.
 - Rolling windows [5, 10, 20, 40, 60, 80] are computed for all stat bases.
-- Shot-profile stats (FGA, FG3A, FTA) are sourced from the v6 spread universe
-  parquet (already cached locally from the 3PM modeling workflow).
+- Shot-profile stats (FGA, FG3A, FTA) are sourced from the shot-profile
+  universe parquet (cached from the 3PM modeling workflow).
 - Market context features (consensus_reb_line, line_range, n_books, etc.) are
   derived from the multi-book props table using the same no-vig / closest-to-50
   canonical line selection as v1.
@@ -18,9 +18,9 @@ Context:
   per-book backtests).
 
 Usage:
-    python src/nba_rebounds_modeling/00_research/scripts/v2_build_rebounds_universe.py \
-        --season "*" \
-        --output ~/Downloads/tmp/rebounds_model_features_v2.parquet \
+    python src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py \\
+        --season "*" \\
+        --output ~/Downloads/tmp/rebounds_full_universe.parquet \\
         --output-v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet
 """
 
@@ -29,7 +29,6 @@ from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
-import subprocess
 import sys
 
 import numpy as np
@@ -56,8 +55,16 @@ def ensure_repo_root_on_syspath() -> Path:
 REPO_ROOT = ensure_repo_root_on_syspath()
 
 import duckdb
+from src.nba_rebounds_modeling.duckdb_s3_creds import connect_duckdb_s3
+from src.nba_rebounds_modeling.rebounds_audit_list_verify import (
+    print_audit_sample_to_stdout,
+    sample_audit_rows,
+    verify_audit_lists_dataframe,
+)
+from src.nba_rebounds_modeling.rebounds_feature_spec import B_MIN_MAX_AUDIT_LIST_COLS, TEAM_CONTEXT_COLS
 from src.player_team_history.name_normalization import normalize_from_nba_api
 from src.player_team_history.name_normalization import normalize_from_odds_api
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api
 
 
 # =============================================================================
@@ -96,6 +103,8 @@ REQUIRED_OUTPUT_COLUMNS = [
     "line_spread",
     "spread_signed",
     "spread_abs",
+    *B_MIN_MAX_AUDIT_LIST_COLS,
+    *TEAM_CONTEXT_COLS,
 ]
 
 
@@ -104,7 +113,7 @@ REQUIRED_OUTPUT_COLUMNS = [
 # =============================================================================
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Build v2 rebounds model feature universe.")
+    p = argparse.ArgumentParser(description="Build the full rebounds model feature universe.")
     p.add_argument("--season",        type=str, default="*")
     p.add_argument("--cache-dir",     type=str, default="~/Downloads/tmp")
     p.add_argument("--use-cache",     type=str, default="true")
@@ -112,7 +121,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--output",
         type=str,
-        default="~/Downloads/tmp/rebounds_model_features_v2.parquet",
+        default="~/Downloads/tmp/rebounds_full_universe.parquet",
     )
     p.add_argument(
         "--output-v3",
@@ -120,6 +129,23 @@ def parse_args() -> argparse.Namespace:
         default="~/Downloads/tmp/v3_rebounds_props_raw.parquet",
     )
     p.add_argument("--seed", type=int, default=69)
+    p.add_argument(
+        "--skip-audit-list",
+        action="store_true",
+        help="Skip audit-list vs scalar checks (emergency only; not recommended for prod).",
+    )
+    p.add_argument(
+        "--audit-list-full-scan",
+        action="store_true",
+        help="Verify every row (slow). Same as env REBOUNDS_AUDIT_LIST_FULL_SCAN=1.",
+    )
+    p.add_argument(
+        "--audit-list-max-rows",
+        type=int,
+        default=500,
+        metavar="N",
+        help="Random sample size for audit when not full-scan (default 500).",
+    )
     return p.parse_args()
 
 
@@ -180,37 +206,6 @@ def remove_vig_two_way(p_over: float, p_under: float) -> tuple[float, float]:
 
 
 # =============================================================================
-# S3 CONNECTION
-# =============================================================================
-
-def connect_duckdb_s3() -> duckdb.DuckDBPyConnection:
-    if "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ:
-        access_key = os.environ["AWS_ACCESS_KEY_ID"]
-        secret_key = os.environ["AWS_SECRET_ACCESS_KEY"]
-    else:
-        access_key = subprocess.check_output(
-            ["aws", "configure", "get", "aws_access_key_id"], text=True
-        ).strip()
-        secret_key = subprocess.check_output(
-            ["aws", "configure", "get", "aws_secret_access_key"], text=True
-        ).strip()
-        if not access_key or not secret_key:
-            raise ValueError(
-                "Missing AWS credentials. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY "
-                "or configure via `aws configure`."
-            )
-    con = duckdb.connect()
-    con.execute("INSTALL httpfs")
-    con.execute("LOAD httpfs")
-    con.execute("SET s3_region='us-east-2'")
-    con.execute(f"SET s3_access_key_id='{access_key}'")
-    con.execute(f"SET s3_secret_access_key='{secret_key}'")
-    if "AWS_SESSION_TOKEN" in os.environ:
-        con.execute(f"SET s3_session_token='{os.environ['AWS_SESSION_TOKEN']}'")
-    return con
-
-
-# =============================================================================
 # DATA LOADING
 # =============================================================================
 
@@ -219,8 +214,12 @@ def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.D
     cache_path = Path(cache_dir).expanduser() / f"v1_rebounds_logs_{season.replace(',', '_')}.parquet"
     cached = maybe_read_cache(cache_path, use_cache, force)
     if cached is not None:
-        print(f"logs: loaded from cache ({len(cached):,} rows)")
-        return cached
+        if "team_normalized" not in cached.columns:
+            print("logs: cache missing team_normalized; refetching")
+            cached = None
+        else:
+            print(f"logs: loaded from cache ({len(cached):,} rows)")
+            return cached
 
     con = connect_duckdb_s3()
     query = f"""
@@ -249,9 +248,22 @@ def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.D
     logs["date"] = pd.to_datetime(logs["GAME_DATE"]).dt.date.astype(str)
     for col in ["MIN", "OREB", "DREB", "REB"]:
         logs[col] = pd.to_numeric(logs[col], errors="coerce")
+    logs["team_normalized"] = logs["TEAM_NAME"].astype(str).map(normalize_team_name_from_odds_api)
 
     out = (
-        logs[["season", "date", "GAME_ID", "player_normalized", "MIN", "OREB", "DREB", "REB"]]
+        logs[
+            [
+                "season",
+                "date",
+                "GAME_ID",
+                "player_normalized",
+                "MIN",
+                "OREB",
+                "DREB",
+                "REB",
+                "team_normalized",
+            ]
+        ]
         .rename(columns={"GAME_ID": "game_id"})
         .copy()
     )
@@ -388,6 +400,17 @@ def build_market_panel(props: pd.DataFrame, logs: pd.DataFrame) -> pd.DataFrame:
     panel["line_range"] = panel["max_line"] - panel["min_line"]
     panel["line_spread"] = panel["line_range"]
 
+    lines_agg = (
+        main_lines.groupby(group_keys, as_index=False)
+        .agg(
+            input_reb_prop_lines=(
+                "line",
+                lambda s: sorted({float(x) for x in pd.to_numeric(s, errors="coerce").dropna().unique()}),
+            )
+        )
+    )
+    panel = panel.merge(lines_agg, on=group_keys, how="left")
+
     print(f"market panel: {len(panel):,} rows, {panel['n_books'].mean():.1f} avg books")
     return panel, book_line
 
@@ -438,8 +461,120 @@ def build_v3_props_raw(
 # SPREAD CONTEXT
 # =============================================================================
 
-def attach_spread(panel: pd.DataFrame, logs: pd.DataFrame, cache_dir: str) -> pd.DataFrame:
-    """Attach spread_signed from v6 if available; otherwise fills NaN."""
+def load_game_level_spreads(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.DataFrame:
+    """Per game: normalized home/away team names and median spread lines (Odds API historical CSV)."""
+    cache_path = Path(cache_dir).expanduser() / f"rebounds_nba_game_spreads_{season.replace(',', '_')}.parquet"
+    cached = maybe_read_cache(cache_path, use_cache, force)
+    if cached is not None:
+        return cached
+
+    con = connect_duckdb_s3()
+    query = f"""
+    WITH raw AS (
+      SELECT
+        home_team,
+        away_team,
+        market,
+        home_line,
+        away_line,
+        regexp_extract(filename, '/historical_game_lines/([^/]+)/', 1) AS season,
+        regexp_extract(filename, 'nba_game_lines_(\\d{{4}}-\\d{{2}}-\\d{{2}})\\.csv', 1) AS date
+      FROM read_csv_auto(
+        's3://the-odds-api-mt/nba/historical_game_lines/*/nba_game_lines_*.csv',
+        union_by_name=true,
+        filename=true,
+        all_varchar=true
+      )
+    ),
+    spread AS (
+      SELECT
+        season,
+        date,
+        home_team,
+        away_team,
+        median(CAST(home_line AS DOUBLE)) AS home_spread,
+        median(CAST(away_line AS DOUBLE)) AS away_spread
+      FROM raw r
+      WHERE {season_predicate('r', season)}
+        AND market = 'spread'
+        AND home_line IS NOT NULL
+        AND away_line IS NOT NULL
+      GROUP BY season, date, home_team, away_team
+    )
+    SELECT season, date, home_team, away_team, home_spread, away_spread
+    FROM spread
+    """
+    spread_df = con.execute(query).fetchdf()
+    con.close()
+    spread_df["home_team_norm"] = spread_df["home_team"].astype(str).map(normalize_team_name_from_odds_api)
+    spread_df["away_team_norm"] = spread_df["away_team"].astype(str).map(normalize_team_name_from_odds_api)
+    spread_df["home_spread"] = pd.to_numeric(spread_df["home_spread"], errors="coerce")
+    spread_df["away_spread"] = pd.to_numeric(spread_df["away_spread"], errors="coerce")
+    spread_df["pair_key"] = spread_df.apply(
+        lambda r: tuple(sorted([r["home_team_norm"], r["away_team_norm"]])),
+        axis=1,
+    )
+    spread_df = spread_df.drop_duplicates(subset=["season", "date", "pair_key"], keep="first")
+    maybe_write_cache(spread_df, cache_path, use_cache)
+    return spread_df
+
+
+def _logs_game_pair_keys(logs: pd.DataFrame) -> pd.DataFrame:
+    rows: list[dict] = []
+    for (season, date, gid), g in logs.groupby(["season", "date", "game_id"], sort=False):
+        u = sorted({x for x in g["team_normalized"].dropna().unique().tolist() if str(x).strip()})
+        pk = tuple(u) if len(u) == 2 else None
+        rows.append({"season": season, "date": date, "game_id": gid, "pair_key": pk})
+    return pd.DataFrame(rows)
+
+
+def attach_spread(
+    panel: pd.DataFrame,
+    logs: pd.DataFrame,
+    cache_dir: str,
+    season: str,
+    use_cache: bool,
+    force: bool,
+) -> pd.DataFrame:
+    """
+    Attach spread_signed from rebounds_input_universe when present; spread_abs; and
+    ``input_spread_by_side`` as ``[home_spread, away_spread]`` from historical game lines
+    joined via (season, date, game_id) and team pairing from logs.
+    """
+    gspread = load_game_level_spreads(season, cache_dir, use_cache, force)
+    pair_df = _logs_game_pair_keys(logs)
+    gattach = pair_df.merge(
+        gspread,
+        on=["season", "date", "pair_key"],
+        how="left",
+    )
+
+    def _spread_pair(row: pd.Series):
+        hs = row.get("home_spread")
+        aws = row.get("away_spread")
+        if pd.isna(hs) or pd.isna(aws):
+            return np.nan
+        return [float(hs), float(aws)]
+
+    gattach["input_spread_by_side"] = gattach.apply(_spread_pair, axis=1)
+    spread_merge_cols = [
+        c
+        for c in (
+            "season",
+            "date",
+            "game_id",
+            "input_spread_by_side",
+            "home_team_norm",
+            "away_team_norm",
+        )
+        if c in gattach.columns
+    ]
+    panel = panel.merge(
+        gattach[spread_merge_cols],
+        on=["season", "date", "game_id"],
+        how="left",
+    )
+
     try:
         input_path = Path(cache_dir).expanduser() / "rebounds_input_universe.parquet"
         input_spread = pd.read_parquet(
@@ -452,6 +587,18 @@ def attach_spread(panel: pd.DataFrame, logs: pd.DataFrame, cache_dir: str) -> pd
         panel["spread_signed"] = np.nan
     panel["spread_abs"] = panel["spread_signed"].abs()
     return panel
+
+
+def build_audit_team_frame(logs: pd.DataFrame, panel: pd.DataFrame) -> pd.DataFrame:
+    """Per player-game: team + home/away norms for ``verify_audit_lists_dataframe`` spread checks."""
+    group_keys = ["season", "date", "player_normalized", "game_id"]
+    lt = logs[group_keys + ["team_normalized"]].drop_duplicates(subset=group_keys)
+    if "home_team_norm" not in panel.columns or "away_team_norm" not in panel.columns:
+        return lt
+    game_sides = panel[
+        ["season", "date", "game_id", "home_team_norm", "away_team_norm"]
+    ].drop_duplicates(subset=["season", "date", "game_id"])
+    return lt.merge(game_sides, on=["season", "date", "game_id"], how="left")
 
 
 # =============================================================================
@@ -504,8 +651,32 @@ def build_rolling_features(logs: pd.DataFrame, v6_shots: pd.DataFrame) -> pd.Dat
             all_feat_cols.append(feat_name)
 
     roll_df = pd.concat(feat_series, axis=1)
+
+    # Audit tails: prior games only (indices [max(0,i-w):i]) aligned with shift(1).rolling(w).
+    reb_tail_60 = pd.Series(index=logs_ext.index, dtype=object)
+    fg3_tail_20 = pd.Series(index=logs_ext.index, dtype=object)
+    reb_tail_5 = pd.Series(index=logs_ext.index, dtype=object)
+    for _, g in logs_ext.groupby("player_normalized", sort=False):
+        reb = g["REB"].to_numpy(dtype=float)
+        fg3 = g["FG3A"].to_numpy(dtype=float)
+        nloc = len(g)
+        r60 = [reb[max(0, i - 60) : i].tolist() for i in range(nloc)]
+        f20 = [fg3[max(0, i - 20) : i].tolist() for i in range(nloc)]
+        r5 = [reb[max(0, i - 5) : i].tolist() for i in range(nloc)]
+        reb_tail_60.loc[g.index] = r60
+        fg3_tail_20.loc[g.index] = f20
+        reb_tail_5.loc[g.index] = r5
+
+    tail_df = pd.DataFrame(
+        {
+            "input_reb_tail_60": reb_tail_60,
+            "input_fg3a_tail_20": fg3_tail_20,
+            "input_reb_tail_5": reb_tail_5,
+        }
+    )
+
     out = pd.concat(
-        [logs_ext[["season", "date", "player_normalized", "game_id"]], roll_df],
+        [logs_ext[["season", "date", "player_normalized", "game_id"]], roll_df, tail_df],
         axis=1,
     )
 
@@ -617,7 +788,7 @@ def main() -> None:
 
     # 2) Build market panel + per-book line table
     panel, book_line = build_market_panel(props, logs)
-    panel = attach_spread(panel, logs, cache_dir)
+    panel = attach_spread(panel, logs, cache_dir, args.season, use_cache, force)
 
     v3_raw = build_v3_props_raw(book_line, logs, panel)
     output_v3_path.parent.mkdir(parents=True, exist_ok=True)
@@ -632,38 +803,85 @@ def main() -> None:
     group_keys = ["season", "date", "player_normalized", "game_id"]
 
     logs_target = (
-        logs[group_keys + ["REB"]]
+        logs[group_keys + ["REB", "team_normalized"]]
         .drop_duplicates(subset=group_keys)
     )
 
-    feat_v2 = (
-        panel[group_keys + [
-            "consensus_reb_line", "max_line", "min_line",
-            "line_range", "n_books", "line_spread",
-            "spread_signed", "spread_abs",
-        ]]
+    panel_cols = [
+        "consensus_reb_line",
+        "max_line",
+        "min_line",
+        "line_range",
+        "n_books",
+        "line_spread",
+        "spread_signed",
+        "spread_abs",
+        "input_reb_prop_lines",
+        "input_spread_by_side",
+    ]
+    for c in ("home_team_norm", "away_team_norm"):
+        if c in panel.columns:
+            panel_cols.append(c)
+
+    feature_universe = (
+        panel[group_keys + panel_cols]
         .merge(logs_target, on=group_keys, how="inner")
         .merge(rolling, on=group_keys, how="left")
     )
 
-    # 5) Fail-fast schema check
-    require_columns(feat_v2, REQUIRED_OUTPUT_COLUMNS, "feat_v2")
+    for c in TEAM_CONTEXT_COLS:
+        if c not in feature_universe.columns:
+            feature_universe[c] = np.nan
 
-    dup_count = feat_v2.duplicated(subset=group_keys, keep=False).sum()
+    # 5) Fail-fast schema check
+    require_columns(feature_universe, REQUIRED_OUTPUT_COLUMNS, "feature_universe")
+
+    dup_count = feature_universe.duplicated(subset=group_keys, keep=False).sum()
     if dup_count > 0:
         raise ValueError(f"Duplicate keys in output before write: {dup_count} rows")
 
+    strict_env = os.environ.get("REBOUNDS_AUDIT_LIST_STRICT", "1").strip().lower()
+    audit_on = strict_env not in ("0", "false", "no") and not bool(
+        getattr(args, "skip_audit_list", False)
+    )
+    if audit_on:
+        full_scan = bool(getattr(args, "audit_list_full_scan", False)) or os.environ.get(
+            "REBOUNDS_AUDIT_LIST_FULL_SCAN", ""
+        ).strip().lower() in ("1", "true", "yes")
+        max_audit_rows = None if full_scan else int(args.audit_list_max_rows)
+        team_frame = build_audit_team_frame(logs, panel)
+        mode = "full" if max_audit_rows is None else "sample"
+        n_eff = len(feature_universe) if max_audit_rows is None else min(max_audit_rows, len(feature_universe))
+        print(
+            "audit_list_verify",
+            f"mode={mode}",
+            f"n_rows={len(feature_universe):,}",
+            f"n_checked~={n_eff:,}",
+            sep=" | ",
+        )
+        audit_sample = sample_audit_rows(feature_universe, max_rows=max_audit_rows)
+        verify_audit_lists_dataframe(
+            feature_universe,
+            team_frame=team_frame,
+            max_rows=max_audit_rows,
+            sample_df=audit_sample,
+        )
+        print("audit_list_verify | ok")
+        show_n = int(os.environ.get("REBOUNDS_AUDIT_LIST_SHOW_ROWS", "0").strip() or "0")
+        if show_n > 0:
+            print_audit_sample_to_stdout(feature_universe, team_frame, n_show=show_n, show_by="recent")
+
     # 6) Sort + write
-    feat_v2 = feat_v2.sort_values(["season", "date", "player_normalized", "game_id"]).reset_index(drop=True)
+    feature_universe = feature_universe.sort_values(["season", "date", "player_normalized", "game_id"]).reset_index(drop=True)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    feat_v2.to_parquet(output_path, index=False)
+    feature_universe.to_parquet(output_path, index=False)
 
     # 7) DuckDB quality checks
     run_quality_checks(output_path)
 
     print(
-        "phase=v2_build_rebounds_universe",
-        f"rows={len(feat_v2)}",
+        "phase=build_rebounds_full_universe",
+        f"rows={len(feature_universe)}",
         f"v3_rows={len(v3_raw)}",
         f"season={args.season}",
         f"output={output_path}",

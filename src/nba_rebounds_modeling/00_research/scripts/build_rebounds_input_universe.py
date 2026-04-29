@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
 from io import BytesIO
 from pathlib import Path
 import sys
@@ -46,6 +45,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+from src.nba_rebounds_modeling.duckdb_s3_creds import connect_duckdb_s3
 from src.player_team_history.name_normalization import normalize_from_nba_api
 from src.player_team_history.team_normalization import normalize_team_name_from_odds_api
 
@@ -114,26 +114,6 @@ def parse_s3_uri(s3_uri: str) -> tuple[str, str]:
     if bucket == "" or key == "":
         raise ValueError(f"Invalid s3 uri: {s3_uri}")
     return bucket, key
-
-
-def connect_duckdb_s3() -> duckdb.DuckDBPyConnection:
-    if "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ:
-        access_key = os.environ["AWS_ACCESS_KEY_ID"]
-        secret_key = os.environ["AWS_SECRET_ACCESS_KEY"]
-    else:
-        access_key = subprocess.check_output(["aws", "configure", "get", "aws_access_key_id"], text=True).strip()
-        secret_key = subprocess.check_output(["aws", "configure", "get", "aws_secret_access_key"], text=True).strip()
-        if access_key == "" or secret_key == "":
-            raise ValueError("Missing AWS credentials.")
-    con = duckdb.connect()
-    con.execute("INSTALL httpfs")
-    con.execute("LOAD httpfs")
-    con.execute("SET s3_region='us-east-2'")
-    con.execute(f"SET s3_access_key_id='{access_key}'")
-    con.execute(f"SET s3_secret_access_key='{secret_key}'")
-    if "AWS_SESSION_TOKEN" in os.environ:
-        con.execute(f"SET s3_session_token='{os.environ['AWS_SESSION_TOKEN']}'")
-    return con
 
 
 def load_player_day_inputs(season: str) -> pd.DataFrame:
@@ -314,6 +294,61 @@ def load_team_spreads_for_calendar_date(season: str, calendar_date: str) -> pd.D
     spread_df["team_normalized"] = spread_df["team_raw"].apply(normalize_team_name_from_odds_api)
     spread_df["spread_signed"] = pd.to_numeric(spread_df["spread_signed"], errors="coerce")
     return spread_df[["season", "date", "team_normalized", "spread_signed"]].drop_duplicates()
+
+
+def load_game_spreads_for_calendar_date(season: str, calendar_date: str) -> pd.DataFrame:
+    """
+    One row per game: home/away team (Odds API names, normalized) and consensus spreads.
+
+    Used to build ``input_spread_by_side`` as ``[home_spread, away_spread]`` on pregame slices.
+    """
+    con = connect_duckdb_s3()
+    date_lit = calendar_date.replace("'", "''")
+    query = f"""
+    WITH raw AS (
+      SELECT
+        home_team,
+        away_team,
+        market,
+        home_line,
+        away_line,
+        regexp_extract(filename, '/historical_game_lines/([^/]+)/', 1) AS season,
+        regexp_extract(filename, 'nba_game_lines_(\\d{{4}}-\\d{{2}}-\\d{{2}})\\.csv', 1) AS date
+      FROM read_csv_auto(
+        's3://the-odds-api-mt/nba/historical_game_lines/*/nba_game_lines_*.csv',
+        union_by_name=true,
+        filename=true,
+        all_varchar=true
+      )
+    ),
+    spread AS (
+      SELECT
+        season,
+        date,
+        home_team,
+        away_team,
+        median(CAST(home_line AS DOUBLE)) AS home_spread,
+        median(CAST(away_line AS DOUBLE)) AS away_spread
+      FROM raw r
+      WHERE {season_predicate('r', season)}
+        AND market = 'spread'
+        AND home_line IS NOT NULL
+        AND away_line IS NOT NULL
+        AND r.date = '{date_lit}'
+      GROUP BY season, date, home_team, away_team
+    )
+    SELECT season, date, home_team, away_team, home_spread, away_spread
+    FROM spread
+    """
+    spread_df = con.execute(query).fetchdf()
+    con.close()
+    spread_df["home_team_norm"] = spread_df["home_team"].apply(normalize_team_name_from_odds_api)
+    spread_df["away_team_norm"] = spread_df["away_team"].apply(normalize_team_name_from_odds_api)
+    spread_df["home_spread"] = pd.to_numeric(spread_df["home_spread"], errors="coerce")
+    spread_df["away_spread"] = pd.to_numeric(spread_df["away_spread"], errors="coerce")
+    return spread_df[
+        ["season", "date", "home_team_norm", "away_team_norm", "home_spread", "away_spread"]
+    ].drop_duplicates()
 
 
 def validate_output(df: pd.DataFrame) -> None:
