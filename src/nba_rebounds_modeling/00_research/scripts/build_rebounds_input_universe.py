@@ -389,8 +389,15 @@ def main() -> None:
     args = parse_args()
     output_path = Path(args.output).expanduser().resolve()
 
+    print(f"load_player_day_inputs\n  season={args.season}")
     player_inputs = load_player_day_inputs(args.season)
+    print(f"  rows={len(player_inputs):,}")
+
+    print(f"load_team_spreads\n  season={args.season}")
     spread_inputs = load_team_spreads(args.season)
+    print(f"  rows={len(spread_inputs):,}")
+
+    print("merging player inputs with spreads")
     built = player_inputs.merge(
         spread_inputs,
         on=["season", "date", "team_normalized"],
@@ -399,6 +406,7 @@ def main() -> None:
     built = built[REQUIRED_COLS].copy()
 
     if args.mode == "append" and args.s3_uri.strip() != "":
+        print(f"append_mode\n  loading existing from s3={args.s3_uri.strip()}")
         existing = read_s3_parquet_if_exists(args.s3_uri.strip())
         merged = pd.concat([existing, built], ignore_index=True)
         merged = merged.drop_duplicates(subset=KEY_COLS, keep="last").copy()
@@ -409,19 +417,13 @@ def main() -> None:
     out = out.sort_values(KEY_COLS).reset_index(drop=True)
     validate_output(out)
 
+    print(f"writing output\n  path={output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(output_path, index=False)
     if args.s3_uri.strip() != "":
+        print(f"uploading to s3\n  uri={args.s3_uri.strip()}")
         upload_file_to_s3(output_path, args.s3_uri.strip())
-    print(
-        "rebounds_input_universe_built",
-        f"season={args.season}",
-        f"mode={args.mode}",
-        f"rows={len(out):,}",
-        f"output={output_path}",
-        f"s3_uri={args.s3_uri.strip()}",
-        sep=" | ",
-    )
+    print(f"rebounds_input_universe_built\n  season={args.season}\n  mode={args.mode}\n  rows={len(out):,}\n  output={output_path}\n  s3_uri={args.s3_uri.strip()}")
 
 
 if __name__ == "__main__":

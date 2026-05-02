@@ -52,6 +52,18 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Optional S3 URI destination for historical props parquet.",
     )
+    parser.add_argument(
+        "--input-universe-mode",
+        type=str,
+        choices=("append", "replace"),
+        default="append",
+        help="Mode for input universe build: append (default) or replace (full rebuild).",
+    )
+    parser.add_argument(
+        "--skip-audit-list",
+        action="store_true",
+        help="Skip audit-list checks in full universe build.",
+    )
     return parser.parse_args()
 
 
@@ -72,8 +84,21 @@ def upload_file_to_s3(local_path: Path, s3_uri: str) -> None:
     boto3.client("s3").put_object(Bucket=bucket, Key=key, Body=local_path.read_bytes())
 
 
+def _fmt_cmd(cmd: list[str]) -> str:
+    lines = ["  " + " ".join(cmd[:2])]
+    i = 2
+    while i < len(cmd):
+        if cmd[i].startswith("--") and i + 1 < len(cmd) and not cmd[i + 1].startswith("--"):
+            lines.append(f"    {cmd[i]} {cmd[i + 1]}")
+            i += 2
+        else:
+            lines.append(f"    {cmd[i]}")
+            i += 1
+    return " \\\n".join(lines)
+
+
 def run_cmd(cmd: list[str], repo_root: Path) -> None:
-    print("run", " ".join(cmd), sep=" | ")
+    print(f"run\n{_fmt_cmd(cmd)}")
     subprocess.run(cmd, cwd=str(repo_root), check=True)
 
 
@@ -95,33 +120,33 @@ def main() -> None:
             "--s3-uri",
             args.input_universe_s3_uri,
             "--mode",
-            "append",
+            args.input_universe_mode,
         ],
         repo_root,
     )
 
-    run_cmd(
-        [
-            sys.executable,
-            "src/nba_rebounds_modeling/00_research/scripts/v2_build_rebounds_universe.py",
-            "--season",
-            args.season,
-            "--cache-dir",
-            str(cache_dir),
-            "--output",
-            str(output_path),
-            "--output-v3",
-            str(output_props_path),
-        ],
-        repo_root,
-    )
+    full_universe_cmd = [
+        sys.executable,
+        "src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py",
+        "--season",
+        args.season,
+        "--cache-dir",
+        str(cache_dir),
+        "--output",
+        str(output_path),
+        "--output-v3",
+        str(output_props_path),
+    ]
+    if args.skip_audit_list:
+        full_universe_cmd.append("--skip-audit-list")
+    run_cmd(full_universe_cmd, repo_root)
 
     upload_file_to_s3(output_path, args.feature_universe_s3_uri)
-    print("uploaded_feature_universe", f"s3_uri={args.feature_universe_s3_uri}", sep=" | ")
+    print(f"uploaded_feature_universe\n  s3_uri={args.feature_universe_s3_uri}")
 
     if args.props_history_s3_uri.strip() != "":
         upload_file_to_s3(output_props_path, args.props_history_s3_uri.strip())
-        print("uploaded_props_history", f"s3_uri={args.props_history_s3_uri}", sep=" | ")
+        print(f"uploaded_props_history\n  s3_uri={args.props_history_s3_uri}")
 
 
 if __name__ == "__main__":

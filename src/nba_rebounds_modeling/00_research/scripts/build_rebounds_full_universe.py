@@ -466,6 +466,7 @@ def load_game_level_spreads(season: str, cache_dir: str, use_cache: bool, force:
     cache_path = Path(cache_dir).expanduser() / f"rebounds_nba_game_spreads_{season.replace(',', '_')}.parquet"
     cached = maybe_read_cache(cache_path, use_cache, force)
     if cached is not None:
+        cached["pair_key"] = cached["pair_key"].apply(lambda x: tuple(x) if x is not None else x)
         return cached
 
     con = connect_duckdb_s3()

@@ -34,6 +34,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-train", action="store_true", help="Train fresh models for this run before scoring.")
     parser.add_argument("--models-dir", type=str, default="", help="Existing models dir when train is skipped.")
     parser.add_argument("--notify-which", type=str, default="both", choices=("ols", "xgb", "both"))
+    parser.add_argument("--skip-audit", action="store_true", help="Skip audit-list checks in feature universe build.")
+    parser.add_argument("--input-universe-mode", type=str, choices=("append", "replace"), default="append", help="Mode for input universe build.")
     return parser.parse_args()
 
 
@@ -45,8 +47,21 @@ def load_config(path: Path) -> dict:
     return cfg
 
 
+def _fmt_cmd(cmd: list[str]) -> str:
+    lines = ["  " + " ".join(cmd[:2])]
+    i = 2
+    while i < len(cmd):
+        if cmd[i].startswith("--") and i + 1 < len(cmd) and not cmd[i + 1].startswith("--"):
+            lines.append(f"    {cmd[i]} {cmd[i + 1]}")
+            i += 2
+        else:
+            lines.append(f"    {cmd[i]}")
+            i += 1
+    return " \\\n".join(lines)
+
+
 def run_cmd(cmd: list[str], repo_root: Path) -> None:
-    print("run", " ".join(cmd), sep=" | ")
+    print(f"run\n{_fmt_cmd(cmd)}")
     subprocess.run(cmd, cwd=str(repo_root), check=True)
 
 
@@ -137,7 +152,7 @@ def check_feature_freshness(feat_path: Path, slate_date: pd.Timestamp, max_featu
         raise ValueError(
             f"Feature data stale: latest_date={latest_date.date()} lag_days={lag_days} max_allowed={max_feature_lag_days}."
         )
-    print("feature_freshness", f"latest_date={latest_date.date()}", f"lag_days={lag_days}", sep=" | ")
+    print(f"feature_freshness\n  latest_date={latest_date.date()}\n  lag_days={lag_days}")
 
 
 def check_model_staleness(models_dir: Path, max_model_age_days: int) -> None:
@@ -151,7 +166,7 @@ def check_model_staleness(models_dir: Path, max_model_age_days: int) -> None:
         raise ValueError(
             f"Model stale: trained_at_utc={trained_at.isoformat()} age_days={age_days:.2f} max_allowed={max_model_age_days}."
         )
-    print("model_freshness", f"trained_at_utc={trained_at.isoformat()}", f"age_days={age_days:.2f}", sep=" | ")
+    print(f"model_freshness\n  trained_at_utc={trained_at.isoformat()}\n  age_days={age_days:.2f}")
 
 
 def main() -> None:
@@ -167,7 +182,7 @@ def main() -> None:
             raise ValueError("--slate-date must be timezone-naive YYYY-MM-DD")
     else:
         slate_date = pd.Timestamp(datetime.now(ZoneInfo("America/New_York")).date())
-    print("slate_date_resolved", f"slate={slate_date.date()}", sep=" | ")
+    print(f"slate_date_resolved\n  slate={slate_date.date()}")
 
     feat_path = Path(cfg["full_feature_parquet"]).expanduser().resolve()
     run_root = Path(cfg["daily_runs_root"]).expanduser().resolve()
@@ -176,30 +191,32 @@ def main() -> None:
     run_dir.mkdir(parents=True, exist_ok=True)
 
     feature_props_snapshot_path = run_dir / f"rebounds_props_history_{slate_date.date()}.parquet"
-    run_cmd(
-        [
-            sys.executable,
-            "src/nba_rebounds_modeling/00_research/scripts/build_rebounds_feature_universe.py",
-            "--season",
-            str(cfg["feature_universe_season"]),
-            "--cache-dir",
-            str(cfg["feature_build_cache_dir"]),
-            "--output",
-            str(feat_path),
-            "--output-props",
-            str(feature_props_snapshot_path),
-            "--input-universe-s3-uri",
-            str(cfg["input_universe_s3_uri"]),
-            "--feature-universe-s3-uri",
-            str(cfg["feature_universe_s3_uri"]),
-        ],
-        repo_root,
-    )
+    feat_universe_cmd = [
+        sys.executable,
+        "src/nba_rebounds_modeling/00_research/scripts/build_rebounds_feature_universe.py",
+        "--season",
+        str(cfg["feature_universe_season"]),
+        "--cache-dir",
+        str(cfg["feature_build_cache_dir"]),
+        "--output",
+        str(feat_path),
+        "--output-props",
+        str(feature_props_snapshot_path),
+        "--input-universe-s3-uri",
+        str(cfg["input_universe_s3_uri"]),
+        "--feature-universe-s3-uri",
+        str(cfg["feature_universe_s3_uri"]),
+        "--input-universe-mode",
+        args.input_universe_mode,
+    ]
+    if args.skip_audit:
+        feat_universe_cmd.append("--skip-audit-list")
+    run_cmd(feat_universe_cmd, repo_root)
 
     sns_healthcheck_message_id = ""
     if cfg["notify_enabled"]:
         sns_healthcheck_message_id = publish_sns_healthcheck(str(cfg["sns_topic_arn"]), run_id, slate_date)
-        print("sns_healthcheck", f"topic_arn={cfg['sns_topic_arn']}", f"message_id={sns_healthcheck_message_id}", sep=" | ")
+        print(f"sns_healthcheck\n  topic_arn={cfg['sns_topic_arn']}\n  message_id={sns_healthcheck_message_id}")
 
     check_feature_freshness(feat_path, slate_date, int(cfg["max_feature_lag_days"]))
 
@@ -269,7 +286,7 @@ def main() -> None:
         feat_slice_rows = len(pd.read_parquet(feat_slice_path))
         if feat_slice_rows == 0:
             raise ValueError("Pregame feature backfill produced 0 rows.")
-        print("pregame_feature_backfill", f"rows={feat_slice_rows}", sep=" | ")
+        print(f"pregame_feature_backfill\n  rows={feat_slice_rows}")
 
     run_train = bool(cfg["retrain_daily"]) or args.run_train
     if run_train:
@@ -352,9 +369,9 @@ def main() -> None:
 
     s3_prefix = f"{str(cfg['s3_runs_prefix']).rstrip('/')}/{slate_date.date()}/{run_id}"
     uploaded = upload_dir_to_s3(run_dir, str(cfg["s3_bucket"]), s3_prefix)
-    print("s3_run_upload", f"uploaded_files={len(uploaded)}", f"prefix=s3://{cfg['s3_bucket']}/{s3_prefix}", sep=" | ")
+    print(f"s3_run_upload\n  uploaded_files={len(uploaded)}\n  prefix=s3://{cfg['s3_bucket']}/{s3_prefix}")
 
-    print("pipeline_complete", f"slate={slate_date.date()}", f"run_id={run_id}", f"run_dir={run_dir}", sep=" | ")
+    print(f"pipeline_complete\n  slate={slate_date.date()}\n  run_id={run_id}\n  run_dir={run_dir}")
 
 
 if __name__ == "__main__":

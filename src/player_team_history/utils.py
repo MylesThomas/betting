@@ -49,7 +49,7 @@ from src.player_name_utils import normalize_player_name, get_name_mappings
 
 # S3 Configuration
 S3_BUCKET = 'nba-betting-mt'
-S3_KEY = 'data/02_cache/player_team_history.parquet'
+S3_KEY = 'nba/player_team_history/history.parquet'
 
 
 def load_team_history() -> pd.DataFrame:
