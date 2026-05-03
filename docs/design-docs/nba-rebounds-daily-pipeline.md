@@ -86,6 +86,89 @@ End state: a **scheduled job** (e.g. nightly ET before slate) that:
 
 ---
 
+## Running the pipeline
+
+### Daily command
+
+```bash
+python scripts/run_rebounds_daily_pipeline.py \
+  --config config/nba_rebounds_prod.yaml \
+  --slate-date YYYY-MM-DD
+```
+
+Omit `--slate-date` to default to ET today. Add `--input-universe-mode replace` on the first run of the day (or to force a full S3 rebuild of the input universe); use `append` (default) after that.
+
+Config can also be an S3 URI — useful for Lambda or any environment without a local checkout of config:
+
+```bash
+python scripts/run_rebounds_daily_pipeline.py \
+  --config s3://nba-betting-mt/rebounds/config/nba_rebounds_prod.yaml \
+  --slate-date YYYY-MM-DD
+```
+
+### What each step does
+
+| Step | Script | Input | Output |
+|------|--------|-------|--------|
+| 1. Feature universe | `build_rebounds_full_universe.py` | Player logs + spreads from S3 | `/tmp/rebounds_features_{run_id}.parquet` → `s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet` |
+| 2. Live props fetch | `fetch_nba_player_rebounds_live.py` | Odds API | `{s3_run_prefix}/live_rebounds_props_raw_{date}.csv` |
+| 3. Scoring input | `build_rebounds_scoring_input.py` | Live CSV from S3 | `{s3_run_prefix}/rebounds_props_scoring_input_{date}.parquet` |
+| 4. Feature slice | `prod_slice_rebounds_features.py` | Feature universe from S3 | `{s3_run_prefix}/rebounds_features_slice_{date}.parquet` (0 rows pregame → triggers step 4b) |
+| 4b. Pregame backfill | `build_rebounds_pregame_feature_slice.py` | Feature universe + scoring input | Same slice path, filled from latest historical form |
+| 5. Train | `prod_train_rebounds_models.py` | Feature universe from S3 | `/tmp/rebounds_models_{run_id}/` → `s3://nba-betting-mt/rebounds/models/{model_run_id}/` |
+| 6. Score | `prod_score_rebounds_slate.py` | Slice + props + models | `{s3_run_prefix}/rebounds_scored_{date}.parquet` |
+| 7. Notify | `prod_notify_rebounds_sns.py` | Scored parquet from S3 | SNS → email |
+
+### What lands in S3
+
+Every run writes to a unique prefix:
+
+```
+s3://nba-betting-mt/rebounds/daily_runs/{date}/{run_id}/
+  live_rebounds_props_raw_{date}.csv
+  rebounds_props_scoring_input_{date}.parquet
+  rebounds_features_slice_{date}.parquet
+  rebounds_scored_{date}.parquet
+  rebounds_props_history_{date}.parquet   ← historical props snapshot
+  run_manifest.json                        ← full audit trail for the run
+```
+
+Models are at: `s3://nba-betting-mt/rebounds/models/{model_run_id}/`
+
+The canonical feature universe (updated each run) is at:
+`s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet`
+
+### Required env / secrets
+
+```bash
+export ODDS_API_KEY=...          # or THE_ODDS_API_KEY
+export AWS_DEFAULT_REGION=us-east-2
+# credentials via aws sso login, IAM role, or long-lived keys
+```
+
+### Key config knobs (`config/nba_rebounds_prod.yaml`)
+
+| Key | What it controls |
+|-----|-----------------|
+| `retrain_daily` | `true` = retrain models every run; `false` = pass `--models-dir` instead |
+| `build_props_scoring_input_from_live` | `true` = fetch live props from Odds API; `false` = use `props_input_uri` |
+| `enable_pregame_feature_backfill` | `true` = auto-build feature slice from latest form when same-day slice is empty (normal for pregame runs) |
+| `max_feature_lag_days` | Pipeline fails if feature universe is older than this many days |
+| `prod_min_edge` | Minimum edge vs no-vig to flag a play (default 0.05) |
+| `feature_build_cache_dir` | Local cache for DuckDB S3 reads; defaults to `/tmp/rebounds_cache` |
+
+### No games / off-season
+
+If the Odds API returns no events for the slate date, the pipeline exits cleanly:
+
+```
+no_games_for_slate
+  slate=YYYY-MM-DD
+  pipeline_complete
+```
+
+---
+
 ## Implemented modules & CLI (v1)
 
 | Piece | Path |
@@ -100,31 +183,11 @@ End state: a **scheduled job** (e.g. nightly ET before slate) that:
 | SNS or stdout plays table | `00_research/scripts/prod_notify_rebounds_sns.py` |
 | Example prod YAML | `config/nba_rebounds_prod.example.yaml` |
 
-### Command sequence (local; paths are examples)
+### Individual scripts (for debugging / manual runs)
 
-1. **Build / refresh full feature universe** (when logs + props are current):  
-   `python src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py --season '*' --output .../rebounds_model_features.parquet --output-v3 .../rebounds_props_scoring_input.parquet`
+All scripts accept `s3://` URIs for `--feat`, `--props`, `--output`, etc. See `--help` on each.
 
-2. **Slice features to slate date:**  
-   `python .../prod_slice_rebounds_features.py --feat .../rebounds_model_features.parquet --as-of-date YYYY-MM-DD --output .../rebounds_features_slice_YYYY-MM-DD.parquet`
-
-3. **Train models** (copy `config/nba_rebounds_prod.example.yaml` → `config/nba_rebounds_prod.yaml` and set `train_end_date` / S3 as needed):  
-   `python .../prod_train_rebounds_models.py --config config/nba_rebounds_prod.yaml --feat .../rebounds_model_features.parquet --output-dir .../rebounds_prod_models/RUN_ID`
-
-4. **Score slate** (props for that date must be in the scorer input schema — historical slice or live fetch output):  
-   `python .../prod_score_rebounds_slate.py --models-dir .../RUN_ID --feat-slice .../rebounds_features_slice_YYYY-MM-DD.parquet --props .../rebounds_props_scoring_input.parquet --slate-date YYYY-MM-DD --output .../rebounds_scored_YYYY-MM-DD.parquet`
-
-5. **Notify (optional):**  
-   `python .../prod_notify_rebounds_sns.py --scored .../rebounds_scored_YYYY-MM-DD.parquet --which both`  
-   Set `SNS_TOPIC_ARN` or `--topic-arn` to publish.
-
-6. **Orchestrated daily run (new):**  
-   `python scripts/run_nba_rebounds_daily_pipeline.py --config config/nba_rebounds_prod.yaml`  
-   (Defaults to **ET today**; optional override: `--slate-date YYYY-MM-DD`.)  
-   Retrain cadence is controlled in config (`retrain_daily: true` for prod).  
-   For score-only runs with an existing model directory, set `retrain_daily: false` and pass `--models-dir .../RUN_ID`.
-
-**Live props path:** rebounds-only Odds API fetch → S3/local CSV → **props scoring-input builder** (`game_id` join, canonical no-vig fields) → **scoring-input parquet** → `--props` here. Historical bulk path remains `scripts/fetch_nba_player_props.py` + `v2` DuckDB (`market = 'player_rebounds'`).
+The orchestrated daily run (`scripts/run_rebounds_daily_pipeline.py`) is the recommended path — see **Running the pipeline** above.
 
 ---
 
@@ -140,17 +203,16 @@ End state: a **scheduled job** (e.g. nightly ET before slate) that:
 
 ### 0) One-time setup
 
-1. Copy config template: `config/nba_rebounds_prod.example.yaml` -> `config/nba_rebounds_prod.yaml`.
-2. Set required paths and policy keys:
-   - `full_feature_parquet`
-   - `daily_runs_root`
+1. Copy config template: `config/nba_rebounds_prod.example.yaml` → `config/nba_rebounds_prod.yaml`.
+2. Confirm S3 keys are set:
+   - `feature_universe_s3_uri`, `input_universe_s3_uri`, `s3_bucket`, `s3_runs_prefix`, `s3_models_prefix`
    - `retrain_daily: true`
    - `build_props_scoring_input_from_live: true`
-   - `live_fetch_to_s3: true` (optional but recommended)
+   - `live_fetch_to_s3: true`
 3. Export secrets/env:
    - `ODDS_API_KEY` (or `THE_ODDS_API_KEY`)
-   - AWS credentials for S3/SNS (if using S3 upload + notify)
-4. If using SNS notifications, set `sns_topic_arn` in config.
+   - AWS credentials for S3/SNS
+4. Set `sns_topic_arn` in config for email notifications.
 
 ### 1) Preflight checks (before first prod run)
 
@@ -169,30 +231,24 @@ Pass criteria:
 
 ### 2) Single-day dry run (manual)
 
-Pick a known slate date and run:
+Pick an upcoming slate date and run:
 
 ```bash
-python scripts/run_nba_rebounds_daily_pipeline.py \
-  --config config/nba_rebounds_prod.yaml
+python scripts/run_rebounds_daily_pipeline.py \
+  --config config/nba_rebounds_prod.yaml \
+  --slate-date YYYY-MM-DD \
+  --input-universe-mode replace
 ```
 
 Pass criteria:
-- Command exits 0.
-- Run directory exists under `daily_runs_root/YYYY-MM-DD/<run_id>/`.
-- Outputs present:
-  - `live_rebounds_props_raw_YYYY-MM-DD.csv`
-  - `rebounds_props_scoring_input_YYYY-MM-DD.parquet`
-  - `rebounds_features_slice_YYYY-MM-DD.parquet`
-  - `rebounds_scored_YYYY-MM-DD.parquet`
-  - `models/manifest.json` (daily retrain policy)
-- Notify step succeeds (fail-hard policy).
+- Command exits 0 or `no_games_for_slate` (no props available).
+- All outputs present in S3 under `s3://nba-betting-mt/rebounds/daily_runs/{date}/{run_id}/`.
+- `run_manifest.json` written to that prefix.
+- Notify step publishes to SNS.
 
 Notes:
-- ET-today runs require same-day props input. If `build_props_scoring_input_from_live: true`,
-  ensure `ODDS_API_KEY` (or `THE_ODDS_API_KEY`) is set.
-- If same-day feature slice is empty pregame, runner automatically builds a fallback
-  feature slice from latest historical player form + same-day props context
-  (`enable_pregame_feature_backfill: true`).
+- Requires `ODDS_API_KEY` set in env.
+- Pregame runs (before game logs land) automatically use `enable_pregame_feature_backfill`.
 
 ### 3) Burn-in gate (recommended before “real money” prod)
 
@@ -213,17 +269,16 @@ Pass criteria:
 Prod command:
 
 ```bash
-python scripts/run_nba_rebounds_daily_pipeline.py \
+python scripts/run_rebounds_daily_pipeline.py \
   --config config/nba_rebounds_prod.yaml
 ```
 
 ### 5) Daily operator checklist (quick)
 
-- Confirm API key + AWS credentials are valid.
-- Confirm `full_feature_parquet` includes latest date needed for slate.
-- Run command.
-- Verify scored parquet row count + play counts are sane.
-- Confirm SNS/email delivery.
+- Confirm `ODDS_API_KEY` and AWS credentials are valid.
+- Run command (ET today is the default slate date).
+- Verify scored parquet row count + play counts in the SNS email.
+- Check `run_manifest.json` in S3 if debugging a run.
 
 ---
 
