@@ -24,7 +24,6 @@ import json
 import pickle
 import sys
 from datetime import datetime, timezone
-from io import BytesIO
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +45,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+from src.io_utils import read_parquet_any, write_parquet_any  # noqa: E402
 from src.nba_rebounds_modeling.option_a_scoring import (  # noqa: E402
     option_a_vector_batch,
     play_under_only_mask,
@@ -63,18 +63,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--feat-slice", type=str, required=True, help="Feature rows for slate (e.g. prod_slice output).")
     p.add_argument("--props", type=str, required=True, help="rebounds_props_scoring_input parquet.")
     p.add_argument("--slate-date", type=str, required=True, help="YYYY-MM-DD; filters props + must match feat slice.")
-    p.add_argument("--output", type=str, required=True, help="Scored parquet path.")
+    p.add_argument("--output", type=str, required=True, help="Scored parquet path or s3:// URI.")
     p.add_argument("--min-edge", type=float, default=-1.0, help="Override manifest prod_min_edge if >= 0.")
-    p.add_argument("--s3-uri", type=str, default="", help="Optional s3://bucket/key.parquet upload after write.")
     return p.parse_args()
 
 
-def read_table(path: Path) -> pd.DataFrame:
-    if path.suffix.lower() == ".parquet":
-        return pd.read_parquet(path)
-    if path.suffix.lower() == ".csv":
-        return pd.read_csv(path)
-    raise ValueError(f"Unsupported table format: {path}")
+def read_table(uri: str) -> pd.DataFrame:
+    if uri.endswith(".csv"):
+        from src.io_utils import read_csv_any
+        return read_csv_any(uri)
+    return read_parquet_any(uri)
 
 
 def load_xgb_model(path: Path):
@@ -84,21 +82,6 @@ def load_xgb_model(path: Path):
     model.load_model(str(path))
     return model
 
-
-def write_parquet_s3(df: pd.DataFrame, s3_uri: str) -> None:
-    import boto3
-
-    if not s3_uri.startswith("s3://"):
-        raise ValueError("s3_uri must be s3://bucket/key")
-    rest = s3_uri[5:]
-    bucket, _, key = rest.partition("/")
-    if not bucket or not key:
-        raise ValueError(f"Invalid s3_uri: {s3_uri}")
-    buf = BytesIO()
-    df.to_parquet(buf, index=False)
-    buf.seek(0)
-    boto3.client("s3").put_object(Bucket=bucket, Key=key, Body=buf.getvalue())
-    print(f"uploaded {s3_uri}")
 
 
 def american_to_implied_prob_vigged(american: np.ndarray) -> np.ndarray:
@@ -113,9 +96,6 @@ def american_to_implied_prob_vigged(american: np.ndarray) -> np.ndarray:
 def main() -> None:
     args = parse_args()
     models_dir = Path(args.models_dir).expanduser()
-    feat_path = Path(args.feat_slice).expanduser()
-    props_path = Path(args.props).expanduser()
-    out_path = Path(args.output).expanduser()
     slate = pd.Timestamp(args.slate_date).normalize()
 
     manifest_path = models_dir / "manifest.json"
@@ -134,8 +114,8 @@ def main() -> None:
 
     xgb_model = load_xgb_model(models_dir / "xgb_model.json")
 
-    feat = read_table(feat_path)
-    props = read_table(props_path)
+    feat = read_table(args.feat_slice)
+    props = read_table(args.props)
 
     for c in GROUP_KEYS + B_MIN_MAX_FEATS:
         if c not in feat.columns:
@@ -205,20 +185,16 @@ def main() -> None:
     out["score_min_edge_used"] = prod_min_edge
     out["score_edge_basis"] = "raw_implied"
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out.to_parquet(out_path, index=False)
+    write_parquet_any(out, args.output)
     print(
         "prod_score_rebounds_slate",
         f"slate={args.slate_date}",
         f"rows={len(out):,}",
         f"n_play_ols={int(play_o.sum())}",
         f"n_play_xgb={int(play_x.sum())}",
-        f"output={out_path}",
+        f"output={args.output}",
         sep=" | ",
     )
-
-    if args.s3_uri.strip():
-        write_parquet_s3(out, args.s3_uri.strip())
 
 
 if __name__ == "__main__":

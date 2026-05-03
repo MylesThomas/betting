@@ -26,19 +26,15 @@ s3_models_prefix: rebounds/models
 s3_runs_prefix: rebounds/daily_runs
 feature_universe_s3_uri: s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet
 feature_universe_season: "*"
-feature_build_cache_dir: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/cache
+feature_build_cache_dir: /tmp/rebounds_cache
 force_refresh_cache: true
 input_universe_s3_uri: s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet
 
 # Optional SNS topic for notify step. Null = print to stdout.
 sns_topic_arn: arn:aws:sns:us-east-2:232692785472:betting-arb-alerts
 
-# Core inputs/outputs
-full_feature_parquet: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/rebounds_model_features_2025_26.parquet
-daily_runs_root: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/daily_runs
-
-# If build_props_scoring_input_from_live=false, this static props path is used.
-props_input_path: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/rebounds_props_scoring_input_2025_26.parquet
+# If build_props_scoring_input_from_live=false, set this to an s3:// URI.
+# props_input_uri: s3://nba-betting-mt/rebounds/props/rebounds_props_scoring_input.parquet
 
 # Prod policy
 retrain_daily: true

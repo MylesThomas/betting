@@ -35,6 +35,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+from src.io_utils import read_parquet_any, write_parquet_any  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import (  # noqa: E402
     B_MIN_MAX_AUDIT_LIST_COLS,
     B_MIN_MAX_FEATS,
@@ -201,8 +202,8 @@ def main() -> None:
     args = parse_args()
     slate = pd.Timestamp(args.slate_date).normalize()
 
-    feat = pd.read_parquet(Path(args.feat).expanduser())
-    props = pd.read_parquet(Path(args.props).expanduser())
+    feat = read_parquet_any(args.feat)
+    props = read_parquet_any(args.props)
 
     props_d = pd.to_datetime(props["date"]).dt.normalize()
     props_s = props.loc[props_d == slate].copy()
@@ -268,14 +269,12 @@ def main() -> None:
             out[c] = np.nan
 
     out = out[GROUP_KEYS + B_MIN_MAX_FEATS + B_MIN_MAX_AUDIT_LIST_COLS].copy()
-    out_path = Path(args.output).expanduser()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out.to_parquet(out_path, index=False)
+    write_parquet_any(out, args.output)
     print(
         "build_rebounds_pregame_feature_slice",
         f"slate={args.slate_date}",
         f"rows={len(out):,}",
-        f"output={out_path}",
+        f"output={args.output}",
         sep=" | ",
     )
 

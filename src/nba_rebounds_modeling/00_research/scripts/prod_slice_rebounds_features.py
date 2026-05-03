@@ -36,6 +36,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+from src.io_utils import read_parquet_any, write_parquet_any  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import GROUP_KEYS  # noqa: E402
 
 SCHEMA_VERSION = "rebounds_features_v2_b_min_max_team_ctx_1"
@@ -51,11 +52,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    feat_path = Path(args.feat).expanduser()
-    out_path = Path(args.output).expanduser()
     as_of = pd.Timestamp(args.as_of_date).normalize()
 
-    feat = pd.read_parquet(feat_path)
+    feat = read_parquet_any(args.feat)
     for k in GROUP_KEYS:
         if k not in feat.columns:
             raise ValueError(f"feat parquet missing group key column: {k}")
@@ -64,13 +63,12 @@ def main() -> None:
     sl = feat.loc[d == as_of].copy()
     sl["rebounds_feature_schema_version"] = SCHEMA_VERSION
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    sl.to_parquet(out_path, index=False)
+    write_parquet_any(sl, args.output)
     print(
         "prod_slice_rebounds_features",
         f"as_of={args.as_of_date}",
         f"rows={len(sl):,}",
-        f"output={out_path}",
+        f"output={args.output}",
         sep=" | ",
     )
 

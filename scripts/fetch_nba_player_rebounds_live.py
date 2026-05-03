@@ -266,10 +266,15 @@ def main():
         
         logging.info("S3 upload complete.")
     if args.output_csv:
-        out_path = Path(args.output_csv).expanduser()
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(out_path, index=False)
-        logging.info(f"Saved locally to {out_path}")
+        csv_body = df.to_csv(index=False)
+        if args.output_csv.startswith("s3://"):
+            write_to_s3(*args.output_csv[5:].split("/", 1), csv_body)
+            logging.info(f"Saved to {args.output_csv}")
+        else:
+            out_path = Path(args.output_csv).expanduser()
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(csv_body, encoding="utf-8")
+            logging.info(f"Saved locally to {out_path}")
     elif not args.s3:
         # Local save for testing
         out_dir = project_root / 'live_props_tmp' / target_date

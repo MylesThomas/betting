@@ -40,6 +40,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 REPO_ROOT = ensure_repo_root_on_syspath()
 
+from src.io_utils import read_csv_any, write_parquet_any  # noqa: E402
 from src.nba_schedule_utils import get_schedule_for_date, resolve_game_id  # noqa: E402
 from src.player_team_history.name_normalization import normalize_from_odds_api  # noqa: E402
 from src.player_team_history.team_normalization import normalize_team_name_from_odds_api  # noqa: E402
@@ -126,16 +127,6 @@ def load_rebounds_market_transform_functions(repo_root: Path):
     return module.build_market_panel, module.build_props_scoring_input
 
 
-def read_csv_any_path(path: str) -> pd.DataFrame:
-    if path.startswith("s3://"):
-        import boto3
-        from io import BytesIO
-
-        bucket, key = path.replace("s3://", "").split("/", 1)
-        obj = boto3.client("s3").get_object(Bucket=bucket, Key=key)
-        return pd.read_csv(BytesIO(obj["Body"].read()))
-    return pd.read_csv(path)
-
 
 def infer_target_date(df: pd.DataFrame) -> str:
     dt = pd.to_datetime(df["game_time"], errors="coerce", utc=True)
@@ -150,7 +141,7 @@ def main() -> None:
     build_market_panel, build_props_raw = load_rebounds_market_transform_functions(REPO_ROOT)
 
     logging.info("Reading live props CSV: %s", args.live_csv)
-    df = read_csv_any_path(args.live_csv)
+    df = read_csv_any(args.live_csv)
     if df.empty:
         raise ValueError("Live props CSV is empty.")
 
@@ -241,10 +232,8 @@ def main() -> None:
         id_map = props[available_join_keys + id_value_cols].drop_duplicates().copy()
         v3_raw = v3_raw.merge(id_map, on=available_join_keys, how="left")
 
-    out_path = Path(args.output).expanduser().resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    v3_raw.to_parquet(out_path, index=False)
-    logging.info("Wrote scoring-input parquet: %s | rows=%s", out_path, f"{len(v3_raw):,}")
+    write_parquet_any(v3_raw, args.output)
+    logging.info("Wrote scoring-input parquet: %s | rows=%s", args.output, f"{len(v3_raw):,}")
 
 
 if __name__ == "__main__":

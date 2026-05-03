@@ -36,6 +36,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+from src.io_utils import read_parquet_any  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import B_MIN_MAX_FEATS  # noqa: E402
 
 
@@ -169,8 +170,7 @@ def build_email_body(plays: pd.DataFrame, which: str) -> str:
 
 def main() -> None:
     args = parse_args()
-    path = Path(args.scored).expanduser()
-    df = pd.read_parquet(path)
+    df = read_parquet_any(args.scored)
     plays = build_plays_table(df, args.which)
     body = build_email_body(plays, args.which)
 

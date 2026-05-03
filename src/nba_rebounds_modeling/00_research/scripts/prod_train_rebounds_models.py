@@ -25,7 +25,6 @@ from pathlib import Path
 
 import pandas as pd
 import statsmodels.api as sm
-import yaml
 
 
 def ensure_repo_root_on_syspath() -> Path:
@@ -43,6 +42,7 @@ def ensure_repo_root_on_syspath() -> Path:
 ensure_repo_root_on_syspath()
 
 from src.config_loader import get_project_root  # noqa: E402
+from src.io_utils import read_parquet_any, read_yaml_any  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import (  # noqa: E402
     B_MIN_MAX_FEATS,
     GROUP_KEYS,
@@ -57,13 +57,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", type=str, required=True, help="Directory for manifest + model files.")
     return p.parse_args()
 
-
-def load_yaml_config(path: Path) -> dict:
-    with open(path, encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
-    if raw is None:
-        raise ValueError(f"Empty YAML: {path}")
-    return raw
 
 
 def try_git_sha() -> str:
@@ -110,13 +103,14 @@ def maybe_upload_dir(local_dir: Path, bucket: str, prefix: str) -> None:
 
 def main() -> None:
     args = parse_args()
-    feat_path = Path(args.feat).expanduser()
     out_dir = Path(args.output_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     cfg: dict = {}
     if args.config.strip():
-        cfg = load_yaml_config(Path(args.config).expanduser())
+        cfg = read_yaml_any(args.config)
+        if cfg is None:
+            raise ValueError(f"Empty config: {args.config}")
 
     feature_columns = cfg["feature_columns"] if cfg else B_MIN_MAX_FEATS
     if list(feature_columns) != list(B_MIN_MAX_FEATS):
@@ -131,7 +125,7 @@ def main() -> None:
     prod_min_edge = float(cfg["prod_min_edge"]) if cfg else 0.05
     sigma_col = cfg["sigma_column"] if cfg else "roll_reb_std_5"
 
-    df = pd.read_parquet(feat_path)
+    df = read_parquet_any(args.feat)
     cols_needed = list(B_MIN_MAX_FEATS) + [TARGET] + GROUP_KEYS
     for c in cols_needed:
         if c not in df.columns:
@@ -159,7 +153,7 @@ def main() -> None:
         "run_id": run_id,
         "trained_at_utc": datetime.now(timezone.utc).isoformat(),
         "git_sha": try_git_sha(),
-        "feat_path": str(feat_path),
+        "feat_path": args.feat,
         "n_train_rows": int(len(work)),
         "date_min": str(pd.to_datetime(work["date"]).min().date()),
         "date_max": str(pd.to_datetime(work["date"]).max().date()),
