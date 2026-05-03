@@ -241,6 +241,9 @@ def main() -> None:
         if cfg["live_fetch_to_s3"]:
             fetch_cmd.append("--s3")
         run_cmd(fetch_cmd, repo_root)
+        if not live_csv.exists():
+            print(f"no_games_for_slate\n  slate={slate_date.date()}\n  pipeline_complete")
+            return
         run_cmd(
             [
                 sys.executable,

@@ -85,6 +85,9 @@ def configure_duckdb_httpfs_s3(
     # Limit parallel threads to avoid exhausting S3 HTTP connections when
     # globbing over many objects (e.g. 163 CSVs).
     con.execute("SET threads=1")
+    con.execute("SET http_retries=5")
+    con.execute("SET http_retry_wait_ms=500")
+    con.execute("SET http_retry_backoff=2")
 
 
 def connect_duckdb_s3(*, region: str = "us-east-2") -> duckdb.DuckDBPyConnection:
