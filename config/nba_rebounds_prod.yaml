@@ -26,7 +26,8 @@ s3_models_prefix: rebounds/models
 s3_runs_prefix: rebounds/daily_runs
 feature_universe_s3_uri: s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet
 feature_universe_season: "*"
-feature_build_cache_dir: /Users/thomasmyles/Downloads/tmp
+feature_build_cache_dir: /Users/thomasmyles/dev/betting/workdir_test/rebounds_prod/cache
+force_refresh_cache: true
 input_universe_s3_uri: s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet
 
 # Optional SNS topic for notify step. Null = print to stdout.

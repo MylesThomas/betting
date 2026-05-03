@@ -2,18 +2,20 @@
 Build the full (historical) rebounds model feature universe.
 
 Context:
-- v1 was a minimal universe (MIN/OREB/DREB/REB + canonical bookmaker line). This
-  script is the current full pipeline: a leakage-safe rolling feature table for
-  regression, plus per-book v3-style props for backtesting.
+Build the full (historical) rebounds model feature universe.
+
+Context:
+- Builds a leakage-safe rolling feature table for regression, plus per-book
+  props scoring input for backtesting.
 - Rolling windows [5, 10, 20, 40, 60, 80] are computed for all stat bases.
 - Shot-profile stats (FGA, FG3A, FTA) are sourced from the shot-profile
   universe parquet (cached from the 3PM modeling workflow).
 - Market context features (consensus_reb_line, line_range, n_books, etc.) are
-  derived from the multi-book props table using the same no-vig / closest-to-50
-  canonical line selection as v1.
+  derived from the multi-book props table using no-vig / closest-to-50
+  canonical line selection.
 - All rolling features are leakage-safe via shift(1) before the rolling window.
 - Output is one row per player/date/game_id with all features + target (REB).
-- Also writes v3_rebounds_props_raw.parquet: one row per bookmaker × posted line
+- Also writes rebounds_props_scoring_input.parquet: one row per bookmaker × posted line
   with over/under odds, no-vig probs, REB outcome, consensus_reb_line (for
   per-book backtests).
 
@@ -21,7 +23,7 @@ Usage:
     python src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py \\
         --season "*" \\
         --output ~/Downloads/tmp/rebounds_full_universe.parquet \\
-        --output-v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet
+        --output-props-scoring-input ~/Downloads/tmp/rebounds_props_scoring_input.parquet
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ import argparse
 import os
 from pathlib import Path
 import sys
+import time
 
 import numpy as np
 import pandas as pd
@@ -124,9 +127,9 @@ def parse_args() -> argparse.Namespace:
         default="~/Downloads/tmp/rebounds_full_universe.parquet",
     )
     p.add_argument(
-        "--output-v3",
+        "--output-props-scoring-input",
         type=str,
-        default="~/Downloads/tmp/v3_rebounds_props_raw.parquet",
+        default="~/Downloads/tmp/rebounds_props_scoring_input.parquet",
     )
     p.add_argument("--seed", type=int, default=69)
     p.add_argument(
@@ -211,14 +214,14 @@ def remove_vig_two_way(p_over: float, p_under: float) -> tuple[float, float]:
 
 def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.DataFrame:
     """Load player game logs (MIN, OREB, DREB, REB) from S3 with local cache."""
-    cache_path = Path(cache_dir).expanduser() / f"v1_rebounds_logs_{season.replace(',', '_')}.parquet"
+    cache_path = Path(cache_dir).expanduser() / f"rebounds_logs_{season.replace(',', '_')}.parquet"
     cached = maybe_read_cache(cache_path, use_cache, force)
     if cached is not None:
         if "team_normalized" not in cached.columns:
             print("logs: cache missing team_normalized; refetching")
             cached = None
         else:
-            print(f"logs: loaded from cache ({len(cached):,} rows)")
+            print(f"logs: loaded from cache ({len(cached):,} rows)\n  path={cache_path}")
             return cached
 
     con = connect_duckdb_s3()
@@ -269,16 +272,16 @@ def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.D
     )
 
     maybe_write_cache(out, cache_path, use_cache)
-    print(f"logs: fetched from S3 ({len(out):,} rows)")
+    print(f"logs: fetched from S3 ({len(out):,} rows)\n  cached={cache_path}")
     return out
 
 
 def load_props(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.DataFrame:
     """Load player_rebounds props from S3 with local cache."""
-    cache_path = Path(cache_dir).expanduser() / f"v1_rebounds_props_{season.replace(',', '_')}.parquet"
+    cache_path = Path(cache_dir).expanduser() / f"rebounds_props_raw_{season.replace(',', '_')}.parquet"
     cached = maybe_read_cache(cache_path, use_cache, force)
     if cached is not None:
-        print(f"props: loaded from cache ({len(cached):,} rows)")
+        print(f"props: loaded from cache ({len(cached):,} rows)\n  path={cache_path}")
         return cached
 
     con = connect_duckdb_s3()
@@ -318,7 +321,7 @@ def load_props(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.
 
     out = props[["season", "date", "player_normalized", "bookmaker", "line", "odds_over", "odds_under"]].copy()
     maybe_write_cache(out, cache_path, use_cache)
-    print(f"props: fetched from S3 ({len(out):,} rows)")
+    print(f"props: fetched from S3 ({len(out):,} rows)\n  cached={cache_path}")
     return out
 
 
@@ -338,7 +341,7 @@ def load_v6_shot_profile(cache_dir: str) -> pd.DataFrame:
     input_df["date"] = pd.to_datetime(input_df["date"]).dt.date.astype(str)
     for col in ["FGA", "FG3A", "FTA"]:
         input_df[col] = pd.to_numeric(input_df[col], errors="coerce")
-    print(f"input universe shot profile: loaded ({len(input_df):,} rows)")
+    print(f"input universe shot profile: loaded ({len(input_df):,} rows)\n  path={input_path}")
     return input_df
 
 
@@ -415,7 +418,7 @@ def build_market_panel(props: pd.DataFrame, logs: pd.DataFrame) -> pd.DataFrame:
     return panel, book_line
 
 
-def build_v3_props_raw(
+def build_props_scoring_input(
     book_line: pd.DataFrame,
     logs: pd.DataFrame,
     panel: pd.DataFrame,
@@ -451,7 +454,7 @@ def build_v3_props_raw(
         "REB",
         "consensus_reb_line",
     ]
-    require_columns(raw, out_cols, "v3_props_raw")
+    require_columns(raw, out_cols, "props_scoring_input")
     return raw[out_cols].sort_values(
         ["season", "date", "player_normalized", "game_id", "bookmaker", "line"]
     ).reset_index(drop=True)
@@ -467,6 +470,7 @@ def load_game_level_spreads(season: str, cache_dir: str, use_cache: bool, force:
     cached = maybe_read_cache(cache_path, use_cache, force)
     if cached is not None:
         cached["pair_key"] = cached["pair_key"].apply(lambda x: tuple(x) if x is not None else x)
+        print(f"game spreads: loaded from cache ({len(cached):,} rows)\n  path={cache_path}")
         return cached
 
     con = connect_duckdb_s3()
@@ -576,17 +580,7 @@ def attach_spread(
         how="left",
     )
 
-    try:
-        input_path = Path(cache_dir).expanduser() / "rebounds_input_universe.parquet"
-        input_spread = pd.read_parquet(
-            input_path, columns=["season", "date", "player_normalized", "spread_signed"]
-        )
-        input_spread["date"] = pd.to_datetime(input_spread["date"]).dt.date.astype(str)
-        input_spread = input_spread.drop_duplicates(subset=["season", "date", "player_normalized"])
-        panel = panel.merge(input_spread, on=["season", "date", "player_normalized"], how="left")
-    except Exception:
-        panel["spread_signed"] = np.nan
-    panel["spread_abs"] = panel["spread_signed"].abs()
+    panel["spread_abs"] = np.nan
     return panel
 
 
@@ -742,17 +736,17 @@ def run_quality_checks(output_path: Path) -> None:
     print("======================\n")
 
 
-def run_quality_checks_v3(output_path: Path) -> None:
-    """DuckDB checks on v3_rebounds_props_raw.parquet."""
+def run_quality_checks_props_scoring_input(output_path: Path) -> None:
+    """DuckDB checks on rebounds_props_scoring_input.parquet."""
     p = str(output_path)
     con = duckdb.connect()
-    print("\n=== V3 PROPS RAW QUALITY CHECKS ===")
+    print("\n=== PROPS SCORING INPUT QUALITY CHECKS ===")
     n = con.execute(f"SELECT COUNT(*) FROM read_parquet('{p}')").fetchone()[0]
-    print(f"v3_total_rows={n:,}")
+    print(f"total_rows={n:,}")
     null_reb = con.execute(
         f"SELECT COUNT(*) FROM read_parquet('{p}') WHERE REB IS NULL"
     ).fetchone()[0]
-    print(f"v3_null_REB={null_reb:,}")
+    print(f"null_REB={null_reb:,}")
     dups = con.execute(f"""
         SELECT COUNT(*) FROM (
             SELECT season, date, player_normalized, game_id, bookmaker, line, COUNT(*) AS c
@@ -760,10 +754,10 @@ def run_quality_checks_v3(output_path: Path) -> None:
             GROUP BY 1,2,3,4,5,6 HAVING c > 1
         )
     """).fetchone()[0]
-    print(f"v3_duplicate_keys={dups}")
+    print(f"duplicate_keys={dups}")
     if dups > 0:
-        raise ValueError("v3_rebounds_props_raw has duplicate bookmaker/line keys")
-    print("=====================================\n")
+        raise ValueError("rebounds_props_scoring_input has duplicate bookmaker/line keys")
+    print("==========================================\n")
     con.close()
 
 
@@ -778,29 +772,69 @@ def main() -> None:
     force = parse_bool(args.force_refresh_cache)
     cache_dir = args.cache_dir
     output_path = Path(args.output).expanduser()
-    output_v3_path = Path(args.output_v3).expanduser()
+    props_scoring_input_path = Path(args.output_props_scoring_input).expanduser()
 
-    print(f"season={args.season}  cache_dir={cache_dir}  output={output_path}  v3={output_v3_path}")
+    t_total = time.time()
+    print(f"\n{'='*60}")
+    print("BUILD REBOUNDS FULL UNIVERSE")
+    print(f"{'='*60}")
+    print(f"  season={args.season}")
+    print(f"  cache_dir={cache_dir}")
+    print(f"  output={output_path}")
+    print(f"  props_scoring_input={props_scoring_input_path}")
 
-    # 1) Load source data
-    logs  = load_logs(args.season, cache_dir, use_cache, force)
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("STEP 1: LOAD SOURCE DATA")
+    print(f"{'='*60}")
+
+    t = time.time()
+    logs = load_logs(args.season, cache_dir, use_cache, force)
+    print(f"  done in {time.time() - t:.1f}s")
+
+    t = time.time()
     props = load_props(args.season, cache_dir, use_cache, force)
+    print(f"  done in {time.time() - t:.1f}s")
+
+    t = time.time()
     v6_shots = load_v6_shot_profile(cache_dir)
+    print(f"  done in {time.time() - t:.1f}s")
 
-    # 2) Build market panel + per-book line table
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("STEP 2: MARKET PANEL + SPREAD")
+    print(f"{'='*60}")
+
+    t = time.time()
     panel, book_line = build_market_panel(props, logs)
+    print(f"  market panel done in {time.time() - t:.1f}s")
+
+    t = time.time()
     panel = attach_spread(panel, logs, cache_dir, args.season, use_cache, force)
+    print(f"  spread attached in {time.time() - t:.1f}s")
 
-    v3_raw = build_v3_props_raw(book_line, logs, panel)
-    output_v3_path.parent.mkdir(parents=True, exist_ok=True)
-    v3_raw.to_parquet(output_v3_path, index=False)
-    print(f"v3_rebounds_props_raw written: {output_v3_path} | rows={len(v3_raw):,}")
-    run_quality_checks_v3(output_v3_path)
+    t = time.time()
+    props_scoring_input = build_props_scoring_input(book_line, logs, panel)
+    props_scoring_input_path.parent.mkdir(parents=True, exist_ok=True)
+    props_scoring_input.to_parquet(props_scoring_input_path, index=False)
+    print(f"\nprops_scoring_input written\n  path={props_scoring_input_path}\n  rows={len(props_scoring_input):,}\n  done in {time.time() - t:.1f}s")
+    run_quality_checks_props_scoring_input(props_scoring_input_path)
 
-    # 3) Build rolling features
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("STEP 3: ROLLING FEATURES")
+    print(f"{'='*60}")
+
+    t = time.time()
     rolling = build_rolling_features(logs, v6_shots)
+    print(f"  done in {time.time() - t:.1f}s")
 
-    # 4) Join: panel (market features) + rolling (player form) + REB target
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("STEP 4: JOIN PANEL + ROLLING + TARGET")
+    print(f"{'='*60}")
+
+    t = time.time()
     group_keys = ["season", "date", "player_normalized", "game_id"]
 
     logs_target = (
@@ -815,8 +849,6 @@ def main() -> None:
         "line_range",
         "n_books",
         "line_spread",
-        "spread_signed",
-        "spread_abs",
         "input_reb_prop_lines",
         "input_spread_by_side",
     ]
@@ -834,12 +866,36 @@ def main() -> None:
         if c not in feature_universe.columns:
             feature_universe[c] = np.nan
 
-    # 5) Fail-fast schema check
+    # Derive spread_signed from input_spread_by_side + player team vs home/away.
+    # This avoids the input universe dependency and matches the audit's derivation.
+    def _spread_signed(row):
+        sides = row.get("input_spread_by_side")
+        if not isinstance(sides, (list, np.ndarray)) or len(sides) != 2:
+            return np.nan
+        team = row.get("team_normalized")
+        if team == row.get("home_team_norm"):
+            return float(sides[0])
+        if team == row.get("away_team_norm"):
+            return float(sides[1])
+        return np.nan
+
+    feature_universe["spread_signed"] = feature_universe.apply(_spread_signed, axis=1)
+    feature_universe["spread_abs"] = feature_universe["spread_signed"].abs()
+
+    spread_null_pct = feature_universe["spread_signed"].isna().mean() * 100
+    print(f"  feature_universe rows={len(feature_universe):,}  spread_signed_null={spread_null_pct:.1f}%  done in {time.time() - t:.1f}s")
+
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("STEP 5: SCHEMA CHECK + AUDIT")
+    print(f"{'='*60}")
+
     require_columns(feature_universe, REQUIRED_OUTPUT_COLUMNS, "feature_universe")
 
     dup_count = feature_universe.duplicated(subset=group_keys, keep=False).sum()
     if dup_count > 0:
         raise ValueError(f"Duplicate keys in output before write: {dup_count} rows")
+    print(f"  schema ok  duplicate_keys={dup_count}")
 
     strict_env = os.environ.get("REBOUNDS_AUDIT_LIST_STRICT", "1").strip().lower()
     audit_on = strict_env not in ("0", "false", "no") and not bool(
@@ -853,13 +909,8 @@ def main() -> None:
         team_frame = build_audit_team_frame(logs, panel)
         mode = "full" if max_audit_rows is None else "sample"
         n_eff = len(feature_universe) if max_audit_rows is None else min(max_audit_rows, len(feature_universe))
-        print(
-            "audit_list_verify",
-            f"mode={mode}",
-            f"n_rows={len(feature_universe):,}",
-            f"n_checked~={n_eff:,}",
-            sep=" | ",
-        )
+        t = time.time()
+        print(f"  audit_list_verify\n    mode={mode}\n    n_rows={len(feature_universe):,}\n    n_checked~={n_eff:,}")
         audit_sample = sample_audit_rows(feature_universe, max_rows=max_audit_rows)
         verify_audit_lists_dataframe(
             feature_universe,
@@ -867,28 +918,36 @@ def main() -> None:
             max_rows=max_audit_rows,
             sample_df=audit_sample,
         )
-        print("audit_list_verify | ok")
+        print(f"  audit ok  done in {time.time() - t:.1f}s")
         show_n = int(os.environ.get("REBOUNDS_AUDIT_LIST_SHOW_ROWS", "0").strip() or "0")
         if show_n > 0:
             print_audit_sample_to_stdout(feature_universe, team_frame, n_show=show_n, show_by="recent")
+    else:
+        print("  audit skipped")
 
-    # 6) Sort + write
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("STEP 6: WRITE + QUALITY CHECKS")
+    print(f"{'='*60}")
+
+    t = time.time()
     feature_universe = feature_universe.sort_values(["season", "date", "player_normalized", "game_id"]).reset_index(drop=True)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     feature_universe.to_parquet(output_path, index=False)
+    print(f"  written\n    path={output_path}\n    rows={len(feature_universe):,}\n    done in {time.time() - t:.1f}s")
 
-    # 7) DuckDB quality checks
     run_quality_checks(output_path)
 
-    print(
-        "phase=build_rebounds_full_universe",
-        f"rows={len(feature_universe)}",
-        f"v3_rows={len(v3_raw)}",
-        f"season={args.season}",
-        f"output={output_path}",
-        f"v3={output_v3_path}",
-        sep=" | ",
-    )
+    # =========================================================
+    print(f"\n{'='*60}")
+    print("BUILD COMPLETE")
+    print(f"{'='*60}")
+    print(f"  total_time={time.time() - t_total:.1f}s")
+    print(f"  rows={len(feature_universe):,}")
+    print(f"  props_scoring_input_rows={len(props_scoring_input):,}")
+    print(f"  season={args.season}")
+    print(f"  output={output_path}")
+    print(f"  props_scoring_input={props_scoring_input_path}")
 
 
 if __name__ == "__main__":

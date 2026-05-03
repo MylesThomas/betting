@@ -1,9 +1,9 @@
 """
-Score a rebounds slate: join feature slice + v3-style props, OLS + XGB yhat, Option A under_only plays.
+Score a rebounds slate: join feature slice + props scoring input, OLS + XGB yhat, Option A under_only plays.
 
 Context:
 - Loads models from prod_train_rebounds_slate output directory (ols_model.pkl, xgb_model.json, manifest.json).
-- Props file must match v3_rebounds_props_raw schema (per-book lines + no-vig probs).
+- Props file must match rebounds_props_scoring_input schema (per-book lines + no-vig probs).
 - Ingestion for *live* props is a separate fetch job; this script only reads parquet/CSV paths.
 
 Locked policy defaults match manifest.json; CLI can override min_edge for experiments.
@@ -12,7 +12,7 @@ Usage:
     python src/nba_rebounds_modeling/00_research/scripts/prod_score_rebounds_slate.py \\
         --models-dir ~/Downloads/tmp/rebounds_prod_models/run_001 \\
         --feat-slice ~/Downloads/tmp/rebounds_features_slice_2025-03-15.parquet \\
-        --props ~/Downloads/tmp/v3_rebounds_props_raw.parquet \\
+        --props ~/Downloads/tmp/rebounds_props_scoring_input.parquet \\
         --slate-date 2025-03-15 \\
         --output ~/Downloads/tmp/rebounds_scored_2025-03-15.parquet
 """
@@ -53,7 +53,7 @@ from src.nba_rebounds_modeling.option_a_scoring import (  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import (  # noqa: E402
     B_MIN_MAX_FEATS,
     GROUP_KEYS,
-    V3_PROPS_SCORE_COLS,
+    PROPS_SCORE_COLS,
 )
 
 
@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Score rebounds slate for prod.")
     p.add_argument("--models-dir", type=str, required=True, help="Directory with ols_model.pkl, xgb_model.json, manifest.json.")
     p.add_argument("--feat-slice", type=str, required=True, help="Feature rows for slate (e.g. prod_slice output).")
-    p.add_argument("--props", type=str, required=True, help="v3_rebounds_props_raw-style parquet.")
+    p.add_argument("--props", type=str, required=True, help="rebounds_props_scoring_input parquet.")
     p.add_argument("--slate-date", type=str, required=True, help="YYYY-MM-DD; filters props + must match feat slice.")
     p.add_argument("--output", type=str, required=True, help="Scored parquet path.")
     p.add_argument("--min-edge", type=float, default=-1.0, help="Override manifest prod_min_edge if >= 0.")
@@ -140,7 +140,7 @@ def main() -> None:
     for c in GROUP_KEYS + B_MIN_MAX_FEATS:
         if c not in feat.columns:
             raise ValueError(f"feat slice missing column: {c}")
-    for c in V3_PROPS_SCORE_COLS:
+    for c in PROPS_SCORE_COLS:
         if c not in props.columns:
             raise ValueError(f"props missing column: {c}")
     if sigma_col not in feat.columns:

@@ -103,7 +103,7 @@ End state: a **scheduled job** (e.g. nightly ET before slate) that:
 ### Command sequence (local; paths are examples)
 
 1. **Build / refresh full feature universe** (when logs + props are current):  
-   `python src/nba_rebounds_modeling/00_research/scripts/v2_build_rebounds_universe.py --season '*' --output .../rebounds_model_features.parquet --output-v3 .../rebounds_props_scoring_input.parquet`
+   `python src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py --season '*' --output .../rebounds_model_features.parquet --output-v3 .../rebounds_props_scoring_input.parquet`
 
 2. **Slice features to slate date:**  
    `python .../prod_slice_rebounds_features.py --feat .../rebounds_model_features.parquet --as-of-date YYYY-MM-DD --output .../rebounds_features_slice_YYYY-MM-DD.parquet`

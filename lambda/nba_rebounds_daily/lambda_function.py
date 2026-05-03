@@ -10,7 +10,8 @@ Env:
 - SNS_TOPIC_ARN (required if notify_enabled=true in config)
 - SETTLEMENT_SES_SOURCE (optional; verified SES identity — multipart HTML+text settlement email)
 - SETTLEMENT_SES_TO (optional; comma-separated To addresses when SES is used; requires SETTLEMENT_SES_SOURCE)
-- CONFIG_PATH (optional; default: config/nba_rebounds_prod.yaml)
+- CONFIG_PATH (optional; default: config/nba_rebounds_prod.yaml — deploy sets
+  config/nba_rebounds_prod.lambda.yaml on the function)
 - SETTLE_BUCKET (optional; default: nba-betting-mt)
 - SETTLE_PREFIX (optional; default: rebounds/daily_runs)
 - SETTLE_DAYS_LAG (optional; default: 1, so settlement end date is yesterday ET)

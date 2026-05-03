@@ -82,6 +82,9 @@ def configure_duckdb_httpfs_s3(
     con.execute(f"SET s3_secret_access_key='{_sql_set_string(secret_key)}'")
     if token:
         con.execute(f"SET s3_session_token='{_sql_set_string(token)}'")
+    # Limit parallel threads to avoid exhausting S3 HTTP connections when
+    # globbing over many objects (e.g. 163 CSVs).
+    con.execute("SET threads=1")
 
 
 def connect_duckdb_s3(*, region: str = "us-east-2") -> duckdb.DuckDBPyConnection:

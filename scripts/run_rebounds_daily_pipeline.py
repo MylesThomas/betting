@@ -208,6 +208,8 @@ def main() -> None:
         str(cfg["feature_universe_s3_uri"]),
         "--input-universe-mode",
         args.input_universe_mode,
+        "--force-refresh-cache",
+        "true" if cfg.get("force_refresh_cache", False) else "false",
     ]
     if args.skip_audit:
         feat_universe_cmd.append("--skip-audit-list")

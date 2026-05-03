@@ -21,8 +21,8 @@
 | Asset | Role |
 |-------|------|
 | `scripts/fetch_nba_player_props.py` | Historical props: events + per-event odds, `parse_player_props()`, S3 `s3://the-odds-api-mt/nba/historical_player_props/{season}/{date}.csv`, column set documented in script header. |
-| `v2_build_rebounds_universe.load_props()` | Reads those CSVs via DuckDB, **`market = 'player_rebounds'`**, normalizes `player_normalized`, `date` (ET), `line`, odds. |
-| `v2_build_rebounds_universe.build_market_panel` / `build_v3_props_raw` | Turns per-book lines into **`book_line`** + scorer-ready rows; **requires** `logs` with **`game_id`** per `(season, date, player_normalized)`. |
+| `build_rebounds_full_universe.load_props()` | Reads those CSVs via DuckDB, **`market = 'player_rebounds'`**, normalizes `player_normalized`, `date` (ET), `line`, odds. |
+| `build_rebounds_full_universe.build_market_panel` / `build_v3_props_raw` | Turns per-book lines into **`book_line`** + scorer-ready rows; **requires** `logs` with **`game_id`** per `(season, date, player_normalized)`. |
 | `prod_score_rebounds_slate.py` | Merges feat slice + props scoring input on **`GROUP_KEYS`**; does not need `REB` for scoring (outcome column unused there). |
 
 **Credit win:** request **`markets=player_rebounds` only** (not the full `DEFAULT_MARKETS` bundle in the big fetcher).

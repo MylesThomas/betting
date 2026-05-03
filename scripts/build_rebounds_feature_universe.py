@@ -64,6 +64,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip audit-list checks in full universe build.",
     )
+    parser.add_argument(
+        "--force-refresh-cache",
+        type=str,
+        default="false",
+        help="Force re-fetch logs/props/spreads from S3 ignoring local cache.",
+    )
     return parser.parse_args()
 
 
@@ -134,8 +140,10 @@ def main() -> None:
         str(cache_dir),
         "--output",
         str(output_path),
-        "--output-v3",
+        "--output-props-scoring-input",
         str(output_props_path),
+        "--force-refresh-cache",
+        args.force_refresh_cache,
     ]
     if args.skip_audit_list:
         full_universe_cmd.append("--skip-audit-list")

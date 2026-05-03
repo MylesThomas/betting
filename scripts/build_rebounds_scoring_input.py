@@ -117,13 +117,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_rebounds_market_transform_functions(repo_root: Path):
-    script_path = repo_root / "src/nba_rebounds_modeling/00_research/scripts/v2_build_rebounds_universe.py"
-    spec = importlib.util.spec_from_file_location("rebounds_v2_build", script_path)
+    script_path = repo_root / "src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py"
+    spec = importlib.util.spec_from_file_location("rebounds_full_universe", script_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load v2 script module: {script_path}")
+        raise RuntimeError(f"Unable to load full universe module: {script_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.build_market_panel, module.build_v3_props_raw
+    return module.build_market_panel, module.build_props_scoring_input
 
 
 def read_csv_any_path(path: str) -> pd.DataFrame:

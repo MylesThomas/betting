@@ -35,7 +35,12 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
-from src.nba_rebounds_modeling.rebounds_feature_spec import B_MIN_MAX_FEATS, GROUP_KEYS  # noqa: E402
+from src.nba_rebounds_modeling.rebounds_feature_spec import (  # noqa: E402
+    B_MIN_MAX_AUDIT_LIST_COLS,
+    B_MIN_MAX_FEATS,
+    GROUP_KEYS,
+)
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api  # noqa: E402
 from src.player_team_history.utils import load_team_history  # noqa: E402
 
 
@@ -103,6 +108,86 @@ def slate_spread_by_player(
     return out
 
 
+def input_spread_by_side_for_slate(props_s: pd.DataFrame, slate_date_str: str, biu) -> pd.DataFrame:
+    """
+    Per player-game ``[home_spread, away_spread]`` in **props** home/away order.
+
+    Prefer live ``home_spread_line`` / ``away_spread_line``; else match Odds API
+    historical game lines to ``home_team`` / ``away_team`` on props when present.
+    """
+    base = props_s[GROUP_KEYS].drop_duplicates().copy()
+    if "home_spread_line" in props_s.columns and "away_spread_line" in props_s.columns:
+        g = props_s.groupby(GROUP_KEYS, as_index=False).first()
+        hs = pd.to_numeric(g["home_spread_line"], errors="coerce")
+        aws = pd.to_numeric(g["away_spread_line"], errors="coerce")
+        if bool(hs.notna().any()):
+            out = g[GROUP_KEYS].copy()
+            out["input_spread_by_side"] = [
+                [float(a), float(b)] if pd.notna(a) and pd.notna(b) else np.nan
+                for a, b in zip(hs, aws)
+            ]
+            return out
+
+    if "home_team" not in props_s.columns or "away_team" not in props_s.columns:
+        return base.assign(input_spread_by_side=np.nan)
+
+    games = (
+        props_s.groupby(GROUP_KEYS, as_index=False)
+        .agg(home_team=("home_team", "first"), away_team=("away_team", "first"))
+    )
+    games["home_n"] = games["home_team"].astype(str).map(normalize_team_name_from_odds_api)
+    games["away_n"] = games["away_team"].astype(str).map(normalize_team_name_from_odds_api)
+    seasons = games["season"].dropna().unique().tolist()
+    if not seasons:
+        return base.assign(input_spread_by_side=np.nan)
+
+    parts = [biu.load_game_spreads_for_calendar_date(str(s), slate_date_str) for s in seasons]
+    hsg = pd.concat(parts, ignore_index=True)
+    if hsg.empty:
+        return base.assign(input_spread_by_side=np.nan)
+
+    hsg = hsg.copy()
+    hsg["date"] = pd.to_datetime(hsg["date"]).dt.strftime("%Y-%m-%d")
+    games = games.copy()
+    games["date"] = pd.to_datetime(games["date"]).dt.strftime("%Y-%m-%d")
+
+    direct = games.merge(
+        hsg,
+        left_on=["season", "date", "home_n", "away_n"],
+        right_on=["season", "date", "home_team_norm", "away_team_norm"],
+        how="left",
+    )
+    swap = games.merge(
+        hsg,
+        left_on=["season", "date", "home_n", "away_n"],
+        right_on=["season", "date", "away_team_norm", "home_team_norm"],
+        how="left",
+    )
+
+    def _pair_from_row(hs: float, aws: float) -> list[float] | float:
+        if pd.notna(hs) and pd.notna(aws):
+            return [float(hs), float(aws)]
+        return np.nan
+
+    d_pairs = [_pair_from_row(r["home_spread"], r["away_spread"]) for _, r in direct.iterrows()]
+    # Swap merge: props home == CSV away team -> [props home line, props away line] =
+    # [CSV away_spread, CSV home_spread].
+    s_pairs = [_pair_from_row(r["away_spread"], r["home_spread"]) for _, r in swap.iterrows()]
+
+    merged: list[list[float] | float] = []
+    for d, s in zip(d_pairs, s_pairs):
+        if isinstance(d, list):
+            merged.append(d)
+        elif isinstance(s, list):
+            merged.append(s)
+        else:
+            merged.append(np.nan)
+
+    out = games[GROUP_KEYS].copy()
+    out["input_spread_by_side"] = merged
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Build pregame rebounds feature slice.")
     p.add_argument("--feat", type=str, required=True, help="Full rebounds feature parquet.")
@@ -134,21 +219,40 @@ def main() -> None:
     latest = hist.groupby(["season", "player_normalized"], as_index=False).tail(1).copy()
 
     market = (
-        props_s.groupby(["season", "date", "player_normalized", "game_id"], as_index=False)
-        .agg(min_line=("line", "min"), max_line=("line", "max"))
+        props_s.groupby(GROUP_KEYS, as_index=False)
+        .agg(
+            min_line=("line", "min"),
+            max_line=("line", "max"),
+            input_reb_prop_lines=(
+                "line",
+                lambda s: sorted(
+                    {float(x) for x in pd.to_numeric(s, errors="coerce").dropna().unique()}
+                ),
+            ),
+        )
     )
 
-    # Rolling form comes from the last *completed* game; spread must be the slate game
-    # (otherwise spread_signed is wrong — e.g. prior blowout favorite line).
-    latest_cols = ["season", "player_normalized", "roll_reb_mean_60", "roll_fg3a_mean_20", "roll_reb_std_5"]
-    latest = latest[latest_cols].copy()
+    # Rolling form + rolling audit tails come from the last *completed* game.
+    latest_cols = [
+        "season",
+        "player_normalized",
+        "roll_reb_mean_60",
+        "roll_fg3a_mean_20",
+        "roll_reb_std_5",
+    ]
+    for c in ("input_reb_tail_60", "input_fg3a_tail_20", "input_reb_tail_5"):
+        if c in latest.columns:
+            latest_cols.append(c)
+    latest = latest[[c for c in latest_cols if c in latest.columns]].copy()
 
     biu = _load_rebounds_input_universe()
     history_df = load_team_history()
     spread_by_player = slate_spread_by_player(props_s, slate, history_df, biu)
+    spread_by_side = input_spread_by_side_for_slate(props_s, str(slate.date()), biu)
 
     out = market.merge(latest, on=["season", "player_normalized"], how="left")
     out = out.merge(spread_by_player, on=["season", "player_normalized"], how="left")
+    out = out.merge(spread_by_side, on=GROUP_KEYS, how="left")
     missing = out[B_MIN_MAX_FEATS].isna().any(axis=1)
     if missing.any():
         missing_players = out.loc[missing, ["season", "player_normalized"]].drop_duplicates()
@@ -159,7 +263,11 @@ def main() -> None:
             sep=" | ",
         )
 
-    out = out[GROUP_KEYS + B_MIN_MAX_FEATS].copy()
+    for c in B_MIN_MAX_AUDIT_LIST_COLS:
+        if c not in out.columns:
+            out[c] = np.nan
+
+    out = out[GROUP_KEYS + B_MIN_MAX_FEATS + B_MIN_MAX_AUDIT_LIST_COLS].copy()
     out_path = Path(args.output).expanduser()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(out_path, index=False)

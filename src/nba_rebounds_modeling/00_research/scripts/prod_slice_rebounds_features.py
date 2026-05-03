@@ -2,7 +2,7 @@
 Slice rebounds_model_features_v2.parquet to a single calendar date for prod scoring.
 
 Context:
-- v2_build_rebounds_universe.py builds the full historical feature table; prod scoring only
+- build_rebounds_full_universe.py builds the full historical feature table; prod scoring only
   needs player-game rows for the slate date.
 - Adds rebounds_feature_schema_version for audit (bump string when v2 output schema changes).
 
@@ -38,7 +38,7 @@ ensure_repo_root_on_syspath()
 
 from src.nba_rebounds_modeling.rebounds_feature_spec import GROUP_KEYS  # noqa: E402
 
-SCHEMA_VERSION = "rebounds_features_v2_b_min_max_1"
+SCHEMA_VERSION = "rebounds_features_v2_b_min_max_team_ctx_1"
 
 
 def parse_args() -> argparse.Namespace:
