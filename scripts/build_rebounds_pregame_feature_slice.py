@@ -41,7 +41,7 @@ from src.nba_rebounds_modeling.rebounds_feature_spec import (  # noqa: E402
     B_MIN_MAX_FEATS,
     GROUP_KEYS,
 )
-from src.player_team_history.team_normalization import normalize_team_name_from_odds_api  # noqa: E402
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api, TEAM_ABBR_TO_NAME  # noqa: E402
 from src.player_team_history.utils import load_team_history  # noqa: E402
 
 
@@ -65,7 +65,7 @@ def slate_spread_by_player(
     """Per (season, player_normalized) spread_signed for the slate game (market lines)."""
     slate_date = slate.date()
     slate_date_str = str(slate_date)
-    team_map = biu.TEAM_ABBR_TO_NAME
+    team_map = TEAM_ABBR_TO_NAME
 
     rows = []
     for season, pn in props_s[["season", "player_normalized"]].drop_duplicates().itertuples(index=False):

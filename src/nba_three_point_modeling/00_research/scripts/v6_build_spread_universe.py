@@ -40,7 +40,7 @@ def ensure_repo_root_on_syspath() -> Path:
 
 REPO_ROOT = ensure_repo_root_on_syspath()
 
-from src.player_team_history.team_normalization import normalize_team_name_from_odds_api
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api, TEAM_ABBR_TO_NAME
 from v5_workflow_lib import build_market_eligibility
 from v5_workflow_lib import connect_duckdb_s3
 from v5_workflow_lib import load_player_logs
@@ -49,39 +49,6 @@ from v5_workflow_lib import resolve_output_path
 from v5_workflow_lib import season_predicate
 from v5_workflow_lib import set_seed
 
-
-TEAM_ABBR_TO_NAME = {
-    "ATL": "Atlanta Hawks",
-    "BOS": "Boston Celtics",
-    "BKN": "Brooklyn Nets",
-    "CHA": "Charlotte Hornets",
-    "CHI": "Chicago Bulls",
-    "CLE": "Cleveland Cavaliers",
-    "DAL": "Dallas Mavericks",
-    "DEN": "Denver Nuggets",
-    "DET": "Detroit Pistons",
-    "GSW": "Golden State Warriors",
-    "HOU": "Houston Rockets",
-    "IND": "Indiana Pacers",
-    "LAC": "Los Angeles Clippers",
-    "LAL": "Los Angeles Lakers",
-    "MEM": "Memphis Grizzlies",
-    "MIA": "Miami Heat",
-    "MIL": "Milwaukee Bucks",
-    "MIN": "Minnesota Timberwolves",
-    "NOP": "New Orleans Pelicans",
-    "NYK": "New York Knicks",
-    "OKC": "Oklahoma City Thunder",
-    "ORL": "Orlando Magic",
-    "PHI": "Philadelphia 76ers",
-    "PHX": "Phoenix Suns",
-    "POR": "Portland Trail Blazers",
-    "SAC": "Sacramento Kings",
-    "SAS": "San Antonio Spurs",
-    "TOR": "Toronto Raptors",
-    "UTA": "Utah Jazz",
-    "WAS": "Washington Wizards",
-}
 
 SPREAD_BIN_EDGES = [float("-inf"), -12.0, -8.0, -4.0, -1.0, 1.0, 4.0, 8.0, 12.0, float("inf")]
 SPREAD_BIN_LABELS = [

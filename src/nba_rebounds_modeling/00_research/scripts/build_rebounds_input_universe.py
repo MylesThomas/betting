@@ -47,41 +47,7 @@ ensure_repo_root_on_syspath()
 
 from src.nba_rebounds_modeling.duckdb_s3_creds import connect_duckdb_s3
 from src.player_team_history.name_normalization import normalize_from_nba_api
-from src.player_team_history.team_normalization import normalize_team_name_from_odds_api
-
-
-TEAM_ABBR_TO_NAME = {
-    "ATL": "Atlanta Hawks",
-    "BOS": "Boston Celtics",
-    "BKN": "Brooklyn Nets",
-    "CHA": "Charlotte Hornets",
-    "CHI": "Chicago Bulls",
-    "CLE": "Cleveland Cavaliers",
-    "DAL": "Dallas Mavericks",
-    "DEN": "Denver Nuggets",
-    "DET": "Detroit Pistons",
-    "GSW": "Golden State Warriors",
-    "HOU": "Houston Rockets",
-    "IND": "Indiana Pacers",
-    "LAC": "Los Angeles Clippers",
-    "LAL": "Los Angeles Lakers",
-    "MEM": "Memphis Grizzlies",
-    "MIA": "Miami Heat",
-    "MIL": "Milwaukee Bucks",
-    "MIN": "Minnesota Timberwolves",
-    "NOP": "New Orleans Pelicans",
-    "NYK": "New York Knicks",
-    "OKC": "Oklahoma City Thunder",
-    "ORL": "Orlando Magic",
-    "PHI": "Philadelphia 76ers",
-    "PHX": "Phoenix Suns",
-    "POR": "Portland Trail Blazers",
-    "SAC": "Sacramento Kings",
-    "SAS": "San Antonio Spurs",
-    "TOR": "Toronto Raptors",
-    "UTA": "Utah Jazz",
-    "WAS": "Washington Wizards",
-}
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api, TEAM_ABBR_TO_NAME
 
 KEY_COLS = ["season", "date", "player_normalized", "game_id"]
 REQUIRED_COLS = KEY_COLS + ["spread_signed", "FGA", "FG3A", "FTA"]

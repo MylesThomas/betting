@@ -17,7 +17,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import logging
 import sys
 from pathlib import Path
@@ -43,18 +42,8 @@ REPO_ROOT = ensure_repo_root_on_syspath()
 from src.io_utils import read_csv_any, write_parquet_any  # noqa: E402
 from src.nba_schedule_utils import get_schedule_for_date, resolve_game_id  # noqa: E402
 from src.player_team_history.name_normalization import normalize_from_odds_api  # noqa: E402
-from src.player_team_history.team_normalization import normalize_team_name_from_odds_api  # noqa: E402
+from src.player_team_history.team_normalization import normalize_team_name_from_odds_api, TEAM_ABBR_TO_NAME  # noqa: E402
 from src.player_team_history.utils import load_team_history  # noqa: E402
-
-
-def _load_rebounds_input_universe_module():
-    path = REPO_ROOT / "src/nba_rebounds_modeling/00_research/scripts/build_rebounds_input_universe.py"
-    spec = importlib.util.spec_from_file_location("rebounds_input_universe", path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Cannot load module from {path}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
 
 
 def attach_spread_signed_from_live_event_lines(props: pd.DataFrame) -> pd.DataFrame:
@@ -70,8 +59,6 @@ def attach_spread_signed_from_live_event_lines(props: pd.DataFrame) -> pd.DataFr
         props["spread_signed"] = np.nan
         return props
 
-    biu = _load_rebounds_input_universe_module()
-    team_abbr_to_name = biu.TEAM_ABBR_TO_NAME
     history_df = load_team_history()
     slate_date = pd.to_datetime(props["date"].iloc[0]).normalize().date()
 
@@ -80,7 +67,7 @@ def attach_spread_signed_from_live_event_lines(props: pd.DataFrame) -> pd.DataFr
         ph = history_df[history_df["player_normalized"] == pn]
         hit = ph[(ph["valid_from"] <= slate_date) & (ph["valid_to"].isna() | (ph["valid_to"] >= slate_date))]
         abbr = None if hit.empty else str(hit.iloc[0]["team"])
-        full = team_abbr_to_name.get(abbr) if abbr else None
+        full = TEAM_ABBR_TO_NAME.get(abbr) if abbr else None
         rows.append({"season": season, "player_normalized": pn, "player_team_full": full})
     pt = pd.DataFrame(rows)
 
