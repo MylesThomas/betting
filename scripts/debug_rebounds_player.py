@@ -1,11 +1,25 @@
 """
 Debug rebounds pipeline artifacts for a specific player + season.
 
-Prints three sections in pipeline order:
-  1. Raw game logs (DuckDB S3 glob)
-  2. Input universe (rebounds_input_universe.parquet)
-  3. Feature universe (rebounds_feature_universe.parquet)
-Then prints an NA root-cause summary cross-referencing all three.
+Current pipeline flow (as of 2026-05):
+─────────────────────────────────────────────────────────────────
+  HISTORICAL TRAINING (build_rebounds_full_universe.py):
+    game_logs (S3)         → ALL stats: REB, MIN, FGA, FG3A, FTA  ← single source of truth
+    historical_props (S3)  → lines, odds
+    Both → feature_universe.parquet (model training + feature store)
+
+  DAILY PROD (run_rebounds_daily_pipeline.py):
+    feature_universe.parquet  → pregame feature slice
+    live_props (S3)           → today's lines/odds
+    input_universe.parquet    → spread joins only (NOT the FG3A source)
+─────────────────────────────────────────────────────────────────
+
+Sections printed:
+  0. Historical + live-fetch props  — was the player ever posted?
+  1. Raw game logs                  — source of all stats (FG3A lives here)
+  2. Input universe                 — daily prod spread joins only
+  3. Feature universe               — what the model actually sees
+  NA root-cause summary
 
 Usage:
     python scripts/debug_rebounds_player.py --player "Jamal Cain" --season 2025-26
@@ -223,7 +237,7 @@ def section_1_game_logs(player_raw: str, season: str, as_of_date: str | None) ->
 def section_2_input_universe(player_norm: str, season: str, as_of_date: str | None) -> "pd.DataFrame":
     import pandas as pd
 
-    _divider("SECTION 2 — Input universe")
+    _divider("SECTION 2 — Input universe  [daily prod / spread joins only — NOT the FG3A source]")
 
     try:
         df = read_parquet_any(INPUT_UNIVERSE_S3)
@@ -238,12 +252,13 @@ def section_2_input_universe(player_norm: str, season: str, as_of_date: str | No
 
     if sub.empty:
         print(f"  No rows for player_normalized='{player_norm}', season='{season}'")
+        print(f"  → Missing here only affects daily spread joins, NOT feature universe FG3A.")
         print(f"  Unique players in season: {df[df['season'] == season]['player_normalized'].nunique()}")
         return sub
 
-    show_cols = [c for c in ["date", "game_id", "REB", "spread_signed", "team_normalized",
+    show_cols = [c for c in ["date", "game_id", "spread_signed", "team_normalized",
                               "home_team_norm", "away_team_norm",
-                              "input_spread_by_side", "input_fg3a_tail_20"] if c in sub.columns]
+                              "input_spread_by_side"] if c in sub.columns]
     print(sub[show_cols].to_string(index=False))
 
     n_null_spread = sub["spread_signed"].isna().sum() if "spread_signed" in sub.columns else "N/A"
@@ -293,8 +308,7 @@ def print_na_summary(logs_df, input_df, feat_df) -> None:
         return
 
     if input_df.empty:
-        print("  WARNING: player has 0 rows in input universe — all NA features likely trace to missing input universe rows.")
-        print("  Check: (1) player name normalization mismatch, (2) player not in props data, (3) input universe not yet rebuilt.\n")
+        print("  NOTE: player has 0 rows in input universe — only affects daily spread joins, not FG3A.\n")
 
     any_na = False
     for col in feat_cols:
@@ -320,10 +334,11 @@ def print_na_summary(logs_df, input_df, feat_df) -> None:
                 n_null_log = int(logs_df["FG3A"].isna().sum())
                 n_zero_log = int((logs_df["FG3A"] == 0).sum())
                 print(f"    → game logs FG3A: {n_null_log} null, {n_zero_log} zero of {len(logs_df)} rows")
-                if not input_df.empty and "input_fg3a_tail_20" in input_df.columns:
-                    n_null_tail = int(input_df["input_fg3a_tail_20"].isna().sum())
-                    print(f"    → input universe input_fg3a_tail_20 nulls: {n_null_tail}")
-            print(f"    → roll needs 1+ non-null FG3A in trailing 20 games; all-zero/null → NA")
+                if n_null_log == 0 and n_zero_log < len(logs_df):
+                    print(f"    → game logs have valid FG3A — feature universe needs rebuild to pick them up")
+                    print(f"    → run build_rebounds_full_universe.py --force-refresh-cache true")
+                else:
+                    print(f"    → roll needs 1+ non-null FG3A in trailing 20 games; all-zero/null → NA")
 
         elif col in ("roll_reb_mean_60", "roll_reb_std_5"):
             if not logs_df.empty and "REB" in logs_df.columns:
@@ -347,10 +362,21 @@ def main() -> None:
     player_norm_odds = normalize_from_odds_api(args.player)
     player_norm_nba = normalize_from_nba_api(args.player)
 
-    print(f"player_raw='{args.player}'")
-    print(f"player_norm (odds_api): '{player_norm_odds}'")
-    print(f"player_norm (nba_api):  '{player_norm_nba}'")
-    print(f"season='{args.season}'  as_of_date={args.as_of_date or 'all'}")
+    print("=" * 70)
+    print("  PIPELINE FLOW (current)")
+    print("=" * 70)
+    print("  game_logs ──────────────────────────────► FGA / FG3A / FTA / REB / MIN")
+    print("  historical_props ───────────────────────► lines / odds")
+    print("  Both ──► build_rebounds_full_universe ──► feature_universe.parquet")
+    print()
+    print("  feature_universe ─┐")
+    print("  live_props ───────┼──► daily scoring pipeline")
+    print("  input_universe ───┘  (input_universe = spread joins only, NOT FG3A source)")
+    print("=" * 70)
+    print(f"  player_raw='{args.player}'")
+    print(f"  player_norm (odds_api): '{player_norm_odds}'")
+    print(f"  player_norm (nba_api):  '{player_norm_nba}'")
+    print(f"  season='{args.season}'  as_of_date={args.as_of_date or 'all'}")
 
     # Section 0: historical props — was this player ever posted?
     section_0_historical_props(player_norm_odds, args.player, args.season, args.as_of_date)
