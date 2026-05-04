@@ -213,12 +213,13 @@ def remove_vig_two_way(p_over: float, p_under: float) -> tuple[float, float]:
 # =============================================================================
 
 def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.DataFrame:
-    """Load player game logs (MIN, OREB, DREB, REB) from S3 with local cache."""
+    """Load player game logs from S3 with local cache."""
     cache_path = Path(cache_dir).expanduser() / f"rebounds_logs_{season.replace(',', '_')}.parquet"
     cached = maybe_read_cache(cache_path, use_cache, force)
     if cached is not None:
-        if "team_normalized" not in cached.columns:
-            print("logs: cache missing team_normalized; refetching")
+        missing_cols = [c for c in ("team_normalized", "FGA", "FG3A", "FTA") if c not in cached.columns]
+        if missing_cols:
+            print(f"logs: cache missing {missing_cols}; refetching")
             cached = None
         else:
             print(f"logs: loaded from cache ({len(cached):,} rows)\n  path={cache_path}")
@@ -229,7 +230,7 @@ def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.D
     WITH raw AS (
       SELECT
         PLAYER_NAME, TEAM_NAME, GAME_ID, GAME_DATE,
-        MIN, OREB, DREB, REB,
+        MIN, OREB, DREB, REB, FGA, FG3A, FTA,
         regexp_extract(filename, '/player_game_logs/([^/]+)/', 1) AS season
       FROM read_csv_auto(
         's3://nba-api-mt/player_game_logs/*/*.csv',
@@ -243,13 +244,13 @@ def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.D
 
     require_columns(
         logs,
-        ["season", "PLAYER_NAME", "TEAM_NAME", "GAME_ID", "GAME_DATE", "MIN", "OREB", "DREB", "REB"],
+        ["season", "PLAYER_NAME", "TEAM_NAME", "GAME_ID", "GAME_DATE", "MIN", "OREB", "DREB", "REB", "FGA", "FG3A", "FTA"],
         "raw_logs",
     )
 
     logs["player_normalized"] = logs["PLAYER_NAME"].apply(normalize_from_nba_api)
     logs["date"] = pd.to_datetime(logs["GAME_DATE"]).dt.date.astype(str)
-    for col in ["MIN", "OREB", "DREB", "REB"]:
+    for col in ["MIN", "OREB", "DREB", "REB", "FGA", "FG3A", "FTA"]:
         logs[col] = pd.to_numeric(logs[col], errors="coerce")
     logs["team_normalized"] = logs["TEAM_NAME"].astype(str).map(normalize_team_name_from_odds_api)
 
@@ -264,12 +265,21 @@ def load_logs(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.D
                 "OREB",
                 "DREB",
                 "REB",
+                "FGA",
+                "FG3A",
+                "FTA",
                 "team_normalized",
             ]
         ]
         .rename(columns={"GAME_ID": "game_id"})
         .copy()
     )
+
+    before = len(out)
+    out = out.drop_duplicates(subset=["player_normalized", "game_id"])
+    dupes_dropped = before - len(out)
+    if dupes_dropped:
+        print(f"logs: dropped {dupes_dropped:,} duplicate (player, game_id) rows")
 
     maybe_write_cache(out, cache_path, use_cache)
     print(f"logs: fetched from S3 ({len(out):,} rows)\n  cached={cache_path}")
@@ -325,24 +335,6 @@ def load_props(season: str, cache_dir: str, use_cache: bool, force: bool) -> pd.
     return out
 
 
-def load_v6_shot_profile(cache_dir: str) -> pd.DataFrame:
-    """Load FGA/FG3A/FTA per player/game from rebounds input universe."""
-    input_path = Path(cache_dir).expanduser() / "rebounds_input_universe.parquet"
-    if not input_path.exists():
-        raise FileNotFoundError(
-            f"rebounds_input_universe.parquet not found at {input_path}. "
-            "Run build_rebounds_input_universe.py first."
-        )
-    input_df = pd.read_parquet(
-        input_path,
-        columns=["season", "date", "player_normalized", "game_id", "FGA", "FG3A", "FTA"],
-    )
-    input_df = input_df.drop_duplicates(subset=["season", "date", "player_normalized"])
-    input_df["date"] = pd.to_datetime(input_df["date"]).dt.date.astype(str)
-    for col in ["FGA", "FG3A", "FTA"]:
-        input_df[col] = pd.to_numeric(input_df[col], errors="coerce")
-    print(f"input universe shot profile: loaded ({len(input_df):,} rows)\n  path={input_path}")
-    return input_df
 
 
 # =============================================================================
@@ -600,19 +592,14 @@ def build_audit_team_frame(logs: pd.DataFrame, panel: pd.DataFrame) -> pd.DataFr
 # ROLLING FEATURES
 # =============================================================================
 
-def build_rolling_features(logs: pd.DataFrame, v6_shots: pd.DataFrame) -> pd.DataFrame:
+def build_rolling_features(logs: pd.DataFrame) -> pd.DataFrame:
     """
     Build leakage-safe rolling features for all stat bases and all windows.
     All rolling features use shift(1) before the window to prevent leakage.
+    FGA/FG3A/FTA come directly from game logs (same source as REB/MIN).
     """
-    logs_ext = logs[["season", "date", "player_normalized", "game_id", "MIN", "OREB", "DREB", "REB"]].copy()
+    logs_ext = logs[["season", "date", "player_normalized", "game_id", "MIN", "OREB", "DREB", "REB", "FGA", "FG3A", "FTA"]].copy()
     logs_ext["date"] = pd.to_datetime(logs_ext["date"]).dt.date.astype(str)
-
-    logs_ext = logs_ext.merge(
-        v6_shots[["season", "date", "player_normalized", "FGA", "FG3A", "FTA"]],
-        on=["season", "date", "player_normalized"],
-        how="left",
-    )
 
     logs_ext["fg3a_share"] = (logs_ext["FG3A"] / logs_ext["FGA"].replace(0, np.nan)).fillna(0.0)
     logs_ext["reb_per_min"] = (logs_ext["REB"] / logs_ext["MIN"].replace(0, np.nan)).fillna(0.0)
@@ -796,10 +783,6 @@ def main() -> None:
     props = load_props(args.season, cache_dir, use_cache, force)
     print(f"  done in {time.time() - t:.1f}s")
 
-    t = time.time()
-    v6_shots = load_v6_shot_profile(cache_dir)
-    print(f"  done in {time.time() - t:.1f}s")
-
     # =========================================================
     print(f"\n{'='*60}")
     print("STEP 2: MARKET PANEL + SPREAD")
@@ -826,7 +809,7 @@ def main() -> None:
     print(f"{'='*60}")
 
     t = time.time()
-    rolling = build_rolling_features(logs, v6_shots)
+    rolling = build_rolling_features(logs)
     print(f"  done in {time.time() - t:.1f}s")
 
     # =========================================================
