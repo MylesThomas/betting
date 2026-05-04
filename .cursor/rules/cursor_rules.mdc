@@ -184,4 +184,4 @@ def main():
 - good: `display(df.round(4))` for exploration tables; keep full precision only in **stored artifacts** (parquet, CSV exports) or **downstream calcs** where rounding would change decisions
 - reasoning: readability and diff-friendliness; rounding for display should not silently replace exact math inside core pricing / settlement logic unless you intend to
 
-16. ...
+16. use readable variable names and types when needed ie. df_abcdef or lst_abcdef

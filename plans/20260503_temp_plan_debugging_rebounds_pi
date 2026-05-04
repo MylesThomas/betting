@@ -1,0 +1,72 @@
+⏺ Plan: scripts/debug_rebounds_player.py                                                                                                    
+                                         
+  ---                                                                                                                                       
+  Process
+                                                                                                                                            
+  Goal: Given a player name + season, show every artifact they touch in the rebounds pipeline so you can trace why any feature is NA or
+  wrong.                                                                                                                                    
+  
+  Three sections of output, in pipeline order:                                                                                              
+                                                            
+  Section 1 — Raw game logs                                                                                                                 
+  Pull from s3://nba-api-mt/player_game_logs/{season}/*.csv via DuckDB glob. For each game that season: DATE, MIN, REB, FGA, FG3A, TEAM,
+  GAME_ID. This tells you whether source data is missing entirely (player not in logs) or FG3A is zero/null across all games (explains      
+  roll_fg3a_mean_20 = NA).                                  
+                                                                                                                                            
+  Section 2 — Input universe                                                                                                                
+  Pull from s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet. Filter to player + season. Show: date, game_id, REB,
+  spread_signed, team_normalized, home_team_norm, away_team_norm, plus the raw audit columns (input_spread_by_side, input_fg3a_tail_20).    
+  This tells you whether the spread join failed, and whether FG3A is actually being read.
+                                                                                                                                            
+  Section 3 — Feature universe                              
+  Pull from s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet. Filter to player + season. Show: date, game_id, all 6
+  B_MIN_MAX_FEATS + all 5 B_MIN_MAX_AUDIT_LIST_COLS. Flag each NaN explicitly. This is what the model sees.                                 
+  
+  At the end, print a NA summary: for each feature column, count how many of that player's rows are null and why (cross-referenced against  
+  sections 1 and 2).                                        
+                                                                                                                                            
+  ---                                                       
+  Coding plan
+             
+  File: scripts/debug_rebounds_player.py
+                                                                                                                                            
+  Args:
+  - --player "Jamal Cain" — raw name, normalized internally                                                                                 
+  - --season 2025-26                                                                                                                        
+  - --as-of-date YYYY-MM-DD (optional) — if passed, filter feature/input universe to a single game date
+                                                                                                                                            
+  Dependencies:                                                                                                                             
+  - src/io_utils.py → read_parquet_any for input + feature universe
+  - src/nba_rebounds_modeling/duckdb_s3_creds.py → connect_duckdb_s3 for game log glob                                                      
+  - src/player_team_history/name_normalization.py → normalize_from_odds_api for name matching
+  - src/nba_rebounds_modeling/rebounds_feature_spec.py → B_MIN_MAX_FEATS, B_MIN_MAX_AUDIT_LIST_COLS, GROUP_KEYS                             
+                                                                                                                                            
+  Structure:                                                                                                                                
+                                                                                                                                            
+  parse_args()                                                                                                                              
+  normalize_player_name(raw) → player_normalized            
+                                                                                                                                            
+  section_1_game_logs(player_normalized, season)                                                                                            
+    → DuckDB glob s3://nba-api-mt/player_game_logs/{season}/*.csv                                                                           
+    → filter PLAYER_NAME (fuzzy match on normalized)                                                                                        
+    → print table: DATE | MIN | REB | FGA | FG3A | TEAM                                                                                     
+    → print summary: n_games, date_range, n_null_fg3a, n_zero_fg3a                                                                          
+                                                                                                                                            
+  section_2_input_universe(player_normalized, season, as_of_date=None)                                                                      
+    → read_parquet_any(s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet)                                                  
+    → filter player + season (+ date if passed)                                                                                             
+    → print table: date | game_id | REB | spread_signed | team_normalized | input_spread_by_side | input_fg3a_tail_20                       
+    → flag rows where spread_signed is null                                                                                                 
+                                                                                                                                            
+  section_3_feature_universe(player_normalized, season, as_of_date=None)
+    → read_parquet_any(s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet)                                             
+    → filter player + season (+ date if passed)                                                                                             
+    → print table: date | game_id | [B_MIN_MAX_FEATS] | [B_MIN_MAX_AUDIT_LIST_COLS]
+    → for each column: flag NaN count                                                                                                       
+                                                                                                                                            
+  print_na_summary(logs_df, input_df, feat_df)
+    → for each NA in feature universe: cross-ref to input universe and logs to explain root cause                                           
+                                                                                                                                            
+  Name matching: normalize --player with normalize_from_odds_api, then filter both parquets on player_normalized == normalized_name. For the
+   DuckDB game log query, do a LOWER(PLAYER_NAME) LIKE '%cain%'-style match since game log names are raw NBA API strings, then verify       
+  against normalized.  
