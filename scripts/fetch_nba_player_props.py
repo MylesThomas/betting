@@ -548,6 +548,17 @@ def load_season_dates_config():
     return config.get('nba', {})
 
 
+def _get_nba_season_type(date_str: str, season: str) -> str:
+    """Return 'Playoffs' if date_str falls in playoffs window, else 'Regular Season'."""
+    nba_dates = load_season_dates_config()
+    season_block = nba_dates[season]
+    playoff_start = season_block['playoff_start']
+    playoff_end = season_block['playoff_end']
+    if playoff_start <= date_str <= playoff_end:
+        return 'Playoffs'
+    return 'Regular Season'
+
+
 def get_season_date_range(season):
     """
     Get the date range for a season from config.
@@ -866,18 +877,20 @@ def fetch_games_for_date(date_str, max_retries=1):
         try:
             # Fetch player game logs for the season
             season_str = SEASON  # e.g., '2025-26'
-            
+
+            season_type = _get_nba_season_type(date_str, season_str)
+            logging.info(f"   Season type: {season_type} (from season_dates.yaml)")
             game_logs = playergamelogs.PlayerGameLogs(
                 season_nullable=season_str,
-                season_type_nullable='Regular Season',
+                season_type_nullable=season_type,
                 date_from_nullable=date_str,
-                date_to_nullable=date_str
+                date_to_nullable=date_str,
             )
-            
+
             games = game_logs.get_data_frames()[0]
-            
+
             if games.empty:
-                logging.info(f"   No games found for {date_str}")
+                logging.info(f"   No games found for {date_str} (regular season or playoffs)")
                 return pd.DataFrame()
             
             # Key columns for our analysis (only keep columns that exist)
