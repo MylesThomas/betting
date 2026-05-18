@@ -549,12 +549,16 @@ def load_season_dates_config():
 
 
 def _get_nba_season_type(date_str: str, season: str) -> str:
-    """Return 'Playoffs' if date_str falls in playoffs window, else 'Regular Season'."""
+    """Return correct NBA season type for the given date using season_dates.yaml."""
     nba_dates = load_season_dates_config()
     season_block = nba_dates[season]
-    playoff_start = season_block['playoff_start']
-    playoff_end = season_block['playoff_end']
-    if playoff_start <= date_str <= playoff_end:
+    playin_start = season_block.get('playin_start')
+    playin_end = season_block.get('playin_end')
+    playoff_start = season_block.get('playoff_start')
+    playoff_end = season_block.get('playoff_end')
+    if playin_start and playin_end and playin_start <= date_str <= playin_end:
+        return 'PlayIn'
+    if playoff_start and playoff_end and playoff_start <= date_str <= playoff_end:
         return 'Playoffs'
     return 'Regular Season'
 

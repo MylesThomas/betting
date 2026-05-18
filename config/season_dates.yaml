@@ -6,37 +6,49 @@ nba:
   2020-21:
     season_start: '2020-12-22'  # COVID delayed season
     regular_season_end: '2021-05-16'
-    playoff_start: '2021-05-18'  # Play-in tournament
+    playin_start: '2021-05-18'
+    playin_end: '2021-05-21'
+    playoff_start: '2021-05-22'
     playoff_end: '2021-07-21'  # NBA Finals Game 6
   
   2021-22:
     season_start: '2021-10-19'
     regular_season_end: '2022-04-10'
-    playoff_start: '2022-04-12'
+    playin_start: '2022-04-12'
+    playin_end: '2022-04-15'
+    playoff_start: '2022-04-16'
     playoff_end: '2022-06-17'  # NBA Finals Game 6
   
   2022-23:
     season_start: '2022-10-18'
     regular_season_end: '2023-04-09'
-    playoff_start: '2023-04-11'
+    playin_start: '2023-04-11'
+    playin_end: '2023-04-14'
+    playoff_start: '2023-04-15'
     playoff_end: '2023-06-13'  # NBA Finals Game 5
   
   2023-24:
     season_start: '2023-10-24'
     regular_season_end: '2024-04-14'
-    playoff_start: '2024-04-20'  # Updated from API (was 2024-04-16)
-    playoff_end: '2024-06-17'  # Updated from API (was 2024-06-18) - BOS vs DAL Finals Game 5
+    playin_start: '2024-04-16'
+    playin_end: '2024-04-19'
+    playoff_start: '2024-04-20'
+    playoff_end: '2024-06-17'  # BOS vs DAL Finals Game 5
   
   2024-25:
     season_start: '2024-10-22'
     regular_season_end: '2025-04-13'
-    playoff_start: '2025-04-19'  # Updated from API (was 2025-04-15) - Play-in tournament starts
-    playoff_end: '2025-06-22'  # IND @ OKC Finals (series still in progress)
+    playin_start: '2025-04-15'
+    playin_end: '2025-04-18'
+    playoff_start: '2025-04-19'
+    playoff_end: '2025-06-22'  # IND @ OKC Finals
   
   2025-26:
     season_start: '2025-10-21'
-    regular_season_end: '2026-04-12'  # Estimated
-    playoff_start: '2026-04-14'  # Estimated
+    regular_season_end: '2026-04-12'
+    playin_start: '2026-04-14'
+    playin_end: '2026-04-17'
+    playoff_start: '2026-04-18'
     playoff_end: '2026-06-21'  # Estimated
 
 nfl:
