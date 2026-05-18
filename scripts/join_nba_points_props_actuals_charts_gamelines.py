@@ -129,7 +129,7 @@ def load_all_game_logs(season):
     df_games = pd.concat(all_game_logs, ignore_index=True)
     
     # Parse game date
-    df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'])
+    df_games['GAME_DATE'] = pd.to_datetime(df_games['GAME_DATE'], format='mixed')
     df_games['game_date'] = df_games['GAME_DATE'].dt.date.astype(str)
     
     # Add normalized names - keep both for debugging
