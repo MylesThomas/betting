@@ -1,0 +1,2 @@
+print(f"Avg implied over prob: {avg_implied_over:.3f}  |  Observed over rate: {observed_over:.3f}")
+print(f"Calibration gap (over): {abs(avg_implied_over - observed_over):.3f}")
