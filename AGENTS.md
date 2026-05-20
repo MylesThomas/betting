@@ -75,6 +75,7 @@ See `docs/design-docs/dependency-boundaries.md` for complete rules.
 - If touching props/odds/lines → Read `docs/domain/betting-fundamentals.md`
 - If analyzing line movement → Read `docs/domain/market-mechanics.md`
 - If handling data quality → Read `docs/domain/data-quality-standards.md`
+- **Modeling / odds math / ROI / data quirks** → `knowledge-base/wiki/` (see index)
 
 **4. Know the edge cases:**
 - Postponed games, injuries, line freezes → `docs/domain/edge-cases.md`
@@ -137,6 +138,7 @@ prob = american_to_probability(-110)  # → 0.5238
 
 **Betting concepts unclear?**
 → `docs/domain/betting-fundamentals.md`
+→ `knowledge-base/wiki/index.md` — odds math, ROI, edge, model evaluation, data quirks, NBA season structure
 
 **API usage questions?**
 → `docs/references/` (DraftKings, The Odds API, NBA API)
