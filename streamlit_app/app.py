@@ -17,8 +17,8 @@ import streamlit as st
 
 # Page config
 st.set_page_config(
-    page_title="TQS Props Dashboard",
-    page_icon="🎯",
+    page_title="TQS",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -86,141 +86,43 @@ st.markdown("""
 
 def main():
     # Header
-    st.markdown('<div class="main-header">🎯 TQS Props Dashboard</div>', unsafe_allow_html=True)
-    
+    st.markdown('<div class="main-header">TQS</div>', unsafe_allow_html=True)
+
     st.markdown("""
     <div style="text-align: center; margin-bottom: 2rem; color: #666;">
-        Find arbitrage opportunities across multiple sportsbooks.<br>
-        Select a sport from the sidebar to get started.
+        Quantitative betting strategies.
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Dashboard cards
-    col1, col2 = st.columns(2)
-    
-    with col1:
+    col_l, col_c, col_r = st.columns([1, 2, 1])
+    with col_c:
         st.markdown("""
-        <div style="background: linear-gradient(135deg, #C9082A 0%, #17408B 100%); 
+        <div style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
                     border-radius: 15px; padding: 2rem; text-align: center; color: white;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🏀</div>
-            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">NBA Arbs</div>
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">Rebounds Strategy</div>
             <div style="font-size: 0.9rem; opacity: 0.9;">
-                Player props arbitrage opportunities<br>
-                Points, Rebounds, Assists, Threes, and more
+                Production model track record<br>
+                P&amp;L, hit rates, today's plays
             </div>
         </div>
         """, unsafe_allow_html=True)
-        
         st.markdown("")
-        if st.button("🏀 Go to NBA Dashboard", use_container_width=True, key="nba_btn"):
-            st.switch_page("pages/1_NBA_Arbs.py")
+        if st.button("📊 Go to Rebounds Dashboard", use_container_width=True, key="reb_btn"):
+            st.switch_page("pages/3_NBA_Rebounds_Strategy.py")
     
-    with col2:
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #013369 0%, #D50A0A 100%); 
-                    border-radius: 15px; padding: 2rem; text-align: center; color: white;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🏈</div>
-            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">NFL Arbs</div>
-            <div style="font-size: 0.9rem; opacity: 0.9;">
-                Player props arbitrage opportunities<br>
-                Passing, Rushing, Receiving, TDs
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("")
-        if st.button("🏈 Go to NFL Dashboard", use_container_width=True, key="nfl_btn"):
-            st.switch_page("pages/2_NFL_Arbs.py")
-    
-    st.markdown("---")
-    
-    # Quick stats section
-    st.subheader("📊 How It Works")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("""
-        **1️⃣ Data Collection**
-        
-        Our scripts fetch live odds from multiple sportsbooks via The Odds API:
-        - FanDuel, DraftKings, BetMGM
-        - Caesars, PointsBet, and more
-        - Updated daily before game time
-        """)
-    
-    with col2:
-        st.markdown("""
-        **2️⃣ Arbitrage Detection**
-        
-        We analyze every player prop market:
-        - Compare Over/Under odds across books
-        - Calculate combined probability
-        - Flag opportunities under 100%
-        """)
-    
-    with col3:
-        st.markdown("""
-        **3️⃣ Profit Calculation**
-        
-        For each arb opportunity:
-        - Optimal stake allocation
-        - Guaranteed profit amount
-        - Which books to bet at
-        """)
-    
-    st.markdown("---")
-    
-    # Info section
-    with st.expander("ℹ️ About Arbitrage Betting"):
-        st.markdown("""
-        ### What is Arbitrage?
-        
-        Arbitrage betting (arbing) exploits differences in odds between sportsbooks to guarantee 
-        a profit regardless of the outcome.
-        
-        **Example:**
-        - Book A: Patrick Mahomes Over 275.5 Pass Yards @ +115
-        - Book B: Patrick Mahomes Under 275.5 Pass Yards @ +105
-        - Combined implied probability: 95.3% (< 100% = arb!)
-        - Guaranteed profit: ~4.9% on total stake
-        
-        ### How We Find Arbs
-        
-        1. Fetch live odds from 10+ sportsbooks
-        2. For each player prop, find best Over odds and best Under odds
-        3. Calculate combined implied probability
-        4. If < 100%, it's an arbitrage opportunity!
-        
-        ### Important Notes
-        
-        - Lines move fast - act quickly on opportunities
-        - Some books may limit or ban arb bettors
-        - Always verify odds before placing bets
-        - Start with small stakes to test the process
-        """)
     
     # Sidebar info
     with st.sidebar:
-        st.markdown("### 🎯 TQS Props Dashboard")
+        st.markdown("### TQS")
         st.markdown("---")
         st.markdown("""
-        **Select a sport from the sidebar** to view arbitrage opportunities.
-        
         📊 **Data Sources:**
         - The Odds API
         - 10+ US Sportsbooks
-        
-        ⏰ **Update Schedule:**
-        - NBA: Every 5 min during game days
-        - NFL: Every 5 min during game days
-        
-        💡 **Pro Tips:**
-        - Higher profit % = better opportunity
-        - Check both books before betting
-        - Use the exact line shown
         """)
 
 
