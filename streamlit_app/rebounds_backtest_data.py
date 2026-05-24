@@ -27,7 +27,8 @@ BUCKETS: list[str] = ["both", "ols", "xgb"]
 
 def _duckdb_s3_conn() -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
-    con.execute("INSTALL httpfs; LOAD httpfs;")
+    con.execute("INSTALL httpfs")
+    con.execute("LOAD httpfs")
     try:
         key_id = st.secrets["AWS_ACCESS_KEY_ID"]
         secret  = st.secrets["AWS_SECRET_ACCESS_KEY"]
