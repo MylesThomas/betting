@@ -4,10 +4,11 @@ NBA Rebounds Strategy Dashboard
 Tracks the production rebounds model's full betting record: P&L, hit rates, individual plays,
 and model health. Data sourced from settled parquet artifacts in S3.
 
-Two tabs:
+Three tabs:
   - Played Bets: rows where model placed a bet (strategy_bucket in both/ols/xgb)
   - Blind Unders Benchmark: rows the model skipped (strategy_bucket = neither),
     showing hypothetical P&L if we had bet every under regardless of edge.
+  - Backtest: multi-season OOS walk-forward results (A3 spec, min_edge=0.05)
 """
 
 from __future__ import annotations
@@ -31,6 +32,15 @@ from rebounds_data import (
     load_settled_plays,
     load_todays_scored,
 )
+from rebounds_backtest_data import (
+    BUCKETS as BT_BUCKETS,
+    PROD_GO_LIVE_DATE as BT_PROD_GO_LIVE_DATE,
+    compute_kpis as bt_compute_kpis,
+    filter_by_buckets,
+    load_backtest_multi,
+    per_season_summary,
+    settled_rows as bt_settled_rows,
+)
 
 # ── Sidebar filter container ───────────────────────────────────────────────────
 
@@ -42,7 +52,7 @@ class SidebarFilters(NamedTuple):
     end_date: date
     selected_buckets: list[str]
     selected_bookmakers: list[str]
-    consensus_filter: str  # one of CONSENSUS_FILTER_OPTIONS
+    consensus_filter: str
 
 
 # ── Constants ──────────────────────────────────────────────────────────────────
@@ -174,11 +184,6 @@ def derive_strategy_bucket(scored: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_is_consensus_line(plays: pd.DataFrame) -> pd.DataFrame:
-    """
-    Add boolean `is_consensus_line` column: True when a bookmaker's line equals the
-    modal (most common) line for that player on that date across all bookmakers.
-    The modal line is the market consensus; minority lines are non-consensus.
-    """
     modal_lines: pd.Series = (
         plays.groupby(["date", "player_normalized"])["line"]
         .transform(lambda lines: lines.mode().iloc[0])
@@ -483,16 +488,7 @@ def render_strategy_table(settled_bets: pd.DataFrame) -> None:
     )
     summary["PnL"] = summary["PnL"].map(lambda v: f"{v:+.2f}u")
 
-    # Highlight the row with the best actual ROI
-    roi_values: pd.Series = (settled_bets.groupby("strategy_bucket")["pnl_units"].sum()
-                              / settled_bets.groupby("strategy_bucket")["pnl_units"].count())
-    best_bucket: str = roi_values.idxmax() if not roi_values.empty else ""
-
-    def highlight_best(row: pd.Series) -> list[str]:
-        return ["background-color: #dcfce7"] * len(row) if row["Strategy"] == best_bucket else [""] * len(row)
-
-    styled = summary.style.apply(highlight_best, axis=1).hide(axis="index")
-    st.dataframe(styled, use_container_width=True, hide_index=True)
+    st.dataframe(summary.style.hide(axis="index"), use_container_width=True, hide_index=True)
 
 
 def render_todays_plays(scored: pd.DataFrame | None) -> None:
@@ -541,20 +537,31 @@ def render_todays_plays(scored: pd.DataFrame | None) -> None:
     st.dataframe(styled, use_container_width=True, hide_index=True)
 
 
-def render_plays_table(plays: pd.DataFrame, download_key: str) -> None:
+def render_plays_table(plays: pd.DataFrame, download_key: str, cap_rows: bool = False) -> None:
     """Render sorted plays table with color-coded result rows and CSV download."""
     sorted_plays: pd.DataFrame = plays.sort_values(
         ["date", "strategy_bucket", "player_normalized"], ascending=[False, True, True]
     )
+
+    if cap_rows and len(sorted_plays) > 100:
+        _opts = ["100", "500", "1,000", f"All ({len(sorted_plays):,})"]
+        _vals = [100, 500, 1000, len(sorted_plays)]
+        _sel = st.selectbox("Show rows", _opts, index=0, key=f"row_cap_{download_key}")
+        _limit = _vals[_opts.index(_sel)]
+        st.caption(f"Showing {min(_limit, len(sorted_plays)):,} of {len(sorted_plays):,} — download CSV for full data.")
+        view_plays = sorted_plays.head(_limit)
+    else:
+        view_plays = sorted_plays
+
     display_df: pd.DataFrame = (
-        sorted_plays[PLAYS_DISPLAY_COLS]
+        view_plays[PLAYS_DISPLAY_COLS]
         .rename(columns=PLAYS_COL_LABELS)
     )
     impl_idx: int = display_df.columns.get_loc("Under Odds") + 1
     display_df.insert(
         impl_idx,
         "Implied Prob",
-        american_to_implied_prob(sorted_plays["under_odds"]).values,
+        american_to_implied_prob(view_plays["under_odds"]).values,
     )
 
     def color_result_row(row: pd.Series) -> list[str]:
@@ -586,11 +593,12 @@ def render_plays_table(plays: pd.DataFrame, download_key: str) -> None:
 
     st.dataframe(styled, use_container_width=True, hide_index=True)
 
-    csv_bytes: bytes = (
-        display_df.assign(Date=display_df["Date"].astype(str))
-        .to_csv(index=False)
-        .encode("utf-8")
+    csv_df: pd.DataFrame = (
+        sorted_plays[PLAYS_DISPLAY_COLS]
+        .rename(columns=PLAYS_COL_LABELS)
+        .assign(Date=lambda d: d["Date"].astype(str))
     )
+    csv_bytes: bytes = csv_df.to_csv(index=False).encode("utf-8")
     st.download_button(
         label="Download CSV",
         data=csv_bytes,
@@ -625,6 +633,151 @@ def render_pipeline_health(manifests: list[dict]) -> None:
     )
 
 
+# ── Backtest renderers ─────────────────────────────────────────────────────────
+
+_BT_BUCKET_COLORS: dict[str, str] = {"both": "#17408B", "ols": "#ff7f0e", "xgb": "#2ca02c"}
+
+_BT_DETAIL_COLS: list[str] = [
+    "date", "player_normalized", "line", "actual", "under_odds", "edge", "result", "pnl_units",
+]
+_BT_DETAIL_LABELS: dict[str, str] = {
+    "date": "Date", "player_normalized": "Player", "line": "Line", "actual": "Actual",
+    "under_odds": "Odds", "edge": "Edge", "result": "Result", "pnl_units": "P&L",
+}
+
+
+def build_backtest_pnl_chart(settled: pd.DataFrame, selected_buckets: list[str]) -> go.Figure:
+    fig = go.Figure()
+    all_dates: pd.Series = settled["date"]
+    seasons = sorted(settled["season"].unique())
+
+    for bucket in selected_buckets:
+        sub = settled[settled["strategy_bucket"] == bucket].sort_values("date")
+        if sub.empty:
+            continue
+        daily = (
+            sub.groupby("date")
+            .agg(daily_pnl=("pnl_units", "sum"), n_bets=("pnl_units", "count"))
+            .reset_index()
+            .sort_values("date")
+        )
+        daily["cumulative_pnl"] = daily["daily_pnl"].cumsum()
+        origin = pd.DataFrame({
+            "date": [daily["date"].min() - pd.Timedelta(days=1)],
+            "daily_pnl": [0.0], "n_bets": [0], "cumulative_pnl": [0.0],
+        })
+        daily = pd.concat([origin, daily], ignore_index=True)
+        customdata = np.stack([daily["daily_pnl"].values, daily["n_bets"].values], axis=1)
+        fig.add_trace(go.Scatter(
+            x=daily["date"], y=daily["cumulative_pnl"],
+            mode="lines", name=bucket.upper(),
+            line={"color": _BT_BUCKET_COLORS.get(bucket, "#888"), "width": 2},
+            customdata=customdata,
+            hovertemplate=(
+                "<b>%{x|%b %d, %Y}</b><br>"
+                "Running P&L: <b>%{y:.2f}u</b><br>"
+                "Daily: %{customdata[0]:.2f}u · Bets: %{customdata[1]}<extra></extra>"
+            ),
+        ))
+
+    if not all_dates.empty:
+        for season in seasons:
+            s_min = settled[settled["season"] == season]["date"].min()
+            fig.add_vline(x=s_min, line_dash="dot", line_color="#d1d5db", line_width=1)
+            fig.add_annotation(
+                x=s_min, y=0.98, yref="paper", text=season,
+                showarrow=False, xanchor="left", font={"size": 10, "color": "#9ca3af"},
+            )
+        fig.add_vline(x=pd.Timestamp(BT_PROD_GO_LIVE_DATE), line_dash="dash", line_color="#9ca3af")
+        fig.add_annotation(
+            x=pd.Timestamp(BT_PROD_GO_LIVE_DATE), y=0.88, yref="paper",
+            text="Prod go-live", showarrow=False, xanchor="left",
+            font={"size": 11, "color": "#6b7280"},
+        )
+
+    fig.add_hline(y=0, line_color="#e5e7eb", line_width=1)
+    fig.update_layout(
+        title="Cumulative P&L — OOS Walk-Forward (units at -110)",
+        xaxis_title=None, yaxis_title="Units",
+        hovermode="x unified", template="plotly_white",
+        height=400, margin={"t": 50, "b": 10},
+    )
+    return fig
+
+
+def render_backtest_per_season_table(df_filtered: pd.DataFrame) -> None:
+    summary = per_season_summary(df_filtered)
+    if summary.empty:
+        st.info("No data for selected models.")
+        return
+    display = summary.copy()
+    display["Hit Rate"] = display["Hit Rate"].map(lambda v: f"{v:.1%}" if pd.notna(v) else "—")
+    display["PnL"]      = display["PnL"].map(lambda v: f"{v:+.2f}u")
+    display["ROI/Bet"]  = display["ROI/Bet"].map(lambda v: f"{v:+.3f}u" if pd.notna(v) else "—")
+    display["Model"]    = display["Model"].str.upper()
+
+    current_season = sorted(summary["Season"].unique())[-1] if not summary.empty else None
+
+    def _highlight_current(row: pd.Series) -> list[str]:
+        return ["background-color: #eff6ff"] * len(row) if row["Season"] == current_season else [""] * len(row)
+
+    st.dataframe(display.style.apply(_highlight_current, axis=1), use_container_width=True, hide_index=True)
+
+
+def render_backtest_season_detail(df_filtered: pd.DataFrame) -> None:
+    available = sorted(df_filtered["season"].unique(), reverse=True)
+    if not available:
+        return
+    selected_season = st.selectbox("Season", available, index=0, key="bt_reb_season")
+    sub = df_filtered[df_filtered["season"] == selected_season]
+    settled = bt_settled_rows(sub)
+    if settled.empty:
+        st.info("No settled plays for this season / filter.")
+        return
+
+    kpis = bt_compute_kpis(settled)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Bets",     kpis["total_bets"])
+    c2.metric("W-L",      f"{kpis['wins']}-{kpis['losses']}")
+    c3.metric("Hit Rate", f"{kpis['hit_rate']:.1%}" if not np.isnan(kpis["hit_rate"]) else "—")
+    c4.metric("P&L",      f"{kpis['total_pnl']:+.2f}u")
+
+    display_df = (
+        sub.sort_values("date", ascending=False)[_BT_DETAIL_COLS]
+        .rename(columns=_BT_DETAIL_LABELS)
+    )
+
+    def _color_row(row: pd.Series) -> list[str]:
+        bg = {"win": "#dcfce7", "loss": "#fee2e2"}.get(str(row.get("Result", "")).lower(), "")
+        return [f"background-color: {bg}"] * len(row) if bg else [""] * len(row)
+
+    st.dataframe(
+        display_df.style.apply(_color_row, axis=1).format({
+            "Date":   lambda v: v.strftime("%Y-%m-%d") if hasattr(v, "strftime") else str(v),
+            "Line":   lambda v: f"{v:.1f}" if pd.notna(v) else "—",
+            "Actual": lambda v: f"{v:.1f}" if pd.notna(v) else "—",
+            "Odds":   lambda v: f"{int(v):+d}" if pd.notna(v) else "—",
+            "Edge":   lambda v: f"{v:.3f}" if pd.notna(v) else "—",
+            "P&L":    lambda v: f"{v:+.3f}u" if pd.notna(v) else "—",
+        }),
+        use_container_width=True, hide_index=True,
+    )
+
+    with st.expander("Edge Distribution"):
+        edge_vals = settled["edge"].dropna()
+        fig = go.Figure(go.Histogram(
+            x=edge_vals, nbinsx=20, marker_color="#065f46", opacity=0.8,
+            hovertemplate="Edge: %{x:.3f}<br>Count: %{y}<extra></extra>",
+        ))
+        fig.add_vline(x=0.05, line_color="#374151", line_width=1, line_dash="dash")
+        fig.update_layout(
+            title="Edge Distribution (min_edge=0.05 threshold shown)",
+            xaxis_title="Edge", yaxis_title="Bets",
+            template="plotly_white", height=260, margin={"t": 50, "b": 10},
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 
 
@@ -633,13 +786,7 @@ def build_sidebar(available_bookmakers: list[str]) -> SidebarFilters:
         st.markdown("### 📊 NBA Rebounds Strategy")
         st.markdown("---")
 
-        preset_options: list[str] = [
-            "All Time",
-            "Season-to-Date",
-            "Last 30 Days",
-            "Last 7 Days",
-            "Custom",
-        ]
+        preset_options: list[str] = ["All Time", "Season-to-Date", "Last 30 Days", "Last 7 Days", "Custom"]
         selected_preset: str = st.radio("Date Range", preset_options, index=0)
 
         today: date = date.today()
@@ -658,7 +805,7 @@ def build_sidebar(available_bookmakers: list[str]) -> SidebarFilters:
         st.markdown("---")
         all_bucket_options: list[str] = ["both", "ols", "xgb"]
         selected_buckets: list[str] = st.multiselect(
-            "Strategy buckets (Played Bets tab)",
+            "Strategy buckets",
             options=all_bucket_options,
             default=all_bucket_options,
         )
@@ -708,14 +855,10 @@ def main() -> None:
         st.warning("No settled plays found in S3. The pipeline may not have run yet.")
         st.stop()
 
-    # Derive consensus flag once on the full dataset before any filtering.
     all_settled: pd.DataFrame = add_is_consensus_line(all_settled_raw)
-
     available_bookmakers: list[str] = sorted(all_settled["bookmaker"].dropna().unique().tolist())
     filters: SidebarFilters = build_sidebar(available_bookmakers)
 
-    # Prep today's scored slate: derive bucket + consensus flag, then apply the same
-    # bookmaker/consensus filters so Today's Plays respects sidebar selections.
     todays_scored_filtered: pd.DataFrame | None = None
     if todays_scored is not None:
         scored_with_bucket: pd.DataFrame = derive_strategy_bucket(todays_scored)
@@ -733,7 +876,6 @@ def main() -> None:
         date_filtered["strategy_bucket"] == "neither"
     ].reset_index(drop=True)
 
-    # Apply bookmaker + consensus filters to both played and neither slices.
     played_filtered = apply_custom_filters(
         played_filtered, filters.selected_bookmakers, filters.consensus_filter
     )
@@ -751,7 +893,7 @@ def main() -> None:
         neither_with_hyp["result"].isin({"win", "loss", "push"})
     ].reset_index(drop=True)
 
-    tab1, tab2 = st.tabs(["Played Bets", "Blind Unders Benchmark"])
+    tab1, tab2, tab3 = st.tabs(["Played Bets", "Blind Unders Benchmark", "Backtest"])
 
     # ── Tab 1: Played Bets ──────────────────────────────────────────────────────
     with tab1:
@@ -806,7 +948,44 @@ def main() -> None:
 
             st.markdown("---")
             st.subheader("Skipped Plays (neither)")
-            render_plays_table(neither_filtered, download_key="dl_neither")
+            render_plays_table(neither_filtered, download_key="dl_neither", cap_rows=True)
+
+    # ── Tab 3: Backtest ────────────────────────────────────────────────────────
+    with tab3:
+        st.caption("OOS walk-forward backtest · A3 spec · min_edge=0.05 · -110 juice")
+
+        with st.spinner("Loading backtest data…"):
+            bt_raw = load_backtest_multi()
+
+        if bt_raw.empty:
+            st.warning("No backtest data in S3 yet — run the export cell in the foundations notebook first.")
+        elif not filters.selected_buckets:
+            st.info("Select at least one bucket.")
+        else:
+            bt_filtered = filter_by_buckets(bt_raw, filters.selected_buckets)
+            bt_settled  = bt_settled_rows(bt_filtered)
+
+            if bt_settled.empty:
+                st.info("No settled plays for the selected models.")
+            else:
+                bt_kpis = bt_compute_kpis(bt_settled)
+                c1, c2, c3, c4, c5 = st.columns(5)
+                c1.metric("Total Bets",  f"{bt_kpis['total_bets']:,}")
+                c2.metric("W-L",         f"{bt_kpis['wins']}-{bt_kpis['losses']}")
+                c3.metric("Hit Rate",    f"{bt_kpis['hit_rate']:.1%}" if not np.isnan(bt_kpis["hit_rate"]) else "—")
+                c4.metric("P&L (units)", f"{bt_kpis['total_pnl']:+.2f}u")
+                c5.metric("ROI / Bet",   f"{bt_kpis['roi_per_bet']:+.3f}u" if not np.isnan(bt_kpis["roi_per_bet"]) else "—")
+
+                st.plotly_chart(build_backtest_pnl_chart(bt_settled, filters.selected_buckets), use_container_width=True)
+
+                st.markdown("---")
+                st.subheader("Per-Season Summary")
+                st.caption("Most recent season highlighted.")
+                render_backtest_per_season_table(bt_filtered)
+
+                st.markdown("---")
+                st.subheader("Season Detail")
+                render_backtest_season_detail(bt_filtered)
 
 
 if __name__ == "__main__":
