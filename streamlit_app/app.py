@@ -97,13 +97,13 @@ def main():
     st.markdown("---")
     
     # Dashboard cards
-    col_l, col_c, col_r = st.columns([1, 2, 1])
-    with col_c:
+    col1, col2 = st.columns(2)
+    with col1:
         st.markdown("""
         <div style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
                     border-radius: 15px; padding: 2rem; text-align: center; color: white;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
-            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">Rebounds Strategy</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">NBA Rebounds</div>
             <div style="font-size: 0.9rem; opacity: 0.9;">
                 Production model track record<br>
                 P&amp;L, hit rates, today's plays
@@ -113,6 +113,22 @@ def main():
         st.markdown("")
         if st.button("📊 Go to Rebounds Dashboard", use_container_width=True, key="reb_btn"):
             st.switch_page("pages/3_NBA_Rebounds_Strategy.py")
+
+    with col2:
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #17408B 0%, #1d4ed8 100%);
+                    border-radius: 15px; padding: 2rem; text-align: center; color: white;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🏀</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">NCAAB Away Revenge</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">
+                Bet the revenge team (away)<br>
+                Season record &amp; today's plays
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("")
+        if st.button("🏀 Go to NCAAB Dashboard", use_container_width=True, key="ncaab_btn"):
+            st.switch_page("pages/4_NCAAB_Revenge_Spot.py")
     
     
     # Sidebar info

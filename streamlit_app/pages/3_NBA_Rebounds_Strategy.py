@@ -714,7 +714,7 @@ def render_backtest_per_season_table(df_filtered: pd.DataFrame) -> None:
     display["Hit Rate"] = display["Hit Rate"].map(lambda v: f"{v:.1%}" if pd.notna(v) else "—")
     display["PnL"]      = display["PnL"].map(lambda v: f"{v:+.2f}u")
     display["ROI/Bet"]  = display["ROI/Bet"].map(lambda v: f"{v:+.3f}u" if pd.notna(v) else "—")
-    display["Model"]    = display["Model"].str.upper()
+    display["Bucket"]   = display["Bucket"].str.upper()
 
     current_season = sorted(summary["Season"].unique())[-1] if not summary.empty else None
 
@@ -735,7 +735,20 @@ def render_backtest_season_detail(df_filtered: pd.DataFrame) -> None:
         st.info("No settled plays for this season / filter.")
         return
 
-    kpis = bt_compute_kpis(settled)
+    # Players sorted by bet count descending; preserve selection across season changes
+    bet_counts = settled["player_normalized"].value_counts()
+    player_raw = list(bet_counts.index)
+    players_by_bets = player_raw
+
+    prev = st.session_state.get("bt_reb_player_name")
+    default_idx = player_raw.index(prev) if prev in player_raw else 0
+
+    selected_label = st.selectbox("Player", players_by_bets, index=default_idx, key="bt_reb_player")
+    selected_player = player_raw[players_by_bets.index(selected_label)]
+    st.session_state["bt_reb_player_name"] = selected_player
+    player_settled = settled[settled["player_normalized"] == selected_player]
+
+    kpis = bt_compute_kpis(player_settled)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Bets",     kpis["total_bets"])
     c2.metric("W-L",      f"{kpis['wins']}-{kpis['losses']}")
@@ -743,23 +756,23 @@ def render_backtest_season_detail(df_filtered: pd.DataFrame) -> None:
     c4.metric("P&L",      f"{kpis['total_pnl']:+.2f}u")
 
     display_df = (
-        sub.sort_values("date", ascending=False)[_BT_DETAIL_COLS]
+        player_settled.sort_values("date", ascending=False)[_BT_DETAIL_COLS]
         .rename(columns=_BT_DETAIL_LABELS)
+        .reset_index(drop=True)
     )
+    display_df["Date"]   = display_df["Date"].apply(lambda v: v.strftime("%Y-%m-%d") if hasattr(v, "strftime") else str(v))
+    display_df["Line"]   = display_df["Line"].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "—")
+    display_df["Actual"] = display_df["Actual"].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "—")
+    display_df["Odds"]   = display_df["Odds"].apply(lambda v: f"{int(v):+d}" if pd.notna(v) else "—")
+    display_df["Edge"]   = display_df["Edge"].apply(lambda v: f"{v:.3f}" if pd.notna(v) else "—")
+    display_df["P&L"]    = display_df["P&L"].apply(lambda v: f"{v:+.3f}u" if pd.notna(v) else "—")
 
     def _color_row(row: pd.Series) -> list[str]:
         bg = {"win": "#dcfce7", "loss": "#fee2e2"}.get(str(row.get("Result", "")).lower(), "")
         return [f"background-color: {bg}"] * len(row) if bg else [""] * len(row)
 
     st.dataframe(
-        display_df.style.apply(_color_row, axis=1).format({
-            "Date":   lambda v: v.strftime("%Y-%m-%d") if hasattr(v, "strftime") else str(v),
-            "Line":   lambda v: f"{v:.1f}" if pd.notna(v) else "—",
-            "Actual": lambda v: f"{v:.1f}" if pd.notna(v) else "—",
-            "Odds":   lambda v: f"{int(v):+d}" if pd.notna(v) else "—",
-            "Edge":   lambda v: f"{v:.3f}" if pd.notna(v) else "—",
-            "P&L":    lambda v: f"{v:+.3f}u" if pd.notna(v) else "—",
-        }),
+        display_df.style.apply(_color_row, axis=1),
         use_container_width=True, hide_index=True,
     )
 
@@ -771,7 +784,7 @@ def render_backtest_season_detail(df_filtered: pd.DataFrame) -> None:
         ))
         fig.add_vline(x=0.05, line_color="#374151", line_width=1, line_dash="dash")
         fig.update_layout(
-            title="Edge Distribution (min_edge=0.05 threshold shown)",
+            title="Edge Distribution (5% threshold shown)",
             xaxis_title="Edge", yaxis_title="Bets",
             template="plotly_white", height=260, margin={"t": 50, "b": 10},
         )
@@ -952,7 +965,7 @@ def main() -> None:
 
     # ── Tab 3: Backtest ────────────────────────────────────────────────────────
     with tab3:
-        st.caption("OOS walk-forward backtest · A3 spec · min_edge=0.05 · -110 juice")
+        st.caption("Walk-forward OOS backtest · model edge ≥ 5% required · P&L at actual book odds")
 
         with st.spinner("Loading backtest data…"):
             bt_raw = load_backtest_multi()
