@@ -27,16 +27,25 @@ BUCKETS: list[str] = ["both", "ols", "xgb"]
 
 def _duckdb_s3_conn() -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
-    con.execute("LOAD httpfs")
-    session = boto3.Session()
-    creds = session.get_credentials()
-    if creds:
-        frozen = creds.get_frozen_credentials()
-        con.execute(f"SET s3_access_key_id='{frozen.access_key}'")
-        con.execute(f"SET s3_secret_access_key='{frozen.secret_key}'")
-        if frozen.token:
-            con.execute(f"SET s3_session_token='{frozen.token}'")
-    con.execute(f"SET s3_region='{session.region_name or 'us-east-1'}'")
+    con.execute("INSTALL httpfs; LOAD httpfs;")
+    try:
+        key_id = st.secrets["AWS_ACCESS_KEY_ID"]
+        secret  = st.secrets["AWS_SECRET_ACCESS_KEY"]
+        region  = st.secrets.get("AWS_DEFAULT_REGION", "us-east-2")
+    except Exception:
+        session = boto3.Session()
+        frozen  = session.get_credentials().get_frozen_credentials()
+        key_id  = frozen.access_key
+        secret  = frozen.secret_key
+        region  = session.region_name or "us-east-2"
+    con.execute(f"""
+        CREATE SECRET (
+            TYPE S3,
+            KEY_ID '{key_id}',
+            SECRET '{secret}',
+            REGION '{region}'
+        )
+    """)
     return con
 
 
