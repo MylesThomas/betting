@@ -10,12 +10,16 @@ No st.* rendering here. No try/except. No defensive column checks.
 from __future__ import annotations
 
 import json
+import sys
 from datetime import date
-from io import BytesIO
+from pathlib import Path
 
 import boto3
 import pandas as pd
 import streamlit as st
+
+sys.path.insert(0, str(Path(__file__).parent))
+from duckdb_conn import get_s3_conn
 
 S3_BUCKET: str = "nba-betting-mt"
 DAILY_RUNS_PREFIX: str = "rebounds/daily_runs"
@@ -28,9 +32,11 @@ def _s3_client() -> boto3.client:
     return boto3.client("s3")
 
 
-def _read_parquet_from_s3(bucket: str, key: str) -> pd.DataFrame:
-    body: bytes = _s3_client().get_object(Bucket=bucket, Key=key)["Body"].read()
-    return pd.read_parquet(BytesIO(body))
+def _read_parquet_from_s3(uri: str) -> pd.DataFrame:
+    con = get_s3_conn()
+    df = con.execute(f"SELECT * FROM read_parquet('{uri}')").df()
+    con.close()
+    return df
 
 
 def _read_json_from_s3(bucket: str, key: str) -> dict:
@@ -104,19 +110,23 @@ def load_settled_plays() -> pd.DataFrame:
     all_keys: list[str] = _list_all_run_keys()
     slate_dates: list[str] = _unique_slate_dates(all_keys)
 
-    frames: list[pd.DataFrame] = []
+    uris: list[str] = []
     for slate_date in slate_dates:
         settled_key: str | None = _latest_key_for_date(
             all_keys, slate_date, f"rebounds_scored_settled_{slate_date}.parquet"
         )
-        if settled_key is None:
-            continue
-        frames.append(_read_parquet_from_s3(S3_BUCKET, settled_key))
+        if settled_key is not None:
+            uris.append(f"s3://{S3_BUCKET}/{settled_key}")
 
-    if not frames:
+    if not uris:
         return pd.DataFrame()
 
-    combined: pd.DataFrame = pd.concat(frames, ignore_index=True)
+    paths_literal = "[" + ", ".join(f"'{u}'" for u in uris) + "]"
+    con = get_s3_conn()
+    combined: pd.DataFrame = con.execute(
+        f"SELECT * FROM read_parquet({paths_literal}, union_by_name=true)"
+    ).df()
+    con.close()
     combined["date"] = pd.to_datetime(combined["date"])
     combined["diff"] = combined["reb_actual"] - combined["line"]
     return combined
@@ -139,7 +149,7 @@ def load_todays_scored() -> pd.DataFrame | None:
     )
     if scored_key is None:
         return None
-    scored: pd.DataFrame = _read_parquet_from_s3(S3_BUCKET, scored_key)
+    scored: pd.DataFrame = _read_parquet_from_s3(f"s3://{S3_BUCKET}/{scored_key}")
     scored["date"] = pd.to_datetime(scored["date"])
     return scored
 

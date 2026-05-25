@@ -9,12 +9,15 @@ No st.* rendering. No try/except. No defensive column checks.
 
 from __future__ import annotations
 
-import io
+import sys
+from pathlib import Path
 
-import boto3
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+sys.path.insert(0, str(Path(__file__).parent))
+from duckdb_conn import get_s3_conn
 
 S3_BUCKET: str = "ncaab-betting-mt"
 BACKTEST_PREFIX: str = "data/04_output/backtest/fade-revenge-spot"
@@ -25,10 +28,6 @@ SEASON_ORDER: list[str] = [
 ]
 
 
-def _s3_client() -> boto3.client:
-    return boto3.client("s3")
-
-
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_backtest_multi() -> pd.DataFrame:
     """
@@ -37,10 +36,14 @@ def load_backtest_multi() -> pd.DataFrame:
     Adds: game_date, matchup, focal_spread, focal_ats_margin, pnl_units, result.
     """
     try:
-        body = _s3_client().get_object(
-            Bucket=S3_BUCKET, Key=f"{BACKTEST_PREFIX}/multi.csv"
-        )["Body"].read()
-        df = pd.read_csv(io.BytesIO(body))
+        con = get_s3_conn()
+        df: pd.DataFrame = con.execute(f"""
+            SELECT * FROM read_csv_auto(
+                's3://{S3_BUCKET}/{BACKTEST_PREFIX}/multi.csv',
+                ignore_errors=true
+            )
+        """).df()
+        con.close()
     except Exception:
         return pd.DataFrame()
 

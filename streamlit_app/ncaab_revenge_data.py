@@ -10,13 +10,17 @@ No st.* rendering. No try/except. No defensive column checks.
 
 from __future__ import annotations
 
+import sys
 from datetime import date
+from pathlib import Path
 
 import boto3
-import duckdb
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+sys.path.insert(0, str(Path(__file__).parent))
+from duckdb_conn import get_s3_conn
 
 S3_BUCKET: str = "ncaab-betting-mt"
 PLAYS_PREFIX: str = "data/04_output/plays/fade-revenge-spot"
@@ -29,30 +33,6 @@ WIN_PAYOUT: float = 100.0 / 110.0  # -110 juice
 def _s3_client():
     return boto3.client("s3")
 
-
-def _duckdb_s3_conn() -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect()
-    con.execute("INSTALL httpfs")
-    con.execute("LOAD httpfs")
-    try:
-        key_id = st.secrets["AWS_ACCESS_KEY_ID"]
-        secret  = st.secrets["AWS_SECRET_ACCESS_KEY"]
-        region  = st.secrets.get("AWS_DEFAULT_REGION", "us-east-2")
-    except Exception:
-        session = boto3.Session()
-        frozen  = session.get_credentials().get_frozen_credentials()
-        key_id  = frozen.access_key
-        secret  = frozen.secret_key
-        region  = session.region_name or "us-east-2"
-    con.execute(f"""
-        CREATE SECRET (
-            TYPE S3,
-            KEY_ID '{key_id}',
-            SECRET '{secret}',
-            REGION '{region}'
-        )
-    """)
-    return con
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -84,7 +64,7 @@ def load_all_plays() -> pd.DataFrame:
     """Read all plays CSVs in parallel via DuckDB httpfs glob."""
     if not _list_plays_keys():
         return pd.DataFrame()
-    con = _duckdb_s3_conn()
+    con = get_s3_conn()
     df: pd.DataFrame = con.execute(f"""
         SELECT * FROM read_csv_auto(
             's3://{S3_BUCKET}/{PLAYS_PREFIX}/*.csv',
@@ -110,7 +90,7 @@ def _load_outcomes_for_dates(game_dates: tuple[str, ...]) -> pd.DataFrame:
     ]
     if not file_paths:
         return pd.DataFrame()
-    con = _duckdb_s3_conn()
+    con = get_s3_conn()
     paths_literal = "[" + ", ".join(f"'{p}'" for p in file_paths) + "]"
     df: pd.DataFrame = con.execute(f"""
         SELECT * FROM read_csv_auto(
@@ -222,7 +202,7 @@ def load_todays_plays() -> pd.DataFrame | None:
     key: str = f"{PLAYS_PREFIX}/{today_str}.csv"
     if key not in _list_plays_keys():
         return None
-    con = _duckdb_s3_conn()
+    con = get_s3_conn()
     df: pd.DataFrame = con.execute(f"""
         SELECT * FROM read_csv_auto(
             's3://{S3_BUCKET}/{key}',
