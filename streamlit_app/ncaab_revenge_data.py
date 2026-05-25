@@ -11,8 +11,9 @@ No st.* rendering. No try/except. No defensive column checks.
 from __future__ import annotations
 
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import boto3
 import numpy as np
@@ -138,7 +139,7 @@ def settle_plays(plays: pd.DataFrame) -> pd.DataFrame:
     past_play_dates: tuple[str, ...] = tuple(
         d for d in work.loc[is_play & has_line, "game_date"]
         .dt.strftime("%Y-%m-%d").unique().tolist()
-        if d < str(date.today())
+        if d < datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
     )
     outcomes: pd.DataFrame = (
         _load_outcomes_for_dates(past_play_dates) if past_play_dates else pd.DataFrame()
@@ -198,7 +199,7 @@ def settle_plays(plays: pd.DataFrame) -> pd.DataFrame:
 @st.cache_data(ttl=900, show_spinner=False)
 def load_todays_plays() -> pd.DataFrame | None:
     """Today's plays CSV. Returns None if Lambda hasn't run yet."""
-    today_str: str = str(date.today())
+    today_str: str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
     key: str = f"{PLAYS_PREFIX}/{today_str}.csv"
     if key not in _list_plays_keys():
         return None

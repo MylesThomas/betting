@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import boto3
 import pandas as pd
@@ -142,7 +143,7 @@ def load_todays_scored() -> pd.DataFrame | None:
     between "rebounds_scored_" and the date, so f"rebounds_scored_{today}.parquet" is unique
     to the unsettled file.
     """
-    today: str = str(date.today())
+    today: str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
     all_keys: list[str] = _list_all_run_keys()
     scored_key: str | None = _latest_key_for_date(
         all_keys, today, f"rebounds_scored_{today}.parquet"
