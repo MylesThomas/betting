@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event-Driven Strategy: Under After 3PT Make</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --accent: #4f8ef7;
+      --accent2: #7c3aed;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --border: #2e3347;
+      --radius: 10px;
+      --code-bg: #131620;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 40px 24px 80px;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
+    h2 { font-size: 1.2rem; font-weight: 600; color: var(--accent); margin: 36px 0 12px; letter-spacing: .02em; text-transform: uppercase; }
+    h3 { font-size: 1rem; font-weight: 600; margin: 20px 0 8px; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 28px; }
+    .tag {
+      display: inline-block; font-size: 0.72rem; font-weight: 700;
+      padding: 2px 9px; border-radius: 20px; margin-right: 6px; letter-spacing: .04em;
+    }
+    .tag-live    { background: #7c3aed22; color: #a78bfa; border: 1px solid #7c3aed55; }
+    .tag-under   { background: #4f8ef722; color: #93c5fd; border: 1px solid #4f8ef755; }
+    .tag-event   { background: #22c55e22; color: #86efac; border: 1px solid #22c55e55; }
+    .tag-phase   { background: #eab30822; color: #fde047; border: 1px solid #eab30855; }
+
+    .callout {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 0.93rem;
+    }
+    .callout.green  { border-color: var(--green); }
+    .callout.yellow { border-color: var(--yellow); }
+    .callout.red    { border-color: var(--red); }
+    .callout.purple { border-color: var(--accent2); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 10px 0;
+    }
+    .card h3 { margin-top: 0; }
+
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 16px 0;
+    }
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .flow-step:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .flow-step:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
+    .flow-step:not(:last-child) { border-bottom: none; }
+    .flow-num {
+      min-width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; color: #fff;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .flow-num.gate { background: var(--yellow); color: #000; }
+    .flow-body { flex: 1; }
+    .flow-body strong { display: block; margin-bottom: 2px; font-size: 0.97rem; }
+    .flow-body span   { color: var(--muted); font-size: 0.88rem; }
+
+    table {
+      width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem;
+    }
+    th {
+      text-align: left; background: var(--surface2);
+      padding: 8px 12px; font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border);
+    }
+    td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    code, pre {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      background: var(--code-bg);
+      border-radius: 5px;
+    }
+    code { padding: 1px 6px; }
+    pre {
+      padding: 16px 20px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      margin: 12px 0;
+      line-height: 1.55;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+    ul, ol { padding-left: 22px; margin: 6px 0; }
+    li { margin-bottom: 4px; }
+    p { margin: 8px 0; }
+
+    .pill {
+      display: inline-block; font-size: 0.75rem; font-weight: 600;
+      padding: 1px 8px; border-radius: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .status-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+    .muted { color: var(--muted); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .inline-green { color: var(--green); font-weight: 600; }
+    .inline-red   { color: var(--red);   font-weight: 600; }
+    .inline-yellow{ color: var(--yellow);font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<h1>Event-Driven Strategy: UNDER After 3PT Make</h1>
+<p class="subtitle">
+  NBA live player-points props &nbsp;·&nbsp; Phase 1 &nbsp;·&nbsp; 20-player bucket &nbsp;·&nbsp; 1 bookmaker
+  <br>
+  <span class="muted">Written 2026-05-22</span>
+</p>
+
+<div class="status-bar">
+  <span class="tag tag-event">Event-driven</span>
+  <span class="tag tag-under">UNDER only</span>
+  <span class="tag tag-live">Live betting</span>
+  <span class="tag tag-phase">Phase 1: Notebook backtest</span>
+</div>
+
+<div class="callout">
+  <strong>One-line thesis:</strong> When a player hits a three-pointer in the final ~60 seconds of real play, bookmakers may briefly inflate the live line to account for the new points — creating a window where the UNDER is mis-priced. We only trade this if our Monte Carlo model confirms an edge vs the posted line and the live points counter has actually moved (verifying we have the correct, updated line).
+</div>
+
+<div class="callout green">
+  <strong>Phase 1 is a notebook backtest, not live deployment.</strong> All required data already exists: signals parquets in S3 contain <code>save_timestamp_utc</code>, <code>player_name</code>, <code>current_points</code>, <code>game_id</code>, and <code>bet_side</code>. The ESPN Summary API returns the full play history for any completed game. The backtest retroactively applies the 3PT trigger filter to existing signals — no new API calls, no S3 writes, no live loop changes needed yet.
+</div>
+
+<hr>
+
+<h2>1. The Edge Hypothesis</h2>
+
+<div class="two-col">
+  <div class="card">
+    <h3>Why UNDERs specifically?</h3>
+    <p>A 3-pointer adds 3 points instantly. Bookmakers re-price the live line upward to reflect the new total — but if they over-correct (or correct slowly), the remaining-points requirement becomes too high, making UNDER the value side.</p>
+    <p>This is the opposite of a "hot hand" bet. We're fading the line adjustment, not the player.</p>
+  </div>
+  <div class="card">
+    <h3>Why "last 60s"?</h3>
+    <p>The 60-second window aligns exactly with our polling cadence. Analysis of <code>save_timestamp_utc</code> across the signals data confirms the generator runs at a <strong>median 59.8 s interval</strong> (mode: 60 s, n=133 intervals from 20260519). A 3PT make within the last 60s is therefore one that happened in the gap <em>since the previous MC scan</em> — it is structurally guaranteed to be new information not yet incorporated into prior signals.</p>
+    <p style="margin-top:8px">Wider windows (e.g. 90 s) would pull in makes the model already priced in the previous iteration, diluting the edge. Narrower windows risk missing makes that occurred just before a poll fired.</p>
+  </div>
+</div>
+
+<div class="callout yellow">
+  <strong>Key guardrail:</strong> The <code>current_points</code> field in the live signal must have increased relative to the most recent prior snapshot for the same player. This confirms the ESPN boxscore has already registered the 3PT make — so we know the live line we're trading against is the post-make price, not a stale pre-make line.
+</div>
+
+<hr>
+
+<h2>2. Execution Flow</h2>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="flow-num">1</div>
+    <div class="flow-body">
+      <strong>Fetch live PBP from ESPN Summary API</strong>
+      <span>
+        <code>GET /apis/site/v2/sports/basketball/nba/summary?event={game_id}</code>
+        &nbsp;— already done in <code>10_live_betting_signal_generator.py:fetch_and_validate_pbp()</code>.
+        Returns <code>data['plays']</code>, each play has <code>text</code>, <code>wallclock</code>, <code>period.number</code>, <code>clock.displayValue</code>.
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num gate">G1</div>
+    <div class="flow-body">
+      <strong>Gate: 3PT make in last 60 seconds (wall clock)</strong>
+      <span>
+        Filter plays where <code>text</code> matches <code>"makes 3-pt"</code> (case-insensitive)
+        AND <code>wallclock</code> is within 60 s of current UTC time.
+        Player name extracted from play text (first two words, e.g. <code>"Nikola Jokic"</code>).
+        If no qualifying play: skip player, no MC needed.
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num gate">G2</div>
+    <div class="flow-body">
+      <strong>Gate: Player is in the 20-player bucket</strong>
+      <span>
+        Hard-coded allowlist of 20 high-volume 3PT shooters (see §5). No API cost — PBP and odds data are already in memory from the main 60 s loop. This gate exists only to limit Phase 1 exposure while the hypothesis is being validated, and to focus on players where the 3PT→line-adjustment dynamic is most pronounced.
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num gate">G3</div>
+    <div class="flow-body">
+      <strong>Gate: Live line is fresh (&lt;60 s) from non-stale bookmaker</strong>
+      <span>
+        Re-uses existing staleness check from <code>10_live_betting_signal_generator.py</code>.
+        Must come from the single designated bookmaker (Phase 1: one fresh bookmaker, determined by lowest Brier score in <code>12_brier_by_bookmaker.py</code> output).
+        Bovada and any bookmaker with <code>stale=True</code> are excluded.
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num gate">G4</div>
+    <div class="flow-body">
+      <strong>Gate: Live points jumped vs prior snapshot</strong>
+      <span>
+        Compare <code>current_points</code> for this player against the last saved snapshot (in-memory dict, keyed by <code>game_id + player_name</code>).
+        Required increase: <code>current_points_now - current_points_prev >= 2</code> (a 3PT is +3, but at minimum +2 rules out a spurious non-scoring update).
+        This confirms ESPN boxscore has propagated the make and the live line reflects the new total.
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">2</div>
+    <div class="flow-body">
+      <strong>Run Monte Carlo simulation for UNDER only</strong>
+      <span>
+        Re-uses <code>monte_carlo_simulate_bet()</code> from <code>monte_carlo_utils.py</code>, fixing <code>bet_side="UNDER"</code>.
+        Inputs: <code>current_points</code>, <code>live_line</code>, <code>game_minute</code>, player profile from <code>minute_by_minute.parquet</code>.
+        5,000 simulations (same as main generator default).
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num gate">G5</div>
+    <div class="flow-body">
+      <strong>Gate: Edge vs posted line exceeds threshold</strong>
+      <span>
+        <code>model_prob_under &gt; implied_prob_under_no_vig + MIN_EDGE</code>.
+        Market implied probability from <code>remove_vig()</code> using posted over/under odds.
+        <strong>Backtest starting point: <code>MIN_EDGE = 0.10</code></strong> (10 pp, same as main generator).
+        The notebook will sweep multiple thresholds — 5 / 10 / 15 / 20 pp — to find where
+        signal count vs hit-rate trade-off is optimal. Higher thresholds = fewer but cleaner signals.
+      </span>
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">3</div>
+    <div class="flow-body">
+      <strong>Tag signal in notebook (no S3 write)</strong>
+      <span>
+        In the backtest notebook, flag matching rows with <code>trigger_event="3pt_make"</code> and
+        <code>trigger_play_text</code> (raw play description). Compare performance of tagged vs untagged
+        signals in-notebook. No parquet writes or S3 uploads needed for Phase 1 — all data lives
+        in memory. If the backtest shows edge, the tagging logic is promoted into the live loop.
+      </span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<h2>3. Data Sources</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Source</th>
+      <th>What it provides</th>
+      <th>Where used</th>
+      <th>Staleness / freshness gate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>ESPN Summary API</strong><br><code>site.api.espn.com/…/nba/summary?event={id}</code></td>
+      <td>Live PBP plays (<code>text</code>, <code>wallclock</code>, <code>period</code>, <code>clock</code>); live boxscore (<code>current_points</code>, <code>minutes_played</code>)</td>
+      <td>3PT detection (Step 1), points-jumped guardrail (Gate 4), player active check</td>
+      <td>Last play <code>wallclock</code> must be &lt;300 s old (Gate 2 in existing code). 3PT event must be &lt;60 s old.</td>
+    </tr>
+    <tr>
+      <td><strong>The Odds API</strong><br><code>api.the-odds-api.com/v4/events/{id}/odds</code></td>
+      <td>Live player-points props: <code>live_line</code>, <code>over_odds</code>, <code>under_odds</code>, <code>last_update</code> per bookmaker</td>
+      <td>Gate 3 (freshness), EV calculation (Gate 5), signal output</td>
+      <td>Bookmaker <code>last_update</code> must be &lt;60 s old. Bovada excluded (known stale).</td>
+    </tr>
+    <tr>
+      <td><strong>S3: <code>minute_by_minute.parquet</code></strong><br>(<code>s3://nba-betting-mt/data/</code>)</td>
+      <td>Historical per-player scoring rates by game minute — MC simulation input. Built by scripts 01–04.</td>
+      <td>Monte Carlo simulation (Step 2)</td>
+      <td>Pre-loaded once per session; does not change during a live game. Updated nightly by EC2 pipeline.</td>
+    </tr>
+    <tr>
+      <td><strong>S3: Pregame player props</strong><br>(<code>data/01_input/pregame_player_props/</code>)</td>
+      <td>Pre-game over/under lines used to calibrate MC baseline (vegasAdjustment)</td>
+      <td>MC calibration (Gate 4 in existing code)</td>
+      <td>Fetched once at session start. Must exist for player or signal is skipped.</td>
+    </tr>
+    <tr>
+      <td><strong>S3: Signals output</strong><br>(<code>data/04_output/live_betting_signals/player_points_3pt_trigger/</code>)</td>
+      <td>Written by this strategy. One parquet per date. Same schema as main signals + <code>trigger_event</code>, <code>trigger_play_text</code>.</td>
+      <td>Post-game evaluation via scripts 11 and 12</td>
+      <td>N/A (write path)</td>
+    </tr>
+    <tr>
+      <td><strong>In-memory snapshot dict</strong></td>
+      <td>Last known <code>current_points</code> per <code>(game_id, player_name)</code> across loop iterations</td>
+      <td>Gate 4 (points-jumped check)</td>
+      <td>Reset each time the loop process restarts. Keyed by game_id so cross-game collisions can't occur.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>4. Implementation Plan</h2>
+
+<div class="callout purple">
+  <strong>No new MC runs needed.</strong> The main generator already runs Monte Carlo for every active player every 60 s. This strategy is a <em>post-filter</em> layered inside the existing loop: after MC results are produced, check if any UNDER signal comes from a player who just hit a 3PT. If yes → tag it as a triggered signal and write to the separate output path. No additional Odds API calls, no additional ESPN calls, no additional simulations.
+</div>
+
+<h3>New functions needed</h3>
+
+<pre><code>def detect_3pt_makes_in_window(
+    pbp_data: dict,
+    window_seconds: int = 60,
+) -> list[dict]:
+    """
+    Return list of {player_name, play_text, wallclock} for any
+    "makes 3-pt" play where wallclock is within window_seconds of now.
+    Pure pattern match on already-fetched pbp_data['plays'] — no API call.
+    """
+
+def check_points_jumped(
+    player_name: str,
+    game_id: str,
+    current_points: float,
+    snapshot: dict,            # in-memory {(game_id, player_name): last_points}
+    min_increase: float = 3.0,
+) -> bool:
+    """
+    Return True if current_points increased by at least min_increase
+    relative to last snapshot. Update snapshot in place.
+    """
+
+def tag_3pt_triggered_signals(
+    signals: list[dict],       # output of existing analyze_player_betting_opportunity()
+    triggered_players: set[str],  # names from detect_3pt_makes_in_window()
+    trigger_plays: dict,       # player_name -> {play_text, wallclock, points_before}
+    points_snapshot: dict,
+    player_bucket: set[str],
+    bookmaker_allowlist: list[str],
+) -> list[dict]:
+    """
+    Filter signals to UNDER-only, player-in-bucket, bookmaker-in-allowlist,
+    and player in triggered_players set. Adds trigger_* columns.
+    No MC or API work — pure filter + annotate on existing signal rows.
+    """</code></pre>
+
+<h3>Loop integration</h3>
+<p>Inserted at the end of the existing per-iteration loop in <code>10_live_betting_signal_generator.py</code>, after <code>analyze_player_betting_opportunity()</code> produces signals. No new loop or process needed — runs in the same 60 s cadence, which is exactly the right window anyway.</p>
+
+<h3>Signal schema additions</h3>
+<table>
+  <thead><tr><th>New column</th><th>Type</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td><code>trigger_event</code></td><td>str</td><td><code>"3pt_make"</code></td></tr>
+    <tr><td><code>trigger_play_text</code></td><td>str</td><td><code>"Nikola Jokic makes 3-pt jump shot"</code></td></tr>
+    <tr><td><code>trigger_wallclock</code></td><td>str (ISO8601 UTC)</td><td><code>"2026-03-15T21:44:05Z"</code></td></tr>
+    <tr><td><code>points_before_trigger</code></td><td>float</td><td><code>14.0</code></td></tr>
+  </tbody>
+</table>
+<p class="muted">All existing signal columns retained so evaluation scripts run unchanged.</p>
+
+<hr>
+
+<h2>5. Phase 1 Player Bucket (20 Players)</h2>
+
+<p>Selection criteria: high 3PT attempt volume, active this season, props regularly offered live by major bookmakers. Revisit each season.</p>
+
+<table>
+  <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Why in bucket</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Stephen Curry</td><td>Golden State Warriors</td><td>Highest 3PT volume in the league; lines move most after his makes</td></tr>
+    <tr><td>2</td><td>Damian Lillard</td><td>Milwaukee Bucks</td><td>Elite 3PT volume, consistent prop availability</td></tr>
+    <tr><td>3</td><td>Klay Thompson</td><td>Dallas Mavericks</td><td>High 3PT rate, known line-mover</td></tr>
+    <tr><td>4</td><td>Jayson Tatum</td><td>Boston Celtics</td><td>High usage, 3PT + scoring volume</td></tr>
+    <tr><td>5</td><td>Donovan Mitchell</td><td>Cleveland Cavaliers</td><td>Consistent 3PT attempts, high live prop liquidity</td></tr>
+    <tr><td>6</td><td>Jaylen Brown</td><td>Boston Celtics</td><td>Volume shooter, consistent prop coverage</td></tr>
+    <tr><td>7</td><td>Devin Booker</td><td>Phoenix Suns</td><td>High 3PT attempts, scoring prop heavily bet</td></tr>
+    <tr><td>8</td><td>Trae Young</td><td>Atlanta Hawks</td><td>Deep-range 3PT volume; lines often volatile</td></tr>
+    <tr><td>9</td><td>LeBron James</td><td>Los Angeles Lakers</td><td>Heavy prop liquidity; 3PT makes can shift large lines</td></tr>
+    <tr><td>10</td><td>Kevin Durant</td><td>Phoenix Suns</td><td>High scoring prop, 3PT in scoring mix</td></tr>
+    <tr><td>11</td><td>Anthony Edwards</td><td>Minnesota Timberwolves</td><td>High 3PT rate, growing live prop market</td></tr>
+    <tr><td>12</td><td>Ja Morant</td><td>Memphis Grizzlies</td><td>Volatile scorer, 3PT makes create outsized swings</td></tr>
+    <tr><td>13</td><td>Luka Doncic</td><td>Dallas Mavericks</td><td>Highest points prop lines, 3PT very common</td></tr>
+    <tr><td>14</td><td>Nikola Jokic</td><td>Denver Nuggets</td><td>Already in MC test suite; 3PT rate has grown</td></tr>
+    <tr><td>15</td><td>Jamal Murray</td><td>Denver Nuggets</td><td>Already in MC test suite; high 3PT volume</td></tr>
+    <tr><td>16</td><td>Tyrese Haliburton</td><td>Indiana Pacers</td><td>High 3PT frequency, heavily bet props</td></tr>
+    <tr><td>17</td><td>De'Aaron Fox</td><td>Sacramento Kings</td><td>3PT becoming larger part of game; active prop market</td></tr>
+    <tr><td>18</td><td>Shai Gilgeous-Alexander</td><td>Oklahoma City Thunder</td><td>Explosive scorer, 3PT in scoring mix</td></tr>
+    <tr><td>19</td><td>James Harden</td><td>LA Clippers</td><td>Deep-range volume; lines historically reactive to his makes</td></tr>
+    <tr><td>20</td><td>Jalen Brunson</td><td>New York Knicks</td><td>High 3PT attempts for his size; consistent prop availability</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Bookmaker selection:</strong> Use the bookmaker with lowest aggregate Brier score from <code>12_brier_by_bookmaker.py --date all</code> output, excluding Bovada. Re-evaluate at the end of Phase 1. Target: DraftKings or FanDuel (historically most live-updated).</p>
+
+<hr>
+
+<h2>6. Guardrails Summary</h2>
+
+<table>
+  <thead><tr><th>Guardrail</th><th>Parameter</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>3PT recency window</td>
+      <td><code>window_seconds = 60</code></td>
+      <td>Matches the polling cadence exactly (empirically confirmed: median 59.8 s, mode 60 s across signals data). A make within this window is one that occurred since the last MC scan — structurally new information. Older makes were already seen in a prior iteration.</td>
+    </tr>
+    <tr>
+      <td>Points jump check</td>
+      <td><code>min_increase = 3.0</code></td>
+      <td>A 3PT make is exactly +3 pts — requiring a ≥3 pt jump verifies both that ESPN has registered the score and that the live line we're trading against is the post-make price. A threshold of 2 would pass spurious updates (e.g. a non-scoring play that updates the boxscore).</td>
+    </tr>
+    <tr>
+      <td>Player bucket</td>
+      <td>20 players, hard-coded allowlist</td>
+      <td>Limits Phase 1 scope and Odds API usage. Players without pregame lines are skipped anyway by existing Gate 4.</td>
+    </tr>
+    <tr>
+      <td>Single bookmaker</td>
+      <td>1 bookmaker allowlist</td>
+      <td>Avoids taking signals on bookmakers with historically stale lines (measured by Brier score in script 12).</td>
+    </tr>
+    <tr>
+      <td>Odds freshness</td>
+      <td><code>MAX_ODDS_AGE_SECONDS = 60</code></td>
+      <td>Inherited from main generator. If the bookmaker hasn't updated in &gt;60 s, the line is pre-make and we skip.</td>
+    </tr>
+    <tr>
+      <td>UNDER only</td>
+      <td>Hard-coded <code>bet_side = "UNDER"</code></td>
+      <td>The hypothesis is specifically about post-make over-correction. OVERs after a 3PT are a different (untested) thesis.</td>
+    </tr>
+    <tr>
+      <td>Min edge threshold</td>
+      <td><code>MIN_EDGE = 0.10</code> (backtest start)</td>
+      <td>Starting value for the notebook sweep. Backtest will compare 5 / 10 / 15 / 20 pp to find the optimal signal-count vs hit-rate balance. Higher threshold = fewer signals, cleaner edge required.</td>
+    </tr>
+    <tr>
+      <td>Model prob cap</td>
+      <td><code>MODEL_PROB_CAP = 0.85</code></td>
+      <td>Inherited from main generator. Prevents overconfident signals on already-decided lines.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>7. Evaluation Plan</h2>
+
+<div class="callout green">
+  All evaluation tooling is reusable unchanged. The new S3 path <code>player_points_3pt_trigger/</code> is the only difference — pass it as an env or path arg.
+</div>
+
+<h3>Primary metrics</h3>
+<ul>
+  <li><strong>Brier score</strong> — is the model calibrated on this specific trigger context? Expect slightly higher (harder) than baseline since the market just re-priced.</li>
+  <li><strong>ROI</strong> — flat $100 per signal, same as existing evaluation.</li>
+  <li><strong>Hit rate on UNDER</strong> — null hypothesis: ~50% (coin flip). We need &gt;52.4% at -110 to break even.</li>
+  <li><strong>Signals per game</strong> — if &lt;1 per game night on average, the strategy is too sparse to be useful.</li>
+</ul>
+
+<h3>Secondary cuts</h3>
+<ul>
+  <li>By quarter (Q1–Q4): is the edge concentrated in early quarters (line still adjusting) or late (line settled)?</li>
+  <li>By game minute at trigger: does the edge decay as game approaches end (fewer points remaining = tighter distribution)?</li>
+  <li>By points gap at trigger: <code>live_line - current_points</code> — large remaining gap = more MC uncertainty; small gap = UNDER more probable already.</li>
+  <li>By player: some players may have cleaner signals than others (test for player-level Brier).</li>
+</ul>
+
+<h3>Sample size target before go/no-go</h3>
+<p>Minimum 50 evaluated signals across at least 10 game days before drawing conclusions. With 20 players and 1 bookmaker, expect 5–15 signals per game night (depending on 3PT rates and gate passage). Aim to hit this in ~7 game nights.</p>
+
+<hr>
+
+<h2>8. Phase 1 → Phase 2 Criteria</h2>
+
+<table>
+  <thead>
+    <tr><th>Decision</th><th>Threshold</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="inline-green">Expand</span> to more players / bookmakers</td>
+      <td>ROI &gt; +5% at n ≥ 50, Brier &lt; 0.22 (calibrated), hit rate &gt; 53%</td>
+    </tr>
+    <tr>
+      <td><span class="inline-yellow">Continue Phase 1</span> with parameter tuning</td>
+      <td>Positive ROI but below thresholds, or n &lt; 50 — gather more data</td>
+    </tr>
+    <tr>
+      <td><span class="inline-red">Kill strategy</span></td>
+      <td>ROI &lt; -10% at n ≥ 50, or Brier &gt; 0.27 (systematic mis-calibration)</td>
+    </tr>
+    <tr>
+      <td>Adjust <code>window_seconds</code></td>
+      <td>If signal count is &lt;3/night, try 90 s. If hit rate is poor in first 30 s, try 45–60 s floor.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>9. EC2 Deployment Notes</h2>
+
+<p>No new process needed. The 3PT trigger logic runs inside the existing <code>10_live_betting_signal_generator.py --loop</code> on EC2. Add a <code>--3pt-trigger</code> flag that enables the post-filter and writes tagged signals to the separate S3 path. The <code>--bookmaker</code> flag already exists (or can be added) to restrict Phase 1 output to a single bookmaker.</p>
+
+<pre><code># Same process, new flag — no separate tmux pane or cron needed
+python src/pbp_data/10_live_betting_signal_generator.py \
+  --loop \
+  --interval 60 \
+  --3pt-trigger \
+  --bookmaker draftkings</code></pre>
+
+<p>Tagged signals are written to <code>player_points_3pt_trigger/{date}.parquet</code> in addition to the normal signals path. Evaluation is completely separate — the main ROI/Brier numbers are unaffected.</p>
+
+<hr>
+<p class="muted" style="font-size:0.82rem">
+  Plan authored 2026-05-22 &nbsp;·&nbsp; References: <code>src/pbp_data/10_live_betting_signal_generator.py</code>, <code>11_evaluate_live_betting_signals.py</code>, <code>12_brier_by_bookmaker.py</code>, <code>monte_carlo_utils.py</code>
+</p>
+
+</body>
+</html>
