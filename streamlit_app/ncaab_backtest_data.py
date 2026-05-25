@@ -9,8 +9,9 @@ No st.* rendering. No try/except. No defensive column checks.
 
 from __future__ import annotations
 
+import io
+
 import boto3
-import duckdb
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -24,29 +25,8 @@ SEASON_ORDER: list[str] = [
 ]
 
 
-def _duckdb_s3_conn() -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect()
-    con.execute("INSTALL httpfs")
-    con.execute("LOAD httpfs")
-    try:
-        key_id = st.secrets["AWS_ACCESS_KEY_ID"]
-        secret  = st.secrets["AWS_SECRET_ACCESS_KEY"]
-        region  = st.secrets.get("AWS_DEFAULT_REGION", "us-east-2")
-    except Exception:
-        session = boto3.Session()
-        frozen  = session.get_credentials().get_frozen_credentials()
-        key_id  = frozen.access_key
-        secret  = frozen.secret_key
-        region  = session.region_name or "us-east-2"
-    con.execute(f"""
-        CREATE SECRET (
-            TYPE S3,
-            KEY_ID '{key_id}',
-            SECRET '{secret}',
-            REGION '{region}'
-        )
-    """)
-    return con
+def _s3_client() -> boto3.client:
+    return boto3.client("s3")
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -56,14 +36,13 @@ def load_backtest_multi() -> pd.DataFrame:
 
     Adds: game_date, matchup, focal_spread, focal_ats_margin, pnl_units, result.
     """
-    con = _duckdb_s3_conn()
-    df: pd.DataFrame = con.execute(f"""
-        SELECT * FROM read_csv_auto(
-            's3://{S3_BUCKET}/{BACKTEST_PREFIX}/multi.csv',
-            ignore_errors=true
-        )
-    """).df()
-    con.close()
+    try:
+        body = _s3_client().get_object(
+            Bucket=S3_BUCKET, Key=f"{BACKTEST_PREFIX}/multi.csv"
+        )["Body"].read()
+        df = pd.read_csv(io.BytesIO(body))
+    except Exception:
+        return pd.DataFrame()
 
     df["game_date"] = pd.to_datetime(df["GAME_DATE"])
     df["season"] = df["season"].astype(str)
