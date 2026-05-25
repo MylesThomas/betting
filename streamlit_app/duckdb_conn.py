@@ -36,5 +36,4 @@ def get_s3_conn() -> duckdb.DuckDBPyConnection:
             REGION '{region}'
         )
     """)
-    con._cred_source = cred_source  # surfaced in test page
     return con

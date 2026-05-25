@@ -13,6 +13,10 @@ Usage:
     streamlit run streamlit_app/dashboard.py
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
 import duckdb_init  # pre-installs httpfs extension at startup
 import streamlit as st
 
