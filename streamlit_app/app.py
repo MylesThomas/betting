@@ -13,6 +13,7 @@ Usage:
     streamlit run streamlit_app/dashboard.py
 """
 
+import duckdb_init  # pre-installs httpfs extension at startup
 import streamlit as st
 
 # Page config
