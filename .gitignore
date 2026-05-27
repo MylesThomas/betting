@@ -152,3 +152,9 @@ data/02_cache/nba_strategy_build/*.parquetsettlement_invoke.json
 
 # workdir_test
 workdir_test/
+
+# Research output artifacts (generated, not source)
+src/nba_points_modeling/research/outputs/
+
+# Scratch HTML files at repo root
+/*.html
