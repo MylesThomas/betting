@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBA Rebounds Strategy Dashboard — Implementation Plan</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #f4f5f7;
+         margin: 0; padding: 24px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; color: #111; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 32px; }
+  h2 { font-size: 1.15rem; font-weight: 700; color: #1a1a1a; margin: 32px 0 12px;
+       border-left: 4px solid #C9082A; padding-left: 10px; }
+  h3 { font-size: 0.95rem; font-weight: 700; color: #333; margin: 20px 0 8px; }
+  p { margin: 0 0 10px; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; font-size: 12px;
+         font-family: 'SF Mono', Menlo, monospace; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 14px 18px; border-radius: 6px;
+        font-size: 12px; overflow-x: auto; margin: 8px 0 16px; line-height: 1.5; }
+  .section { background: #fff; border: 1px solid #e0e0e4; border-radius: 8px;
+             padding: 20px 24px; margin-bottom: 20px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+           border-radius: 12px; margin-right: 6px; }
+  .badge-new { background: #dcfce7; color: #166534; }
+  .badge-edit { background: #fef9c3; color: #854d0e; }
+  .badge-s3 { background: #dbeafe; color: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #2d3748; color: #f7fafc; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e8e8ec; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; }
+  .step-num { flex-shrink: 0; width: 28px; height: 28px; background: #C9082A; color: #fff;
+              border-radius: 50%; display: flex; align-items: center; justify-content: center;
+              font-weight: 700; font-size: 13px; }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; margin-bottom: 2px; }
+  ul { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  .qbox { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 6px;
+          padding: 12px 16px; margin-bottom: 12px; }
+  .qbox strong { color: #92400e; }
+  .layout-row { display: flex; gap: 16px; margin: 10px 0; }
+  .layout-box { flex: 1; background: #f1f5f9; border: 1px dashed #94a3b8;
+                border-radius: 6px; padding: 10px 12px; font-size: 12px; }
+  .layout-box strong { display: block; font-size: 11px; color: #475569; margin-bottom: 4px; }
+  .win { color: #166534; font-weight: 700; }
+  .loss { color: #991b1b; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>NBA Rebounds Strategy Dashboard</h1>
+<p class="meta">Plan · Created 2026-05-22 · Owner: Myles Thomas</p>
+
+<!-- ───────────────────────── OVERVIEW ───────────────────────── -->
+<div class="section">
+<h2>What We're Building</h2>
+<p>
+  A new Streamlit page (<code>streamlit_app/pages/3_NBA_Rebounds_Strategy.py</code>) plugged into
+  the existing <strong>TQS Props Dashboard</strong> at
+  <code>https://tqs-props-dashboard.streamlit.app/</code>. The page shows the full performance
+  history of the production rebounds model — P&amp;L, hit rates, individual plays, and
+  model diagnostics — sourced directly from the scored and settled parquet files in S3.
+</p>
+<p>
+  <strong>Primary audience:</strong> You (the operator) — daily review of yesterday's bets,
+  running P&amp;L track record, and model health.
+</p>
+</div>
+
+<!-- ───────────────────────── DATA SOURCES ───────────────────────── -->
+<div class="section">
+<h2>Data Sources</h2>
+<table>
+  <tr>
+    <th>S3 Path Pattern</th>
+    <th>Content</th>
+    <th>Used For</th>
+  </tr>
+  <tr>
+    <td><code>s3://nba-betting-mt/rebounds/daily_runs/{date}/{run_id}/<br>rebounds_scored_settled_{date}.parquet</code></td>
+    <td>Row-level settled bets: player, line, actual REB, result (win/loss/push), pnl_units, strategy_bucket</td>
+    <td>P&amp;L chart, plays table, strategy comparison</td>
+  </tr>
+  <tr>
+    <td><code>…/rebounds_scored_{date}.parquet</code></td>
+    <td>Today's (unsettled) scored slate: predictions, edges, play flags</td>
+    <td>Today's plays panel — shows what to bet today</td>
+  </tr>
+  <tr>
+    <td><code>…/strategy_summary_{date}.csv</code></td>
+    <td>Daily rollup by strategy bucket: n_bets, n_win, pnl_units, hit_rate, ROI</td>
+    <td>KPI metrics (fast to load — skip full parquets)</td>
+  </tr>
+  <tr>
+    <td><code>…/run_manifest.json</code></td>
+    <td>Pipeline run metadata: timestamps, step status, row counts</td>
+    <td>Model freshness indicator, pipeline health</td>
+  </tr>
+</table>
+
+<h3>Loading Strategy</h3>
+<p>Use <code>@st.cache_data(ttl=3600)</code> on S3 reads. On load, enumerate all
+<code>rebounds/daily_runs/</code> date prefixes → download <code>strategy_summary_{date}.csv</code>
+for each → concat into a master DataFrame. Only pull full parquets when the user drills into
+a specific day or the plays table. This keeps cold-start fast (&lt;5 sec).</p>
+</div>
+
+<!-- ───────────────────────── PAGE LAYOUT ───────────────────────── -->
+<div class="section">
+<h2>Page Layout (Wireframe)</h2>
+
+<p>Two tabs inside <code>3_NBA_Rebounds_Strategy.py</code>: <strong>Played Bets</strong> (default) and <strong>Blind Unders Benchmark</strong>. Sidebar controls (date range, strategy bucket filter within Played Bets) apply to whichever tab is active.</p>
+
+<h3>Sidebar (shared)</h3>
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Date range preset</strong>
+    All Time (default) / Season-to-Date / Last 30 Days / Last 7 Days / Custom picker
+  </div>
+  <div class="layout-box" style="flex:1;">
+    <strong>Strategy bucket filter (Tab 1 only)</strong>
+    Multi-select: both / ols / xgb (all checked by default)
+  </div>
+</div>
+
+<h3>Tab 1 — Played Bets (strategy_bucket in both/ols/xgb)</h3>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 1 — KPI Strip (4 metrics)</strong>
+    Total Bets · Total P&amp;L (units) · Hit Rate % · ROI per Bet
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:2;">
+    <strong>Row 2 left — Cumulative P&amp;L Chart (Plotly, interactive)</strong>
+    Line chart, one line per strategy bucket (both / ols / xgb) + an "all played" aggregate.
+    X-axis: date. Y-axis: cumulative units. Vertical dashed line at prod go-live date.
+    Hover tooltip: date, daily P&amp;L, running total, n_bets that day.
+    Zoom/pan enabled.
+  </div>
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 2 right — Strategy Bucket Table</strong>
+    both / ols / xgb rows: bets, wins, losses, hit rate, total P&amp;L, ROI/bet.
+    Best ROI row highlighted green.
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 3 — Today's Plays Panel</strong>
+    If <code>rebounds_scored_{today}.parquet</code> exists: table of plays (player, bookmaker, line, edge_under, strategy_bucket) sorted by edge desc.<br>
+    If not: banner — <em>"Model runs daily ~10am ET. Yesterday's settled results are shown below."</em>
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 4 — Full Plays History Table</strong>
+    All settled plays. Columns: player, strat, bookmaker, line, actual, diff, result, under_odds, date.
+    Color-coded result column (win=green, loss=red, push=amber).
+    Download as CSV button.
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 5 (expander) — Player P&amp;L Breakdown (Plotly bar)</strong>
+    Top/bottom 15 players by total P&amp;L units. Horizontal bar chart, green/red bars.
+  </div>
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 6 (expander) — Pipeline Health</strong>
+    Table of last 7 run manifests: date, steps status, row counts, model age.
+    Flag stale rows (&gt;2 days old) in red.
+  </div>
+</div>
+
+<h3>Tab 2 — Blind Unders Benchmark (strategy_bucket = neither)</h3>
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Same KPI strip + cumulative P&amp;L chart</strong>, but for "neither" rows — i.e. what would have happened betting every under the model saw but chose not to play. Gives visual proof the edge filter adds value. Single line (no bucket breakdown needed).
+  </div>
+</div>
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Plays table</strong> — same columns as Tab 1, showing all "neither" rows.
+  </div>
+</div>
+</div>
+
+<!-- ───────────────────────── KPI DEFINITIONS ───────────────────────── -->
+<div class="section">
+<h2>Metric Definitions (locked to prod logic)</h2>
+<table>
+  <tr><th>Metric</th><th>Formula</th><th>Source</th></tr>
+  <tr>
+    <td><strong>Total Bets</strong></td>
+    <td>Count of rows where <code>strategy_bucket != 'neither'</code></td>
+    <td>settled parquets</td>
+  </tr>
+  <tr>
+    <td><strong>Total P&amp;L (units)</strong></td>
+    <td>Sum of <code>pnl_units</code> across all settled bets<br>
+        Win: <code>american_profit(under_odds)</code> · Loss: <code>-1.0</code> · Push: <code>0.0</code></td>
+    <td>settled parquets</td>
+  </tr>
+  <tr>
+    <td><strong>Hit Rate</strong></td>
+    <td><code>n_win / n_bets</code> (pushes excluded from denominator)</td>
+    <td>strategy_summary CSVs</td>
+  </tr>
+  <tr>
+    <td><strong>ROI per Bet</strong></td>
+    <td><code>pnl_units / n_bets</code></td>
+    <td>strategy_summary CSVs</td>
+  </tr>
+  <tr>
+    <td><strong>Edge</strong></td>
+    <td><code>p_under_model - implied_prob(under_odds)</code> — min 0.05 to trigger play</td>
+    <td>scored parquets (today's slate)</td>
+  </tr>
+</table>
+</div>
+
+<!-- ───────────────────────── CODING STANDARDS ───────────────────────── -->
+<div class="section">
+<h2>⚠️ Coding Standards — Read Before Writing Any Code</h2>
+<p>These rules apply to every file in this dashboard. Violating them is a reason to reject the code.</p>
+
+<h3>1. Readable names + full type annotations</h3>
+<p>Every function signature has typed parameters and a return type. Variable names are full words — no <code>df</code>, no <code>tmp</code>, no <code>d</code>.</p>
+<pre>
+# BAD
+def load(b, p, d=None):
+    df = ...
+    return df
+
+# GOOD
+def load_settled_plays(bucket: str, prefix: str, start_date: str, end_date: str) -> pd.DataFrame:
+    settled_plays: pd.DataFrame = ...
+    return settled_plays
+</pre>
+
+<h3>2. Fail fast — no try/except blocks</h3>
+<p>Do not catch exceptions. If S3 is unreachable, the boto3 call raises and Streamlit shows an error — that is the correct behavior. Do not swallow errors with <code>except Exception</code>, <code>except KeyError</code>, or any other catch-all. If a precondition isn't met, raise explicitly with a descriptive message.</p>
+<pre>
+# BAD
+try:
+    df = pd.read_parquet(BytesIO(body))
+except Exception:
+    return pd.DataFrame()
+
+# GOOD
+df = pd.read_parquet(BytesIO(body))  # let it raise — caller sees the real error
+</pre>
+
+<h3>3. No defensive column checks</h3>
+<p>Do not write <code>if "REB" in df.columns</code>, <code>df.get("col", default)</code>, or <code>.get()</code> on rows unless the column is genuinely optional by design (and documented as such). Trust the schema — if a column is missing, the KeyError tells us something is broken upstream.</p>
+<pre>
+# BAD
+pnl = row.get("pnl_units", 0.0)
+
+# GOOD
+pnl: float = row["pnl_units"]
+</pre>
+
+<h3>4. No unnecessary None / empty guards</h3>
+<p>Do not check <code>if df is None</code> or <code>if len(df) == 0</code> before every operation. Structure the code so that empty DataFrames are a valid contract and Plotly/Streamlit handles them gracefully. Only guard where the business logic genuinely branches.</p>
+
+<h3>5. Constants at module top, not buried inline</h3>
+<p>S3 bucket names, prefix patterns, column lists, and date literals go in <code>ALL_CAPS</code> constants at the top of the file. No magic strings scattered through functions.</p>
+<pre>
+S3_BUCKET = "nba-betting-mt"
+DAILY_RUNS_PREFIX = "rebounds/daily_runs"
+PLAYED_BUCKETS = {"both", "ols", "xgb"}
+PROD_GO_LIVE_DATE = "2025-10-01"  # update when known
+</pre>
+
+<h3>6. One responsibility per function</h3>
+<p>Data loading functions load data. Chart functions build charts. They do not render Streamlit widgets. Keep <code>rebounds_data.py</code> free of any <code>st.*</code> calls — pure data, pure Pandas.</p>
+</div>
+
+<!-- ───────────────────────── IMPLEMENTATION STEPS ───────────────────────── -->
+<div class="section">
+<h2>Implementation Steps</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <strong>S3 data loader module — <code>streamlit_app/rebounds_data.py</code> <span class="badge badge-new">NEW</span></strong>
+    Single module with cached functions:
+    <ul>
+      <li><code>list_run_dates(bucket, prefix) → list[str]</code> — paginate S3 for date folders</li>
+      <li><code>load_strategy_summaries(bucket, prefix) → pd.DataFrame</code> — concat all <code>strategy_summary_{date}.csv</code></li>
+      <li><code>load_settled_plays(bucket, prefix, start_date, end_date) → pd.DataFrame</code> — concat settled parquets</li>
+      <li><code>load_todays_scored(bucket, prefix) → pd.DataFrame | None</code> — today's unsettled slate</li>
+      <li><code>load_run_manifests(bucket, prefix, n=7) → list[dict]</code> — last N manifests</li>
+    </ul>
+    All wrapped with <code>@st.cache_data(ttl=3600)</code>. Auth via boto3 default credential chain
+    (same pattern as existing pipeline scripts).
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <strong>New page — <code>streamlit_app/pages/3_NBA_Rebounds_Strategy.py</code> <span class="badge badge-new">NEW</span></strong>
+    Skeleton:
+    <pre>st.set_page_config(page_title="NBA Rebounds Strategy", layout="wide")
+# Sidebar: date range preset + custom picker, bucket multi-select (Tab 1 only)
+tab1, tab2 = st.tabs(["Played Bets", "Blind Unders Benchmark"])
+# tab1:
+#   KPI strip (st.metric x4)
+#   Plotly cumulative P&L line chart + strategy bucket table (columns)
+#   Today's plays panel (or wait-banner)
+#   Full plays history table + CSV download
+#   Expander: player P&L bar chart (Plotly)
+#   Expander: pipeline health table
+# tab2:
+#   KPI strip (neither rows)
+#   Plotly cumulative P&L single line
+#   Full neither plays table + CSV download</pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <strong>Cumulative P&amp;L chart — Plotly</strong>
+    <p>Use <code>plotly.graph_objects.Figure</code> with one <code>Scatter</code> trace per strategy bucket.
+    Sort settled plays by date, <code>cumsum(pnl_units)</code> per bucket. Add a vertical
+    <code>add_vline()</code> at the prod go-live date with a label. Hover template shows:
+    date, that day's P&amp;L, running total, n_bets. Render via
+    <code>st.plotly_chart(fig, use_container_width=True)</code>.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <strong>Plays table — reuse settlement email helpers</strong>
+    <p>Import <code>prepare_email_plays_dataframe()</code> from
+    <code>src/nba_rebounds_settlement_email.py</code> for sorting logic. Render with
+    <code>st.dataframe()</code> using column config for color-coding the result column.
+    Add <code>st.download_button()</code> for CSV export.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <strong>Add rebounds card to home page — <code>streamlit_app/app.py</code> <span class="badge badge-edit">EDIT</span></strong>
+    Add a third card in the existing grid alongside NBA Arbs and NFL Arbs, linking to the new
+    rebounds page. Update sidebar copy.
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-body">
+    <strong>Add to <code>requirements.txt</code> / <code>pyproject.toml</code> if needed <span class="badge badge-edit">EDIT</span></strong>
+    Verify <code>altair</code>, <code>boto3</code>, <code>pyarrow</code> are listed. The prod stack
+    already uses all three so this is likely a no-op.
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">7</div>
+  <div class="step-body">
+    <strong>Local test</strong>
+    <p>Run <code>streamlit run streamlit_app/app.py</code> — navigate to rebounds page — verify
+    data loads, charts render, table filters work, download works.</p>
+  </div>
+</div>
+</div>
+
+<!-- ───────────────────────── DECISIONS ───────────────────────── -->
+<div class="section">
+<h2>Decisions (answered 2026-05-22)</h2>
+
+<table>
+  <tr>
+    <th style="width:220px;">Question</th>
+    <th>Decision</th>
+  </tr>
+  <tr>
+    <td><strong>Q1 — Strategy buckets</strong></td>
+    <td>
+      <strong>Two pages:</strong><br>
+      • <strong>Page 1 (default) — "Played Bets"</strong>: rows where <code>strategy_bucket in (both, ols, xgb)</code>. This is the real track record.<br>
+      • <strong>Page 2 — "Blind Unders Benchmark"</strong>: rows where <code>strategy_bucket = 'neither'</code> — shows what would happen if you blindly bet every under regardless of edge. Useful to see how much value the model filter adds.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q2 — Date range</strong></td>
+    <td>
+      Default: <strong>all-time</strong>. Mark the prod go-live date with a vertical annotation on the P&amp;L chart.
+      Sidebar filter presets: All Time / Season-to-Date / Last 30 Days / Last 7 Days + custom date picker.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q3 — No plays yet today</strong></td>
+    <td>
+      If no scored file exists for today, show a banner: <em>"Model runs daily ~10am ET. Check back for today's plays. Yesterday's results are shown below."</em>
+      Do <strong>not</strong> surface yesterday's unsettled slate as a proxy.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q4 — Streamlit Cloud credentials</strong></td>
+    <td>
+      Deferred — test locally first. Will add <code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code> to Streamlit Cloud secrets after local validation.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q5 — Unsettled days</strong></td>
+    <td>
+      <strong>Exclude from all P&amp;L metrics until settled.</strong> Note: unsettled rows are almost always players who didn't play (DNP), not in-progress games. The cumulative P&amp;L chart and KPI strip only count fully settled bets.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q6 — Charting library</strong></td>
+    <td>
+      <strong>Plotly</strong> — interactive, cool, great tooltip + zoom UX. Use <code>plotly.express</code> / <code>plotly.graph_objects</code> via <code>st.plotly_chart(use_container_width=True)</code>. Altair is the fallback if Plotly adds deployment friction.
+    </td>
+  </tr>
+</table>
+</div>
+
+<!-- ───────────────────────── FILE CHANGES SUMMARY ───────────────────────── -->
+<div class="section">
+<h2>File Change Summary</h2>
+<table>
+  <tr><th>File</th><th>Action</th><th>Why</th></tr>
+  <tr>
+    <td><code>streamlit_app/rebounds_data.py</code></td>
+    <td><span class="badge badge-new">NEW</span></td>
+    <td>S3 data loading + caching — keep page file clean</td>
+  </tr>
+  <tr>
+    <td><code>streamlit_app/pages/3_NBA_Rebounds_Strategy.py</code></td>
+    <td><span class="badge badge-new">NEW</span></td>
+    <td>The dashboard page itself</td>
+  </tr>
+  <tr>
+    <td><code>streamlit_app/app.py</code></td>
+    <td><span class="badge badge-edit">EDIT</span></td>
+    <td>Add rebounds card to home page grid</td>
+  </tr>
+  <tr>
+    <td><code>pyproject.toml</code> / <code>requirements.txt</code></td>
+    <td><span class="badge badge-edit">EDIT if needed</span></td>
+    <td>Ensure altair, boto3, pyarrow are listed</td>
+  </tr>
+</table>
+</div>
+
+</div><!-- /container -->
+</body>
+</html>

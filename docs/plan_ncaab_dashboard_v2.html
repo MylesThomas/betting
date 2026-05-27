@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NCAAB Dashboard v2 — Plan</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #f4f5f7;
+         margin: 0; padding: 24px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; color: #111; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 32px; }
+  h2 { font-size: 1.15rem; font-weight: 700; color: #1a1a1a; margin: 32px 0 12px;
+       border-left: 4px solid #17408B; padding-left: 10px; }
+  h3 { font-size: 0.95rem; font-weight: 700; color: #333; margin: 16px 0 6px; }
+  p { margin: 0 0 10px; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; font-size: 12px;
+         font-family: 'SF Mono', Menlo, monospace; }
+  .section { background: #fff; border: 1px solid #e0e0e4; border-radius: 8px;
+             padding: 20px 24px; margin-bottom: 20px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+           border-radius: 12px; margin-right: 6px; }
+  .badge-new    { background: #dcfce7; color: #166534; }
+  .badge-edit   { background: #fef9c3; color: #854d0e; }
+  .badge-del    { background: #fee2e2; color: #991b1b; }
+  .badge-done   { background: #dbeafe; color: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #2d3748; color: #f7fafc; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e8e8ec; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  ul { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  .layout-row { display: flex; gap: 12px; margin: 10px 0; }
+  .layout-box { flex: 1; background: #f1f5f9; border: 1px dashed #94a3b8;
+                border-radius: 6px; padding: 10px 12px; font-size: 12px; min-height: 60px; }
+  .layout-box strong { display: block; font-size: 11px; text-transform: uppercase;
+                       letter-spacing: .04em; color: #475569; margin-bottom: 4px; }
+  .layout-full { background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 6px;
+                 padding: 10px 12px; font-size: 12px; margin: 8px 0; }
+  .layout-full strong { display: block; font-size: 11px; text-transform: uppercase;
+                        letter-spacing: .04em; color: #475569; margin-bottom: 4px; }
+  .note  { background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px;
+           padding: 10px 14px; margin-bottom: 12px; font-size: 13px; }
+  .qbox  { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 6px;
+           padding: 12px 16px; margin-bottom: 12px; }
+  .qbox strong { color: #92400e; }
+  .resolved { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px;
+              padding: 12px 16px; margin-bottom: 12px; }
+  .resolved strong { color: #166534; }
+  .divider { border: none; border-top: 2px dashed #cbd5e1; margin: 18px 0 10px; }
+  .page-header { background: #17408B; color: white; border-radius: 6px;
+                 padding: 8px 14px; font-size: 13px; font-weight: 700; margin: 14px 0 8px; }
+  .page-header.green { background: #065f46; }
+  .stat-table { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; }
+  .stat-table td { padding: 4px 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>NCAAB Away Revenge — Dashboard v2 Plan</h1>
+<p class="meta">Plan · Created 2026-05-24 · Updated 2026-05-24 · Owner: Myles Thomas</p>
+
+<!-- ───── SUMMARY ───── -->
+<div class="section">
+<h2>What's changing</h2>
+<table>
+  <thead><tr><th>Change</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="badge badge-edit">EDIT</span><code>4_NCAAB_Revenge_Spot.py</code></td>
+      <td>Remove tabs → single scrollable page: Today's Plays at top, Season Summary below</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-new">NEW</span><code>5_NCAAB_Backtest.py</code></td>
+      <td>Backtest page: overall multi-season record + per-season breakdown (focal_away filter to match prod)</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-new">NEW</span><code>ncaab_backtest_data.py</code></td>
+      <td>Load pre-generated backtest CSVs from S3 (<code>data/04_output/backtest/</code>)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ───── PAGE 1 ───── -->
+<div class="section">
+<h2>Page 1 — NCAAB Away Revenge (tab-free)</h2>
+<div class="note">Remove the two tabs. Everything scrolls on one page. Sidebar filters apply to Season Summary section only.</div>
+
+<div class="page-header">Section 1 — Today's Plays</div>
+<div class="layout-full"><strong>Offseason banner (if applicable)</strong>Strategy paused until Nov 2026</div>
+<div class="layout-full"><strong>Today's plays table</strong>Tip-off · Bet Team · Spread · Matchup · Away Conf · Home Conf · Prior Meetings<br><em>If Lambda hasn't run → "Check back ~9am ET"</em></div>
+<div class="layout-full"><strong>Yesterday's Results</strong>Header: "Yesterday: 4-2 (+2.18u)" · styled table</div>
+
+<hr class="divider">
+
+<div class="page-header">Section 2 — Season Summary</div>
+<p style="font-size:12px;color:#555;margin:0 0 8px"><em>Sidebar filters (date range + conference) apply below</em></p>
+<div class="layout-full"><strong>KPI strip</strong>Total Bets · W-L · ATS % · P&amp;L (units) · ROI/Bet</div>
+<div class="layout-row">
+  <div class="layout-box" style="flex:2"><strong>Cumulative P&amp;L chart</strong>Starts at 0 · prod go-live vline at 2026-02-19</div>
+  <div class="layout-box" style="flex:1"><strong>Monthly Breakdown</strong>Month · Bets · W · L · P&amp;L · ATS%</div>
+</div>
+<div class="layout-full"><strong>Plays History table</strong>Newest→oldest · no_line rows excluded with count · download CSV</div>
+<div class="layout-row">
+  <div class="layout-box"><strong>Conference Breakdown (expander)</strong>Sorted by Bets desc</div>
+  <div class="layout-box"><strong>Spread Distribution (expander)</strong>Histogram</div>
+</div>
+</div>
+
+<!-- ───── PAGE 2 ───── -->
+<div class="section">
+<h2>Page 2 — NCAAB Backtest (new page)</h2>
+
+<div class="note">
+  <strong>Strategy being backtested:</strong> Bet the focal team (rematch team = prior loser). Prod Lambda only bets when focal is <strong>away</strong> — 52.6% ATS across 6 seasons. Dashboard shows <strong>All / Away / Home</strong> filter, defaulting to Away.
+</div>
+
+<h3>Data flow (resolved)</h3>
+<div class="resolved">
+  <strong>Backtest script</strong> (<code>lambda/ncaab_fade_revenge_daily/tmp/analyze_ncaab_conference_rematch_su_ats.py</code>) reads from S3 and <strong>saves results directly to S3</strong>:<br><br>
+  <ul style="margin:4px 0 0">
+    <li><strong>Input:</strong> <code>s3://ncaab-betting-mt/data/01_input/the-odds-api/ncaab/game_lines/*.csv</code></li>
+    <li><strong>Input:</strong> <code>s3://ncaab-betting-mt/data/01_input/historical_game_results/*.csv</code></li>
+    <li><strong>Output (multi):</strong> <code>s3://ncaab-betting-mt/data/04_output/backtest/fade-revenge-spot/multi.csv</code> — full game-level rows with <code>focal_was_home</code>, <code>focal_ats_cover</code>, <code>season</code>, <code>game_period</code></li>
+    <li><strong>Output (summary):</strong> <code>s3://ncaab-betting-mt/data/04_output/backtest/fade-revenge-spot/summary.csv</code> — per-season aggregates</li>
+  </ul>
+  <br>Script needs a small update to write outputs to S3 in addition to (or instead of) local <code>data/04_output/</code>.
+  Refresh at season end or on demand — <strong>Streamlit reads fixed-path S3 files, not a glob</strong>.
+</div>
+
+<hr class="divider">
+
+<div class="page-header green">Section 1 — Overall Summary</div>
+<div class="layout-full"><strong>KPI strip (all seasons, focal_away filter)</strong>Total Bets · W-L · ATS % · P&amp;L · ROI/Bet · Seasons (2020-21 → 2025-26)</div>
+<div class="layout-full"><strong>Cumulative P&amp;L chart (all seasons chronological)</strong>One season-boundary vline per year · prod go-live vline at 2026-02-19 · chart starts at 0</div>
+
+<hr class="divider">
+
+<div class="page-header green">Section 2 — Per-Season Table</div>
+<div class="layout-full"><strong>Season summary table</strong>Season · Bets · W · L · ATS% · P&amp;L · ROI/Bet — one row per season, newest first<br><em>Highlight 2025-26 row (deployed season)</em></div>
+
+<hr class="divider">
+
+<div class="page-header green">Section 3 — Season Detail (expander per season)</div>
+<div class="layout-full"><strong>Game-level plays table</strong>Date · Bet Team · Spread · Matchup · Result · Margin · P&amp;L — filterable by season via selectbox</div>
+<div class="layout-row">
+  <div class="layout-box"><strong>Conference breakdown</strong>For selected season</div>
+  <div class="layout-box"><strong>Spread distribution</strong>Histogram for selected season</div>
+</div>
+
+<p style="font-size:12px;color:#555;margin-top:12px"><em>
+  Sidebar filter: <strong>Focal team side</strong> — Away (default, matches prod) / Home / All.<br>
+  No date filter — backtest is full historical. Season selector drives the detail section.
+</em></p>
+</div>
+
+<!-- ───── FILES ───── -->
+<div class="section">
+<h2>Files</h2>
+<table>
+  <thead><tr><th>File</th><th>Action</th><th>What changes</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>pages/4_NCAAB_Revenge_Spot.py</code></td>
+      <td><span class="badge badge-edit">EDIT</span></td>
+      <td>Remove <code>st.tabs()</code>; merge into single scrollable layout with <code>st.markdown("---")</code> divider</td>
+    </tr>
+    <tr>
+      <td><code>pages/5_NCAAB_Backtest.py</code></td>
+      <td><span class="badge badge-new">NEW</span></td>
+      <td>New page wired to backtest data loader</td>
+    </tr>
+    <tr>
+      <td><code>ncaab_backtest_data.py</code></td>
+      <td><span class="badge badge-new">NEW</span></td>
+      <td>DuckDB S3 read of <code>backtest/fade-revenge-spot/multi.csv</code> + <code>summary.csv</code>; returns pre-filtered <code>focal_away</code> DataFrame</td>
+    </tr>
+    <tr>
+      <td><code>ncaab_revenge_data.py</code></td>
+      <td>no change</td>
+      <td>Prod data loading untouched</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Script update needed + run command</h3>
+<p>Add <code>--s3</code> flag to the analysis script so it writes outputs directly to S3 at the fixed paths above (in addition to local). Then run once to seed the backtest data, and again at season end to refresh.</p>
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:14px 18px;border-radius:6px;font-size:12px;overflow-x:auto">
+cd /Users/thomasmyles/dev/betting
+
+python lambda/ncaab_fade_revenge_daily/tmp/analyze_ncaab_conference_rematch_su_ats.py \
+    --all-games \
+    --seasons "2020-21,2021-22,2022-23,2023-24,2024-25,2025-26" \
+    --csv --verbose --s3
+</pre>
+</div>
+
+<!-- ───── OPEN QUESTIONS ───── -->
+<div class="section">
+<h2>Open questions</h2>
+
+<div class="resolved">
+  <strong>✅ Q1 — Backtest script location:</strong> Found at <code>lambda/ncaab_fade_revenge_daily/tmp/analyze_ncaab_conference_rematch_su_ats.py</code>. Reads from S3 game_lines + historical_game_results, computes all rematch stats, outputs local CSVs.
+</div>
+
+<div class="resolved">
+  <strong>✅ Q2 — Seasons covered:</strong> 6 seasons — 2020-21 through 2025-26. Data in S3 confirmed from 2020-11-25 to present for both game lines and outcomes.
+</div>
+
+<div class="resolved">
+  <strong>✅ Q3 — Settlement:</strong> Outcomes are baked into the backtest CSV (<code>focal_ats_cover</code>, <code>focal_su_win</code> columns already computed). No additional join needed in Streamlit — read and display.
+</div>
+
+<div class="resolved">
+  <strong>✅ Q4 — Which ATS% to show:</strong> Post-fix, prod strategy = <code>focal_away</code> filter (<code>focal_was_home == false</code>). Overall 52.6% ATS across 6 seasons on this slice. The ~36% figure was the "all rematch games" pre-fix number — <strong>do not use</strong>.
+</div>
+
+<div class="resolved">
+  <strong>✅ Q5 — Per-season breakdown filter:</strong> Streamlit filters <code>multi.csv</code> by <code>focal_was_home</code> based on the sidebar (Away / Home / All). Summary table recomputed from the filtered game-level data — no script change needed.
+</div>
+
+<div class="resolved">
+  <strong>✅ Q6 — P&amp;L assumption:</strong> −110 confirmed for all CBB spreads. Streamlit computes <code>pnl_units</code> from <code>focal_ats_cover</code>: win = +100/110, loss = −1.0, push = 0.
+</div>
+
+</div>
+
+</div>
+</body>
+</html>

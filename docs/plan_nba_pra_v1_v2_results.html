@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRA Research Results — v1 & v2</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 24px; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    h1 { color: #f8fafc; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
+    h2 { color: #93c5fd; margin-top: 40px; }
+    h3 { color: #cbd5e1; margin-top: 18px; margin-bottom: 6px; }
+    .card { background: #1e2333; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+    code { background: #2d3748; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a78bfa; }
+    .file { color: #34d399; font-size: 13px; font-family: monospace; }
+    .note  { background: #1a2535; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fbbf24; margin: 10px 0; }
+    .warn  { background: #2a1a1a; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fca5a5; margin: 10px 0; }
+    .good  { background: #0f2a1a; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #6ee7b7; margin: 10px 0; }
+    .tldr  { background: #1a1f35; border: 2px solid #3b82f6; border-radius: 10px; padding: 18px 22px; margin: 16px 0; }
+    .tldr h3 { color: #60a5fa; margin-top: 0; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th { background: #1e2333; color: #93c5fd; padding: 8px 12px; text-align: left; border: 1px solid #2d3748; }
+    td { padding: 7px 12px; border: 1px solid #2d3748; vertical-align: top; font-size: 13px; }
+    tr:nth-child(even) td { background: #161b27; }
+    .pos { color: #4ade80; font-weight: 600; }
+    .neg { color: #f87171; }
+    .neu { color: #94a3b8; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+    .tag-pass { background: #0f2a1a; color: #6ee7b7; border: 1px solid #065f46; }
+    .tag-fail { background: #2a1a1a; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .tag-warn { background: #2a1f00; color: #fcd34d; border: 1px solid #78350f; }
+    .tag-fix  { background: #1e1a3f; color: #a5b4fc; border: 1px solid #312e81; }
+    ul, ol { margin: 8px 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+    .mono { font-family: monospace; font-size: 13px; }
+    .dim { color: #64748b; }
+    hr { border: none; border-top: 1px solid #2d3748; margin: 28px 0; }
+  </style>
+</head>
+<body>
+
+<h1>PRA Research Results — v1 &amp; v2</h1>
+<p style="color:#94a3b8">2026-05-25 &nbsp;|&nbsp; Market: <code>player_points_rebounds_assists</code> &nbsp;|&nbsp; 32,305 player-games · 3 seasons &nbsp;|&nbsp; Spread coverage fixed to 99.8%</p>
+
+<!-- ═══ TL;DR ═══ -->
+<div class="tldr">
+  <h3>TL;DR</h3>
+  <p><strong>Flat rule:</strong> Betting every PRA under loses money in all three seasons (–7.5% ROI overall). No tier passes the gate. The market prices PRA efficiently at the aggregate level.</p>
+  <p><strong>Model vs market:</strong> The prop line (median) is already the best single predictor of PRA (MAE 6.34, R² 0.50). Every rolling feature alone is individually <em>worse</em> than the line. OLS and Ridge on top of the line improve by ~0.01 MAE consistently across both folds. XGBoost can't beat the market — it overfits on rolling features.</p>
+  <p><strong>min/max line as inputs:</strong> Dominate XGBoost importance (56% + 23%) but essentially just reconstruct the consensus median. Net improvement over using the median directly is negligible (~0.01 MAE).</p>
+  <p><strong>Spread (fixed):</strong> Spread join was broken at 33% coverage due to a UTC vs Eastern date mismatch. Fixed by converting game_time to Eastern time before extracting date. Now 99.8% coverage. Spread adds almost no signal — only 1.25% XGBoost importance. Adding it doesn't change OLS/Ridge results meaningfully.</p>
+  <p><strong>Edge calibration (new signal):</strong> In the 2025-26 out-of-sample fold, XGBoost edges ≥ 2.0 points hit at 57% with +6.6% ROI (n=1,257). At ≥ 3.0 points: +7.9% ROI (n=349). This does NOT replicate in 2024-25 (negative at all thresholds). Inconsistent — don't bet yet.</p>
+  <p><strong>One structural signal:</strong> The oracle minutes test (same-game MIN 15–25) shows +15–67% ROI across all line tiers. Not exploitable yet — needs a pre-game minutes proxy to use it.</p>
+</div>
+
+<hr>
+
+<!-- ═══ V1 ═══ -->
+<h2>v1 — Flat Rule Backtest &nbsp;<span class="dim file">v1_pra_flat_rule.ipynb</span></h2>
+<p class="dim">Dataset: 31,278 rows after vig filter [1.00–1.20] · MIN ≥ 15 · 3 seasons</p>
+
+<h3>Flat rule: bet every under</h3>
+<div class="card">
+  <table>
+    <tr><th>Season</th><th>n</th><th>Hit rate</th><th>ROI</th><th>Gate (&gt;0%?)</th></tr>
+    <tr><td>2023-24</td><td>8,018</td><td>50.7%</td><td class="neg">–5.2%</td><td><span class="tag tag-fail">FAIL</span></td></tr>
+    <tr><td>2024-25</td><td>10,276</td><td>48.8%</td><td class="neg">–9.0%</td><td><span class="tag tag-fail">FAIL</span></td></tr>
+    <tr><td>2025-26</td><td>12,984</td><td>49.3%</td><td class="neg">–7.7%</td><td><span class="tag tag-fail">FAIL</span></td></tr>
+    <tr><td><strong>Overall</strong></td><td><strong>31,278</strong></td><td><strong>49.5%</strong></td><td class="neg"><strong>–7.5%</strong></td><td><span class="tag tag-fail">FAIL 0/3</span></td></tr>
+  </table>
+</div>
+
+<h3>Segment by line tier</h3>
+<div class="card">
+  <table>
+    <tr><th>Tier</th><th>n</th><th>Hit rate</th><th>ROI</th><th>Note</th></tr>
+    <tr><td>low (&lt;20)</td><td>10,421</td><td>46.7%</td><td class="neg">–12.8%</td><td>Role players — market knows these lines, overs actually hit more</td></tr>
+    <tr><td>mid (20–25)</td><td>6,799</td><td>50.3%</td><td class="neg">–6.0%</td><td></td></tr>
+    <tr><td>high (25–30)</td><td>5,475</td><td>49.9%</td><td class="neg">–6.7%</td><td></td></tr>
+    <tr><td>star (30+)</td><td>8,583</td><td>52.0%</td><td class="neg">–2.7%</td><td>Least bad; 2023-24 was –0.1% (near breakeven)</td></tr>
+  </table>
+  <div class="note">No tier reaches ROI &gt;0% in 2/3 seasons. Star tier is closest but still negative all three.</div>
+</div>
+
+<h3>Calibration gap by tier</h3>
+<div class="card">
+  <table>
+    <tr><th>Tier</th><th>Market P(over)</th><th>Actual P(over)</th><th>Gap</th><th>Gate (&gt;3%?)</th></tr>
+    <tr><td>low (&lt;20)</td><td>49.9%</td><td>53.3%</td><td class="neg">–3.4%</td><td><span class="tag tag-fail">FAIL</span> — market <em>under</em>prices over</td></tr>
+    <tr><td>mid (20–25)</td><td>49.9%</td><td>49.7%</td><td class="neu">+0.2%</td><td><span class="tag tag-fail">FAIL</span></td></tr>
+    <tr><td>high (25–30)</td><td>50.0%</td><td>50.1%</td><td class="neu">–0.1%</td><td><span class="tag tag-fail">FAIL</span></td></tr>
+    <tr><td>star (30+)</td><td>50.0%</td><td>47.98%</td><td class="pos">+2.0%</td><td><span class="tag tag-fail">FAIL</span> — below 3% threshold</td></tr>
+  </table>
+</div>
+
+<h3>Minutes segmentation — oracle test</h3>
+<div class="card">
+  <table>
+    <tr><th>Tier</th><th>Min bucket</th><th>n</th><th>Hit rate</th><th>ROI</th></tr>
+    <tr><td>low (&lt;20)</td><td class="pos">15–25 min</td><td>4,773</td><td class="pos">61.7%</td><td class="pos">+15.1%</td></tr>
+    <tr><td>mid (20–25)</td><td class="pos">15–25 min</td><td>1,405</td><td class="pos">80.2%</td><td class="pos">+49.8%</td></tr>
+    <tr><td>high (25–30)</td><td class="pos">15–25 min</td><td>580</td><td class="pos">86.2%</td><td class="pos">+61.2%</td></tr>
+    <tr><td>star (30+)</td><td class="pos">15–25 min</td><td>348</td><td class="pos">89.4%</td><td class="pos">+67.1%</td></tr>
+    <tr><td colspan="5" class="dim" style="font-style:italic">25-33 min and above: under ROI is negative across all tiers</td></tr>
+  </table>
+  <div class="good"><strong>Oracle gate: PASS.</strong> Every tier, every season. n ≈ 1,500/season for low tier. PRA is extremely minutes-sensitive — when a player logs 15–25 min on a 25+ line, the under hits nearly every time. Not exploitable yet: these are same-game minutes (oracle). Needs a pre-game proxy.</div>
+</div>
+
+<h3>Regression after outlier games</h3>
+<div class="card">
+  <table>
+    <tr><th>Last game vs rolling avg</th><th>n</th><th>Hit rate</th><th>ROI</th></tr>
+    <tr><td>cold (&lt;0.7×)</td><td>4,461</td><td>48.5%</td><td class="neg">–9.4%</td></tr>
+    <tr><td>below avg</td><td>5,842</td><td>49.6%</td><td class="neg">–7.3%</td></tr>
+    <tr><td>on avg</td><td>6,956</td><td>51.2%</td><td class="neg">–4.3%</td></tr>
+    <tr><td>above avg</td><td>5,128</td><td>50.3%</td><td class="neg">–5.9%</td></tr>
+    <tr><td>hot (&gt;1.3×)</td><td>4,550</td><td>48.2%</td><td class="neg">–9.9%</td></tr>
+  </table>
+  <div class="warn">Hot games have the <em>worst</em> under ROI. No regression signal. Gate FAIL.</div>
+</div>
+
+<h3>Pre-game proxy: rolling avg vs line</h3>
+<div class="card">
+  <table>
+    <tr><th>Bucket (rolling PRA – line)</th><th>n</th><th>Hit rate</th><th>ROI</th></tr>
+    <tr><td>avg &lt;&lt; line (–5+)</td><td>980</td><td>52.3%</td><td class="neg">–2.5%</td></tr>
+    <tr><td>avg &lt; line (–2 to –5)</td><td>4,568</td><td>50.4%</td><td class="neg">–6.1%</td></tr>
+    <tr><td>avg ≈ line– (–2 to 0)</td><td>7,053</td><td>50.7%</td><td class="neg">–5.3%</td></tr>
+    <tr><td>avg ≈ line+ (0 to +2)</td><td>7,498</td><td>49.9%</td><td class="neg">–6.7%</td></tr>
+    <tr><td>avg &gt; line (+2 to +5)</td><td>5,617</td><td>48.5%</td><td class="neg">–9.2%</td></tr>
+    <tr><td>avg &gt;&gt; line (+5+)</td><td>1,223</td><td>44.4%</td><td class="neg">–16.6%</td></tr>
+  </table>
+  <div class="warn">All negative. When rolling avg greatly exceeds line, it's the worst bucket — market has this priced correctly. Gate FAIL.</div>
+</div>
+
+<hr>
+
+<!-- ═══ V2 ═══ -->
+<h2>v2 — Model vs Market &nbsp;<span class="dim file">v2_pra_model_vs_market.py</span></h2>
+<p class="dim">32,305 rows · baseline: median_line predicts PRA directly · walk-forward: 2023-24→2024-25, +2024-25→2025-26 · spread join fixed (99.8% coverage)</p>
+
+<h3>Market baseline</h3>
+<div class="card">
+  <table>
+    <tr><th>Season</th><th>n</th><th>MAE</th><th>RMSE</th><th>R²</th></tr>
+    <tr><td>2023-24</td><td>8,132</td><td>6.634</td><td>8.453</td><td>—</td></tr>
+    <tr><td>2024-25</td><td>10,566</td><td>6.364</td><td>8.087</td><td>—</td></tr>
+    <tr><td>2025-26</td><td>13,607</td><td>6.147</td><td>7.870</td><td>—</td></tr>
+    <tr><td><strong>Overall</strong></td><td><strong>32,305</strong></td><td><strong>6.340</strong></td><td><strong>8.091</strong></td><td><strong>0.497</strong></td></tr>
+  </table>
+  <div class="note">The prop line explains 50% of variance in actual PRA. This is the bar every model needs to beat on held-out data.</div>
+</div>
+
+<h3>Individual predictor ranking (univariate OLS)</h3>
+<div class="card">
+  <table>
+    <tr><th>Feature</th><th>n</th><th>MAE</th><th>RMSE</th><th>Δ MAE vs baseline</th></tr>
+    <tr><td><code>median_line</code> ← baseline</td><td>32,305</td><td>6.334</td><td>8.054</td><td class="pos">–0.007</td></tr>
+    <tr><td><code>max_line</code></td><td>32,305</td><td>6.388</td><td>8.118</td><td class="neg">+0.047</td></tr>
+    <tr><td><code>min_line</code></td><td>32,305</td><td>6.391</td><td>8.129</td><td class="neg">+0.051</td></tr>
+    <tr><td><code>pra_roll20</code></td><td>24,211</td><td>6.707</td><td>8.484</td><td class="neg">+0.366</td></tr>
+    <tr><td><code>pra_roll10</code></td><td>27,921</td><td>6.710</td><td>8.489</td><td class="neg">+0.370</td></tr>
+    <tr><td><code>pra_roll5</code></td><td>30,421</td><td>6.849</td><td>8.677</td><td class="neg">+0.508</td></tr>
+    <tr><td><code>pts_roll10</code></td><td>27,921</td><td>7.075</td><td>8.928</td><td class="neg">+0.734</td></tr>
+    <tr><td><code>min_roll10</code></td><td>27,921</td><td>7.935</td><td>9.984</td><td class="neg">+1.595</td></tr>
+    <tr><td><code>reb_roll10</code></td><td>27,921</td><td>8.734</td><td>10.876</td><td class="neg">+2.393</td></tr>
+    <tr><td><code>spread_signed</code></td><td>32,254</td><td>9.177</td><td>11.381</td><td class="neg">+2.836</td></tr>
+    <tr><td><code>days_rest</code></td><td>32,305</td><td>9.125</td><td>11.335</td><td class="neg">+2.785</td></tr>
+  </table>
+  <div class="warn">Every rolling feature and the spread are individually <em>worse</em> than the market line. The market has already priced rolling history and game context. Spread alone can't substitute for the line — only the consensus line carries real PRA signal.</div>
+</div>
+
+<h3>Walk-forward: OLS / Ridge / XGBoost</h3>
+<p class="dim">Δ MAE = model MAE – baseline MAE on <em>same rows</em>. Negative = beats market. ✓ beats both metrics · ✗ fails both.</p>
+<div class="card">
+  <table>
+    <tr><th>Variant</th><th>Model</th><th>Fold 1 Δ MAE<br><span class="dim">test 2024-25, n=10,566</span></th><th>Fold 2 Δ MAE<br><span class="dim">test 2025-26, n=13,607</span></th><th>Consistent?</th></tr>
+    <tr><td>A: <code>median_line</code> only</td><td>OLS</td><td class="pos">–0.011</td><td class="pos">–0.008</td><td><span class="tag tag-pass">✓ both</span></td></tr>
+    <tr><td>A: <code>median_line</code> only</td><td>Ridge</td><td class="pos">–0.011</td><td class="pos">–0.008</td><td><span class="tag tag-pass">✓ both</span></td></tr>
+    <tr><td>B: min+max+range+roll</td><td>OLS</td><td class="pos">–0.005</td><td class="pos">–0.013</td><td><span class="tag tag-pass">✓ both</span></td></tr>
+    <tr><td>B: min+max+range+roll</td><td>Ridge</td><td class="pos">–0.005</td><td class="pos">–0.013</td><td><span class="tag tag-pass">✓ both</span></td></tr>
+    <tr><td>C: +spread (99.8% coverage)</td><td>OLS</td><td class="pos">–0.004</td><td class="pos">–0.013</td><td><span class="tag tag-pass">✓ both</span></td></tr>
+    <tr><td>C: +spread (99.8% coverage)</td><td>Ridge</td><td class="pos">–0.004</td><td class="pos">–0.013</td><td><span class="tag tag-pass">✓ both</span></td></tr>
+    <tr><td>C: +spread (99.8% coverage)</td><td>XGBoost</td><td class="neg">+0.130</td><td class="neg">+0.032</td><td><span class="tag tag-fail">✗ both</span></td></tr>
+  </table>
+  <div class="note">OLS = Ridge for these features (linear relationship, regularisation adds nothing). Adding spread (Variant C vs B) barely moves the needle — spread adds ~0 to OLS/Ridge. The ~0.01 MAE improvement is real but trivial: &lt;0.2% over a baseline of 6.34. XGBoost consistently loses to the market despite 400 trees.</div>
+</div>
+
+<h3>XGBoost feature importance (fold 2: train 2023-25, test 2025-26)</h3>
+<div class="card">
+  <table>
+    <tr><th>Feature</th><th>Importance</th><th>Reading</th></tr>
+    <tr><td><code>min_line</code></td><td class="pos">55.8%</td><td>The low end of book consensus — dominant signal</td></tr>
+    <tr><td><code>max_line</code></td><td>23.4%</td><td>High end — together min+max ≈ 79% of model</td></tr>
+    <tr><td><code>pra_roll20</code></td><td>4.2%</td><td>20-game rolling PRA — only meaningful rolling feature</td></tr>
+    <tr><td><code>line_range</code></td><td>1.9%</td><td>Book disagreement</td></tr>
+    <tr><td><code>pra_roll10</code></td><td>1.9%</td><td></td></tr>
+    <tr><td><code>pra_per_min_roll10</code></td><td>1.6%</td><td></td></tr>
+    <tr><td><code>spread_signed</code></td><td>1.25%</td><td>Game spread — negligible contribution</td></tr>
+    <tr><td>All other features</td><td>&lt;1.3% each</td><td>min_roll, pts_roll, ast_roll, etc.</td></tr>
+  </table>
+  <div class="note">min_line + max_line dominate at 79% because they essentially encode where the consensus sits — they're reconstructing the median. Once the line is in the model, rolling features and spread add almost nothing. The spread join was previously broken and giving false results — at full coverage, spread importance is just 1.25%.</div>
+</div>
+
+<h3>Edge calibration — XGBoost, both folds</h3>
+<p class="dim">edge = model_pred – median_line. Bet in model direction when |edge| ≥ threshold. Vig filter applied [1.00–1.20].</p>
+<div class="card">
+  <table>
+    <tr><th>Fold</th><th>|edge| ≥</th><th>n</th><th>Hit rate</th><th>ROI</th></tr>
+    <tr><td rowspan="4">2024-25</td><td>0.0</td><td>7,590</td><td>51.2%</td><td class="neg">–4.34%</td></tr>
+    <tr><td>1.0</td><td>4,317</td><td>52.3%</td><td class="neg">–2.45%</td></tr>
+    <tr><td>2.0</td><td>2,100</td><td>53.1%</td><td class="neg">–0.99%</td></tr>
+    <tr><td>3.0</td><td>987</td><td>52.8%</td><td class="neg">–1.66%</td></tr>
+    <tr><td rowspan="4">2025-26</td><td>0.0</td><td>10,202</td><td>51.2%</td><td class="neg">–4.29%</td></tr>
+    <tr><td>1.0</td><td>4,307</td><td>52.8%</td><td class="neg">–1.32%</td></tr>
+    <tr><td>2.0</td><td>1,257</td><td class="pos">57.0%</td><td class="pos">+6.56%</td></tr>
+    <tr><td>3.0</td><td>349</td><td class="pos">57.9%</td><td class="pos">+7.85%</td></tr>
+  </table>
+  <div class="warn"><strong>Inconsistent across folds.</strong> The 2025-26 signal (+6.6% ROI at |edge|≥2, n=1,257) does not replicate in 2024-25 (–1.0% same threshold). One fold passing is not sufficient evidence — could be noise, data leakage, or regime shift. Do not bet based on this alone.</div>
+  <div class="note">The 2025-26 fold is the most recent, most data-rich season (n=10,202 bets). The edge bucket breakdown shows a clean monotonic relationship in 2025-26 (over% rises from 47% at negative edge to 62% at &gt;3 edge), but 2024-25 is noisier — the over% at edge &gt;3 is only 54% vs 62% in 2025-26.</div>
+</div>
+
+<hr>
+
+<!-- ═══ SPREAD FIX ═══ -->
+<h2>Spread Join: Root Cause &amp; Fix</h2>
+<div class="card">
+  <div class="good"><strong>Fixed. Coverage: 33% → 99.8%.</strong></div>
+  <p><strong>Root cause:</strong> Game lines store <code>game_time</code> as UTC (<code>2024-10-22 23:40:00+00:00</code>). The original query extracted the date from the UTC timestamp via regex. NBA games starting at 8pm+ ET are past midnight UTC, so they extract as <em>next day</em> in UTC but the NBA API logs them as the ET calendar date. Example: Lakers at 10pm ET Oct 22 = 2am UTC Oct 23 → spread had game_date Oct 23, logs had Oct 22 → no join.</p>
+  <p><strong>Fix applied:</strong> Replaced UTC date extraction with Eastern time conversion in the DuckDB query:</p>
+  <code>CAST(CAST(game_time AS TIMESTAMPTZ) AT TIME ZONE 'America/New_York' AS DATE) AS game_date</code>
+  <p style="margin-top:8px"><strong>Also fixed:</strong> "Los Angeles Clippers" → "LA Clippers" team name normalisation (odds API vs NBA API).</p>
+  <p><strong>Remaining unmatched (0.3%):</strong> 8 (game_date, team) pairs across 4 specific dates — likely cancelled/postponed games not captured by the odds API.</p>
+</div>
+
+<hr>
+
+<!-- ═══ DECISION ═══ -->
+<h2>Decision: What Next?</h2>
+<div class="card">
+  <table>
+    <tr><th>Question asked</th><th>Answer</th><th>Status</th></tr>
+    <tr><td>Does the flat rule (bet every under) work?</td><td>No. –7.5% ROI, all 3 seasons negative.</td><td><span class="tag tag-fail">Dead end</span></td></tr>
+    <tr><td>Can we model PRA better than the market (MAE/RMSE)?</td><td>Barely. Best improvement is ~0.01 MAE (~0.2%). Not enough to generate edge on its own.</td><td><span class="tag tag-warn">Marginal</span></td></tr>
+    <tr><td>Do min/max lines help as model inputs?</td><td>They dominate XGBoost importance (79%) but just reconstruct the consensus. Net gain vs using median alone: negligible.</td><td><span class="tag tag-warn">Marginal</span></td></tr>
+    <tr><td>Does spread help?</td><td>No. At 99.8% coverage, spread is only 1.25% XGBoost importance. Adding it doesn't change OLS/Ridge results.</td><td><span class="tag tag-fail">No signal</span></td></tr>
+    <tr><td>Is there any signal at all?</td><td>Two candidates: (1) Oracle minutes — when MIN 15–25, under hits 62–89% across all tiers (needs pre-game proxy). (2) XGBoost edge ≥ 2 in 2025-26 fold shows +6.6% ROI — but doesn't replicate in 2024-25.</td><td><span class="tag tag-warn">Inconsistent</span></td></tr>
+  </table>
+  <div class="good"><strong>Recommended next step:</strong> Build the pre-game minutes proxy — test whether <code>min_roll10 &lt; X</code> can identify players likely to play 15–25 minutes before the game starts (the same approach as steals v2). That's the only structural signal with a clear mechanism.</div>
+</div>
+
+</body>
+</html>

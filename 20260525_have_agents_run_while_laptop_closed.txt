@@ -1,0 +1,132 @@
+HOW TO RUN CLAUDE AGENTS ON EC2 WHILE LAPTOP IS CLOSED
+=======================================================
+Instance: mc-nba-live-betting (i-06e3589d7a91627d0, t3.micro, us-east-2b)
+Written: 2026-05-25
+
+
+STEP 1 — GET THE PUBLIC IP
+---------------------------
+EC2 console -> click instance ID -> copy Public IPv4 address
+(appears once state changes Pending -> Running, ~30s)
+
+
+STEP 2 — SSH IN
+---------------
+ssh -i ~/.ssh/YOUR_KEY.pem ec2-user@YOUR_PUBLIC_IP
+
+If Ubuntu AMI: replace ec2-user with ubuntu
+If you forgot the key name: EC2 console -> instance -> "Key pair name" column
+
+
+STEP 3 — ONE-TIME SETUP (skip anything already installed)
+----------------------------------------------------------
+# Check what's there
+node --version 2>/dev/null || echo "no node"
+claude --version 2>/dev/null || echo "no claude"
+python3 --version
+
+# Install Node if missing (Amazon Linux 2023)
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs
+
+# Install Node if missing (Ubuntu)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install Claude Code
+npm install -g @anthropic-ai/claude-code
+
+# Install Python deps if missing
+pip3 install pandas numpy lightgbm scikit-learn duckdb jupyter nbconvert
+
+
+STEP 4 — GET THE REPO ON THE SERVER
+-------------------------------------
+# Option A: clone from GitHub
+git clone https://github.com/YOUR_ORG/betting.git ~/betting
+
+# Option B: sync from your laptop (run this on your laptop, not the server)
+rsync -avz --exclude '.git' ~/dev/betting/ ec2-user@YOUR_PUBLIC_IP:~/betting/
+
+
+STEP 5 — SET CREDENTIALS
+--------------------------
+# Add to ~/.bashrc so they persist across tmux panes
+echo 'export AWS_ACCESS_KEY_ID=YOUR_KEY' >> ~/.bashrc
+echo 'export AWS_SECRET_ACCESS_KEY=YOUR_SECRET' >> ~/.bashrc
+echo 'export AWS_DEFAULT_REGION=us-east-1' >> ~/.bashrc
+echo 'export ANTHROPIC_API_KEY=YOUR_ANTHROPIC_KEY' >> ~/.bashrc
+source ~/.bashrc
+
+# Verify
+echo $ANTHROPIC_API_KEY
+aws s3 ls s3://the-odds-api-mt/
+
+
+STEP 6 — START TMUX AND LAUNCH AGENTS
+---------------------------------------
+tmux new-session -s research
+
+# --- WINDOW 0: ASSISTS AGENT ---
+# You are now in window 0 automatically
+cd ~/betting
+claude --dangerously-skip-permissions
+
+# Paste this prompt when Claude starts:
+#
+#   Follow the plan at src/nba_assists_modeling/research/plan_v1_assists_signal.html exactly.
+#   Build and execute the notebook src/nba_assists_modeling/research/notebooks/v1_assists_flat_rule.ipynb
+#   cell by cell as described. Report results at the end.
+
+# --- WINDOW 1: PRA AGENT ---
+# Open a new window: Ctrl+B then C
+cd ~/betting
+claude --dangerously-skip-permissions
+
+# Paste this prompt when Claude starts:
+#
+#   Follow the plan at src/nba_pra_modeling/research/plan_v1_pra_signal.html exactly.
+#   Build and execute the notebook src/nba_pra_modeling/research/notebooks/v1_pra_flat_rule.ipynb
+#   cell by cell as described. Report results at the end.
+
+# Verify both agents have started executing before you detach.
+# If Claude pauses waiting for confirmation, approve once -- then it runs autonomously.
+
+
+STEP 7 — DETACH AND CLOSE YOUR LAPTOP
+---------------------------------------
+Ctrl+B then D        <- detaches from tmux (agents keep running on EC2)
+exit                 <- closes SSH connection
+Close laptop.        <- EC2 instance keeps running, agents keep going.
+
+
+STEP 8 — RECONNECT WHEN YOU'RE BACK
+--------------------------------------
+ssh -i ~/.ssh/YOUR_KEY.pem ec2-user@YOUR_PUBLIC_IP
+tmux attach -t research
+
+# Switch between agent windows:
+# Ctrl+B then 0  -> assists agent
+# Ctrl+B then 1  -> PRA agent
+
+# If the session is gone (instance was rebooted), check for output files:
+ls ~/betting/src/nba_assists_modeling/research/notebooks/
+ls ~/betting/src/nba_pra_modeling/research/notebooks/
+
+
+STEP 9 — STOP THE INSTANCE WHEN DONE
+--------------------------------------
+EC2 console -> select instance -> Instance state -> Stop
+(Stop, not Terminate -- Stop preserves the disk so setup is saved for next time)
+t3.micro costs ~$0.01/hr so an overnight run is ~$0.08.
+
+
+TMUX CHEAT SHEET
+-----------------
+Ctrl+B then D        detach (leave running)
+Ctrl+B then C        new window
+Ctrl+B then 0/1/2    switch to window 0, 1, 2
+Ctrl+B then [        scroll mode (q to exit)
+Ctrl+B then &        kill current window
+tmux ls              list sessions
+tmux attach -t NAME  re-attach to session

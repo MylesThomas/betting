@@ -343,7 +343,7 @@ python scripts/run_rebounds_daily_pipeline.py \
 ## References
 
 - Live rebounds props + S3 + scoring-input bridge plan: `docs/exec-plans/active/nba-rebounds-live-props-s3-plan.md`
-- Research notebook: `src/nba_rebounds_modeling/00_research/notebooks/v1_rebounds_game_to_game_foundations.ipynb` (Option A/B markdown; Option A implemented in scripts).
+- Research notebook: `src/nba_rebounds_modeling/00_research/notebooks/rebounds_backtest_research.ipynb` (Option A/B markdown; Option A implemented in scripts).
 - Backtests: `v3_run_rebounds_edge_backtest.py`, `v4_run_rebounds_under_only_season_robustness.py`, `v5_compare_rebounds_models_oos.py`.
 - Spec sweep + PnL + bet bootstrap: `v7_spec_sweep_rebounds_oos.py`.
 - Prod scoring: `src/nba_rebounds_modeling/option_a_scoring.py`.

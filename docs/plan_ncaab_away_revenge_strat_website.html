@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NCAAB Away Revenge Strategy Dashboard — Implementation Plan</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #f4f5f7;
+         margin: 0; padding: 24px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; color: #111; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 32px; }
+  h2 { font-size: 1.15rem; font-weight: 700; color: #1a1a1a; margin: 32px 0 12px;
+       border-left: 4px solid #17408B; padding-left: 10px; }
+  h3 { font-size: 0.95rem; font-weight: 700; color: #333; margin: 20px 0 8px; }
+  p { margin: 0 0 10px; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; font-size: 12px;
+         font-family: 'SF Mono', Menlo, monospace; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 14px 18px; border-radius: 6px;
+        font-size: 12px; overflow-x: auto; margin: 8px 0 16px; line-height: 1.5; }
+  .section { background: #fff; border: 1px solid #e0e0e4; border-radius: 8px;
+             padding: 20px 24px; margin-bottom: 20px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+           border-radius: 12px; margin-right: 6px; }
+  .badge-new { background: #dcfce7; color: #166534; }
+  .badge-edit { background: #fef9c3; color: #854d0e; }
+  .badge-s3 { background: #dbeafe; color: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #2d3748; color: #f7fafc; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e8e8ec; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; }
+  .step-num { flex-shrink: 0; width: 28px; height: 28px; background: #17408B; color: #fff;
+              border-radius: 50%; display: flex; align-items: center; justify-content: center;
+              font-weight: 700; font-size: 13px; }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; margin-bottom: 2px; }
+  ul { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  .qbox { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 6px;
+          padding: 12px 16px; margin-bottom: 12px; }
+  .qbox strong { color: #92400e; }
+  .layout-row { display: flex; gap: 16px; margin: 10px 0; }
+  .layout-box { flex: 1; background: #f1f5f9; border: 1px dashed #94a3b8;
+                border-radius: 6px; padding: 10px 12px; font-size: 12px; }
+  .layout-box strong { display: block; font-size: 11px; color: #475569; margin-bottom: 4px; }
+  .win { color: #166534; font-weight: 700; }
+  .loss { color: #991b1b; font-weight: 700; }
+  .note { background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px;
+          padding: 10px 14px; margin-bottom: 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>NCAAB Away Revenge Strategy Dashboard</h1>
+<p class="meta">Plan · Created 2026-05-22 · Owner: Myles Thomas</p>
+
+<!-- ───────────────────────── OVERVIEW ───────────────────────── -->
+<div class="section">
+<h2>What We're Building</h2>
+<p>
+  A new Streamlit page (<code>streamlit_app/pages/4_NCAAB_Revenge_Spot.py</code>) plugged into
+  the existing <strong>TQS Props Dashboard</strong>. The page shows the full season track record
+  of the NCAAB Away Revenge strategy — season W-L, ATS %, P&amp;L, today's plays, and a full
+  plays history table sourced from the daily Lambda's S3 output.
+</p>
+<p>
+  <strong>Primary audience:</strong> You (the operator) — morning review of today's plays, running
+  season record, and per-game history with prior meeting context.
+</p>
+<div class="note">
+  <strong>Strategy in one sentence:</strong> When Team A has 0 wins vs Team B this season and is
+  playing them again as the <em>away</em> team, bet Team A (the revenge team) against the spread.
+  Historical edge: <strong>52.6% ATS</strong> (n=2,738 games, 6 seasons) for the focal-away segment.
+</div>
+</div>
+
+<!-- ───────────────────────── STRATEGY BACKGROUND ───────────────────────── -->
+<div class="section">
+<h2>Strategy Background</h2>
+<table>
+  <tr><th>Property</th><th>Value</th></tr>
+  <tr>
+    <td><strong>Signal</strong></td>
+    <td>Team lost every prior meeting this season vs opponent → "focal" (revenge) team</td>
+  </tr>
+  <tr>
+    <td><strong>Filter</strong></td>
+    <td>Focal team must be the <strong>away team</strong> — the only segment with 52%+ ATS at volume</td>
+  </tr>
+  <tr>
+    <td><strong>Bet direction</strong></td>
+    <td>Bet <em>on</em> the focal (revenge/away) team ATS at standard spread juice (-110)</td>
+  </tr>
+  <tr>
+    <td><strong>Season scope</strong></td>
+    <td>NCAAB regular season + conference tournaments. Offseason paused; 2026-27 auto-resumes 2026-11-03</td>
+  </tr>
+  <tr>
+    <td><strong>Lambda name</strong></td>
+    <td><code>ncaab-fade-revenge-daily</code> — runs ~9am ET daily, writes plays CSV to S3</td>
+  </tr>
+  <tr>
+    <td><strong>2025-26 performance</strong></td>
+    <td>Deployed in-season; track record lives in S3 plays CSVs + outcomes CSVs</td>
+  </tr>
+</table>
+
+<h3>Segment performance (historical, 6 seasons)</h3>
+<table>
+  <tr><th>Segment</th><th>ATS %</th><th>n</th><th>Notes</th></tr>
+  <tr><td><strong>focal_away</strong> (our play)</td><td class="win">52.6%</td><td>2,738</td><td>Core filter — used in production</td></tr>
+  <tr><td>dog_line_away</td><td class="win">52.8%</td><td>2,235</td><td>Best edge; requires first-meeting line (future upgrade)</td></tr>
+  <tr><td>dog_focal_away</td><td class="win">52.7%</td><td>2,416</td><td>Focal is dog on the road</td></tr>
+  <tr><td>dog_line_toward (avoid)</td><td class="loss">49.7%</td><td>—</td><td>Focal dog, line moved toward focal — skip</td></tr>
+</table>
+</div>
+
+<!-- ───────────────────────── DATA SOURCES ───────────────────────── -->
+<div class="section">
+<h2>Data Sources</h2>
+<table>
+  <tr>
+    <th>S3 Path</th>
+    <th>Content</th>
+    <th>Used For</th>
+  </tr>
+  <tr>
+    <td><code>s3://ncaab-betting-mt/data/04_output/plays/<br>fade-revenge-spot/{date}.csv</code></td>
+    <td>All games that day + rematch plays. Columns: <code>game_date, home_team, away_team, home_conference, away_conference, meetings_count, record, consensus_spread_home, focal_team, bet_team, side, prior_meetings, start_time_et</code>.<br><strong>Filter: <code>WHERE bet_team IS NOT NULL</code></strong> to get actual plays.</td>
+    <td>Today's plays panel; historical plays table</td>
+  </tr>
+  <tr>
+    <td><code>s3://ncaab-betting-mt/data/01_input/<br>historical_game_results/{date}.csv</code></td>
+    <td>ESPN game results: <code>GAME_DATE, HOME_TEAM, AWAY_TEAM, HOME_SCORE, AWAY_SCORE</code></td>
+    <td>Join with plays to compute W/L/Push per bet</td>
+  </tr>
+  <tr>
+    <td><code>s3://ncaab-betting-mt/data/01_input/<br>the-odds-api/ncaab/game_lines/{date}.csv</code></td>
+    <td>Daily closing lines: <code>date, home_team, away_team, consensus_spread</code> (home perspective)</td>
+    <td>Optional: enrich plays table with opening vs closing line; future use</td>
+  </tr>
+</table>
+
+<h3>Settlement logic (done in Streamlit)</h3>
+<p>
+  Unlike rebounds (which has pre-settled parquets), the revenge strategy requires a <strong>join</strong>
+  of plays CSVs with outcomes CSVs in Streamlit. The data volume is small (&lt;500 plays per season)
+  so this is fast. The join key is <code>(game_date, home_team, away_team)</code>.
+</p>
+<pre>
+# Cover formula (home perspective):
+if bet_team == home_team:
+    cover = (home_score + spread_home) > away_score
+else:                           # bet_team = away team (our case)
+    cover = (away_score - spread_home) > home_score   # i.e. away beats spread
+
+# P&L at -110:
+pnl = +100/110   # win  (~+0.909u)
+pnl = -1.0       # loss
+pnl = 0.0        # push (spread == 0; rare)
+</pre>
+<p>
+  A play where <code>consensus_spread_home</code> is null has no spread data → mark as
+  <code>result = "no_line"</code> and exclude from P&amp;L / ATS % (still show in table).
+</p>
+</div>
+
+<!-- ───────────────────────── PAGE LAYOUT ───────────────────────── -->
+<div class="section">
+<h2>Page Layout (Wireframe)</h2>
+
+<p>Two tabs: <strong>Today's Plays</strong> (default) and <strong>Season Record</strong>. Sidebar date/conference controls apply to Season Record tab only.</p>
+
+<h3>Sidebar (Season Record tab)</h3>
+<div class="layout-row">
+  <div class="layout-box">
+    <strong>Date range preset</strong>
+    All Time (default) / Season-to-Date / Last 30 Days / Custom picker
+  </div>
+  <div class="layout-box">
+    <strong>Conference filter (optional)</strong>
+    Multi-select: all conferences or specific ones (home_conference / away_conference on either side)
+  </div>
+</div>
+
+<h3>Tab 1 — Today's Plays (default)</h3>
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Today's rematch plays</strong>
+    If Lambda has run and plays exist: table sorted by tip-off time —
+    Tip-off ET · Bet Team · Spread · Away @ Home · Conferences · Prior Meetings.<br><br>
+    If no plays today: banner — <em>"No rematch spots today meeting the away-team filter."</em><br>
+    If Lambda hasn't run yet (CSV missing): banner — <em>"Lambda runs ~9am ET. Check back for today's plays."</em><br>
+    If offseason (today &lt; NCAAB_PAUSE_UNTIL): banner — <em>"NCAAB season is on break. Strategy resumes [date]."</em>
+  </div>
+</div>
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Below today's plays — Yesterday's Results (if settled)</strong>
+    Small table: yesterday's plays + W/L outcome + score + margin. Mirrors the Lambda email "section 2" output.
+    Gives immediate context when reviewing in the morning after yesterday's games.
+  </div>
+</div>
+
+<h3>Tab 2 — Season Record</h3>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 1 — KPI Strip (5 metrics)</strong>
+    Total Bets · W-L record · ATS % · P&amp;L (units at -110) · ROI per Bet
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:2;">
+    <strong>Row 2 — Cumulative P&amp;L Chart (Plotly)</strong>
+    Single line: cumulative units at -110 juice over time.
+    X-axis: date. Y-axis: cumulative units. Vertical dashed line at prod go-live date.
+    Hover: date, daily P&amp;L, running total, n_bets.
+  </div>
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 2 right — Monthly Breakdown</strong>
+    Simple table: month, bets, W-L, ATS %, P&amp;L. Gives a sense of variance.
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 3 — Plays History Table</strong>
+    All settled plays. Columns: Date · Away @ Home · Conferences · Spread · Result · Margin · P&amp;L · Prior Meetings.
+    Color-coded result rows (win=green, loss=red, no_line=gray).
+    Download as CSV button.
+  </div>
+</div>
+
+<div class="layout-row">
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 4 (expander) — Conference Breakdown</strong>
+    Table: conference, bets, W-L, ATS %. One row per unique away_conference.
+    Shows if edge concentrates in specific conferences.
+  </div>
+  <div class="layout-box" style="flex:1;">
+    <strong>Row 5 (expander) — Spread Distribution</strong>
+    Histogram of consensus_spread_home for our plays.
+    Helps see if we're mostly dogs, favorites, or pick'ems.
+  </div>
+</div>
+</div>
+
+<!-- ───────────────────────── KPI DEFINITIONS ───────────────────────── -->
+<div class="section">
+<h2>Metric Definitions</h2>
+<table>
+  <tr><th>Metric</th><th>Formula</th><th>Notes</th></tr>
+  <tr>
+    <td><strong>Total Bets</strong></td>
+    <td>Count of rows where <code>bet_team IS NOT NULL</code> and <code>consensus_spread_home IS NOT NULL</code> (i.e. has a line)</td>
+    <td>Excludes no-line plays from all P&amp;L metrics</td>
+  </tr>
+  <tr>
+    <td><strong>W-L</strong></td>
+    <td>Win = cover vs consensus spread. Loss = fail to cover. Push = exact spread (count separately, exclude from ATS % denominator)</td>
+    <td>Join plays + outcomes to compute</td>
+  </tr>
+  <tr>
+    <td><strong>ATS %</strong></td>
+    <td><code>wins / (wins + losses)</code> — pushes excluded from denominator</td>
+    <td>Target &gt; 52.4% (break-even at -110)</td>
+  </tr>
+  <tr>
+    <td><strong>P&amp;L (units)</strong></td>
+    <td>Win: <code>+100/110 ≈ +0.909u</code> · Loss: <code>-1.0u</code> · Push: <code>0.0u</code></td>
+    <td>Standard -110 juice assumption (no actual odds stored for spread bets)</td>
+  </tr>
+  <tr>
+    <td><strong>ROI per Bet</strong></td>
+    <td><code>pnl_units / total_bets</code></td>
+    <td>Break-even ROI at -110 ≈ -0.045 (need &gt;0 for profitability)</td>
+  </tr>
+  <tr>
+    <td><strong>Spread Margin</strong></td>
+    <td><code>away_score - home_score - spread_away</code> (positive = cover)</td>
+    <td>Shown per row in plays table; helps see near-misses</td>
+  </tr>
+</table>
+</div>
+
+<!-- ───────────────────────── CODING STANDARDS ───────────────────────── -->
+<div class="section">
+<h2>⚠️ Coding Standards — Same as Rebounds Dashboard</h2>
+<p>These rules apply to every file in this dashboard.</p>
+
+<h3>1. Full type annotations, readable names</h3>
+<pre>
+# BAD
+def load(b, p, d=None):
+    df = ...
+
+# GOOD
+def load_plays_for_date(bucket: str, prefix: str, game_date: str) -> pd.DataFrame:
+    plays_df: pd.DataFrame = ...
+</pre>
+
+<h3>2. Fail fast — no try/except blocks</h3>
+<p>Let boto3 and pandas raise. Streamlit will surface the real error. Do not return empty DataFrames on S3 failure.</p>
+
+<h3>3. No defensive column checks</h3>
+<p>Trust the schema. If <code>consensus_spread_home</code> is missing, that's a pipeline bug — don't silently default to 0.</p>
+
+<h3>4. Constants at module top</h3>
+<pre>
+S3_BUCKET: str = "ncaab-betting-mt"
+PLAYS_PREFIX: str = "data/04_output/plays/fade-revenge-spot"
+OUTCOMES_PREFIX: str = "data/01_input/historical_game_results"
+NCAAB_SEASON_2025_START: str = "2025-11-03"
+PROD_GO_LIVE_DATE: str = "2025-11-03"   # update to actual first play date
+WIN_PAYOUT: float = 100.0 / 110.0       # -110 juice
+</pre>
+
+<h3>5. One responsibility per function</h3>
+<p>Data module (<code>ncaab_revenge_data.py</code>) is pure data + pandas. No <code>st.*</code> calls. Page file handles all rendering.</p>
+</div>
+
+<!-- ───────────────────────── IMPLEMENTATION STEPS ───────────────────────── -->
+<div class="section">
+<h2>Implementation Steps</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <strong>S3 data loader module — <code>streamlit_app/ncaab_revenge_data.py</code> <span class="badge badge-new">NEW</span></strong>
+    <ul>
+      <li><code>list_plays_dates(bucket, prefix) → list[str]</code> — enumerate all date CSVs in the plays prefix</li>
+      <li><code>load_all_plays(bucket, prefix) → pd.DataFrame</code> — concat all plays CSVs, filter to <code>bet_team IS NOT NULL</code></li>
+      <li><code>load_outcomes_for_dates(bucket, prefix, dates) → pd.DataFrame</code> — load outcome CSVs only for dates that have plays</li>
+      <li><code>settle_plays(plays_df, outcomes_df) → pd.DataFrame</code> — join on (game_date, home_team, away_team); compute result, pnl_units, spread_margin per play</li>
+      <li><code>load_todays_plays(bucket, prefix) → pd.DataFrame | None</code> — today's plays CSV; return None if file missing (Lambda hasn't run yet)</li>
+    </ul>
+    All reads wrapped with <code>@st.cache_data(ttl=900)</code> (15-min TTL — today's files appear quickly).
+    Auth via boto3 default credential chain (same as rebounds).
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <strong>New page — <code>streamlit_app/pages/4_NCAAB_Revenge_Spot.py</code> <span class="badge badge-new">NEW</span></strong>
+    <pre>st.set_page_config(page_title="NCAAB Away Revenge", layout="wide")
+tab1, tab2 = st.tabs(["Today's Plays", "Season Record"])
+# tab1 (default): today's plays table or banner; yesterday's results below
+# tab2: KPI strip, P&L chart, plays history table, conference expander, spread expander</pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <strong>Settlement join</strong>
+    <p>In <code>settle_plays()</code>: merge plays + outcomes on <code>(game_date, home_team, away_team)</code>. For each matched row, compute cover using the formula above. Rows with no outcome match → <code>result = "pending"</code> (game not played yet or ESPN fetch missed it). Rows with null spread → <code>result = "no_line"</code>.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <strong>Cumulative P&amp;L chart (Plotly)</strong>
+    <p>Single <code>go.Scatter</code> trace. Sort settled plays by date, cumsum <code>pnl_units</code>. Add <code>add_vline()</code> at prod go-live date. Hover: date, daily P&amp;L, running total, n_bets. Same rendering pattern as rebounds.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <strong>Plays history table</strong>
+    <p>Display columns: Date · Bet Team · Spread · Away @ Home · Away Conf · Home Conf · Score · Result · Margin · P&amp;L · Prior Meetings.
+    Color-code rows: win=green, loss=red, no_line=light gray, pending=light blue.
+    Truncate <code>prior_meetings</code> to 60 chars with tooltip for full text.
+    CSV download button.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-body">
+    <strong>Today's plays tab</strong>
+    <p>Call <code>load_todays_plays()</code>. Show table if plays found. Three banner cases:
+    (1) no plays today, (2) Lambda hasn't run, (3) offseason — detect offseason by checking if today
+    is before the season start constant.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">7</div>
+  <div class="step-body">
+    <strong>Add card to home page — <code>streamlit_app/app.py</code> <span class="badge badge-edit">EDIT</span></strong>
+    Add an NCAAB Revenge Spot card alongside the Rebounds card on the home page.
+    Update <code>st.switch_page()</code> path to <code>pages/4_NCAAB_Revenge_Spot.py</code>.
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">8</div>
+  <div class="step-body">
+    <strong>Local test</strong>
+    <p>Run <code>streamlit run streamlit_app/app.py</code>. Navigate to NCAAB Revenge page.
+    Verify: data loads, settlement join produces correct W/L, chart renders, table filters work,
+    today's plays tab handles both the run and no-run cases correctly.</p>
+  </div>
+</div>
+</div>
+
+<!-- ───────────────────────── DECISIONS ───────────────────────── -->
+<div class="section">
+<h2>Decisions (answered 2026-05-22)</h2>
+
+<table>
+  <tr>
+    <th style="width:220px;">Question</th>
+    <th>Decision</th>
+  </tr>
+  <tr>
+    <td><strong>Q1 — Season scope</strong></td>
+    <td>
+      <strong>Show all-time by default.</strong> Sidebar presets: All Time (default) / Season-to-Date / Last 30 Days / Last 7 Days / Custom date picker.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q2 — Conference filter</strong></td>
+    <td>
+      <strong>Sidebar dropdown (A-Z).</strong> Single-select or multiselect of all conferences sorted A-Z. Default = All. Filters both the Season Record plays table and the KPI strip.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q3 — Spread assumption</strong></td>
+    <td>
+      <strong>Assume -110 if real odds unavailable.</strong> Use actual juice if the plays CSV ever stores it; fall back to -110 otherwise. Matches Lambda email reporting.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q4 — Offseason detection</strong></td>
+    <td>
+      <strong>Hard-code <code>NCAAB_PAUSE_UNTIL = "2026-11-03"</code> as a module constant.</strong> Update each season. Today's Plays tab checks <code>date.today() &lt; NCAAB_PAUSE_UNTIL</code> and shows the resume-date banner if true.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Q5 — Settlement data loading</strong></td>
+    <td>
+      <strong>Defer Lambda settlement artifact to v2.</strong> v1 loads all plays CSVs + outcomes CSVs from S3 and joins in-process (DuckDB or pandas — volume is small enough). Pre-built settled parquet is a v2 optimization.
+    </td>
+  </tr>
+</table>
+</div>
+
+<!-- ───────────────────────── FILE CHANGES SUMMARY ───────────────────────── -->
+<div class="section">
+<h2>File Change Summary</h2>
+<table>
+  <tr><th>File</th><th>Action</th><th>Why</th></tr>
+  <tr>
+    <td><code>streamlit_app/ncaab_revenge_data.py</code></td>
+    <td><span class="badge badge-new">NEW</span></td>
+    <td>S3 data loading, settlement join, caching — keep page file clean</td>
+  </tr>
+  <tr>
+    <td><code>streamlit_app/pages/4_NCAAB_Revenge_Spot.py</code></td>
+    <td><span class="badge badge-new">NEW</span></td>
+    <td>The dashboard page itself</td>
+  </tr>
+  <tr>
+    <td><code>streamlit_app/app.py</code></td>
+    <td><span class="badge badge-edit">EDIT</span></td>
+    <td>Add NCAAB Revenge card to home page alongside Rebounds card</td>
+  </tr>
+  <tr>
+    <td><code>pyproject.toml</code></td>
+    <td><span class="badge badge-edit">CHECK</span></td>
+    <td>boto3, pandas, plotly, pyarrow already present from rebounds — likely no changes needed</td>
+  </tr>
+</table>
+</div>
+
+</div><!-- /container -->
+</body>
+</html>

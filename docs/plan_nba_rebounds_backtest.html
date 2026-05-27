@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBA Rebounds Backtest — Plan</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         font-size: 14px; line-height: 1.6; color: #1a1a1a; background: #f4f5f7;
+         margin: 0; padding: 24px; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; color: #111; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 32px; }
+  h2 { font-size: 1.15rem; font-weight: 700; color: #1a1a1a; margin: 32px 0 12px;
+       border-left: 4px solid #065f46; padding-left: 10px; }
+  h3 { font-size: 0.95rem; font-weight: 700; color: #333; margin: 16px 0 6px; }
+  p { margin: 0 0 10px; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; font-size: 12px;
+         font-family: 'SF Mono', Menlo, monospace; }
+  .section { background: #fff; border: 1px solid #e0e0e4; border-radius: 8px;
+             padding: 20px 24px; margin-bottom: 20px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+           border-radius: 12px; margin-right: 6px; }
+  .badge-new  { background: #dcfce7; color: #166534; }
+  .badge-edit { background: #fef9c3; color: #854d0e; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #2d3748; color: #f7fafc; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e8e8ec; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  ul { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  .layout-full { background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 6px;
+                 padding: 10px 12px; font-size: 12px; margin: 8px 0; }
+  .layout-full strong { display: block; font-size: 11px; text-transform: uppercase;
+                        letter-spacing: .04em; color: #475569; margin-bottom: 4px; }
+  .layout-row { display: flex; gap: 12px; margin: 10px 0; }
+  .layout-box { flex: 1; background: #f1f5f9; border: 1px dashed #94a3b8;
+                border-radius: 6px; padding: 10px 12px; font-size: 12px; min-height: 60px; }
+  .layout-box strong { display: block; font-size: 11px; text-transform: uppercase;
+                       letter-spacing: .04em; color: #475569; margin-bottom: 4px; }
+  .note  { background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px;
+           padding: 10px 14px; margin-bottom: 12px; font-size: 13px; }
+  .resolved { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px;
+              padding: 12px 16px; margin-bottom: 12px; }
+  .resolved strong { color: #166534; }
+  .divider { border: none; border-top: 2px dashed #cbd5e1; margin: 18px 0 10px; }
+  .page-header { background: #065f46; color: white; border-radius: 6px;
+                 padding: 8px 14px; font-size: 13px; font-weight: 700; margin: 14px 0 8px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 14px 18px; border-radius: 6px;
+        font-size: 12px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>NBA Rebounds — Backtest Tab Plan</h1>
+<p class="meta">Plan · Created 2026-05-24 · Owner: Myles Thomas</p>
+
+<!-- ── SUMMARY ── -->
+<div class="section">
+<h2>What's changing</h2>
+<table>
+  <thead><tr><th>Change</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="badge badge-edit">EDIT</span><code>rebounds_backtest_research.ipynb</code></td>
+      <td>Add export cell at end: filter to A3 + OLS/XGB + <code>min_edge=0.05</code>, write game-level + season-summary CSVs to S3</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-new">NEW</span><code>rebounds_backtest_data.py</code></td>
+      <td>DuckDB S3 reader for backtest CSVs; computes <code>pnl_units</code>, <code>result</code></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-edit">EDIT</span><code>pages/3_NBA_Rebounds_Strategy.py</code></td>
+      <td>Add <strong>Backtest</strong> tab (third tab) alongside Played Bets + Blind Unders Benchmark</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ── NOTEBOOK ── -->
+<div class="section">
+<h2>Step 1 — Update notebook + seed S3</h2>
+
+<div class="resolved">
+  <strong>Notebook location:</strong> <code>src/nba_rebounds_modeling/00_research/notebooks/rebounds_backtest_research.ipynb</code><br>
+  Already runs a full spec × model × min_edge sweep. Outputs <code>spec_sweep_pnl_df</code> (game-level) and <code>spec_sweep_pnl_pooled</code> (per-spec summary).
+</div>
+
+<h3>New export cell (add at end of notebook)</h3>
+<pre>
+import boto3, io
+
+S3_BUCKET = "nba-betting-mt"
+BT_PREFIX = "data/04_output/backtest/rebounds"
+
+PROD_SPEC    = "A3"
+PROD_MODELS  = {"ols", "xgb"}
+PROD_EDGE    = 0.05
+
+def _upload_csv(df, s3_key):
+    buf = io.BytesIO()
+    df.to_csv(buf, index=False)
+    buf.seek(0)
+    boto3.client("s3").put_object(Bucket=S3_BUCKET, Key=s3_key, Body=buf.getvalue())
+    print(f"Uploaded s3://{S3_BUCKET}/{s3_key}  ({len(df):,} rows)")
+
+# --- game-level ---
+multi = spec_sweep_pnl_df.loc[
+    (spec_sweep_pnl_df["spec"]     == PROD_SPEC) &
+    (spec_sweep_pnl_df["model"].isin(PROD_MODELS)) &
+    (spec_sweep_pnl_df["min_edge"] == PROD_EDGE)
+].copy()
+_upload_csv(multi, f"{BT_PREFIX}/multi.csv")
+
+# --- per-season summary ---
+summary = (
+    multi[multi["result"].isin({"win", "loss", "push"})]
+    .groupby(["season", "model"], as_index=False)
+    .agg(
+        bets    = ("pnl_units", "count"),
+        wins    = ("result",    lambda s: (s == "win").sum()),
+        losses  = ("result",    lambda s: (s == "loss").sum()),
+        pnl     = ("pnl_units", "sum"),
+    )
+)
+summary["ats_pct"] = summary["wins"] / (summary["wins"] + summary["losses"])
+_upload_csv(summary, f"{BT_PREFIX}/summary.csv")
+</pre>
+
+<h3>Columns needed from <code>spec_sweep_pnl_df</code></h3>
+<p>Verify these exist in the notebook's output df (add if missing):</p>
+<ul>
+  <li><code>date</code> — game date</li>
+  <li><code>season</code> — e.g. "2023-24"</li>
+  <li><code>player_normalized</code></li>
+  <li><code>bookmaker</code></li>
+  <li><code>line</code> — the over/under line</li>
+  <li><code>model</code> — "ols" | "xgb"</li>
+  <li><code>spec</code> — "A3"</li>
+  <li><code>min_edge</code> — 0.05</li>
+  <li><code>side</code> — "under" (strategy is under-only)</li>
+  <li><code>edge</code> — edge vs implied prob</li>
+  <li><code>actual</code> — actual rebounds</li>
+  <li><code>result</code> — "win" | "loss" | "push"</li>
+  <li><code>pnl_units</code> — flat-stake P&L at -110</li>
+  <li><code>under_odds</code> — the odds taken</li>
+</ul>
+
+<h3>Run command (execute + output to executed notebook)</h3>
+<pre>
+cd /Users/thomasmyles/dev/betting
+
+jupyter nbconvert --to notebook --execute \
+    --ExecutePreprocessor.timeout=900 \
+    --output rebounds_backtest_research_executed.ipynb \
+    --output-dir src/nba_rebounds_modeling/00_research/notebooks/ \
+    src/nba_rebounds_modeling/00_research/notebooks/rebounds_backtest_research.ipynb
+</pre>
+<p style="font-size:12px;color:#555">Refresh at season end or when the spec changes. Streamlit reads fixed-path S3 files, not a glob.</p>
+</div>
+
+<!-- ── DATA LOADER ── -->
+<div class="section">
+<h2>Step 2 — <code>rebounds_backtest_data.py</code></h2>
+
+<div class="note">Same pattern as <code>ncaab_backtest_data.py</code>. DuckDB httpfs reads from S3. <code>@st.cache_data(ttl=3600)</code>.</div>
+
+<ul>
+  <li><code>load_backtest_multi()</code> — reads <code>multi.csv</code>, returns enriched DataFrame</li>
+  <li><code>filter_by_model(df, model)</code> — "OLS" / "XGB" / "Both (either)" sidebar filter</li>
+  <li><code>compute_kpis(settled)</code> — total bets, W-L, hit rate, P&L, ROI/Bet</li>
+  <li><code>per_season_summary(df)</code> — one row per season</li>
+</ul>
+
+<p>S3 paths:</p>
+<ul>
+  <li><code>s3://nba-betting-mt/data/04_output/backtest/rebounds/multi.csv</code></li>
+  <li><code>s3://nba-betting-mt/data/04_output/backtest/rebounds/summary.csv</code></li>
+</ul>
+</div>
+
+<!-- ── STREAMLIT TAB ── -->
+<div class="section">
+<h2>Step 3 — Backtest tab in <code>3_NBA_Rebounds_Strategy.py</code></h2>
+
+<div class="note">
+  Tabs become: <strong>Played Bets</strong> · <strong>Blind Unders Benchmark</strong> · <strong>Backtest</strong>
+</div>
+
+<div class="page-header">Sidebar addition</div>
+<div class="layout-full"><strong>Model filter (Backtest tab only)</strong>OLS / XGB / Both — defaults to Both. Note: prod runs both daily.</div>
+
+<hr class="divider">
+
+<div class="page-header">Backtest tab layout</div>
+<div class="layout-full"><strong>KPI strip (all seasons, selected model)</strong>Total Bets · W-L · Hit Rate · P&amp;L (units) · ROI/Bet · Seasons covered</div>
+<div class="layout-full"><strong>Cumulative P&amp;L chart</strong>One line per model (OLS = orange, XGB = green, matches prod color scheme) · season boundary vlines · prod go-live vline</div>
+
+<hr class="divider">
+
+<div class="layout-full"><strong>Per-Season table</strong>Season · Model · Bets · W · L · Hit Rate · P&amp;L · ROI/Bet — newest first · current season highlighted</div>
+
+<hr class="divider">
+
+<div class="layout-row">
+  <div class="layout-box"><strong>Season detail</strong>Selectbox → game-level table: Date · Player · Line · Actual · Result · Edge · P&amp;L</div>
+  <div class="layout-box"><strong>Edge distribution (expander)</strong>Histogram of edge values for selected season/model</div>
+</div>
+</div>
+
+<!-- ── FILES ── -->
+<div class="section">
+<h2>Files</h2>
+<table>
+  <thead><tr><th>File</th><th>Action</th><th>What changes</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>rebounds_backtest_research.ipynb</code></td>
+      <td><span class="badge badge-edit">EDIT</span></td>
+      <td>Add export cell: filter to A3/0.05, upload <code>multi.csv</code> + <code>summary.csv</code> to S3</td>
+    </tr>
+    <tr>
+      <td><code>rebounds_backtest_data.py</code></td>
+      <td><span class="badge badge-new">NEW</span></td>
+      <td>DuckDB S3 reader, <code>filter_by_model</code>, <code>compute_kpis</code>, <code>per_season_summary</code></td>
+    </tr>
+    <tr>
+      <td><code>pages/3_NBA_Rebounds_Strategy.py</code></td>
+      <td><span class="badge badge-edit">EDIT</span></td>
+      <td>Add third tab; import <code>rebounds_backtest_data</code>; add backtest render functions</td>
+    </tr>
+    <tr>
+      <td><code>rebounds_data.py</code></td>
+      <td>no change</td>
+      <td>Prod data loading untouched</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+</div>
+</body>
+</html>
