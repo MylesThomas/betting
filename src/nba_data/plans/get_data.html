@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plan: NBA Unified Data Loader with S3 Cache</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+    h1 { font-size: 28px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+    .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 40px; }
+    h2 { font-size: 18px; font-weight: 600; color: #f1f5f9; margin: 36px 0 14px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
+    h3 { font-size: 14px; font-weight: 600; color: #cbd5e1; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    p { color: #94a3b8; font-size: 14px; margin-bottom: 12px; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 13px; background: #1e293b; color: #7dd3fc; padding: 2px 6px; border-radius: 4px; }
+    pre { background: #0d1520; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; overflow-x: auto; margin: 12px 0 20px; }
+    pre code { background: none; padding: 0; color: #e2e8f0; font-size: 13px; }
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .str { color: #86efac; }
+    .cm  { color: #64748b; }
+    .num { color: #fb923c; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0 20px; }
+    th { background: #1e293b; color: #cbd5e1; text-align: left; padding: 10px 14px; font-weight: 600; }
+    td { padding: 9px 14px; color: #94a3b8; border-bottom: 1px solid #1a2332; vertical-align: top; }
+    tr:hover td { background: #111827; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge-green  { background: #14532d; color: #86efac; }
+    .badge-blue   { background: #1e3a5f; color: #93c5fd; }
+    .badge-yellow { background: #422006; color: #fde68a; }
+    .badge-red    { background: #450a0a; color: #fca5a5; }
+    .step { display: flex; gap: 16px; margin-bottom: 20px; }
+    .step-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: #1e3a5f; color: #93c5fd; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+    .step-body h4 { font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+    .step-body p { margin-bottom: 0; }
+    .section { background: #111827; border: 1px solid #1e293b; border-radius: 10px; padding: 24px; margin-bottom: 20px; }
+    ul { list-style: none; padding: 0; }
+    ul li { padding: 4px 0; color: #94a3b8; font-size: 14px; }
+    ul li::before { content: "–"; margin-right: 8px; color: #475569; }
+    .flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+    .flow-box { background: #1e293b; border-radius: 6px; padding: 8px 14px; font-size: 13px; color: #cbd5e1; }
+    .flow-arrow { color: #475569; font-size: 18px; }
+    .note { background: #0f2744; border: 1px solid #1e3a5f; border-radius: 8px; padding: 14px 18px; margin: 12px 0; font-size: 13px; color: #93c5fd; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>NBA Unified Data Loader — <code>get_data</code></h1>
+  <div class="subtitle">Plan &middot; src/nba_data/get_data.py &middot; 2026-05-26</div>
+
+  <h2>Motivation</h2>
+  <p>
+    Every research script re-implements the same DuckDB + S3 boilerplate to load player game logs and betting odds. There is no shared entry point, no caching, and no way to get a fast data pull without re-scanning raw S3 globs on each run. This plan defines a single <code>get_data()</code> function backed by an S3 parquet cache so any script — research, production, or notebook — gets all three datasets in under a second on warm hits.
+  </p>
+
+  <h2>Goals</h2>
+  <div class="section">
+    <ul>
+      <li>Single import: <code>from src.nba_data import get_data</code> — returns logs, props, and game lines together</li>
+      <li>Warm cache (&lt;1 s): reads pre-built parquet files from <code>nba-betting-mt</code> — no raw S3 glob scan</li>
+      <li>Refresh mode: checks manifest timestamp, appends only new raw CSVs, rewrites cache</li>
+      <li>No hidden state: cache metadata is a plain JSON manifest anyone can inspect</li>
+      <li>Works from local dev, Lambda, and Streamlit — same credential chain already in <code>duckdb_s3_creds.py</code></li>
+    </ul>
+  </div>
+
+  <h2>Datasets in Scope</h2>
+  <table>
+    <thead>
+      <tr><th>Dataset</th><th>Raw Source Bucket / Path</th><th>Cache Key</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>logs</code> — player game logs</td>
+        <td><code>nba-api-mt / player_game_logs/{season}/*.csv</code></td>
+        <td><code>nba-betting-mt / data/02_cache/nba_unified/player_game_logs.parquet</code></td>
+      </tr>
+      <tr>
+        <td><code>props</code> — player prop odds</td>
+        <td><code>the-odds-api-mt / nba/historical_player_props/{season}/*.csv</code></td>
+        <td><code>nba-betting-mt / data/02_cache/nba_unified/player_props.parquet</code></td>
+      </tr>
+      <tr>
+        <td><code>lines</code> — game spreads &amp; moneylines</td>
+        <td><code>the-odds-api-mt / nba/historical_game_lines/{season}/*.csv</code></td>
+        <td><code>nba-betting-mt / data/02_cache/nba_unified/game_lines.parquet</code></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="color:#475569; font-style:italic; padding: 6px 14px;">Manifest</td>
+      </tr>
+      <tr>
+        <td><code>manifest.json</code></td>
+        <td>—</td>
+        <td><code>nba-betting-mt / data/02_cache/nba_unified/manifest.json</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Cache Manifest Schema</h2>
+  <p>One JSON file written to S3 alongside the parquet files. Tracks provenance and enables append logic.</p>
+  <pre><code><span class="cm">// s3://nba-betting-mt/data/02_cache/nba_unified/manifest.json</span>
+{
+  <span class="str">"updated_at"</span>: <span class="str">"2026-05-26T18:00:00Z"</span>,          <span class="cm">// ISO-8601 UTC wall-clock of last cache build</span>
+  <span class="str">"seasons"</span>: [<span class="str">"2023-24"</span>, <span class="str">"2024-25"</span>, <span class="str">"2025-26"</span>],   <span class="cm">// seasons included</span>
+  <span class="str">"max_game_date"</span>: <span class="str">"2026-05-25"</span>,                <span class="cm">// latest GAME_DATE in logs cache</span>
+  <span class="str">"max_prop_date"</span>: <span class="str">"2026-05-25"</span>,                <span class="cm">// latest game_time date in props cache</span>
+  <span class="str">"row_counts"</span>: {
+    <span class="str">"player_game_logs"</span>: <span class="num">74812</span>,
+    <span class="str">"player_props"</span>:     <span class="num">2431087</span>,
+    <span class="str">"game_lines"</span>:       <span class="num">89543</span>
+  }
+}</code></pre>
+
+  <h2>Public API</h2>
+  <pre><code><span class="kw">from</span> src.nba_data <span class="kw">import</span> get_data
+
+<span class="cm"># Fast path — read from S3 parquet cache (default)</span>
+data = <span class="fn">get_data</span>()
+data.logs    <span class="cm"># pd.DataFrame — player game logs, all seasons</span>
+data.props   <span class="cm"># pd.DataFrame — player prop odds</span>
+data.lines   <span class="cm"># pd.DataFrame — game lines (spread / moneyline)</span>
+data.meta    <span class="cm"># dict — manifest contents (updated_at, row_counts, …)</span>
+
+<span class="cm"># Refresh: check manifest, append new raw CSVs, rewrite cache</span>
+data = <span class="fn">get_data</span>(refresh=<span class="kw">True</span>)
+
+<span class="cm"># Rebuild from scratch (full reload, overwrites cache)</span>
+data = <span class="fn">get_data</span>(rebuild=<span class="kw">True</span>)
+
+<span class="cm"># Subset seasons (filter applied post-load, not baked into cache)</span>
+data = <span class="fn">get_data</span>(seasons=[<span class="str">"2024-25"</span>, <span class="str">"2025-26"</span>])
+
+<span class="cm"># Min-minutes filter (applied after load)</span>
+data = <span class="fn">get_data</span>(min_minutes=<span class="num">5</span>)</code></pre>
+
+  <div class="note">
+    <strong>Return type</strong> — <code>NBAData</code> is a <code>@dataclass(frozen=True)</code> with fields <code>logs</code>, <code>props</code>, <code>lines</code>, <code>meta</code>.
+  </div>
+
+  <h2>Runtime Decision Tree</h2>
+  <div class="section">
+    <h3>Cold path — cache miss or rebuild=True</h3>
+    <div class="flow">
+      <div class="flow-box">DuckDB glob all raw CSVs (both source buckets)</div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">Write 3 parquet files + manifest to <code>nba-betting-mt</code></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">Return DataFrames</div>
+    </div>
+    <p>Uses the same DuckDB + httpfs pattern as the dispersion script and rebounds builder. Writes parquet with <code>pyarrow</code> via <code>io_utils</code>.</p>
+
+    <h3>Warm path — cache hit, no refresh flag</h3>
+    <div class="flow">
+      <div class="flow-box">Read manifest from S3</div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">Read 3 parquet files via <code>io_utils</code></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">Return DataFrames</div>
+    </div>
+    <p>Single <code>GetObject</code> per file. Typically &lt;1 second for all three datasets combined.</p>
+
+    <h3>Refresh path — refresh=True</h3>
+    <div class="flow">
+      <div class="flow-box">Read manifest → get <code>max_game_date</code></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">DuckDB query current season raw CSVs WHERE date &gt; max</div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">If new rows: concat + rewrite parquet + update manifest</div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-box">Return DataFrames</div>
+    </div>
+    <p>Only scans raw CSVs for the current/active season. Past seasons are immutable — they never get new games.</p>
+  </div>
+
+  <h2>File Structure</h2>
+  <pre><code>src/nba_data/
+├── __init__.py          <span class="cm"># exports get_data, NBAData</span>
+├── get_data.py          <span class="cm"># public entry point — orchestrates cache logic</span>
+├── _cache.py            <span class="cm"># read/write manifest + parquet; S3 path constants</span>
+├── _loaders.py          <span class="cm"># DuckDB loaders for raw CSVs (logs, props, lines)</span>
+└── plans/
+    └── get_data.html</code></pre>
+
+  <h2>Implementation Steps</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Write <code>_loaders.py</code> — raw S3 loaders</h4>
+      <p>Extract the DuckDB load patterns from <code>nba_three_point_modeling/99_utils/data_loading.py</code> and the dispersion script into three clean functions: <code>load_logs_raw(seasons, conn)</code>, <code>load_props_raw(seasons, conn)</code>, <code>load_lines_raw(seasons, conn)</code>. Reuse <code>duckdb_s3_creds.py</code> for credential setup. Each returns a <code>pd.DataFrame</code>.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Write <code>_cache.py</code> — manifest + parquet I/O</h4>
+      <p>Define S3 cache path constants. Implement <code>read_manifest()</code> → <code>dict | None</code> (None if absent), <code>write_manifest(meta)</code>, <code>read_cache()</code> → <code>NBAData</code>, and <code>write_cache(logs, props, lines)</code>. Use existing <code>io_utils.py</code> for S3 parquet reads/writes.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Write <code>get_data.py</code> — orchestrator</h4>
+      <p>Implements the three paths (cold, warm, refresh) using the decision tree above. Exposes <code>get_data()</code> with the signature shown above. Applies <code>min_minutes</code> and <code>seasons</code> filters post-load — not baked into the cache so it stays general.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Write <code>__init__.py</code></h4>
+      <p><code>from src.nba_data.get_data import get_data, NBAData</code> — one clean import surface.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h4>Build the initial cache</h4>
+      <p>Run <code>python -c "from src.nba_data import get_data; get_data(rebuild=True)"</code> once to populate <code>nba-betting-mt</code>. Log row counts and manifest to verify correctness.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <h4>Migrate callers (optional, non-breaking)</h4>
+      <p>Replace inline DuckDB boilerplate in the dispersion script and rebounds builder with <code>get_data()</code>. Existing scripts remain unchanged since we are adding, not modifying.</p>
+    </div>
+  </div>
+
+  <h2>Column Contracts (Cache Schema)</h2>
+  <p>Cache stores these columns exactly. Research scripts derive additional columns after calling <code>get_data()</code>.</p>
+
+  <h3>logs</h3>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>season</td><td>str</td><td><code>"2024-25"</code></td></tr>
+      <tr><td>PLAYER_ID</td><td>int64</td><td>NBA API player ID</td></tr>
+      <tr><td>PLAYER_NAME</td><td>str</td><td>raw name from NBA API</td></tr>
+      <tr><td><strong>player_normalized</strong></td><td>str</td><td>via <code>name_normalization.py</code> — join key to props</td></tr>
+      <tr><td>TEAM_ABBREVIATION</td><td>str</td><td>e.g. <code>"BOS"</code></td></tr>
+      <tr><td><strong>team_normalized</strong></td><td>str</td><td>full name via <code>team_normalization.py</code> — join key to lines</td></tr>
+      <tr><td>GAME_ID</td><td>str</td><td></td></tr>
+      <tr><td>GAME_DATE</td><td>date</td><td>parsed from string</td></tr>
+      <tr><td>MATCHUP</td><td>str</td><td><code>"BOS vs. MIA"</code></td></tr>
+      <tr><td>WL</td><td>str</td><td><code>"W"</code> or <code>"L"</code></td></tr>
+      <tr><td>MIN</td><td>float</td><td>minutes played</td></tr>
+      <tr><td>PTS, REB, AST, STL, BLK, TOV</td><td>int/float</td><td>per-game stat cols</td></tr>
+      <tr><td>FGM, FGA, FG3M, FG3A, FTM, FTA</td><td>int/float</td><td>shooting stat cols</td></tr>
+      <tr><td>OREB, DREB, PF, PLUS_MINUS</td><td>int/float</td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h3>props</h3>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>season</td><td>str</td><td></td></tr>
+      <tr><td>player</td><td>str</td><td>raw name from odds API</td></tr>
+      <tr><td><strong>player_normalized</strong></td><td>str</td><td>via <code>name_normalization.py</code> — join key to logs</td></tr>
+      <tr><td>home_team, away_team</td><td>str</td><td>full team name (same space as lines)</td></tr>
+      <tr><td>game_time</td><td>datetime</td><td>UTC tip-off time</td></tr>
+      <tr><td>market</td><td>str</td><td><code>"player_points"</code>, <code>"player_rebounds"</code>, …</td></tr>
+      <tr><td>prop_line</td><td>float</td><td>published line</td></tr>
+      <tr><td>bookmaker</td><td>str</td><td><code>"draftkings"</code>, <code>"fanduel"</code>, …</td></tr>
+      <tr><td>over_odds, under_odds</td><td>int</td><td>American odds</td></tr>
+    </tbody>
+  </table>
+
+  <h3>lines</h3>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>season</td><td>str</td><td></td></tr>
+      <tr><td>home_team, away_team</td><td>str</td><td>full team name — join key to logs via <code>team_normalized</code></td></tr>
+      <tr><td>game_time</td><td>datetime</td><td></td></tr>
+      <tr><td>bookmaker</td><td>str</td><td></td></tr>
+      <tr><td>market</td><td>str</td><td><code>"spreads"</code> or <code>"h2h"</code></td></tr>
+      <tr><td>home_line, away_line</td><td>float</td><td>spread from each side's perspective</td></tr>
+      <tr><td>home_odds, away_odds</td><td>int</td><td>American odds</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Design Decisions</h2>
+  <table>
+    <thead><tr><th>Decision</th><th>Choice</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Cache format</td>
+        <td><span class="badge badge-green">Parquet</span></td>
+        <td>Typed columns, columnar compression — fast to read with <code>pd.read_parquet</code>. CSV has no types; DuckDB file adds another dependency to sync.</td>
+      </tr>
+      <tr>
+        <td>Cache location</td>
+        <td><span class="badge badge-blue">nba-betting-mt</span></td>
+        <td>Already the internal cache bucket. Keeps raw source buckets read-only.</td>
+      </tr>
+      <tr>
+        <td>Refresh granularity</td>
+        <td><span class="badge badge-yellow">Current season only</span></td>
+        <td>Past seasons are immutable. Only the active season gets new games. Avoids re-scanning all raw CSVs on every refresh call.</td>
+      </tr>
+      <tr>
+        <td>Filters in cache?</td>
+        <td><span class="badge badge-red">No — raw data cached</span></td>
+        <td>Cache stores unfiltered data. Callers apply <code>min_minutes</code>, market, season filters post-load. Keeps cache general-purpose for all consumers.</td>
+      </tr>
+      <tr>
+        <td>Name + team normalization in cache?</td>
+        <td><span class="badge badge-green">Yes — extra columns</span></td>
+        <td>
+          Joins between the three datasets require it. Logs carry <code>TEAM_ABBREVIATION</code> ("BOS"); lines carry full team names ("Boston Celtics") — you cannot join them without a shared normalized key. Similarly, props player names from the odds API differ in casing and punctuation from NBA API names. <code>player_normalized</code> is added to logs + props; <code>team_normalized</code> is added to logs (maps abbr → full name via <code>team_normalization.py</code>), and lines already use full names. Raw names are kept alongside for debuggability. Both normalization modules (<code>name_normalization.py</code>, <code>team_normalization.py</code>) already exist and are stable.
+        </td>
+      </tr>
+      <tr>
+        <td>Warm path read method</td>
+        <td><span class="badge badge-green">boto3 / io_utils</span></td>
+        <td>Cache parquet is a single object per dataset — no glob needed. DuckDB startup overhead is unnecessary on warm reads.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Example: Full Research DataFrame (all 3 seasons)</h2>
+  <p>
+    The canonical starting point for prop modeling — every player-game over 3 seasons with actual stats, their team's closing spread, and the market line for each of the three main props. All three datasets are used, and the joins show exactly what keys connect them.
+  </p>
+
+  <pre><code><span class="kw">from</span> src.nba_data <span class="kw">import</span> get_data
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># ── 1. load everything — warm cache hit is &lt;1s ──────────────────────────────</span>
+data = <span class="fn">get_data</span>(seasons=[<span class="str">"2023-24"</span>, <span class="str">"2024-25"</span>, <span class="str">"2025-26"</span>])
+<span class="cm"># data.logs  → ~75k player-games</span>
+<span class="cm"># data.props → ~2.4M prop rows (one row per player × market × bookmaker × game)</span>
+<span class="cm"># data.lines → ~90k line rows  (one row per team × market × bookmaker × game)</span>
+
+<span class="cm"># ── 2. median spread per game, one row per game ──────────────────────────────</span>
+<span class="cm">#    logs.team_normalized is the full team name — same space as lines.home_team</span>
+spread = (
+    data.lines
+    .query(<span class="str">"market == 'spreads'"</span>)
+    .groupby([<span class="str">"home_team"</span>, <span class="str">"away_team"</span>, <span class="str">"game_time"</span>], as_index=<span class="kw">False</span>)
+    .agg(spread_home=(<span class="str">"home_line"</span>, <span class="str">"median"</span>))
+)
+spread[<span class="str">"GAME_DATE"</span>] = pd.to_datetime(spread[<span class="str">"game_time"</span>]).dt.date
+
+logs = data.logs.merge(
+    spread,
+    left_on=[<span class="str">"home_team_normalized"</span>, <span class="str">"away_team_normalized"</span>, <span class="str">"GAME_DATE"</span>],
+    right_on=[<span class="str">"home_team"</span>,            <span class="str">"away_team"</span>,            <span class="str">"GAME_DATE"</span>],
+    how=<span class="str">"left"</span>,
+)
+<span class="cm"># spread_signed: negative = player's team is favourite</span>
+logs[<span class="str">"spread_signed"</span>] = logs.apply(
+    <span class="kw">lambda</span> r: r[<span class="str">"spread_home"</span>] <span class="kw">if</span> r[<span class="str">"is_home"</span>] <span class="kw">else</span> -r[<span class="str">"spread_home"</span>], axis=<span class="num">1</span>
+)
+
+<span class="cm"># ── 3. median prop line per player × market × game, pivot to columns ─────────</span>
+<span class="cm">#    props.player_normalized is already in the same space as logs.player_normalized</span>
+props_median = (
+    data.props
+    .query(<span class="str">"market in ('player_points', 'player_rebounds', 'player_assists')"</span>)
+    .groupby([<span class="str">"player_normalized"</span>, <span class="str">"game_time"</span>, <span class="str">"market"</span>], as_index=<span class="kw">False</span>)
+    .agg(prop_line=(<span class="str">"prop_line"</span>, <span class="str">"median"</span>))
+    .pivot_table(index=[<span class="str">"player_normalized"</span>, <span class="str">"game_time"</span>], columns=<span class="str">"market"</span>, values=<span class="str">"prop_line"</span>)
+    .rename(columns={
+        <span class="str">"player_points"</span>:   <span class="str">"line_pts"</span>,
+        <span class="str">"player_rebounds"</span>: <span class="str">"line_reb"</span>,
+        <span class="str">"player_assists"</span>:  <span class="str">"line_ast"</span>,
+    })
+    .reset_index()
+)
+props_median[<span class="str">"GAME_DATE"</span>] = pd.to_datetime(props_median[<span class="str">"game_time"</span>]).dt.date
+
+<span class="cm"># ── 4. join props onto logs — normalized keys match, no ad-hoc cleaning ──────</span>
+df = logs.merge(
+    props_median[[<span class="str">"player_normalized"</span>, <span class="str">"GAME_DATE"</span>, <span class="str">"line_pts"</span>, <span class="str">"line_reb"</span>, <span class="str">"line_ast"</span>]],
+    on=[<span class="str">"player_normalized"</span>, <span class="str">"GAME_DATE"</span>],
+    how=<span class="str">"left"</span>,
+)
+
+<span class="cm"># ── 6. result ────────────────────────────────────────────────────────────────</span>
+KEEP = [
+    <span class="str">"season"</span>, <span class="str">"GAME_DATE"</span>, <span class="str">"PLAYER_NAME"</span>, <span class="str">"TEAM_ABBREVIATION"</span>, <span class="str">"MATCHUP"</span>, <span class="str">"WL"</span>,
+    <span class="str">"MIN"</span>, <span class="str">"PTS"</span>, <span class="str">"REB"</span>, <span class="str">"AST"</span>,
+    <span class="str">"spread_signed"</span>,                   <span class="cm"># team's spread going in (+fav / -dog)</span>
+    <span class="str">"line_pts"</span>, <span class="str">"line_reb"</span>, <span class="str">"line_ast"</span>,  <span class="cm"># market prop lines for this game</span>
+]
+df = df[KEEP].sort_values([<span class="str">"season"</span>, <span class="str">"GAME_DATE"</span>, <span class="str">"PLAYER_NAME"</span>]).reset_index(drop=<span class="kw">True</span>)
+
+<span class="fn">print</span>(df.shape)         <span class="cm"># e.g. (68_412, 15) — only rows with a prop market line</span>
+<span class="fn">print</span>(df.head(<span class="num">3</span>).to_string())</code></pre>
+
+  <h3>What the result looks like</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>season</th><th>GAME_DATE</th><th>PLAYER_NAME</th><th>TEAM</th>
+        <th>MIN</th><th>PTS</th><th>REB</th><th>AST</th>
+        <th>spread_signed</th><th>line_pts</th><th>line_reb</th><th>line_ast</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2023-24</td><td>2023-10-24</td><td>Jayson Tatum</td><td>BOS</td>
+        <td>37.0</td><td>35</td><td>9</td><td>4</td>
+        <td style="color:#86efac">-5.5</td><td>27.5</td><td>7.5</td><td>4.5</td>
+      </tr>
+      <tr>
+        <td>2023-24</td><td>2023-10-24</td><td>LeBron James</td><td>LAL</td>
+        <td>35.0</td><td>21</td><td>5</td><td>8</td>
+        <td style="color:#fca5a5">+2.0</td><td>25.5</td><td>6.5</td><td>7.5</td>
+      </tr>
+      <tr>
+        <td>2024-25</td><td>2024-10-22</td><td>Nikola Jokic</td><td>DEN</td>
+        <td>34.0</td><td>29</td><td>14</td><td>7</td>
+        <td style="color:#86efac">-3.5</td><td>27.5</td><td>12.5</td><td>8.5</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="margin-top:8px;">Each row is one player-game. <code>spread_signed</code> is positive when the player's team was favoured. The three <code>line_*</code> columns are the median market line across bookmakers — the market's pre-game expectation for that player. Actual vs. line is the core over/under signal.</p>
+
+  <h2>Open Questions</h2>
+  <ul>
+    <li>Single merged parquet vs one file per season? Single file is simpler for now — revisit if parquet files become large (&gt;500 MB).</li>
+    <li>Should <code>get_data()</code> print cache age to stdout by default? Useful in notebooks for catching stale data.</li>
+    <li>Add <code>python -m src.nba_data rebuild</code> CLI entry point so Lambda or cron can trigger a rebuild without a caller script?</li>
+    <li>Streamlit Cloud credential path: IAM role on the container — same boto3 chain, should work without changes.</li>
+  </ul>
+
+</div>
+</body>
+</html>
