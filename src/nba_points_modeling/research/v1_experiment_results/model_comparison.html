@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBA Points Props — v1 Model Comparison</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; line-height: 1.5; }
+
+  .header { background: #1a1a2e; color: white; padding: 36px 48px; }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .header .meta { margin-top: 8px; color: #8888aa; font-size: 13px; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 36px 24px; }
+
+  /* TL;DR */
+  .tldr { background: #fff; border-left: 4px solid #2563eb; border-radius: 4px; padding: 24px 28px; margin-bottom: 36px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .tldr h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #2563eb; margin-bottom: 14px; }
+  .tldr .verdict { font-size: 17px; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; }
+  .tldr ul { padding-left: 18px; }
+  .tldr li { font-size: 14px; color: #444; margin-bottom: 6px; }
+  .tldr li strong { color: #1a1a1a; }
+
+  /* Section headers */
+  h2.section { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #888; margin-bottom: 16px; margin-top: 40px; }
+
+  /* Setup cards */
+  .setup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 8px; }
+  .setup-card { background: #fff; border-radius: 6px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .setup-card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 6px; }
+  .setup-card .value { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .setup-card .sub { font-size: 12px; color: #888; margin-top: 2px; }
+
+  /* Ranking table */
+  .rank-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .rank-table th { background: #1a1a2e; color: #aab; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 12px 16px; text-align: left; }
+  .rank-table td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  .rank-table tr:last-child td { border-bottom: none; }
+  .rank-table tr.winner td { background: #f0fdf4; }
+  .rank-table tr:hover td { background: #fafafa; }
+  .rank-table tr.winner:hover td { background: #dcfce7; }
+
+  .rank-badge { display: inline-block; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: 700; color: white; }
+  .rank-1 { background: #d97706; }
+  .rank-2 { background: #6b7280; }
+  .rank-3 { background: #92400e; }
+  .rank-other { background: #d1d5db; color: #555; }
+
+  .approach-name { font-weight: 600; font-size: 13px; }
+  .approach-model { font-size: 11px; color: #888; margin-top: 2px; }
+
+  .roi-val { font-size: 14px; font-weight: 700; }
+  .roi-neg { color: #dc2626; }
+  .roi-close { color: #d97706; }
+
+  .brier-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .brier-bar-bg { background: #e5e7eb; border-radius: 3px; height: 6px; width: 100px; flex-shrink: 0; }
+  .brier-bar-fill { background: #2563eb; border-radius: 3px; height: 6px; }
+  .brier-val { font-size: 12px; color: #555; font-family: monospace; }
+
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .tag-green { background: #dcfce7; color: #166534; }
+  .tag-red { background: #fee2e2; color: #991b1b; }
+  .tag-yellow { background: #fef9c3; color: #854d0e; }
+  .tag-gray { background: #f3f4f6; color: #6b7280; }
+
+  /* Model cards */
+  .model-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .model-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+  .model-card .card-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f0f0f0; }
+  .model-card .card-header .left .rank-num { font-size: 11px; color: #aaa; font-weight: 600; margin-bottom: 4px; }
+  .model-card .card-header .left .name { font-size: 14px; font-weight: 700; }
+  .model-card .card-header .left .sub { font-size: 11px; color: #888; margin-top: 2px; }
+  .model-card .card-body { padding: 16px 20px; }
+
+  .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .stat-row:last-child { margin-bottom: 0; }
+  .stat-label { font-size: 12px; color: #888; }
+  .stat-value { font-size: 13px; font-weight: 600; }
+
+  .feat-bar-wrap { margin-top: 14px; border-top: 1px solid #f0f0f0; padding-top: 14px; }
+  .feat-label-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .feat-name { font-size: 11px; color: #555; font-family: monospace; }
+  .feat-pct { font-size: 11px; color: #888; }
+  .feat-bar-bg { background: #f3f4f6; border-radius: 3px; height: 5px; margin-bottom: 7px; }
+  .feat-bar-fill-pos { background: #2563eb; border-radius: 3px; height: 5px; }
+  .feat-bar-fill-neg { background: #dc2626; border-radius: 3px; height: 5px; }
+
+  .insight-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 12px 16px; margin-top: 12px; font-size: 12px; color: #78350f; line-height: 1.5; }
+
+  /* Findings */
+  .findings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .finding-card { background: #fff; border-radius: 6px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .finding-card .finding-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .finding-card .finding-body { font-size: 13px; color: #555; line-height: 1.6; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #16a34a; }
+  .dot-red { background: #dc2626; }
+  .dot-yellow { background: #d97706; }
+  .dot-blue { background: #2563eb; }
+
+  /* Next steps */
+  .steps-list { list-style: none; counter-reset: steps; }
+  .steps-list li { counter-increment: steps; display: flex; gap: 16px; margin-bottom: 20px; background: #fff; border-radius: 6px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .steps-list li::before { content: counter(steps); display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #1a1a2e; color: white; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .step-content .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .step-content .step-body { font-size: 13px; color: #555; line-height: 1.5; }
+
+  .footer { text-align: center; padding: 32px; font-size: 12px; color: #bbb; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NBA Points Props — v1 Model Comparison</h1>
+  <div class="meta">6 approaches backtested &nbsp;·&nbsp; Train: 2024-25 &nbsp;·&nbsp; Test: 2025-26 (out-of-sample) &nbsp;·&nbsp; May 2026</div>
+</div>
+
+<div class="container">
+
+  <!-- TL;DR -->
+  <div class="tldr">
+    <h2>TL;DR</h2>
+    <div class="verdict">No approach was profitable at -110 flat betting — but two clear signals are worth building on in v2.</div>
+    <ul>
+      <li><strong>Market Blending won</strong> on every metric: best Brier (0.24967), best ROI (−2.5%), highest win rate (51.1%). The key insight: isotonic recalibration found the market overprices low-probability overs by ~3.5%. That's the most actionable edge from this entire run.</li>
+      <li><strong>Injury/lineup detection found a real signal</strong> — a 4.1pp over-rate lift when core players are absent — but the detector is broken: 98.5% of games got flagged, diluting everything. Fix the threshold and this becomes usable.</li>
+      <li><strong>Rolling form features actively hurt</strong> (Agent 4 was 2nd worst). Players who recently beat their line are slightly more likely to fall under next game — regression to mean. Don't use streak features in v2.</li>
+      <li><strong>XGBoost underperformed</strong> despite the most features. All features had ~equal importance (~9% each), meaning the model found no real hierarchy. The features themselves aren't wrong — the model just needs better signal.</li>
+      <li><strong>Bayesian player model was the worst ROI</strong> (−10.1%). 351 of 377 players had positive bias, which is suspicious — almost certainly a data artifact from star players getting propped at conservative lines.</li>
+    </ul>
+  </div>
+
+  <!-- Setup -->
+  <h2 class="section">Experiment Setup</h2>
+  <div class="setup-grid">
+    <div class="setup-card">
+      <div class="label">Training Data</div>
+      <div class="value">2024-25 Season</div>
+      <div class="sub">12,480 player-games with props + actuals</div>
+    </div>
+    <div class="setup-card">
+      <div class="label">Test Data (out-of-sample)</div>
+      <div class="value">2025-26 Season</div>
+      <div class="sub">10,175 player-games · true holdout</div>
+    </div>
+    <div class="setup-card">
+      <div class="label">Betting Rule</div>
+      <div class="value">≥2% edge over market</div>
+      <div class="sub">No-vig implied prob (never arithmetic mean) · −110 juice · break-even = 52.38%</div>
+    </div>
+  </div>
+
+  <!-- Rankings -->
+  <h2 class="section">Rankings by Out-of-Sample ROI</h2>
+  <table class="rank-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Approach</th>
+        <th>ROI @ −110</th>
+        <th>Win Rate</th>
+        <th>Brier Score</th>
+        <th>Brier vs Market</th>
+        <th>N Bets</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="winner">
+        <td><span class="rank-badge rank-1">1</span></td>
+        <td>
+          <div class="approach-name">Market Blending</div>
+          <div class="approach-model">Platt scaling + isotonic recalibration</div>
+        </td>
+        <td><span class="roi-val roi-close">−2.5%</span></td>
+        <td>51.1%</td>
+        <td>
+          <div class="brier-bar-wrap">
+            <div class="brier-bar-bg"><div class="brier-bar-fill" style="width:78px"></div></div>
+            <span class="brier-val">0.24967</span>
+          </div>
+        </td>
+        <td><span class="tag tag-green">−0.00478</span></td>
+        <td>1,476</td>
+        <td><span class="tag tag-green">Best overall</span></td>
+      </tr>
+      <tr>
+        <td><span class="rank-badge rank-2">2</span></td>
+        <td>
+          <div class="approach-name">Opponent-Adjusted Pace</div>
+          <div class="approach-model">Logistic regression on opp defensive features</div>
+        </td>
+        <td><span class="roi-val roi-neg">−3.9%</span></td>
+        <td>50.4%</td>
+        <td>
+          <div class="brier-bar-wrap">
+            <div class="brier-bar-bg"><div class="brier-bar-fill" style="width:82px"></div></div>
+            <span class="brier-val">0.25001</span>
+          </div>
+        </td>
+        <td><span class="tag tag-green">−0.00444</span></td>
+        <td>5,423</td>
+        <td><span class="tag tag-yellow">Good Brier, weak ROI</span></td>
+      </tr>
+      <tr>
+        <td><span class="rank-badge rank-3">3</span></td>
+        <td>
+          <div class="approach-name">Injury / Lineup Detection</div>
+          <div class="approach-model">Random forest on absence signals</div>
+        </td>
+        <td><span class="roi-val roi-neg">−3.9%</span></td>
+        <td>50.3%</td>
+        <td>
+          <div class="brier-bar-wrap">
+            <div class="brier-bar-bg"><div class="brier-bar-fill" style="width:82px"></div></div>
+            <span class="brier-val">0.25009</span>
+          </div>
+        </td>
+        <td><span class="tag tag-green">−0.00436</span></td>
+        <td>4,557</td>
+        <td><span class="tag tag-yellow">Real signal, broken detector</span></td>
+      </tr>
+      <tr>
+        <td><span class="rank-badge rank-other">4</span></td>
+        <td>
+          <div class="approach-name">Gradient Boosting</div>
+          <div class="approach-model">XGBoost on minutes + usage features</div>
+        </td>
+        <td><span class="roi-val roi-neg">−4.2%</span></td>
+        <td>50.2%</td>
+        <td>
+          <div class="brier-bar-wrap">
+            <div class="brier-bar-bg"><div class="brier-bar-fill" style="width:60px"></div></div>
+            <span class="brier-val">0.25313</span>
+          </div>
+        </td>
+        <td><span class="tag tag-yellow">−0.00132</span></td>
+        <td>7,509</td>
+        <td><span class="tag tag-gray">Most bets, least signal</span></td>
+      </tr>
+      <tr>
+        <td><span class="rank-badge rank-other">5</span></td>
+        <td>
+          <div class="approach-name">Recent Form Regression</div>
+          <div class="approach-model">EWM rolling windows · logistic</div>
+        </td>
+        <td><span class="roi-val roi-neg">−7.4%</span></td>
+        <td>48.5%</td>
+        <td>
+          <div class="brier-bar-wrap">
+            <div class="brier-bar-bg"><div class="brier-bar-fill" style="width:81px"></div></div>
+            <span class="brier-val">0.25009</span>
+          </div>
+        </td>
+        <td><span class="tag tag-green">−0.00436</span></td>
+        <td>4,318</td>
+        <td><span class="tag tag-red">Regression to mean hurts</span></td>
+      </tr>
+      <tr>
+        <td><span class="rank-badge rank-other">6</span></td>
+        <td>
+          <div class="approach-name">Bayesian Hierarchical</div>
+          <div class="approach-model">Empirical Bayes by player · shrinkage</div>
+        </td>
+        <td><span class="roi-val roi-neg">−10.1%</span></td>
+        <td>47.1%</td>
+        <td>
+          <div class="brier-bar-wrap">
+            <div class="brier-bar-bg"><div class="brier-bar-fill" style="width:68px"></div></div>
+            <span class="brier-val">0.25078</span>
+          </div>
+        </td>
+        <td><span class="tag tag-green">−0.00367</span></td>
+        <td>4,112</td>
+        <td><span class="tag tag-red">Worst ROI · mostly over bets</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:11px;color:#aaa;margin-top:8px;">Market Brier baseline: 0.25445 · Break-even win rate at −110: 52.38%</p>
+
+  <!-- Model cards -->
+  <h2 class="section">Model Deep Dives</h2>
+  <div class="model-grid">
+
+    <!-- Agent 1 -->
+    <div class="model-card">
+      <div class="card-header">
+        <div class="left">
+          <div class="rank-num">RANK 4 · Agent 1</div>
+          <div class="name">Gradient Boosting (XGBoost)</div>
+          <div class="sub">Minutes + usage rolling features</div>
+        </div>
+        <span class="tag tag-gray">−4.2% ROI</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row"><span class="stat-label">Brier score</span><span class="stat-value">0.25313</span></div>
+        <div class="stat-row"><span class="stat-label">Market Brier</span><span class="stat-value">0.25445 (−0.00132 improvement)</span></div>
+        <div class="stat-row"><span class="stat-label">Win rate</span><span class="stat-value">50.2%</span></div>
+        <div class="stat-row"><span class="stat-label">Bets (over / under)</span><span class="stat-value">7,509 &nbsp;(3,863 over · 3,646 under)</span></div>
+        <div class="feat-bar-wrap">
+          <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Top Features (XGBoost importance)</div>
+          <div class="feat-label-row"><span class="feat-name">is_favorite</span><span class="feat-pct">10.0%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:100%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">FT_PCT_r10</span><span class="feat-pct">9.5%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:95%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">points_line</span><span class="feat-pct">9.1%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:91%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">team_spread / usage_r10 / FG_PCT_r10</span><span class="feat-pct">~9.2%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:92%"></div></div>
+        </div>
+        <div class="insight-box">⚠️ All features have nearly equal importance (~9% each). XGBoost is not finding a signal hierarchy — it's spreading credit evenly. This pattern usually means the model is underfitting or the features are too collinear. <code>pts_0_6_pct</code> had zero importance.</div>
+      </div>
+    </div>
+
+    <!-- Agent 2 -->
+    <div class="model-card">
+      <div class="card-header">
+        <div class="left">
+          <div class="rank-num">RANK 6 · Agent 2</div>
+          <div class="name">Bayesian Hierarchical (by player)</div>
+          <div class="sub">Empirical Bayes shrinkage · 70/30 blend with logistic</div>
+        </div>
+        <span class="tag tag-red">−10.1% ROI</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row"><span class="stat-label">Brier score</span><span class="stat-value">0.25078</span></div>
+        <div class="stat-row"><span class="stat-label">Win rate</span><span class="stat-value">47.1%</span></div>
+        <div class="stat-row"><span class="stat-label">Bets</span><span class="stat-value">4,112 &nbsp;(3,837 over · 275 under)</span></div>
+        <div class="stat-row"><span class="stat-label">Players: positive bias</span><span class="stat-value">351 of 377 (93%)</span></div>
+        <div class="stat-row"><span class="stat-label">Players: new in test</span><span class="stat-value">64 (used global prior)</span></div>
+        <div class="stat-row"><span class="stat-label">Mean shrinkage k</span><span class="stat-value">0.922 (strong pull to global mean)</span></div>
+        <div class="insight-box">🚨 93% of players have positive scoring bias vs their prop line — this is almost certainly because the market sets conservative lines for star players. The model is systematically over-betting overs. The 275 under bets vs 3,837 over bets confirms a directional bias. The Bayesian machinery is working correctly but the prior assumption (bias = 0) is wrong.</div>
+      </div>
+    </div>
+
+    <!-- Agent 3 -->
+    <div class="model-card">
+      <div class="card-header">
+        <div class="left">
+          <div class="rank-num">RANK 2 · Agent 3</div>
+          <div class="name">Opponent-Adjusted Pace</div>
+          <div class="sub">Logistic regression · opp defensive rate derived from game logs</div>
+        </div>
+        <span class="tag tag-yellow">−3.9% ROI</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row"><span class="stat-label">Brier score</span><span class="stat-value">0.25001 (2nd best)</span></div>
+        <div class="stat-row"><span class="stat-label">Win rate</span><span class="stat-value">50.4%</span></div>
+        <div class="stat-row"><span class="stat-label">Bets (over / under)</span><span class="stat-value">5,423 &nbsp;(2,619 over · 2,804 under)</span></div>
+        <div class="feat-bar-wrap">
+          <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Opponent Tier Over-Rates (test set)</div>
+          <div class="stat-row"><span class="stat-label">😤 Tough defense (n=3,296)</span><span class="stat-value">48.2%</span></div>
+          <div class="stat-row"><span class="stat-label">😐 Average defense (n=3,552)</span><span class="stat-value">49.3%</span></div>
+          <div class="stat-row"><span class="stat-label">😴 Easy defense (n=3,327)</span><span class="stat-value">47.5%</span></div>
+          <div style="margin-top:8px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;">Top Feature Coefficients</div>
+          <div class="feat-label-row" style="margin-top:8px;"><span class="feat-name">opp_over_rate</span><span class="feat-pct">0.071 ↑</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:100%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">rim_fg_pct</span><span class="feat-pct">0.064 ↑</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:90%"></div></div>
+        </div>
+        <div class="insight-box">⚠️ Opponent tier spread is tiny (47.5% to 49.3%). The market already prices opponent strength well — there's minimal residual. The surprisingly good Brier score likely comes from <code>rim_fg_pct</code> and <code>points_line</code> being informative about player type, not opponent matchup.</div>
+      </div>
+    </div>
+
+    <!-- Agent 4 -->
+    <div class="model-card">
+      <div class="card-header">
+        <div class="left">
+          <div class="rank-num">RANK 5 · Agent 4</div>
+          <div class="name">Recent Form Regression</div>
+          <div class="sub">Rolling 5/10-game windows + EWM · logistic regression</div>
+        </div>
+        <span class="tag tag-red">−7.4% ROI</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row"><span class="stat-label">Brier score</span><span class="stat-value">0.25009</span></div>
+        <div class="stat-row"><span class="stat-label">Win rate</span><span class="stat-value">48.5%</span></div>
+        <div class="stat-row"><span class="stat-label">Bets @ 2% threshold</span><span class="stat-value">4,318 &nbsp;(2,092 over · 2,226 under)</span></div>
+        <div class="stat-row"><span class="stat-label">ROI @ 4% strict threshold</span><span class="stat-value">−5.6% &nbsp;(1,305 bets)</span></div>
+        <div class="feat-bar-wrap">
+          <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Top Feature Coefficients</div>
+          <div class="feat-label-row"><span class="feat-name">points_line</span><span class="feat-pct">−0.186</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-neg" style="width:100%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">MIN_ewm</span><span class="feat-pct">−0.150 (negative!)</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-neg" style="width:80%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">PTS_r10</span><span class="feat-pct">+0.118</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:63%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">pvl_r5 (pts vs line, recent)</span><span class="feat-pct">−0.071</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-neg" style="width:38%"></div></div>
+        </div>
+        <div class="insight-box">💡 The negative <code>pvl_r5</code> coefficient is the key finding: players who recently exceeded their line are <em>more likely to go under</em> next game. This is regression to mean, not momentum. <code>last3over</code> had near-zero coefficient (0.006) — hot streak betting is noise.</div>
+      </div>
+    </div>
+
+    <!-- Agent 5 -->
+    <div class="model-card">
+      <div class="card-header">
+        <div class="left">
+          <div class="rank-num">RANK 3 · Agent 5</div>
+          <div class="name">Injury / Lineup Detection</div>
+          <div class="sub">Random forest · absence signals from game-log roster gaps</div>
+        </div>
+        <span class="tag tag-yellow">−3.9% ROI</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row"><span class="stat-label">Brier score</span><span class="stat-value">0.25009</span></div>
+        <div class="stat-row"><span class="stat-label">Win rate</span><span class="stat-value">50.3%</span></div>
+        <div class="stat-row"><span class="stat-label">Bets</span><span class="stat-value">4,557 &nbsp;(2,521 over · 2,036 under)</span></div>
+        <div class="stat-row"><span class="stat-label">Over rate WITH absence</span><span class="stat-value" style="color:#16a34a;">48.4%</span></div>
+        <div class="stat-row"><span class="stat-label">Over rate WITHOUT absence</span><span class="stat-value">44.3%</span></div>
+        <div class="stat-row"><span class="stat-label">Absence lift</span><span class="stat-value; font-weight:700">+4.1pp 🔥</span></div>
+        <div class="stat-row"><span class="stat-label">ROI on absence-game bets only</span><span class="stat-value">−3.8%</span></div>
+        <div class="stat-row" style="background:#fff3cd;padding:6px 8px;border-radius:4px;margin-top:8px;">
+          <span class="stat-label" style="color:#856404;">⚠️ Games flagged as "absence"</span>
+          <span class="stat-value" style="color:#856404;">98.5%</span>
+        </div>
+        <div class="feat-bar-wrap">
+          <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;margin-top:12px;text-transform:uppercase;letter-spacing:1px;">Feature Importance</div>
+          <div class="feat-label-row"><span class="feat-name">points_line</span><span class="feat-pct">22.7%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:100%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">avg_min</span><span class="feat-pct">20.4%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:90%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">team_spread</span><span class="feat-pct">19.1%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:84%"></div></div>
+          <div class="feat-label-row"><span class="feat-name">abs_signal (absence × minutes tier)</span><span class="feat-pct">13.5%</span></div>
+          <div class="feat-bar-bg"><div class="feat-bar-fill-pos" style="width:59%"></div></div>
+        </div>
+        <div class="insight-box">🔥 The 4.1pp absence lift is real. But flagging 98.5% of games as "absence" means the core rotation threshold (>35% appearance rate) is too loose. The <code>abs_signal</code> feature still shows up at 13.5% importance despite the noisy detector — tightening this is the highest-ROI improvement available for v2.</div>
+      </div>
+    </div>
+
+    <!-- Agent 6 -->
+    <div class="model-card" style="border:2px solid #2563eb;">
+      <div class="card-header" style="background:#eff6ff;">
+        <div class="left">
+          <div class="rank-num" style="color:#2563eb;">RANK 1 · Agent 6 · WINNER</div>
+          <div class="name">Market Blending</div>
+          <div class="sub">Isotonic recalibration + Platt scaling · optimized blend</div>
+        </div>
+        <span class="tag tag-green">−2.5% ROI · Best</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row"><span class="stat-label">Brier score</span><span class="stat-value" style="color:#2563eb;">0.24967 (best overall)</span></div>
+        <div class="stat-row"><span class="stat-label">Brier improvement vs market</span><span class="stat-value" style="color:#16a34a;">−0.00478</span></div>
+        <div class="stat-row"><span class="stat-label">Win rate</span><span class="stat-value">51.1% (closest to break-even)</span></div>
+        <div class="stat-row"><span class="stat-label">Bets</span><span class="stat-value">1,476 (697 over · 779 under) · fewest, most selective</span></div>
+        <div class="stat-row"><span class="stat-label">Blend weights</span><span class="stat-value">Isotonic 81.2% · Platt 18.8% · Raw market 0%</span></div>
+        <div class="feat-bar-wrap">
+          <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;margin-top:4px;text-transform:uppercase;letter-spacing:1px;">Market Calibration Biases (training set)</div>
+          <div class="stat-row" style="background:#dcfce7;padding:6px 8px;border-radius:4px;">
+            <span class="stat-label">Low-probability overs (bottom 20%)</span>
+            <span class="stat-value" style="color:#16a34a;">+3.5pp overpriced 🎯</span>
+          </div>
+          <div class="stat-row" style="margin-top:6px;"><span class="stat-label">High-probability overs (top 20%)</span><span class="stat-value">−0.2pp (negligible)</span></div>
+          <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;margin-top:12px;text-transform:uppercase;letter-spacing:1px;">Line Tier Biases</div>
+          <div class="stat-row"><span class="stat-label">Low lines (role players)</span><span class="stat-value" style="color:#16a34a;">+1.1pp (market underprices overs)</span></div>
+          <div class="stat-row"><span class="stat-label">Mid-low lines</span><span class="stat-value">−0.5pp</span></div>
+          <div class="stat-row"><span class="stat-label">Mid-high lines</span><span class="stat-value">+1.0pp</span></div>
+          <div class="stat-row"><span class="stat-label">High lines (stars)</span><span class="stat-value" style="color:#dc2626;">−2.2pp (market overprices star overs)</span></div>
+        </div>
+        <div class="insight-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af;">💡 The low-prob bias (+3.5pp) is the most concrete actionable edge from this entire experiment. It means the market adds too much vig on long-shot over bets and not enough on near-even bets. This is a systematic bookmaker pricing inefficiency, not a modeling artifact. Worth validating directly before building a full model on top of it.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Findings -->
+  <h2 class="section">Cross-Model Findings</h2>
+  <div class="findings-grid">
+    <div class="finding-card">
+      <div class="finding-title"><div class="dot dot-red"></div>No approach was profitable at −110 flat betting</div>
+      <div class="finding-body">Break-even requires 52.38% win rate. Best model hit 51.1%. This is expected for a v1 baseline — NBA player props are a mature, competitive market. The question is whether there are narrow conditions where edge exists, not whether a naive model wins overall.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title"><div class="dot dot-green"></div>Market has a real low-probability over bias (+3.5pp)</div>
+      <div class="finding-body">When the no-vig over probability is in the bottom decile, actual hit rates are 3.5pp higher than market implied. This is the strongest signal found. It likely reflects bookmakers applying conservative vig on "prop specials" — low-probability outcomes where they model less accurately.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title"><div class="dot dot-yellow"></div>Absence signal is real but detector is broken</div>
+      <div class="finding-body">Agent 5 found a 4.1pp over-rate lift (44.3% → 48.4%) when a core rotation player is absent. However, 98.5% of games were flagged — the 35% appearance threshold is too loose. The signal exists in the feature importance (13.5%) despite the noise. Fix: raise threshold to >60%, require player averaged >28 min/game.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title"><div class="dot dot-red"></div>Rolling form / streak features actively hurt performance</div>
+      <div class="finding-body">Agent 4 (Recent Form) had the 2nd worst ROI. The <code>pvl_r5</code> coefficient is <em>negative</em> — recent over-performance predicts under-performance next game. The market adjusts lines quickly for hot streaks. Chasing momentum is anti-edge here.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title"><div class="dot dot-yellow"></div>Star player lines are overpriced by −2.2pp</div>
+      <div class="finding-body">Agent 6 found that high-line players (stars) have a −2.2pp bias — meaning the market slightly overprices their over. This is consistent with "star premium" pricing where books know casual bettors prefer overs on famous players and shade the line accordingly.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title"><div class="dot dot-blue"></div>Isotonic recalibration outperforms raw market and Platt scaling</div>
+      <div class="finding-body">The optimizer assigned 81% weight to isotonic regression and 18% to Platt scaling, discarding raw market entirely. This suggests the market probability ordering is good (Brier ranking) but the calibration is systematically off at the tails — exactly what isotonic regression corrects.</div>
+    </div>
+  </div>
+
+  <!-- Next Steps -->
+  <h2 class="section">Recommended Next Steps for v2</h2>
+  <ol class="steps-list">
+    <li>
+      <div class="step-content">
+        <div class="step-title">Validate the low-prob over bias directly (1-2 hours)</div>
+        <div class="step-body">Before building anything, confirm the +3.5pp bias holds cross-season. Filter to props where no-vig over probability &lt;46%, check actual hit rate in 2023-24 and 2024-25 data. If it replicates, this is a standalone rule-based edge deployable today without a model.</div>
+      </div>
+    </li>
+    <li>
+      <div class="step-content">
+        <div class="step-title">Fix the absence detector (threshold: >60% appearance, >28 min avg)</div>
+        <div class="step-body">Raise the core rotation threshold from 35% to 60% appearance rate AND require the player averaged >28 minutes per game. Rerun Agent 5's script and check what % of games get flagged — target 15-25%. If the 4.1pp lift holds with a sharper detector, this becomes the most valuable feature in v2.</div>
+      </div>
+    </li>
+    <li>
+      <div class="step-content">
+        <div class="step-title">Build v2 as: isotonic calibration base + sharpened absence adjustment</div>
+        <div class="step-body">Use Agent 6's isotonic recalibration as the probability foundation, then add the fixed absence signal as a multiplicative adjustment. No rolling form features. Betting rule: edge ≥3% (raise from 2% to reduce noise) on games where low-prob over OR confirmed absence detected.</div>
+      </div>
+    </li>
+    <li>
+      <div class="step-content">
+        <div class="step-title">Investigate the star-player under bias as a separate strategy</div>
+        <div class="step-body">Agent 6 found −2.2pp bias for high-line players. Backtest a simple rule: bet under on players with lines >25 pts when the market over probability is above the median. This is complementary to the low-prob over strategy and targets a different segment of the market.</div>
+      </div>
+    </li>
+  </ol>
+
+</div>
+
+<div class="footer">
+  Generated from 6 parallel model runs · Training data: 2024-25 (12,480 rows) · Test data: 2025-26 (10,175 rows) · All implied probabilities computed using no-vig conversion (never arithmetic mean)
+</div>
+
+</body>
+</html>

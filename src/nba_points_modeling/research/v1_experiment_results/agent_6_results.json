@@ -1,0 +1,51 @@
+{
+  "approach": "market_implied_probability_blending",
+  "brier_score": 0.24967,
+  "brier_score_market_raw": 0.25445,
+  "brier_score_platt": 0.24957,
+  "brier_score_isotonic": 0.24987,
+  "roi_at_minus_110": -0.02476,
+  "n_bets": 1476,
+  "win_rate": 0.5108,
+  "edge_threshold": 0.02,
+  "blend_weights": {
+    "market": 0.0,
+    "platt": 0.188,
+    "isotonic": 0.812
+  },
+  "train_season": "2024-25",
+  "test_season": "2025-26",
+  "n_train": 12480,
+  "n_test": 10175,
+  "feature_importance": {
+    "mkt": 0.04523,
+    "team_spread": 0.01123,
+    "is_home": 0.00776,
+    "is_favorite": 0.00336,
+    "points_line": -0.03388,
+    "pts_0_6_pct": 0.0,
+    "rim_fg_pct": 0.06114,
+    "num_bookmakers": -0.01445
+  },
+  "market_calibration": {
+    "low_prob_bias": 0.0348,
+    "high_prob_bias": -0.0022
+  },
+  "spread_biases": {
+    "big_dog": 0.0011,
+    "dog": -0.0104,
+    "sd": -0.0016,
+    "sf": -0.0119,
+    "fav": 0.011,
+    "big_fav": -0.0014
+  },
+  "line_tier_biases": {
+    "low": 0.011,
+    "mid_low": -0.005,
+    "mid_high": 0.01,
+    "high": -0.0217
+  },
+  "bets_over": 697,
+  "bets_under": 779,
+  "notes": "Market low-prob bias=0.0348, high-prob bias=-0.0022. Best single: platt."
+}

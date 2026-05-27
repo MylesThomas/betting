@@ -1064,6 +1064,223 @@ Profits when:      Realized correlation  &lt;  Implied correlation
     </ul>
   </div>
 
+  <!-- ============================================================ -->
+  <!-- PHASE 3 — PRODUCTION                                         -->
+  <!-- ============================================================ -->
+
+  <hr />
+
+  <h2>Phase 3 — Production</h2>
+
+  <div class="callout" style="border-color:var(--accent2);">
+    <div class="label" style="color:var(--accent2);">Status</div>
+    Backtest complete (+1,734u pooled, 3 seasons, σ=1.0). Phase 3 builds the daily operational loop:
+    a Lambda that detects today's qualifying plays and emails them, and a Streamlit page with a live plays
+    tab and the backtest summary.
+  </div>
+
+  <!-- Architecture overview -->
+  <h3>Architecture Overview</h3>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin:16px 0; font-family:'Fira Code','Cascadia Code',monospace; font-size:0.82rem; color:var(--text); line-height:1.9;">
+    <div style="color:var(--muted); font-size:0.75rem; margin-bottom:10px;">DAILY DATA FLOW</div>
+    s3://nba-api-mt/player_game_logs/{season}/*.csv          ← player logs (nightly)<br/>
+    s3://the-odds-api-mt/nba/historical_player_props/{season}/{date}.csv  ← props (daily)<br/>
+    s3://the-odds-api-mt/nba/historical_game_lines/{season}/nba_game_lines_{date}.csv  ← lines<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+    <span style="color:var(--accent);">Lambda: nba-dispersion-daily</span>  ← fires ~9 AM ET<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓  reads logs + props from S3<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓  runs dispersion signal (last-game star detection)<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓  filters to teams playing today<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓  joins today's prop lines<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓  writes <span style="color:var(--accent2);">today_plays.csv</span> → S3<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓  sends email via SES<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+    <span style="color:var(--accent);">Streamlit Page 3: Dispersion</span><br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;Tab 1: Current Plays  ← reads today_plays.csv from S3<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;Tab 2: Backtest       ← static results table + P&L chart
+  </div>
+
+  <!-- Lambda spec -->
+  <h3>Lambda — <code>nba-dispersion-daily</code></h3>
+
+  <table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Trigger</td><td>EventBridge schedule — 9:00 AM ET daily (year-round; no-op outside NBA season)</td></tr>
+      <tr><td>Runtime</td><td>Python 3.12, same pattern as <code>nba-player-scoring-props-daily-workflow</code></td></tr>
+      <tr><td>Input</td><td>Player logs from S3, today's prop lines from S3, today's game schedule</td></tr>
+      <tr><td>Output</td><td><code>s3://nba-betting-mt/dispersion/today_plays.csv</code> + SES email</td></tr>
+      <tr><td>Idempotent</td><td>Yes — overwrites same S3 key each run; re-running is safe</td></tr>
+    </tbody>
+  </table>
+
+  <h4 style="font-size:0.88rem; font-weight:600; color:#fff; margin:18px 0 8px;">Signal Logic (mirrors <code>dispersion_backtest.py</code>)</h4>
+  <ol style="font-size:0.87rem; padding-left:22px; margin:10px 0;">
+    <li>Load last <strong>11 games</strong> per player (10 for rolling stats + 1 to evaluate as the most recent game).</li>
+    <li>Compute <code>roll10_pts</code> and <code>resid10</code> for each player's most recent game using shift(1).</li>
+    <li>Identify <strong>star nights</strong>: <code>is_star=True</code> AND <code>resid10 &gt; σ × std(all_star_resids)</code> AND <code>games_played_prior ≥ 10</code>.</li>
+    <li>Check if the triggering star's team <strong>plays today</strong> AND the gap from the star night to today is <code>≤ 5 days</code>.</li>
+    <li>For each qualifying team, pull today's prop lines for non-star teammates.</li>
+    <li>Emit a bet record for each teammate with a prop line.</li>
+  </ol>
+
+  <div class="callout warn">
+    <div class="label">Timing dependency</div>
+    The Lambda reads closing prop lines from the <em>previous</em> day's scrape. Today's lines may not yet
+    be available at 9 AM. Two options: (a) fire at a time when today's lines are confirmed in S3,
+    or (b) output "pending lines" plays and re-run at a later time when lines are loaded.
+    Resolve this when wiring up to the existing props pipeline schedule.
+  </div>
+
+  <h4 style="font-size:0.88rem; font-weight:600; color:#fff; margin:18px 0 8px;">Email Format</h4>
+  <div style="background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:16px 20px; font-family:'Fira Code','Cascadia Code',monospace; font-size:0.82rem; color:#a8c4ff; line-height:1.8;">
+    Subject: Dispersion Plays — [N] bets today (2026-05-27)<br/><br/>
+    DISPERSION PLAYS — Wed May 27<br/>
+    ────────────────────────────────────────<br/><br/>
+    LAL @ GSW — tip 7:30 PM ET<br/>
+    Trigger: LeBron James — 38 pts (roll_avg 26.1, resid +11.9, σ=1.8×)<br/>
+    Team Q: Q2 — Moderate favorite (roll spread −4.1)<br/><br/>
+    &nbsp;&nbsp;UNDER Austin Reaves&nbsp;&nbsp;&nbsp;&nbsp;13.5 pts&nbsp;&nbsp;roll_avg 12.4<br/>
+    &nbsp;&nbsp;UNDER D'Angelo Russell&nbsp;&nbsp;15.0 pts&nbsp;&nbsp;roll_avg 14.1<br/><br/>
+    ────────────────────────────────────────<br/>
+    Total: 2 plays across 1 team<br/>
+    σ threshold: 1.0 × 6.73 = 6.73 pts<br/>
+    Breakeven at −110: 52.4% | Historical WR: 63.2%
+  </div>
+
+  <h4 style="font-size:0.88rem; font-weight:600; color:#fff; margin:18px 0 8px;">File Structure</h4>
+  <div class="math">lambda/nba_dispersion_daily/
+  handler.py           — Lambda entry point; orchestrates load → signal → email
+  signal.py            — core signal logic (thin wrapper over dispersion_backtest.py functions)
+  email_renderer.py    — builds plain-text + HTML email body
+  requirements.txt</div>
+
+  <!-- today_plays.csv schema -->
+  <h4 style="font-size:0.88rem; font-weight:600; color:#fff; margin:18px 0 8px;"><code>today_plays.csv</code> Schema</h4>
+  <div class="math">date, generated_at, sigma, team, opponent, game_time_et,
+trigger_player, trigger_pts, trigger_roll_avg, trigger_resid, trigger_game_date,
+team_roll_spread, spread_q, player, prop_line, roll_avg, prior_games, direction
+
+# example row:
+2026-05-27, 2026-05-27T09:03:11Z, 1.0, Los Angeles Lakers, Golden State Warriors, 19:30,
+LeBron James, 38, 26.1, 11.9, 2026-05-25, -4.1, 2, Austin Reaves, 13.5, 12.4, 66, UNDER</div>
+
+  <!-- Streamlit spec -->
+  <h3>Streamlit — Page 3: Dispersion</h3>
+
+  <table>
+    <thead><tr><th>Tab</th><th>Content</th><th>Data source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Current Plays</strong></td>
+        <td>
+          Today's date + game count header. One card per triggering event: trigger player/game,
+          team Q badge, game time. Below each card: table of bets (player, prop line, roll avg, direction).
+          If no plays today, show "No qualifying plays" message.
+        </td>
+        <td><code>s3://nba-betting-mt/dispersion/today_plays.csv</code> (written by Lambda)</td>
+      </tr>
+      <tr>
+        <td><strong>Backtest</strong></td>
+        <td>
+          Results table (season, N, WR, edge, n_units, max_up, max_dd) matching
+          <code>dispersion_backtest.py</code> output. P&amp;L chart image (<code>dispersion_pnl.png</code>).
+          Config summary: σ=1.0, min_games=10, max_gap=5d, closing lines.
+        </td>
+        <td>Static — read from <code>research/outputs/dispersion/</code> or regenerated on load</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <div class="label">Backtest tab — live vs static</div>
+    Two options: (a) embed the pre-generated <code>dispersion_pnl.png</code> and hard-code the results table
+    (fast, no runtime dependency), or (b) run <code>dispersion_backtest.py</code> inside the app on load
+    (always current, but slow — ~60s). Recommend option (a) for now with a "last updated" timestamp,
+    upgrading to (b) once the daily Lambda is running and we trust the data pipeline.
+  </div>
+
+  <!-- Build checklist -->
+  <h3>Build Checklist</h3>
+  <table>
+    <thead><tr><th>#</th><th>Task</th><th>Depends on</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Confirm props pipeline schedule — what time do today's lines land in S3?</td>
+        <td>—</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Extract signal logic from <code>dispersion_backtest.py</code> into <code>lambda/nba_dispersion_daily/signal.py</code></td>
+        <td>—</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Write <code>handler.py</code>: load S3 → run signal → write <code>today_plays.csv</code> → send SES email</td>
+        <td>#2</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Wire EventBridge trigger at confirmed time (post #1)</td>
+        <td>#1, #3</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Add Page 3 to Streamlit dashboard with Current Plays tab reading <code>today_plays.csv</code></td>
+        <td>#3</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>Add Backtest tab to Page 3 (static results table + embedded chart)</td>
+        <td>—</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>End-to-end smoke test: trigger Lambda manually, confirm email + <code>today_plays.csv</code> in S3, confirm Streamlit renders</td>
+        <td>#4, #5, #6</td>
+        <td><span class="badge badge-yellow">open</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Resolved Decisions</h3>
+  <table>
+    <thead><tr><th>Topic</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Props timing</strong></td>
+        <td>Lines are read after open but before close — same-day lines, not closing. This is a known tracking risk (line may move against us); acceptable for now. Monitor line-at-bet vs closing as a performance metric over time.</td>
+      </tr>
+      <tr>
+        <td><strong>Game schedule source</strong></td>
+        <td>Iterate through the Odds API events response for <code>basketball_nba</code>; filter events where <code>commence_time</code> falls on today's date in ET. Same pattern as <code>src/odds_api_parser.py</code>. No separate schedule fixture needed.</td>
+      </tr>
+      <tr>
+        <td><strong>Star definition in prod</strong></td>
+        <td>Use the same logic as the backtest: top-3 by season-to-date games played per team. No change needed.</td>
+      </tr>
+      <tr>
+        <td><strong>Email recipients</strong></td>
+        <td><code>mylescgthomas@gmail.com</code> — set as <code>SETTLEMENT_SES_TO</code> env var (same pattern as rebounds Lambda).</td>
+      </tr>
+      <tr>
+        <td><strong>No-play days</strong></td>
+        <td>Send a "no plays today" email — always fire, never silent.</td>
+      </tr>
+      <tr>
+        <td><strong>S3 writes</strong></td>
+        <td>All outputs go to S3 (<code>nba-betting-mt</code> bucket, prefix <code>dispersion/</code>). No local file writes in Lambda.</td>
+      </tr>
+    </tbody>
+  </table>
+
 </div>
 </body>
 </html>

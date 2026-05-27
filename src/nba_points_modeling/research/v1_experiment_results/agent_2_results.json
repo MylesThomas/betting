@@ -1,0 +1,25 @@
+{
+  "approach": "bayesian_hierarchical_player",
+  "brier_score": 0.25078,
+  "brier_score_baseline": 0.25445,
+  "roi_at_minus_110": -0.1007,
+  "n_bets": 4112,
+  "win_rate": 0.4711,
+  "edge_threshold": 0.02,
+  "train_season": "2024-25",
+  "test_season": "2025-26",
+  "n_train": 12480,
+  "n_test": 10175,
+  "feature_importance": {
+    "mean_abs_player_bias": 0.45325,
+    "mean_shrinkage_k": 0.92206,
+    "team_spread_coef": 0.00445,
+    "is_home_coef": 0.00624
+  },
+  "players_with_positive_bias": 351,
+  "players_with_negative_bias": 26,
+  "new_players_in_test": 64,
+  "bets_over": 3837,
+  "bets_under": 275,
+  "notes": "EmpBayes shrinkage. 70% Bayes+30% logistic. 64 new players used global prior."
+}

@@ -1,0 +1,31 @@
+{
+  "approach": "gradient_boosting_usage",
+  "model": "xgboost",
+  "brier_score": 0.25313,
+  "brier_score_baseline": 0.25445,
+  "roi_at_minus_110": -0.04177,
+  "n_bets": 7509,
+  "win_rate": 0.5019,
+  "edge_threshold": 0.02,
+  "train_season": "2024-25",
+  "test_season": "2025-26",
+  "n_train": 12480,
+  "n_test": 10175,
+  "feature_importance": {
+    "points_line": 0.0911,
+    "team_spread": 0.09182,
+    "is_home": 0.081,
+    "is_favorite": 0.10049,
+    "pts_0_6_pct": 0.0,
+    "rim_fg_pct": 0.08792,
+    "PTS_r10": 0.09024,
+    "MIN_r10": 0.08999,
+    "FGA_r10": 0.08866,
+    "FG_PCT_r10": 0.09174,
+    "FT_PCT_r10": 0.09517,
+    "usage_r10": 0.09187
+  },
+  "bets_over": 3863,
+  "bets_under": 3646,
+  "notes": "Brier improvement over market: 0.00132"
+}

@@ -1,0 +1,43 @@
+{
+  "approach": "opponent_adjusted_pace",
+  "model": "logistic_regression",
+  "brier_score": 0.25001,
+  "brier_score_baseline": 0.25445,
+  "roi_at_minus_110": -0.03859,
+  "n_bets": 5423,
+  "win_rate": 0.5036,
+  "edge_threshold": 0.02,
+  "train_season": "2024-25",
+  "test_season": "2025-26",
+  "n_train": 12480,
+  "n_test": 10175,
+  "feature_importance": {
+    "points_line": -0.04079,
+    "team_spread": 0.03993,
+    "is_home": 0.01309,
+    "is_favorite": 0.01707,
+    "opp_over_rate": 0.07072,
+    "opp_pts_avg": 0.01148,
+    "opp_tier": 0.00688,
+    "game_comp": -0.00691,
+    "pts_0_6_pct": 0.0,
+    "rim_fg_pct": 0.06421
+  },
+  "opponent_tier_analysis": {
+    "tough": {
+      "over_rate": 0.4821,
+      "n": 3296
+    },
+    "average": {
+      "over_rate": 0.493,
+      "n": 3552
+    },
+    "easy": {
+      "over_rate": 0.4746,
+      "n": 3327
+    }
+  },
+  "bets_over": 2619,
+  "bets_under": 2804,
+  "notes": "opp_over_rate range 0.458-0.534"
+}
