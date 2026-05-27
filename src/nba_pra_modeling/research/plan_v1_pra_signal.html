@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRA Signal Investigation Plan</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 880px; margin: 40px auto; padding: 0 24px; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    h1 { color: #f8fafc; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
+    h2 { color: #93c5fd; margin-top: 40px; }
+    h3 { color: #cbd5e1; margin-top: 18px; }
+    .card { background: #1e2333; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+    code { background: #2d3748; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a78bfa; }
+    .file { color: #34d399; font-size: 13px; font-family: monospace; }
+    .note { background: #1a2535; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fbbf24; margin: 10px 0; }
+    .warn { background: #2a1a1a; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fca5a5; margin: 10px 0; }
+    .good { background: #0f2a1a; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #6ee7b7; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th { background: #1e2333; color: #93c5fd; padding: 8px 12px; text-align: left; border: 1px solid #2d3748; }
+    td { padding: 8px 12px; border: 1px solid #2d3748; vertical-align: top; }
+    tr:nth-child(even) td { background: #161b27; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+    .tag-audit { background: #2a1f00; color: #fcd34d; border: 1px solid #78350f; }
+    .tag-build { background: #1a1a3f; color: #a5b4fc; border: 1px solid #312e81; }
+    .tag-decide { background: #0f2a1a; color: #6ee7b7; border: 1px solid #065f46; }
+    pre { background: #2d3748; padding: 12px; border-radius: 6px; font-size: 13px; color: #e2e8f0; overflow-x: auto; line-height: 1.5; }
+    ul, ol { margin: 8px 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+
+<h1>Points + Rebounds + Assists (PRA) — Signal Investigation Plan v1</h1>
+<p style="color:#94a3b8">2026-05-25 &nbsp;|&nbsp; Market: <code>player_points_rebounds_assists</code> &nbsp;|&nbsp; First pass, all lines</p>
+
+<!-- ===== CONTEXT ===== -->
+<h2>Context &amp; Motivation</h2>
+<div class="card">
+  <p>PRA is untested. It's structurally different from individual stat markets: it aggregates three separate count stats, each with its own variance. This creates more surface area for mispricing.</p>
+  <table>
+    <tr><th>Attribute</th><th>Individual stats (PTS/REB/AST/STL)</th><th>PRA</th></tr>
+    <tr><td>Line range</td><td>Narrow (e.g. steals 0.5–1.5)</td><td>Wide: 15.5–45.5 (2024-25 distribution roughly uniform 18.5–35.5)</td></tr>
+    <tr><td>Variance</td><td>Lower — single stat</td><td>Higher — sum of 3 stats, each noisy</td></tr>
+    <tr><td>Market pricing</td><td>Market is efficient on pure-counting stats</td><td>May be less efficient when role changes affect the mix (e.g. PTS↓ but AST↑)</td></tr>
+    <tr><td>Regression to mean</td><td>Strong on individual stats</td><td>Stronger on PRA — a 40-PRA outlier game almost always regresses hard</td></tr>
+  </table>
+  <div class="note">The PRA market may lag when a player's role shifts (e.g. more ball-handling → more AST, fewer PTS from iso plays). The total PRA may be similar but the mix changes and the line was set for the old mix.</div>
+</div>
+
+
+<!-- ===== HYPOTHESES ===== -->
+<h2>Hypotheses to Test</h2>
+<div class="card">
+  <ol>
+    <li><strong>Regression after outlier games</strong>: After a player hits 40+ PRA in a game, the next line is anchored too high. Bet the under. Same as the "high-line regression" hypothesis in assists — but PRA variance is even larger so the effect should be stronger.</li>
+    <li><strong>Calibration gap by line tier</strong>: The uniform line distribution (every 1-point increment gets ~3.5-4% of rows) suggests books set lines by formula. Check if any tier (under-20, 20-30, 30+) is systematically mispriced. Under-20 is likely role players who shouldn't have high PRA lines.</li>
+    <li><strong>Minutes sensitivity</strong>: Like steals and rebounds, PRA is a volume stat. A player averaging 30 PRA in 36 minutes who plays 24 minutes will fall well short of their line. The same oracle/pre-game test from steals applies.</li>
+    <li><strong>Post-injury return</strong>: Players returning from injury tend to have lower PRA in their first 2-3 games but the market sets the line near their season average. Classic under opportunity.</li>
+    <li><strong>Role mix change</strong>: When a player's PTS/AST mix shifts (e.g. becomes primary ball-handler), their PRA total may stay the same but individual stat tracking lags. The market prices PTS and AST individually and sums — if it lags on one component, the PRA line will be wrong.</li>
+  </ol>
+</div>
+
+
+<!-- ===== DATA ===== -->
+<h2>Data</h2>
+<div class="card">
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>S3 market name</td><td><code>player_points_rebounds_assists</code></td></tr>
+    <tr><td>Seasons</td><td>2023-24, 2024-25, 2025-26</td></tr>
+    <tr><td>Game log columns needed</td><td><code>PTS</code>, <code>REB</code>, <code>AST</code> — compute <code>PRA = PTS + REB + AST</code> in the merge step</td></tr>
+    <tr><td>Line distribution (2024-25)</td><td>Roughly uniform from 18.5–35.5, each line ~3.5-4% of rows (~3,000/line)</td></tr>
+    <tr><td>MIN filter</td><td>≥ 15 (same as other markets — low-minute players have noisy PRA)</td></tr>
+    <tr><td>Infra reference</td><td><span class="file">src/nba_steals_modeling/research/notebooks/v2_steals_1_5_under_flat_rule.ipynb</span> — copy data loading pattern</td></tr>
+  </table>
+  <div class="note">Verify that <code>PTS</code>, <code>REB</code>, <code>AST</code> are all available in the game logs query. The rebounds notebook uses <code>REB</code>; the points notebook uses <code>PTS</code>. Both should be in the same game log table.</div>
+</div>
+
+
+<!-- ===== NOTEBOOK ===== -->
+<h2>Notebook Plan: <span class="file">v1_pra_flat_rule.ipynb</span></h2>
+<div class="card">
+
+  <h3>Cell 1 — Imports &amp; config</h3>
+  <p>Copy from steals v2 cell 1. Set <code>market = 'player_points_rebounds_assists'</code>. No line filter — pull all lines. <code>MIN ≥ 15</code>.</p>
+
+  <h3>Cell 2 — Load game logs</h3>
+  <p>Same join as steals but fetch <code>PTS, REB, AST, MIN</code> from logs. After merge, compute:</p>
+  <pre>df["PRA"] = df["PTS"] + df["REB"] + df["AST"]</pre>
+  <p>Print season row counts and PRA distribution (<code>df["PRA"].describe()</code>).</p>
+
+  <h3>Cell 3 — Line distribution audit</h3>
+  <pre>print(df["prop_line"].value_counts().sort_index())
+# Segment into tiers
+df["line_tier"] = pd.cut(df["prop_line"],
+    bins=[0, 19.5, 24.5, 29.5, 200],
+    labels=["low (&lt;20)", "mid (20-25)", "high (25-30)", "star (30+)"])
+print(df["line_tier"].value_counts())</pre>
+
+  <h3>Cell 4 — Odds audit (vig filter)</h3>
+  <p>Same vig-based filter as steals v2. Remove <code>vig &lt; 1.00</code>, <code>vig &gt; 1.20</code>, <code>|odds| &lt; 5</code>.</p>
+
+  <h3>Cell 5 — Flat rule: bet every under</h3>
+  <pre>df_clean["y_under"] = (df_clean["PRA"] < df_clean["prop_line"]).astype(int)
+df_clean["pnl"] = df_clean.apply(
+    lambda r: american_profit(r["under_odds"]) if r["y_under"] == 1 else -1.0, axis=1
+)
+
+print(f"n={len(df_clean):,}  hit_rate={df_clean['y_under'].mean():.3f}  ROI={df_clean['pnl'].mean()*100:.2f}%")
+print(df_clean.groupby("season")[["y_under","pnl"]].mean().rename(
+    columns={"y_under":"hit_rate","pnl":"roi"}).round(3))</pre>
+
+  <h3>Cell 6 — Segment by line tier</h3>
+  <pre>print(df_clean.groupby("line_tier", observed=True).apply(lambda g: pd.Series({
+    "n": len(g),
+    "hit_rate": g["y_under"].mean(),
+    "roi": g["pnl"].mean(),
+}), include_groups=False).round(3))
+
+# Also by season x tier
+print(df_clean.groupby(["season","line_tier"], observed=True)[["y_under","pnl"]].mean().round(3))</pre>
+
+  <h3>Cell 7 — Calibration by line tier</h3>
+  <pre>df_clean["p_mkt_dv"] = (df_clean["over_odds"].apply(american_to_implied_prob)
+                       / df_clean["vig"])
+df_clean["y_over"] = (df_clean["PRA"] >= df_clean["prop_line"]).astype(int)
+
+cal = df_clean.groupby("line_tier", observed=True).apply(lambda g: pd.Series({
+    "mkt_p_over": g["p_mkt_dv"].mean(),
+    "actual_over": g["y_over"].mean(),
+    "gap": g["p_mkt_dv"].mean() - g["y_over"].mean(),
+    "n": len(g),
+}), include_groups=False)
+print(cal.round(4))</pre>
+
+  <h3>Cell 8 — Minutes segmentation</h3>
+  <pre>df_clean["min_bucket"] = pd.cut(df_clean["MIN"], bins=[15, 25, 33, 38, 100],
+                                 labels=["15-25","25-33","33-38","38+"])
+print(df_clean.groupby(["line_tier","min_bucket"], observed=True)[["y_under","pnl"]].agg(
+    count=("pnl","count"), hit_rate=("y_under","mean"), roi=("pnl","mean")
+).round(3))</pre>
+
+  <h3>Cell 9 — Regression after outlier games hypothesis</h3>
+  <pre># Does betting under after a player had a big PRA game show edge?
+dc = df_clean.sort_values(["PLAYER_NAME","season","game_date"]).copy()
+dc["pra_last1"] = dc.groupby(["PLAYER_NAME","season"])["PRA"].shift(1)
+dc["pra_roll10"] = dc.groupby(["PLAYER_NAME","season"])["PRA"].transform(
+    lambda s: s.shift(1).rolling(10, min_periods=5).mean()
+)
+
+# "Outlier game" = last game PRA was 1.3x+ the rolling average
+dc["last_game_vs_avg"] = dc["pra_last1"] / dc["pra_roll10"].replace(0, float("nan"))
+dc["outlier_bucket"] = pd.cut(dc["last_game_vs_avg"],
+    bins=[0, 0.7, 0.9, 1.1, 1.3, 10],
+    labels=["cold (&lt;0.7x)", "below avg", "on avg", "above avg", "hot (&gt;1.3x)"]
+)
+
+print("=== Under ROI by last-game PRA vs rolling average ===")
+print(dc.dropna(subset=["outlier_bucket"]).groupby("outlier_bucket", observed=True)[["y_under","pnl"]].agg(
+    count=("pnl","count"), hit_rate=("y_under","mean"), roi=("pnl","mean")
+).round(3))</pre>
+  <div class="note">Key test: if a player had a hot game (1.3x their average), does the under hit more on the next game? This is the regression hypothesis.</div>
+
+  <h3>Cell 10 — Pre-game proxy (same test as steals)</h3>
+  <pre># Can we predict with pre-game info who will go under?
+dc["pra_roll10_vs_line"] = dc["pra_roll10"] - dc["prop_line"]
+# Positive = player's avg > line (market set it low), negative = avg < line (market set it high)
+
+print("=== Under ROI by (rolling PRA - prop_line) ===")
+dc["avg_vs_line"] = pd.cut(dc["pra_roll10_vs_line"],
+    bins=[-50, -5, -2, 0, 2, 5, 50],
+    labels=["avg &lt;&lt; line", "avg &lt; line", "avg ≈ line-", "avg ≈ line+", "avg &gt; line", "avg &gt;&gt; line"]
+)
+print(dc.dropna(subset=["avg_vs_line"]).groupby("avg_vs_line", observed=True)[["y_under","pnl"]].agg(
+    count=("pnl","count"), hit_rate=("y_under","mean"), roi=("pnl","mean")
+).round(3))</pre>
+</div>
+
+
+<!-- ===== DECISION GATES ===== -->
+<h2>Decision Gates</h2>
+<div class="card">
+  <table>
+    <tr><th>Gate</th><th>Pass condition</th><th>Next step</th></tr>
+    <tr><td>Flat rule — any tier</td><td>ROI &gt; 0% in 2/3 seasons on any line tier</td><td>Deeper segmentation on that tier</td></tr>
+    <tr><td>Calibration gap</td><td>gap &gt; 3% on any tier</td><td>Focus model on that tier; market may not accurately price PRA</td></tr>
+    <tr><td>Regression hypothesis</td><td>"hot (&gt;1.3x)" bucket: ROI &gt; +5% in 2/3 seasons</td><td>Pre-game exploitable — build LightGBM model with last-game feature</td></tr>
+    <tr><td>Minutes segment</td><td>Any bucket &gt; +5% in 2/3 seasons, n ≥ 300/season</td><td>Pre-game proxy test (same as steals Cell B)</td></tr>
+    <tr><td>All gates fail</td><td>—</td><td>Dead end. Write post-mortem. Market is efficient on PRA.</td></tr>
+  </table>
+</div>
+
+
+<!-- ===== MODEL ===== -->
+<h2>If Signal Found: Model Features</h2>
+<div class="card">
+  <p><span class="tag tag-build">Build</span> Only if a gate passes. Notebook: <span class="file">v2_pra_model.ipynb</span></p>
+  <table>
+    <tr><th>Feature</th><th>Rationale</th></tr>
+    <tr><td><code>pra_roll5</code>, <code>pra_roll10</code>, <code>pra_roll20</code></td><td>Recent PRA rate — all shift(1)</td></tr>
+    <tr><td><code>pts_roll10</code>, <code>reb_roll10</code>, <code>ast_roll10</code></td><td>Individual component rates — decompose the PRA signal</td></tr>
+    <tr><td><code>min_roll10</code></td><td>Minutes context</td></tr>
+    <tr><td><code>pra_per_min_roll10</code></td><td>Rate-normalized tendency</td></tr>
+    <tr><td><code>pra_std_roll10</code></td><td>Volatility — how consistent is this player's PRA?</td></tr>
+    <tr><td><code>last_game_vs_avg</code></td><td>pra_last1 / pra_roll10 — regression to mean signal</td></tr>
+    <tr><td><code>line_vs_roll10</code></td><td>prop_line - pra_roll10 — how stretched is the line vs reality?</td></tr>
+    <tr><td><code>days_rest</code></td><td>Rest affects all three components</td></tr>
+    <tr><td><code>market_p_under</code></td><td>De-vigged market P(under) — model finds where it's wrong</td></tr>
+  </table>
+  <p>Walk-forward: train 2023-24 → test 2024-25; train 2023-24+2024-25 → test 2025-26. LightGBM. Pass if ROI &gt; 0% in 2/2 folds at +5% edge with n ≥ 200/season.</p>
+</div>
+
+</body>
+</html>

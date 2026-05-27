@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assists Model vs Market — v1 Results</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; color: #1a1a1a; line-height: 1.6; }
+  .page { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+  .meta { font-size: 0.85rem; color: #666; margin-bottom: 32px; }
+  h2 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 12px; color: #111; border-bottom: 2px solid #e0e0e0; padding-bottom: 6px; }
+  h3 { font-size: 0.95rem; font-weight: 600; margin: 20px 0 8px; color: #333; }
+  p { margin-bottom: 10px; font-size: 0.93rem; }
+  ul { margin: 8px 0 10px 20px; font-size: 0.93rem; }
+  li { margin-bottom: 4px; }
+
+  /* TL;DR box */
+  .tldr { background: #1a1a2e; color: #e8e8e8; border-radius: 8px; padding: 20px 24px; margin-bottom: 32px; }
+  .tldr-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #8888cc; margin-bottom: 12px; }
+  .tldr-item { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
+  .tldr-q { font-size: 0.82rem; color: #aaa; min-width: 200px; font-style: italic; }
+  .tldr-a { font-size: 0.9rem; color: #e8e8e8; font-weight: 500; }
+  .verdict-pass { color: #4caf50; font-weight: 700; }
+  .verdict-fail { color: #f44336; font-weight: 700; }
+  .verdict-warn { color: #ff9800; font-weight: 700; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 12px 0 20px; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  th { background: #2c2c2c; color: #fff; padding: 8px 12px; text-align: left; font-weight: 600; font-size: 0.8rem; }
+  td { padding: 7px 12px; border-bottom: 1px solid #eee; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) { background: #fafafa; }
+  .best { background: #e8f5e9 !important; font-weight: 700; }
+  .worst { background: #ffebee !important; }
+  .mkt-row { background: #fff3e0 !important; }
+  .delta-pos { color: #c62828; font-weight: 600; }  /* worse than market */
+  .delta-neg { color: #2e7d32; font-weight: 700; }  /* better than market */
+  .label-col { font-weight: 600; color: #444; }
+
+  /* Section cards */
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .card-note { font-size: 0.82rem; color: #666; margin-top: 10px; padding: 10px 14px; background: #f8f8f8; border-left: 3px solid #bbb; border-radius: 0 4px 4px 0; }
+
+  /* Inline code */
+  code { font-family: "SF Mono", Consolas, monospace; font-size: 0.82em; background: #f0f0f0; padding: 1px 5px; border-radius: 3px; color: #c7254e; }
+
+  .fold-label { display: inline-block; background: #e3f2fd; color: #1565c0; border-radius: 4px; padding: 1px 7px; font-size: 0.78rem; font-weight: 700; margin-right: 6px; }
+  .section-intro { font-size: 0.9rem; color: #555; margin-bottom: 14px; }
+  hr { border: none; border-top: 1px solid #e8e8e8; margin: 28px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Assists Model vs Market — v1 Results</h1>
+  <div class="meta">2026-05-26 &nbsp;|&nbsp; Script: <code>src/nba_assists_modeling/research/scripts/v1_assists_model_vs_market.py</code> &nbsp;|&nbsp; Market: <code>player_assists</code> &nbsp;|&nbsp; Seasons: 2023-24, 2024-25, 2025-26 &nbsp;|&nbsp; MIN ≥ 10</div>
+
+  <!-- TL;DR -->
+  <div class="tldr">
+    <div class="tldr-title">TL;DR</div>
+    <div class="tldr-item">
+      <div class="tldr-q">OLS vs market?</div>
+      <div class="tldr-a"><span class="verdict-pass">Beats market in both OOS folds</span> — RMSE ~1% lower. Barely, but consistent.</div>
+    </div>
+    <div class="tldr-item">
+      <div class="tldr-q">XGB vs market?</div>
+      <div class="tldr-a"><span class="verdict-fail">Worse than market in both folds.</span> Overfits on thin training data — 5K rows in fold 1 isn't enough.</div>
+    </div>
+    <div class="tldr-item">
+      <div class="tldr-q">Ridge vs market?</div>
+      <div class="tldr-a"><span class="verdict-pass">Beats market in both folds</span> — nearly identical to OLS. Simple linear is the ceiling here.</div>
+    </div>
+    <div class="tldr-item">
+      <div class="tldr-q">Best single predictor?</div>
+      <div class="tldr-a"><code>max_line</code> — RMSE 2.072 vs market 2.069. The posted line IS the signal. Rolling AST averages all lose to the market alone.</div>
+    </div>
+    <div class="tldr-item">
+      <div class="tldr-q">Is there a tradeable edge?</div>
+      <div class="tldr-a"><span class="verdict-warn">No — not yet.</span> 1% RMSE improvement evaporates after vig. Need features the market hasn't priced: lineup changes, PG out at tip-off, pace/TO on the night.</div>
+    </div>
+  </div>
+
+  <!-- Section 1: OLS + XGB comparison -->
+  <h2>1. OLS, Ridge &amp; XGB vs Market — Overall OOS</h2>
+  <div class="card">
+    <p class="section-intro">Walk-forward OOS: train on prior seasons, test on held-out season. Two folds — fold 1 trains on 2023-24 only, fold 2 trains on 2023-24 + 2024-25.</p>
+
+    <h3><span class="fold-label">FOLD 1</span> Test: 2024-25 &nbsp;|&nbsp; Train: 2023-24 &nbsp;|&nbsp; train_n=5,023 &nbsp;test_n=6,826</h3>
+    <table>
+      <thead><tr><th>Model</th><th>RMSE</th><th>MAE</th><th>R²</th><th>vs Market RMSE</th></tr></thead>
+      <tbody>
+        <tr class="mkt-row"><td class="label-col">Market (consensus line)</td><td>2.1698</td><td>1.6647</td><td>0.470</td><td>—</td></tr>
+        <tr class="best"><td class="label-col">OLS</td><td>2.1500</td><td>1.6520</td><td>0.480</td><td class="delta-neg">−0.0198 (−0.9%)</td></tr>
+        <tr class="best"><td class="label-col">Ridge</td><td>2.1493</td><td>1.6517</td><td>0.480</td><td class="delta-neg">−0.0205 (−0.9%)</td></tr>
+        <tr class="worst"><td class="label-col">XGB</td><td>2.1983</td><td>1.6979</td><td>0.456</td><td class="delta-pos">+0.0285 (+1.3%)</td></tr>
+      </tbody>
+    </table>
+
+    <h3><span class="fold-label">FOLD 2</span> Test: 2025-26 &nbsp;|&nbsp; Train: 2023-24 + 2024-25 &nbsp;|&nbsp; train_n=11,849 &nbsp;test_n=8,728</h3>
+    <table>
+      <thead><tr><th>Model</th><th>RMSE</th><th>MAE</th><th>R²</th><th>vs Market RMSE</th></tr></thead>
+      <tbody>
+        <tr class="mkt-row"><td class="label-col">Market (consensus line)</td><td>2.0925</td><td>1.6232</td><td>0.433</td><td>—</td></tr>
+        <tr class="best"><td class="label-col">OLS</td><td>2.0790</td><td>1.6120</td><td>0.441</td><td class="delta-neg">−0.0135 (−0.6%)</td></tr>
+        <tr class="best"><td class="label-col">Ridge</td><td>2.0794</td><td>1.6122</td><td>0.440</td><td class="delta-neg">−0.0131 (−0.6%)</td></tr>
+        <tr class="worst"><td class="label-col">XGB</td><td>2.1004</td><td>1.6333</td><td>0.429</td><td class="delta-pos">+0.0079 (+0.4%)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="card-note">
+      <strong>Why XGB loses:</strong> Fold 1 has only 5,023 training rows — XGB with 500 trees and 9 features overfits badly. With 11,849 rows in fold 2 it nearly breaks even (+0.4%) but still can't beat the linear models. XGB requires more data or fewer trees to be useful here.
+      <br><br>
+      <strong>Why OLS ≈ Ridge:</strong> With only 9 features the ridge penalty barely activates. Both models are essentially doing the same thing: a linear combination of line features + rolling means.
+    </div>
+  </div>
+
+  <!-- Section 2: By line tier -->
+  <h2>2. RMSE by Line Tier (OOS: 2024-25 + 2025-26 combined)</h2>
+  <div class="card">
+    <p class="section-intro">The market is most efficient at high lines. The only tier where any model shows meaningful improvement is <strong>low (0.5–1.5)</strong> — role players where the market sets lines mechanically.</p>
+
+    <h3>RMSE</h3>
+    <table>
+      <thead><tr><th>Tier</th><th>n</th><th>Market</th><th>OLS</th><th>Ridge</th><th>XGB</th></tr></thead>
+      <tbody>
+        <tr class="best"><td class="label-col">low (0.5–1.5)</td><td>4,008</td><td>1.4147</td><td>1.3783</td><td>1.3778</td><td class="delta-pos" style="color:#c62828">1.4452</td></tr>
+        <tr><td class="label-col">mid (2.5–3.5)</td><td>5,719</td><td>1.9519</td><td>1.9380</td><td>1.9371</td><td>1.9541</td></tr>
+        <tr><td class="label-col">high (4.5–5.5)</td><td>3,642</td><td>2.4573</td><td>2.4454</td><td>2.4455</td><td class="delta-pos" style="color:#c62828">2.4818</td></tr>
+        <tr class="worst"><td class="label-col">star (6.5+)</td><td>2,185</td><td>2.9138</td><td>2.9140</td><td>2.9135</td><td class="delta-pos" style="color:#c62828">3.0331</td></tr>
+      </tbody>
+    </table>
+
+    <h3>MAE</h3>
+    <table>
+      <thead><tr><th>Tier</th><th>n</th><th>Market</th><th>OLS</th><th>Ridge</th><th>XGB</th></tr></thead>
+      <tbody>
+        <tr class="best"><td class="label-col">low (0.5–1.5)</td><td>4,008</td><td>1.1135</td><td>1.0913</td><td>1.0915</td><td class="delta-pos" style="color:#c62828">1.1775</td></tr>
+        <tr><td class="label-col">mid (2.5–3.5)</td><td>5,719</td><td>1.5488</td><td>1.5438</td><td>1.5436</td><td>1.5628</td></tr>
+        <tr><td class="label-col">high (4.5–5.5)</td><td>3,642</td><td>1.9628</td><td>1.9541</td><td>1.9543</td><td class="delta-pos" style="color:#c62828">1.9884</td></tr>
+        <tr class="worst"><td class="label-col">star (6.5+)</td><td>2,185</td><td>2.3162</td><td>2.3172</td><td>2.3167</td><td class="delta-pos" style="color:#c62828">2.4070</td></tr>
+      </tbody>
+    </table>
+
+    <div class="card-note">
+      <strong>Low tier (0.5–1.5) is the only live tier:</strong> Ridge RMSE 1.3778 vs market 1.4147 = <strong>−2.6% improvement</strong>. These are bench players / situational guys where the market uses a simple formula and our rolling features add value. The star tier (6.5+) — think top PGs — is perfectly priced; XGB makes it worse by 4%.
+    </div>
+  </div>
+
+  <!-- Section 3: Individual feature regressions -->
+  <h2>3. Individual Feature Regressions (Univariate OLS, avg across both folds)</h2>
+  <div class="card">
+    <p class="section-intro">Each feature fit alone (OLS with constant) on OOS test data. <code>delta_rmse</code> = feature RMSE − market RMSE. Negative = feature alone beats the market alone.</p>
+
+    <table>
+      <thead><tr><th>Feature</th><th>RMSE</th><th>MAE</th><th>R²</th><th>Market RMSE</th><th>Δ RMSE vs Market</th></tr></thead>
+      <tbody>
+        <tr class="best"><td class="label-col"><code>max_line</code></td><td>2.0720</td><td>1.5984</td><td>0.461</td><td>2.0692</td><td class="delta-pos">+0.003 ≈ 0</td></tr>
+        <tr><td class="label-col"><code>min_line</code></td><td>2.0798</td><td>1.5749</td><td>0.457</td><td>2.0692</td><td class="delta-pos">+0.011</td></tr>
+        <tr><td class="label-col"><code>ast_roll_mean_60</code></td><td>2.1640</td><td>1.6710</td><td>0.434</td><td>2.1312</td><td class="delta-pos">+0.033</td></tr>
+        <tr><td class="label-col"><code>ast_roll_mean_20</code></td><td>2.1354</td><td>1.6438</td><td>0.438</td><td>2.0942</td><td class="delta-pos">+0.041</td></tr>
+        <tr><td class="label-col"><code>ast_roll_mean_10</code></td><td>2.1505</td><td>1.6548</td><td>0.428</td><td>2.0877</td><td class="delta-pos">+0.063</td></tr>
+        <tr><td class="label-col"><code>ast_roll_mean_5</code></td><td>2.1916</td><td>1.6911</td><td>0.407</td><td>2.0877</td><td class="delta-pos">+0.104</td></tr>
+        <tr class="worst"><td class="label-col"><code>ast_roll_std_5</code></td><td>2.6142</td><td>2.0636</td><td>0.157</td><td>2.0877</td><td class="delta-pos">+0.526</td></tr>
+        <tr class="worst"><td class="label-col"><code>min_roll_mean_10</code></td><td>2.6720</td><td>2.0660</td><td>0.119</td><td>2.0877</td><td class="delta-pos">+0.584</td></tr>
+        <tr class="worst"><td class="label-col"><code>line_range</code></td><td>2.6746</td><td>2.1718</td><td>0.103</td><td>2.0692</td><td class="delta-pos">+0.605</td></tr>
+      </tbody>
+    </table>
+
+    <div class="card-note">
+      <strong>Key finding — no feature beats the market alone.</strong> <code>max_line</code> comes closest (+0.003 RMSE) because the posted line is basically a proxy for the player's true expected assists. Every rolling AST mean loses to the market, with shorter windows hurting most (market has already priced last 5 games). <code>ast_roll_std_5</code>, <code>min_roll_mean_10</code>, and <code>line_range</code> are essentially useless as standalone predictors.
+      <br><br>
+      <strong>Why models beat market when combined:</strong> Even though no single feature beats market alone, OLS/Ridge finds that <em>combining</em> line features + rolling means gives a marginal correction — mainly in the low-line tier where the market's mechanical formula has more slack.
+    </div>
+  </div>
+
+  <!-- Section 4: Data summary -->
+  <h2>4. Data &amp; Feature Summary</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Season</th><th>Props (raw)</th><th>Props (consensus)</th><th>Logs (MIN≥10)</th><th>Joined</th><th>With full features</th></tr></thead>
+      <tbody>
+        <tr><td>2023-24</td><td>66,976</td><td>10,143</td><td>21,995</td><td>8,209</td><td rowspan="3" style="vertical-align:middle; text-align:center; font-weight:700;">20,577 / 32,005<br>(64%)</td></tr>
+        <tr><td>2024-25</td><td>57,791</td><td>13,026</td><td>22,108</td><td>10,762</td></tr>
+        <tr><td>2025-26</td><td>88,918</td><td>15,957</td><td>23,887</td><td>13,034</td></tr>
+      </tbody>
+    </table>
+    <p>The 36% feature dropout is mostly players early in their season (fewer than 5 prior games → rolling windows return NaN). This is expected and correct — we don't want to bet on a player with no history.</p>
+
+    <h3>Line distribution (consensus)</h3>
+    <p>Peak at <strong>1.5</strong> (7,409 rows, 23%) and <strong>2.5</strong> (6,220, 19%). Unlike steals (73% on 1.5), assists is spread across 6+ tiers. Multi-book line spread: mean = 0.54, 42% of games have books disagreeing (potential arbitrage surface).</p>
+
+    <h3>Features used</h3>
+    <ul>
+      <li><code>min_line</code>, <code>max_line</code>, <code>line_range</code> — book consensus/spread</li>
+      <li><code>ast_roll_mean_5/10/20/60</code> — rolling AST averages (shifted by 1 to avoid leakage)</li>
+      <li><code>ast_roll_std_5</code> — recent volatility</li>
+      <li><code>min_roll_mean_10</code> — minutes context</li>
+    </ul>
+  </div>
+
+  <!-- Section 5: Next steps -->
+  <h2>5. Decision &amp; Next Steps</h2>
+  <div class="card">
+    <p><strong>Gate result: FAIL for a tradeable model.</strong> OLS/Ridge beat market by ~1% RMSE — not enough to overcome vig at posted odds. XGB actively hurts. The current feature set is essentially a noisy re-derivation of what the bookmaker already computed.</p>
+
+    <h3>What to try next (in priority order)</h3>
+    <ul>
+      <li><strong>Lineup context</strong> — is the team's primary PG playing? When PG1 sits, backup PG's line is set before the news. This is the strongest hypothesis in the plan and can't be derived from rolling stats alone.</li>
+      <li><strong>Opponent context</strong> — opponent defensive rating vs PG, steal rate (limits assist opportunities), team pace.</li>
+      <li><strong>Home/away + days rest</strong> — small effect but free signal.</li>
+      <li><strong>Low-tier focus (0.5–1.5 lines only)</strong> — the only tier where Ridge shows meaningful improvement (−2.6% RMSE). Retrain a focused model on this tier; n=4,008 OOS rows is sufficient.</li>
+      <li><strong>More XGB data</strong> — fold 1 had only 5K rows. With 3 full seasons of data (32K rows) XGB may start adding value over linear.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

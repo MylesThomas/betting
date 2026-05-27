@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steals Modeling Session Summary</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 24px; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    h1 { color: #f8fafc; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
+    h2 { color: #93c5fd; margin-top: 40px; }
+    h3 { color: #cbd5e1; margin-top: 18px; }
+    .card { background: #1e2333; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+    .tldr-card { background: #162032; border: 2px solid #3b82f6; border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+    code { background: #2d3748; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a78bfa; }
+    .file { color: #34d399; font-size: 13px; font-family: monospace; }
+    .note { background: #1a2535; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fbbf24; margin: 10px 0; }
+    .warn { background: #2a1a1a; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fca5a5; margin: 10px 0; }
+    .good { background: #0f2a1a; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #6ee7b7; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th { background: #1e2333; color: #93c5fd; padding: 8px 12px; text-align: left; border: 1px solid #2d3748; }
+    td { padding: 8px 12px; border: 1px solid #2d3748; vertical-align: top; }
+    tr:nth-child(even) td { background: #161b27; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+    .tag-dead { background: #3f1f1f; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .tag-live { background: #0f2a1a; color: #6ee7b7; border: 1px solid #065f46; }
+    .tag-flag { background: #2a1f00; color: #fcd34d; border: 1px solid #78350f; }
+    .tag-nb { background: #1a1a3f; color: #a5b4fc; border: 1px solid #312e81; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+    .num { font-size: 28px; font-weight: 700; color: #f8fafc; }
+    .num-label { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .metrics { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; }
+    .metric { background: #161b27; border: 1px solid #2d3748; border-radius: 8px; padding: 12px 16px; min-width: 110px; }
+    .metric.green .num { color: #34d399; }
+    .metric.red .num { color: #f87171; }
+    .metric.yellow .num { color: #fbbf24; }
+    pre { background: #2d3748; padding: 12px; border-radius: 6px; font-size: 13px; color: #e2e8f0; overflow-x: auto; }
+    .section-num { background: #3b82f6; color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 8px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<h1>Steals Modeling — Session Summary</h1>
+<p style="color:#94a3b8">May 21–24, 2026 &nbsp;|&nbsp; Points post-mortem → Steals market exploration → Flat-rule backtest</p>
+
+<!-- ===== TLDR ===== -->
+<h2>TL;DR</h2>
+<div class="tldr-card">
+  <table>
+    <tr><th>Notebook</th><th>Verdict</th><th>Key Number</th></tr>
+    <tr>
+      <td><span class="tag tag-dead">Dead</span> v1 Points (prior work)</td>
+      <td>No edge. Market prices points off the same rolling stats you'd build.</td>
+      <td>Brier vs market: +0.001 — can't beat 6.9% vig</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-dead">Dead</span> v1 Steals 1.5-line model</td>
+      <td>No edge. LogReg doesn't beat market Brier. Features too weak (r ≈ 0.10).</td>
+      <td>Walk-forward ROI: -10% fold 1, -17% fold 2</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-flag">⚠ Investigate</span> v1 Steals all lines</td>
+      <td>Found: 1.5-line market overprices over by 4.2%. 0.5-line perfectly calibrated (gap 0.001).</td>
+      <td>1.5 calibration gap: 0.042</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-live">Signal</span> v2 Flat rule 1.5 under</td>
+      <td>+7.5% ROI, positive all 3 seasons. Edge concentrated in &lt;35 min players. BUT: data quality red flags in player-level ROIs — needs audit before trusting.</td>
+      <td>ROI: +8.6% / +3.2% / +10.4% by season</td>
+    </tr>
+  </table>
+
+  <div class="note" style="margin-top:16px">
+    <strong>Next step:</strong> Audit raw <code>under_odds</code> distribution for the 1.5-line props. Some rows likely have corrupted/swapped odds driving implausible player ROIs (Jalen Suggs +143%, Jordan Poole +120%). If the main market rows (under_odds -150 to -200) are clean, the flat-rule ROI survives and a v3 model on top makes sense.
+  </div>
+</div>
+
+
+<!-- ===== CONTEXT ===== -->
+<h2>Background: Why Steals?</h2>
+<div class="card">
+  <p>After the points modeling post-mortem concluded the points market is too efficient to beat with rolling stats, we evaluated which other markets might have structural inefficiency. The shortlist:</p>
+  <ul>
+    <li><strong>Assists</strong> — role/pace sensitive, books lag on ball-handler changes</li>
+    <li><strong>Steals</strong> — high variance, low-frequency stat, market may be lazy on 1.5 lines</li>
+    <li><strong>Blocks</strong> — matchup-sensitive, thin market</li>
+  </ul>
+  <p>We picked steals first because the 1.5 line is close to 50/50 and the data was ready (3 seasons in S3). The key hypothesis: books may anchor the 1.5-line over price to historical steal averages without adjusting for role/minutes, creating a persistent under edge.</p>
+</div>
+
+
+<!-- ===== DATA ===== -->
+<h2>Data</h2>
+<div class="card">
+  <table>
+    <tr><th>Source</th><th>Path</th><th>Seasons</th><th>Rows (raw)</th></tr>
+    <tr>
+      <td>Game logs (STL, MIN)</td>
+      <td class="file">s3://nba-api-mt/player_game_logs/{season}/*.csv</td>
+      <td>2023-24 · 2024-25 · 2025-26</td>
+      <td>81,034</td>
+    </tr>
+    <tr>
+      <td>Steals props (1.5 line)</td>
+      <td class="file">s3://the-odds-api-mt/nba/historical_player_props/{season}/*.csv</td>
+      <td>2023-24 · 2024-25 · 2025-26</td>
+      <td>31,636 (raw) → 10,497 consensus</td>
+    </tr>
+  </table>
+  <div class="note">
+    <strong>Data quality issue found:</strong> 2025-26 props folder contains rows with <code>game_time</code> from 2023 (season label mismatch from backfill). Fixed by filtering <code>game_time</code> to 2025-10-01 → 2026-06-30 per season.
+  </div>
+  <p>After join + MIN ≥ 15 filter: <strong>8,666 usable rows</strong> across 3 seasons.</p>
+</div>
+
+
+<!-- ===== RUN 1 ===== -->
+<h2><span class="tag tag-nb">Notebook 1</span> v1_steals_1_5_line — Model Attempt</h2>
+<div class="card">
+  <p><span class="file">src/nba_steals_modeling/research/notebooks/v1_steals_1_5_line_executed.ipynb</span></p>
+  <p>Logistic regression models (Model A: rolling only · Model B: full features) vs market baseline. Target: P(STL ≥ 2).</p>
+
+  <h3>Features tested</h3>
+  <pre>stl_roll5, stl_roll10, stl_roll20, stl_roll40
+stl_per_min_roll10, stl_per_min_roll20
+min_roll5, min_roll10</pre>
+
+  <h3>Feature signal (best correlations with y)</h3>
+  <table>
+    <tr><th>Feature</th><th>Corr with y</th><th>Note</th></tr>
+    <tr><td>stl_per_min_roll20</td><td>0.101</td><td>Best — rate-normalized, long window</td></tr>
+    <tr><td>stl_roll20</td><td>0.098</td><td></td></tr>
+    <tr><td>stl_roll40</td><td>0.090</td><td></td></tr>
+    <tr><td>stl_roll10</td><td>0.083</td><td></td></tr>
+    <tr><td>min_roll10</td><td>-0.016</td><td>Minutes barely predictive — steal rate is role-dependent not minutes-dependent</td></tr>
+  </table>
+  <div class="note">Max correlation ~0.10 — extremely weak signal. Compare to rebounds where roll_mean_60 had r ≈ 0.66 with REB.</div>
+
+  <h3>Model Brier scores (2025-26 OOS)</h3>
+  <table>
+    <tr><th>Model</th><th>Brier</th></tr>
+    <tr><td>Market baseline</td><td><strong>0.22703</strong></td></tr>
+    <tr><td>LogReg B (full features)</td><td>0.22740</td></tr>
+    <tr><td>LogReg A (rolling only)</td><td>0.22744</td></tr>
+  </table>
+  <div class="warn">Market beats both models. Features add no signal beyond what the line already captures.</div>
+
+  <h3>Walk-forward ROI (min_edge=0.05, shrink=0)</h3>
+  <table>
+    <tr><th>Fold</th><th>Test season</th><th>n_train</th><th>n_test</th><th>ROI</th></tr>
+    <tr><td>1</td><td>2024-25</td><td>1,298</td><td>2,387</td><td style="color:#f87171">-10.3%</td></tr>
+    <tr><td>2</td><td>2025-26</td><td>3,685</td><td>2,971</td><td style="color:#f87171">-16.9%</td></tr>
+  </table>
+
+  <p><strong>Verdict: Dead.</strong> No model-based edge at the 1.5 line.</p>
+</div>
+
+
+<!-- ===== RUN 2 ===== -->
+<h2><span class="tag tag-nb">Notebook 2</span> v1_steals_all_lines — Market Calibration</h2>
+<div class="card">
+  <p><span class="file">src/nba_steals_modeling/research/notebooks/v1_steals_all_lines_executed.ipynb</span></p>
+  <p>Both 0.5 and 1.5 lines side-by-side. Key goal: characterize both markets.</p>
+
+  <h3>Market calibration — the important result</h3>
+  <table>
+    <tr><th>Line</th><th>n</th><th>Actual over rate</th><th>De-vigged P(over)</th><th>Calibration gap</th><th>Verdict</th></tr>
+    <tr>
+      <td>0.5 (P(STL≥1))</td>
+      <td>4,333</td>
+      <td>0.574</td>
+      <td>0.573</td>
+      <td style="color:#34d399"><strong>0.001</strong></td>
+      <td>Market is near-perfect. No opportunity.</td>
+    </tr>
+    <tr>
+      <td>1.5 (P(STL≥2))</td>
+      <td>3,093</td>
+      <td>0.360</td>
+      <td>0.403</td>
+      <td style="color:#fbbf24"><strong>0.042</strong></td>
+      <td>Market overprices the over by 4.2%. Under is cheap.</td>
+    </tr>
+  </table>
+
+  <div class="good">
+    <strong>Key finding:</strong> At the 1.5 line, the market prices P(over) at 40.3% but the actual over rate is 36.0% — a 4.2% gap. The over is systematically overpriced. Betting the under on every 1.5-line prop is directionally correct.
+  </div>
+
+  <h3>Walk-forward (flat model, min_edge=0.05)</h3>
+  <table>
+    <tr><th>Fold</th><th>Test season</th><th>Line</th><th>n_test</th><th>Brier model</th><th>Brier market</th><th>ROI</th></tr>
+    <tr><td>1</td><td>2024-25</td><td>0.5</td><td>1,306</td><td>0.2464</td><td>0.2494</td><td style="color:#34d399">+29.3%</td></tr>
+    <tr><td>1</td><td>2024-25</td><td>1.5</td><td>817</td><td>0.2367</td><td>0.2338</td><td style="color:#34d399">+1.0%</td></tr>
+    <tr><td>2</td><td>2025-26</td><td>0.5</td><td>429</td><td>0.2392</td><td>0.2396</td><td style="color:#34d399">+2.1%</td></tr>
+    <tr><td>2</td><td>2025-26</td><td>1.5</td><td>1,031</td><td>0.2376</td><td>0.2353</td><td style="color:#f87171">-8.6%</td></tr>
+  </table>
+  <div class="note">0.5-line fold 1 ROI of 29.3% is suspicious — likely driven by tiny n_bets at that edge threshold, not a real signal.</div>
+</div>
+
+
+<!-- ===== RUN 3 ===== -->
+<h2><span class="tag tag-live">Signal</span> v2_steals_1_5_under_flat_rule — Blind Backtest</h2>
+<div class="card">
+  <p><span class="file">src/nba_steals_modeling/research/notebooks/v2_steals_1_5_under_flat_rule_executed.ipynb</span></p>
+  <p>No model, no threshold, no features. Bet the under on every single 1.5-line steals prop, all 3 seasons.</p>
+
+  <h3>Overall</h3>
+  <div class="metrics">
+    <div class="metric green"><div class="num">+7.5%</div><div class="num-label">Overall ROI</div></div>
+    <div class="metric green"><div class="num">3 / 3</div><div class="num-label">Seasons profitable</div></div>
+    <div class="metric"><div class="num">8,666</div><div class="num-label">Total bets</div></div>
+    <div class="metric green"><div class="num">+642u</div><div class="num-label">Total PnL</div></div>
+    <div class="metric"><div class="num">63.4%</div><div class="num-label">Hit rate</div></div>
+  </div>
+
+  <h3>By season</h3>
+  <table>
+    <tr><th>Season</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>PnL (units)</th><th>Median under_odds</th></tr>
+    <tr><td>2023-24</td><td>2,516</td><td>65.9%</td><td style="color:#34d399"><strong>+8.6%</strong></td><td>+209u</td><td>-190</td></tr>
+    <tr><td>2024-25</td><td>2,858</td><td>62.5%</td><td style="color:#34d399"><strong>+3.2%</strong></td><td>+91u</td><td>-194</td></tr>
+    <tr><td>2025-26</td><td>3,292</td><td>62.2%</td><td style="color:#34d399"><strong>+10.4%</strong></td><td>+342u</td><td>-189</td></tr>
+  </table>
+
+  <h3>By minutes bucket — where the edge lives</h3>
+  <table>
+    <tr><th>Minutes</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>Interpretation</th></tr>
+    <tr><td>15–25 min (role players)</td><td>854</td><td>74.2%</td><td style="color:#34d399"><strong>+18.0%</strong></td><td>Market hugely overprices 1.5 over for bench guys</td></tr>
+    <tr><td>25–35 min (starters)</td><td>4,439</td><td>64.1%</td><td style="color:#34d399"><strong>+11.5%</strong></td><td>Meaningful edge</td></tr>
+    <tr><td>35+ min (stars)</td><td>3,373</td><td>59.7%</td><td style="color:#f87171"><strong>-0.4%</strong></td><td>Market is efficient for high-usage players</td></tr>
+  </table>
+  <div class="good">
+    <strong>This is the core insight:</strong> The flat-rule edge is entirely in players under 35 minutes. Stars (35+ min) who actually average 1.5+ steals are priced correctly. Role players who rarely hit 2 steals are consistently overpriced on the over.
+  </div>
+
+  <h3>By steal type</h3>
+  <table>
+    <tr><th>Type</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>Calibration gap</th></tr>
+    <tr><td>Low-steal players (avg &lt;1.2 STL/g)</td><td>2,869</td><td>72.8%</td><td style="color:#34d399">+12.3%</td><td>9.8%</td></tr>
+    <tr><td>High-steal players (avg ≥1.2 STL/g)</td><td>5,797</td><td>58.7%</td><td style="color:#34d399">+5.1%</td><td>0.4%</td></tr>
+  </table>
+
+  <h3>⚠ Red Flags — Investigate Before Trusting</h3>
+  <div class="warn">
+    <strong>1. Odds tier breakdown contradicts overall ROI.</strong> All three odds tiers (<code>-300 to -200</code>, <code>-200 to -150</code>, <code>-150 to -100</code>) showed negative ROI (-1.2% to -1.6%). But overall ROI is +7.5%. Arithmetically impossible unless 666 out-of-bin rows are driving the whole number. These rows likely have <code>under_odds</code> outside [-300, -100] — possibly positive odds or extreme values from data errors.
+  </div>
+  <div class="warn">
+    <strong>2. Player-level ROIs are implausibly high.</strong>
+    <ul>
+      <li>Jalen Suggs: 50.8% hit rate, ROI <strong>+143%</strong> (impossible at -190 odds)</li>
+      <li>Jordan Poole: 65.5% hit rate, ROI <strong>+120%</strong></li>
+      <li>Kawhi Leonard: 52.1% hit rate, ROI <strong>+99%</strong></li>
+    </ul>
+    A 65% hit rate at -190 odds is roughly break-even. These numbers require wildly favorable odds — suggesting swapped over/under fields or data entry errors in those rows.
+  </div>
+  <div class="note">
+    <strong>Audit required:</strong> Run <code>df["under_odds"].describe()</code> and plot the distribution. Flag rows where <code>under_odds &gt; -100</code> (positive odds on a typical -190 market) and rows where <code>under_odds &lt; -400</code>. Remove those rows and rerun. If ROI survives, the signal is real.
+  </div>
+</div>
+
+
+<!-- ===== NEXT STEPS ===== -->
+<h2>Next Steps</h2>
+<div class="card">
+  <table>
+    <tr><th>#</th><th>Task</th><th>Why</th></tr>
+    <tr>
+      <td>1</td>
+      <td><strong>Audit <code>under_odds</code> distribution</strong> — add a cell to v2 notebook that prints <code>describe()</code>, flags out-of-range rows, and reruns ROI after removing them</td>
+      <td>Required before any decisions. ROI may be inflated by bad data.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>If ROI survives audit:</strong> build <code>v3_steals_1_5_under_model.ipynb</code> — add features (minutes, steal rate) on top of the flat-rule universe to find the highest-confidence unders within the &lt;35 min segment</td>
+      <td>Minutes bucket is the obvious model feature. Low-steal players in the 15-35 min range are the sweet spot.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>If ROI does not survive audit:</strong> write post-mortem and move to assists market</td>
+      <td>Assists has similar structure — role/pace sensitive, books may lag on lineup changes</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Points v2:</strong> <code>v2_points_rim_attacker_filter.ipynb</code> — flat rule test for rim attackers hitting unders at 57% vs 51% overall</td>
+      <td>Low-effort, one surviving signal from points v1. Can run in parallel with steals audit.</td>
+    </tr>
+  </table>
+</div>
+
+
+<!-- ===== FILES ===== -->
+<h2>Files Created This Session</h2>
+<div class="card">
+  <table>
+    <tr><th>File</th><th>Status</th></tr>
+    <tr><td class="file">src/nba_steals_modeling/research/notebooks/v1_steals_1_5_line.ipynb</td><td>Written + executed ✓</td></tr>
+    <tr><td class="file">src/nba_steals_modeling/research/notebooks/v1_steals_1_5_line_executed.ipynb</td><td>Executed output ✓</td></tr>
+    <tr><td class="file">src/nba_steals_modeling/research/notebooks/v1_steals_all_lines.ipynb</td><td>Written + executed ✓</td></tr>
+    <tr><td class="file">src/nba_steals_modeling/research/notebooks/v1_steals_all_lines_executed.ipynb</td><td>Executed output ✓</td></tr>
+    <tr><td class="file">src/nba_steals_modeling/research/notebooks/v2_steals_1_5_under_flat_rule.ipynb</td><td>Written + executed ✓</td></tr>
+    <tr><td class="file">src/nba_steals_modeling/research/notebooks/v2_steals_1_5_under_flat_rule_executed.ipynb</td><td>Executed output ✓</td></tr>
+    <tr><td class="file">src/nba_points_modeling/research/post_mortems/v1_points_foundations_postmortem.md</td><td>Written ✓</td></tr>
+    <tr><td class="file">src/nba_points_modeling/research/notebooks/v1_points_game_to_game_foundations_executed.ipynb</td><td>Re-executed with TLDR cell ✓</td></tr>
+  </table>
+</div>
+
+</body>
+</html>

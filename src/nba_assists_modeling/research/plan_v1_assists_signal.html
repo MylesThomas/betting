@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assists Signal Investigation Plan</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 880px; margin: 40px auto; padding: 0 24px; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    h1 { color: #f8fafc; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
+    h2 { color: #93c5fd; margin-top: 40px; }
+    h3 { color: #cbd5e1; margin-top: 18px; }
+    .card { background: #1e2333; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+    code { background: #2d3748; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a78bfa; }
+    .file { color: #34d399; font-size: 13px; font-family: monospace; }
+    .note { background: #1a2535; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fbbf24; margin: 10px 0; }
+    .warn { background: #2a1a1a; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fca5a5; margin: 10px 0; }
+    .good { background: #0f2a1a; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #6ee7b7; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th { background: #1e2333; color: #93c5fd; padding: 8px 12px; text-align: left; border: 1px solid #2d3748; }
+    td { padding: 8px 12px; border: 1px solid #2d3748; vertical-align: top; }
+    tr:nth-child(even) td { background: #161b27; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+    .tag-audit { background: #2a1f00; color: #fcd34d; border: 1px solid #78350f; }
+    .tag-build { background: #1a1a3f; color: #a5b4fc; border: 1px solid #312e81; }
+    .tag-decide { background: #0f2a1a; color: #6ee7b7; border: 1px solid #065f46; }
+    pre { background: #2d3748; padding: 12px; border-radius: 6px; font-size: 13px; color: #e2e8f0; overflow-x: auto; line-height: 1.5; }
+    ul, ol { margin: 8px 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+
+<h1>Assists — Signal Investigation Plan v1</h1>
+<p style="color:#94a3b8">2026-05-25 &nbsp;|&nbsp; Market: <code>player_assists</code> &nbsp;|&nbsp; First pass, all lines</p>
+
+<!-- ===== CONTEXT ===== -->
+<h2>Context &amp; Motivation</h2>
+<div class="card">
+  <p>Steals v2 concluded as a dead end: the 15-25 min edge was oracle (can't be predicted pre-game). Pivoting to assists, which shares structural similarities but with a richer signal surface.</p>
+  <table>
+    <tr><th>Attribute</th><th>Steals</th><th>Assists</th></tr>
+    <tr><td>Line distribution</td><td>73% on 1.5, 27% on 0.5</td><td>Spread: 1.5–12.5, peak at 3.5/4.5 (each ~18%)</td></tr>
+    <tr><td>Primary driver</td><td>Minutes (steal opportunity)</td><td>Ball-handler role + minutes</td></tr>
+    <tr><td>Market lag hypothesis</td><td>None found</td><td>When PG1 sits, backup PG's line may lag behind role expansion</td></tr>
+    <tr><td>Predictable pre-game?</td><td>No — edge was from in-game minute cuts</td><td>Potentially — lineup changes are known at tip-off</td></tr>
+  </table>
+  <div class="note">The key difference vs steals: <strong>ball-handler share changes are often known before the game</strong> (injury report, confirmed starter listings). This is the hypothesis to test.</div>
+</div>
+
+
+<!-- ===== HYPOTHESES ===== -->
+<h2>Hypotheses to Test</h2>
+<div class="card">
+  <ol>
+    <li><strong>Ball-handler lag</strong>: When a team's primary PG sits, the backup PG's assists line was set before the lineup news. Market underprices the backup's over, overprices the starter's under. Testable via rolling average vs posted line comparison.</li>
+    <li><strong>High-line regression</strong>: Players on 7.5+ lines have high-assist games baked into the line. After a 12-assist game, the next line is set too high — bet the under. Anchoring bias in line-setting.</li>
+    <li><strong>Role player wrong line</strong>: Non-PG players (wings, bigs) sometimes have a 3.5 line despite averaging 2.8 AST. Market sets the line by formula (last 3 games avg) and a couple high-assist games inflate it. Same mechanism as steals 1.5 line for low-steal players.</li>
+    <li><strong>Calibration gap by line tier</strong>: Like steals (0.5 line was perfectly calibrated, 1.5 line had a 4.2% gap), one tier of the assists market may be systematically mispriced.</li>
+  </ol>
+</div>
+
+
+<!-- ===== DATA ===== -->
+<h2>Data</h2>
+<div class="card">
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>S3 market name</td><td><code>player_assists</code></td></tr>
+    <tr><td>Seasons</td><td>2023-24, 2024-25, 2025-26</td></tr>
+    <tr><td>Game log column</td><td><code>AST</code></td></tr>
+    <tr><td>Line distribution (2024-25)</td><td>3.5: 18.1%, 4.5: 18.3%, 2.5: 16.3%, 5.5: 14.6%, 1.5: 10.8%, 6.5: 9.0%</td></tr>
+    <tr><td>Infra reference</td><td><span class="file">src/nba_steals_modeling/research/notebooks/v2_steals_1_5_under_flat_rule.ipynb</span> — copy data loading pattern exactly</td></tr>
+  </table>
+  <div class="note">Don't filter to a single line value upfront. Pull all lines, audit the distribution, then segment. Assists has no dominant single line (unlike steals 1.5 = 73%).</div>
+</div>
+
+
+<!-- ===== NOTEBOOK ===== -->
+<h2>Notebook Plan: <span class="file">v1_assists_flat_rule.ipynb</span></h2>
+<div class="card">
+  <p>One notebook, all lines. Follow the exact cell structure from the steals v2 notebook.</p>
+
+  <h3>Cell 1 — Imports &amp; config</h3>
+  <p>Copy from steals v2 cell 1. Change <code>market = 'player_assists'</code>. Target column: <code>AST</code>. Remove line filter (pull all lines). Add <code>MIN</code> filter ≥ 10 (assists players can be lower-minute).</p>
+
+  <h3>Cell 2 — Load game logs</h3>
+  <p>Same as steals: join props to game logs on <code>player_key × game_date</code>. Verify <code>AST</code> column is present. Print season row counts.</p>
+
+  <h3>Cell 3 — Line distribution audit</h3>
+  <pre>print(df["prop_line"].value_counts().sort_index())
+print(f"Most common line: {df['prop_line'].mode()[0]}")
+# Segment into tiers for later analysis
+df["line_tier"] = pd.cut(df["prop_line"],
+    bins=[0, 2, 4, 6, 100],
+    labels=["low (0.5-1.5)", "mid (2.5-3.5)", "high (4.5-5.5)", "star (6.5+)"])</pre>
+  <div class="note">Understand the shape before doing any ROI math. If one tier dominates, focus analysis there.</div>
+
+  <h3>Cell 4 — Odds audit (vig filter)</h3>
+  <p>Same vig-based filter as steals v2. Remove rows where <code>vig &lt; 1.00</code>, <code>vig &gt; 1.20</code>, or <code>|odds| &lt; 5</code>. Print how many rows each filter removes.</p>
+  <pre>df["vig"] = (df["over_odds"].apply(american_to_implied_prob)
+           + df["under_odds"].apply(american_to_implied_prob))
+df_clean = df[
+    (df["vig"] >= 1.00) & (df["vig"] <= 1.20) &
+    (df["over_odds"].abs() >= 5) &
+    (df["under_odds"].abs() >= 5)
+].copy()</pre>
+
+  <h3>Cell 5 — Flat rule: bet every under</h3>
+  <pre># y_under = 1 if AST < prop_line (e.g. AST < 4 on a 3.5 line)
+df_clean["y_under"] = (df_clean["AST"] < df_clean["prop_line"]).astype(int)
+df_clean["pnl"] = df_clean.apply(
+    lambda r: american_profit(r["under_odds"]) if r["y_under"] == 1 else -1.0, axis=1
+)
+
+# Overall
+print(f"n={len(df_clean):,}  hit_rate={df_clean['y_under'].mean():.3f}  ROI={df_clean['pnl'].mean()*100:.2f}%")
+
+# By season
+print(df_clean.groupby("season")[["y_under","pnl"]].mean().rename(
+    columns={"y_under":"hit_rate","pnl":"roi"}).round(3))</pre>
+
+  <h3>Cell 6 — Segment by line tier</h3>
+  <pre>print(df_clean.groupby("line_tier", observed=True)[["y_under","pnl"]].agg(
+    count=("pnl","count"), hit_rate=("y_under","mean"), roi=("pnl","mean")
+).round(3))</pre>
+  <p>Key question: is any tier systematically above 0% ROI? Flag tiers with <strong>ROI &gt; +2% in 2/3 seasons</strong> for deeper investigation.</p>
+
+  <h3>Cell 7 — Calibration by line tier</h3>
+  <pre>df_clean["p_mkt_dv"] = (df_clean["over_odds"].apply(american_to_implied_prob)
+                       / df_clean["vig"])
+# p_mkt_dv = de-vigged P(over). Calibration gap = p_mkt_dv - actual_over_rate.
+df_clean["y_over"] = (df_clean["AST"] >= df_clean["prop_line"]).astype(int)
+cal = df_clean.groupby("line_tier", observed=True).apply(lambda g: pd.Series({
+    "mkt_p_over": g["p_mkt_dv"].mean(),
+    "actual_over": g["y_over"].mean(),
+    "gap": g["p_mkt_dv"].mean() - g["y_over"].mean(),
+    "n": len(g),
+}), include_groups=False)
+print(cal.round(4))</pre>
+  <div class="note">In steals, the 1.5 line had a 4.2% calibration gap (market overpriced the over). Look for any tier here with gap &gt; 3%.</div>
+
+  <h3>Cell 8 — Minutes segmentation on the best tier</h3>
+  <p>Once you identify the best line tier, run the same minutes breakdown used in steals:</p>
+  <pre>best_tier = df_clean[df_clean["line_tier"] == "mid (2.5-3.5)"]  # adjust to best tier
+best_tier["min_bucket"] = pd.cut(best_tier["MIN"], bins=[10, 20, 28, 36, 100],
+                                  labels=["10-20","20-28","28-36","36+"])
+print(best_tier.groupby("min_bucket", observed=True)[["y_under","pnl"]].agg(
+    count=("pnl","count"), hit_rate=("y_under","mean"), roi=("pnl","mean")).round(3))</pre>
+
+  <h3>Cell 9 — Rolling average vs line (the lag hypothesis)</h3>
+  <pre># Pre-game proxy: player's recent AST average vs the posted line
+# If ast_roll10 << prop_line, market may have set line based on stale data
+dc = df_clean.sort_values(["PLAYER_NAME","season","game_date"]).copy()
+dc["ast_roll10"] = dc.groupby(["PLAYER_NAME","season"])["AST"].transform(
+    lambda s: s.shift(1).rolling(10, min_periods=5).mean()
+)
+dc["line_vs_roll"] = dc["prop_line"] - dc["ast_roll10"]  # positive = line set above rolling avg
+
+# Does betting under when line_vs_roll > +1 show edge?
+print("=== Under ROI by (prop_line - ast_roll10) bucket ===")
+dc["lag_bucket"] = pd.cut(dc["line_vs_roll"],
+    bins=[-20, -2, -1, 0, 1, 2, 20],
+    labels=["line &lt;&lt; avg", "line &lt; avg", "line ≈ avg-", "line ≈ avg+", "line &gt; avg", "line &gt;&gt; avg"]
+)
+print(dc.groupby("lag_bucket", observed=True)[["y_under","pnl"]].agg(
+    count=("pnl","count"), hit_rate=("y_under","mean"), roi=("pnl","mean")).round(3))</pre>
+  <div class="note">This is the key test: if <code>prop_line &gt;&gt; ast_roll10</code> (market set the line high relative to recent average), does the under have edge? This is the "anchoring bias" hypothesis.</div>
+</div>
+
+
+<!-- ===== DECISION GATES ===== -->
+<h2>Decision Gates</h2>
+<div class="card">
+  <table>
+    <tr><th>Gate</th><th>Pass condition</th><th>If pass</th><th>If fail</th></tr>
+    <tr><td>Overall flat rule ROI</td><td>&gt; 0% in 2/3 seasons on any tier</td><td>Proceed to segmentation</td><td>Calibration gap still worth checking; if gap &gt; 3% on any tier proceed</td></tr>
+    <tr><td>Calibration gap</td><td>&gt; 3% on any line tier</td><td>Focus model on that tier</td><td>Market is efficient — dead end</td></tr>
+    <tr><td>Lag hypothesis</td><td>line &gt;&gt; rolling avg bucket has ROI &gt; +5% in 2/3 seasons</td><td>This is pre-game exploitable — build model</td><td>Market updates lines efficiently</td></tr>
+    <tr><td>Minutes segment</td><td>Any bucket &gt; +5% ROI in 2/3 seasons, n ≥ 300/season</td><td>Check pre-game exploitability (same test as steals)</td><td>Drop minutes as primary signal</td></tr>
+  </table>
+</div>
+
+
+<!-- ===== MODEL ===== -->
+<h2>If Signal Found: Model Features</h2>
+<div class="card">
+  <p><span class="tag tag-build">Build</span> Only if a gate above passes. Notebook: <span class="file">v2_assists_model.ipynb</span></p>
+  <table>
+    <tr><th>Feature</th><th>Rationale</th></tr>
+    <tr><td><code>ast_roll5</code>, <code>ast_roll10</code>, <code>ast_roll20</code></td><td>Recent assist rate — all shift(1)</td></tr>
+    <tr><td><code>min_roll10</code></td><td>Minutes context</td></tr>
+    <tr><td><code>ast_per_min_roll10</code></td><td>Rate-normalized tendency</td></tr>
+    <tr><td><code>line_vs_roll10</code></td><td><code>prop_line - ast_roll10</code> — the lag signal</td></tr>
+    <tr><td><code>stl_std_roll10</code></td><td>Assist volatility — high std means unpredictable</td></tr>
+    <tr><td><code>days_rest</code></td><td>0 = back-to-back, affects assist rate</td></tr>
+    <tr><td><code>market_p_under</code></td><td>De-vigged market probability — model finds when it's wrong</td></tr>
+  </table>
+  <p>Walk-forward: train 2023-24 → test 2024-25; train 2023-24+2024-25 → test 2025-26. Same LightGBM setup as steals v2 Cell H. Pass if ROI &gt; 0% in 2/2 folds at +5% edge threshold with n ≥ 200/season.</p>
+</div>
+
+</body>
+</html>

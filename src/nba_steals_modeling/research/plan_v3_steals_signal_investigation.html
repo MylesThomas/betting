@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steals Signal Investigation Plan</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 880px; margin: 40px auto; padding: 0 24px; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    h1 { color: #f8fafc; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
+    h2 { color: #93c5fd; margin-top: 40px; }
+    h3 { color: #cbd5e1; margin-top: 18px; }
+    .card { background: #1e2333; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+    .step { display: flex; gap: 16px; margin: 10px 0; }
+    .step-num { background: #3b82f6; color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; margin-top: 2px; }
+    code { background: #2d3748; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a78bfa; }
+    .file { color: #34d399; font-size: 13px; font-family: monospace; }
+    .note { background: #1a2535; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fbbf24; margin: 10px 0; }
+    .warn { background: #2a1a1a; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #fca5a5; margin: 10px 0; }
+    .good { background: #0f2a1a; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; color: #6ee7b7; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th { background: #1e2333; color: #93c5fd; padding: 8px 12px; text-align: left; border: 1px solid #2d3748; }
+    td { padding: 8px 12px; border: 1px solid #2d3748; vertical-align: top; }
+    tr:nth-child(even) td { background: #161b27; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+    .tag-audit { background: #2a1f00; color: #fcd34d; border: 1px solid #78350f; }
+    .tag-build { background: #1a1a3f; color: #a5b4fc; border: 1px solid #312e81; }
+    .tag-decide { background: #0f2a1a; color: #6ee7b7; border: 1px solid #065f46; }
+    pre { background: #2d3748; padding: 12px; border-radius: 6px; font-size: 13px; color: #e2e8f0; overflow-x: auto; line-height: 1.5; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+
+<h1>Steals Signal — Investigation Plan</h1>
+<p style="color:#94a3b8">2026-05-24 &nbsp;|&nbsp; Based on v2_steals_1_5_under_flat_rule_executed.ipynb</p>
+
+<!-- ===== AUDIT RESULTS ===== -->
+<h2>⚠ Phase 1 Audit Results — 2026-05-24</h2>
+<div class="card" style="border-color:#ef4444">
+  <div class="warn">
+    <strong>Signal largely dead after odds cleanup.</strong> The +7.5% headline ROI was inflated by corrupted rows. Clean ROI is <strong>-0.93%</strong> overall. Only 1/3 seasons positive after removing bad data.
+  </div>
+
+  <h3>What the audit found</h3>
+  <table>
+    <tr><th>Check</th><th>Result</th></tr>
+    <tr><td>Rows with <code>under_odds</code> outside [-400, -100]</td><td style="color:#fca5a5">1,467 rows (16.9%) — includes min=-575, max=+210</td></tr>
+    <tr><td>Rows where <code>under_odds</code> is positive (should never be)</td><td style="color:#fca5a5">516 rows (6.0%)</td></tr>
+    <tr><td>Rows where over_odds &lt; under_odds (likely swapped)</td><td style="color:#fca5a5">855 rows (9.9%)</td></tr>
+    <tr><td>Clean rows (under_odds -350 to -110, over_odds ≥ 50)</td><td>7,199 / 8,666 (83.1%)</td></tr>
+  </table>
+
+  <h3>Clean ROI — the real numbers</h3>
+  <table>
+    <tr><th>Season</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>PnL</th></tr>
+    <tr><td>2023-24</td><td>2,049</td><td>67.7%</td><td style="color:#34d399">+2.7%</td><td>+55u</td></tr>
+    <tr><td>2024-25</td><td>2,416</td><td>64.8%</td><td style="color:#f87171">-2.1%</td><td>-50u</td></tr>
+    <tr><td>2025-26</td><td>2,734</td><td>64.5%</td><td style="color:#f87171">-2.6%</td><td>-72u</td></tr>
+    <tr style="font-weight:bold"><td>Overall</td><td>7,199</td><td>65.5%</td><td style="color:#f87171">-0.93%</td><td>-67u</td></tr>
+  </table>
+
+  <h3>Clean ROI by minutes — one survivor</h3>
+  <table>
+    <tr><th>Minutes</th><th>n_bets</th><th>Hit Rate</th><th>ROI (clean)</th><th>ROI (dirty)</th><th>Change</th></tr>
+    <tr><td>15–25 min</td><td>713</td><td>74.9%</td><td style="color:#34d399"><strong>+12.5%</strong></td><td>+18.0%</td><td>-5.5pp</td></tr>
+    <tr><td>25–35 min</td><td>3,692</td><td>66.2%</td><td style="color:#94a3b8"><strong>+0.1%</strong></td><td>+11.5%</td><td>-11.4pp (collapsed)</td></tr>
+    <tr><td>35+ min</td><td>2,794</td><td>62.3%</td><td style="color:#f87171"><strong>-5.7%</strong></td><td>-0.4%</td><td>-5.3pp</td></tr>
+  </table>
+  <div class="good">
+    <strong>Only surviving signal:</strong> 15–25 min (role players) — +12.5% ROI on 713 clean bets. The market consistently overprices the 1.5 over for bench players who rarely reach 2 steals in limited minutes. Worth isolating as a focused rule.
+  </div>
+
+  <h3>What "corrupted" actually means — with examples</h3>
+  <div class="note">
+    <strong>Correction to prior analysis:</strong> Positive <code>under_odds</code> is NOT a sign of corruption. It is legitimate for high-steal players where the market thinks they're likely to get 2+ steals, making the under a longshot. My earlier "clean" filter incorrectly removed these rows.
+  </div>
+
+  <h3>Legitimate: Alex Caruso at +110 under_odds</h3>
+  <div class="card" style="background:#0f1f0f;border-color:#10b981">
+    <p>Caruso averages ~1.8 STL/game — market correctly prices the over as favorite and under as underdog.</p>
+    <table>
+      <tr><th>game_date</th><th>over_odds</th><th>under_odds</th><th>STL</th><th>Interpretation</th></tr>
+      <tr><td>2024-03-07</td><td>-139</td><td style="color:#34d399">+105</td><td>0</td><td>Under hit — legitimate +1.05 PnL ✓</td></tr>
+      <tr><td>2024-03-31</td><td>-151</td><td style="color:#34d399">+115</td><td>5</td><td>Over hit — legitimate -1 PnL ✓</td></tr>
+    </table>
+    <p style="color:#6ee7b7;font-size:13px">Vig check: implied_prob(-139) + implied_prob(+105) = 58.2% + 48.8% = 107% ✓ (normal vig)</p>
+  </div>
+
+  <h3>Corrupted: Jalen Suggs at under_odds = -0.5</h3>
+  <div class="card" style="background:#2a1a1a;border-color:#ef4444">
+    <p>Suggs' top PnL row: <code>under_odds = -0.5</code>. This is a null/placeholder stored as near-zero — not a real market price. <code>american_profit(-0.5) = 100/0.5 = 200</code>, so a $1 bet "won" $200.</p>
+    <table>
+      <tr><th>game_date</th><th>over_odds</th><th>under_odds</th><th>STL</th><th>pnl</th><th>Problem</th></tr>
+      <tr><td>2026-03-17</td><td>-132</td><td style="color:#fca5a5"><strong>-0.5</strong></td><td>1</td><td style="color:#fca5a5"><strong>200.00</strong></td><td>Odds of -0.5 = implied prob of 100%+. Impossible. Likely NULL.</td></tr>
+    </table>
+    <p style="color:#fca5a5;font-size:13px">Vig check: implied_prob(-132) + implied_prob(-0.5) = 56.9% + 200% = 257% ✗ (way over 120% → data error)</p>
+    <p style="color:#fca5a5;font-size:13px">This single row contributed ~199 units of fake profit to Suggs' total, explaining his +143% ROI.</p>
+  </div>
+
+  <h3>Corrupted: Jordan Poole at under_odds = -1.5</h3>
+  <div class="card" style="background:#2a1a1a;border-color:#ef4444">
+    <table>
+      <tr><th>game_date</th><th>over_odds</th><th>under_odds</th><th>STL</th><th>pnl</th><th>Problem</th></tr>
+      <tr><td>2024-04-05</td><td>-129.5</td><td style="color:#fca5a5"><strong>-1.5</strong></td><td>0</td><td style="color:#fca5a5"><strong>66.67</strong></td><td>american_profit(-1.5) = 100/1.5 = 66.67. Near-zero placeholder.</td></tr>
+      <tr><td>2025-01-29</td><td style="color:#fca5a5"><strong>-1.0</strong></td><td>-130</td><td>0</td><td>0.77</td><td>over_odds = -1.0 also near-zero — same corruption on the over side.</td></tr>
+    </table>
+    <p style="color:#fca5a5;font-size:13px">Vig check for row 1: implied_prob(-129.5) + implied_prob(-1.5) = 56.4% + 6000% ✗</p>
+  </div>
+
+  <h3>Correct filter: vig-based, not sign-based</h3>
+  <pre style="background:#2d3748;padding:12px;border-radius:6px;font-size:13px;color:#e2e8f0">def american_to_implied_prob(odds):
+    if odds &lt; 0: return (-odds) / ((-odds) + 100)
+    return 100 / (odds + 100)
+
+df["vig"] = (df["over_odds"].apply(american_to_implied_prob)
+           + df["under_odds"].apply(american_to_implied_prob))
+
+# Flag rows where vig is outside plausible range
+# Real markets: 100% &lt; vig &lt; 120%. Near-zero odds blow this up.
+df_clean = df[(df["vig"] &gt;= 1.00) &amp; (df["vig"] &lt;= 1.20)].copy()
+print(f"Rows passing vig filter: {len(df_clean):,}")
+</pre>
+  <p>This correctly keeps Alex Caruso (+105 under, vig ≈ 107%) and removes Suggs' -0.5 row (vig ≈ 257%).</p>
+
+  <h3>Results after correct filter (vig 1.00–1.20 + |odds| ≥ 5)</h3>
+  <table>
+    <tr><th>Metric</th><th>Wrong filter (sign-based)</th><th>Correct filter (vig-based)</th></tr>
+    <tr><td>Rows dropped</td><td>1,467 (16.9%)</td><td><strong>269 (3.1%)</strong></td></tr>
+    <tr><td>Overall ROI</td><td>-0.93%</td><td><strong>-0.80%</strong></td></tr>
+    <tr><td>Seasons positive</td><td>1/3</td><td><strong>1/3</strong> (2023-24: +2.8%)</td></tr>
+  </table>
+
+  <h3>Clean ROI by season</h3>
+  <table>
+    <tr><th>Season</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>PnL</th></tr>
+    <tr><td>2023-24</td><td>2,390</td><td>65.7%</td><td style="color:#34d399">+2.8%</td><td>+67u</td></tr>
+    <tr><td>2024-25</td><td>2,810</td><td>62.6%</td><td style="color:#f87171">-2.1%</td><td>-59u</td></tr>
+    <tr><td>2025-26</td><td>3,197</td><td>62.4%</td><td style="color:#f87171">-2.4%</td><td>-76u</td></tr>
+    <tr style="font-weight:bold"><td>Overall</td><td>8,397</td><td>63.4%</td><td style="color:#f87171">-0.80%</td><td>-67u</td></tr>
+  </table>
+
+  <h3>Clean ROI by minutes — the surviving signal</h3>
+  <table>
+    <tr><th>Minutes</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>PnL</th></tr>
+    <tr><td>15–25 min (role players)</td><td>822</td><td>74.3%</td><td style="color:#34d399"><strong>+16.4%</strong></td><td>+135u</td></tr>
+    <tr><td>25–35 min (starters)</td><td>4,294</td><td>63.9%</td><td style="color:#94a3b8"><strong>0.0%</strong></td><td>+0u</td></tr>
+    <tr><td>35+ min (stars)</td><td>3,281</td><td>59.9%</td><td style="color:#f87171"><strong>-6.2%</strong></td><td>-202u</td></tr>
+  </table>
+  <div class="good">
+    <strong>15–25 min signal survives proper cleaning: +16.4% ROI, 822 bets across 3 seasons.</strong> 25-35 min is exactly flat (0.0%). 35+ min loses (-6.2%) — market correctly prices high-usage stealers.
+  </div>
+
+  <h3>Top players by clean ROI (n ≥ 50)</h3>
+  <table>
+    <tr><th>Player</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th><th>Avg STL</th><th>Avg MIN</th></tr>
+    <tr><td>Devin Booker</td><td>59</td><td>83.1%</td><td style="color:#34d399">+22.0%</td><td>0.92</td><td>36.9</td></tr>
+    <tr><td>Jalen Johnson</td><td>113</td><td>72.6%</td><td style="color:#34d399">+11.6%</td><td>1.17</td><td>35.9</td></tr>
+    <tr><td>Tyus Jones</td><td>51</td><td>74.5%</td><td style="color:#34d399">+11.1%</td><td>1.00</td><td>29.2</td></tr>
+    <tr><td>LeBron James</td><td>107</td><td>74.8%</td><td style="color:#34d399">+10.9%</td><td>1.08</td><td>34.6</td></tr>
+    <tr><td>Jrue Holiday</td><td>57</td><td>75.4%</td><td style="color:#34d399">+10.7%</td><td>1.00</td><td>31.6</td></tr>
+  </table>
+  <div class="note">Common thread: avg STL ~1.0 for players on a 1.5 line. Market posts 1.5 for players who only average 1.0 — systematic overpricing of the over.</div>
+
+  <h3>Decision: Phase 2 path</h3>
+  <table>
+    <tr><th>Segment</th><th>Verdict</th><th>Next action</th></tr>
+    <tr><td>Flat rule (all players)</td><td style="color:#f87171">Dead. -0.80% overall, 1/3 seasons positive.</td><td>Drop</td></tr>
+    <tr><td>15–25 min role players</td><td style="color:#34d399"><strong>Alive. +16.4% ROI, n=822, 3 seasons.</strong></td><td>Walk-forward test + v3 model</td></tr>
+    <tr><td>25–35 min starters</td><td style="color:#94a3b8">Exactly flat (0.0%). No edge, no loss.</td><td>Drop</td></tr>
+    <tr><td>35+ min stars</td><td style="color:#f87171">Dead. -6.2%. Market is efficient here.</td><td>Drop</td></tr>
+    <tr><td>Low-STL players (avg &lt;1.2) on 1.5 line</td><td style="color:#fbbf24">Likely overlaps with 15-25 min segment. Cross-tab needed.</td><td>Check in v3</td></tr>
+  </table>
+</div>
+
+<h2>Signal Summary (original, pre-audit)</h2>
+<div class="card">
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Overall ROI (flat bet every 1.5 under)</td><td style="color:#34d399"><strong>+7.5%</strong></td></tr>
+    <tr><td>Seasons profitable</td><td style="color:#34d399"><strong>3 / 3</strong> (2023-24: +8.6%, 2024-25: +3.2%, 2025-26: +10.4%)</td></tr>
+    <tr><td>Total bets / PnL</td><td>8,666 bets, +642u</td></tr>
+    <tr><td>Edge concentrated in</td><td>&lt;35 min players. 35+ min ROI: -0.4% (no edge).</td></tr>
+    <tr><td>Low-steal players (&lt;1.2 STL/g)</td><td>+12.3% ROI, 72.8% hit rate, calibration gap 9.8%</td></tr>
+  </table>
+  <div class="warn" style="margin-top:12px">
+    <strong>Not trusted yet.</strong> Odds tier breakdown (all 3 tiers negative) contradicts the +7.5% headline. 666 unclassified rows are likely driving the result. Player-level ROIs (Suggs +143%, Poole +120%) are impossible at -190 odds. Must audit odds data before any conclusions.
+  </div>
+</div>
+
+
+<h2>Phase 1 — Odds Data Audit</h2>
+<div class="card">
+  <p><span class="tag tag-audit">Audit</span> Add a dedicated audit cell to the v2 notebook (or build a separate script). Goal: understand the full distribution of <code>under_odds</code> and identify corrupt rows.</p>
+
+  <h3>Step 1 — Describe the odds distribution</h3>
+  <pre>print(df["under_odds"].describe())
+print(df["over_odds"].describe())
+
+# How many rows fall outside the expected range?
+weird_under = df[(df["under_odds"] > -100) | (df["under_odds"] < -400)]
+print(f"Rows with under_odds outside [-400, -100]: {len(weird_under)} ({len(weird_under)/len(df)*100:.1f}%)")
+print(weird_under[["PLAYER_NAME","game_date","season","over_odds","under_odds","STL"]].head(20))</pre>
+  <div class="note">
+    Expected range for 1.5 steals under: roughly <code>-250</code> to <code>-140</code>. Anything above <code>-100</code> (positive odds) or below <code>-400</code> is suspect.
+  </div>
+
+  <h3>Step 2 — Check for swapped over/under odds</h3>
+  <pre># If over_odds < under_odds on a 1.5 line, odds are likely swapped
+# (under should be favorite, so under_odds more negative than over_odds)
+swapped = df[df["over_odds"] < df["under_odds"]]
+print(f"Rows where over_odds < under_odds (likely swapped): {len(swapped)}")
+print(swapped[["PLAYER_NAME","game_date","over_odds","under_odds"]].head(10))</pre>
+
+  <h3>Step 3 — Inspect the high-ROI players</h3>
+  <pre># Pull all rows for the implausible players and check their odds
+for player in ["Jalen Suggs", "Jordan Poole", "Kawhi Leonard"]:
+    sub = df[df["PLAYER_NAME"].str.contains(player, case=False)]
+    print(f"\n{player} — {len(sub)} rows")
+    print(sub[["game_date","season","STL","over_odds","under_odds","pnl"]].sort_values("pnl", ascending=False).head(10))</pre>
+
+  <h3>Step 4 — Rerun ROI on clean subset</h3>
+  <pre># Clean: keep only rows where under_odds is in expected range AND odds not swapped
+df_clean = df[
+    (df["under_odds"] >= -350) &
+    (df["under_odds"] <= -110) &
+    (df["over_odds"] > 0)   # over should be positive odds on a 1.5 line
+].copy()
+
+print(f"Clean rows: {len(df_clean)} / {len(df)} ({len(df_clean)/len(df)*100:.1f}%)")
+print(f"Dropped: {len(df) - len(df_clean)}")
+
+roi_clean = df_clean["pnl"].mean()
+print(f"\nClean ROI: {roi_clean:.4f} ({roi_clean*100:.2f}%)")
+print(df_clean.groupby("season")["pnl"].agg(["mean","sum","count"]).rename(columns={"mean":"roi","sum":"pnl","count":"n"}))</pre>
+
+  <h3>Decision gate</h3>
+  <table>
+    <tr><th>Clean ROI</th><th>Interpretation</th><th>Next action</th></tr>
+    <tr><td>&gt; +3% in 2/3 seasons</td><td>Signal is real, bad rows were noise</td><td>Proceed to Phase 2</td></tr>
+    <tr><td>0% to +3%</td><td>Marginal — signal exists but may not beat vig after costs</td><td>Deeper segmentation before building model</td></tr>
+    <tr><td>&lt; 0%</td><td>Signal was entirely driven by corrupt data</td><td>Dead end — move to assists market</td></tr>
+  </table>
+</div>
+
+
+<h2>Phase 2 — Segmentation Deep-Dive</h2>
+<div class="card">
+  <p><span class="tag tag-audit">Audit</span> Assuming clean ROI survives, understand exactly which bets drive the edge before building a model on top.</p>
+
+  <h3>Segment by minutes × steal type</h3>
+  <p>The minutes breakdown showed 35+ min players have zero edge. Build a 2×2 cross-tab:</p>
+  <pre>df_clean["min_bucket"] = pd.cut(df_clean["MIN"], bins=[15, 25, 35, 100],
+                                  labels=["15-25","25-35","35+"])
+df_clean["steal_type"] = np.where(
+    df_clean.groupby("PLAYER_NAME")["STL"].transform("mean") >= 1.2,
+    "high_stealer", "low_stealer"
+)
+pivot = df_clean.groupby(["min_bucket","steal_type"])["pnl"].agg(["mean","count"])
+print(pivot)</pre>
+  <p>Hypothesis: the edge is strongest in <strong>low-steal players at 15–35 min</strong>. These players rarely hit 2 steals in a game and the market prices them like they will.</p>
+
+  <h3>Check if line is correct for these players</h3>
+  <p>A player averaging 0.8 STL/game should not have a 1.5 line. Check how often low-steal role players have a 1.5 line vs 0.5:</p>
+  <pre>low_role = df_clean[(df_clean["steal_type"]=="low_stealer") & (df_clean["min_bucket"]!="35+")]
+print(f"Low-steal role players on 1.5 line: {len(low_role)}")
+print(f"Their avg STL: {low_role['STL'].mean():.2f}")
+print(f"P(STL >= 2): {(low_role['STL'] >= 2).mean():.3f}")
+print(f"Market de-vigged P(over): {low_role['p_mkt_dv'].mean():.3f}")</pre>
+  <div class="note">If avg STL is ~0.8 and market implies P(≥2) = 40%, that's the mis-pricing. These players are on a 1.5 line when they should be on a 0.5 line, and the market hasn't adjusted odds enough to reflect that.</div>
+
+  <h3>Stability check — rolling 30-day ROI</h3>
+  <p>Plot cumulative PnL on the clean subset. Should be monotonically positive (with noise), not one big jump followed by flat. A single lucky month would show as a spike.</p>
+</div>
+
+
+<h2>Phase 3 — v3 Notebook Build</h2>
+<div class="card">
+  <p><span class="tag tag-build">Build</span> Only proceed here if Phase 1 + 2 confirm the signal. Notebook: <span class="file">v3_steals_1_5_under_model.ipynb</span></p>
+
+  <h3>What the model adds over the flat rule</h3>
+  <p>The flat rule bets everything including 35+ min players (zero edge). A model filters to the high-confidence spots within the universe.</p>
+
+  <table>
+    <tr><th>Feature</th><th>Rationale</th></tr>
+    <tr><td><code>stl_roll20</code>, <code>stl_roll40</code></td><td>Settled steal rate — longer window more stable for low-frequency stat</td></tr>
+    <tr><td><code>min_roll10</code></td><td>Minutes context — primary driver of steal opportunity volume</td></tr>
+    <tr><td><code>stl_per_min_roll20</code></td><td>Rate-normalized steal tendency</td></tr>
+    <tr><td><code>market_p_over</code> (de-vigged)</td><td>Where market thinks the line is — gap vs model = edge</td></tr>
+  </table>
+
+  <h3>Model approach</h3>
+  <p>Two options — test both:</p>
+  <ul>
+    <li><strong>Option A — Logistic regression</strong>: direct P(STL ≥ 2) classifier. Same as v1 but restricted to &lt;35 min population where the edge exists. v1 was trained on everything including stars where there's no signal.</li>
+    <li><strong>Option B — Poisson rate model</strong>: estimate each player's λ (steal rate per game), compute P(X ≥ 2) = 1 − Poisson.cdf(1, λ). More principled for count data. Shrink λ estimates toward population prior (Empirical Bayes).</li>
+  </ul>
+  <div class="note">Option B is worth testing — see the population prior approach. Key difference: shrink toward the DATA prior (observed steal rates), not toward the market. The market prior is demonstrably wrong for low-minute players.</div>
+
+  <h3>Evaluation criteria</h3>
+  <ul>
+    <li>Walk-forward ROI must be positive in 2/3 seasons at min_edge=0.05</li>
+    <li>Model ROI must beat flat-rule ROI on the same filtered universe (otherwise just use the flat rule)</li>
+    <li>n_bets ≥ 300 per test season at the chosen threshold (below this is noise)</li>
+  </ul>
+</div>
+
+
+<h2>Phase 4 — If Signal Holds: Production Path</h2>
+<div class="card">
+  <p><span class="tag tag-decide">Decide</span> If v3 walk-forward shows +ROI, the path to production follows the rebounds model blueprint.</p>
+
+  <table>
+    <tr><th>Step</th><th>What</th><th>Reference</th></tr>
+    <tr><td>1</td><td>Build <code>build_steals_universe.py</code> — daily pipeline that fetches 1.5-line steals props, joins to game logs, computes rolling features</td><td><span class="file">src/nba_rebounds_modeling/00_research/scripts/build_rebounds_full_universe.py</span></td></tr>
+    <tr><td>2</td><td>Build <code>score_steals_slate.py</code> — loads today's 1.5 props, scores each player, outputs edge-ranked list</td><td><span class="file">src/nba_rebounds_modeling/00_research/scripts/score_rebounds_slate.py</span></td></tr>
+    <tr><td>3</td><td>Wire to SNS notification (same as rebounds daily alert)</td><td><span class="file">src/nba_rebounds_modeling/00_research/scripts/prod_notify_rebounds_sns.py</span></td></tr>
+    <tr><td>4</td><td>Paper trade 2 weeks before going live</td><td>—</td></tr>
+  </table>
+  <div class="note">Don't start production work until Phase 1 audit is clean. The rebounds model took ~3 months from research signal to production. The steals pipeline would be faster since the infrastructure already exists.</div>
+</div>
+
+
+<h2>If Signal Dies in Phase 1</h2>
+<div class="card">
+  <p>If odds audit kills the ROI, the 4.2% calibration gap from v1 is also suspect. Write a post-mortem and pivot to:</p>
+  <ul>
+    <li><strong>Assists market</strong> — similar market structure, role/pace sensitive, books may lag on ball-handler changes. Hypothesis: when a team's primary PG misses a game, the backup's assists line lags.</li>
+    <li><strong>Points rim attacker filter</strong> — the one surviving signal from points v1 (57% under rate vs 51% for non-rim players). Simple segmentation rule, quick to test.</li>
+  </ul>
+</div>
+
+
+<h2>Open Questions</h2>
+<div class="card">
+  <ul>
+    <li>Why does the 2025-26 season have the highest ROI (+10.4%) despite the smallest calibration gap (2.3%)? Investigate whether odds improved but accuracy didn't.</li>
+    <li>The 666 out-of-bin rows — what are they? Positive under odds? Very extreme negative? Which bookmakers post them?</li>
+    <li>Is the 0.5-line "near-perfect calibration" (gap 0.001) real or also affected by data quality? If 0.5 is clean, it confirms the market knows P(STL ≥ 1) well and the 1.5 mis-pricing is specific to the 2-steal threshold.</li>
+    <li>Dyson Daniels at -30% ROI (333% hit rate — he actually hits unders 67% of the time but loses money). Flag: is he on a 1.5 line despite averaging 2.3 STL/game? If so, that row is the inverse error — market underprices the over for high-steal players.</li>
+  </ul>
+</div>
+
+
+
+<h2>VERDICT — Dead End (2026-05-21)</h2>
+<div class="card" style="border-color:#ef4444">
+  <div class="warn" style="font-size:15px">
+    <strong>Signal is un-exploitable pre-game. Do not build a model. Pivot to assists.</strong>
+  </div>
+
+  <h3>The 15–25 min signal is real — but not pre-game exploitable</h3>
+  <p>We added a pre-game proxy test (Cell B): can we replicate the +16.4% ROI using only information available before tip-off?</p>
+  <table>
+    <tr><th>Filter</th><th>n_bets</th><th>ROI</th><th>Interpretation</th></tr>
+    <tr><td>Oracle: same-game MIN &lt; 25</td><td>819</td><td style="color:#34d399"><strong>+16.26%</strong></td><td>The real signal — but uses future game info</td></tr>
+    <tr><td>Pre-game proxy: min_roll10 &lt; 25</td><td>179</td><td style="color:#f87171"><strong>-15.91%</strong></td><td>True bench players — market prices these correctly</td></tr>
+    <tr><td>Pre-game proxy: min_roll10 &lt; 28</td><td>643</td><td style="color:#f87171"><strong>-5.73%</strong></td><td>Wider window — still negative</td></tr>
+  </table>
+
+  <h3>Why the oracle signal doesn't translate</h3>
+  <p>The +16% edge comes from players who <em>unexpectedly</em> played under 25 minutes — starters in blowouts, foul trouble, load management decisions made same-day. These situations are not predictable pre-game. The players who <em>always</em> play under 25 minutes (true bench players, <code>min_roll10 &lt; 25</code>) are already priced correctly by the market, hence -15.9% ROI.</p>
+
+  <h3>Season × minutes breakdown (already saw this was consistent)</h3>
+  <table>
+    <tr><th>Season</th><th>15–25 min n</th><th>15–25 min ROI</th><th>Assessment</th></tr>
+    <tr><td>2023-24</td><td>191</td><td style="color:#34d399">+27.4%</td><td>Strong — but oracle</td></tr>
+    <tr><td>2024-25</td><td>268</td><td style="color:#34d399">+14.5%</td><td>Strong — but oracle</td></tr>
+    <tr><td>2025-26</td><td>363</td><td style="color:#34d399">+12.0%</td><td>Strong — but oracle</td></tr>
+  </table>
+  <p>The 3/3 consistency confirms the effect is real. But it's a <strong>live-betting signal</strong> (once you know a starter is in a blowout and getting pulled), not a pre-game signal. We don't build live betting models.</p>
+
+  <h3>Conclusion</h3>
+  <ul>
+    <li><strong>Flat rule (all players):</strong> -0.80% — dead.</li>
+    <li><strong>15–25 min oracle filter:</strong> +16.4% — real but not exploitable pre-game.</li>
+    <li><strong>15–25 min pre-game proxy:</strong> -15.9% — market prices bench players correctly.</li>
+    <li><strong>No model to build.</strong> The signal source (unexpected minute reductions) is not available at bet placement time.</li>
+  </ul>
+
+  <h3>Pivot</h3>
+  <table>
+    <tr><th>Market</th><th>Why try it</th><th>Hypothesis</th></tr>
+    <tr><td><strong>Assists</strong></td><td>Similar structure to steals — role/pace sensitive, books may lag on ball-handler changes</td><td>When a team's primary PG misses a game, backup's assists line lags — testable pre-game</td></tr>
+    <tr><td><strong>Points rim attacker filter</strong></td><td>Surviving signal from points v1 (57% under rate vs 51% baseline)</td><td>Simple segmentation rule, no model needed — quick to validate</td></tr>
+  </table>
+</div>
+
+</body>
+</html>
