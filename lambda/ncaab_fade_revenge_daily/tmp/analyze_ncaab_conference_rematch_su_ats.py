@@ -32,6 +32,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import boto3
 import numpy as np
 import pandas as pd
 import duckdb
@@ -77,6 +78,9 @@ CONF_TOURNEY_DAYS_BEFORE_NCAA = 10
 
 # Order for 3-table output: regular_season | conf_tournament | ncaa_tournament
 GAME_PERIODS = ['regular_season', 'conf_tournament', 'ncaa_tournament']
+
+S3_BUCKET = "ncaab-betting-mt"
+S3_BACKTEST_PREFIX = "data/04_output/backtest/fade-revenge-spot"
 
 
 def load_ncaab_period_bounds() -> dict:
@@ -961,6 +965,17 @@ def plot_fade_pnl(df: pd.DataFrame, out_path: Path) -> None:
 
 
 # -----------------------------------------------------------------------------
+# S3 upload
+# -----------------------------------------------------------------------------
+
+
+def _upload_to_s3(local_path: Path, s3_key: str) -> None:
+    boto3.client("s3").upload_file(str(local_path), S3_BUCKET, s3_key)
+    LOG.info("Uploaded s3://%s/%s", S3_BUCKET, s3_key)
+    print(f"S3: s3://{S3_BUCKET}/{s3_key}")
+
+
+# -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
 
@@ -1013,6 +1028,14 @@ def main():
         '--plot',
         action='store_true',
         help='Save cumulative PnL over time (fade rematch team, flat 1u) to data/04_output/. Use with --all-games.',
+    )
+    parser.add_argument(
+        '--s3',
+        action='store_true',
+        help=(
+            'Upload backtest outputs to s3://ncaab-betting-mt/data/04_output/backtest/fade-revenge-spot/. '
+            'Requires --csv and --all-games --seasons.'
+        ),
     )
     args = parser.parse_args()
 
@@ -1078,12 +1101,12 @@ def main():
             sub = combined[combined['season'] == season]
             rows.append(_all_games_summary_row(sub, season))
         rows.append(_all_games_summary_row(combined, 'all'))
-        summary_df = pd.DataFrame(rows)
+        all_periods_summary_df = pd.DataFrame(rows)
         print()
         print("=" * 80)
         print("NCAAB REMATCH (all games): summary by season [all periods]")
         print("=" * 80)
-        print(summary_df.to_string(index=False))
+        print(all_periods_summary_df.to_string(index=False))
         # Then 3 summary tables (one per period)
         for period in GAME_PERIODS:
             sub = combined[combined['game_period'] == period]
@@ -1117,7 +1140,16 @@ def main():
             combined_path = out_dir / f'ncaab_rematch_all_games_multi_{et_date}.csv'
             combined.to_csv(combined_path, index=False)
             LOG.info("Wrote CSV: %s", combined_path)
-            print(f"CSV written: {combined_path} (columns: season, game_period)")
+            print(f"CSV written: {combined_path}")
+
+            summary_path = out_dir / f'ncaab_rematch_all_games_summary_{et_date}.csv'
+            all_periods_summary_df.to_csv(summary_path, index=False)
+            LOG.info("Wrote summary CSV: %s", summary_path)
+            print(f"Summary CSV written: {summary_path}")
+
+            if args.s3:
+                _upload_to_s3(combined_path, f"{S3_BACKTEST_PREFIX}/multi.csv")
+                _upload_to_s3(summary_path, f"{S3_BACKTEST_PREFIX}/summary.csv")
         if args.plot:
             out_dir.mkdir(parents=True, exist_ok=True)
             plot_fade_pnl(combined, out_dir / f'ncaab_rematch_fade_pnl_{et_date}.png')
