@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rebounds Under — Strategy P&amp;L Driver Tree</title>
+<style>
+  :root {
+    --bcg-green-700: #0E3E1B;
+    --bcg-green-500: #197A56;
+    --bcg-green-400: #21BF61;
+    --bcg-green-300: #A8F0B8;
+    --bcg-green-200: #DCF9E3;
+    --bcg-neutral-200: #F1EEEA;
+    --bcg-white: #FFFFFF;
+    --bcg-gray-700: #323232;
+    --bcg-gray-500: #535353;
+    --bcg-gray-400: #B1B1B1;
+    --bcg-gray-300: #D4D4D4;
+    --bcg-gray-200: #F2F2F2;
+    --bcg-font: 'Inter', 'Trebuchet MS', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--bcg-font);
+    background: var(--bcg-neutral-200);
+    color: var(--bcg-gray-700);
+    margin: 0;
+    padding: 16px 28px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-text { flex: 1; min-width: 0; }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--bcg-green-700);
+    margin: 0 0 2px 0;
+  }
+  .header .subtitle {
+    font-size: 12px;
+    color: var(--bcg-gray-500);
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .btn {
+    background: var(--bcg-white);
+    border: 1px solid var(--bcg-green-500);
+    color: var(--bcg-green-500);
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+  }
+  .btn:hover {
+    border-color: var(--bcg-green-700);
+    color: var(--bcg-green-700);
+    background: var(--bcg-green-200);
+  }
+
+  /* LEGEND */
+  .legend-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    align-items: center;
+    padding: 6px 12px;
+    background: var(--bcg-white);
+    border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--bcg-gray-500);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 16px; height: 16px; border-radius: 2px;
+    background: var(--bcg-white);
+    border-left: 3px solid var(--bcg-gray-400);
+    flex-shrink: 0;
+  }
+  .legend-swatch.root { background: var(--bcg-green-400); border-left: none; }
+  .legend-swatch.l1 { border-left: 4px solid var(--bcg-green-500); }
+  .legend-swatch.l2 { border-left: 3px solid var(--bcg-green-300); border-bottom: 2px solid var(--bcg-green-200); }
+  .legend-swatch.leaf { border-left: 3px solid var(--bcg-gray-400); }
+  .legend-swatch.bundle { background: var(--bcg-gray-200); border: 1px solid var(--bcg-gray-300); border-left: 1px solid var(--bcg-gray-300); }
+  .legend-op {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+    background: var(--bcg-white);
+    border: 1.5px solid var(--bcg-green-500);
+    color: var(--bcg-green-500);
+    border-radius: 50%;
+    font-weight: 700; font-size: 11px;
+  }
+
+  /* TREE */
+  .tree, .tree ul { list-style: none; padding: 0; margin: 0; }
+  .tree {
+    display: flex;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .tree li { display: flex; align-items: center; position: relative; }
+  .tree li:has(> ul)::after {
+    content: '';
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    height: 2px;
+    background: var(--bcg-gray-500);
+    width: var(--connector-w, 26px);
+    left: var(--connector-l, 0);
+    z-index: 0;
+    border-radius: 1px;
+  }
+  .tree ul {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    margin-left: 26px;
+    position: relative;
+  }
+  .tree ul li { padding-left: 22px; position: relative; }
+  .tree ul li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    width: 22px; height: 2px;
+    background: var(--bcg-gray-500);
+    border-radius: 1px;
+  }
+  .tree ul::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--spine-top, 0);
+    bottom: var(--spine-bottom, 0);
+    width: 2px;
+    background: var(--bcg-gray-500);
+    border-radius: 1px;
+  }
+  .tree ul.single::before { display: none; }
+
+  /* OPERATOR PILL */
+  .tree ul[data-op]::after {
+    content: attr(data-op);
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bcg-white);
+    border: 1.5px solid var(--bcg-green-500);
+    color: var(--bcg-green-500);
+    font-weight: 700; font-size: 12px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  /* TERMINAL-LEAF GRID */
+  .tree ul.terminal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 185px);
+    gap: 3px 8px;
+    align-items: center;
+    margin-left: 22px;
+    background: var(--bcg-gray-200);
+    border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px;
+    padding: 5px 8px;
+  }
+  .tree ul.terminal-grid.cols-3 { grid-template-columns: repeat(3, 185px); }
+  .tree ul.terminal-grid::before { display: none; }
+  .tree ul.terminal-grid > li { padding-left: 0; }
+  .tree ul.terminal-grid > li::before { display: none; }
+
+  /* NODES */
+  .node {
+    background: var(--bcg-white);
+    border-left: 3px solid var(--bcg-gray-400);
+    padding: 5px 11px;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    min-width: 130px; max-width: 200px;
+    font-size: 12px; line-height: 1.25;
+    flex-shrink: 0;
+  }
+  .node .label { font-weight: 600; color: var(--bcg-gray-700); }
+  .node .desc { font-size: 10.5px; font-style: italic; color: var(--bcg-gray-500); margin-top: 1px; font-weight: 400; }
+  .node .source {
+    font-size: 10px; font-style: italic; color: var(--bcg-gray-500);
+    margin-top: 2px; font-weight: 400;
+    border-top: 1px dotted var(--bcg-gray-300); padding-top: 2px;
+  }
+
+  /* Terminal-grid leaves — tight */
+  .tree ul.terminal-grid .node {
+    padding: 3px 10px;
+    width: 185px; min-width: 185px; max-width: 185px;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .tree ul.terminal-grid .node .label { font-size: 11.5px; flex-shrink: 0; }
+  .tree ul.terminal-grid .node .source {
+    margin-top: 0; border-top: none; padding-top: 0;
+    font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Root */
+  .node.root {
+    background: var(--bcg-green-400); border-left: none;
+    padding: 7px 13px; width: 180px;
+  }
+  .node.root .label { color: var(--bcg-white); font-size: 13px; font-weight: 700; }
+  .node.root .desc { color: var(--bcg-green-200); }
+
+  /* L1 */
+  .node.l1 {
+    border-left: 4px solid var(--bcg-green-500);
+    padding: 6px 12px; width: 160px;
+  }
+  .node.l1 .label {
+    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 12px; font-weight: 700; color: var(--bcg-green-700);
+  }
+
+  /* L2 */
+  .node.l2 {
+    border-left: 3px solid var(--bcg-green-300);
+    border-bottom: 2px solid var(--bcg-green-200);
+    padding: 5px 11px 4px 11px; width: 200px;
+  }
+  .node.l2 .label { color: var(--bcg-gray-700); font-weight: 600; }
+
+  /* Leaf */
+  .node.leaf { border-left: 3px solid var(--bcg-gray-400); }
+  .node.leaf .label { font-weight: 500; }
+
+  /* TRENDS ANNEX */
+  .annex {
+    margin-top: 20px; padding-top: 14px;
+    border-top: 2px solid var(--bcg-gray-300);
+  }
+  .annex h2 { font-size: 15px; font-weight: 600; color: var(--bcg-green-700); margin: 0 0 2px 0; }
+  .annex .annex-sub {
+    font-size: 11.5px; color: var(--bcg-gray-500); font-style: italic; margin-bottom: 10px;
+  }
+  .annex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .annex-col {
+    background: var(--bcg-white);
+    border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px; padding: 10px 14px;
+  }
+  .annex-col h3 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--bcg-green-500); margin: 0 0 7px 0;
+    padding-bottom: 4px; border-bottom: 1.5px solid var(--bcg-green-300);
+  }
+  .trend {
+    margin-bottom: 7px; padding-bottom: 5px;
+    border-bottom: 1px dotted var(--bcg-gray-300);
+  }
+  .trend:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .trend .t-label { font-size: 12px; font-weight: 600; color: var(--bcg-gray-700); }
+  .trend .t-desc { font-size: 10.5px; font-style: italic; color: var(--bcg-gray-500); margin-top: 2px; }
+  .trend .t-source { font-size: 10px; font-style: italic; color: var(--bcg-gray-500); margin-top: 3px; }
+
+  .footer-note {
+    margin-top: 20px; font-size: 11px; color: var(--bcg-gray-500);
+    border-top: 1px solid var(--bcg-gray-300); padding-top: 10px; max-width: 900px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-text">
+    <h1>Rebounds Under — Strategy P&amp;L Driver Tree</h1>
+    <div class="subtitle">NBA 2024-25 | Bottom-up: P&amp;L = Volume × ROI per Bet | Fixed 1u staking</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="exportHTML()">↓ Export HTML</button>
+    <button class="btn" onclick="exportTXT()">↓ Export TXT</button>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-bar">
+  <div class="legend-item"><span class="legend-swatch root"></span> Root (P&amp;L)</div>
+  <div class="legend-item"><span class="legend-swatch l1"></span> L1 driver</div>
+  <div class="legend-item"><span class="legend-swatch l2"></span> L2 category</div>
+  <div class="legend-item"><span class="legend-swatch leaf"></span> Leaf + DS = data source</div>
+  <div class="legend-item"><span class="legend-swatch bundle"></span> Terminal bundle (MECE group)</div>
+  <div class="legend-item"><span class="legend-op">×</span> operator</div>
+</div>
+
+<!-- DRIVER TREE -->
+<ul class="tree">
+  <li>
+    <div class="node root">
+      <div class="label">Rebounds Under P&amp;L</div>
+      <div class="desc">units, fixed 1u stake</div>
+    </div>
+
+    <ul data-op="×">
+
+      <!-- L1: VOLUME -->
+      <li>
+        <div class="node l1">
+          <div class="label">Volume</div>
+          <div class="desc">Bets placed</div>
+        </div>
+        <ul data-op="×">
+
+          <!-- L2: Slate Size -->
+          <li>
+            <div class="node l2">
+              <div class="label">Slate Size</div>
+              <div class="desc">Props available per day</div>
+            </div>
+            <ul data-op="×">
+              <li><div class="node leaf"><div class="label">Games per slate</div><div class="source">DS: NBA API / schedule</div></div></li>
+              <li><div class="node leaf"><div class="label">Props per game</div><div class="source">DS: The Odds API</div></div></li>
+            </ul>
+          </li>
+
+          <!-- L2: Selection Rate -->
+          <li>
+            <div class="node l2">
+              <div class="label">Selection Rate</div>
+              <div class="desc">Fraction of slate that pass filters</div>
+            </div>
+            <ul data-op="×">
+              <li><div class="node leaf"><div class="label">Min-edge threshold</div><div class="source">DS: config / edge_calibration.py</div></div></li>
+              <li><div class="node leaf"><div class="label">Shrinkage setting</div><div class="source">DS: edge_calibration.py</div></div></li>
+              <li><div class="node leaf"><div class="label">Odds range filter</div><div class="source">DS: roi-and-pnl wiki (~-190 to +190)</div></div></li>
+            </ul>
+          </li>
+
+        </ul>
+      </li>
+
+      <!-- L1: ROI per Bet -->
+      <li>
+        <div class="node l1">
+          <div class="label">ROI per Bet</div>
+          <div class="desc">P&amp;L per unit wagered</div>
+        </div>
+        <ul data-op="×">
+
+          <!-- L2: Hit Rate -->
+          <li>
+            <div class="node l2">
+              <div class="label">Hit Rate</div>
+              <div class="desc">Model accuracy — unders that land below line</div>
+            </div>
+            <!-- 6 model feature leaves → 2-col terminal grid -->
+            <ul>
+              <li><div class="node leaf"><div class="label">Roll reb mean (60g)</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+              <li><div class="node leaf"><div class="label">Roll reb std (5g)</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+              <li><div class="node leaf"><div class="label">Spread signal</div><div class="source">DS: The Odds API</div></div></li>
+              <li><div class="node leaf"><div class="label">3PA rate (20g)</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+              <li><div class="node leaf"><div class="label">Consensus line (min/max)</div><div class="source">DS: The Odds API</div></div></li>
+              <li><div class="node leaf"><div class="label">Model form (OLS + XGB)</div><div class="source">DS: prod_train_rebounds_models.py</div></div></li>
+            </ul>
+          </li>
+
+          <!-- L2: Odds Quality -->
+          <li>
+            <div class="node l2">
+              <div class="label">Odds Quality</div>
+              <div class="desc">Payout captured per winning bet</div>
+            </div>
+            <!-- 3 leaves → terminal grid -->
+            <ul>
+              <li><div class="node leaf"><div class="label">Avg under odds</div><div class="source">DS: The Odds API (bookmakers)</div></div></li>
+              <li><div class="node leaf"><div class="label">Vig drag</div><div class="source">DS: american-odds wiki / de-vig calc</div></div></li>
+              <li><div class="node leaf"><div class="label">CLV capture</div><div class="source">DS: The Odds API (line movement)</div></div></li>
+            </ul>
+          </li>
+
+        </ul>
+      </li>
+
+    </ul>
+  </li>
+</ul>
+
+<!-- TRENDS ANNEX -->
+<div class="annex">
+  <h2>Forward-looking trends</h2>
+  <div class="annex-sub">Not part of the static structure. MECE within each column. Apply as overlays when evaluating strategy durability.</div>
+  <div class="annex-grid">
+
+    <div class="annex-col">
+      <h3>Volume drivers</h3>
+      <div class="trend">
+        <div class="t-label">Schedule compression (playoffs)</div>
+        <div class="t-desc">Play-in and playoff slates shrink to 2-4 games/night, halving available props</div>
+        <div class="t-source">Data source: NBA schedule / nba-season-structure wiki</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Prop market expansion</div>
+        <div class="t-desc">Additional sportsbooks entering state markets increases props per player and boosts line depth</div>
+        <div class="t-source">Data source: The Odds API bookmaker list (TBD)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Threshold calibration drift</div>
+        <div class="t-desc">Optimal min-edge cutoff shifts as season-long sample grows; looser threshold = more bets at lower ROI</div>
+        <div class="t-source">Data source: edge_calibration.py sweep results</div>
+      </div>
+    </div>
+
+    <div class="annex-col">
+      <h3>Edge / ROI drivers</h3>
+      <div class="trend">
+        <div class="t-label">Model staleness</div>
+        <div class="t-desc">OLS/XGB trained on prior seasons; mid-season role changes (trade deadline, injury returns) degrade feature relevance until retrain</div>
+        <div class="t-source">Data source: prod_train_rebounds_models.py retraining log</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Rolling window lag</div>
+        <div class="t-desc">60-game rolling mean is slow to capture sudden minutes/role changes; shorter windows (10-20g) may track better but add noise</div>
+        <div class="t-source">Data source: rebounds_feature_spec.py / S3 feature universe</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Market efficiency creep</div>
+        <div class="t-desc">Books are tightening rebounds lines seasonally as sharp action identifies the same signals; edges compress over multi-year horizon</div>
+        <div class="t-source">Data source: TBD (line movement analysis)</div>
+      </div>
+    </div>
+
+    <div class="annex-col">
+      <h3>Mix shift</h3>
+      <div class="trend">
+        <div class="t-label">Pace-driven rebound inflation</div>
+        <div class="t-desc">Higher-pace teams generate more missed shots and thus total rebounds; individual lines may lag team-level pace shifts</div>
+        <div class="t-source">Data source: NBA API team pace stats (TBD)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Defensive scheme mix</div>
+        <div class="t-desc">Zone defense increases long-range miss rate and unpredictable rebound locations; reduces individual REB predictability</div>
+        <div class="t-source">Data source: expert interviews / TBD</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Player role concentration</div>
+        <div class="t-desc">Seasonal drift toward fewer "designated rebounder" roles (stretch bigs replacing traditional PFs) shifts REB distribution toward star players</div>
+        <div class="t-source">Data source: NBA position trend data (TBD)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-note">
+  Reading the tree: Root = total P&amp;L in units. L1 splits into Volume (bets placed) and ROI per Bet — these multiply to give total P&amp;L. Volume = Slate Size × Selection Rate. ROI per Bet = Hit Rate × Odds Quality. Leaves carry data sources for pipeline and backtest alignment. Forward-looking trends below — apply as overlays when stress-testing strategy durability.
+</div>
+
+<script>
+  // Auto-detect terminal-leaf groups (2+ all-terminal children) → terminal grid
+  document.querySelectorAll('.tree ul').forEach(ul => {
+    if (ul.classList.contains('terminal-grid')) return;
+    const items = Array.from(ul.children);
+    const allTerminal = items.every(li => !li.querySelector(':scope > ul'));
+    if (allTerminal && items.length >= 2) {
+      ul.classList.add('terminal-grid');
+      if (items.length >= 7) ul.classList.add('cols-3');
+    }
+  });
+
+  // Trim sibling spine to first-to-last child centers
+  document.querySelectorAll('.tree ul').forEach(ul => {
+    if (ul.classList.contains('terminal-grid')) return;
+    const items = ul.children;
+    if (items.length <= 1) { ul.classList.add('single'); return; }
+    const ulRect = ul.getBoundingClientRect();
+    const firstRect = items[0].getBoundingClientRect();
+    const lastRect = items[items.length - 1].getBoundingClientRect();
+    const top = (firstRect.top + firstRect.height / 2) - ulRect.top;
+    const bottom = ulRect.bottom - (lastRect.top + lastRect.height / 2);
+    ul.style.setProperty('--spine-top', top + 'px');
+    ul.style.setProperty('--spine-bottom', bottom + 'px');
+  });
+
+  // Right-align all terminal bundles to the same vertical column
+  (function alignBundles() {
+    const grids = Array.from(document.querySelectorAll('.tree ul.terminal-grid'));
+    if (grids.length === 0) return;
+    const treeRect = document.querySelector('.tree').getBoundingClientRect();
+    let maxLeft = 0;
+    grids.forEach(g => {
+      const leftRel = g.getBoundingClientRect().left - treeRect.left;
+      if (leftRel > maxLeft) maxLeft = leftRel;
+    });
+    grids.forEach(g => {
+      const leftRel = g.getBoundingClientRect().left - treeRect.left;
+      const shift = maxLeft - leftRel;
+      if (shift > 0) {
+        const current = parseFloat(getComputedStyle(g).marginLeft) || 22;
+        g.style.marginLeft = (current + shift) + 'px';
+      }
+    });
+  })();
+
+  // Parent-to-spine connectors
+  document.querySelectorAll('.tree li').forEach(li => {
+    const childUl = li.querySelector(':scope > ul');
+    if (!childUl) return;
+    const node = li.querySelector(':scope > .node');
+    if (!node) return;
+    const liRect = li.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const ulRect = childUl.getBoundingClientRect();
+    li.style.setProperty('--connector-l', (nodeRect.right - liRect.left) + 'px');
+    li.style.setProperty('--connector-w', (ulRect.left - nodeRect.right) + 'px');
+  });
+
+  function exportHTML() {
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().slice(0, 10);
+    a.download = `driver-tree-rebounds-under_${date}.html`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  function exportTXT() {
+    const lines = [];
+    lines.push('# Driver Tree — Rebounds Under Strategy P&L');
+    lines.push('Scope: NBA 2024-25 | Bottom-up | Fixed 1u staking');
+    lines.push(`Generated: ${new Date().toISOString().slice(0, 10)}`);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## Tree structure');
+    lines.push('');
+
+    function walk(li, depth) {
+      const node = li.querySelector(':scope > .node');
+      if (node) {
+        const label = node.querySelector('.label')?.textContent.trim() || '';
+        const desc = node.querySelector('.desc')?.textContent.trim() || '';
+        const source = node.querySelector('.source')?.textContent.trim() || '';
+        const isRoot = node.classList.contains('root');
+        const isL1 = node.classList.contains('l1');
+        const isL2 = node.classList.contains('l2');
+        let typeTag = isRoot ? '[ROOT] ' : isL1 ? '[DRIVER] ' : isL2 ? '[CATEGORY] ' : '[LEAF] ';
+        let line = '  '.repeat(depth) + '- ' + typeTag + label;
+        if (desc) line += ` (${desc})`;
+        if (source) line += ` | ${source}`;
+        lines.push(line);
+      }
+      const childUl = li.querySelector(':scope > ul');
+      if (childUl) {
+        const op = childUl.dataset.op;
+        if (op) lines.push('  '.repeat(depth + 1) + `[op: ${op}]`);
+        Array.from(childUl.children).forEach(child => walk(child, depth + 1));
+      }
+    }
+    document.querySelectorAll('.tree > li').forEach(li => walk(li, 0));
+
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## Forward-looking trends');
+    lines.push('');
+    document.querySelectorAll('.annex-col').forEach(col => {
+      const colTitle = col.querySelector('h3')?.textContent.trim() || '';
+      lines.push(`### ${colTitle}`);
+      col.querySelectorAll('.trend').forEach(t => {
+        const tLabel = t.querySelector('.t-label')?.textContent.trim() || '';
+        const tDesc = t.querySelector('.t-desc')?.textContent.trim() || '';
+        const tSource = t.querySelector('.t-source')?.textContent.trim() || '';
+        lines.push(`- ${tLabel}: ${tDesc} | ${tSource}`);
+      });
+      lines.push('');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().slice(0, 10);
+    a.download = `driver-tree-rebounds-under_${date}.txt`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>

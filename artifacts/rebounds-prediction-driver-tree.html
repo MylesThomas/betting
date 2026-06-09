@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rebounds Prediction Driver Tree</title>
+<style>
+  :root {
+    --bcg-green-700: #0E3E1B;
+    --bcg-green-500: #197A56;
+    --bcg-green-400: #21BF61;
+    --bcg-green-300: #A8F0B8;
+    --bcg-green-200: #DCF9E3;
+    --bcg-neutral-200: #F1EEEA;
+    --bcg-white: #FFFFFF;
+    --bcg-gray-700: #323232;
+    --bcg-gray-500: #535353;
+    --bcg-gray-400: #B1B1B1;
+    --bcg-gray-300: #D4D4D4;
+    --bcg-gray-200: #F2F2F2;
+    --bcg-font: 'Inter', 'Trebuchet MS', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--bcg-font);
+    background: var(--bcg-neutral-200);
+    color: var(--bcg-gray-700);
+    margin: 0; padding: 16px 28px; min-height: 100vh;
+  }
+
+  .header {
+    margin-bottom: 10px; display: flex;
+    justify-content: space-between; align-items: flex-start;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .header-text { flex: 1; min-width: 0; }
+  .header h1 { font-size: 18px; font-weight: 600; color: var(--bcg-green-700); margin: 0 0 2px 0; }
+  .header .subtitle { font-size: 12px; color: var(--bcg-gray-500); }
+  .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn {
+    background: var(--bcg-white); border: 1px solid var(--bcg-green-500);
+    color: var(--bcg-green-500); padding: 6px 12px; font-family: inherit;
+    font-size: 11px; font-weight: 600; border-radius: 3px; cursor: pointer;
+    display: inline-flex; align-items: center; transition: all 0.15s ease;
+  }
+  .btn:hover { border-color: var(--bcg-green-700); color: var(--bcg-green-700); background: var(--bcg-green-200); }
+
+  .legend-bar {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
+    padding: 6px 12px; background: var(--bcg-white); border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px; margin-bottom: 14px; font-size: 11px; color: var(--bcg-gray-500);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 16px; height: 16px; border-radius: 2px; background: var(--bcg-white); border-left: 3px solid var(--bcg-gray-400); flex-shrink: 0; }
+  .legend-swatch.root { background: var(--bcg-green-400); border-left: none; }
+  .legend-swatch.l1  { border-left: 4px solid var(--bcg-green-500); }
+  .legend-swatch.l2  { border-left: 3px solid var(--bcg-green-300); border-bottom: 2px solid var(--bcg-green-200); }
+  .legend-swatch.leaf { border-left: 3px solid var(--bcg-gray-400); }
+  .legend-swatch.bundle { background: var(--bcg-gray-200); border: 1px solid var(--bcg-gray-300); border-left: 1px solid var(--bcg-gray-300); }
+  .legend-op { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: var(--bcg-white); border: 1.5px solid var(--bcg-green-500); color: var(--bcg-green-500); border-radius: 50%; font-weight: 700; font-size: 11px; }
+
+  /* STATUS TAGS on leaves */
+  .tag {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.4px; text-transform: uppercase; border-radius: 2px;
+    padding: 1px 5px; margin-left: 5px; vertical-align: middle; flex-shrink: 0;
+  }
+  .tag.in-model { background: #DCF9E3; color: #0E3E1B; }
+  .tag.gap { background: #FFF3CD; color: #7A4F00; }
+
+  /* TREE */
+  .tree, .tree ul { list-style: none; padding: 0; margin: 0; }
+  .tree { display: flex; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
+  .tree li { display: flex; align-items: center; position: relative; }
+  .tree li:has(> ul)::after {
+    content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+    height: 2px; background: var(--bcg-gray-400);
+    width: var(--connector-w, 26px); left: var(--connector-l, 0); z-index: 0; border-radius: 1px;
+  }
+  .tree ul {
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 4px; margin-left: 26px; position: relative;
+  }
+  .tree ul li { padding-left: 22px; position: relative; }
+  .tree ul li::before { content: ''; position: absolute; left: 0; top: 50%; width: 22px; height: 2px; background: var(--bcg-gray-400); border-radius: 1px; }
+  .tree ul::before { content: ''; position: absolute; left: 0; top: var(--spine-top, 0); bottom: var(--spine-bottom, 0); width: 2px; background: var(--bcg-gray-400); border-radius: 1px; }
+  .tree ul.single::before { display: none; }
+
+  .tree ul[data-op]::after {
+    content: attr(data-op); position: absolute; left: 0; top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bcg-white); border: 1.5px solid var(--bcg-green-500);
+    color: var(--bcg-green-500); font-weight: 700; font-size: 12px;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; z-index: 2;
+  }
+
+  .tree ul.terminal-grid {
+    display: grid; grid-template-columns: repeat(2, 200px);
+    gap: 3px 8px; align-items: start; margin-left: 22px;
+    background: var(--bcg-gray-200); border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px; padding: 5px 8px;
+  }
+  .tree ul.terminal-grid.cols-3 { grid-template-columns: repeat(3, 200px); }
+  .tree ul.terminal-grid::before { display: none; }
+  .tree ul.terminal-grid > li { padding-left: 0; }
+  .tree ul.terminal-grid > li::before { display: none; }
+
+  .node {
+    background: var(--bcg-white); border-left: 3px solid var(--bcg-gray-400);
+    padding: 5px 11px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    min-width: 130px; max-width: 210px; font-size: 12px; line-height: 1.25; flex-shrink: 0;
+  }
+  .node .label { font-weight: 600; color: var(--bcg-gray-700); }
+  .node .desc { font-size: 10.5px; font-style: italic; color: var(--bcg-gray-500); margin-top: 1px; font-weight: 400; }
+  .node .source { font-size: 10px; font-style: italic; color: var(--bcg-gray-500); margin-top: 2px; font-weight: 400; border-top: 1px dotted var(--bcg-gray-300); padding-top: 2px; }
+
+  .tree ul.terminal-grid .node {
+    padding: 4px 10px; width: 200px; min-width: 200px; max-width: 200px;
+  }
+  .tree ul.terminal-grid .node .label { font-size: 11.5px; }
+  .tree ul.terminal-grid .node .source { font-size: 9.5px; }
+
+  .node.root { background: var(--bcg-green-400); border-left: none; padding: 7px 13px; width: 180px; }
+  .node.root .label { color: var(--bcg-white); font-size: 13px; font-weight: 700; }
+  .node.root .desc { color: var(--bcg-green-200); }
+
+  .node.l1 { border-left: 4px solid var(--bcg-green-500); padding: 6px 12px; width: 160px; }
+  .node.l1 .label { text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; font-weight: 700; color: var(--bcg-green-700); }
+
+  .node.l2 { border-left: 3px solid var(--bcg-green-300); border-bottom: 2px solid var(--bcg-green-200); padding: 5px 11px 4px 11px; width: 200px; }
+  .node.l2 .label { color: var(--bcg-gray-700); font-weight: 600; }
+
+  .node.leaf { border-left: 3px solid var(--bcg-gray-400); }
+  .node.leaf .label { font-weight: 500; }
+
+  /* FORMULA BOX */
+  .formula-box {
+    margin-top: 14px; background: var(--bcg-white);
+    border: 1px solid var(--bcg-green-300); border-left: 4px solid var(--bcg-green-500);
+    border-radius: 4px; padding: 10px 16px; max-width: 820px;
+    font-size: 11.5px; color: var(--bcg-gray-700);
+  }
+  .formula-box h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bcg-green-700); margin: 0 0 6px 0; font-weight: 700; }
+  .formula-box .formula-row { margin-bottom: 4px; font-family: 'Courier New', monospace; font-size: 11px; color: var(--bcg-gray-700); }
+  .formula-box .formula-note { font-size: 10.5px; color: var(--bcg-gray-500); font-style: italic; margin-top: 6px; }
+
+  /* GAP KEY */
+  .gap-key {
+    display: inline-flex; gap: 12px; align-items: center; margin-bottom: 12px;
+    font-size: 11px; color: var(--bcg-gray-500);
+  }
+
+  /* ANNEX */
+  .annex { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--bcg-gray-300); }
+  .annex h2 { font-size: 15px; font-weight: 600; color: var(--bcg-green-700); margin: 0 0 2px 0; }
+  .annex .annex-sub { font-size: 11.5px; color: var(--bcg-gray-500); font-style: italic; margin-bottom: 10px; }
+  .annex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .annex-col { background: var(--bcg-white); border: 1px solid var(--bcg-gray-300); border-radius: 4px; padding: 10px 14px; }
+  .annex-col h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bcg-green-500); margin: 0 0 7px 0; padding-bottom: 4px; border-bottom: 1.5px solid var(--bcg-green-300); }
+  .trend { margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px dotted var(--bcg-gray-300); }
+  .trend:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .trend .t-label { font-size: 12px; font-weight: 600; color: var(--bcg-gray-700); }
+  .trend .t-desc { font-size: 10.5px; font-style: italic; color: var(--bcg-gray-500); margin-top: 2px; }
+  .trend .t-source { font-size: 10px; font-style: italic; color: var(--bcg-gray-500); margin-top: 3px; }
+
+  .footer-note { margin-top: 20px; font-size: 11px; color: var(--bcg-gray-500); border-top: 1px solid var(--bcg-gray-300); padding-top: 10px; max-width: 920px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-text">
+    <h1>Rebounds Prediction Driver Tree</h1>
+    <div class="subtitle">What drives yhat? | NBA player REB, game-level | Bottom-up: yhat = Expected Minutes × Per-Min REB Rate</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="exportHTML()">↓ Export HTML</button>
+    <button class="btn" onclick="exportTXT()">↓ Export TXT</button>
+  </div>
+</div>
+
+<div class="legend-bar">
+  <div class="legend-item"><span class="legend-swatch root"></span> Root (yhat)</div>
+  <div class="legend-item"><span class="legend-swatch l1"></span> L1 driver</div>
+  <div class="legend-item"><span class="legend-swatch l2"></span> L2 category</div>
+  <div class="legend-item"><span class="legend-swatch leaf"></span> Leaf + DS</div>
+  <div class="legend-item"><span class="legend-swatch bundle"></span> Terminal bundle</div>
+  <div class="legend-item"><span class="legend-op">×</span> operator</div>
+  <div class="legend-item"><span class="tag in-model">model</span> in current feature spec</div>
+  <div class="legend-item"><span class="tag gap">gap</span> not yet modeled</div>
+</div>
+
+<ul class="tree" id="main-tree">
+  <li>
+    <div class="node root">
+      <div class="label">yhat (Predicted REB)</div>
+      <div class="desc">point estimate, game-level</div>
+    </div>
+
+    <ul data-op="×">
+
+      <!-- ── L1: EXPECTED MINUTES ──────────────────── -->
+      <li>
+        <div class="node l1">
+          <div class="label">Expected Minutes</div>
+          <div class="desc">Opportunity to accumulate REB</div>
+        </div>
+        <ul>
+
+          <li>
+            <div class="node l2">
+              <div class="label">Baseline Role</div>
+              <div class="desc">Minutes in a neutral game</div>
+            </div>
+            <ul>
+              <li><div class="node leaf"><div class="label">Season avg minutes <span class="tag gap">gap</span></div><div class="source">DS: NBA API game logs / S3</div></div></li>
+              <li><div class="node leaf"><div class="label">Starter vs bench <span class="tag gap">gap</span></div><div class="source">DS: NBA API roster</div></div></li>
+              <li><div class="node leaf"><div class="label">Injury / rest status <span class="tag gap">gap</span></div><div class="source">DS: injury report (ESPN / manual)</div></div></li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node l2">
+              <div class="label">Game Script Risk</div>
+              <div class="desc">Blowout = garbage time = fewer minutes</div>
+            </div>
+            <ul>
+              <li><div class="node leaf"><div class="label">Spread signed <span class="tag in-model">model</span></div><div class="source">DS: The Odds API → spread_signed</div></div></li>
+              <li><div class="node leaf"><div class="label">Game total (O/U) <span class="tag gap">gap</span></div><div class="source">DS: The Odds API</div></div></li>
+            </ul>
+          </li>
+
+        </ul>
+      </li>
+
+      <!-- ── L1: PER-MINUTE REB RATE ───────────────── -->
+      <li>
+        <div class="node l1">
+          <div class="label">Per-Min REB Rate</div>
+          <div class="desc">REB collected per minute on floor</div>
+        </div>
+        <ul>
+
+          <li>
+            <div class="node l2">
+              <div class="label">Player Tendency</div>
+              <div class="desc">Historical rebounding ability</div>
+            </div>
+            <ul>
+              <li><div class="node leaf"><div class="label">Roll reb mean (60g) <span class="tag in-model">model</span></div><div class="source">DS: NBA API game logs / S3 → roll_reb_mean_60</div></div></li>
+              <li><div class="node leaf"><div class="label">Roll reb mean (10g) <span class="tag gap">gap</span></div><div class="source">DS: NBA API game logs / S3 (recent form)</div></div></li>
+              <li><div class="node leaf"><div class="label">Roll reb std (5g) <span class="tag in-model">model</span></div><div class="source">DS: NBA API game logs / S3 → roll_reb_std_5</div></div></li>
+              <li><div class="node leaf"><div class="label">Position (C/PF vs guard) <span class="tag gap">gap</span></div><div class="source">DS: NBA API roster data</div></div></li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node l2">
+              <div class="label">Game Rebound Volume</div>
+              <div class="desc">Total missed shots available to grab</div>
+            </div>
+            <ul>
+              <li><div class="node leaf"><div class="label">Team FG miss rate <span class="tag gap">gap</span></div><div class="source">DS: NBA API team stats (1 − FG%)</div></div></li>
+              <li><div class="node leaf"><div class="label">Roll 3PA rate (20g) <span class="tag in-model">model</span></div><div class="source">DS: NBA API game logs / S3 → roll_fg3a_mean_20</div></div></li>
+              <li><div class="node leaf"><div class="label">Team pace (poss/game) <span class="tag gap">gap</span></div><div class="source">DS: NBA API team stats</div></div></li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node l2">
+              <div class="label">Competition for Boards</div>
+              <div class="desc">How contested is this player's rebounding opportunity</div>
+            </div>
+            <ul>
+              <li><div class="node leaf"><div class="label">Opp frontcourt reb rate <span class="tag gap">gap</span></div><div class="source">DS: NBA API team stats (opp REB%)</div></div></li>
+              <li><div class="node leaf"><div class="label">Teammate reb overlap <span class="tag gap">gap</span></div><div class="source">DS: NBA API lineup / on-court data</div></div></li>
+            </ul>
+          </li>
+
+        </ul>
+      </li>
+
+    </ul>
+  </li>
+</ul>
+
+<!-- FORMULA -->
+<div class="formula-box">
+  <h4>From yhat to edge — pricing chain</h4>
+  <div class="formula-row">yhat_adj  =  consensus_line + (1 − shrink) × (yhat − consensus_line)    ← shrink ∈ {0, 0.25, 0.5}</div>
+  <div class="formula-row">σ         =  roll_reb_std_5  (per-player)  or global residual std fallback</div>
+  <div class="formula-row">P(under)  =  norm.cdf(line,  loc=yhat_adj,  scale=σ)</div>
+  <div class="formula-row">edge      =  P(under) − implied_prob(under_odds)    ← bet when edge &gt; min_edge</div>
+  <div class="formula-note">Consensus line acts as the shrinkage anchor — the market's prior on yhat. Leaves tagged <strong>gap</strong> are drivers of the true outcome that the current model doesn't see; each is a potential feature to add.</div>
+</div>
+
+<!-- ANNEX -->
+<div class="annex">
+  <h2>Forward-looking dynamics</h2>
+  <div class="annex-sub">Trends that affect which drivers matter most, and how much. Not part of the static structure.</div>
+  <div class="annex-grid">
+
+    <div class="annex-col">
+      <h3>Signal strength</h3>
+      <div class="trend">
+        <div class="t-label">Role change lag in 60g window</div>
+        <div class="t-desc">Long rolling window dampens response to trades, minutes restrictions, and coaching changes — blending a short (10-15g) window is the highest-value near-term improvement</div>
+        <div class="t-source">Data source: rebounds_feature_spec.py / S3 feature universe</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Position signal untapped</div>
+        <div class="t-desc">C/PF rebound at ~3-4× the per-minute rate of guards; position is a strong prior that the current model infers only indirectly via the rolling mean</div>
+        <div class="t-source">Data source: NBA API roster data (TBD)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">σ underestimates returning players</div>
+        <div class="t-desc">5-game std is thin after an injury return; manual override or a floor on σ prevents overconfident edges in those cases</div>
+        <div class="t-source">Data source: edge_calibration.py model residuals</div>
+      </div>
+    </div>
+
+    <div class="annex-col">
+      <h3>Game volume drivers</h3>
+      <div class="trend">
+        <div class="t-label">3PA rate structural rise</div>
+        <div class="t-desc">League 3PA share has grown from ~30% to ~40% of FGA over the past decade; 3s miss at ~66% and rebound further, inflating total boards and making roll_fg3a a richer signal over time</div>
+        <div class="t-source">Data source: NBA API shot chart data (TBD)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Game total as pace proxy</div>
+        <div class="t-desc">O/U total is correlated with expected pace and total shot volume; adding it alongside 3PA rate may reduce reliance on lagged rolling stats for volume estimation</div>
+        <div class="t-source">Data source: The Odds API</div>
+      </div>
+    </div>
+
+    <div class="annex-col">
+      <h3>Competition / matchup</h3>
+      <div class="trend">
+        <div class="t-label">Opponent REB rate unstable</div>
+        <div class="t-desc">Team defensive rebounding rates fluctuate 5-8% across stretches within a season due to rotation and injury; point-in-time rates outperform season averages as matchup inputs</div>
+        <div class="t-source">Data source: NBA API team stats (TBD)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Lineup data sparsity</div>
+        <div class="t-desc">On-court teammate rebounding overlap requires lineup-level data which is available from NBA API but expensive to join at scale; high value, moderate engineering cost</div>
+        <div class="t-source">Data source: NBA API lineup endpoint (TBD)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-note">
+  Reading the tree: yhat = Expected Minutes × Per-Min REB Rate. Minutes scales the entire prediction — a player who plays 20 minutes simply has fewer chances than one who plays 35. Per-min rate decomposes into what the player tends to do (tendency), how many boards are available (game volume), and how contested those boards are (competition). <strong>Green "model" tags</strong> = currently in rebounds_feature_spec.py. <strong>Yellow "gap" tags</strong> = real drivers of the outcome not yet in the model — the feature backlog.
+</div>
+
+<script>
+  document.querySelectorAll('.tree ul').forEach(ul => {
+    if (ul.classList.contains('terminal-grid')) return;
+    const items = Array.from(ul.children);
+    const allTerminal = items.every(li => !li.querySelector(':scope > ul'));
+    if (allTerminal && items.length >= 2) {
+      ul.classList.add('terminal-grid');
+      if (items.length >= 7) ul.classList.add('cols-3');
+    }
+  });
+
+  document.querySelectorAll('.tree ul').forEach(ul => {
+    if (ul.classList.contains('terminal-grid')) return;
+    const items = ul.children;
+    if (items.length <= 1) { ul.classList.add('single'); return; }
+    const ulRect = ul.getBoundingClientRect();
+    const firstRect = items[0].getBoundingClientRect();
+    const lastRect = items[items.length - 1].getBoundingClientRect();
+    ul.style.setProperty('--spine-top', ((firstRect.top + firstRect.height / 2) - ulRect.top) + 'px');
+    ul.style.setProperty('--spine-bottom', (ulRect.bottom - (lastRect.top + lastRect.height / 2)) + 'px');
+  });
+
+  (function alignBundles() {
+    const grids = Array.from(document.querySelectorAll('.tree ul.terminal-grid'));
+    if (!grids.length) return;
+    const treeRect = document.querySelector('.tree').getBoundingClientRect();
+    let maxLeft = 0;
+    grids.forEach(g => { const l = g.getBoundingClientRect().left - treeRect.left; if (l > maxLeft) maxLeft = l; });
+    grids.forEach(g => {
+      const l = g.getBoundingClientRect().left - treeRect.left;
+      const shift = maxLeft - l;
+      if (shift > 0) {
+        const cur = parseFloat(getComputedStyle(g).marginLeft) || 22;
+        g.style.marginLeft = (cur + shift) + 'px';
+      }
+    });
+  })();
+
+  document.querySelectorAll('.tree li').forEach(li => {
+    const childUl = li.querySelector(':scope > ul');
+    if (!childUl) return;
+    const node = li.querySelector(':scope > .node');
+    if (!node) return;
+    const liRect = li.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const ulRect = childUl.getBoundingClientRect();
+    li.style.setProperty('--connector-l', (nodeRect.right - liRect.left) + 'px');
+    li.style.setProperty('--connector-w', (ulRect.left - nodeRect.right) + 'px');
+  });
+
+  function exportHTML() {
+    const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `rebounds-prediction-driver-tree_${new Date().toISOString().slice(0,10)}.html`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  function exportTXT() {
+    const lines = [];
+    lines.push('# Rebounds Prediction Driver Tree');
+    lines.push('yhat = Expected Minutes × Per-Min REB Rate');
+    lines.push(`Generated: ${new Date().toISOString().slice(0,10)}`);
+    lines.push('');
+    lines.push('## Tree structure');
+    lines.push('');
+
+    function walk(li, depth) {
+      const node = li.querySelector(':scope > .node');
+      if (node) {
+        const label = node.querySelector('.label')?.textContent.trim() || '';
+        const desc = node.querySelector('.desc')?.textContent.trim() || '';
+        const source = node.querySelector('.source')?.textContent.trim() || '';
+        const isRoot = node.classList.contains('root');
+        const isL1 = node.classList.contains('l1');
+        const isL2 = node.classList.contains('l2');
+        let tag = isRoot ? '[ROOT] ' : isL1 ? '[DRIVER] ' : isL2 ? '[CATEGORY] ' : '[LEAF] ';
+        let line = '  '.repeat(depth) + '- ' + tag + label;
+        if (desc) line += ` (${desc})`;
+        if (source) line += ` | ${source}`;
+        lines.push(line);
+      }
+      const childUl = li.querySelector(':scope > ul');
+      if (childUl) {
+        const op = childUl.dataset.op;
+        if (op) lines.push('  '.repeat(depth + 1) + `[op: ${op}]`);
+        Array.from(childUl.children).forEach(child => walk(child, depth + 1));
+      }
+    }
+    document.querySelectorAll('.tree > li').forEach(li => walk(li, 0));
+
+    lines.push('');
+    lines.push('## Pricing chain');
+    lines.push('yhat_adj = consensus_line + (1 - shrink) × (yhat - consensus_line)');
+    lines.push('σ        = roll_reb_std_5 (per-player) or global residual std');
+    lines.push('P(under) = norm.cdf(line, loc=yhat_adj, scale=σ)');
+    lines.push('edge     = P(under) - implied_prob(under_odds)  ← bet when edge > min_edge');
+    lines.push('');
+
+    lines.push('## Forward-looking dynamics');
+    document.querySelectorAll('.annex-col').forEach(col => {
+      lines.push(`### ${col.querySelector('h3')?.textContent.trim()}`);
+      col.querySelectorAll('.trend').forEach(t => {
+        lines.push(`- ${t.querySelector('.t-label')?.textContent.trim()}: ${t.querySelector('.t-desc')?.textContent.trim()} | ${t.querySelector('.t-source')?.textContent.trim()}`);
+      });
+      lines.push('');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `rebounds-prediction-driver-tree_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>

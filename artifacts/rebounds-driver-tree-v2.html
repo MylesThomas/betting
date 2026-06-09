@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rebounds — Outcomes + Pricing Driver Trees</title>
+<style>
+  :root {
+    --bcg-green-700: #0E3E1B;
+    --bcg-green-500: #197A56;
+    --bcg-green-400: #21BF61;
+    --bcg-green-300: #A8F0B8;
+    --bcg-green-200: #DCF9E3;
+    --bcg-neutral-200: #F1EEEA;
+    --bcg-white: #FFFFFF;
+    --bcg-gray-700: #323232;
+    --bcg-gray-500: #535353;
+    --bcg-gray-400: #B1B1B1;
+    --bcg-gray-300: #D4D4D4;
+    --bcg-gray-200: #F2F2F2;
+    --bcg-font: 'Inter', 'Trebuchet MS', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--bcg-font);
+    background: var(--bcg-neutral-200);
+    color: var(--bcg-gray-700);
+    margin: 0; padding: 16px 28px; min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    margin-bottom: 10px; display: flex;
+    justify-content: space-between; align-items: flex-start;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .header-text { flex: 1; min-width: 0; }
+  .header h1 { font-size: 18px; font-weight: 600; color: var(--bcg-green-700); margin: 0 0 2px 0; }
+  .header .subtitle { font-size: 12px; color: var(--bcg-gray-500); }
+  .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn {
+    background: var(--bcg-white); border: 1px solid var(--bcg-green-500);
+    color: var(--bcg-green-500); padding: 6px 12px; font-family: inherit;
+    font-size: 11px; font-weight: 600; border-radius: 3px; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; transition: all 0.15s ease;
+  }
+  .btn:hover { border-color: var(--bcg-green-700); color: var(--bcg-green-700); background: var(--bcg-green-200); }
+
+  /* LEGEND */
+  .legend-bar {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
+    padding: 6px 12px; background: var(--bcg-white); border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px; margin-bottom: 14px; font-size: 11px; color: var(--bcg-gray-500);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 16px; height: 16px; border-radius: 2px; background: var(--bcg-white); border-left: 3px solid var(--bcg-gray-400); flex-shrink: 0; }
+  .legend-swatch.root { background: var(--bcg-green-400); border-left: none; }
+  .legend-swatch.root-2 { background: #4A90D9; border-left: none; }
+  .legend-swatch.l1 { border-left: 4px solid var(--bcg-green-500); }
+  .legend-swatch.l1-2 { border-left: 4px solid #2E6BB0; }
+  .legend-swatch.l2 { border-left: 3px solid var(--bcg-green-300); border-bottom: 2px solid var(--bcg-green-200); }
+  .legend-swatch.leaf { border-left: 3px solid var(--bcg-gray-400); }
+  .legend-op { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: var(--bcg-white); border: 1.5px solid var(--bcg-green-500); color: var(--bcg-green-500); border-radius: 50%; font-weight: 700; font-size: 11px; }
+
+  /* TREE SECTION LABEL */
+  .tree-section {
+    margin-bottom: 6px;
+  }
+  .tree-section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.7px; color: var(--bcg-gray-500);
+    padding: 4px 10px; background: var(--bcg-white);
+    border: 1px solid var(--bcg-gray-300); border-radius: 3px;
+    display: inline-block; margin-bottom: 8px;
+  }
+  .tree-section-label.pricing { color: #2E6BB0; border-color: #b3cde8; background: #f0f6fd; }
+
+  /* TREE */
+  .tree, .tree ul { list-style: none; padding: 0; margin: 0; }
+  .tree { display: flex; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
+  .tree li { display: flex; align-items: center; position: relative; }
+  .tree li:has(> ul)::after {
+    content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+    height: 2px; background: var(--bcg-gray-400);
+    width: var(--connector-w, 26px); left: var(--connector-l, 0); z-index: 0; border-radius: 1px;
+  }
+  .tree ul {
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 4px; margin-left: 26px; position: relative;
+  }
+  .tree ul li { padding-left: 22px; position: relative; }
+  .tree ul li::before {
+    content: ''; position: absolute; left: 0; top: 50%;
+    width: 22px; height: 2px; background: var(--bcg-gray-400); border-radius: 1px;
+  }
+  .tree ul::before {
+    content: ''; position: absolute; left: 0;
+    top: var(--spine-top, 0); bottom: var(--spine-bottom, 0);
+    width: 2px; background: var(--bcg-gray-400); border-radius: 1px;
+  }
+  .tree ul.single::before { display: none; }
+
+  /* OPERATOR PILL */
+  .tree ul[data-op]::after {
+    content: attr(data-op); position: absolute; left: 0; top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bcg-white); border: 1.5px solid var(--bcg-green-500);
+    color: var(--bcg-green-500); font-weight: 700; font-size: 12px;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; z-index: 2;
+  }
+  /* Pricing tree uses blue operator pills */
+  .pricing-tree ul[data-op]::after {
+    border-color: #2E6BB0; color: #2E6BB0;
+  }
+
+  /* TERMINAL-LEAF GRID */
+  .tree ul.terminal-grid {
+    display: grid; grid-template-columns: repeat(2, 190px);
+    gap: 3px 8px; align-items: center; margin-left: 22px;
+    background: var(--bcg-gray-200); border: 1px solid var(--bcg-gray-300);
+    border-radius: 4px; padding: 5px 8px;
+  }
+  .tree ul.terminal-grid.cols-3 { grid-template-columns: repeat(3, 190px); }
+  .tree ul.terminal-grid::before { display: none; }
+  .tree ul.terminal-grid > li { padding-left: 0; }
+  .tree ul.terminal-grid > li::before { display: none; }
+
+  /* NODES */
+  .node {
+    background: var(--bcg-white); border-left: 3px solid var(--bcg-gray-400);
+    padding: 5px 11px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    min-width: 130px; max-width: 200px; font-size: 12px; line-height: 1.25; flex-shrink: 0;
+  }
+  .node .label { font-weight: 600; color: var(--bcg-gray-700); }
+  .node .desc { font-size: 10.5px; font-style: italic; color: var(--bcg-gray-500); margin-top: 1px; font-weight: 400; }
+  .node .source { font-size: 10px; font-style: italic; color: var(--bcg-gray-500); margin-top: 2px; font-weight: 400; border-top: 1px dotted var(--bcg-gray-300); padding-top: 2px; }
+
+  .tree ul.terminal-grid .node {
+    padding: 3px 10px; width: 190px; min-width: 190px; max-width: 190px;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .tree ul.terminal-grid .node .label { font-size: 11.5px; flex-shrink: 0; }
+  .tree ul.terminal-grid .node .source { margin-top: 0; border-top: none; padding-top: 0; font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Root — outcomes (green) */
+  .node.root { background: var(--bcg-green-400); border-left: none; padding: 7px 13px; width: 180px; }
+  .node.root .label { color: var(--bcg-white); font-size: 13px; font-weight: 700; }
+  .node.root .desc { color: var(--bcg-green-200); }
+
+  /* Root — pricing (blue) */
+  .node.root-2 { background: #4A90D9; border-left: none; padding: 7px 13px; width: 180px; }
+  .node.root-2 .label { color: var(--bcg-white); font-size: 13px; font-weight: 700; }
+  .node.root-2 .desc { color: #d6e8fa; }
+
+  /* L1 — outcomes */
+  .node.l1 { border-left: 4px solid var(--bcg-green-500); padding: 6px 12px; width: 160px; }
+  .node.l1 .label { text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; font-weight: 700; color: var(--bcg-green-700); }
+
+  /* L1 — pricing */
+  .node.l1-2 { border-left: 4px solid #2E6BB0; padding: 6px 12px; width: 160px; }
+  .node.l1-2 .label { text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; font-weight: 700; color: #1a3f6e; }
+
+  /* L2 */
+  .node.l2 { border-left: 3px solid var(--bcg-green-300); border-bottom: 2px solid var(--bcg-green-200); padding: 5px 11px 4px 11px; width: 200px; }
+  .node.l2 .label { color: var(--bcg-gray-700); font-weight: 600; }
+
+  .node.l2-2 { border-left: 3px solid #9ec8f0; border-bottom: 2px solid #d6e8fa; padding: 5px 11px 4px 11px; width: 200px; }
+  .node.l2-2 .label { color: var(--bcg-gray-700); font-weight: 600; }
+
+  /* Leaf */
+  .node.leaf { border-left: 3px solid var(--bcg-gray-400); }
+  .node.leaf .label { font-weight: 500; }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    margin: 20px 0 16px 0; border: none;
+    border-top: 2px dashed var(--bcg-gray-300);
+  }
+
+  /* FORMULA BOX */
+  .formula-box {
+    margin-top: 14px;
+    background: var(--bcg-white);
+    border: 1px solid #b3cde8;
+    border-left: 4px solid #2E6BB0;
+    border-radius: 4px;
+    padding: 10px 16px;
+    max-width: 760px;
+    font-size: 11.5px;
+    color: var(--bcg-gray-700);
+  }
+  .formula-box h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #2E6BB0; margin: 0 0 6px 0; font-weight: 700; }
+  .formula-box .formula-row { margin-bottom: 4px; font-family: 'Courier New', monospace; font-size: 11px; color: var(--bcg-gray-700); }
+  .formula-box .formula-note { font-size: 10.5px; color: var(--bcg-gray-500); font-style: italic; margin-top: 6px; }
+
+  /* TRENDS ANNEX */
+  .annex { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--bcg-gray-300); }
+  .annex h2 { font-size: 15px; font-weight: 600; color: var(--bcg-green-700); margin: 0 0 2px 0; }
+  .annex .annex-sub { font-size: 11.5px; color: var(--bcg-gray-500); font-style: italic; margin-bottom: 10px; }
+  .annex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .annex-col { background: var(--bcg-white); border: 1px solid var(--bcg-gray-300); border-radius: 4px; padding: 10px 14px; }
+  .annex-col h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bcg-green-500); margin: 0 0 7px 0; padding-bottom: 4px; border-bottom: 1.5px solid var(--bcg-green-300); }
+  .trend { margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px dotted var(--bcg-gray-300); }
+  .trend:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .trend .t-label { font-size: 12px; font-weight: 600; color: var(--bcg-gray-700); }
+  .trend .t-desc { font-size: 10.5px; font-style: italic; color: var(--bcg-gray-500); margin-top: 2px; }
+  .trend .t-source { font-size: 10px; font-style: italic; color: var(--bcg-gray-500); margin-top: 3px; }
+
+  .footer-note { margin-top: 20px; font-size: 11px; color: var(--bcg-gray-500); border-top: 1px solid var(--bcg-gray-300); padding-top: 10px; max-width: 900px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-text">
+    <h1>NBA Rebounds — Outcomes + Pricing Driver Trees</h1>
+    <div class="subtitle">Player REB (actual) · yhat (predicted line) · NBA 2024-25 | Fixed 1u staking</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="exportHTML()">↓ Export HTML</button>
+    <button class="btn" onclick="exportTXT()">↓ Export TXT</button>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-bar">
+  <div class="legend-item"><span class="legend-swatch root"></span> Outcomes root</div>
+  <div class="legend-item"><span class="legend-swatch root-2"></span> Pricing root</div>
+  <div class="legend-item"><span class="legend-swatch l1"></span> L1 driver (outcomes)</div>
+  <div class="legend-item"><span class="legend-swatch l1-2"></span> L1 driver (pricing)</div>
+  <div class="legend-item"><span class="legend-swatch l2"></span> L2 category</div>
+  <div class="legend-item"><span class="legend-swatch leaf"></span> Leaf + DS = data source</div>
+  <div class="legend-item"><span class="legend-op">×</span> operator</div>
+</div>
+
+<!-- ── TREE 1: OUTCOMES ─────────────────────────────────── -->
+<div class="tree-section">
+  <div class="tree-section-label">Tree 1 — What drives actual player rebounds?</div>
+
+  <ul class="tree" id="tree-outcomes">
+    <li>
+      <div class="node root">
+        <div class="label">Player REB</div>
+        <div class="desc">actual, game-level</div>
+      </div>
+
+      <ul data-op="×">
+
+        <!-- L1: MINUTES PLAYED -->
+        <li>
+          <div class="node l1">
+            <div class="label">Minutes</div>
+            <div class="desc">Time on floor</div>
+          </div>
+          <ul>
+            <!-- L2: Role -->
+            <li>
+              <div class="node l2">
+                <div class="label">Role &amp; Usage</div>
+                <div class="desc">Expected minutes in a neutral game</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Starter vs bench</div><div class="source">DS: NBA API game logs / roster</div></div></li>
+                <li><div class="node leaf"><div class="label">Season avg minutes</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+                <li><div class="node leaf"><div class="label">Injury / rest status</div><div class="source">DS: injury report (manual / ESPN)</div></div></li>
+              </ul>
+            </li>
+            <!-- L2: Game Script -->
+            <li>
+              <div class="node l2">
+                <div class="label">Game Script Risk</div>
+                <div class="desc">Blowout or garbage time reduces minutes</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Spread (blowout risk)</div><div class="source">DS: The Odds API</div></div></li>
+                <li><div class="node leaf"><div class="label">Total (pace proxy)</div><div class="source">DS: The Odds API</div></div></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- L1: PER-MINUTE REB RATE -->
+        <li>
+          <div class="node l1">
+            <div class="label">Per-Min Rate</div>
+            <div class="desc">REB per minute on floor</div>
+          </div>
+          <ul>
+            <!-- L2: Individual Tendency -->
+            <li>
+              <div class="node l2">
+                <div class="label">Individual Tendency</div>
+                <div class="desc">Player's baseline rebounding ability</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Roll reb mean (60g)</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+                <li><div class="node leaf"><div class="label">Roll reb std (5g)</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+                <li><div class="node leaf"><div class="label">Position (C/PF vs guard)</div><div class="source">DS: NBA API roster data</div></div></li>
+              </ul>
+            </li>
+            <!-- L2: Game Context -->
+            <li>
+              <div class="node l2">
+                <div class="label">Game Context</div>
+                <div class="desc">How many rebounds are available &amp; contested</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Team FG miss rate</div><div class="source">DS: NBA API team stats</div></div></li>
+                <li><div class="node leaf"><div class="label">3PA rate (20g)</div><div class="source">DS: NBA API game logs / S3</div></div></li>
+                <li><div class="node leaf"><div class="label">Opp frontcourt reb rate</div><div class="source">DS: NBA API team stats</div></div></li>
+                <li><div class="node leaf"><div class="label">Teammate reb competition</div><div class="source">DS: NBA API lineup / on-court data</div></div></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<hr class="section-divider">
+
+<!-- ── TREE 2: PRICING ─────────────────────────────────── -->
+<div class="tree-section">
+  <div class="tree-section-label pricing">Tree 2 — How do we generate a predicted line (yhat)?</div>
+
+  <ul class="tree pricing-tree" id="tree-pricing">
+    <li>
+      <div class="node root-2">
+        <div class="label">yhat</div>
+        <div class="desc">predicted REB (point estimate)</div>
+      </div>
+
+      <ul data-op="+">
+
+        <!-- L1: PLAYER BASELINE -->
+        <li>
+          <div class="node l1-2">
+            <div class="label">Baseline</div>
+            <div class="desc">Player's expected REB in neutral game</div>
+          </div>
+          <ul>
+            <li>
+              <div class="node l2-2">
+                <div class="label">Historical Signal</div>
+                <div class="desc">What the player has been doing recently</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Roll reb mean (60g)</div><div class="source">DS: S3 feature universe</div></div></li>
+                <li><div class="node leaf"><div class="label">Consensus line anchor</div><div class="source">DS: The Odds API (market prior)</div></div></li>
+                <li><div class="node leaf"><div class="label">Min / max line spread</div><div class="source">DS: The Odds API (book disagreement)</div></div></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- L1: GAME ADJUSTMENTS -->
+        <li>
+          <div class="node l1-2">
+            <div class="label">Adjustments</div>
+            <div class="desc">Game-specific context that shifts baseline</div>
+          </div>
+          <ul>
+            <li>
+              <div class="node l2-2">
+                <div class="label">Game Context Signals</div>
+                <div class="desc">Inputs that move yhat above or below baseline</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Spread signed</div><div class="source">DS: The Odds API (game script / mins risk)</div></div></li>
+                <li><div class="node leaf"><div class="label">Roll 3PA rate (20g)</div><div class="source">DS: S3 feature universe (miss rate proxy)</div></div></li>
+              </ul>
+            </li>
+            <li>
+              <div class="node l2-2">
+                <div class="label">Shrinkage</div>
+                <div class="desc">Anchors overconfident predictions toward market</div>
+              </div>
+              <ul>
+                <li><div class="node leaf"><div class="label">Shrink parameter</div><div class="source">DS: edge_calibration.py (sweep 0, 0.25, 0.5)</div></div></li>
+                <li><div class="node leaf"><div class="label">Consensus line (anchor)</div><div class="source">DS: The Odds API</div></div></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+      </ul>
+    </li>
+  </ul>
+
+  <!-- FORMULA: yhat → P(under) → edge -->
+  <div class="formula-box">
+    <h4>From yhat to edge — the pricing chain</h4>
+    <div class="formula-row">yhat_adj  =  consensus_line + (1 − shrink) × (yhat − consensus_line)</div>
+    <div class="formula-row">σ         =  per-player rolling residual std  (or global fallback)</div>
+    <div class="formula-row">P(under)  =  norm.cdf(line,  loc=yhat_adj,  scale=σ)</div>
+    <div class="formula-row">P_book    =  implied_prob(under_odds)    ← raw vigged, NOT de-vigged</div>
+    <div class="formula-row">edge      =  P(under) − P_book           ← bet when edge &gt; min_edge</div>
+    <div class="formula-note">σ drives the confidence interval around yhat — wider σ means flatter P(under) curves and smaller edges at the same line distance. Per-player rolling σ (roll_reb_std_5) outperforms a global constant because variance is player-specific (bigs are more consistent than wings).</div>
+  </div>
+</div>
+
+<!-- TRENDS ANNEX -->
+<div class="annex">
+  <h2>Forward-looking dynamics</h2>
+  <div class="annex-sub">Not part of the static structure. Apply as overlays when evaluating model durability and signal decay.</div>
+  <div class="annex-grid">
+
+    <div class="annex-col">
+      <h3>Outcome / volume drivers</h3>
+      <div class="trend">
+        <div class="t-label">Pace inflation (league-wide)</div>
+        <div class="t-desc">Average possessions/game has risen ~3% over 5 years; more shot attempts = more total rebounds, but individual lines adjust slowly</div>
+        <div class="t-source">Data source: NBA API team pace stats / TBD</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">3PA rate structural shift</div>
+        <div class="t-desc">League 3PA rate has risen from ~30% to ~40% of FGA over a decade; 3s miss at ~66% and rebound further — inflates total rebounds and reduces individual REB predictability</div>
+        <div class="t-source">Data source: NBA API shot chart data / TBD</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Stretch-big role expansion</div>
+        <div class="t-desc">Traditional rebounding bigs replaced by shooting-first PFs; concentrated REB opportunity moving toward a smaller pool of true bigs</div>
+        <div class="t-source">Data source: positional usage trend data / TBD</div>
+      </div>
+    </div>
+
+    <div class="annex-col">
+      <h3>Model accuracy drivers</h3>
+      <div class="trend">
+        <div class="t-label">Role change lag (60g window)</div>
+        <div class="t-desc">60-game rolling mean is slow to incorporate trade deadline moves, coaching changes, or injury-return role adjustments — consider 10-20g window as a blend</div>
+        <div class="t-source">Data source: rebounds_feature_spec.py / S3</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Missing features (data gaps)</div>
+        <div class="t-desc">Opponent frontcourt reb rate, lineup REB competition, and projected minutes are in the outcomes tree but absent from the current feature spec — largest gap between DGP and model</div>
+        <div class="t-source">Data source: rebounds_feature_spec.py (current gaps)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">σ calibration drift</div>
+        <div class="t-desc">Per-player rolling σ is well-specified but may understate variance for returning injured players whose 5g window is thin</div>
+        <div class="t-source">Data source: edge_calibration.py / model residuals</div>
+      </div>
+    </div>
+
+    <div class="annex-col">
+      <h3>Market / line dynamics</h3>
+      <div class="trend">
+        <div class="t-label">Market efficiency creep</div>
+        <div class="t-desc">Books have tightened rebounds lines as sharp volume has grown; the spread_signed and 3PA signals were likely larger edges in 2022-23 than they are today</div>
+        <div class="t-source">Data source: line movement analysis (TBD)</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Shrinkage optimum shifts</div>
+        <div class="t-desc">Optimal shrinkage increases as market efficiency improves — re-sweep shrink parameter each season rather than locking in a prior-year value</div>
+        <div class="t-source">Data source: edge_calibration.py sweep results</div>
+      </div>
+      <div class="trend">
+        <div class="t-label">Line anchor quality</div>
+        <div class="t-desc">Consensus line quality varies by book depth; early-morning lines have more disagreement (wider min/max spread) and thus more potential edge before sharpening</div>
+        <div class="t-source">Data source: The Odds API (bookmaker list)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-note">
+  Reading the trees. <strong>Tree 1 (green):</strong> Player REB = Minutes × Per-Minute REB Rate. Minutes splits into Role/Usage and Game Script Risk. Per-Minute Rate splits into Individual Tendency and Game Context. <strong>Tree 2 (blue):</strong> yhat = Baseline + Adjustments. Baseline anchors to historical tendency and the consensus line. Adjustments move the prediction based on game-specific context and shrinkage. <strong>Pricing chain:</strong> yhat + σ + line → P(under) via parametric normal → edge = P(under) − P_book. The gap between Tree 1 leaves and Tree 2 leaves is the model's missing-feature backlog.
+</div>
+
+<script>
+  // Per-tree spine and connector computation (run separately for each tree)
+  function computeTree(treeEl) {
+    // Auto-detect terminal-leaf groups
+    treeEl.querySelectorAll('ul').forEach(ul => {
+      if (ul.classList.contains('terminal-grid')) return;
+      const items = Array.from(ul.children);
+      const allTerminal = items.every(li => !li.querySelector(':scope > ul'));
+      if (allTerminal && items.length >= 2) {
+        ul.classList.add('terminal-grid');
+        if (items.length >= 7) ul.classList.add('cols-3');
+      }
+    });
+
+    // Trim spines
+    treeEl.querySelectorAll('ul').forEach(ul => {
+      if (ul.classList.contains('terminal-grid')) return;
+      const items = ul.children;
+      if (items.length <= 1) { ul.classList.add('single'); return; }
+      const ulRect = ul.getBoundingClientRect();
+      const firstRect = items[0].getBoundingClientRect();
+      const lastRect = items[items.length - 1].getBoundingClientRect();
+      ul.style.setProperty('--spine-top', ((firstRect.top + firstRect.height / 2) - ulRect.top) + 'px');
+      ul.style.setProperty('--spine-bottom', (ulRect.bottom - (lastRect.top + lastRect.height / 2)) + 'px');
+    });
+
+    // Right-align bundles
+    const grids = Array.from(treeEl.querySelectorAll('ul.terminal-grid'));
+    if (grids.length > 0) {
+      const treeRect = treeEl.getBoundingClientRect();
+      let maxLeft = 0;
+      grids.forEach(g => { const l = g.getBoundingClientRect().left - treeRect.left; if (l > maxLeft) maxLeft = l; });
+      grids.forEach(g => {
+        const l = g.getBoundingClientRect().left - treeRect.left;
+        const shift = maxLeft - l;
+        if (shift > 0) {
+          const cur = parseFloat(getComputedStyle(g).marginLeft) || 22;
+          g.style.marginLeft = (cur + shift) + 'px';
+        }
+      });
+    }
+
+    // Connectors
+    treeEl.querySelectorAll('li').forEach(li => {
+      const childUl = li.querySelector(':scope > ul');
+      if (!childUl) return;
+      const node = li.querySelector(':scope > .node');
+      if (!node) return;
+      const liRect = li.getBoundingClientRect();
+      const nodeRect = node.getBoundingClientRect();
+      const ulRect = childUl.getBoundingClientRect();
+      li.style.setProperty('--connector-l', (nodeRect.right - liRect.left) + 'px');
+      li.style.setProperty('--connector-w', (ulRect.left - nodeRect.right) + 'px');
+    });
+  }
+
+  computeTree(document.getElementById('tree-outcomes'));
+  computeTree(document.getElementById('tree-pricing'));
+
+  function exportHTML() {
+    const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `driver-tree-rebounds-v2_${new Date().toISOString().slice(0,10)}.html`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  function exportTXT() {
+    const lines = [];
+    lines.push('# Driver Tree — NBA Rebounds Outcomes + Pricing');
+    lines.push(`Generated: ${new Date().toISOString().slice(0,10)}`);
+    lines.push('');
+
+    function walkTree(treeEl, treeLabel) {
+      lines.push(`## ${treeLabel}`);
+      lines.push('');
+      treeEl.querySelectorAll(':scope > li').forEach(li => walk(li, 0));
+      lines.push('');
+    }
+
+    function walk(li, depth) {
+      const node = li.querySelector(':scope > .node');
+      if (node) {
+        const label = node.querySelector('.label')?.textContent.trim() || '';
+        const desc = node.querySelector('.desc')?.textContent.trim() || '';
+        const source = node.querySelector('.source')?.textContent.trim() || '';
+        const isRoot = node.classList.contains('root') || node.classList.contains('root-2');
+        const isL1 = node.classList.contains('l1') || node.classList.contains('l1-2');
+        const isL2 = node.classList.contains('l2') || node.classList.contains('l2-2');
+        let tag = isRoot ? '[ROOT] ' : isL1 ? '[DRIVER] ' : isL2 ? '[CATEGORY] ' : '[LEAF] ';
+        let line = '  '.repeat(depth) + '- ' + tag + label;
+        if (desc) line += ` (${desc})`;
+        if (source) line += ` | ${source}`;
+        lines.push(line);
+      }
+      const childUl = li.querySelector(':scope > ul');
+      if (childUl) {
+        const op = childUl.dataset.op;
+        if (op) lines.push('  '.repeat(depth + 1) + `[op: ${op}]`);
+        Array.from(childUl.children).forEach(child => walk(child, depth + 1));
+      }
+    }
+
+    walkTree(document.getElementById('tree-outcomes'), 'Tree 1 — Outcomes: Player REB');
+    walkTree(document.getElementById('tree-pricing'), 'Tree 2 — Pricing: yhat');
+
+    lines.push('## Pricing chain');
+    lines.push('yhat_adj  = consensus_line + (1 - shrink) × (yhat - consensus_line)');
+    lines.push('σ         = per-player rolling residual std (fallback: global)');
+    lines.push('P(under)  = norm.cdf(line, loc=yhat_adj, scale=σ)');
+    lines.push('P_book    = implied_prob(under_odds)  ← raw vigged');
+    lines.push('edge      = P(under) - P_book          ← bet when edge > min_edge');
+    lines.push('');
+
+    lines.push('## Forward-looking dynamics');
+    document.querySelectorAll('.annex-col').forEach(col => {
+      lines.push(`### ${col.querySelector('h3')?.textContent.trim()}`);
+      col.querySelectorAll('.trend').forEach(t => {
+        lines.push(`- ${t.querySelector('.t-label')?.textContent.trim()}: ${t.querySelector('.t-desc')?.textContent.trim()} | ${t.querySelector('.t-source')?.textContent.trim()}`);
+      });
+      lines.push('');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `driver-tree-rebounds-v2_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
