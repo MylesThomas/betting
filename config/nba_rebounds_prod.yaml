@@ -27,7 +27,7 @@ s3_runs_prefix: rebounds/daily_runs
 feature_universe_s3_uri: s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet
 feature_universe_season: "*"
 feature_build_cache_dir: /tmp/rebounds_cache
-force_refresh_cache: true
+force_refresh_cache: false
 input_universe_s3_uri: s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet
 
 # Optional SNS topic for notify step. Null = print to stdout.
@@ -38,7 +38,7 @@ sns_topic_arn: arn:aws:sns:us-east-2:232692785472:betting-arb-alerts
 
 # Prod policy
 retrain_daily: true
-max_feature_lag_days: 2
+max_feature_lag_days: 4
 max_model_age_days: 7
 prod_min_edge_override: null
 # Leave null to auto-generate:

@@ -37,7 +37,7 @@ daily_runs_root: /tmp/rebounds_prod/daily_runs
 props_input_path: /tmp/rebounds_prod/rebounds_props_scoring_input_2025_26.parquet
 
 retrain_daily: true
-max_feature_lag_days: 2
+max_feature_lag_days: 4
 max_model_age_days: 7
 prod_min_edge_override: null
 scored_s3_uri: null
