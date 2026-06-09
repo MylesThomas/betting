@@ -8,3 +8,4 @@
 | [[model-evaluation]] | Brier score interpretation, when model improvement is meaningful vs noise |
 | [[data-quirks]] | Known issues in S3 data sources: ESPN placeholders, shot chart errors, odds aggregation |
 | [[nba-season-structure]] | Regular season, play-in, playoffs dates and NBA API season type strings |
+| [[the-odds-api]] | V4 endpoint reference: quota costs, featured vs non-featured markets, rate limits, error codes |
