@@ -307,7 +307,7 @@ echo "Creating/updating EventBridge rule: $EVENTBRIDGE_NBA..."
 aws events put-rule \
     --name "$EVENTBRIDGE_NBA" \
     --schedule-expression "rate(1 minute)" \
-    --state ENABLED \
+    --state DISABLED \
     --description "Trigger NBA live odds tracking every minute" \
     --region "$REGION" \
     --output table
@@ -321,7 +321,7 @@ echo "Creating/updating EventBridge rule: $EVENTBRIDGE_NCAAB..."
 aws events put-rule \
     --name "$EVENTBRIDGE_NCAAB" \
     --schedule-expression "rate(1 minute)" \
-    --state ENABLED \
+    --state DISABLED \
     --description "Trigger NCAAB live odds tracking every minute" \
     --region "$REGION" \
     --output table

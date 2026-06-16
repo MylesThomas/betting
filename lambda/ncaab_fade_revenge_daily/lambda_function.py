@@ -64,6 +64,7 @@ def _get_current_ncaab_season() -> str:
 
 def _season_start(season: str) -> str:
     starts = {
+        '2026-27': '2026-11-02',
         '2025-26': '2025-11-03',
         '2024-25': '2024-11-03',
         '2023-24': '2023-11-06',

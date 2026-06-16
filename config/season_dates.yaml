@@ -51,6 +51,14 @@ nba:
     playoff_start: '2026-04-18'
     playoff_end: '2026-06-21'  # Estimated
 
+  2026-27:
+    season_start: '2026-10-20'        # Estimated — update when official schedule drops (~Aug 2026)
+    regular_season_end: '2027-04-11'  # Estimated
+    playin_start: '2027-04-13'        # Estimated
+    playin_end: '2027-04-16'          # Estimated
+    playoff_start: '2027-04-17'       # Estimated
+    playoff_end: '2027-06-20'         # Estimated
+
 nfl:
   2020:
     season_start: '2020-09-10'
@@ -124,6 +132,12 @@ ncaab:
     regular_season_end: '2026-03-15'  # Estimated
     tournament_start: '2026-03-17'  # Estimated
     tournament_end: '2026-04-06'  # Estimated
+
+  2026-27:
+    season_start: '2026-11-02'        # Estimated (first Monday of Nov)
+    regular_season_end: '2027-03-14'  # Estimated
+    tournament_start: '2027-03-16'    # Estimated
+    tournament_end: '2027-04-05'      # Estimated
 
 ncaaf:
   2020:

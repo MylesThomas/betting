@@ -193,7 +193,7 @@ echo ""
 aws events put-rule \
     --name "$EVENTBRIDGE_RULE" \
     --schedule-expression "$CRON_9AM_ET" \
-    --state ENABLED \
+    --state DISABLED \
     --description "Trigger NCAAB fade revenge Lambda daily at 9am ET" \
     --region "$REGION" \
     --output table

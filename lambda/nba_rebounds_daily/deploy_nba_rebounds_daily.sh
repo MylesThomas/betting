@@ -211,7 +211,7 @@ aws events put-rule \
 aws events put-rule \
   --name "$SETTLE_RULE_NAME" \
   --schedule-expression "$CRON_SETTLE_905AM_ET" \
-  --state ENABLED \
+  --state DISABLED \
   --description "Trigger NBA rebounds settlement at 9:05am ET target" \
   --region "$REGION" \
   --output table
