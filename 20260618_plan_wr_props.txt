@@ -1,0 +1,395 @@
+WR RECEIVING YARDS PROPS — AIR YARDS DEBT MODEL
+Plan: 2026-06-18
+
+Core hypothesis: books anchor WR receiving yards props to recent ACTUAL yards.
+When a WR's actual yards << opportunity (high intended air yards, overthrows, drops,
+tight coverage), next-game prop is under-priced. When actual >> opportunity (lucky
+YAC, short catches that went far), next-game prop is over-priced.
+
+Pipeline mirrors the rebounds model:
+  data ingest → feature universe → prop lines → OLS/XGB train → Option A signal
+  → backtest → daily prod scoring
+
+---
+
+my plan for starters:
+
+1. get all props for 1 player, 1 season
+   - JSN (Jaxon Smith-Njigba, SEA) led NFL in receiving yards 2025 season (1,793 yds)
+   - Pull his receiving yards props from Odds API for every game 2025 season
+
+2. get RMSE / MAE of game lines vs actual yards per game
+   - Baseline: how well does the prop line predict actual yards?
+   - This is the bar we need to beat
+
+3. try and make ML model that beats this
+   - Add air yards debt + opportunity features
+   - OLS first (interpretable), then XGB
+
+4. derive trading signal from ML model using sampling of distribution
+   - Same Option A approach as rebounds:
+     model_prediction + sigma → P(over/under) → edge vs book implied prob
+
+n. expand to all WRs in the NFL
+
+---
+
+FINALIZED PLAN:
+
+================================================================================
+PHASE 0 — Single-Player Proof of Concept (JSN, 2025 season)
+================================================================================
+Goal: establish baseline RMSE/MAE, validate data joins, confirm air_yards_debt
+      has a measurable signal before scaling.
+
+Step 0a — Pull JSN actual receiving yards from nfl-data-py
+  import nfl_data_py as nfl
+  pbp = nfl.import_pbp_data([2025])
+  # Filter: receiver_player_name == 'J.Smith-Njigba', play_type == 'pass', complete_pass == 1
+  # Aggregate per game: sum(yards_gained), sum(air_yards) as rec_air_yards,
+  #                     count(pass_attempt) as targets
+  # Also need INTENDED air yards (all targets, complete or not):
+  # Filter: receiver_player_name == 'J.Smith-Njigba', play_type == 'pass' (all attempts)
+  # sum(air_yards) as intended_air_yards
+
+  Key columns from pbp:
+    game_id, week, posteam, receiver_player_name
+    air_yards          — air yards on THIS target (positive = past LOS)
+    yards_gained       — actual yards gained (0 if incomplete)
+    complete_pass      — 1/0
+    yac_epa            — yards after catch EPA
+
+  Per-game aggregation:
+    actual_rec_yards    = sum(yards_gained)
+    intended_air_yards  = sum(air_yards)             [all targets]
+    rec_air_yards       = sum(air_yards * complete_pass) [completions only]
+    yac                 = actual_rec_yards - rec_air_yards
+    targets             = count(rows)
+    air_yards_debt      = intended_air_yards - actual_rec_yards
+
+Step 0b — Pull JSN receiving yards props from Odds API
+  Endpoint: /v4/sports/americanfootball_nfl/events/{event_id}/odds
+  Market: player_reception_yards (or player_receiving_yards)
+  Bookmakers: draftkings, fanduel, betmgm, caesars (consensus line)
+  For each game week: fetch prop line (over/under threshold) + over/under odds
+
+  Store as: data/nfl/props/jsn_2025_rec_yards_props.csv
+  Columns: game_id, week, bookmaker, line, over_odds, under_odds, implied_p_over, implied_p_under
+
+Step 0c — Baseline RMSE / MAE
+  Join actual yards to prop lines on game_id/week
+  Compute:
+    MAE  = mean(|actual_yards - consensus_line|)
+    RMSE = sqrt(mean((actual_yards - consensus_line)^2))
+    Bias = mean(actual_yards - consensus_line)   [is book over/under on JSN?]
+
+  This is the bar. Any model we build must beat this RMSE on held-out games.
+
+Step 0d — Quick air_yards_debt scatter (sanity check)
+  Plot: air_yards_debt_game_N vs actual_yards_game_N+1
+  If there's a positive slope, the signal exists. If flat, reconsider.
+
+
+================================================================================
+PHASE 1 — Feature Universe (All WRs, 2022–2025)
+================================================================================
+Goal: build a per-(player, game) feature universe for all WRs who have prop
+      lines available. Mirror rebounds_feature_spec.py structure.
+
+Step 1a — Pull nfl-data-py play-by-play (2022-25)
+  pbp = nfl.import_pbp_data([2022, 2023, 2024, 2025])
+  snap = nfl.import_snap_counts([2022, 2023, 2024, 2025])
+
+  Filter to passing plays with a receiver. Aggregate per (game_id, receiver_player_id):
+
+  Raw per-game stats:
+    actual_rec_yards       = sum(yards_gained)
+    intended_air_yards     = sum(air_yards)                [all targets]
+    rec_air_yards          = sum(air_yards * complete_pass)
+    yac                    = actual_rec_yards - rec_air_yards
+    targets                = count(*)
+    receptions             = sum(complete_pass)
+    adot                   = intended_air_yards / targets  [avg depth of target]
+    wopr                   = target_share * 1.5 + air_yards_share * 0.7  [nfl-data-py has this]
+    air_yards_debt         = intended_air_yards - actual_rec_yards
+
+Step 1b — Rolling features (per player, sorted by game date)
+  Compute over rolling windows (last 3 games, last 5 games):
+    roll_actual_yards_mean_3
+    roll_actual_yards_mean_5
+    roll_intended_air_yards_mean_3
+    roll_air_yards_debt_mean_3       ← primary signal feature
+    roll_air_yards_debt_mean_5
+    roll_targets_mean_3
+    roll_wopr_mean_3
+    roll_adot_mean_3
+    roll_actual_yards_std_5          ← sigma for Option A scoring
+
+  Use shift(1) to avoid lookahead: features are computed on games BEFORE current game.
+
+Step 1c — Game context features
+  From existing S3 NFL game lines (the-odds-api-mt bucket):
+    spread_signed      (positive = team is favorite)
+    game_total         (implied total points — proxy for pass-heavy script)
+    implied_team_total = (game_total / 2) + (spread_signed / 2)
+
+  From nfl-data-py schedule:
+    home_away_flag
+    week_of_season
+    opponent_team
+
+Step 1d — Output
+  Write to S3: s3://nfl-betting-mt/data/02_features/wr_air_yards_universe/{season}/features.parquet
+  Locally: data/nfl/features/wr_air_yards_universe_{season}.parquet
+
+  GROUP_KEYS = ['season', 'game_id', 'week', 'player_id', 'player_name']
+
+  FEATURE_COLS = [
+    'roll_actual_yards_mean_3',
+    'roll_actual_yards_mean_5',
+    'roll_intended_air_yards_mean_3',
+    'roll_air_yards_debt_mean_3',       ← primary
+    'roll_air_yards_debt_mean_5',
+    'roll_targets_mean_3',
+    'roll_wopr_mean_3',
+    'roll_adot_mean_3',
+    'spread_signed',
+    'implied_team_total',
+    'home_away_flag',
+    'week_of_season',
+  ]
+
+  TARGET = 'actual_rec_yards'
+  SIGMA_COL = 'roll_actual_yards_std_5'
+
+
+================================================================================
+PHASE 2 — Prop Lines Ingest (Historical, 2022–2025)
+================================================================================
+Goal: fetch historical WR receiving yards prop lines from Odds API and align
+      to feature universe.
+
+Step 2a — Odds API historical props pull
+  Endpoint: /v4/sports/americanfootball_nfl/events (historical)
+  Market: player_reception_yards
+
+  For each game (2022-25):
+    - Fetch all WR receiving yards props
+    - Columns: game_id, player_name, bookmaker, line, over_odds, under_odds
+
+  Note: Odds API historical player props data may have limited lookback.
+  Start with 2024-25 if 2022 data isn't available.
+  This is where we burn the Odds API tokens.
+
+Step 2b — Compute implied probabilities
+  implied_p_over  = 1 / decimal_over_odds   [after vig removal]
+  implied_p_under = 1 / decimal_under_odds
+  Use:vig-free normalization (existing odds_utils.py has this)
+
+  consensus_line = median(line) across bookmakers for same player/game
+
+Step 2c — Join to feature universe
+  Join on (game_id, player_name) → normalize player names via nfl_team_name_mapping
+  or a new player name normalizer.
+
+  Final dataset columns:
+    GROUP_KEYS + FEATURE_COLS + [consensus_line, implied_p_over, implied_p_under, actual_rec_yards]
+
+  Drop rows with NaN features (insufficient history < 3 games in season).
+  Write to: data/nfl/features/wr_props_training_dataset.parquet
+
+
+================================================================================
+PHASE 3 — Model Training & Evaluation
+================================================================================
+Goal: build a model that predicts actual_rec_yards better than the consensus
+      prop line. Beat the book RMSE from Phase 0.
+
+Step 3a — OLS baseline (interpretable first)
+  from sklearn.linear_model import LinearRegression
+
+  Model A (book only):
+    y ~ consensus_line
+    → RMSE_book, MAE_book (this is the bar)
+
+  Model B (air yards debt added):
+    y ~ consensus_line + roll_air_yards_debt_mean_3 + roll_wopr_mean_3
+    → RMSE_debt, coefficient on roll_air_yards_debt_mean_3
+    → If coefficient is positive and significant, signal confirmed
+
+  Model C (full feature set):
+    y ~ all FEATURE_COLS + consensus_line
+    → RMSE_full
+
+  Evaluation: use walk-forward cross-validation (train on weeks 1-10, test 11-18;
+  roll forward). Prevents lookahead.
+
+Step 3b — XGB model
+  Same features as Model C. Tune:
+    max_depth: 3-4 (keep shallow — avoid overfitting on small N)
+    n_estimators: 100-300
+    learning_rate: 0.05
+    subsample: 0.8
+
+  Evaluate on same walk-forward folds. Report:
+    XGB RMSE vs book RMSE vs OLS RMSE
+
+Step 3c — Key diagnostic: is air_yards_debt a real signal?
+  Plot: partial dependence of XGB on roll_air_yards_debt_mean_3
+  If monotonically positive (higher debt → higher predicted next-game yards), signal holds.
+  Feature importance: air_yards_debt should rank in top 3 alongside consensus_line.
+
+  Report final model selection (OLS or XGB, whichever has better walk-forward RMSE
+  without overfitting).
+
+
+================================================================================
+PHASE 4 — Signal Generation (Option A — Normal CDF)
+================================================================================
+Goal: convert model prediction (yhat) into an edge vs book implied probability.
+      Same approach as rebounds option_a_scoring.py.
+
+Formula (from option_a_scoring.py):
+  mean_adj = consensus_line + (1 - shrink) * (yhat - consensus_line)
+  sigma    = max(roll_actual_yards_std_5, SIGMA_FLOOR)
+  z        = (line - mean_adj) / sigma
+  p_under  = Phi(z)
+  p_over   = 1 - p_under
+  edge_over  = p_over  - implied_p_over
+  edge_under = p_under - implied_p_under
+
+Parameters to tune on backtest data:
+  shrink       (0.0 = trust model fully, 1.0 = use consensus only)
+  SIGMA_FLOOR  (minimum sigma — prevents over-confidence on low-variance players)
+  MIN_EDGE     (minimum edge to generate a play, e.g., 0.05)
+
+Play selection:
+  If edge_over > MIN_EDGE  → play OVER
+  If edge_under > MIN_EDGE → play UNDER
+  Both > MIN_EDGE          → take the larger edge
+
+Output per play:
+  player_name, game_id, week, line, side, edge, yhat, mean_adj, sigma, p_over,
+  p_under, implied_p_over, implied_p_under, consensus_line
+
+
+================================================================================
+PHASE 5 — Backtest
+================================================================================
+Goal: measure historical profitability of the signal. Use $100 flat bet sizing
+      first, then Kelly.
+
+Step 5a — Flat bet backtest (2022–2025, walk-forward)
+  For each play generated:
+    result = 'win' if (side=='over' and actual > line) or (side=='under' and actual < line)
+    pnl    = +$100 * (decimal_odds - 1) if win else -$100
+
+  Report:
+    Total plays, win%, total PnL, ROI, max drawdown
+    PnL by: season, week_of_season, player, edge_bucket (0.05-0.10, 0.10-0.15, 0.15+)
+    Calibration: does edge_over 0.10 actually win ~60% of the time?
+
+Step 5b — Filter tuning
+  Test: MIN_EDGE thresholds (0.03, 0.05, 0.07, 0.10)
+  Test: minimum air_yards_debt threshold (0, 20, 40 yards)
+  Test: minimum targets threshold (only play WRs with ≥ 5 targets last game)
+  Goal: find the filter combo with best Sharpe (ROI / drawdown), not just raw ROI.
+
+Step 5c — Go/no-go decision
+  Play if:
+    walk-forward ROI > +5% after vig (not just before)
+    win% > 54% on plays with edge > 0.05
+    backtest has ≥ 100 plays (statistical minimum)
+    no single season has negative ROI (not a fluke)
+
+
+================================================================================
+PHASE 6 — Production Pipeline (if backtest passes)
+================================================================================
+Goal: daily Lambda (or script) that fetches today's WR props, scores against
+      the model, and emails/SNS plays.
+
+Step 6a — Daily data flow
+  1. [8 AM ET] Fetch today's WR receiving yards props from Odds API
+     → data/nfl/props/live/{YYYY-MM-DD}_wr_rec_yards.csv
+  2. Load last 5 games of nfl-data-py data for active WRs (or use pre-computed
+     rolling features updated after each Sunday/MNF/TNF game)
+  3. Score: join today's props to feature universe → compute yhat + edge
+  4. Filter plays by MIN_EDGE
+  5. Send SNS/email with plays table
+
+Step 6b — Feature refresh cadence
+  nfl-data-py play-by-play updates ~2 hours after each game.
+  Refresh rolling features after each game day (Sun, Mon, Thu night).
+  Store rolling feature cache in S3:
+    s3://nfl-betting-mt/data/02_features/wr_rolling_cache/{YYYY-MM-DD}.parquet
+
+Step 6c — Model retraining
+  Retrain OLS/XGB after each full season (not weekly — avoid overfitting).
+  Store model artifacts in S3:
+    s3://nfl-betting-mt/models/wr_air_yards/{season}/model.pkl
+
+Step 6d — S3 bucket
+  New bucket: nfl-betting-mt  (mirrors ncaab-betting-mt structure)
+  OR add nfl/ prefix to existing nba-betting-mt
+
+  Proposed layout:
+    s3://nfl-betting-mt/
+    ├── data/
+    │   ├── 01_input/
+    │   │   ├── pbp/{season}/pbp_{season}.parquet
+    │   │   └── props/{season}/{YYYY-MM-DD}_wr_rec_yards.csv
+    │   ├── 02_features/
+    │   │   ├── wr_air_yards_universe/{season}/features.parquet
+    │   │   └── wr_rolling_cache/{YYYY-MM-DD}.parquet
+    │   └── 04_output/
+    │       └── plays/wr-air-yards-debt/{YYYY-MM-DD}.csv
+    └── models/
+        └── wr_air_yards/{season}/model.pkl
+
+
+================================================================================
+EXECUTION ORDER
+================================================================================
+
+Week 1 — POC + signal validation
+  [ ] Phase 0: JSN single-player POC
+      [ ] 0a: nfl-data-py pull + per-game aggregation for JSN 2025
+      [ ] 0b: Odds API pull for JSN receiving yards props 2025
+      [ ] 0c: Baseline RMSE/MAE (book line vs actuals)
+      [ ] 0d: Air yards debt scatter — confirm signal direction
+  [ ] Decision gate: is air_yards_debt positively correlated with next-game yards?
+      If no → revisit hypothesis before Phase 1
+
+Week 2 — Feature universe + training dataset
+  [ ] Phase 1: Full WR feature universe (2022-25)
+  [ ] Phase 2: Historical prop lines ingest (burn Odds API tokens here)
+  [ ] Phase 3a: OLS models — confirm air_yards_debt improves on book RMSE
+
+Week 3 — Model + backtest
+  [ ] Phase 3b: XGB model, walk-forward CV
+  [ ] Phase 4: Option A signal generation
+  [ ] Phase 5: Full backtest
+  [ ] Decision gate: does signal pass go/no-go criteria?
+
+Week 4+ — Production (if backtest passes)
+  [ ] Phase 6: Lambda or script, SNS/email plays
+
+================================================================================
+KEY RISKS
+================================================================================
+
+1. Odds API historical coverage: player props history may only go back 1-2 seasons.
+   Mitigation: start with 2024-25, assess coverage before pulling 2022-23.
+
+2. Player name normalization: nfl-data-py uses "J.Smith-Njigba", Odds API uses
+   "Jaxon Smith-Njigba". Need a mapping layer (similar to nba_team_name_mapping.py).
+
+3. Air yards debt may be noisy at short rolling windows (<3 games into a season).
+   Mitigation: require ≥ 3 prior games before generating a play.
+
+4. Sample size: if only 2 seasons of prop data are available, backtest N may be
+   too small for statistical confidence. Accept this and flag it explicitly.
+
+5. Non-stationarity: WR role changes (injury to WR1, new QB, new OC) can break
+   rolling features. Phase 5b filter tuning should include recency weighting.
