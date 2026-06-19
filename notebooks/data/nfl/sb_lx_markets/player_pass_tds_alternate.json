@@ -1,0 +1,504 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -760,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -119,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 296,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1020,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 2100,
+                "point": 4.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -460,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 119,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 463,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1420,
+                "point": 3.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -700,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -120,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 325,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1200,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -475,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 125,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 425,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1200,
+                "point": 3.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -440,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 132,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 520,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -650,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -112,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 350,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1200,
+                "point": 3.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 330,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -455,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 128,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -120,
+                "point": 1.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 330,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -455,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 128,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -120,
+                "point": 1.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "williamhill_us",
+        "title": "Caesars",
+        "last_update": "2026-02-08T22:53:11Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:55:08Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -425,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 121,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 400,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1400,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 2500,
+                "point": 4.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -750,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -129,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 245,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 700,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1800,
+                "point": 4.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -120,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 128,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -455,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 330,
+                "point": 2.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betonlineag",
+        "title": "BetOnline.ag",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:54:48Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -667,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 775,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 110,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 280,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 525,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -130,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -714,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 200,
+                "point": 2.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "player_pass_tds_alternate",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 250,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 375,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -130,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -1100,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 115,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -650,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 900,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1750,
+                "point": 3.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

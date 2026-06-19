@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_pats_alternate",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -1140,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -200,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 182,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 591,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -451,
+                "point": 1.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -118,
+                "point": 2.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": 254,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": 750,
+                "point": 4.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,246 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 145
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -175
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 150
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -175
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 156
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -190
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:54:57Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 155
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -190
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "williamhill_us",
+        "title": "Caesars",
+        "last_update": "2026-02-08T22:53:11Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:55:08Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 150
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -182
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 148
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -186
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betonlineag",
+        "title": "BetOnline.ag",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:54:48Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 149
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -170
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 145
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -200
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betus",
+        "title": "BetUS",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:54:58Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 142
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -170
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fliff",
+        "title": "Fliff",
+        "last_update": "2026-02-08T22:55:14Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:55:11Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 145
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -215
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betanysports",
+        "title": "BetAnything",
+        "last_update": "2026-02-08T22:55:15Z",
+        "markets": [
+          {
+            "key": "h2h_h1",
+            "last_update": "2026-02-08T22:55:15Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 150
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -170
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

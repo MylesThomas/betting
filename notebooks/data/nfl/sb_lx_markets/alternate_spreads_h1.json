@@ -1,0 +1,487 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "alternate_spreads_h1",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": -342,
+                "point": 9.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -312,
+                "point": 8.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -280,
+                "point": 7.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -201,
+                "point": 6.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -172,
+                "point": 5.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -164,
+                "point": 4.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -132,
+                "point": 3.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 104,
+                "point": 1.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 175,
+                "point": -1.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 183,
+                "point": -2.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 238,
+                "point": -3.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 297,
+                "point": -4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 238,
+                "point": -9.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 220,
+                "point": -8.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 200,
+                "point": -7.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 148,
+                "point": -6.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 128,
+                "point": -5.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 123,
+                "point": -4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -101,
+                "point": -3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -138,
+                "point": -1.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -240,
+                "point": 1.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -252,
+                "point": 2.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -343,
+                "point": 3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -448,
+                "point": 4.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "alternate_spreads_h1",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 265,
+                "point": -3.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 215,
+                "point": -2.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 200,
+                "point": -1.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 176,
+                "point": -0.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 126,
+                "point": 0.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 112,
+                "point": 1.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 104,
+                "point": 2.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -128,
+                "point": 3.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -164,
+                "point": 4.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -174,
+                "point": 5.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -205,
+                "point": 6.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -295,
+                "point": 7.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -330,
+                "point": 8.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -350,
+                "point": 9.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -390,
+                "point": 3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -280,
+                "point": 2.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -265,
+                "point": 1.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -230,
+                "point": 0.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -162,
+                "point": -0.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -142,
+                "point": -1.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -132,
+                "point": -2.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 100,
+                "point": -3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 128,
+                "point": -4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 136,
+                "point": -5.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 158,
+                "point": -6.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 220,
+                "point": -7.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 240,
+                "point": -8.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 255,
+                "point": -9.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "alternate_spreads_h1",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 333,
+                "point": -5.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 320,
+                "point": -4.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 270,
+                "point": -3.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 200,
+                "point": -2.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 185,
+                "point": -1.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 110,
+                "point": 1.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": 105,
+                "point": 2.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -125,
+                "point": 3.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -170,
+                "point": 4.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -175,
+                "point": 5.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -185,
+                "point": 6.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -275,
+                "point": 7.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -295,
+                "point": 8.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -300,
+                "point": 9.5
+              },
+              {
+                "name": "New England Patriots",
+                "price": -425,
+                "point": 10.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -500,
+                "point": 5.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -475,
+                "point": 4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -375,
+                "point": 3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -275,
+                "point": 2.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -250,
+                "point": 1.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -145,
+                "point": -1.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -140,
+                "point": -2.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 105,
+                "point": -3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 130,
+                "point": -4.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 135,
+                "point": -5.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 140,
+                "point": -6.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 200,
+                "point": -7.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 210,
+                "point": -8.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 220,
+                "point": -9.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": 290,
+                "point": -10.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fliff",
+        "title": "Fliff",
+        "last_update": "2026-02-08T22:55:14Z",
+        "markets": [
+          {
+            "key": "alternate_spreads_h1",
+            "last_update": "2026-02-08T22:55:11Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": -135,
+                "point": 3.5
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -105,
+                "point": -3.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

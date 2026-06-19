@@ -1,0 +1,238 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -102,
+                "point": 8.5
+              },
+              {
+                "name": "Under",
+                "description": "Jason Myers",
+                "price": -126,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -129,
+                "point": 6.5
+              },
+              {
+                "name": "Under",
+                "description": "Andres Borregales",
+                "price": 101,
+                "point": 6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -103,
+                "point": 6.5
+              },
+              {
+                "name": "Under",
+                "description": "Andres Borregales",
+                "price": -127,
+                "point": 6.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -105,
+                "point": 8.5
+              },
+              {
+                "name": "Under",
+                "description": "Jason Myers",
+                "price": -124,
+                "point": 8.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -103,
+                "point": 6.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -105,
+                "point": 8.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": 100,
+                "point": 8.5
+              },
+              {
+                "name": "Under",
+                "description": "Jason Myers",
+                "price": -135,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 105,
+                "point": 7.5
+              },
+              {
+                "name": "Under",
+                "description": "Andres Borregales",
+                "price": -140,
+                "point": 7.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -106,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -104,
+                "point": 6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": 100,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -140,
+                "point": 6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fliff",
+        "title": "Fliff",
+        "last_update": "2026-02-08T22:55:14Z",
+        "markets": [
+          {
+            "key": "player_kicking_points",
+            "last_update": "2026-02-08T22:55:11Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -115,
+                "point": 8.5
+              },
+              {
+                "name": "Under",
+                "description": "Jason Myers",
+                "price": -125,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 100,
+                "point": 7.5
+              },
+              {
+                "name": "Under",
+                "description": "Andres Borregales",
+                "price": -145,
+                "point": 7.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

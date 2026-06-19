@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "h2h_3_way_q3",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 180
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -105
+              },
+              {
+                "name": "Draw",
+                "price": 360
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "h2h_3_way_q3",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 180
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -110
+              },
+              {
+                "name": "Draw",
+                "price": 350
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "h2h_3_way_q3",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 175
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -104
+              },
+              {
+                "name": "Draw",
+                "price": 375
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "h2h_3_way_q3",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 175
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -104
+              },
+              {
+                "name": "Draw",
+                "price": 375
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "h2h_3_way_q3",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "New England Patriots",
+                "price": 175
+              },
+              {
+                "name": "Seattle Seahawks",
+                "price": -104
+              },
+              {
+                "name": "Draw",
+                "price": 375
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

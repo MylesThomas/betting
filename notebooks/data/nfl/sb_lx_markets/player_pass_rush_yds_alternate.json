@@ -1,0 +1,770 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_pass_rush_yds_alternate",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -2900,
+                "point": 159.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -1860,
+                "point": 169.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -1240,
+                "point": 179.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -870,
+                "point": 189.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -630,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -458,
+                "point": 209.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -343,
+                "point": 219.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -265,
+                "point": 229.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -211,
+                "point": 239.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -164,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -125,
+                "point": 259.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -114,
+                "point": 264.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 101,
+                "point": 269.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 126,
+                "point": 279.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 158,
+                "point": 289.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 192,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 237,
+                "point": 309.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 306,
+                "point": 319.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 375,
+                "point": 329.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 474,
+                "point": 339.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 573,
+                "point": 349.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 710,
+                "point": 359.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 920,
+                "point": 369.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1120,
+                "point": 379.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1340,
+                "point": 389.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1600,
+                "point": 399.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1980,
+                "point": 409.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 2500,
+                "point": 419.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 2800,
+                "point": 429.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -1920,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -1300,
+                "point": 159.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -840,
+                "point": 169.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -620,
+                "point": 179.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -462,
+                "point": 189.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -336,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -262,
+                "point": 209.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -202,
+                "point": 219.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -154,
+                "point": 229.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -123,
+                "point": 239.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -112,
+                "point": 243.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 103,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 131,
+                "point": 259.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 167,
+                "point": 269.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 209,
+                "point": 279.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 259,
+                "point": 289.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 330,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 408,
+                "point": 309.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 519,
+                "point": 319.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 630,
+                "point": 329.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 790,
+                "point": 339.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1000,
+                "point": 349.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1240,
+                "point": 359.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1560,
+                "point": 369.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1940,
+                "point": 379.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 2400,
+                "point": 389.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 3200,
+                "point": 399.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 3700,
+                "point": 409.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_pass_rush_yds_alternate",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -3000,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -1400,
+                "point": 174.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -650,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -300,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -160,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 115,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 200,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 360,
+                "point": 324.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 600,
+                "point": 349.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -1500,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -650,
+                "point": 174.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -325,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -170,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 120,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 210,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 375,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 700,
+                "point": 324.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1100,
+                "point": 349.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "player_pass_rush_yds_alternate",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -1800,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -700,
+                "point": 174.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -340,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -182,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 104,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 188,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 320,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 580,
+                "point": 324.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 920,
+                "point": 349.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 1500,
+                "point": 374.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -1400,
+                "point": 174.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -600,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -310,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -166,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 112,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 194,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 350,
+                "point": 324.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 580,
+                "point": 349.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 920,
+                "point": 374.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 1500,
+                "point": 399.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "player_pass_rush_yds_alternate",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -134,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -275,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -590,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 140,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 255,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 380,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 200,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -190,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -420,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 107,
+                "point": 249.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_pass_rush_yds_alternate",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -134,
+                "point": 249.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -275,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": -590,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 140,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Maye",
+                "price": 255,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 380,
+                "point": 299.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 200,
+                "point": 274.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -190,
+                "point": 224.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": -420,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Sam Darnold",
+                "price": 107,
+                "point": 249.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

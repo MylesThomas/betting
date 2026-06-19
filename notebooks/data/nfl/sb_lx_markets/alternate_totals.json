@@ -1,0 +1,5918 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -528,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": -462,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": -417,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -345,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -299,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -262,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -230,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -208,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": -176,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -166,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -139,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -123,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -101,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 113,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 125,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 137,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 155,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 176,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 197,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 216,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 239,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 268,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 288,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 332,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 367,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": 337,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": 304,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": 280,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 239,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 212,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 188,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 168,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 153,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": 131,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 124,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": 104,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -108,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -132,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -151,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -167,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -184,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -211,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -243,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -306,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -344,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -395,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -433,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -519,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -591,
+                "point": 58.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 155,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 130,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 114,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": -120,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -145,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -175,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -190,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -220,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": -240,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -200,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -185,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -170,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -140,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": 100,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": 115,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": 135,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": 145,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 165,
+                "point": 40.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -50000,
+                "point": 19.5
+              },
+              {
+                "name": "Over",
+                "price": -20000,
+                "point": 20.5
+              },
+              {
+                "name": "Over",
+                "price": -20000,
+                "point": 21.5
+              },
+              {
+                "name": "Over",
+                "price": -10000,
+                "point": 22.5
+              },
+              {
+                "name": "Over",
+                "price": -7000,
+                "point": 23.5
+              },
+              {
+                "name": "Over",
+                "price": -6000,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "price": -5000,
+                "point": 25.5
+              },
+              {
+                "name": "Over",
+                "price": -3500,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "price": -2500,
+                "point": 27.5
+              },
+              {
+                "name": "Over",
+                "price": -2200,
+                "point": 28.5
+              },
+              {
+                "name": "Over",
+                "price": -1600,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "price": -1100,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "price": -950,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "price": -800,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "price": -620,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": -520,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": -460,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -390,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -320,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -290,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -250,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -210,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": -184,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -164,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -140,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -120,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -106,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": 106,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 126,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 158,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 176,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 210,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 230,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 255,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 285,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 330,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 350,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 420,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 460,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 520,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": 560,
+                "point": 60.5
+              },
+              {
+                "name": "Over",
+                "price": 630,
+                "point": 61.5
+              },
+              {
+                "name": "Over",
+                "price": 750,
+                "point": 62.5
+              },
+              {
+                "name": "Over",
+                "price": 800,
+                "point": 63.5
+              },
+              {
+                "name": "Over",
+                "price": 900,
+                "point": 64.5
+              },
+              {
+                "name": "Over",
+                "price": 1060,
+                "point": 65.5
+              },
+              {
+                "name": "Over",
+                "price": 1100,
+                "point": 66.5
+              },
+              {
+                "name": "Over",
+                "price": 1200,
+                "point": 67.5
+              },
+              {
+                "name": "Over",
+                "price": 1300,
+                "point": 68.5
+              },
+              {
+                "name": "Over",
+                "price": 1400,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "price": 1500,
+                "point": 70.5
+              },
+              {
+                "name": "Over",
+                "price": 1700,
+                "point": 71.5
+              },
+              {
+                "name": "Over",
+                "price": 1700,
+                "point": 72.5
+              },
+              {
+                "name": "Over",
+                "price": 2000,
+                "point": 73.5
+              },
+              {
+                "name": "Over",
+                "price": 2500,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "price": 3000,
+                "point": 75.5
+              },
+              {
+                "name": "Under",
+                "price": 3000,
+                "point": 19.5
+              },
+              {
+                "name": "Under",
+                "price": 2500,
+                "point": 20.5
+              },
+              {
+                "name": "Under",
+                "price": 2000,
+                "point": 21.5
+              },
+              {
+                "name": "Under",
+                "price": 1700,
+                "point": 22.5
+              },
+              {
+                "name": "Under",
+                "price": 1500,
+                "point": 23.5
+              },
+              {
+                "name": "Under",
+                "price": 1400,
+                "point": 24.5
+              },
+              {
+                "name": "Under",
+                "price": 1300,
+                "point": 25.5
+              },
+              {
+                "name": "Under",
+                "price": 1060,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "price": 900,
+                "point": 27.5
+              },
+              {
+                "name": "Under",
+                "price": 870,
+                "point": 28.5
+              },
+              {
+                "name": "Under",
+                "price": 750,
+                "point": 29.5
+              },
+              {
+                "name": "Under",
+                "price": 600,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "price": 540,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "price": 480,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "price": 400,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": 320,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 280,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 235,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 215,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 190,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 162,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": 142,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 128,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -106,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -120,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -136,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -162,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -180,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -205,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -230,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -280,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -310,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -350,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -480,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -520,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -650,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -750,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -900,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": -1000,
+                "point": 60.5
+              },
+              {
+                "name": "Under",
+                "price": -1200,
+                "point": 61.5
+              },
+              {
+                "name": "Under",
+                "price": -1600,
+                "point": 62.5
+              },
+              {
+                "name": "Under",
+                "price": -1800,
+                "point": 63.5
+              },
+              {
+                "name": "Under",
+                "price": -2500,
+                "point": 64.5
+              },
+              {
+                "name": "Under",
+                "price": -3500,
+                "point": 65.5
+              },
+              {
+                "name": "Under",
+                "price": -4000,
+                "point": 66.5
+              },
+              {
+                "name": "Under",
+                "price": -4500,
+                "point": 67.5
+              },
+              {
+                "name": "Under",
+                "price": -5000,
+                "point": 68.5
+              },
+              {
+                "name": "Under",
+                "price": -7000,
+                "point": 69.5
+              },
+              {
+                "name": "Under",
+                "price": -7000,
+                "point": 70.5
+              },
+              {
+                "name": "Under",
+                "price": -10000,
+                "point": 71.5
+              },
+              {
+                "name": "Under",
+                "price": -10000,
+                "point": 72.5
+              },
+              {
+                "name": "Under",
+                "price": -20000,
+                "point": 73.5
+              },
+              {
+                "name": "Under",
+                "price": -20000,
+                "point": 74.5
+              },
+              {
+                "name": "Under",
+                "price": -50000,
+                "point": 75.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": -106,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": 200,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": -250,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -315,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": 215,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": 350,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 150,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": -530,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": 240,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": -143,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": 110,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": 310,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": -182,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -200,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": 180,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 100,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 340,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": 250,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": -286,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": 195,
+                "point": 52.0
+              },
+              {
+                "name": "Over",
+                "price": -124,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -625,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": 123,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": 440,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": 285,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": -215,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": 128,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 117,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": -117,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -167,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": -530,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": -455,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": -275,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": -157,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": -177,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": -134,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -315,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": -455,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -375,
+                "point": 37.0
+              },
+              {
+                "name": "Over",
+                "price": -385,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 56.0
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": -590,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": -240,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": 160,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 390,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": 220,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 135,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -115,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": -715,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": 188,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 230,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": -295,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": -530,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -195,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": -335,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": 118,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -132,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": -455,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": 145,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 155,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": -240,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -121,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -530,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": -345,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": -265,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": 102,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": 390,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": -152,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": -715,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": -420,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": 163,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": -159,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -143,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -104,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": 133,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": -180,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": 340,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": 300,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": 205,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": 128,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": 225,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": 310,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 260,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": 275,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": -435,
+                "point": 56.0
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -230,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": 380,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": 180,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": -205,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": -305,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -175,
+                "point": 49.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": -106,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": 200,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": -250,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -315,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": 215,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": 350,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 150,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": -530,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": 240,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": -143,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": 110,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": 310,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": -182,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -200,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": 180,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 100,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 340,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": 250,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": -286,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": 195,
+                "point": 52.0
+              },
+              {
+                "name": "Over",
+                "price": -124,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -625,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": 123,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": 440,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": 285,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": -215,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": 128,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 117,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": -117,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -167,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": -530,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": -455,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": -275,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": -157,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": -177,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": -134,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -315,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": -455,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -375,
+                "point": 37.0
+              },
+              {
+                "name": "Over",
+                "price": -385,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 56.0
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": -590,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": -240,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": 160,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 390,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": 220,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 135,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -115,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": -715,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": 188,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 230,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": -295,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": -530,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -195,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": -335,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": 118,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -132,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": -455,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": 145,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 155,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": -240,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -121,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -530,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": -345,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": -265,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": 102,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": 390,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": -152,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": -715,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": -420,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": 163,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": -159,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -143,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -104,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": 133,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": -180,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": 340,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": 300,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": 205,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": 128,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": 225,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": 310,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 260,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": 275,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": -435,
+                "point": 56.0
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -230,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": 380,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": 180,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": -205,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": -305,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -175,
+                "point": 49.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -105,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": -1100,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "price": -1100,
+                "point": 31.0
+              },
+              {
+                "name": "Over",
+                "price": -1000,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "price": -900,
+                "point": 32.0
+              },
+              {
+                "name": "Over",
+                "price": -800,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "price": -625,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": -600,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": -525,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": -525,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": -475,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -450,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": -400,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -375,
+                "point": 37.0
+              },
+              {
+                "name": "Over",
+                "price": -325,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -300,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": -295,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -285,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": -250,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -250,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": -220,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": -210,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": -190,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -185,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": -175,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -160,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": -155,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -150,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -130,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -125,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -102,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": 100,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 105,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": 110,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 120,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": 125,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 130,
+                "point": 49.0
+              },
+              {
+                "name": "Over",
+                "price": 135,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 145,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": 150,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 170,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": 180,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 185,
+                "point": 52.0
+              },
+              {
+                "name": "Over",
+                "price": 200,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 210,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": 220,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 240,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": 250,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": 280,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 340,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": 350,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": 475,
+                "point": 60.0
+              },
+              {
+                "name": "Over",
+                "price": 500,
+                "point": 60.5
+              },
+              {
+                "name": "Under",
+                "price": -115,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": 575,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "price": 575,
+                "point": 31.0
+              },
+              {
+                "name": "Under",
+                "price": 525,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "price": 525,
+                "point": 32.0
+              },
+              {
+                "name": "Under",
+                "price": 475,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "price": 400,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": 375,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": 340,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": 320,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 310,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": 280,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 270,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": 240,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 225,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": 185,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 185,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": 165,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": 160,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": 145,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": 135,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": 125,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": 120,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": 115,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": 100,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -102,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": -125,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": -130,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -140,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": -145,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -155,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": -160,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -170,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -180,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -190,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": -200,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -225,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": -235,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -250,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -295,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": -300,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -325,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": -350,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -450,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -525,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": -525,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": -650,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -750,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": -750,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": -800,
+                "point": 60.0
+              },
+              {
+                "name": "Under",
+                "price": -900,
+                "point": 60.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanatics",
+        "title": "Fanatics",
+        "last_update": "2026-02-08T22:55:15Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:35Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -125,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -160,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": 110,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -105,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": 125,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": 420,
+                "point": 60.5
+              },
+              {
+                "name": "Over",
+                "price": -135,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": 150,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 200,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": -1200,
+                "point": 28.5
+              },
+              {
+                "name": "Over",
+                "price": 270,
+                "point": 56.0
+              },
+              {
+                "name": "Over",
+                "price": 620,
+                "point": 64.5
+              },
+              {
+                "name": "Over",
+                "price": 370,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": 170,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": 225,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": 235,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": -475,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": 345,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": -210,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -275,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": 520,
+                "point": 62.0
+              },
+              {
+                "name": "Over",
+                "price": 420,
+                "point": 60.0
+              },
+              {
+                "name": "Over",
+                "price": 700,
+                "point": 65.0
+              },
+              {
+                "name": "Over",
+                "price": 190,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": -2000,
+                "point": 26.0
+              },
+              {
+                "name": "Over",
+                "price": 560,
+                "point": 63.0
+              },
+              {
+                "name": "Over",
+                "price": -1200,
+                "point": 29.0
+              },
+              {
+                "name": "Over",
+                "price": -650,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "price": 130,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": -1500,
+                "point": 27.0
+              },
+              {
+                "name": "Over",
+                "price": -1300,
+                "point": 27.5
+              },
+              {
+                "name": "Over",
+                "price": 105,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 560,
+                "point": 63.5
+              },
+              {
+                "name": "Over",
+                "price": -2000,
+                "point": 25.5
+              },
+              {
+                "name": "Over",
+                "price": -145,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": 470,
+                "point": 61.5
+              },
+              {
+                "name": "Over",
+                "price": -650,
+                "point": 32.0
+              },
+              {
+                "name": "Over",
+                "price": -185,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": -900,
+                "point": 30.0
+              },
+              {
+                "name": "Over",
+                "price": -400,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": -550,
+                "point": 33.0
+              },
+              {
+                "name": "Over",
+                "price": -260,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": -350,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": -320,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -230,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": 255,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": -400,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": -750,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "price": -175,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": -140,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": 100,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": 135,
+                "point": 49.0
+              },
+              {
+                "name": "Over",
+                "price": 120,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": -1800,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "price": 520,
+                "point": 62.5
+              },
+              {
+                "name": "Over",
+                "price": -165,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": 190,
+                "point": 52.0
+              },
+              {
+                "name": "Over",
+                "price": 250,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": 345,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": 285,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": -375,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": 155,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 61.0
+              },
+              {
+                "name": "Over",
+                "price": 620,
+                "point": 64.0
+              },
+              {
+                "name": "Over",
+                "price": -950,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "price": -1300,
+                "point": 28.0
+              },
+              {
+                "name": "Over",
+                "price": 700,
+                "point": 65.5
+              },
+              {
+                "name": "Over",
+                "price": -115,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -750,
+                "point": 31.0
+              },
+              {
+                "name": "Over",
+                "price": -475,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": -300,
+                "point": 37.0
+              },
+              {
+                "name": "Over",
+                "price": -575,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "price": 385,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": -245,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -200,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": 210,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 780,
+                "point": 66.0
+              },
+              {
+                "name": "Over",
+                "price": 780,
+                "point": 66.5
+              },
+              {
+                "name": "Over",
+                "price": 850,
+                "point": 67.0
+              },
+              {
+                "name": "Over",
+                "price": 850,
+                "point": 67.5
+              },
+              {
+                "name": "Under",
+                "price": 105,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": 130,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": -135,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": -110,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": -115,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -155,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": -650,
+                "point": 60.5
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -185,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": -175,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -260,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": 660,
+                "point": 28.5
+              },
+              {
+                "name": "Under",
+                "price": -375,
+                "point": 56.0
+              },
+              {
+                "name": "Under",
+                "price": -1100,
+                "point": 64.5
+              },
+              {
+                "name": "Under",
+                "price": -550,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": -215,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": -300,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": -310,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -425,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": 330,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": -500,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": 165,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": -850,
+                "point": 62.0
+              },
+              {
+                "name": "Under",
+                "price": -650,
+                "point": 60.0
+              },
+              {
+                "name": "Under",
+                "price": -1300,
+                "point": 65.0
+              },
+              {
+                "name": "Under",
+                "price": -245,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": 950,
+                "point": 26.0
+              },
+              {
+                "name": "Under",
+                "price": -950,
+                "point": 63.0
+              },
+              {
+                "name": "Under",
+                "price": 660,
+                "point": 29.0
+              },
+              {
+                "name": "Under",
+                "price": 420,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "price": -160,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": 780,
+                "point": 27.0
+              },
+              {
+                "name": "Under",
+                "price": 700,
+                "point": 27.5
+              },
+              {
+                "name": "Under",
+                "price": -125,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -950,
+                "point": 63.5
+              },
+              {
+                "name": "Under",
+                "price": 950,
+                "point": 25.5
+              },
+              {
+                "name": "Under",
+                "price": 120,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": -750,
+                "point": 61.5
+              },
+              {
+                "name": "Under",
+                "price": 420,
+                "point": 32.0
+              },
+              {
+                "name": "Under",
+                "price": 150,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": 540,
+                "point": 30.0
+              },
+              {
+                "name": "Under",
+                "price": 285,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": 370,
+                "point": 33.0
+              },
+              {
+                "name": "Under",
+                "price": 200,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": 255,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": -425,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": 240,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 180,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": -350,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -225,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": 285,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": 470,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": 115,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": -120,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": -165,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -145,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": 850,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "price": -850,
+                "point": 62.5
+              },
+              {
+                "name": "Under",
+                "price": 135,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": -245,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": -340,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": -500,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": 270,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": -195,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -700,
+                "point": 61.0
+              },
+              {
+                "name": "Under",
+                "price": -1100,
+                "point": 64.0
+              },
+              {
+                "name": "Under",
+                "price": 560,
+                "point": 29.5
+              },
+              {
+                "name": "Under",
+                "price": 700,
+                "point": 28.0
+              },
+              {
+                "name": "Under",
+                "price": -1300,
+                "point": 65.5
+              },
+              {
+                "name": "Under",
+                "price": -105,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": 470,
+                "point": 31.0
+              },
+              {
+                "name": "Under",
+                "price": 330,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": 225,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": 385,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "price": -575,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": 190,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 160,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -1500,
+                "point": 66.0
+              },
+              {
+                "name": "Under",
+                "price": -1500,
+                "point": 66.5
+              },
+              {
+                "name": "Under",
+                "price": -1800,
+                "point": 67.0
+              },
+              {
+                "name": "Under",
+                "price": -1800,
+                "point": 67.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "williamhill_us",
+        "title": "Caesars",
+        "last_update": "2026-02-08T22:53:11Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:08Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -769,
+                "point": 32.0
+              },
+              {
+                "name": "Over",
+                "price": -714,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "price": -667,
+                "point": 33.0
+              },
+              {
+                "name": "Over",
+                "price": -556,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": -526,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": -435,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": -435,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": -400,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -385,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": -345,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -333,
+                "point": 37.0
+              },
+              {
+                "name": "Over",
+                "price": -286,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -278,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": -270,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -263,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": -244,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -233,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": -204,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": -192,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": -175,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -172,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": -167,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -161,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": -145,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -137,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -127,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -115,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": -109,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": -104,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 104,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": 110,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 119,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": 125,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 131,
+                "point": 49.0
+              },
+              {
+                "name": "Over",
+                "price": 136,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 146,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": 152,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 167,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 189,
+                "point": 52.0
+              },
+              {
+                "name": "Over",
+                "price": 195,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 204,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": 210,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 225,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": 229,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 254,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": 265,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 56.0
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 315,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": 325,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 365,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": 375,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": 400,
+                "point": 32.0
+              },
+              {
+                "name": "Under",
+                "price": 395,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "price": 380,
+                "point": 33.0
+              },
+              {
+                "name": "Under",
+                "price": 325,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": 320,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": 290,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": 285,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": 265,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 260,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": 235,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 225,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": 200,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 199,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": 190,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 184,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": 173,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 165,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": 150,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": 144,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": 131,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 129,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": 125,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": 118,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": 102,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": -105,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -110,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": -118,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -122,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": -128,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -139,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": -149,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -161,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": -167,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -175,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -182,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -196,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": -208,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -233,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": -250,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -270,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": -270,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -294,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": -303,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -323,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": -333,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -370,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": -385,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -417,
+                "point": 56.0
+              },
+              {
+                "name": "Under",
+                "price": -417,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -500,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": -526,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": -667,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -714,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": -769,
+                "point": 59.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": 200,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": -315,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -250,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -530,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": 150,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": 350,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 215,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": 240,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": -107,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": -455,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -315,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": -455,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": -530,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": -177,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": -159,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": -275,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": -136,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -125,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": 195,
+                "point": 52.0
+              },
+              {
+                "name": "Over",
+                "price": 440,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": 123,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": -625,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": 117,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 128,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": -215,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": 285,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": -167,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -118,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -112,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": 390,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": 135,
+                "point": 49.0
+              },
+              {
+                "name": "Over",
+                "price": 220,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": 400,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": -240,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": -590,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": 160,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 310,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 108,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": -148,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": 180,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": -200,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": -182,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": 250,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 340,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": 100,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": -286,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 56.0
+              },
+              {
+                "name": "Over",
+                "price": -385,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -375,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": 230,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 188,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": -195,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": -530,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -295,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": -335,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": -715,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": -117,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": 310,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 225,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": -180,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": 300,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": 340,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": 128,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": 205,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": 100,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -265,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": -715,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": -152,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": 390,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": -143,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -159,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": 163,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": -420,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": 133,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": -106,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": -112,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": -175,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -305,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -230,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": -625,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": 180,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": 380,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": -205,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -455,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -134,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": 117,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -240,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": 155,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": 145,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": -345,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -530,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": -122,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": -435,
+                "point": 56.0
+              },
+              {
+                "name": "Under",
+                "price": 275,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 260,
+                "point": 37.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -1500,
+                "point": 28.5
+              },
+              {
+                "name": "Over",
+                "price": -1200,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "price": 750,
+                "point": 64.0
+              },
+              {
+                "name": "Over",
+                "price": -120,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": 175,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": -800,
+                "point": 32.0
+              },
+              {
+                "name": "Over",
+                "price": -4000,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "price": 500,
+                "point": 60.0
+              },
+              {
+                "name": "Over",
+                "price": 1000,
+                "point": 66.5
+              },
+              {
+                "name": "Over",
+                "price": 1100,
+                "point": 67.0
+              },
+              {
+                "name": "Over",
+                "price": 1400,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "price": 575,
+                "point": 61.5
+              },
+              {
+                "name": "Over",
+                "price": 900,
+                "point": 65.0
+              },
+              {
+                "name": "Over",
+                "price": 200,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 650,
+                "point": 62.5
+              },
+              {
+                "name": "Over",
+                "price": 1200,
+                "point": 68.5
+              },
+              {
+                "name": "Over",
+                "price": 425,
+                "point": 58.0
+              },
+              {
+                "name": "Over",
+                "price": -525,
+                "point": 34.0
+              },
+              {
+                "name": "Over",
+                "price": 1400,
+                "point": 69.0
+              },
+              {
+                "name": "Over",
+                "price": 165,
+                "point": 50.0
+              },
+              {
+                "name": "Over",
+                "price": 650,
+                "point": 62.0
+              },
+              {
+                "name": "Over",
+                "price": 325,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 900,
+                "point": 65.5
+              },
+              {
+                "name": "Over",
+                "price": -1100,
+                "point": 30.0
+              },
+              {
+                "name": "Over",
+                "price": 250,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 145,
+                "point": 49.0
+              },
+              {
+                "name": "Over",
+                "price": 375,
+                "point": 57.0
+              },
+              {
+                "name": "Over",
+                "price": -1400,
+                "point": 29.0
+              },
+              {
+                "name": "Over",
+                "price": -900,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "price": 125,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 700,
+                "point": 63.5
+              },
+              {
+                "name": "Over",
+                "price": 195,
+                "point": 51.0
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": -1600,
+                "point": 27.5
+              },
+              {
+                "name": "Over",
+                "price": 115,
+                "point": 47.0
+              },
+              {
+                "name": "Over",
+                "price": -260,
+                "point": 39.0
+              },
+              {
+                "name": "Over",
+                "price": 130,
+                "point": 48.0
+              },
+              {
+                "name": "Over",
+                "price": 375,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": -115,
+                "point": 45.0
+              },
+              {
+                "name": "Over",
+                "price": -240,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": -200,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": 750,
+                "point": 64.5
+              },
+              {
+                "name": "Over",
+                "price": 1000,
+                "point": 66.0
+              },
+              {
+                "name": "Over",
+                "price": -150,
+                "point": 43.0
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": -475,
+                "point": 35.0
+              },
+              {
+                "name": "Over",
+                "price": 550,
+                "point": 61.0
+              },
+              {
+                "name": "Over",
+                "price": -900,
+                "point": 31.0
+              },
+              {
+                "name": "Over",
+                "price": -5000,
+                "point": 24.0
+              },
+              {
+                "name": "Over",
+                "price": -350,
+                "point": 37.0
+              },
+              {
+                "name": "Over",
+                "price": 325,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 300,
+                "point": 55.0
+              },
+              {
+                "name": "Over",
+                "price": -425,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": 500,
+                "point": 60.5
+              },
+              {
+                "name": "Over",
+                "price": -175,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": 700,
+                "point": 63.0
+              },
+              {
+                "name": "Over",
+                "price": -800,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "price": 105,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": -3000,
+                "point": 25.5
+              },
+              {
+                "name": "Over",
+                "price": 140,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 240,
+                "point": 53.0
+              },
+              {
+                "name": "Over",
+                "price": -225,
+                "point": 40.0
+              },
+              {
+                "name": "Over",
+                "price": 100,
+                "point": 46.0
+              },
+              {
+                "name": "Over",
+                "price": 325,
+                "point": 56.0
+              },
+              {
+                "name": "Over",
+                "price": -650,
+                "point": 33.0
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 54.0
+              },
+              {
+                "name": "Over",
+                "price": -9000,
+                "point": 22.5
+              },
+              {
+                "name": "Over",
+                "price": 450,
+                "point": 59.0
+              },
+              {
+                "name": "Over",
+                "price": -550,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": -425,
+                "point": 36.0
+              },
+              {
+                "name": "Over",
+                "price": 155,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": -2200,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "price": -275,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -700,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "price": 425,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 1100,
+                "point": 67.5
+              },
+              {
+                "name": "Over",
+                "price": -2000,
+                "point": 27.0
+              },
+              {
+                "name": "Over",
+                "price": -3000,
+                "point": 26.0
+              },
+              {
+                "name": "Over",
+                "price": -135,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -125,
+                "point": 44.0
+              },
+              {
+                "name": "Over",
+                "price": -170,
+                "point": 42.0
+              },
+              {
+                "name": "Over",
+                "price": -300,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -4000,
+                "point": 25.0
+              },
+              {
+                "name": "Over",
+                "price": -1600,
+                "point": 28.0
+              },
+              {
+                "name": "Over",
+                "price": -190,
+                "point": 41.0
+              },
+              {
+                "name": "Over",
+                "price": -5000,
+                "point": 23.5
+              },
+              {
+                "name": "Over",
+                "price": -475,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": 225,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": -9000,
+                "point": 23.0
+              },
+              {
+                "name": "Over",
+                "price": -160,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -350,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": 1200,
+                "point": 68.0
+              },
+              {
+                "name": "Over",
+                "price": -300,
+                "point": 38.0
+              },
+              {
+                "name": "Over",
+                "price": 220,
+                "point": 52.0
+              },
+              {
+                "name": "Under",
+                "price": 800,
+                "point": 28.5
+              },
+              {
+                "name": "Under",
+                "price": 650,
+                "point": 29.5
+              },
+              {
+                "name": "Under",
+                "price": -1500,
+                "point": 64.0
+              },
+              {
+                "name": "Under",
+                "price": -105,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -230,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": 475,
+                "point": 32.0
+              },
+              {
+                "name": "Under",
+                "price": 1400,
+                "point": 24.5
+              },
+              {
+                "name": "Under",
+                "price": -850,
+                "point": 60.0
+              },
+              {
+                "name": "Under",
+                "price": -2200,
+                "point": 66.5
+              },
+              {
+                "name": "Under",
+                "price": -2500,
+                "point": 67.0
+              },
+              {
+                "name": "Under",
+                "price": -4000,
+                "point": 69.5
+              },
+              {
+                "name": "Under",
+                "price": -1000,
+                "point": 61.5
+              },
+              {
+                "name": "Under",
+                "price": -1800,
+                "point": 65.0
+              },
+              {
+                "name": "Under",
+                "price": -275,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -1100,
+                "point": 62.5
+              },
+              {
+                "name": "Under",
+                "price": -3000,
+                "point": 68.5
+              },
+              {
+                "name": "Under",
+                "price": -650,
+                "point": 58.0
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 34.0
+              },
+              {
+                "name": "Under",
+                "price": -4000,
+                "point": 69.0
+              },
+              {
+                "name": "Under",
+                "price": -220,
+                "point": 50.0
+              },
+              {
+                "name": "Under",
+                "price": -1100,
+                "point": 62.0
+              },
+              {
+                "name": "Under",
+                "price": -500,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -1800,
+                "point": 65.5
+              },
+              {
+                "name": "Under",
+                "price": 650,
+                "point": 30.0
+              },
+              {
+                "name": "Under",
+                "price": -350,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -190,
+                "point": 49.0
+              },
+              {
+                "name": "Under",
+                "price": -575,
+                "point": 57.0
+              },
+              {
+                "name": "Under",
+                "price": 750,
+                "point": 29.0
+              },
+              {
+                "name": "Under",
+                "price": 525,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "price": -155,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -1300,
+                "point": 63.5
+              },
+              {
+                "name": "Under",
+                "price": -260,
+                "point": 51.0
+              },
+              {
+                "name": "Under",
+                "price": -750,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": 850,
+                "point": 27.5
+              },
+              {
+                "name": "Under",
+                "price": -140,
+                "point": 47.0
+              },
+              {
+                "name": "Under",
+                "price": 190,
+                "point": 39.0
+              },
+              {
+                "name": "Under",
+                "price": -165,
+                "point": 48.0
+              },
+              {
+                "name": "Under",
+                "price": -600,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -105,
+                "point": 45.0
+              },
+              {
+                "name": "Under",
+                "price": 180,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": 155,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": -1500,
+                "point": 64.5
+              },
+              {
+                "name": "Under",
+                "price": -2000,
+                "point": 66.0
+              },
+              {
+                "name": "Under",
+                "price": 120,
+                "point": 43.0
+              },
+              {
+                "name": "Under",
+                "price": -400,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": 325,
+                "point": 35.0
+              },
+              {
+                "name": "Under",
+                "price": -1000,
+                "point": 61.0
+              },
+              {
+                "name": "Under",
+                "price": 525,
+                "point": 31.0
+              },
+              {
+                "name": "Under",
+                "price": 1500,
+                "point": 24.0
+              },
+              {
+                "name": "Under",
+                "price": 240,
+                "point": 37.0
+              },
+              {
+                "name": "Under",
+                "price": -450,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -450,
+                "point": 55.0
+              },
+              {
+                "name": "Under",
+                "price": 300,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": -850,
+                "point": 60.5
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": -1300,
+                "point": 63.0
+              },
+              {
+                "name": "Under",
+                "price": 475,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "price": -125,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": 1200,
+                "point": 25.5
+              },
+              {
+                "name": "Under",
+                "price": -175,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -325,
+                "point": 53.0
+              },
+              {
+                "name": "Under",
+                "price": 170,
+                "point": 40.0
+              },
+              {
+                "name": "Under",
+                "price": -120,
+                "point": 46.0
+              },
+              {
+                "name": "Under",
+                "price": -500,
+                "point": 56.0
+              },
+              {
+                "name": "Under",
+                "price": 425,
+                "point": 33.0
+              },
+              {
+                "name": "Under",
+                "price": -375,
+                "point": 54.0
+              },
+              {
+                "name": "Under",
+                "price": 2000,
+                "point": 22.5
+              },
+              {
+                "name": "Under",
+                "price": -750,
+                "point": 59.0
+              },
+              {
+                "name": "Under",
+                "price": 350,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": 275,
+                "point": 36.0
+              },
+              {
+                "name": "Under",
+                "price": -195,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": 1000,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "price": 200,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 425,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "price": -700,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -2500,
+                "point": 67.5
+              },
+              {
+                "name": "Under",
+                "price": 1000,
+                "point": 27.0
+              },
+              {
+                "name": "Under",
+                "price": 1200,
+                "point": 26.0
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": 105,
+                "point": 44.0
+              },
+              {
+                "name": "Under",
+                "price": 135,
+                "point": 42.0
+              },
+              {
+                "name": "Under",
+                "price": 220,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 1400,
+                "point": 25.0
+              },
+              {
+                "name": "Under",
+                "price": 850,
+                "point": 28.0
+              },
+              {
+                "name": "Under",
+                "price": 150,
+                "point": 41.0
+              },
+              {
+                "name": "Under",
+                "price": 1500,
+                "point": 23.5
+              },
+              {
+                "name": "Under",
+                "price": 325,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": -300,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": 2000,
+                "point": 23.0
+              },
+              {
+                "name": "Under",
+                "price": 130,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": 260,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": -3000,
+                "point": 68.0
+              },
+              {
+                "name": "Under",
+                "price": 210,
+                "point": 38.0
+              },
+              {
+                "name": "Under",
+                "price": -300,
+                "point": 52.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fliff",
+        "title": "Fliff",
+        "last_update": "2026-02-08T22:55:14Z",
+        "markets": [
+          {
+            "key": "alternate_totals",
+            "last_update": "2026-02-08T22:55:11Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": -1075,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "price": -920,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "price": -680,
+                "point": 33.5
+              },
+              {
+                "name": "Over",
+                "price": -580,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "price": -515,
+                "point": 35.5
+              },
+              {
+                "name": "Over",
+                "price": -425,
+                "point": 36.5
+              },
+              {
+                "name": "Over",
+                "price": -340,
+                "point": 37.5
+              },
+              {
+                "name": "Over",
+                "price": -305,
+                "point": 38.5
+              },
+              {
+                "name": "Over",
+                "price": -265,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "price": -225,
+                "point": 40.5
+              },
+              {
+                "name": "Over",
+                "price": -200,
+                "point": 41.5
+              },
+              {
+                "name": "Over",
+                "price": -180,
+                "point": 42.5
+              },
+              {
+                "name": "Over",
+                "price": -155,
+                "point": 43.5
+              },
+              {
+                "name": "Over",
+                "price": -135,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 45.5
+              },
+              {
+                "name": "Over",
+                "price": -110,
+                "point": 46.5
+              },
+              {
+                "name": "Over",
+                "price": 105,
+                "point": 47.5
+              },
+              {
+                "name": "Over",
+                "price": 115,
+                "point": 48.5
+              },
+              {
+                "name": "Over",
+                "price": 130,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "price": 145,
+                "point": 50.5
+              },
+              {
+                "name": "Over",
+                "price": 170,
+                "point": 51.5
+              },
+              {
+                "name": "Over",
+                "price": 185,
+                "point": 52.5
+              },
+              {
+                "name": "Over",
+                "price": 205,
+                "point": 53.5
+              },
+              {
+                "name": "Over",
+                "price": 230,
+                "point": 54.5
+              },
+              {
+                "name": "Over",
+                "price": 255,
+                "point": 55.5
+              },
+              {
+                "name": "Over",
+                "price": 275,
+                "point": 56.5
+              },
+              {
+                "name": "Over",
+                "price": 310,
+                "point": 57.5
+              },
+              {
+                "name": "Over",
+                "price": 350,
+                "point": 58.5
+              },
+              {
+                "name": "Over",
+                "price": 380,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "price": 415,
+                "point": 60.5
+              },
+              {
+                "name": "Under",
+                "price": 425,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "price": 385,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "price": 320,
+                "point": 33.5
+              },
+              {
+                "name": "Under",
+                "price": 290,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "price": 265,
+                "point": 35.5
+              },
+              {
+                "name": "Under",
+                "price": 230,
+                "point": 36.5
+              },
+              {
+                "name": "Under",
+                "price": 195,
+                "point": 37.5
+              },
+              {
+                "name": "Under",
+                "price": 175,
+                "point": 38.5
+              },
+              {
+                "name": "Under",
+                "price": 160,
+                "point": 39.5
+              },
+              {
+                "name": "Under",
+                "price": 140,
+                "point": 40.5
+              },
+              {
+                "name": "Under",
+                "price": 120,
+                "point": 41.5
+              },
+              {
+                "name": "Under",
+                "price": 110,
+                "point": 42.5
+              },
+              {
+                "name": "Under",
+                "price": -105,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "price": -120,
+                "point": 44.5
+              },
+              {
+                "name": "Under",
+                "price": -115,
+                "point": 45.5
+              },
+              {
+                "name": "Under",
+                "price": -145,
+                "point": 46.5
+              },
+              {
+                "name": "Under",
+                "price": -170,
+                "point": 47.5
+              },
+              {
+                "name": "Under",
+                "price": -190,
+                "point": 48.5
+              },
+              {
+                "name": "Under",
+                "price": -210,
+                "point": 49.5
+              },
+              {
+                "name": "Under",
+                "price": -245,
+                "point": 50.5
+              },
+              {
+                "name": "Under",
+                "price": -290,
+                "point": 51.5
+              },
+              {
+                "name": "Under",
+                "price": -320,
+                "point": 52.5
+              },
+              {
+                "name": "Under",
+                "price": -360,
+                "point": 53.5
+              },
+              {
+                "name": "Under",
+                "price": -415,
+                "point": 54.5
+              },
+              {
+                "name": "Under",
+                "price": -490,
+                "point": 55.5
+              },
+              {
+                "name": "Under",
+                "price": -540,
+                "point": 56.5
+              },
+              {
+                "name": "Under",
+                "price": -650,
+                "point": 57.5
+              },
+              {
+                "name": "Under",
+                "price": -780,
+                "point": 58.5
+              },
+              {
+                "name": "Under",
+                "price": -905,
+                "point": 59.5
+              },
+              {
+                "name": "Under",
+                "price": -1040,
+                "point": 60.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

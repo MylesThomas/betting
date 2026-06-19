@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_kicking_points_alternate",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -1340,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -386,
+                "point": 5.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": -154,
+                "point": 7.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": 150,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Jason Myers",
+                "price": 500,
+                "point": 12.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -562,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": -195,
+                "point": 5.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 121,
+                "point": 7.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 256,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Andres Borregales",
+                "price": 860,
+                "point": 12.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

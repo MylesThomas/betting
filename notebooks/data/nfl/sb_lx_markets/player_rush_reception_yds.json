@@ -1,0 +1,648 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -114,
+                "point": 97.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -112,
+                "point": 97.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -112,
+                "point": 77.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -113,
+                "point": 77.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -111,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "description": "Rashid Shaheed",
+                "price": -115,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -110,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "description": "TreVeyon Henderson",
+                "price": -116,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -110,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": -116,
+                "point": 26.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -120,
+                "point": 94.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -110,
+                "point": 94.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -120,
+                "point": 74.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -110,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -110,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "description": "TreVeyon Henderson",
+                "price": -120,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -110,
+                "point": 24.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": -120,
+                "point": 24.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -112,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "description": "TreVeyon Henderson",
+                "price": -108,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -110,
+                "point": 75.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -110,
+                "point": 75.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -110,
+                "point": 95.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -110,
+                "point": 95.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -106,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "description": "Rashid Shaheed",
+                "price": -114,
+                "point": 30.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -114,
+                "point": 73.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -114,
+                "point": 73.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -114,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "description": "Rashid Shaheed",
+                "price": -113,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -112,
+                "point": 24.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": -117,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -112,
+                "point": 96.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -115,
+                "point": 96.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -114,
+                "point": 73.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -114,
+                "point": 32.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -112,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -112,
+                "point": 96.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -110,
+                "point": 74.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -118,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Kayshon Boutte",
+                "price": -118,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "description": "Kayshon Boutte",
+                "price": -110,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -115,
+                "point": 96.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -118,
+                "point": 96.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -115,
+                "point": 31.5
+              },
+              {
+                "name": "Under",
+                "description": "Rashid Shaheed",
+                "price": -118,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -145,
+                "point": 22.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": 110,
+                "point": 22.5
+              },
+              {
+                "name": "Over",
+                "description": "Jaxon Smith-Njigba",
+                "price": -115,
+                "point": 97.5
+              },
+              {
+                "name": "Under",
+                "description": "Jaxon Smith-Njigba",
+                "price": -115,
+                "point": 97.5
+              },
+              {
+                "name": "Over",
+                "description": "Kyle Williams",
+                "price": 155,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Kyle Williams",
+                "price": -210,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Mack Hollins",
+                "price": -115,
+                "point": 25.5
+              },
+              {
+                "name": "Under",
+                "description": "Mack Hollins",
+                "price": -115,
+                "point": 25.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -110,
+                "point": 26.5
+              },
+              {
+                "name": "Under",
+                "description": "TreVeyon Henderson",
+                "price": -118,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "description": "Jake Bobo",
+                "price": 175,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Jake Bobo",
+                "price": -235,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Cooper Kupp",
+                "price": -110,
+                "point": 34.5
+              },
+              {
+                "name": "Under",
+                "description": "Cooper Kupp",
+                "price": -118,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "description": "Stefon Diggs",
+                "price": -118,
+                "point": 43.5
+              },
+              {
+                "name": "Under",
+                "description": "Stefon Diggs",
+                "price": -110,
+                "point": 43.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -113,
+                "point": 96.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -117,
+                "point": 96.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -115,
+                "point": 73.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -115,
+                "point": 73.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -113,
+                "point": 24.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": -118,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -115,
+                "point": 32.5
+              },
+              {
+                "name": "Under",
+                "description": "Rashid Shaheed",
+                "price": -114,
+                "point": 32.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -115,
+                "point": 30.5
+              },
+              {
+                "name": "Under",
+                "description": "Rashid Shaheed",
+                "price": -115,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -115,
+                "point": 76.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -115,
+                "point": 76.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -115,
+                "point": 97.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -115,
+                "point": 97.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -115,
+                "point": 25.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": -115,
+                "point": 25.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -115,
+                "point": 28.5
+              },
+              {
+                "name": "Under",
+                "description": "TreVeyon Henderson",
+                "price": -115,
+                "point": 28.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fliff",
+        "title": "Fliff",
+        "last_update": "2026-02-08T22:55:14Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds",
+            "last_update": "2026-02-08T22:55:11Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -120,
+                "point": 99.5
+              },
+              {
+                "name": "Under",
+                "description": "Kenneth Walker III",
+                "price": -120,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -120,
+                "point": 77.5
+              },
+              {
+                "name": "Under",
+                "description": "Rhamondre Stevenson",
+                "price": -120,
+                "point": 77.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -120,
+                "point": 25.5
+              },
+              {
+                "name": "Under",
+                "description": "George Holani",
+                "price": -120,
+                "point": 25.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

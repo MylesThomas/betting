@@ -1,0 +1,1306 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -2700,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -1580,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -730,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -359,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -235,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -153,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -114,
+                "point": 97.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -101,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 133,
+                "point": 109.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 188,
+                "point": 119.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 264,
+                "point": 129.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 371,
+                "point": 139.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 510,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 680,
+                "point": 159.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 950,
+                "point": 169.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 1260,
+                "point": 179.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 1740,
+                "point": 189.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 2100,
+                "point": 199.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 2700,
+                "point": 209.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 3500,
+                "point": 219.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -1160,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -521,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -269,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -159,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -112,
+                "point": 77.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -103,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 153,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 231,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 340,
+                "point": 109.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 497,
+                "point": 119.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 720,
+                "point": 129.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 980,
+                "point": 139.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 1400,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 1880,
+                "point": 159.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 2500,
+                "point": 169.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 3300,
+                "point": 179.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -163,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -111,
+                "point": 31.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 134,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 215,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 328,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 494,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 700,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 1020,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 1420,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 1940,
+                "point": 109.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 2800,
+                "point": 119.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 3700,
+                "point": 129.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -173,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -116,
+                "point": 30.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 155,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 239,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 378,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 591,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 860,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 1160,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 1620,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 2200,
+                "point": 109.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 3100,
+                "point": 119.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -128,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -110,
+                "point": 26.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 203,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 360,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 597,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 930,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 1480,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 2200,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 3200,
+                "point": 99.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -15000,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -8000,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -5000,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -3000,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -2000,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -800,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -400,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -325,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -250,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -155,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 100,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 250,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 550,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -20000,
+                "point": 19.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -10000,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -5000,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -2250,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -1300,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -800,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -500,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -275,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -155,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -120,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 105,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 165,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 250,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 600,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -225,
+                "point": 19.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -140,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 105,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 150,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 200,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 250,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 325,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 550,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 800,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 900,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 1100,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 1500,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 2000,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -190,
+                "point": 19.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -115,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 125,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 175,
+                "point": 34.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 250,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 325,
+                "point": 44.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 425,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 700,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 1100,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": 1300,
+                "point": 74.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -2000,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -750,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -400,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -240,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -154,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 102,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 152,
+                "point": 109.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 255,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 580,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 1200,
+                "point": 174.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -4500,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -1200,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -490,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -270,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -154,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 106,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 168,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 250,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 360,
+                "point": 109.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 630,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 1280,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -1600,
+                "point": 4.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -650,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -360,
+                "point": 14.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -245,
+                "point": 19.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -166,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -120,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 144,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 225,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 350,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 520,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 750,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 1000,
+                "point": 89.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 1400,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -2200,
+                "point": 4.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -700,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -340,
+                "point": 14.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -215,
+                "point": 19.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": -138,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 106,
+                "point": 29.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 198,
+                "point": 39.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 320,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 550,
+                "point": 59.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 800,
+                "point": 69.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 1100,
+                "point": 79.5
+              },
+              {
+                "name": "Over",
+                "description": "TreVeyon Henderson",
+                "price": 1500,
+                "point": 89.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -335,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 285,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -106,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 290,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 105,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -480,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 205,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -182,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -109,
+                "point": 24.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -335,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 285,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -106,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 290,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 105,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -480,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 205,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -182,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -109,
+                "point": 24.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -350,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -3000,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 230,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 525,
+                "point": 149.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -110,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -135,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 210,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 500,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -600,
+                "point": 49.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "player_rush_reception_yds_alternate",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "George Holani",
+                "price": -109,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -480,
+                "point": 49.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": 285,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 105,
+                "point": 99.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": 290,
+                "point": 124.5
+              },
+              {
+                "name": "Over",
+                "description": "Kenneth Walker III",
+                "price": -335,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": -182,
+                "point": 24.5
+              },
+              {
+                "name": "Over",
+                "description": "Rhamondre Stevenson",
+                "price": -106,
+                "point": 74.5
+              },
+              {
+                "name": "Over",
+                "description": "Rashid Shaheed",
+                "price": 205,
+                "point": 49.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

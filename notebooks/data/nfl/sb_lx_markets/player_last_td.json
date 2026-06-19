@@ -1,0 +1,1287 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 390
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 600
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 850
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1100
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1100
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1600
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1700
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Seattle Seahawks D/ST",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "New England Patriots D/ST",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 3000
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 3500
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 3500
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 4500
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 5500
+              },
+              {
+                "name": "Yes",
+                "description": "No Touchdown",
+                "price": 9000
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 11000
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 11000
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 13000
+              },
+              {
+                "name": "Yes",
+                "description": "Velus Jones Jr.",
+                "price": 15000
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 16000
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 17000
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 19000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 550
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 850
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 1000
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1100
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1600
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 3000
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 6000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 460
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 700
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 850
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1000
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1200
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1200
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 1900
+              },
+              {
+                "name": "Yes",
+                "description": "Seattle Seahawks Defense",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 2700
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2700
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 3300
+              },
+              {
+                "name": "Yes",
+                "description": "New England Patriots Defense",
+                "price": 3500
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 7500
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 8000
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 8000
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Velus Jones Jr.",
+                "price": 10000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1500
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 6000
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 8000
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 650
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 400
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 16000
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 14000
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1150
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1050
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 3300
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1700
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 12000
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 850
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 2400
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1600
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 3500
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 5000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1500
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 6000
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 8000
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 650
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 400
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 16000
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 14000
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1150
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1050
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 3300
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1700
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 12000
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 850
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 2400
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1600
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 3500
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 5000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 400
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 550
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1200
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "Velus Jones Jr.",
+                "price": 12500
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 12500
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 6600
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Seattle Seahawks D/ST",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 900
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1700
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1100
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 12500
+              },
+              {
+                "name": "Yes",
+                "description": "New England Patriots D/ST",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "No Touchdown",
+                "price": 12500
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanatics",
+        "title": "Fanatics",
+        "last_update": "2026-02-08T22:55:15Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:35Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "Seattle Seahawks D/ST",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 450
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 550
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 800
+              },
+              {
+                "name": "Yes",
+                "description": "New England Patriots D/ST",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1000
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 3000
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1500
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 3000
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 8000
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Velus Jones Jr.",
+                "price": 7000
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 4500
+              },
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1500
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2200
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1700
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 10000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1500
+              },
+              {
+                "name": "Yes",
+                "description": "Eric Saubert",
+                "price": 6000
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 4000
+              },
+              {
+                "name": "Yes",
+                "description": "Cam Akers",
+                "price": 8000
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 650
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 5000
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 400
+              },
+              {
+                "name": "Yes",
+                "description": "Brady Russell",
+                "price": 16000
+              },
+              {
+                "name": "Yes",
+                "description": "Dareke Young",
+                "price": 14000
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1800
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1150
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1050
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 3300
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1700
+              },
+              {
+                "name": "Yes",
+                "description": "D'Ernest Johnson",
+                "price": 12000
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 850
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 2400
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1600
+              },
+              {
+                "name": "Yes",
+                "description": "Jack Westover",
+                "price": 10000
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2800
+              },
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 3500
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 5000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "player_last_td",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "Yes",
+                "description": "Kyle Williams",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Rashid Shaheed",
+                "price": 1750
+              },
+              {
+                "name": "Yes",
+                "description": "Drake Maye",
+                "price": 1400
+              },
+              {
+                "name": "Yes",
+                "description": "DeMario Douglas",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Kayshon Boutte",
+                "price": 1500
+              },
+              {
+                "name": "Yes",
+                "description": "Mack Hollins",
+                "price": 1750
+              },
+              {
+                "name": "Yes",
+                "description": "Jake Bobo",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Sam Darnold",
+                "price": 2500
+              },
+              {
+                "name": "Yes",
+                "description": "Jaxon Smith-Njigba",
+                "price": 650
+              },
+              {
+                "name": "Yes",
+                "description": "Austin Hooper",
+                "price": 2250
+              },
+              {
+                "name": "Yes",
+                "description": "Kenneth Walker III",
+                "price": 425
+              },
+              {
+                "name": "Yes",
+                "description": "Stefon Diggs",
+                "price": 1200
+              },
+              {
+                "name": "Yes",
+                "description": "Hunter Henry",
+                "price": 1100
+              },
+              {
+                "name": "Yes",
+                "description": "Cooper Kupp",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "George Holani",
+                "price": 2000
+              },
+              {
+                "name": "Yes",
+                "description": "Elijah Arroyo",
+                "price": 3000
+              },
+              {
+                "name": "Yes",
+                "description": "AJ Barner",
+                "price": 1300
+              },
+              {
+                "name": "Yes",
+                "description": "TreVeyon Henderson",
+                "price": 1750
+              },
+              {
+                "name": "Yes",
+                "description": "Rhamondre Stevenson",
+                "price": 850
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

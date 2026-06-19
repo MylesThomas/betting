@@ -1,0 +1,451 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "betparx",
+        "title": "betPARX",
+        "last_update": "2026-02-08T22:54:58Z",
+        "markets": [
+          {
+            "key": "alternate_team_totals_h1",
+            "last_update": "2026-02-08T22:55:07Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -121,
+                "point": 9.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -103,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -129,
+                "point": 12.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 104,
+                "point": 12.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ballybet",
+        "title": "Bally Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "alternate_team_totals_h1",
+            "last_update": "2026-02-08T22:55:06Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -121,
+                "point": 9.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -103,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -129,
+                "point": 12.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 104,
+                "point": 12.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betmgm",
+        "title": "BetMGM",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "alternate_team_totals_h1",
+            "last_update": "2026-02-08T22:55:28Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -425,
+                "point": 3.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 300,
+                "point": 3.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -425,
+                "point": 4.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 300,
+                "point": 4.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -425,
+                "point": 5.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 300,
+                "point": 5.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -275,
+                "point": 6.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 210,
+                "point": 6.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -150,
+                "point": 7.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 115,
+                "point": 7.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -150,
+                "point": 8.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 115,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -135,
+                "point": 9.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": 105,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": 145,
+                "point": 10.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -190,
+                "point": 10.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": 145,
+                "point": 11.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -190,
+                "point": 11.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": 155,
+                "point": 12.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -200,
+                "point": 12.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": 220,
+                "point": 13.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -295,
+                "point": 13.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": 350,
+                "point": 14.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -525,
+                "point": 14.5
+              },
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": 350,
+                "point": 15.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -525,
+                "point": 15.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -625,
+                "point": 6.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 400,
+                "point": 6.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -325,
+                "point": 7.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 240,
+                "point": 7.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -325,
+                "point": 8.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 240,
+                "point": 8.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -285,
+                "point": 9.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 210,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -145,
+                "point": 10.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 110,
+                "point": 10.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -145,
+                "point": 11.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 110,
+                "point": 11.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -140,
+                "point": 12.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 110,
+                "point": 12.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": 100,
+                "point": 13.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": -130,
+                "point": 13.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": 160,
+                "point": 14.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": -210,
+                "point": 14.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": 160,
+                "point": 15.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": -210,
+                "point": 15.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": 180,
+                "point": 16.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": -235,
+                "point": 16.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": 325,
+                "point": 17.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": -475,
+                "point": 17.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": 333,
+                "point": 18.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": -475,
+                "point": 18.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betrivers",
+        "title": "BetRivers",
+        "last_update": "2026-02-08T22:55:31Z",
+        "markets": [
+          {
+            "key": "alternate_team_totals_h1",
+            "last_update": "2026-02-08T22:55:13Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "New England Patriots",
+                "price": -121,
+                "point": 9.5
+              },
+              {
+                "name": "Under",
+                "description": "New England Patriots",
+                "price": -103,
+                "point": 9.5
+              },
+              {
+                "name": "Over",
+                "description": "Seattle Seahawks",
+                "price": -129,
+                "point": 12.5
+              },
+              {
+                "name": "Under",
+                "description": "Seattle Seahawks",
+                "price": 104,
+                "point": 12.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

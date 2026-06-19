@@ -1,0 +1,1017 @@
+{
+  "timestamp": "2026-02-08T22:55:37Z",
+  "previous_timestamp": "2026-02-08T22:50:37Z",
+  "next_timestamp": "2026-02-08T23:00:37Z",
+  "data": {
+    "id": "b64e3587d7a4cf01a568e7150a2a1aec",
+    "sport_key": "americanfootball_nfl",
+    "sport_title": "NFL",
+    "commence_time": "2026-02-08T23:30:00Z",
+    "home_team": "New England Patriots",
+    "away_team": "Seattle Seahawks",
+    "bookmakers": [
+      {
+        "key": "draftkings",
+        "title": "DraftKings",
+        "last_update": "2026-02-08T22:54:21Z",
+        "markets": [
+          {
+            "key": "player_sacks",
+            "last_update": "2026-02-08T22:55:22Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "DeMarcus Lawrence",
+                "price": -116,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "DeMarcus Lawrence",
+                "price": -109,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Williams",
+                "price": 114,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Leonard Williams",
+                "price": -145,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "K'Lavon Chaisson",
+                "price": 143,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "K'Lavon Chaisson",
+                "price": -183,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Milton Williams",
+                "price": 157,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Milton Williams",
+                "price": -202,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Byron Murphy II",
+                "price": 171,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Byron Murphy II",
+                "price": -220,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Uchenna Nwosu",
+                "price": 219,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Uchenna Nwosu",
+                "price": -285,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Christian Barmore",
+                "price": 231,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Christian Barmore",
+                "price": -302,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Derick Hall",
+                "price": 268,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Derick Hall",
+                "price": -353,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Boye Mafe",
+                "price": 335,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Boye Mafe",
+                "price": -449,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Jarran Reed",
+                "price": 385,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Jarran Reed",
+                "price": -525,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Anfernee Jennings",
+                "price": 396,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Anfernee Jennings",
+                "price": -543,
+                "point": 0.25
+              },
+              {
+                "name": "Over",
+                "description": "Elijah Ponder",
+                "price": 412,
+                "point": 0.25
+              },
+              {
+                "name": "Under",
+                "description": "Elijah Ponder",
+                "price": -567,
+                "point": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "espnbet",
+        "title": "theScore Bet",
+        "last_update": "2026-02-08T22:55:30Z",
+        "markets": [
+          {
+            "key": "player_sacks",
+            "last_update": "2026-02-08T22:54:47Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "K'Lavon Chaisson",
+                "price": 170,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "K'Lavon Chaisson",
+                "price": -240,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Uchenna Nwosu",
+                "price": 270,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Uchenna Nwosu",
+                "price": -420,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Thomas",
+                "price": 700,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Drake Thomas",
+                "price": -1800,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Boye Mafe",
+                "price": 400,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Boye Mafe",
+                "price": -750,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Khyiris Tonga",
+                "price": 1100,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Khyiris Tonga",
+                "price": -4000,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Williams",
+                "price": 130,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Leonard Williams",
+                "price": -170,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Nick Emmanwori",
+                "price": 600,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Nick Emmanwori",
+                "price": -1600,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Milton Williams",
+                "price": 190,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Milton Williams",
+                "price": -260,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Derick Hall",
+                "price": 290,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Derick Hall",
+                "price": -475,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Christian Barmore",
+                "price": 270,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Christian Barmore",
+                "price": -420,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Byron Murphy II",
+                "price": 210,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Byron Murphy II",
+                "price": -300,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Robert Spillane",
+                "price": 1000,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Robert Spillane",
+                "price": -3500,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Jarran Reed",
+                "price": 500,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Jarran Reed",
+                "price": -1200,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Christian Elliss",
+                "price": 500,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Christian Elliss",
+                "price": -1200,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "DeMarcus Lawrence",
+                "price": 105,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "DeMarcus Lawrence",
+                "price": -135,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fanduel",
+        "title": "FanDuel",
+        "last_update": "2026-02-08T22:55:32Z",
+        "markets": [
+          {
+            "key": "player_sacks",
+            "last_update": "2026-02-08T22:55:51Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "DeMarcus Lawrence",
+                "price": 100,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Williams",
+                "price": 112,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "K'Lavon Chaisson",
+                "price": 144,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Byron Murphy II",
+                "price": 172,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Milton Williams",
+                "price": 188,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Uchenna Nwosu",
+                "price": 225,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Harold Landry III",
+                "price": 265,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Christian Barmore",
+                "price": 280,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Derick Hall",
+                "price": 280,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Boye Mafe",
+                "price": 320,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Elijah Ponder",
+                "price": 390,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Anfernee Jennings",
+                "price": 390,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Jarran Reed",
+                "price": 390,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Nick Emmanwori",
+                "price": 640,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Robert Spillane",
+                "price": 700,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Khyiris Tonga",
+                "price": 920,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betonlineag",
+        "title": "BetOnline.ag",
+        "last_update": "2026-02-08T22:54:57Z",
+        "markets": [
+          {
+            "key": "player_sacks",
+            "last_update": "2026-02-08T22:54:48Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Christian Barmore",
+                "price": 225,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Christian Barmore",
+                "price": -312,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Uchenna Nwosu",
+                "price": 190,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Uchenna Nwosu",
+                "price": -256,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Anfernee Jennings",
+                "price": 400,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Anfernee Jennings",
+                "price": -625,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Williams",
+                "price": 100,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Leonard Williams",
+                "price": -130,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Byron Murphy II",
+                "price": 160,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Byron Murphy II",
+                "price": -213,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Milton Williams",
+                "price": 160,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Milton Williams",
+                "price": -213,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "DeMarcus Lawrence",
+                "price": -114,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "DeMarcus Lawrence",
+                "price": -114,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "K'Lavon Chaisson",
+                "price": 140,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "K'Lavon Chaisson",
+                "price": -185,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Boye Mafe",
+                "price": 300,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Boye Mafe",
+                "price": -435,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Harold Landry III",
+                "price": 350,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Harold Landry III",
+                "price": -526,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Jarran Reed",
+                "price": 350,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Jarran Reed",
+                "price": -526,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Derick Hall",
+                "price": 225,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Derick Hall",
+                "price": -312,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Elijah Ponder",
+                "price": 400,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Elijah Ponder",
+                "price": -625,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "hardrockbet",
+        "title": "Hard Rock Bet",
+        "last_update": "2026-02-08T22:55:16Z",
+        "markets": [
+          {
+            "key": "player_sacks",
+            "last_update": "2026-02-08T22:54:54Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "Christian Barmore",
+                "price": 260,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Christian Barmore",
+                "price": -375,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Ernest Jones",
+                "price": 1000,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Ernest Jones",
+                "price": -2000,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Williams",
+                "price": 120,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Leonard Williams",
+                "price": -160,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Khyiris Tonga",
+                "price": 1000,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Khyiris Tonga",
+                "price": -2000,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Byron Murphy II",
+                "price": 175,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Byron Murphy II",
+                "price": -250,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "K'Lavon Chaisson",
+                "price": 160,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "K'Lavon Chaisson",
+                "price": -220,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Harold Landry III",
+                "price": 300,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Harold Landry III",
+                "price": -450,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Jarran Reed",
+                "price": 475,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Jarran Reed",
+                "price": -750,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Robert Spillane",
+                "price": 1000,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Robert Spillane",
+                "price": -2200,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Milton Williams",
+                "price": 165,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Milton Williams",
+                "price": -230,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Christian Elliss",
+                "price": 550,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Christian Elliss",
+                "price": -900,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Elijah Ponder",
+                "price": 450,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Elijah Ponder",
+                "price": -700,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "DeMarcus Lawrence",
+                "price": -105,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "DeMarcus Lawrence",
+                "price": -125,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Uchenna Nwosu",
+                "price": 220,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Uchenna Nwosu",
+                "price": -325,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Derick Hall",
+                "price": 275,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Derick Hall",
+                "price": -400,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Taylor III",
+                "price": 1200,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Leonard Taylor III",
+                "price": -3000,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Boye Mafe",
+                "price": 400,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Boye Mafe",
+                "price": -600,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Drake Thomas",
+                "price": 750,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Drake Thomas",
+                "price": -1300,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Anfernee Jennings",
+                "price": 425,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Anfernee Jennings",
+                "price": -700,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "fliff",
+        "title": "Fliff",
+        "last_update": "2026-02-08T22:55:14Z",
+        "markets": [
+          {
+            "key": "player_sacks",
+            "last_update": "2026-02-08T22:55:11Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "description": "DeMarcus Lawrence",
+                "price": -120,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "DeMarcus Lawrence",
+                "price": -120,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Leonard Williams",
+                "price": 115,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Leonard Williams",
+                "price": -165,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "K'Lavon Chaisson",
+                "price": 140,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "K'Lavon Chaisson",
+                "price": -205,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Milton Williams",
+                "price": 160,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Milton Williams",
+                "price": -240,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Byron Murphy II",
+                "price": 200,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Byron Murphy II",
+                "price": -300,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Uchenna Nwosu",
+                "price": 235,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Uchenna Nwosu",
+                "price": -375,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Christian Barmore",
+                "price": 240,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Christian Barmore",
+                "price": -380,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Derick Hall",
+                "price": 270,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Derick Hall",
+                "price": -440,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Boye Mafe",
+                "price": 360,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Boye Mafe",
+                "price": -645,
+                "point": 0.5
+              },
+              {
+                "name": "Over",
+                "description": "Jarran Reed",
+                "price": 395,
+                "point": 0.5
+              },
+              {
+                "name": "Under",
+                "description": "Jarran Reed",
+                "price": -750,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
