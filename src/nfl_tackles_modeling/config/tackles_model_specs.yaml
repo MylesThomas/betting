@@ -1,0 +1,142 @@
+# NFL Tackles — model spec sweep config
+#
+# baseline: which spec+model row is the reference (delta_mae_vs_baseline is relative to this)
+# models:   which model types to run for every spec (per-spec override also supported)
+# specs:    list of named feature combos to evaluate
+
+baseline:
+  spec: market
+  model: xgb2
+
+models:
+  - ols
+  - ridge
+  - xgb2
+
+cv_splits: 5
+
+position_filter:
+  drop: [WR, FB]   # null positions also dropped
+
+# ── Specs ─────────────────────────────────────────────────────────────────────
+
+specs:
+
+  # ── Market baseline ──────────────────────────────────────────────────────────
+  - name: market
+    features: [consensus_point]
+
+  # ── Tackle rate: single-window sweep (find best horizon) ─────────────────────
+  - name: tackle_rate_L3
+    features: [tackle_rate_L3]
+
+  - name: tackle_rate_L5
+    features: [tackle_rate_L5]
+
+  - name: tackle_rate_L8
+    features: [tackle_rate_L8]
+
+  - name: tackle_rate_L16
+    features: [tackle_rate_L16]
+
+  - name: tackle_rate_Lcareer
+    features: [tackle_rate_Lcareer]
+
+  # ── Beat-rate: single-window sweep ───────────────────────────────────────────
+  # over_rate_L* = rolling fraction of games this player beat their prop line
+  - name: over_rate_L3
+    features: [over_rate_L3]
+
+  - name: over_rate_L5
+    features: [over_rate_L5]
+
+  - name: over_rate_L8
+    features: [over_rate_L8]
+
+  - name: over_rate_L16
+    features: [over_rate_L16]
+
+  - name: over_rate_Lcareer
+    features: [over_rate_Lcareer]
+
+  # ── Market + best single window (tackle rate) ─────────────────────────────────
+  - name: market_L3
+    features: [consensus_point, tackle_rate_L3]
+
+  - name: market_L5
+    features: [consensus_point, tackle_rate_L5]
+
+  - name: market_L8
+    features: [consensus_point, tackle_rate_L8]
+
+  - name: market_L16
+    features: [consensus_point, tackle_rate_L16]
+
+  - name: market_Lcareer
+    features: [consensus_point, tackle_rate_Lcareer]
+
+  # ── Market + beat-rate ────────────────────────────────────────────────────────
+  - name: market_overrate_L5
+    features: [consensus_point, over_rate_L5]
+
+  - name: market_overrate_L8
+    features: [consensus_point, over_rate_L8]
+
+  - name: market_overrate_Lcareer
+    features: [consensus_point, over_rate_Lcareer]
+
+  # ── Market + game context: L8 variants ───────────────────────────────────────
+  - name: market_L8_game_ctx
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L8]
+
+  - name: market_L8_game_ctx_pos
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L8, pos_LB, pos_CB, pos_S, pos_DL]
+
+  - name: market_L8_game_ctx_pos_overprob
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L8, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob]
+
+  # ── Market + game context: L16 variants (best single window) ─────────────────
+  - name: market_L16_game_ctx
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L16]
+
+  - name: market_L16_game_ctx_pos
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L16, pos_LB, pos_CB, pos_S, pos_DL]
+
+  - name: market_L16_game_ctx_pos_overprob
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L16, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob]
+
+  - name: market_L16_game_ctx_pos_overprob_overrate_career
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L16, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob, over_rate_Lcareer]
+
+  # ── L5+L16 combo: momentum + stable baseline ──────────────────────────────────
+  - name: market_L5_L16_game_ctx_pos
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L5, tackle_rate_L16, pos_LB, pos_CB, pos_S, pos_DL]
+
+  - name: market_L5_L16_game_ctx_pos_overprob
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L5, tackle_rate_L16, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob]
+
+  - name: market_L5_L16_game_ctx_pos_overprob_overrate_career
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L5, tackle_rate_L16, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob, over_rate_Lcareer]
+
+  # ── Add beat-rate to best combos ──────────────────────────────────────────────
+  - name: market_L8_game_ctx_pos_overprob_overrate_L5
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L8, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob, over_rate_L5]
+
+  - name: market_L8_game_ctx_pos_overprob_overrate_career
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L8, pos_LB, pos_CB, pos_S, pos_DL, consensus_over_prob, over_rate_Lcareer]
+
+  # ── Multi-window combos (short-term momentum + long-term baseline) ────────────
+  - name: market_L5_L16
+    features: [consensus_point, tackle_rate_L5, tackle_rate_L16]
+
+  - name: market_L5_Lcareer
+    features: [consensus_point, tackle_rate_L5, tackle_rate_Lcareer]
+
+  - name: market_L8_Lcareer
+    features: [consensus_point, tackle_rate_L8, tackle_rate_Lcareer]
+
+  # ── Position-stratified (OLS only — small n per stratum) ─────────────────────
+  - name: market_L8_game_ctx_by_pos
+    features: [consensus_point, game_total, proj_opp_score, tackle_rate_L8]
+    models: [ols]
+    stratify_by: position_group

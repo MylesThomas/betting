@@ -1,0 +1,28 @@
+odds_name_raw,spine_name_raw,name_norm,source,n_games,fuzzy_score
+Anthony Walker Jr.,Anthony Walker,anthony walker,auto_norm,5,100.0
+Byron Murphy II,Byron Murphy,byron murphy,auto_norm,10,100.0
+Byron Murphy Jr.,Byron Murphy,byron murphy,auto_norm,30,100.0
+DJ Turner,DJ Turner II,dj turner,auto_norm,1,100.0
+Derwin James Jr.,Derwin James,derwin james,auto_norm,32,100.0
+Dexter Lawrence II,Dexter Lawrence,dexter lawrence,auto_norm,12,100.0
+Jarvis Brownlee,Jarvis Brownlee Jr.,jarvis brownlee,auto_norm,13,100.0
+Jermaine Johnson,Jermaine Johnson II,jermaine johnson,auto_norm,1,100.0
+Jessie Bates III,Jessie Bates,jessie bates,auto_norm,32,100.0
+John Johnson III,John Johnson,john johnson,auto_norm,1,100.0
+Kenneth Murray Jr.,"Kenneth Murray, Jr.",kenneth murray,auto_norm,24,100.0
+Lonnie Johnson Jr.,Lonnie Johnson,lonnie johnson,auto_norm,2,100.0
+Mack Wilson Sr.,Mack Wilson,mack wilson,auto_norm,16,100.0
+Martin Emerson Jr.,Martin Emerson,martin emerson,auto_norm,11,100.0
+Ronnie Harrison Jr.,Ronnie Harrison,ronnie harrison,auto_norm,1,100.0
+Ronnie Hickman,Ronnie Hickman Jr.,ronnie hickman,auto_norm,14,100.0
+Willie Gay,Willie Gay Jr.,willie gay,auto_norm,1,100.0
+Foyesade Oluokun,Foye Oluokun,foye oluokun,fuzzy_accepted,29,85.71
+Cam Bynum,Camryn Bynum,camryn bynum,fuzzy_accepted,13,85.71
+Cor'Dale Flott,Cordale Flott,cordale flott,fuzzy_accepted,13,96.3
+Kamren Curl,Kam Curl,kam curl,manual,31,84.21
+Dax Hill,Daxton Hill,daxton hill,manual,14,84.21
+Justin Madubuike,Nnamdi Madubuike,nnamdi madubuike,manual,14,56.25
+BJ Hill,B.J. Hill,b j hill,manual,4,80.0
+JuJu Brents,Julius Brents,julius brents,manual,1,83.33
+Michael Jackson,Mike Jackson,mike jackson,manual,24,81.48
+Josh Allen,Josh Hines-Allen,josh hines allen,manual,17,76.92
