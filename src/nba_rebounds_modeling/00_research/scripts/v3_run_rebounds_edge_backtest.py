@@ -8,12 +8,15 @@ Context:
 - Trains OLS on all seasons except --test-season; sweeps shrinkage × sigma × min_edge.
 - Each sweep row includes mean vigged implied prob and mean American odds on bets placed.
 - side_policy: both (pick stronger edge), over_only, under_only.
+- --dedupe: when True, at the player/game/line level take only 1 bet — the best-shopped
+  line (highest American odds) among all books that qualify for that group.
 
 Usage:
     python src/nba_rebounds_modeling/00_research/scripts/v3_run_rebounds_edge_backtest.py \\
         --feat ~/Downloads/tmp/rebounds_model_features_v2.parquet \\
         --v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet \\
-        --test-season 2025-26
+        --test-season 2025-26 \\
+        --dedupe
 """
 
 from __future__ import annotations
@@ -86,7 +89,57 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--test-season", type=str, default="")
     p.add_argument("--out-png", type=str, default="")
+    p.add_argument(
+        "--dedupe",
+        action="store_true",
+        default=False,
+        help="At the player/game/line level, place only 1 bet using the best-shopped odds.",
+    )
     return p.parse_args()
+
+
+def select_bet_rows(
+    n: int,
+    dedup_keys: list[tuple],
+    edge_o: np.ndarray,
+    edge_u: np.ndarray,
+    min_edge: float,
+    side_policy: str,
+    over_odds: np.ndarray,
+    under_odds: np.ndarray,
+    dedupe: bool,
+) -> list[tuple[int, str]]:
+    """Return (row_idx, side) pairs to bet, applying dedup when requested.
+
+    Dedup: for each (player, game, line) group, keep only the qualifying row
+    with the best American odds for the chosen side (highest value = least vig).
+    When rows in a group disagree on side, the row with highest edge wins.
+    """
+    if not dedupe:
+        return [
+            (i, s)
+            for i in range(n)
+            if (s := pick_side(i, edge_o, edge_u, min_edge, side_policy)) is not None
+        ]
+
+    # dedup_key → (row_idx, side, best_edge, american_odds)
+    group_best: dict[tuple, tuple[int, str, float, float]] = {}
+    for i in range(n):
+        side = pick_side(i, edge_o, edge_u, min_edge, side_policy)
+        if side is None:
+            continue
+        dk = dedup_keys[i]
+        odds_am = float(over_odds[i] if side == "over" else under_odds[i])
+        best_edge = float(edge_o[i] if side == "over" else edge_u[i])
+        if dk not in group_best:
+            group_best[dk] = (i, side, best_edge, odds_am)
+        else:
+            _, _, prev_edge, prev_odds = group_best[dk]
+            # prefer same side + better odds; if edge is higher on a different side, that wins
+            if best_edge > prev_edge or (best_edge == prev_edge and odds_am > prev_odds):
+                group_best[dk] = (i, side, best_edge, odds_am)
+
+    return [(idx, side) for idx, side, _, _ in group_best.values()]
 
 
 def main() -> None:
@@ -127,8 +180,16 @@ def main() -> None:
     base = v3_test.merge(pred, on=GROUP_KEYS, how="inner")
     print(
         f"test_season={test_season}  v3_rows={len(v3_test):,}  "
-        f"after_merge={len(base):,}  train_n={len(train_m):,}"
+        f"after_merge={len(base):,}  train_n={len(train_m):,}  "
+        f"dedupe={args.dedupe}"
     )
+
+    # Precompute dedup keys (player/game/line) once — reused across every sweep combo.
+    dedup_keys = list(zip(
+        base["player_normalized"].tolist(),
+        base["game_id"].tolist(),
+        base["line"].tolist(),
+    ))
 
     rows_out: list[dict] = []
     best_by_policy: dict[str, tuple[float, int]] = {
@@ -168,10 +229,18 @@ def main() -> None:
                     sum_imp_vigged = 0.0
                     sum_american = 0.0
 
-                    for i in range(len(base)):
-                        side = pick_side(i, edge_o, edge_u, min_edge, side_policy)
-                        if side is None:
-                            continue
+                    bets = select_bet_rows(
+                        len(base),
+                        dedup_keys,
+                        edge_o,
+                        edge_u,
+                        min_edge,
+                        side_policy,
+                        over_odds,
+                        under_odds,
+                        args.dedupe,
+                    )
+                    for i, side in bets:
                         if reb[i] == line[i]:
                             n_push += 1
                             continue
@@ -201,6 +270,7 @@ def main() -> None:
                         "sigma_window":  sig_w,
                         "shrinkage":     shrink,
                         "min_edge":      min_edge,
+                        "dedupe":        args.dedupe,
                         "n_bets":        n_bets,
                         "n_push":        n_push,
                         "n_win":         n_win,

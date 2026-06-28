@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REB∨ — Rebounds Under Strategy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #06080f;
+  --surface:     #0b0f1a;
+  --surface-2:   #111827;
+  --surface-3:   #1c2535;
+  --border:      rgba(255,255,255,0.06);
+  --border-hi:   rgba(255,255,255,0.13);
+  --amber:       #f4a500;
+  --amber-10:    rgba(244,165,0,0.10);
+  --amber-20:    rgba(244,165,0,0.22);
+  --teal:        #00d4aa;
+  --teal-10:     rgba(0,212,170,0.10);
+  --red:         #ff4560;
+  --red-10:      rgba(255,69,96,0.10);
+  --blue:        #4e9cf5;
+  --blue-10:     rgba(78,156,245,0.10);
+  --text-1:      #e8ecf4;
+  --text-2:      #8492a6;
+  --text-3:      #3a4d66;
+  --f-display:   'Chakra Petch', sans-serif;
+  --f-mono:      'JetBrains Mono', monospace;
+  --f-ui:        'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--f-ui);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Background layers ─────────────────────────────────── */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.bg-grain {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+.bg-glow {
+  position: fixed; z-index: 0; pointer-events: none;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,165,0,0.055) 0%, transparent 65%);
+  top: -250px; left: -180px;
+  animation: glowDrift 14s ease-in-out infinite alternate;
+}
+
+.bg-glow-2 {
+  position: fixed; z-index: 0; pointer-events: none;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,212,170,0.04) 0%, transparent 65%);
+  bottom: -150px; right: -100px;
+  animation: glowDrift 18s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes glowDrift {
+  from { transform: translate(0,0); }
+  to   { transform: translate(80px, 60px); }
+}
+
+/* ── Navbar ────────────────────────────────────────────── */
+.navbar {
+  position: sticky; top: 0; z-index: 200;
+  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 36px;
+  background: rgba(6,8,15,0.82);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-left { display: flex; align-items: center; gap: 14px; }
+
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 0 rgba(0,212,170,0.6);
+  animation: livePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,212,170,0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(0,212,170,0); }
+}
+
+.live-tag {
+  font-family: var(--f-mono); font-size: 9px;
+  letter-spacing: 0.18em; color: var(--teal); font-weight: 500;
+}
+
+.nav-divider { width: 1px; height: 18px; background: var(--border); }
+
+.nav-brand {
+  font-family: var(--f-display); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--text-1);
+}
+.nav-brand em { font-style: normal; color: var(--amber); }
+
+.nav-right {
+  display: flex; align-items: center; gap: 20px;
+  font-family: var(--f-mono); font-size: 10px; color: var(--text-2);
+  letter-spacing: 0.06em;
+}
+.nav-clock { color: var(--text-1); font-weight: 500; }
+.nav-season { color: var(--amber); }
+
+/* ── Main container ────────────────────────────────────── */
+.container {
+  position: relative; z-index: 10;
+  max-width: 1300px; margin: 0 auto;
+  padding: 52px 36px 100px;
+}
+
+/* ── Entrance animations ───────────────────────────────── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: fadeUp 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero {
+  margin-bottom: 56px;
+  animation-delay: 0.05s;
+}
+
+.hero-eyebrow {
+  font-family: var(--f-mono); font-size: 10px;
+  letter-spacing: 0.22em; color: var(--amber);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-eyebrow::before {
+  content: ''; display: block; width: 28px; height: 1px;
+  background: var(--amber);
+}
+
+.hero-title {
+  font-family: var(--f-display);
+  font-size: clamp(56px, 8vw, 100px);
+  font-weight: 700; line-height: 0.88;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+}
+
+.hero-under {
+  color: var(--amber);
+  display: inline-block;
+  filter: drop-shadow(0 0 12px rgba(244,165,0,0.5));
+  animation: underGlow 3.5s ease-in-out infinite;
+}
+
+@keyframes underGlow {
+  0%,100% { filter: drop-shadow(0 0 8px rgba(244,165,0,0.45)); }
+  50%      { filter: drop-shadow(0 0 28px rgba(244,165,0,0.85)); }
+}
+
+.hero-meta {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  font-family: var(--f-mono); font-size: 11px; color: var(--text-2);
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 4px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  letter-spacing: 0.05em;
+}
+.hero-tag .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-3); }
+
+/* ── Vitals strip ──────────────────────────────────────── */
+.vitals {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0; border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 48px; animation-delay: 0.18s;
+}
+
+.vital {
+  background: var(--surface); padding: 30px 32px;
+  border-right: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  transition: background 0.2s;
+}
+.vital:last-child { border-right: none; }
+.vital:hover { background: var(--surface-2); }
+
+.vital::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--amber) 50%, transparent 100%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.vital:hover::after { opacity: 1; }
+
+.vital-label {
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--text-2); margin-bottom: 14px;
+}
+
+.vital-value {
+  font-family: var(--f-display); font-size: 46px; font-weight: 700;
+  line-height: 1; letter-spacing: -0.025em; margin-bottom: 6px;
+}
+.vital-value.green { color: var(--teal); text-shadow: 0 0 32px rgba(0,212,170,0.28); }
+.vital-value.amber { color: var(--amber); text-shadow: 0 0 32px rgba(244,165,0,0.28); }
+.vital-value.white { color: var(--text-1); }
+
+.vital-sub { font-family: var(--f-mono); font-size: 10px; color: var(--text-3); }
+
+/* ── Section header ────────────────────────────────────── */
+.sec-hd {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 20px;
+}
+.sec-title {
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--text-2); white-space: nowrap;
+  font-weight: 500;
+}
+.sec-line { flex: 1; height: 1px; background: var(--border); }
+.sec-tag {
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em;
+  color: var(--text-3); white-space: nowrap;
+}
+
+/* ── Bucket cards ──────────────────────────────────────── */
+.buckets {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; margin-bottom: 40px; animation-delay: 0.32s;
+}
+
+.bucket {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  cursor: default;
+}
+.bucket:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-hi);
+}
+
+.bucket-both {
+  background: linear-gradient(145deg, rgba(244,165,0,0.06), var(--surface));
+  border-color: rgba(244,165,0,0.18);
+}
+.bucket-both:hover { border-color: rgba(244,165,0,0.36); }
+
+.b-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.16em;
+  font-weight: 700; padding: 3px 9px; border-radius: 4px; margin-bottom: 22px;
+}
+.b-tag-both { background: var(--amber-10); color: var(--amber); border: 1px solid var(--amber-20); }
+.b-tag-ols  { background: var(--blue-10);  color: var(--blue);  border: 1px solid rgba(78,156,245,0.22); }
+.b-tag-xgb  { background: var(--teal-10);  color: var(--teal);  border: 1px solid rgba(0,212,170,0.22); }
+
+.b-roi {
+  font-family: var(--f-display); font-size: 40px; font-weight: 700;
+  line-height: 1; margin-bottom: 4px; letter-spacing: -0.02em;
+}
+.b-roi-both { color: var(--amber); }
+.b-roi-ols  { color: var(--blue); }
+.b-roi-xgb  { color: var(--teal); }
+
+.b-roi-label { font-family: var(--f-mono); font-size: 10px; color: var(--text-3); margin-bottom: 22px; }
+
+.b-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.b-stat-label {
+  font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 4px;
+}
+.b-stat-val { font-family: var(--f-mono); font-size: 13px; color: var(--text-1); font-weight: 500; }
+
+/* ── Cards ─────────────────────────────────────────────── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 26px;
+}
+
+/* ── Charts row ────────────────────────────────────────── */
+.charts-row {
+  display: grid; grid-template-columns: 1fr 360px;
+  gap: 14px; margin-bottom: 40px; animation-delay: 0.46s;
+}
+
+.chart-wrap { position: relative; height: 210px; margin-top: 18px; }
+#roiChart { display: block; width: 100%; height: 100%; }
+
+/* ── Calibration bars ──────────────────────────────────── */
+.cal-list { margin-top: 18px; display: flex; flex-direction: column; gap: 13px; }
+
+.cal-row { display: flex; align-items: center; gap: 10px; }
+
+.cal-label {
+  font-family: var(--f-mono); font-size: 9px; color: var(--text-2);
+  width: 54px; flex-shrink: 0; letter-spacing: 0.04em;
+}
+
+.cal-track {
+  flex: 1; height: 7px; background: var(--surface-3);
+  border-radius: 4px; position: relative; overflow: visible;
+}
+
+.cal-fill {
+  height: 100%; border-radius: 4px;
+  width: 0%; transition: width 1.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.cal-expected {
+  position: absolute; top: -5px; width: 2px; height: 17px;
+  background: var(--amber); border-radius: 1px; opacity: 0.65;
+}
+
+.cal-pct {
+  font-family: var(--f-mono); font-size: 11px; color: var(--text-1);
+  width: 32px; text-align: right; flex-shrink: 0; font-weight: 500;
+}
+
+.cal-legend {
+  margin-top: 18px; display: flex; gap: 20px;
+  font-family: var(--f-mono); font-size: 9px; color: var(--text-3);
+  letter-spacing: 0.08em;
+}
+.cal-legend .amber { color: var(--amber); }
+
+/* ── Plays table ───────────────────────────────────────── */
+.plays-section { animation-delay: 0.60s; }
+
+.plays-table { width: 100%; border-collapse: collapse; }
+
+.plays-table thead tr {
+  border-bottom: 1px solid var(--border);
+}
+.plays-table th {
+  font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-3); font-weight: 400;
+  padding: 0 14px 14px; text-align: left;
+}
+.plays-table th:first-child { padding-left: 26px; }
+
+.plays-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.14s;
+}
+.plays-table tbody tr:last-child { border-bottom: none; }
+.plays-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+.plays-table td {
+  padding: 16px 14px; vertical-align: middle;
+}
+.plays-table td:first-child { padding-left: 26px; }
+
+.p-name { font-family: var(--f-ui); font-size: 13px; font-weight: 600; color: var(--text-1); display: block; margin-bottom: 2px; }
+.p-match { font-family: var(--f-mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.08em; }
+
+.p-prop { font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: var(--text-1); white-space: nowrap; }
+.p-prop .arrow { color: var(--amber); margin-right: 3px; font-size: 13px; }
+
+.prob-wrap { display: flex; align-items: center; gap: 8px; }
+.prob-track { width: 72px; height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.prob-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--teal), rgba(0,212,170,0.55)); width: 0%; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+.prob-val { font-family: var(--f-mono); font-size: 12px; color: var(--text-1); font-weight: 500; }
+
+.edge { font-family: var(--f-mono); font-size: 12px; font-weight: 600; }
+.edge-hi  { color: var(--teal); }
+.edge-mid { color: var(--amber); }
+.edge-lo  { color: var(--text-2); }
+
+.pill {
+  display: inline-flex; align-items: center;
+  font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.14em; font-weight: 700;
+  padding: 3px 8px; border-radius: 3px;
+}
+.pill-both { background: var(--amber-10); color: var(--amber); border: 1px solid rgba(244,165,0,0.2); }
+.pill-ols  { background: var(--blue-10);  color: var(--blue);  border: 1px solid rgba(78,156,245,0.2); }
+.pill-xgb  { background: var(--teal-10);  color: var(--teal);  border: 1px solid rgba(0,212,170,0.2); }
+
+.signal { display: flex; gap: 3px; align-items: flex-end; height: 20px; }
+
+/* ── Footer ────────────────────────────────────────────── */
+.footer {
+  margin-top: 72px; padding-top: 22px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--f-mono); font-size: 9px;
+  color: var(--text-3); letter-spacing: 0.1em;
+  animation-delay: 0.72s;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .charts-row { grid-template-columns: 1fr; }
+  .buckets { grid-template-columns: 1fr; }
+  .vitals  { grid-template-columns: 1fr; }
+  .vital   { border-right: none; border-bottom: 1px solid var(--border); }
+  .vital:last-child { border-bottom: none; }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 32px 20px 80px; }
+  .navbar { padding: 0 20px; }
+  .hero-title { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-grain"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow-2"></div>
+
+<!-- ── Navbar ──────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-left">
+    <div class="live-dot"></div>
+    <span class="live-tag">LIVE</span>
+    <div class="nav-divider"></div>
+    <span class="nav-brand">REB<em>∨</em> STRATEGY</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-season">NBA 2025–26</span>
+    <span>·</span>
+    <span>MODEL v2.1</span>
+    <span>·</span>
+    <span class="nav-clock" id="clock">--:--:-- --</span>
+  </div>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────────── -->
+<main class="container">
+
+  <!-- Hero -->
+  <header class="hero fade-up">
+    <p class="hero-eyebrow">STRATEGY DASHBOARD</p>
+    <h1 class="hero-title">
+      REBOUNDS<br>
+      <span class="hero-under">∨</span> UNDER
+    </h1>
+    <div class="hero-meta">
+      <span class="hero-tag"><span class="dot"></span>XGBoost + OLS Ensemble</span>
+      <span class="hero-tag"><span class="dot"></span>Min Edge 5%</span>
+      <span class="hero-tag"><span class="dot"></span>Under-Only</span>
+      <span class="hero-tag"><span class="dot"></span>Daily Retrain</span>
+      <span class="hero-tag"><span class="dot"></span>sigma_floor 0.25</span>
+    </div>
+  </header>
+
+  <!-- Vitals -->
+  <div class="vitals fade-up">
+    <div class="vital">
+      <p class="vital-label">All-Time ROI</p>
+      <p class="vital-value green" data-target="5.8" data-prefix="+" data-suffix="%">+0.0%</p>
+      <p class="vital-sub">per settled bet</p>
+    </div>
+    <div class="vital">
+      <p class="vital-label">Hit Rate</p>
+      <p class="vital-value amber" data-target="54.7" data-suffix="%">0.0%</p>
+      <p class="vital-sub">390 settled bets</p>
+    </div>
+    <div class="vital">
+      <p class="vital-label">Total PnL</p>
+      <p class="vital-value green" data-target="31.7" data-prefix="+" data-suffix="u">+0.0u</p>
+      <p class="vital-sub">since 2025-01-06</p>
+    </div>
+  </div>
+
+  <!-- Buckets -->
+  <section class="fade-up" style="animation-delay:0.32s">
+    <div class="sec-hd">
+      <span class="sec-title">Bucket Performance</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">OLS · XGB · CONSENSUS</span>
+    </div>
+    <div class="buckets" style="opacity:1;transform:none;animation:none;">
+
+      <div class="bucket bucket-both">
+        <div class="b-tag b-tag-both">● BOTH</div>
+        <p class="b-roi b-roi-both" data-target="5.8" data-prefix="+" data-suffix="%">+0%</p>
+        <p class="b-roi-label">ROI per bet</p>
+        <div class="b-grid">
+          <div><p class="b-stat-label">Record</p><p class="b-stat-val">128-106-0</p></div>
+          <div><p class="b-stat-label">Hit Rate</p><p class="b-stat-val">54.7%</p></div>
+          <div><p class="b-stat-label">PnL</p><p class="b-stat-val" style="color:var(--teal)">+18.2u</p></div>
+          <div><p class="b-stat-label">Bets</p><p class="b-stat-val">234</p></div>
+        </div>
+      </div>
+
+      <div class="bucket">
+        <div class="b-tag b-tag-ols">◆ OLS</div>
+        <p class="b-roi b-roi-ols" data-target="4.2" data-prefix="+" data-suffix="%">+0%</p>
+        <p class="b-roi-label">ROI per bet</p>
+        <div class="b-grid">
+          <div><p class="b-stat-label">Record</p><p class="b-stat-val">47-42-0</p></div>
+          <div><p class="b-stat-label">Hit Rate</p><p class="b-stat-val">52.8%</p></div>
+          <div><p class="b-stat-label">PnL</p><p class="b-stat-val" style="color:var(--teal)">+6.1u</p></div>
+          <div><p class="b-stat-label">Bets</p><p class="b-stat-val">89</p></div>
+        </div>
+      </div>
+
+      <div class="bucket">
+        <div class="b-tag b-tag-xgb">▲ XGB</div>
+        <p class="b-roi b-roi-xgb" data-target="6.8" data-prefix="+" data-suffix="%">+0%</p>
+        <p class="b-roi-label">ROI per bet</p>
+        <div class="b-grid">
+          <div><p class="b-stat-label">Record</p><p class="b-stat-val">38-29-0</p></div>
+          <div><p class="b-stat-label">Hit Rate</p><p class="b-stat-val">56.7%</p></div>
+          <div><p class="b-stat-label">PnL</p><p class="b-stat-val" style="color:var(--teal)">+7.4u</p></div>
+          <div><p class="b-stat-label">Bets</p><p class="b-stat-val">67</p></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Charts row -->
+  <div class="charts-row fade-up">
+
+    <!-- ROI trend -->
+    <div class="card">
+      <div class="sec-hd">
+        <span class="sec-title">Rolling 7-Day ROI</span>
+        <div class="sec-line"></div>
+        <span class="sec-tag">30 DAYS</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="roiChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Calibration -->
+    <div class="card">
+      <div class="sec-hd">
+        <span class="sec-title">Probability Calibration</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="cal-list">
+        <div class="cal-row">
+          <span class="cal-label">50–60%</span>
+          <div class="cal-track">
+            <div class="cal-fill" style="background:rgba(78,156,245,0.65)" data-pct="53"></div>
+            <div class="cal-expected" style="left:55%"></div>
+          </div>
+          <span class="cal-pct">53%</span>
+        </div>
+        <div class="cal-row">
+          <span class="cal-label">60–70%</span>
+          <div class="cal-track">
+            <div class="cal-fill" style="background:rgba(78,156,245,0.8)" data-pct="61"></div>
+            <div class="cal-expected" style="left:65%"></div>
+          </div>
+          <span class="cal-pct">61%</span>
+        </div>
+        <div class="cal-row">
+          <span class="cal-label">70–80%</span>
+          <div class="cal-track">
+            <div class="cal-fill" style="background:rgba(0,212,170,0.7)" data-pct="68"></div>
+            <div class="cal-expected" style="left:75%"></div>
+          </div>
+          <span class="cal-pct">68%</span>
+        </div>
+        <div class="cal-row">
+          <span class="cal-label">80–90%</span>
+          <div class="cal-track">
+            <div class="cal-fill" style="background:rgba(0,212,170,0.85)" data-pct="74"></div>
+            <div class="cal-expected" style="left:85%"></div>
+          </div>
+          <span class="cal-pct">74%</span>
+        </div>
+        <div class="cal-row">
+          <span class="cal-label">90–100%</span>
+          <div class="cal-track">
+            <div class="cal-fill" style="background:rgba(244,165,0,0.75)" data-pct="80"></div>
+            <div class="cal-expected" style="left:95%"></div>
+          </div>
+          <span class="cal-pct">80%</span>
+        </div>
+      </div>
+      <div class="cal-legend">
+        <span>━━ actual hit rate</span>
+        <span class="amber">│ expected (mid-bin)</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Today's Plays -->
+  <section class="plays-section fade-up">
+    <div class="sec-hd">
+      <span class="sec-title">Today's Plays</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag" style="color:var(--teal)">5 SIGNALS · Jun 8 2026</span>
+    </div>
+    <div class="card" style="padding:24px 0">
+      <table class="plays-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Prop</th>
+            <th>Model Prob</th>
+            <th>Edge</th>
+            <th>Bucket</th>
+            <th>Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="p-name">Nikola Jokić</span>
+              <span class="p-match">DEN @ GSW · 9:00 PM ET</span>
+            </td>
+            <td><span class="p-prop"><span class="arrow">∨</span>UNDER 12.5 REB</span></td>
+            <td>
+              <div class="prob-wrap">
+                <div class="prob-track"><div class="prob-fill" data-pct="74"></div></div>
+                <span class="prob-val">74%</span>
+              </div>
+            </td>
+            <td><span class="edge edge-hi">+17%</span></td>
+            <td><span class="pill pill-both">BOTH</span></td>
+            <td><div class="signal" id="sig-0" data-strength="5"></div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="p-name">Anthony Davis</span>
+              <span class="p-match">LAL @ PHX · 10:00 PM ET</span>
+            </td>
+            <td><span class="p-prop"><span class="arrow">∨</span>UNDER 11.5 REB</span></td>
+            <td>
+              <div class="prob-wrap">
+                <div class="prob-track"><div class="prob-fill" data-pct="69"></div></div>
+                <span class="prob-val">69%</span>
+              </div>
+            </td>
+            <td><span class="edge edge-hi">+13%</span></td>
+            <td><span class="pill pill-both">BOTH</span></td>
+            <td><div class="signal" id="sig-1" data-strength="4"></div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="p-name">Bam Adebayo</span>
+              <span class="p-match">MIA @ BOS · 7:30 PM ET</span>
+            </td>
+            <td><span class="p-prop"><span class="arrow">∨</span>UNDER 9.5 REB</span></td>
+            <td>
+              <div class="prob-wrap">
+                <div class="prob-track"><div class="prob-fill" data-pct="66"></div></div>
+                <span class="prob-val">66%</span>
+              </div>
+            </td>
+            <td><span class="edge edge-mid">+10%</span></td>
+            <td><span class="pill pill-xgb">XGB</span></td>
+            <td><div class="signal" id="sig-2" data-strength="3"></div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="p-name">Draymond Green</span>
+              <span class="p-match">GSW @ DEN · 9:00 PM ET</span>
+            </td>
+            <td><span class="p-prop"><span class="arrow">∨</span>UNDER 7.5 REB</span></td>
+            <td>
+              <div class="prob-wrap">
+                <div class="prob-track"><div class="prob-fill" data-pct="63"></div></div>
+                <span class="prob-val">63%</span>
+              </div>
+            </td>
+            <td><span class="edge edge-mid">+7%</span></td>
+            <td><span class="pill pill-ols">OLS</span></td>
+            <td><div class="signal" id="sig-3" data-strength="3"></div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="p-name">Kristaps Porziņģis</span>
+              <span class="p-match">BOS @ MIA · 7:30 PM ET</span>
+            </td>
+            <td><span class="p-prop"><span class="arrow">∨</span>UNDER 8.5 REB</span></td>
+            <td>
+              <div class="prob-wrap">
+                <div class="prob-track"><div class="prob-fill" data-pct="61"></div></div>
+                <span class="prob-val">61%</span>
+              </div>
+            </td>
+            <td><span class="edge edge-lo">+6%</span></td>
+            <td><span class="pill pill-ols">OLS</span></td>
+            <td><div class="signal" id="sig-4" data-strength="2"></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer fade-up">
+    <span>REB∨ STRATEGY DASHBOARD — NBA 2025–26 — UNDER ONLY · PROD v2.1</span>
+    <span id="gen-time">Generated —</span>
+  </footer>
+
+</main>
+
+<script>
+'use strict';
+
+// ── Clock ──────────────────────────────────────────────────
+function tick() {
+  const d = new Date();
+  const h = d.getHours() % 12 || 12;
+  const m = String(d.getMinutes()).padStart(2,'0');
+  const s = String(d.getSeconds()).padStart(2,'0');
+  const ap = d.getHours() >= 12 ? 'PM' : 'AM';
+  document.getElementById('clock').textContent = `${String(h).padStart(2,'0')}:${m}:${s} ${ap} ET`;
+}
+tick();
+setInterval(tick, 1000);
+
+// Footer timestamp
+const now = new Date();
+document.getElementById('gen-time').textContent =
+  'Generated ' + now.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) +
+  ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ' ET';
+
+// ── Animated counters ─────────────────────────────────────
+function animCount(el, target, delay) {
+  const prefix = el.dataset.prefix || '';
+  const suffix = el.dataset.suffix || '';
+  const dur = 1300;
+  setTimeout(() => {
+    const t0 = performance.now();
+    function step(ts) {
+      const p = Math.min((ts - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + (e * target).toFixed(1) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }, delay);
+}
+
+document.querySelectorAll('[data-target]').forEach((el, i) => {
+  animCount(el, parseFloat(el.dataset.target), 500 + i * 80);
+});
+
+// ── Prob bars & cal bars ──────────────────────────────────
+setTimeout(() => {
+  document.querySelectorAll('.prob-fill').forEach(el => {
+    el.style.width = el.dataset.pct + '%';
+  });
+  document.querySelectorAll('.cal-fill').forEach(el => {
+    el.style.width = el.dataset.pct + '%';
+  });
+}, 700);
+
+// ── Signal meters ─────────────────────────────────────────
+const sigColors = ['var(--text-3)', 'var(--text-3)', 'var(--amber)', 'var(--amber)', 'var(--teal)'];
+const sigHeights = [5, 8, 12, 16, 21];
+
+for (let i = 0; i < 5; i++) {
+  const el = document.getElementById('sig-' + i);
+  const strength = parseInt(el.dataset.strength, 10);
+  sigHeights.forEach((h, j) => {
+    const b = document.createElement('div');
+    b.style.cssText = `
+      width:4px; height:${h}px; border-radius:2px;
+      background:${j < strength ? sigColors[Math.min(j, sigColors.length-1)] : 'var(--surface-3)'};
+      transition: background 0.4s ease ${0.85 + j * 0.06}s;
+    `;
+    el.appendChild(b);
+  });
+}
+
+// ── ROI trend chart ───────────────────────────────────────
+const ROI_DATA = [
+  4.2, 3.8, 2.1, 1.5, -0.8, -2.1, -1.4,  0.3,  1.8,  3.2,
+  4.5, 5.1, 6.8, 7.2,  5.9,  6.4,  7.1,  8.3,  7.8,  6.9,
+  5.4, 6.1, 7.3, 6.8,  7.9,  8.4,  7.6,  8.1,  7.4,  8.2
+];
+
+const canvas = document.getElementById('roiChart');
+const ctx = canvas.getContext('2d');
+let dpr = 1;
+
+function setupCanvas() {
+  dpr = window.devicePixelRatio || 1;
+  const wrap = canvas.parentElement;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  canvas.width  = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function getLayout() {
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
+  const pL = 46, pR = 18, pT = 14, pB = 30;
+  return { W, H, pL, pR, pT, pB,
+    cW: W - pL - pR, cH: H - pT - pB,
+    minV: -3, maxV: 10.5,
+    toX: (i)  => pL + (i / (ROI_DATA.length - 1)) * (W - pL - pR),
+    toY: (v)  => pT + (W - pL - pR, H - pT - pB) && (pT + (H - pT - pB) * (1 - (v - (-3)) / 13.5)),
+  };
+}
+
+function dataY(v, pT, cH) {
+  return pT + cH * (1 - (v - (-3)) / 13.5);
+}
+
+function drawChart(progress) {
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
+  if (!W || !H) return;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const pL = 46, pR = 18, pT = 14, pB = 30;
+  const cW = W - pL - pR;
+  const cH = H - pT - pB;
+  const minV = -3, maxV = 10.5, range = maxV - minV;
+
+  const toX = i => pL + (i / (ROI_DATA.length - 1)) * cW;
+  const toY = v => pT + cH * (1 - (v - minV) / range);
+
+  const zeroY = toY(0);
+
+  // Horizontal grid lines
+  [-2, 0, 2, 4, 6, 8, 10].forEach(v => {
+    const y = toY(v);
+    ctx.beginPath();
+    ctx.strokeStyle = v === 0 ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = v === 0 ? 1 : 0.5;
+    ctx.setLineDash(v === 0 ? [4,5] : []);
+    ctx.moveTo(pL, y); ctx.lineTo(pL + cW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Y labels
+    ctx.font = `300 9px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.textAlign = 'right';
+    ctx.fillText((v > 0 ? '+' : '') + v + '%', pL - 6, y + 3);
+  });
+
+  // X labels
+  const xLabels = ['30d', '3w', '2w', '1w', 'today'];
+  const xIdxs   = [0, 7, 14, 21, 29];
+  ctx.font = `300 9px 'JetBrains Mono', monospace`;
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.textAlign = 'center';
+  xIdxs.forEach((idx, i) => {
+    ctx.fillText(xLabels[i], toX(idx), H - 6);
+  });
+
+  // Visible points
+  const n = Math.max(2, Math.floor(progress * (ROI_DATA.length - 1)) + 1);
+  const pts = ROI_DATA.slice(0, n).map((v, i) => ({ x: toX(i), y: toY(v), v }));
+
+  // Positive area fill
+  const gradPos = ctx.createLinearGradient(0, pT, 0, zeroY);
+  gradPos.addColorStop(0, 'rgba(0,212,170,0.18)');
+  gradPos.addColorStop(1, 'rgba(0,212,170,0.02)');
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pL, pT, cW, zeroY - pT);
+  ctx.clip();
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, zeroY);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length-1].x, zeroY);
+  ctx.closePath();
+  ctx.fillStyle = gradPos;
+  ctx.fill();
+  ctx.restore();
+
+  // Negative area fill
+  const gradNeg = ctx.createLinearGradient(0, zeroY, 0, pT + cH);
+  gradNeg.addColorStop(0, 'rgba(255,69,96,0.02)');
+  gradNeg.addColorStop(1, 'rgba(255,69,96,0.14)');
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pL, zeroY, cW, pT + cH - zeroY);
+  ctx.clip();
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, zeroY);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length-1].x, zeroY);
+  ctx.closePath();
+  ctx.fillStyle = gradNeg;
+  ctx.fill();
+  ctx.restore();
+
+  // Line
+  ctx.beginPath();
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap  = 'round';
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+
+  // Gradient stroke (dim → bright)
+  const lineGrad = ctx.createLinearGradient(toX(0), 0, toX(n-1), 0);
+  lineGrad.addColorStop(0, 'rgba(0,212,170,0.3)');
+  lineGrad.addColorStop(1, 'rgba(0,212,170,1)');
+  ctx.strokeStyle = lineGrad;
+  ctx.stroke();
+
+  // Latest dot
+  const last = pts[pts.length - 1];
+  const lastColor = last.v >= 0 ? '#00d4aa' : '#ff4560';
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = lastColor;
+  ctx.fill();
+  ctx.strokeStyle = '#06080f';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Latest value label
+  const lastVal = ROI_DATA[n - 1];
+  ctx.font = `600 11px 'JetBrains Mono', monospace`;
+  ctx.fillStyle = lastColor;
+  ctx.textAlign = last.x > W - 70 ? 'right' : 'left';
+  const tx = last.x + (last.x > W - 70 ? -8 : 8);
+  ctx.fillText((lastVal >= 0 ? '+' : '') + lastVal.toFixed(1) + '%', tx, last.y - 8);
+}
+
+function animateChart() {
+  const dur = 1900;
+  const t0 = performance.now();
+  function frame(ts) {
+    const p = Math.min((ts - t0) / dur, 1);
+    const e = 1 - Math.pow(1 - p, 2.2);
+    drawChart(e);
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// Hover
+let hovering = false;
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  const pL = 46, pR = 18, pT = 14, pB = 30;
+  const cW = W - pL - pR, cH = H - pT - pB;
+  const rel = Math.max(0, Math.min(mx - pL, cW));
+  const idx = Math.round((rel / cW) * (ROI_DATA.length - 1));
+  if (idx < 0 || idx >= ROI_DATA.length) { drawChart(1); return; }
+
+  drawChart(1);
+
+  const minV = -3, maxV = 10.5, range = maxV - minV;
+  const toX = i => pL + (i / (ROI_DATA.length - 1)) * cW;
+  const toY = v => pT + cH * (1 - (v - minV) / range);
+  const x = toX(idx);
+  const y = toY(ROI_DATA[idx]);
+  const v = ROI_DATA[idx];
+
+  // Crosshair
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 4]);
+  ctx.moveTo(x, pT); ctx.lineTo(x, H - pB);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dot
+  ctx.beginPath();
+  ctx.arc(x, y, 5, 0, Math.PI * 2);
+  ctx.fillStyle = v >= 0 ? '#00d4aa' : '#ff4560';
+  ctx.fill();
+  ctx.strokeStyle = '#06080f';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Tooltip
+  const tw = 72, th = 26;
+  let tx = x - tw / 2;
+  tx = Math.max(pL, Math.min(W - pR - tw, tx));
+  const ty = Math.max(pT, y - th - 10);
+  const borderColor = v >= 0 ? 'rgba(0,212,170,0.5)' : 'rgba(255,69,96,0.5)';
+
+  ctx.beginPath();
+  roundRect(ctx, tx, ty, tw, th, 5);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.font = `700 11px 'JetBrains Mono', monospace`;
+  ctx.fillStyle = v >= 0 ? '#00d4aa' : '#ff4560';
+  ctx.textAlign = 'center';
+  ctx.fillText((v >= 0 ? '+' : '') + v.toFixed(1) + '%', tx + tw / 2, ty + th / 2 + 4);
+});
+
+canvas.addEventListener('mouseleave', () => drawChart(1));
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+// Init chart after layout
+window.addEventListener('resize', () => { setupCanvas(); drawChart(1); });
+setTimeout(() => {
+  setupCanvas();
+  animateChart();
+}, 250);
+</script>
+</body>
+</html>

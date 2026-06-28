@@ -162,3 +162,7 @@ src/nba_points_modeling/research/outputs/
 # Web dashboard generated data (rebuilt by build_data.py)
 web/rebounds/data.json
 web/rebounds/data.js
+
+# tmp files
+tmp_instructions.txt
+git_stuff.txt

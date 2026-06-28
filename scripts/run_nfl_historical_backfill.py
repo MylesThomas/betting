@@ -41,7 +41,7 @@ ODDS_API_BASE = "https://api.the-odds-api.com/v4"
 SPORT         = "americanfootball_nfl"
 BOOKMAKERS    = ["bovada"]
 REGIONS       = "us2"
-SLEEP_S       = 0.25
+SLEEP_S       = 0.05
 
 S3_BUCKET          = "the-odds-api-mt"
 CREDIT_STOP_THRESHOLD = 200   # stop when fewer than this many credits remain
@@ -196,12 +196,21 @@ def build_event_id_map(season: int, dry_run: bool) -> pd.DataFrame | None:
             continue
 
         snapshot = f"{gameday}T12:00:00Z"
-        resp = requests.get(
-            f"{ODDS_API_BASE}/historical/sports/{SPORT}/odds",
-            params={"apiKey": ODDS_API_KEY, "markets": "h2h", "regions": REGIONS,
-                    "oddsFormat": "american", "dateFormat": "iso", "date": snapshot},
-            timeout=30,
-        )
+        for attempt in range(3):
+            try:
+                resp = requests.get(
+                    f"{ODDS_API_BASE}/historical/sports/{SPORT}/odds",
+                    params={"apiKey": ODDS_API_KEY, "markets": "h2h", "regions": REGIONS,
+                            "oddsFormat": "american", "dateFormat": "iso", "date": snapshot},
+                    timeout=60,
+                )
+                break
+            except requests.exceptions.Timeout:
+                if attempt == 2:
+                    raise
+                wait = 2 ** (attempt + 1)
+                print(f"    timeout on {gameday}, retrying in {wait}s (attempt {attempt+1}/3)...")
+                time.sleep(wait)
         time.sleep(SLEEP_S)
 
         remaining = parse_remaining(resp.headers)
@@ -247,19 +256,28 @@ def already_in_s3(s3_client, season: int, nfl_game_id: str) -> bool:
 
 
 def fetch_market(event_id: str, market: str, snapshot: str) -> tuple[list[dict], int]:
-    resp = requests.get(
-        f"{ODDS_API_BASE}/historical/sports/{SPORT}/events/{event_id}/odds",
-        params={
-            "apiKey":     ODDS_API_KEY,
-            "markets":    market,
-            "bookmakers": ",".join(BOOKMAKERS),
-            "regions":    REGIONS,
-            "oddsFormat": "american",
-            "dateFormat": "iso",
-            "date":       snapshot,
-        },
-        timeout=30,
-    )
+    for attempt in range(3):
+        try:
+            resp = requests.get(
+                f"{ODDS_API_BASE}/historical/sports/{SPORT}/events/{event_id}/odds",
+                params={
+                    "apiKey":     ODDS_API_KEY,
+                    "markets":    market,
+                    "bookmakers": ",".join(BOOKMAKERS),
+                    "regions":    REGIONS,
+                    "oddsFormat": "american",
+                    "dateFormat": "iso",
+                    "date":       snapshot,
+                },
+                timeout=60,
+            )
+            break
+        except requests.exceptions.Timeout:
+            if attempt == 2:
+                raise
+            wait = 2 ** (attempt + 1)
+            print(f"    timeout on {market}, retrying in {wait}s (attempt {attempt+1}/3)...")
+            time.sleep(wait)
     time.sleep(SLEEP_S)
     remaining = parse_remaining(resp.headers)
 
