@@ -1,0 +1,20 @@
+nfl_sacks_model:
+  seasons: [2025]
+  prop_line: 0.5              # only rows where the canonical sacks line == 0.5
+  target: is_over             # 1 if sacks >= 1.0, 0 if sacks == 0.0
+  drop_pushes: true           # sacks == 0.5 excluded from training (push = money back, not a loss or win)
+  rolling_windows: [1, 3, 5, 8, 16, 999]  # 999 = career (all prior games)
+  player_id_col: pfr_player_id
+  # pfr_player_id is used (not player name) as the groupby key for all rolling
+  # features and games_played_ytd. Reason: nfl_data_py snap counts identify
+  # players by name, which collides when two players share a name (e.g. Byron
+  # Young — YounBy00 on PHI and YounBy01 on LAR both played in 2025). Using
+  # pfr_player_id correctly separates them so rolling history is never mixed.
+  position_groups:
+    DL: [DE, DT, NT, DL]
+    LB: [OLB, ILB, MLB, LB]
+    DB: [CB, SS, FS, DB, S]
+  position_side:
+    outside: [DE, OLB, DL, LB]  # edge rushers (LB = OLB/pass-rusher in snap data)
+    inside:  [DT, NT, MLB, ILB] # interior / off-ball
+    other:   [S, SS, FS, CB, DB] # safeties/DBs who occasionally blitz
