@@ -23,6 +23,7 @@ Run:
 
 import argparse
 import os
+import re
 import sys
 import time
 from datetime import date, datetime, timedelta
@@ -88,6 +89,33 @@ TEAM_NAME_MAP = {
     "Seattle Seahawks":      "SEA", "Tampa Bay Buccaneers":  "TB",
     "Tennessee Titans":      "TEN", "Washington Commanders": "WAS",
 }
+
+ABBR_TO_TEAM = {v: k for k, v in TEAM_NAME_MAP.items()}
+
+
+# ── Name normalisation ─────────────────────────────────────────────────────────
+
+_DOTS_RE = re.compile(r"(?<=[A-Za-z])\.")
+
+
+def _load_name_norm_config() -> tuple[re.Pattern, dict[str, str]]:
+    with open(CONFIG_PATH) as f:
+        cfg = yaml.safe_load(f).get("player_name_normalization", {})
+    suffixes  = cfg.get("strip_suffixes", [])
+    pattern   = r"\s+(" + "|".join(re.escape(s) for s in suffixes) + r")$"
+    suffix_re = re.compile(pattern, re.IGNORECASE)
+    aliases   = {k.lower(): v.lower() for k, v in cfg.get("aliases", {}).items()}
+    return suffix_re, aliases
+
+
+_SUFFIX_RE, _NAME_ALIASES = _load_name_norm_config()
+
+
+def _normalize(name: str) -> str:
+    name = _SUFFIX_RE.sub("", name.strip())
+    name = _DOTS_RE.sub("", name)
+    name = name.lower()
+    return _NAME_ALIASES.get(name, name)
 
 
 # ── Config ─────────────────────────────────────────────────────────────────────
@@ -157,6 +185,103 @@ def api_get(url: str, params: dict) -> dict | list:
     resp.raise_for_status()
     time.sleep(SLEEP_S)
     return resp.json(), remaining
+
+
+# ── Past-date helpers ─────────────────────────────────────────────────────────
+
+def _infer_season(gameday: str) -> int:
+    """Map YYYY-MM-DD to NFL season year (Aug–Dec → same year; Jan–Jul → previous year)."""
+    d = date.fromisoformat(gameday)
+    return d.year if d.month >= 8 else d.year - 1
+
+
+def _game_lines_from_parquet(df: pd.DataFrame) -> dict:
+    """Reconstruct {team_abbr: {game_total, team_spread}} from a game_lines parquet."""
+    totals = df[(df["market"] == "totals") & (df["outcome_name"] == "Over")]["point"]
+    game_total = float(np.nanmedian(totals)) if len(totals) else float("nan")
+
+    result = {}
+    for team_full, grp in df[df["market"] == "spreads"].groupby("outcome_name"):
+        abbr = TEAM_NAME_MAP.get(team_full)
+        if abbr:
+            result[abbr] = {
+                "game_total":  game_total,
+                "team_spread": float(np.nanmedian(grp["point"])),
+            }
+    return result
+
+
+def _load_past_date_s3(gameday: str, season: int) -> tuple[list[dict], list[dict], dict]:
+    """
+    Load sacks props + game lines from S3 for a past gameday.
+    Returns (events, all_prop_rows, all_game_lines) in the same format
+    that the live API path produces.
+    """
+    s3_map_key = f"nfl/event_id_maps/event_id_map_{season}.csv"
+    print(f"  Loading event_id_map from s3://{S3_BUCKET}/{s3_map_key}")
+    try:
+        body = boto3.client("s3").get_object(Bucket=S3_BUCKET, Key=s3_map_key)["Body"].read()
+    except Exception as exc:
+        raise FileNotFoundError(f"No event_id_map for season {season} in S3: {exc}") from exc
+
+    eid_map = pd.read_csv(BytesIO(body))
+    games = eid_map[eid_map["gameday"] == gameday]
+    if games.empty:
+        return [], [], {}
+
+    s3 = boto3.client("s3")
+    events: list[dict] = []
+    all_prop_rows: list[dict] = []
+    all_game_lines: dict = {}
+
+    for _, g in games.iterrows():
+        game_id   = g["nfl_game_id"]
+        home_abbr = g["home_team"]   # abbr in event_id_map
+        away_abbr = g["away_team"]
+        home_full = ABBR_TO_TEAM.get(home_abbr, home_abbr)
+        away_full = ABBR_TO_TEAM.get(away_abbr, away_abbr)
+        gametime  = str(g.get("gametime", "00:00"))[:5]  # "HH:MM"
+
+        dt_et = datetime.strptime(f"{gameday} {gametime}", "%Y-%m-%d %H:%M").replace(tzinfo=ET)
+        commence_utc = dt_et.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        events.append({
+            "id":            game_id,
+            "home_team":     home_full,
+            "away_team":     away_full,
+            "commence_time": commence_utc,
+        })
+
+        # Sacks props
+        props_key = f"nfl/player_props/player_sacks/{season}/{game_id}.parquet"
+        try:
+            body = s3.get_object(Bucket=S3_BUCKET, Key=props_key)["Body"].read()
+            props_df = pd.read_parquet(BytesIO(body))
+            for _, row in props_df.iterrows():
+                all_prop_rows.append({
+                    "event_id":     game_id,
+                    "home_team":    home_full,
+                    "away_team":    away_full,
+                    "bookmaker":    row["bookmaker"],
+                    "outcome_name": row["outcome_name"],
+                    "outcome_desc": row["outcome_desc"],
+                    "point":        row["point"],
+                    "price":        row["price"],
+                })
+        except s3.exceptions.NoSuchKey:
+            print(f"  WARNING: no sacks props parquet in S3 for {game_id}")
+
+        # Game lines
+        lines_key = f"nfl/game_lines/{season}/{game_id}.parquet"
+        try:
+            body = s3.get_object(Bucket=S3_BUCKET, Key=lines_key)["Body"].read()
+            lines_df = pd.read_parquet(BytesIO(body))
+            all_game_lines[game_id] = _game_lines_from_parquet(lines_df)
+        except s3.exceptions.NoSuchKey:
+            print(f"  WARNING: no game_lines parquet in S3 for {game_id}")
+            all_game_lines[game_id] = {}
+
+    return events, all_prop_rows, all_game_lines
 
 
 # ── Odds API fetches ────────────────────────────────────────────────────────────
@@ -270,26 +395,35 @@ def load_spine_s3() -> pd.DataFrame:
     return pd.read_parquet(BytesIO(body))
 
 
-def compute_player_rolling(spine: pd.DataFrame, player_names: list[str], windows: list[int]) -> pd.DataFrame:
+def compute_player_rolling(
+    spine: pd.DataFrame,
+    player_names: list[str],
+    windows: list[int],
+    target_season: int | None = None,
+    target_week: int | None = None,
+) -> pd.DataFrame:
     """
     For each player, compute rolling features representing their history
     going INTO the next game (i.e., averages over all completed games).
 
+    target_season / target_week: when set, spine is cut to games BEFORE that
+    week so games_played_ytd and rolling windows are correct for past dates.
+    In live mode (spine is already a current snapshot) these are left as None.
+
     Player matching: Odds API name (outcome_desc) → spine player name.
     """
-    name_map = {name.strip().lower(): name for name in spine["player"].unique()}
+    name_map = {_normalize(name): name for name in spine["player"].unique()}
     pid_map  = spine.groupby("player")["pfr_player_id"].first().to_dict()
     team_map = spine.groupby("pfr_player_id")["team"].last().to_dict()
     pos_map  = spine.groupby("pfr_player_id")["position"].last().to_dict()
     pg_map   = spine.groupby("pfr_player_id")["pos_group"].last().to_dict()
     ps_map   = spine.groupby("pfr_player_id")["pos_side"].last().to_dict()
 
-    # Current season for games_played_ytd
-    max_season = int(spine["season"].max())
+    cur_season = target_season if target_season is not None else int(spine["season"].max())
 
     rows = []
     for name in player_names:
-        spine_name = name_map.get(name.strip().lower())
+        spine_name = name_map.get(_normalize(name))
         if spine_name is None:
             rows.append({"player": name, "matched": False})
             continue
@@ -297,15 +431,22 @@ def compute_player_rolling(spine: pd.DataFrame, player_names: list[str], windows
         pid = pid_map.get(spine_name)
         g = spine[spine["pfr_player_id"] == pid].sort_values(["season", "week"]).reset_index(drop=True)
 
+        # Cut to games played BEFORE the target game (past-date mode only)
+        if target_season is not None and target_week is not None:
+            g = g[
+                (g["season"] < target_season) |
+                ((g["season"] == target_season) & (g["week"] < target_week))
+            ].reset_index(drop=True)
+
         row = {
-            "player":          name,
-            "pfr_player_id":   pid,
-            "team":            team_map.get(pid, ""),
-            "position":        pos_map.get(pid, ""),
-            "pos_group":       pg_map.get(pid, "OTH"),
-            "pos_side":        ps_map.get(pid, "other"),
-            "games_played_ytd": len(g[g["season"] == max_season]),
-            "matched":         True,
+            "player":           name,
+            "pfr_player_id":    pid,
+            "team":             team_map.get(pid, ""),
+            "position":         pos_map.get(pid, ""),
+            "pos_group":        pg_map.get(pid, "OTH"),
+            "pos_side":         ps_map.get(pid, "other"),
+            "games_played_ytd": len(g[g["season"] == cur_season]),
+            "matched":          True,
         }
 
         for feat, src_col in [("sack_rate", "sacks"), ("qbhit_rate", "qb_hits"), ("snap_pct", "defense_pct")]:
@@ -444,31 +585,52 @@ def build_feature_matrix(
 
 # ── Scoring ─────────────────────────────────────────────────────────────────────
 
-def load_model_s3() -> dict:
-    print(f"  Downloading model from s3://{S3_BUCKET}/{S3_PREFIX}/model/lr_model.pkl...")
-    key  = f"{S3_PREFIX}/model/lr_model.pkl"
+def load_model_s3(cfg: dict) -> dict:
+    artifact = cfg.get("model_artifact", "lr_model.pkl")
+    key      = f"{S3_PREFIX}/model/{artifact}"
+    print(f"  Downloading model from s3://{S3_BUCKET}/{key}...")
     body = boto3.client("s3").get_object(Bucket=S3_BUCKET, Key=key)["Body"].read()
     return joblib.load(BytesIO(body))
 
 
-def score(df: pd.DataFrame, artifact: dict) -> pd.DataFrame:
+def score(df: pd.DataFrame, artifact: dict, cfg: dict) -> pd.DataFrame:
     pipe      = artifact["pipeline"]
     n_cols    = artifact["n_cols"]
     c_cols    = artifact["c_cols"]
-    threshold = artifact["threshold"]
+
+    inf       = cfg["inference"]
+    threshold = inf["threshold"]
+    direction = inf["direction"]
+    min_edge  = inf["min_edge"]
 
     all_cols = n_cols + c_cols
     X = df[[c for c in all_cols if c in df.columns]]
-    # Align columns: add missing ones as NaN
     for col in all_cols:
         if col not in X.columns:
             X[col] = float("nan")
     X = X[all_cols]
 
     df = df.copy()
-    df["lr_prob"] = pipe.predict_proba(X)[:, 1]
-    df["bet"]     = df["lr_prob"] < threshold
-    df["bet_side"] = df["bet"].apply(lambda b: f"Under 0.5 sacks" if b else "")
+    df["p_over"] = pipe.predict_proba(X)[:, 1]
+
+    mkt_over  = df.get("prop_median_impl_over",  pd.Series(float("nan"), index=df.index))
+    mkt_under = df.get("prop_median_impl_under", pd.Series(float("nan"), index=df.index))
+
+    bet_under = (
+        (direction in ("under", "both")) &
+        (df["p_over"] < threshold) &
+        ((1 - df["p_over"]) - mkt_under >= min_edge)
+    )
+    bet_over = (
+        (direction in ("over", "both")) &
+        (df["p_over"] > (1 - threshold)) &
+        (df["p_over"] - mkt_over >= min_edge)
+    )
+
+    df["bet"]      = bet_under | bet_over
+    df["bet_side"] = ""
+    df.loc[bet_under, "bet_side"] = "Under 0.5 sacks"
+    df.loc[bet_over,  "bet_side"] = "Over 0.5 sacks"
     return df
 
 
@@ -476,7 +638,7 @@ def score(df: pd.DataFrame, artifact: dict) -> pd.DataFrame:
 
 def build_bet_sheet_html(df: pd.DataFrame, gameday: str, n_events: int) -> str:
     bets = df[df["bet"]].copy()
-    bets = bets.sort_values("lr_prob")
+    bets = bets.sort_values("p_over")
 
     def fmt_odds(p):
         if pd.isna(p):
@@ -485,11 +647,16 @@ def build_bet_sheet_html(df: pd.DataFrame, gameday: str, n_events: int) -> str:
 
     rows_html = ""
     for _, r in bets.iterrows():
-        prob_pct = f"{r['lr_prob']:.1%}"
-        mkt_pct  = f"{r.get('prop_median_impl_over', float('nan')):.1%}"
-        edge     = r.get("prop_median_impl_over", float("nan")) - r["lr_prob"]
-        edge_str = f"+{edge:.1%}" if not pd.isna(edge) else "N/A"
-        under_odds = fmt_odds(r.get("prop_median_price_under", float("nan")))
+        p_over    = r["p_over"]
+        bet_side  = r.get("bet_side", "Under 0.5 sacks")
+        is_over   = str(bet_side).startswith("Over")
+        mkt_impl  = r.get("prop_median_impl_over", float("nan"))
+        edge      = (p_over - mkt_impl) if is_over else (mkt_impl - p_over)
+        odds_col  = "prop_median_price_over" if is_over else "prop_median_price_under"
+        odds      = fmt_odds(r.get(odds_col, float("nan")))
+        prob_pct  = f"{p_over:.1%}"
+        mkt_pct   = f"{mkt_impl:.1%}" if not pd.isna(mkt_impl) else "N/A"
+        edge_str  = f"+{edge:.1%}" if not pd.isna(edge) else "N/A"
         rows_html += f"""
         <tr>
           <td>{r['player']}</td>
@@ -498,11 +665,11 @@ def build_bet_sheet_html(df: pd.DataFrame, gameday: str, n_events: int) -> str:
           <td style="color:#1d6fa4;font-weight:600">{prob_pct}</td>
           <td>{mkt_pct}</td>
           <td style="color:#2a7d2e;font-weight:600">{edge_str}</td>
-          <td>{under_odds}</td>
-          <td style="font-weight:600">Under 0.5</td>
+          <td>{odds}</td>
+          <td style="font-weight:600">{bet_side}</td>
         </tr>"""
 
-    no_bets_msg = "" if len(bets) > 0 else '<p style="color:#888">No qualifying bets today (prob &lt; 0.30 threshold not met).</p>'
+    no_bets_msg = "" if len(bets) > 0 else '<p style="color:#888">No qualifying bets today.</p>'
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -534,14 +701,14 @@ tr:hover td {{ background: #f9f9f9; }}
 <thead><tr>
   <th>Player</th><th>Matchup</th><th>Pos</th>
   <th>Model P(Over)</th><th>Market P(Over)</th><th>Edge</th>
-  <th>Under Odds</th><th>Bet</th>
+  <th>Odds</th><th>Bet</th>
 </tr></thead>
 <tbody>{rows_html}</tbody>
 </table>"""}
 <div class="summary">
-  <strong>Strategy:</strong> Bet Under 0.5 sacks when model P(Over) &lt; 0.30<br>
-  <strong>OOS performance (2024+2025):</strong> +71.8u, +4.0% ROI on 1,779 bets<br>
-  <strong>Model:</strong> Logistic Regression trained on 2024+2025 seasons
+  <strong>Strategy:</strong> direction=both · thresh=0.45 · edge≥0.03<br>
+  <strong>OOS performance (2025):</strong> 222 bets · 73.9% hit · +0.1348 EV/unit · +29.92u<br>
+  <strong>Model:</strong> lr_norm_2024_2025_v4.pkl — Logistic Regression trained on 2024+2025
 </div>
 </body>
 </html>"""
@@ -565,7 +732,7 @@ def send_plays_notification(gameday: str, scored: pd.DataFrame, csv_uri: str, ht
 
     n_bets    = int(scored["bet"].sum())
     n_players = len(scored)
-    bets      = scored[scored["bet"]].sort_values("lr_prob")
+    bets      = scored[scored["bet"]].sort_values("p_over")
 
     subject = (
         f"NFL Sacks — {gameday} — {n_bets} bet{'s' if n_bets != 1 else ''}"
@@ -576,12 +743,17 @@ def send_plays_notification(gameday: str, scored: pd.DataFrame, csv_uri: str, ht
 
     lines = [f"NFL Sacks — {gameday}", f"Players with props: {n_players}", f"Qualifying bets: {n_bets}", ""]
     for _, r in bets.iterrows():
-        edge = r.get("prop_median_impl_over", float("nan")) - r["lr_prob"]
-        edge_s = f"+{edge:.1%}" if not pd.isna(edge) else "N/A"
-        odds   = r.get("prop_median_price_under", float("nan"))
-        odds_s = f"{int(odds):+d}" if not pd.isna(odds) else "N/A"
+        p_over   = r.get("p_over", float("nan"))
+        bet_side = r.get("bet_side", "Under 0.5 sacks")
+        is_over  = str(bet_side).startswith("Over")
+        mkt      = r.get("prop_median_impl_over", float("nan"))
+        edge     = (p_over - mkt) if is_over else (mkt - p_over)
+        edge_s   = f"+{edge:.1%}" if not pd.isna(edge) else "N/A"
+        odds_col = "prop_median_price_over" if is_over else "prop_median_price_under"
+        odds     = r.get(odds_col, float("nan"))
+        odds_s   = f"{int(odds):+d}" if not pd.isna(odds) else "N/A"
         lines.append(f"  {r['player']:<28} {r['team']:>3} vs {r['opponent']:<3}  "
-                     f"model={r['lr_prob']:.1%}  edge={edge_s}  odds={odds_s}")
+                     f"model={p_over:.1%}  edge={edge_s}  odds={odds_s}  [{bet_side}]")
     lines += ["", f"CSV : {csv_uri}", f"HTML: {html_uri}"]
     text_body = "\n".join(lines)
 
@@ -615,9 +787,6 @@ def send_plays_notification(gameday: str, scored: pd.DataFrame, csv_uri: str, ht
 # ── Main ────────────────────────────────────────────────────────────────────────
 
 def main():
-    if not ODDS_API_KEY:
-        sys.exit("ODDS_API_KEY not set — add to .env or environment")
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--gameday", type=str, default=None,
                         help="YYYY-MM-DD (default: today in ET)")
@@ -631,37 +800,55 @@ def main():
     windows = cfg["rolling_windows"]
     n_cols, c_cols = feature_lists(cfg)
 
-    # ── 1. Events ──────────────────────────────────────────────────────────────
-    print("\nFetching events...")
-    events = fetch_events_for_date(gameday)
-    if not events:
-        print(f"  No NFL games found for {gameday}.")
-        msg = f"No NFL games on {gameday} — pipeline skipped."
-        if SNS_TOPIC_ARN:
-            boto3.client("sns").publish(TopicArn=SNS_TOPIC_ARN,
-                                        Subject=f"NFL sacks — no games on {gameday}",
-                                        Message=msg)
-        print(msg)
-        return
+    is_past = date.fromisoformat(gameday) < date.today()
 
-    # ── 2. Props + game lines ──────────────────────────────────────────────────
-    print("\nFetching props and game lines...")
-    all_prop_rows: list[dict] = []
-    all_game_lines: dict = {}
+    # ── 1. Events + props + game lines ────────────────────────────────────────
+    if is_past:
+        season = _infer_season(gameday)
+        print(f"\nPast-date mode — loading from S3 (season={season})...")
+        events, all_prop_rows, all_game_lines = _load_past_date_s3(gameday, season)
+        if not events:
+            print(f"  No games found in event_id_map for {gameday}.")
+            return
+        for ev in events:
+            home_abbr = TEAM_NAME_MAP.get(ev["home_team"], ev["home_team"])
+            away_abbr = TEAM_NAME_MAP.get(ev["away_team"], ev["away_team"])
+            n_players_ev = len(set(
+                r["outcome_desc"] for r in all_prop_rows if r["event_id"] == ev["id"]
+            ))
+            print(f"  {home_abbr} vs {away_abbr}: {n_players_ev} players with sacks props")
+    else:
+        if not ODDS_API_KEY:
+            sys.exit("ODDS_API_KEY not set — add to .env or environment")
+        print("\nFetching events...")
+        events = fetch_events_for_date(gameday)
+        if not events:
+            print(f"  No NFL games found for {gameday}.")
+            msg = f"No NFL games on {gameday} — pipeline skipped."
+            if SNS_TOPIC_ARN:
+                boto3.client("sns").publish(TopicArn=SNS_TOPIC_ARN,
+                                            Subject=f"NFL sacks — no games on {gameday}",
+                                            Message=msg)
+            print(msg)
+            return
 
-    for ev in events:
-        eid   = ev["id"]
-        home  = ev.get("home_team", "")
-        away  = ev.get("away_team", "")
+        print("\nFetching props and game lines...")
+        all_prop_rows: list[dict] = []
+        all_game_lines: dict = {}
 
-        prop_rows = fetch_sacks_props(eid, home, away)
-        all_prop_rows.extend(prop_rows)
+        for ev in events:
+            eid   = ev["id"]
+            home  = ev.get("home_team", "")
+            away  = ev.get("away_team", "")
 
-        glines = fetch_game_lines(eid, home, away)
-        all_game_lines[eid] = glines
+            prop_rows = fetch_sacks_props(eid, home, away)
+            all_prop_rows.extend(prop_rows)
 
-        n_players_ev = len(set(r["outcome_desc"] for r in prop_rows))
-        print(f"  {home} vs {away}: {n_players_ev} players with sacks props")
+            glines = fetch_game_lines(eid, home, away)
+            all_game_lines[eid] = glines
+
+            n_players_ev = len(set(r["outcome_desc"] for r in prop_rows))
+            print(f"  {home} vs {away}: {n_players_ev} players with sacks props")
 
     if not all_prop_rows:
         print(f"\n  No sacks props found for {gameday}.")
@@ -675,7 +862,18 @@ def main():
     # ── 4. Spine + rolling features ───────────────────────────────────────────
     print("\nLoading spine and computing rolling features...")
     spine = load_spine_s3()
-    player_features = compute_player_rolling(spine, prop_df["player_name"].tolist(), windows)
+
+    # In past-date mode, cut spine to games before this week so rolling
+    # features and games_played_ytd reflect history going INTO the game.
+    roll_season, roll_week = None, None
+    if is_past and events:
+        roll_season = _infer_season(gameday)
+        roll_week   = int(events[0]["id"].split("_")[1])  # "2025_01_DAL_PHI" → 1
+
+    player_features = compute_player_rolling(
+        spine, prop_df["player_name"].tolist(), windows,
+        target_season=roll_season, target_week=roll_week,
+    )
     matched = player_features["matched"].sum()
     print(f"  Spine players matched: {matched}/{len(player_features)}")
 
@@ -690,11 +888,12 @@ def main():
 
     # ── 6. Score ──────────────────────────────────────────────────────────────
     print("\nLoading model and scoring...")
-    artifact = load_model_s3()
-    scored   = score(feature_df, artifact)
-    n_bets   = int(scored["bet"].sum())
-    threshold = artifact["threshold"]
-    print(f"  Scored {len(scored)} players  →  {n_bets} Under bets (prob < {threshold})")
+    artifact  = load_model_s3(cfg)
+    scored    = score(feature_df, artifact, cfg)
+    n_bets    = int(scored["bet"].sum())
+    inf       = cfg["inference"]
+    print(f"  Scored {len(scored)} players  →  {n_bets} bets "
+          f"(direction={inf['direction']} thresh={inf['threshold']} edge≥{inf['min_edge']})")
 
     # ── 7. Output ──────────────────────────────────────────────────────────────
     print("\nGenerating bet sheet and uploading...")

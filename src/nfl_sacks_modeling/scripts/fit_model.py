@@ -13,6 +13,7 @@ Run:
   python src/nfl_sacks_modeling/scripts/fit_model.py
 """
 
+import argparse
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -25,6 +26,7 @@ import yaml
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -35,7 +37,6 @@ CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.yaml"
 TMP = Path.home() / "Downloads" / "tmp"
 
 S3_BUCKET = "the-odds-api-mt"
-S3_KEY = "nfl/sacks_model/model/lr_model.pkl"
 THRESHOLD = 0.30
 TRAIN_SEASONS = [2024, 2025]
 
@@ -45,30 +46,14 @@ def load_config() -> dict:
         return yaml.safe_load(f)["nfl_sacks_model"]
 
 
+def model_artifact_name(cfg: dict) -> str:
+    return cfg.get("model_artifact", "lr_model.pkl")
+
+
 def feature_lists(cfg: dict) -> tuple[list[str], list[str]]:
-    windows = cfg["rolling_windows"]
-    rolling = [
-        f"{feat}_L{('career' if w >= 999 else w)}"
-        for feat in ["sack_rate", "qbhit_rate", "snap_pct"]
-        for w in windows
-    ]
-    market_num = [
-        "prop_median_impl_over", "prop_median_impl_under",
-        "prop_mean_impl_over",   "prop_mean_impl_under",
-        "prop_min_impl_over",    "prop_max_impl_over",
-        "prop_min_impl_under",   "prop_max_impl_under",
-        "prop_book_spread_over", "prop_book_spread_under",
-        "prop_n_books",
-        "fanduel_over_0p5_implied",
-        "betonline_over_0p5_implied", "betonline_under_0p5_implied",
-        "draftkings_over_0p25_implied", "draftkings_under_0p25_implied",
-    ]
-    market_cat = [
-        "prop_median_impl_over_bin", "prop_mean_impl_over_bin",
-        "prop_median_impl_under_bin", "prop_mean_impl_under_bin",
-    ]
-    numeric = rolling + ["game_total", "team_spread", "games_played_ytd"] + market_num
-    categorical = ["pos_group", "pos_side"] + market_cat
+    model_cfg = cfg["model"]
+    numeric = model_cfg["features"]["numeric"]
+    categorical = model_cfg["features"]["categorical"] or []
     return numeric, categorical
 
 
@@ -90,11 +75,20 @@ def build_pipeline(n_cols: list[str], c_cols: list[str]) -> Pipeline:
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verbose", action="store_true", help="Print top coefficients and in-sample AUC")
+    args = parser.parse_args()
+
     cfg = load_config()
+    artifact_name = model_artifact_name(cfg)
+    s3_key = f"nfl/sacks_model/model/{artifact_name}"
     n_cols, c_cols = feature_lists(cfg)
 
+    lr_params = {"C": 1.0, "max_iter": 1000, "solver": "lbfgs"}
     print(f"\nFitting LR on seasons {TRAIN_SEASONS}")
     print(f"{'='*55}")
+    print(f"  Model      : LogisticRegression({', '.join(f'{k}={v}' for k, v in lr_params.items())})")
+    print(f"  Response   : target  (1 = sacks >= 1.0, 0 = sacks == 0.0, push dropped)")
 
     frames = []
     for season in TRAIN_SEASONS:
@@ -129,10 +123,26 @@ def main():
     n_pos = int(y.sum())
     n_neg = int((y == 0).sum())
 
-    print(f"\n  Train rows : {n_train:,}  (pos={n_pos:,}, neg={n_neg:,})")
-    print(f"  Numeric    : {len(n_cols_present)} features")
-    print(f"  Categorical: {len(c_cols_present)} features")
+    print(f"\n  Train rows : {n_train:,}  (pos={n_pos:,}, neg={n_neg:,}, pos_rate={n_pos/n_train:.1%})")
+    print(f"  Numeric    : {len(n_cols_present)} features — {n_cols_present}")
+    print(f"  Categorical: {len(c_cols_present)} features — {c_cols_present}")
     print(f"  Threshold  : {THRESHOLD}  → {n_under:,} rows ({pct_under:.1f}%) flagged as Under bets")
+
+    if args.verbose:
+        auc = roc_auc_score(y, probas)
+        print(f"\n  In-sample AUC : {auc:.4f}")
+
+        lr = pipe.named_steps["lr"]
+        if c_cols_present:
+            ohe_names = pipe.named_steps["pre"].named_transformers_["cat"].named_steps["ohe"].get_feature_names_out(c_cols_present)
+        else:
+            ohe_names = []
+        all_feature_names = n_cols_present + list(ohe_names)
+        coefs = pd.Series(lr.coef_[0], index=all_feature_names)
+        top = coefs.abs().nlargest(10).index
+        print(f"\n  Top 10 coefficients by magnitude:")
+        for feat in top:
+            print(f"    {coefs[feat]:+.4f}  {feat}")
 
     artifact = {
         "pipeline":        pipe,
@@ -146,15 +156,16 @@ def main():
         "pos_rate":        n_pos / n_train,
     }
 
-    local_path = TMP / "lr_model.pkl"
+    local_path = TMP / artifact_name
     joblib.dump(artifact, local_path)
     print(f"\n  Saved local : {local_path}")
 
     buf = BytesIO()
     joblib.dump(artifact, buf)
     buf.seek(0)
-    boto3.client("s3").put_object(Bucket=S3_BUCKET, Key=S3_KEY, Body=buf.getvalue())
-    print(f"  Uploaded    : s3://{S3_BUCKET}/{S3_KEY}")
+    boto3.client("s3").put_object(Bucket=S3_BUCKET, Key=s3_key, Body=buf.getvalue())
+    print(f"  Uploaded    : s3://{S3_BUCKET}/{s3_key}")
+    print(f"\n  Granularity : player/game (training deduped across books)")
     print(f"{'='*55}\n")
 
 

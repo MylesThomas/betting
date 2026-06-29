@@ -1,4 +1,23 @@
+player_name_normalization:
+  strip_suffixes: [Jr., Sr., II, III, IV, V]
+  aliases:
+    # Props API name (post suffix-strip + dot-removal + lowercase) → spine name
+    "greg rousseau":    "gregory rousseau"   # preferred vs official first name
+    "mike danna":       "michael danna"       # preferred vs official first name
+    "nate landman":     "nathan landman"      # preferred vs official first name
+    "josh allen":       "josh hines-allen"    # DE/OLB; avoids QB name collision
+    "justin madubuike": "nnamdi madubuike"    # official name change 2024 season
+    "demeioun robinson": "chop robinson"       # goes by nickname "Chop" in snap count data
+    "matthew judon":    "matt judon"           # full name Pernell Matthew Judon; goes by middle name Matt
+    "ogbo okoronkwo":   "ogbonnia okoronkwo"   # "Ogbo" is a nickname for Ogbonnia
+    "pat jones":        "patrick jones"        # Pat Jones II listed as Patrick Jones II in snap counts
+    "tj slaton":        "tedarrell slaton"     # T.J. = Tedarrell James; listed as T.J. Slaton on rosters
+    "josh uche":        "joshua uche"          # Josh = Joshua
+
 nfl_sacks_model:
+  spine_version: v3
+  model_artifact: lr_norm_2024_2025_v4.pkl  # PFR box score (def_sacks) via pfr_player_id — eliminates PBP name-matching bugs (suffix/compound names silently zeroed)
+  feature_granularity: player_game  # training deduped to 1 row/player-game (label invariant across books at 0.5 line); live pipeline scores at player-game-book level
   seasons: [2025]
   prop_line: 0.5              # only rows where the canonical sacks line == 0.5
   target: is_over             # 1 if sacks >= 1.0, 0 if sacks == 0.0
@@ -18,3 +37,13 @@ nfl_sacks_model:
     outside: [DE, OLB, DL, LB]  # edge rushers (LB = OLB/pass-rusher in snap data)
     inside:  [DT, NT, MLB, ILB] # interior / off-ball
     other:   [S, SS, FS, CB, DB] # safeties/DBs who occasionally blitz
+  model:
+    combo: M7-parsimonious  # market already prices position + categoricals
+    features:
+      numeric: [prop_median_impl_over, qbhit_rate_L16, sack_rate_Lcareer]
+      categorical: []
+  inference:
+    direction: both         # under: p_over < threshold; over: p_over > (1 - threshold)
+    threshold: 0.45         # bet under when p_over < 0.45, over when p_over > 0.55
+    min_edge: 0.03          # model prob must beat book implied by ≥3pp
+    # sweep winner: 665 bets · 72.5% hit · +0.0949 EV/unit · +63.11 units (in-sample 2024+2025)

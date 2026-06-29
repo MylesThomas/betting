@@ -2,12 +2,24 @@
 Build feature matrix for NFL sacks props — one script, any season.
 
 Reads from:
-  ~/Downloads/tmp/nfl_sacks_historical_spine.parquet  (rolling features, all seasons)
-  ~/Downloads/tmp/nfl_defensive_props/{season}/        (props parquets)
-  ~/Downloads/tmp/nfl_game_lines/{season}/             (game line parquets)
+  ~/Downloads/tmp/nfl_sacks_historical_spine_v3.parquet  (rolling features, all seasons; PFR def_sacks)
+  ~/Downloads/tmp/nfl_defensive_props/{season}/           (props parquets)
+  ~/Downloads/tmp/nfl_game_lines/{season}/                (game line parquets)
 
 Outputs:
-  ~/Downloads/tmp/nfl_sacks_features_{season}.parquet
+  ~/Downloads/tmp/nfl_sacks_features_{season}.parquet  (always normalized)
+
+Row granularity — TRAINING vs LIVE:
+  This file outputs ONE ROW PER PLAYER-GAME (deduplicated across books). This is intentional
+  for training: the sacks line is always 0.5, so the label (0 vs 1+ sacks) does not vary by
+  book. Collapsing to player-game level is correct here.
+
+  The live pipeline (run_pipeline.py) operates at player-game-BOOK level — it scans each
+  book's posted odds separately and prices the edge per book. Training and inference are
+  intentionally different granularities for this market.
+
+  Contrast with tackles: lines vary by book (3.5 vs 4.5 changes the label), so the tackles
+  feature matrix is per-book to preserve that signal at training time.
 
 Run:
   python src/nfl_sacks_modeling/scripts/build_sacks_features.py --season 2024
@@ -16,6 +28,7 @@ Run:
 
 import argparse
 import glob
+import re
 import sys
 from pathlib import Path
 
@@ -25,7 +38,7 @@ import yaml
 
 CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.yaml"
 TMP         = Path.home() / "Downloads" / "tmp"
-SPINE       = TMP / "nfl_sacks_historical_spine.parquet"
+SPINE       = TMP / "nfl_sacks_historical_spine_v3.parquet"
 
 VALIDATION_TARGETS = {
     2024: {
@@ -75,7 +88,32 @@ _BIN_EDGES  = list(range(0, 110, 10))
 _BIN_LABELS = [f"{i}-{i+10}" for i in range(0, 100, 10)]
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+# ── Name normalisation ─────────────────────────────────────────────────────────
+
+_DOTS_RE = re.compile(r"(?<=[A-Za-z])\.")  # strips any dot after a letter (handles A.J. → AJ)
+
+
+def _load_name_norm_config() -> tuple[re.Pattern, dict[str, str]]:
+    with open(CONFIG_PATH) as f:
+        cfg = yaml.safe_load(f).get("player_name_normalization", {})
+    suffixes  = cfg.get("strip_suffixes", [])
+    pattern   = r"\s+(" + "|".join(re.escape(s) for s in suffixes) + r")$"
+    suffix_re = re.compile(pattern, re.IGNORECASE)
+    aliases   = {k.lower(): v.lower() for k, v in cfg.get("aliases", {}).items()}
+    return suffix_re, aliases
+
+
+_SUFFIX_RE, _NAME_ALIASES = _load_name_norm_config()
+
+
+def _normalize(name: str) -> str:
+    name = _SUFFIX_RE.sub("", name.strip())
+    name = _DOTS_RE.sub("", name)
+    name = name.lower()
+    return _NAME_ALIASES.get(name, name)
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────────────
 
 def load_config() -> dict:
     with open(CONFIG_PATH) as f:
@@ -260,7 +298,7 @@ def main():
     cfg = load_config()
     out = TMP / f"nfl_sacks_features_{season}.parquet"
 
-    print(f"\nBuilding features for {season} season")
+    print(f"\nBuilding features for {season} season  [player names normalized]")
     print(f"{'='*55}")
 
     # ── 1. Spine ──────────────────────────────────────────────────────────────
@@ -280,9 +318,23 @@ def main():
     # ── 3. Props ──────────────────────────────────────────────────────────────
     print("Loading props...")
     props = load_props(season)
-    df = df.merge(props, left_on=["game_id", "player"],
-                  right_on=["game_id", "player_name"], how="left")
-    df = df.drop(columns=["player_name"], errors="ignore")
+
+    df["_norm"]    = df["player"].map(_normalize)
+    props["_norm"] = props["player_name"].map(_normalize)
+
+    baseline_matched = set(df["player"]) & set(props["player_name"])
+
+    df = df.merge(props.drop(columns=["player_name"]),
+                  on=["game_id", "_norm"], how="left")
+    df = df.drop(columns=["_norm"], errors="ignore")
+
+    norm_matched = set(df.loc[df["prop_median_price_over"].notna(), "player"])
+    gained = sorted(norm_matched - baseline_matched)
+    n_after = df["prop_median_price_over"].notna().sum()
+    print(f"  Props joined: {n_after} rows  (+{len(gained)} recovered via name normalization)")
+    if gained:
+        for p in gained:
+            print(f"    + {p}")
 
     # ── 4. Target ─────────────────────────────────────────────────────────────
     df = add_target(df, drop_pushes=cfg["drop_pushes"])

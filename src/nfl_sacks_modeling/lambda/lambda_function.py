@@ -119,18 +119,19 @@ def lambda_handler(event, context):
             )
 
         elif mode == "pipeline":
+            gameday = str(event.get("gameday", today_et))
             out = _run_capture(
-                [sys.executable, str(scripts_dir / "run_pipeline.py"), "--gameday", today_et],
+                [sys.executable, str(scripts_dir / "run_pipeline.py"), "--gameday", gameday],
                 cwd=root,
             )
             step_results.append({"step": "pipeline", "status": "ok"})
             # run_pipeline.py sends its own SES+SNS notification with bet details
 
         elif mode == "settle":
-            out = _run_capture(
-                [sys.executable, str(scripts_dir / "settle_sacks.py")],
-                cwd=root,
-            )
+            settle_cmd = [sys.executable, str(scripts_dir / "settle_sacks.py")]
+            if "gameday" in event:
+                settle_cmd += ["--gameday", str(event["gameday"])]
+            out = _run_capture(settle_cmd, cwd=root)
             step_results.append({"step": "settle", "status": "ok"})
             # settle_sacks.py sends its own SES+SNS settlement email
 

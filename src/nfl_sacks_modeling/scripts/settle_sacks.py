@@ -196,14 +196,18 @@ def settle_bets(bets: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
     def settle_row(r):
         if not r.get("bet", False):
             return pd.Series({"outcome": "no_bet", "pnl": 0.0})
-        actual = r["actual_sacks"]
-        price  = r.get("prop_median_price_under", float("nan"))
-        if actual == 0.0:
-            return pd.Series({"outcome": "win",  "pnl": units_to_win(price)})
-        elif actual == 0.5:
+        actual   = r["actual_sacks"]
+        bet_side = r.get("bet_side", "Under 0.5 sacks")
+        is_over  = str(bet_side).startswith("Over")
+        price    = r.get("prop_median_price_over" if is_over else "prop_median_price_under", float("nan"))
+        if actual == 0.5:
             return pd.Series({"outcome": "push", "pnl": 0.0})
+        elif is_over:
+            won = actual >= 1.0
         else:
-            return pd.Series({"outcome": "loss", "pnl": -1.0})
+            won = actual == 0.0
+        return pd.Series({"outcome": "win" if won else "loss",
+                          "pnl":     units_to_win(price) if won else -1.0})
 
     outcomes = merged.apply(settle_row, axis=1)
     merged["outcome"] = outcomes["outcome"]
@@ -350,7 +354,7 @@ def build_settlement_html(
 # ── Plays HTML email ────────────────────────────────────────────────────────────
 
 def build_plays_html(df: pd.DataFrame, gameday: str) -> str:
-    bets = df[df["bet"]].copy().sort_values("lr_prob") if "bet" in df.columns else pd.DataFrame()
+    bets = df[df["bet"]].copy().sort_values("p_over") if "bet" in df.columns else pd.DataFrame()
 
     def fmt_odds(p):
         return f"{int(p):+d}" if not pd.isna(p) else "—"
@@ -363,22 +367,27 @@ def build_plays_html(df: pd.DataFrame, gameday: str) -> str:
 
     rows_html = ""
     for _, r in bets.iterrows():
-        mkt  = r.get("prop_median_impl_over", float("nan"))
-        edge = mkt - r["lr_prob"] if not pd.isna(mkt) else float("nan")
-        ec   = edge_color(edge)
+        p_over   = r.get("p_over", float("nan"))
+        bet_side = r.get("bet_side", "Under 0.5 sacks")
+        is_over  = str(bet_side).startswith("Over")
+        mkt      = r.get("prop_median_impl_over", float("nan"))
+        edge     = (p_over - mkt) if is_over else (mkt - p_over)  # noqa: SIM210
+        edge     = edge if not pd.isna(mkt) else float("nan")
+        ec       = edge_color(edge)
+        odds_col = "prop_median_price_over" if is_over else "prop_median_price_under"
         rows_html += f"""
 <tr style="border-bottom:1px solid #f3f4f6">
   <td style="padding:8px 12px;font-weight:600">{html_module.escape(str(r['player']))}</td>
   <td style="padding:8px 12px">{html_module.escape(str(r.get('team','')))} vs {html_module.escape(str(r.get('opponent','')))}</td>
   <td style="padding:8px 12px;color:#6b7280">{html_module.escape(str(r.get('pos_group','')))} / {html_module.escape(str(r.get('pos_side','')))}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{r['lr_prob']:.1%}</td>
+  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{f'{p_over:.1%}' if not pd.isna(p_over) else '—'}</td>
   <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{f'{mkt:.1%}' if not pd.isna(mkt) else '—'}</td>
   <td style="padding:8px 12px;text-align:center;font-weight:600;color:{ec}">{f'+{edge:.1%}' if not pd.isna(edge) else '—'}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{fmt_odds(r.get('prop_median_price_under', float('nan')))}</td>
-  <td style="padding:8px 12px;text-align:center;font-weight:600;color:#1d2d44">Under 0.5</td>
+  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{fmt_odds(r.get(odds_col, float('nan')))}</td>
+  <td style="padding:8px 12px;text-align:center;font-weight:600;color:#1d2d44">{html_module.escape(str(bet_side))}</td>
 </tr>"""
 
-    no_bets_msg = "" if len(bets) else '<p style="color:#6b7280">No qualifying bets today (prob &lt; 0.30 threshold not met for any player).</p>'
+    no_bets_msg = "" if len(bets) else '<p style="color:#6b7280">No qualifying bets today.</p>'
 
     table = "" if not len(bets) else f"""
 <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -389,7 +398,7 @@ def build_plays_html(df: pd.DataFrame, gameday: str) -> str:
   <th style="padding:9px 12px;text-align:center">Model P(Over)</th>
   <th style="padding:9px 12px;text-align:center">Mkt P(Over)</th>
   <th style="padding:9px 12px;text-align:center">Edge</th>
-  <th style="padding:9px 12px;text-align:center">Under Odds</th>
+  <th style="padding:9px 12px;text-align:center">Odds</th>
   <th style="padding:9px 12px;text-align:center">Bet</th>
 </tr></thead>
 <tbody>{rows_html}</tbody>
@@ -407,8 +416,8 @@ def build_plays_html(df: pd.DataFrame, gameday: str) -> str:
   </p>
   {no_bets_msg}{table}
   <p style="color:#9ca3af;font-size:11px;margin-top:20px">
-    Strategy: Bet Under 0.5 sacks when model P(Over) &lt; 0.30 &nbsp;|&nbsp;
-    OOS: +71.8u, +4.0% ROI (2024–2025, 1,779 bets)
+    Strategy: direction=both · thresh=0.45 · edge≥0.03 &nbsp;|&nbsp;
+    OOS 2025: 222 bets · 73.9% hit · +0.1348 EV/unit · +29.92u
   </p>
 </div>
 </body>

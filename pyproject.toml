@@ -33,7 +33,7 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "scipy>=1.17.1",
     "statsmodels>=0.14.6",
-    "nfl-data-py>=0.3.2",
+    "nfl-data-py>=0.3.3",
 ]
 
 [project.optional-dependencies]

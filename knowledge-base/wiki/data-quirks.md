@@ -64,7 +64,30 @@ Game lines are aggregated to a consensus spread per game. If only one bookmaker 
 
 ---
 
+---
+
+## NFL player props (s3://the-odds-api-mt/nfl/props_backfill/)
+
+### Tackles market coverage gap
+`player_tackles_assists` had **0% coverage on Bovada in 2023**, ~75% in 2024, 100% in 2025. Training data for tackles models must start in **2024**, not 2023. Using 2023 tackle lines from Bovada will produce NaN-heavy joins.
+
+Full-book backfill (DK + FanDuel + all books, `regions=us,us2`) written to:
+```
+nfl/props_backfill/{market}/{season}/{game_id}.parquet
+```
+Markets backfilled: `player_tackles_assists` (2024–2025), `player_rush_attempts` (2023–2025), `player_reception_yds` (2023–2025).
+
+### Tackle scoring convention
+Books score tackles as: **solo tackle = 1, assisted tackle = 1** (full credit for both). This matches the PBP columns:
+- Solo: `solo_tackle_1_player_id`, `solo_tackle_2_player_id`
+- Assist: `assist_tackle_1_player_id` … `assist_tackle_4_player_id`
+
+Sum all columns where the player appears — that's their book-scored tackle count. Do not half-credit assists.
+
+---
+
 ## Related
 
 - [[nba-season-structure]]
 - [[american-odds]]
+- [[nfl-2026-season-context]]

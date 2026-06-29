@@ -1,24 +1,23 @@
-FROM public.ecr.aws/lambda/python:3.11
+FROM public.ecr.aws/lambda/python:3.13
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# --only-binary :all: forces manylinux wheels — avoids source compilation (AL2 has GCC 7.3.1,
-# numpy 2.x requires GCC >= 9.3). fastavro is pure-Python fallback; if no wheel exists it
-# compiles fine with older gcc, so allow source for that one package only.
+# Versions pinned to match uv.lock — always run fit_model.py via `uv run`
+# to ensure the pickle is saved with the same sklearn version as this image.
 RUN pip install --no-cache-dir --only-binary :all: \
     boto3 \
-    "pandas==2.2.3" \
-    numpy \
-    "pyarrow==17.0.0" \
-    "scikit-learn==1.5.2" \
-    "joblib==1.4.2" \
+    "pandas==2.3.3" \
+    "numpy==2.4.2" \
+    "pyarrow==23.0.0" \
+    "scikit-learn==1.8.0" \
+    "joblib==1.5.3" \
     requests \
     pyyaml \
     python-dotenv \
     "nfl-data-py==0.3.2" \
     tqdm \
-    "tzdata==2024.1" \
+    "tzdata==2025.3" \
   && pip install --no-cache-dir fastavro
 
 # Lambda task root is /var/task
