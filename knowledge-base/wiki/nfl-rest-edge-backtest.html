@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Rest Edge vs Win Total O-U (2010–2025)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; padding: 32px 24px; }
+  h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 36px; }
+  h2 { font-size: 15px; font-weight: 600; color: #ccc; margin-bottom: 6px; }
+  .desc { font-size: 12px; color: #666; margin-bottom: 18px; }
+  .chart-wrap { background: #181c27; border: 1px solid #2a2e3d; border-radius: 10px; padding: 24px 24px 16px; margin-bottom: 40px; }
+  .legend-row { display: flex; gap: 20px; margin-top: 14px; font-size: 11px; color: #777; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 2px; }
+  .note { font-size: 11px; color: #555; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>NFL Net Rest Edge vs Preseason Win Total O-U</h1>
+<p class="subtitle">2010–2025 · 489 team-seasons · pushes excluded (n=22 of 511, 4.3%) · source: sportsoddshistory.com + nfl_data_py</p>
+
+<!-- Chart 1: Individual values -->
+<div class="chart-wrap">
+  <h2>Chart 1 — Over% by Individual Net Rest Value</h2>
+  <p class="desc">Each bar is one integer value of net_rest. Grey = n &lt; 10 (treat as noise). Dashed line = 50% baseline.</p>
+  <canvas id="chart1" height="90"></canvas>
+  <div class="legend-row">
+    <div class="legend-item"><div class="swatch" style="background:#ef5350"></div> Below avg (&lt;44.4%)</div>
+    <div class="legend-item"><div class="swatch" style="background:#42a5f5"></div> Near avg (44–51%)</div>
+    <div class="legend-item"><div class="swatch" style="background:#66bb6a"></div> Above avg (&gt;50.4%)</div>
+    <div class="legend-item"><div class="swatch" style="background:#444"></div> n &lt; 10 (small sample)</div>
+    <div class="legend-item"><div class="swatch" style="background:transparent;border-top:2px dashed rgba(239,83,80,0.7);height:2px;width:20px"></div> avg over% (47.4%)</div>
+  </div>
+  <p class="note">Hover for details · n shown inside bar</p>
+</div>
+
+<!-- Chart 2: Bucketed -->
+<div class="chart-wrap">
+  <h2>Chart 2 — Over% by 5-Unit Net Rest Bucket</h2>
+  <p class="desc">Teams grouped into 5-day bands. Hatched = n &lt; 10. Numbers above bars = sample size (n).</p>
+  <canvas id="chart2" height="75"></canvas>
+  <div class="legend-row">
+    <div class="legend-item"><div class="swatch" style="background:#ef5350"></div> Below avg (&lt;44.4%)</div>
+    <div class="legend-item"><div class="swatch" style="background:#42a5f5"></div> Near avg (44–51%)</div>
+    <div class="legend-item"><div class="swatch" style="background:#66bb6a"></div> Above avg (&gt;50.4%)</div>
+    <div class="legend-item"><div class="swatch" style="background:#333; border:1px dashed #888"></div> n &lt; 10 (small sample)</div>
+    <div class="legend-item"><div class="swatch" style="background:transparent;border-top:2px dashed rgba(239,83,80,0.7);height:2px;width:20px"></div> avg over% (47.4%)</div>
+  </div>
+  <p class="note">Hover for details</p>
+</div>
+
+<p style="font-size:11px;color:#444;margin-top:8px;">
+  * 511 team-seasons, not 512 — IND 2011 excluded: no preseason win total was offered after Peyton Manning's neck injury made the Colts unbettable that summer.
+</p>
+
+<script>
+const AVG_OVER_PCT = 47.4; // actual dataset average — used as reference line on both charts
+
+const IND = [{"net_rest":-25,"n":1,"overs":0,"over_pct":0.0,"avg_wvl":-6.0,"small":true},{"net_rest":-22,"n":3,"overs":0,"over_pct":0.0,"avg_wvl":-4.17,"small":true},{"net_rest":-20,"n":2,"overs":1,"over_pct":50.0,"avg_wvl":0.25,"small":true},{"net_rest":-19,"n":2,"overs":0,"over_pct":0.0,"avg_wvl":-2.0,"small":true},{"net_rest":-17,"n":3,"overs":2,"over_pct":66.7,"avg_wvl":2.0,"small":true},{"net_rest":-16,"n":1,"overs":0,"over_pct":0.0,"avg_wvl":-1.5,"small":true},{"net_rest":-15,"n":1,"overs":1,"over_pct":100.0,"avg_wvl":1.5,"small":true},{"net_rest":-14,"n":6,"overs":5,"over_pct":83.3,"avg_wvl":0.75,"small":true},{"net_rest":-13,"n":7,"overs":3,"over_pct":42.9,"avg_wvl":-0.36,"small":true},{"net_rest":-12,"n":4,"overs":2,"over_pct":50.0,"avg_wvl":0.5,"small":true},{"net_rest":-11,"n":6,"overs":1,"over_pct":16.7,"avg_wvl":-2.67,"small":true},{"net_rest":-10,"n":8,"overs":4,"over_pct":50.0,"avg_wvl":1.06,"small":true},{"net_rest":-9,"n":9,"overs":1,"over_pct":11.1,"avg_wvl":-2.67,"small":true},{"net_rest":-8,"n":12,"overs":4,"over_pct":33.3,"avg_wvl":-0.38,"small":false},{"net_rest":-7,"n":23,"overs":9,"over_pct":39.1,"avg_wvl":-0.61,"small":false},{"net_rest":-6,"n":19,"overs":14,"over_pct":73.7,"avg_wvl":0.92,"small":false},{"net_rest":-5,"n":19,"overs":9,"over_pct":47.4,"avg_wvl":0.18,"small":false},{"net_rest":-4,"n":20,"overs":11,"over_pct":55.0,"avg_wvl":0.1,"small":false},{"net_rest":-3,"n":14,"overs":7,"over_pct":50.0,"avg_wvl":-0.61,"small":false},{"net_rest":-2,"n":27,"overs":10,"over_pct":37.0,"avg_wvl":-0.31,"small":false},{"net_rest":-1,"n":34,"overs":16,"over_pct":47.1,"avg_wvl":-0.35,"small":false},{"net_rest":0,"n":34,"overs":18,"over_pct":52.9,"avg_wvl":0.0,"small":false},{"net_rest":1,"n":26,"overs":14,"over_pct":53.8,"avg_wvl":0.52,"small":false},{"net_rest":2,"n":21,"overs":10,"over_pct":47.6,"avg_wvl":-0.1,"small":false},{"net_rest":3,"n":33,"overs":14,"over_pct":42.4,"avg_wvl":-0.48,"small":false},{"net_rest":4,"n":24,"overs":13,"over_pct":54.2,"avg_wvl":0.56,"small":false},{"net_rest":5,"n":16,"overs":5,"over_pct":31.2,"avg_wvl":-0.78,"small":false},{"net_rest":6,"n":22,"overs":9,"over_pct":40.9,"avg_wvl":-0.5,"small":false},{"net_rest":7,"n":18,"overs":12,"over_pct":66.7,"avg_wvl":0.53,"small":false},{"net_rest":8,"n":22,"overs":10,"over_pct":45.5,"avg_wvl":-0.3,"small":false},{"net_rest":9,"n":11,"overs":6,"over_pct":54.5,"avg_wvl":-0.27,"small":false},{"net_rest":10,"n":11,"overs":6,"over_pct":54.5,"avg_wvl":0.41,"small":false},{"net_rest":11,"n":12,"overs":6,"over_pct":50.0,"avg_wvl":0.58,"small":false},{"net_rest":12,"n":12,"overs":4,"over_pct":33.3,"avg_wvl":-0.29,"small":false},{"net_rest":13,"n":3,"overs":2,"over_pct":66.7,"avg_wvl":0.5,"small":true},{"net_rest":14,"n":1,"overs":1,"over_pct":100.0,"avg_wvl":2.5,"small":true},{"net_rest":16,"n":1,"overs":1,"over_pct":100.0,"avg_wvl":1.5,"small":true},{"net_rest":22,"n":1,"overs":1,"over_pct":100.0,"avg_wvl":1.0,"small":true}];
+
+const BCK = [{"bucket":"≤-21","n":4,"overs":0,"over_pct":0.0,"avg_net_rest":-22.75,"avg_wvl":-4.63,"small":true},{"bucket":"-20→-16","n":8,"overs":3,"over_pct":37.5,"avg_net_rest":-18.13,"avg_wvl":0.13,"small":true},{"bucket":"-15→-11","n":24,"overs":12,"over_pct":50.0,"avg_net_rest":-12.67,"avg_wvl":-0.44,"small":false},{"bucket":"-10→-6","n":71,"overs":32,"over_pct":45.1,"avg_net_rest":-7.49,"avg_wvl":-0.23,"small":false},{"bucket":"-5→-1","n":114,"overs":53,"over_pct":46.5,"avg_net_rest":-2.68,"avg_wvl":-0.21,"small":false},{"bucket":"0→+4","n":138,"overs":69,"over_pct":50.0,"avg_net_rest":1.91,"avg_wvl":0.07,"small":false},{"bucket":"+5→+9","n":89,"overs":42,"over_pct":47.2,"avg_net_rest":6.89,"avg_wvl":-0.26,"small":false},{"bucket":"+10→+14","n":39,"overs":19,"over_pct":48.7,"avg_net_rest":11.26,"avg_wvl":0.31,"small":false},{"bucket":"+15→+19","n":1,"overs":1,"over_pct":100.0,"avg_net_rest":16.0,"avg_wvl":1.5,"small":true},{"bucket":"≥+20","n":1,"overs":1,"over_pct":100.0,"avg_net_rest":22.0,"avg_wvl":1.0,"small":true}];
+
+function barColor(pct, small) {
+  if (small) return 'rgba(80,80,80,0.7)';
+  if (pct < AVG_OVER_PCT - 3) return 'rgba(239,83,80,0.85)';   // meaningfully below avg → red
+  if (pct > AVG_OVER_PCT + 3) return 'rgba(102,187,106,0.85)'; // meaningfully above avg → green
+  return 'rgba(66,165,245,0.85)';                               // near avg → blue
+}
+
+// Chart 1
+const ctx1 = document.getElementById('chart1').getContext('2d');
+new Chart(ctx1, {
+  type: 'bar',
+  data: {
+    labels: IND.map(d => d.net_rest),
+    datasets: [{
+      data: IND.map(d => d.over_pct),
+      backgroundColor: IND.map(d => barColor(d.over_pct, d.small)),
+      borderColor: IND.map(d => d.small ? 'rgba(80,80,80,0.3)' : 'transparent'),
+      borderWidth: 1,
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: ctx => `net_rest = ${ctx[0].label}`,
+          label: ctx => {
+            const d = IND[ctx.dataIndex];
+            return [`Over%: ${d.over_pct}%`, `n: ${d.n} (${d.overs}O / ${d.n - d.overs}U)`, `Avg wins vs line: ${d.avg_wvl > 0 ? '+' : ''}${d.avg_wvl.toFixed(2)}`, d.small ? '⚠ Small sample (n<10)' : ''];
+          }
+        },
+        backgroundColor: '#1e2230',
+        titleColor: '#fff',
+        bodyColor: '#aaa',
+        borderColor: '#333',
+        borderWidth: 1,
+      },
+      annotation: { /* handled via baseline */ }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Net Rest (days)', color: '#666', font: { size: 11 } },
+        ticks: { color: '#555', font: { size: 10 } },
+        grid: { color: '#1e2230' }
+      },
+      y: {
+        min: 0, max: 100,
+        title: { display: true, text: 'Over %', color: '#666', font: { size: 11 } },
+        ticks: { color: '#555', font: { size: 10 }, callback: v => v + '%' },
+        grid: { color: '#222' }
+      }
+    }
+  },
+  plugins: [{
+    id: 'baseline',
+    afterDraw(chart) {
+      const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+      const yAvg = y.getPixelForValue(AVG_OVER_PCT);
+      ctx.save();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = 'rgba(239,83,80,0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(left, yAvg);
+      ctx.lineTo(right, yAvg);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(239,83,80,0.85)';
+      ctx.font = '10px -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`avg ${AVG_OVER_PCT}%`, right + 4, yAvg + 4);
+      ctx.restore();
+    }
+  }]
+});
+
+// Chart 2
+const ctx2 = document.getElementById('chart2').getContext('2d');
+const chart2 = new Chart(ctx2, {
+  type: 'bar',
+  data: {
+    labels: BCK.map(d => d.bucket),
+    datasets: [{
+      data: BCK.map(d => d.over_pct),
+      backgroundColor: BCK.map(d => barColor(d.over_pct, d.small)),
+      borderColor: BCK.map(d => d.small ? 'rgba(120,120,120,0.6)' : 'transparent'),
+      borderWidth: d => d.small ? 1 : 0,
+      borderDash: [4, 2],
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: ctx => `Bucket: ${ctx[0].label}`,
+          label: ctx => {
+            const d = BCK[ctx.dataIndex];
+            return [`Over%: ${d.over_pct}%`, `n: ${d.n} (${d.overs}O / ${d.n - d.overs}U)`, `Avg net rest: ${d.avg_net_rest > 0 ? '+' : ''}${d.avg_net_rest.toFixed(1)}`, `Avg wins vs line: ${d.avg_wvl > 0 ? '+' : ''}${d.avg_wvl.toFixed(2)}`, d.small ? '⚠ Small sample (n<10)' : ''];
+          }
+        },
+        backgroundColor: '#1e2230',
+        titleColor: '#fff',
+        bodyColor: '#aaa',
+        borderColor: '#333',
+        borderWidth: 1,
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Net Rest Bucket', color: '#666', font: { size: 11 } },
+        ticks: { color: '#555', font: { size: 11 } },
+        grid: { color: '#1e2230' }
+      },
+      y: {
+        min: 0, max: 100,
+        title: { display: true, text: 'Over %', color: '#666', font: { size: 11 } },
+        ticks: { color: '#555', font: { size: 10 }, callback: v => v + '%' },
+        grid: { color: '#222' }
+      }
+    }
+  },
+  plugins: [
+    {
+      id: 'baseline',
+      afterDraw(chart) {
+        const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+        const y50 = y.getPixelForValue(50);
+        ctx.save();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(left, y50);
+        ctx.lineTo(right, y50);
+        ctx.stroke();
+        ctx.restore();
+      }
+    },
+    {
+      id: 'nLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx, data, chartArea: { top }, scales: { x, y } } = chart;
+        ctx.save();
+        ctx.font = '11px -apple-system, sans-serif';
+        ctx.fillStyle = '#888';
+        ctx.textAlign = 'center';
+        data.datasets[0].data.forEach((val, i) => {
+          const d = BCK[i];
+          const xPos = x.getPixelForValue(i);
+          const yPos = y.getPixelForValue(val) - 6;
+          ctx.fillText(`n=${d.n}`, xPos, yPos);
+        });
+        ctx.restore();
+      }
+    }
+  ]
+});
+</script>
+</body>
+</html>

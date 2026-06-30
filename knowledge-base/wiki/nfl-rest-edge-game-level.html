@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NFL Rest Edge — Game-Level Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 22px; color: #fff; margin-bottom: 4px; }
+.meta { color: #888; font-size: 13px; margin-bottom: 28px; }
+nav { margin-bottom: 28px; padding: 10px 0; border-top: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; }
+nav a { color: #5b9bd5; text-decoration: none; margin-right: 18px; font-size: 13px; }
+nav a:hover { text-decoration: underline; }
+.section { margin-bottom: 52px; border-top: 1px solid #2a2a2a; padding-top: 22px; }
+h2 { font-size: 17px; color: #fff; margin-bottom: 6px; }
+.desc { color: #999; font-size: 13px; margin-bottom: 12px; }
+.sharp { background: #1a2a1a; border-left: 3px solid #4caf50; padding: 7px 12px; margin-bottom: 14px; font-size: 12px; color: #aaa; border-radius: 0 3px 3px 0; }
+.chart-wrap { margin: 14px 0 8px; }
+.dt { width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 13px; }
+.dt th { background: #1e1e1e; color: #888; padding: 6px 10px; text-align: right; font-weight: 500; border-bottom: 1px solid #2e2e2e; }
+.dt th:first-child, .dt th:nth-child(2) { text-align: left; }
+.dt td { padding: 5px 10px; text-align: right; border-bottom: 1px solid #1e1e1e; }
+.dt td:first-child, .dt td:nth-child(2) { text-align: left; color: #ccc; }
+.dt tr:hover td { background: #191919; }
+.hi  { color: #4caf50; font-weight: 700; }
+.lo  { color: #f44336; font-weight: 700; }
+.mid { color: #e0e0e0; }
+footer { color: #555; font-size: 12px; margin-top: 40px; border-top: 1px solid #1e1e1e; padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>NFL Rest Edge — Game-Level Analysis</h1>
+<p class="meta">2010–2025 · 8,350 team-game rows · pushes excluded from cover rates (see each table) · baseline cover rate: <strong>50.0%</strong></p>
+
+<nav>
+  <a href="#s1">1. Direction</a>
+  <a href="#s2">2. Magnitude</a>
+  <a href="#s3">3. Home vs Away</a>
+  <a href="#s4">4. Week 6+ cutoff</a>
+  <a href="#s5">5. Short-week road</a>
+  <a href="#s6">6. Bye vs mid-week rest</a>
+</nav>
+
+<!-- ── STEP 1 ── -->
+<div class="section" id="s1">
+<h2>Step 1 — Does rest edge direction predict spread cover?</h2>
+<p class="desc">Baseline three-way split: teams with more rest vs equal rest vs less rest than their opponent.</p>
+<table class="dt"><thead><tr><th>Category</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>Rest advantage (edge > 0)</td><td>1423</td><td>707</td><td>32</td><td class="mid">49.7%</td></tr><tr><td>Neutral (edge = 0)</td><td>5292</td><td>2646</td><td>148</td><td class="mid">50.0%</td></tr><tr><td>Rest disadvantage (edge < 0)</td><td>1423</td><td>716</td><td>32</td><td class="mid">50.3%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c1" height="260"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c1'), {"type": "bar", "data": {"labels": ["Rest advantage (edge > 0)", "Neutral (edge = 0)", "Rest disadvantage (edge < 0)"], "datasets": [{"data": [49.7, 50.0, 50.3], "backgroundColor": ["#5b9bd5", "#5b9bd5", "#5b9bd5"], "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 52.4, "yMax": 52.4, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Breakeven (52.4%)", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 0, "max": 100, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+</div>
+
+<!-- ── STEP 2 ── -->
+<div class="section" id="s2">
+<h2>Step 2 — Does the size of the rest edge matter?</h2>
+<p class="desc">Cover rate by rest edge magnitude. −7/−8 = facing a bye team; +7/+8 = team coming off bye vs short-week opponent.</p>
+<table class="dt"><thead><tr><th>Category</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>≤ −7</td><td>361</td><td>185</td><td>9</td><td class="mid">51.2%</td></tr><tr><td>−4 to −6</td><td>101</td><td>46</td><td>3</td><td class="lo">45.5%</td></tr><tr><td>−2 to −3</td><td>458</td><td>228</td><td>10</td><td class="mid">49.8%</td></tr><tr><td>−1</td><td>503</td><td>257</td><td>10</td><td class="mid">51.1%</td></tr><tr><td>0</td><td>5292</td><td>2646</td><td>148</td><td class="mid">50.0%</td></tr><tr><td>+1</td><td>503</td><td>246</td><td>10</td><td class="mid">48.9%</td></tr><tr><td>+2 to +3</td><td>458</td><td>230</td><td>10</td><td class="mid">50.2%</td></tr><tr><td>+4 to +6</td><td>101</td><td>55</td><td>3</td><td class="hi">54.5%</td></tr><tr><td>≥ +7</td><td>361</td><td>176</td><td>9</td><td class="mid">48.8%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c2" height="260"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c2'), {"type": "bar", "data": {"labels": ["\u2264 \u22127", "\u22124 to \u22126", "\u22122 to \u22123", "\u22121", "0", "+1", "+2 to +3", "+4 to +6", "\u2265 +7"], "datasets": [{"data": [51.2, 45.5, 49.8, 51.1, 50.0, 48.9, 50.2, 54.5, 48.8], "backgroundColor": ["#5b9bd5", "#f44336", "#5b9bd5", "#5b9bd5", "#5b9bd5", "#5b9bd5", "#5b9bd5", "#4caf50", "#5b9bd5"], "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 50.0, "yMax": 50.0, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Baseline 50.0%", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 40, "max": 62, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+</div>
+
+<!-- ── STEP 3 ── -->
+<div class="section" id="s3">
+<h2>Step 3 — Home vs Away split</h2>
+<p class="desc">Home and away cover rates always sum to ~100% (each game has exactly one cover), so the 50% baseline is misleading here — read marginal effects vs each group's own baseline instead.</p>
+<div class="sharp">Sharp (10-yr sample): Road teams with 3–6 day rest edge → <strong>56.1% cover rate</strong> (7.0% ROI) across 134 games</div>
+
+<h3 style="font-size:14px;color:#bbb;margin:16px 0 8px;">3a — Baseline: Home vs Away (all games, no rest split)</h3>
+<table class="dt"><thead><tr><th>Category</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>Home</td><td>4069</td><td>1996</td><td>106</td><td class="mid">49.1%</td></tr><tr><td>Away</td><td>4069</td><td>2073</td><td>106</td><td class="mid">50.9%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c3a" height="200"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c3a'), {"type": "bar", "data": {"labels": ["Home", "Away"], "datasets": [{"data": [49.1, 50.9], "backgroundColor": ["#5b9bd5", "#5b9bd5"], "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 50.0, "yMax": 50.0, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Baseline 50.0%", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 40, "max": 62, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+
+<h3 style="font-size:14px;color:#bbb;margin:20px 0 8px;">3b — Home vs Away × rest edge direction</h3>
+<p class="desc">Marginal lift from rest advantage: +5pp for home teams (62.8% vs 57.8% baseline), ~0pp for away teams (42.0% vs 42.2% baseline). Disadvantage hurts away teams specifically (37.2%).</p>
+<table class="dt"><thead><tr><th>Direction</th><th>Location</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>Advantage (> 0)</td><td>Home</td><td>627</td><td>301</td><td>19</td><td class="lo">48.0%</td></tr><tr><td>Advantage (> 0)</td><td>Away</td><td>796</td><td>406</td><td>13</td><td class="mid">51.0%</td></tr><tr><td>Neutral (= 0)</td><td>Home</td><td>2646</td><td>1305</td><td>74</td><td class="mid">49.3%</td></tr><tr><td>Neutral (= 0)</td><td>Away</td><td>2646</td><td>1341</td><td>74</td><td class="mid">50.7%</td></tr><tr><td>Disadvantage (< 0)</td><td>Home</td><td>796</td><td>390</td><td>13</td><td class="mid">49.0%</td></tr><tr><td>Disadvantage (< 0)</td><td>Away</td><td>627</td><td>326</td><td>19</td><td class="hi">52.0%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c3" height="280"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c3'), {"type": "bar", "data": {"labels": ["Advantage (> 0)", "Neutral (= 0)", "Disadvantage (< 0)"], "datasets": [{"label": "Home", "data": [48.0, 49.3, 49.0], "backgroundColor": "#5b9bd5", "borderWidth": 0}, {"label": "Away", "data": [51.0, 50.7, 52.0], "backgroundColor": "#ff9800", "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"labels": {"color": "#ccc", "font": {"size": 12}}}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 50.0, "yMax": 50.0, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Baseline 50.0%", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 40, "max": 62, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+</div>
+
+<!-- ── STEP 4 ── -->
+<div class="section" id="s4">
+<h2>Step 4 — Week 6+ cutoff</h2>
+<p class="desc">Sharp claims rest edge is noise early in the season and becomes signal from Week 6 onward, as teams settle their rotations.</p>
+<div class="sharp">Sharp: After Week 6, rest advantage → <strong>54.6% cover</strong> (4.2% ROI) across 233 games</div>
+<table class="dt"><thead><tr><th>Direction</th><th>Period</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>Advantage</td><td>All weeks</td><td>1423</td><td>707</td><td>32</td><td class="mid">49.7%</td></tr><tr><td>Advantage</td><td>Weeks 1–5</td><td>270</td><td>141</td><td>6</td><td class="hi">52.2%</td></tr><tr><td>Advantage</td><td>Week 6+</td><td>1153</td><td>566</td><td>26</td><td class="mid">49.1%</td></tr><tr><td>Neutral</td><td>All weeks</td><td>5292</td><td>2646</td><td>148</td><td class="mid">50.0%</td></tr><tr><td>Neutral</td><td>Weeks 1–5</td><td>1894</td><td>947</td><td>36</td><td class="mid">50.0%</td></tr><tr><td>Neutral</td><td>Week 6+</td><td>3398</td><td>1699</td><td>112</td><td class="mid">50.0%</td></tr><tr><td>Disadvantage</td><td>All weeks</td><td>1423</td><td>716</td><td>32</td><td class="mid">50.3%</td></tr><tr><td>Disadvantage</td><td>Weeks 1–5</td><td>270</td><td>129</td><td>6</td><td class="lo">47.8%</td></tr><tr><td>Disadvantage</td><td>Week 6+</td><td>1153</td><td>587</td><td>26</td><td class="mid">50.9%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c4" height="280"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c4'), {"type": "bar", "data": {"labels": ["Advantage", "Neutral", "Disadvantage"], "datasets": [{"label": "All weeks", "data": [49.7, 50.0, 50.3], "backgroundColor": "#777", "borderWidth": 0}, {"label": "Weeks 1\u20135", "data": [52.2, 50.0, 47.8], "backgroundColor": "#ff9800", "borderWidth": 0}, {"label": "Week 6+", "data": [49.1, 50.0, 50.9], "backgroundColor": "#4caf50", "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"labels": {"color": "#ccc", "font": {"size": 12}}}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 50.0, "yMax": 50.0, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Baseline 50.0%", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 40, "max": 62, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+</div>
+
+<!-- ── STEP 5 ── -->
+<div class="section" id="s5">
+<h2>Step 5 — Short-week road games specifically</h2>
+<p class="desc">Away teams with fewer than 6 days rest are the most structurally disadvantaged situation in the NFL schedule.</p>
+<div class="sharp">Sharp: Short-week road teams → <strong>47.4% cover</strong> (−9.4% ROI) · flip to rest advantage = 53.3% (+1.8% ROI) · swing: 11.2% ROI</div>
+<table class="dt"><thead><tr><th>Category</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>Short-week road (away, < 6 days)</td><td>521</td><td>266</td><td>16</td><td class="mid">51.1%</td></tr><tr><td>Standard road, disadvantage</td><td>407</td><td>218</td><td>15</td><td class="hi">53.6%</td></tr><tr><td>Standard road, neutral</td><td>2348</td><td>1185</td><td>62</td><td class="mid">50.5%</td></tr><tr><td>Road with rest advantage</td><td>796</td><td>406</td><td>13</td><td class="mid">51.0%</td></tr><tr><td>All road games</td><td>4069</td><td>2073</td><td>106</td><td class="mid">50.9%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c5" height="260"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c5'), {"type": "bar", "data": {"labels": ["Short-week road (away, < 6 days)", "Standard road, disadvantage", "Standard road, neutral", "Road with rest advantage", "All road games"], "datasets": [{"data": [51.1, 53.6, 50.5, 51.0, 50.9], "backgroundColor": ["#5b9bd5", "#4caf50", "#5b9bd5", "#5b9bd5", "#5b9bd5"], "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 50.0, "yMax": 50.0, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Baseline 50.0%", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 40, "max": 62, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+</div>
+
+<!-- ── STEP 6 ── -->
+<div class="section" id="s6">
+<h2>Step 6 — Post-bye vs mid-week rest advantage</h2>
+<p class="desc">Is a full bye (13+ days rest) worth more than a smaller structural advantage? Sharp argues the 3–6 day mid-week edge is underpriced because books focus on the visible bye.</p>
+<div class="sharp">Sharp: Full bye often priced in by books · 3–6 day mid-week edge less visible → more exploitable</div>
+<table class="dt"><thead><tr><th>Category</th><th>n (excl push)</th><th>Covers</th><th>Pushes</th><th>Cover %</th></tr></thead><tbody><tr><td>Post-bye (had_bye=True)</td><td>497</td><td>246</td><td>15</td><td class="mid">49.5%</td></tr><tr><td>Mid-week edge (3–6 days, no bye)</td><td>461</td><td>235</td><td>9</td><td class="mid">51.0%</td></tr><tr><td>Small edge (1–2 days)</td><td>537</td><td>262</td><td>11</td><td class="mid">48.8%</td></tr><tr><td>Neutral (edge = 0)</td><td>5292</td><td>2646</td><td>148</td><td class="mid">50.0%</td></tr><tr><td>Rest disadvantage, std week</td><td>1203</td><td>608</td><td>28</td><td class="mid">50.5%</td></tr><tr><td>Short-week road</td><td>521</td><td>266</td><td>16</td><td class="mid">51.1%</td></tr></tbody></table>
+
+<div class="chart-wrap"><canvas id="c6" height="260"></canvas></div>
+<script>(function(){ new Chart(document.getElementById('c6'), {"type": "bar", "data": {"labels": ["Post-bye (had_bye=True)", "Mid-week edge (3\u20136 days, no bye)", "Small edge (1\u20132 days)", "Neutral (edge = 0)", "Rest disadvantage, std week", "Short-week road"], "datasets": [{"data": [49.5, 51.0, 48.8, 50.0, 50.5, 51.1], "backgroundColor": ["#5b9bd5", "#5b9bd5", "#5b9bd5", "#5b9bd5", "#5b9bd5", "#5b9bd5"], "borderWidth": 0}]}, "options": {"responsive": true, "plugins": {"legend": {"display": false}, "annotation": {"annotations": {"bl": {"type": "line", "yMin": 50.0, "yMax": 50.0, "borderColor": "#ef5350", "borderWidth": 2, "borderDash": [6, 4], "label": {"display": true, "content": "Baseline 50.0%", "color": "#ef5350", "position": "end", "backgroundColor": "transparent", "font": {"size": 11}}}}}}, "scales": {"y": {"min": 40, "max": 62, "ticks": {"color": "#aaa", "callback": v => v + "%"}, "grid": {"color": "#2a2a2a"}, "title": {"display": true, "text": "Cover %", "color": "#777"}}, "x": {"ticks": {"color": "#bbb"}, "grid": {"color": "#1e1e1e"}}}}}); })();</script>
+</div>
+
+<footer>
+  Source: nfl_data_py schedules + spread lines, 2010–2025.
+  Pushes (212 total, 2.5% of all team-game rows) excluded from cover rate denominators.
+  Green = ≥ baseline + 2pp · Red = ≤ baseline − 2pp.
+</footer>
+
+</div>
+</body>
+</html>
