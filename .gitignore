@@ -166,3 +166,8 @@ web/rebounds/data.js
 # tmp files
 tmp_instructions.txt
 git_stuff.txt
+temp_content.txt
+tmp_query.sql
+
+# Model artifacts (local staging only — canonical copy lives on S3)
+models/
