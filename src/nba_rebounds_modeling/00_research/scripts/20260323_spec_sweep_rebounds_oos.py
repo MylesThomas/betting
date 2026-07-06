@@ -8,7 +8,7 @@ Context:
 - Optional: bootstrap (Monte Carlo) CIs on total PnL and mean ROI over placed bets (resample bets w/ replacement).
 
 Usage:
-    python src/nba_rebounds_modeling/00_research/scripts/v7_spec_sweep_rebounds_oos.py \\
+    python src/nba_rebounds_modeling/00_research/scripts/20260323_spec_sweep_rebounds_oos.py \\
         --feat ~/Downloads/tmp/rebounds_model_features_v2.parquet \\
         --v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet \\
         --out-csv ~/Downloads/tmp/rebounds_spec_sweep_oos.csv \\
@@ -125,8 +125,8 @@ def build_spec_table() -> dict[str, list[str]]:
 
 def load_v5_module():
     here = Path(__file__).resolve().parent
-    path = here / "v5_compare_rebounds_models_oos.py"
-    spec = importlib.util.spec_from_file_location("v5_compare_rebounds_models_oos", path)
+    path = here / "20260323_compare_rebounds_models_oos.py"
+    spec = importlib.util.spec_from_file_location("20260323_compare_rebounds_models_oos", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

@@ -8,7 +8,7 @@ Context:
 - Writes CSVs + matplotlib figures to --out-dir for notebook replication.
 
 Usage:
-    python src/nba_rebounds_modeling/00_research/scripts/v6_diagnose_xgb_vs_linear_rebounds_oos.py \\
+    python src/nba_rebounds_modeling/00_research/scripts/20260323_diagnose_xgb_vs_linear_rebounds_oos.py \\
         --feat ~/Downloads/tmp/rebounds_model_features_v2.parquet \\
         --v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet \\
         --out-dir ~/Downloads/tmp/rebounds_xgb_ols_diag \\
@@ -45,8 +45,8 @@ ensure_repo_root_on_syspath()
 
 def load_v5_module():
     here = Path(__file__).resolve().parent
-    path = here / "v5_compare_rebounds_models_oos.py"
-    spec = importlib.util.spec_from_file_location("v5_compare_rebounds_models_oos", path)
+    path = here / "20260323_compare_rebounds_models_oos.py"
+    spec = importlib.util.spec_from_file_location("20260323_compare_rebounds_models_oos", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

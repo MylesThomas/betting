@@ -200,12 +200,14 @@ def fetch_all_starters(gameday: str) -> dict[str, dict]:
 
 def settle(recs: pd.DataFrame, actuals: dict[str, dict]) -> pd.DataFrame:
     df = recs.copy()
+    df["side"] = df["side"].str.lower()
+    # Only settle rows with an actual recommendation — drop no-edge rows (side=NaN)
+    df = df[df["side"].isin(["over", "under"])].copy()
     df["actual_k"] = df["player_key"].map(
         {k: v.get("strikeouts") for k, v in actuals.items()}
     )
     df["actual_k"] = pd.to_numeric(df["actual_k"], errors="coerce")
     df["line"]     = pd.to_numeric(df["line"], errors="coerce")
-    df["side"]     = df["side"].str.lower()
 
     def outcome(row):
         if pd.isna(row["actual_k"]):
@@ -223,12 +225,11 @@ def settle(recs: pd.DataFrame, actuals: dict[str, dict]) -> pd.DataFrame:
     def pnl(row):
         if row["outcome"] in ("PUSH", "DNP"):
             return 0.0
+        odds = row.get("odds") if row["side"] == "over" else row.get("odds_u")
+        if pd.isna(odds):
+            return np.nan  # missing odds = data problem, not a default
+        odds = float(odds)
         if row["outcome"] == "WIN":
-            odds_col = "best_over_odds" if row["side"] == "over" else "best_under_odds"
-            odds = row.get(odds_col, -110)
-            if pd.isna(odds):
-                odds = -110
-            odds = float(odds)
             return odds / 100.0 if odds >= 0 else 100.0 / abs(odds)
         return -1.0
 
@@ -259,13 +260,14 @@ def build_settlement_html(df: pd.DataFrame, gameday: str) -> str:
         oc      = row["outcome"]
         side    = str(row.get("side", "")).upper()
         side_c  = "#4ade80" if side == "OVER" else "#f87171"
-        odds_col = "best_over_odds" if side.lower() == "over" else "best_under_odds"
+        raw_odds = row.get("odds") if side == "OVER" else row.get("odds_u")
+        odds_disp = f"{int(float(raw_odds)):+d}" if pd.notna(raw_odds) else "—"
         rows_html += f"""
         <tr>
           <td style="padding:6px 10px;font-weight:600;">{html_module.escape(str(row.get('player','—')))}</td>
           <td style="padding:6px 10px;text-align:center;font-weight:bold;color:{side_c};">{side}</td>
           <td style="padding:6px 10px;text-align:center;">{row.get('line','—')}</td>
-          <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">{int(float(row.get('best_over_odds', row.get('best_under_odds', 0)))) if pd.notna(row.get('best_over_odds', row.get('best_under_odds'))) else '—'}</td>
+          <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">{odds_disp}</td>
           <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">{"—" if pd.isna(row.get('actual_k')) else int(row['actual_k'])}</td>
           <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">+{row.get('edge',0)*100:.1f}pp</td>
           <td style="padding:6px 10px;text-align:center;font-weight:bold;color:{color(oc)};">{oc}</td>

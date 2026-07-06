@@ -12,7 +12,7 @@ Context:
   line (highest American odds) among all books that qualify for that group.
 
 Usage:
-    python src/nba_rebounds_modeling/00_research/scripts/v3_run_rebounds_edge_backtest.py \\
+    python src/nba_rebounds_modeling/00_research/scripts/20260323_run_rebounds_edge_backtest.py \\
         --feat ~/Downloads/tmp/rebounds_model_features_v2.parquet \\
         --v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet \\
         --test-season 2025-26 \\

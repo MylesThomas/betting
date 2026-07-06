@@ -490,7 +490,7 @@ def build_html_email(
         if game_srcs else pd.DataFrame()
     )
 
-    S1_COLS = 16
+    S1_COLS = 17
     rows_bet = ""
 
     for _, grow in all_games.iterrows():
@@ -537,6 +537,12 @@ def build_html_email(
             model_under = fmt(1 - float(r.get("p_model", np.nan)), ".1%")
             edge_str    = fmt(r.get("edge_under"), "+.1%")
             proj_tb     = fmt(r.get("y_hat"), ".2f")
+            is_dog = float(r.get("novig_under", 1.0)) < 0.50
+            dog_cell = (
+                "<td style='text-align:center;color:#276221;font-weight:bold'>✓</td>"
+                if is_dog else
+                "<td style='text-align:center;color:#aaa'>✗</td>"
+            )
 
             rows_bet += (
                 f"<tr style='{bg}'>"
@@ -547,6 +553,7 @@ def build_html_email(
                 f"<td style='text-align:center;font-weight:600'>{book_abbrev}</td>"
                 f"<td style='text-align:center;color:#555'>{over_odds}</td>"
                 f"<td style='text-align:center;font-weight:bold;color:#1d4ed8'>{under_odds}</td>"
+                f"{dog_cell}"
                 f"<td style='text-align:center'>{mkt_under}</td>"
                 f"<td style='text-align:center'>{model_under}</td>"
                 f"<td style='text-align:center'>{edge_str}</td>"
@@ -568,6 +575,12 @@ def build_html_email(
             best_book  = str(r.get("best_under_book", "") or "—")
             under_odds = to_american(r.get("best_under_price"))
             over_odds  = to_american(r.get("over_odds"))
+            nq_is_dog  = float(r.get("novig_prob_under", 1.0)) < 0.50
+            nq_dog_cell = (
+                "<td style='text-align:center;color:#888'>✓</td>"
+                if nq_is_dog else
+                "<td style='text-align:center;color:#ccc'>✗</td>"
+            )
 
             rows_bet += (
                 f"<tr>"
@@ -578,6 +591,7 @@ def build_html_email(
                 f"<td style='text-align:center;font-size:11px;color:#aaa'>{he(display_book(best_book))}</td>"
                 f"<td style='text-align:center;color:#aaa'>{over_odds}</td>"
                 f"<td style='text-align:center;color:#aaa'>{under_odds}</td>"
+                f"{nq_dog_cell}"
                 f"<td style='text-align:center;color:#aaa'>{fmt(r.get('novig_prob_under'), '.1%')}</td>"
                 f"<td style='text-align:center;color:#aaa'>{fmt(1 - float(r.get('p_model', np.nan)), '.1%')}</td>"
                 f"<td style='text-align:center;color:#aaa'>{fmt(r.get('edge_under'), '+.1%')}</td>"
@@ -648,7 +662,7 @@ def build_html_email(
   <table>
     <tr>
       <th>Player</th><th>Team</th><th>Opp</th><th>Line</th>
-      <th>Book</th><th>Over</th><th>Under</th>
+      <th>Book</th><th>Over</th><th>Under</th><th>Dog?</th>
       <th>Mkt Under%</th><th>Model Under%</th><th>Edge</th>
       <th>Proj TB</th>
       <th>AB/G (C)</th><th>AB/G (L10)</th><th>TB/G (C)</th><th>TB/G (L10)</th>
@@ -668,8 +682,8 @@ def build_html_email(
 
 <div class='footer'>
   Flat 1u per book bet · v2 XGBoost regression + Method C calibration &nbsp;·&nbsp;
-  Plays (≥{min_bet_edge*100:.0f}pp, dogs, line=1.5): OOS +211.9u, ROI=+1.72%, n=12,323 &nbsp;·&nbsp;
-  Tracks ({min_track_edge*100:.0f}pp, dogs, line=1.5): OOS +47.7u, ROI=+0.34%, n=14,110
+  Plays (≥{min_bet_edge*100:.0f}pp, dogs, line=1.5): out-of-sample +211.9u, ROI=+1.72%, n=12,323 &nbsp;·&nbsp;
+  Tracks ({min_track_edge*100:.0f}pp, dogs, line=1.5): out-of-sample +47.7u, ROI=+0.34%, n=14,110
 </div>
 
 <details style='margin-top:16px'>

@@ -16,7 +16,7 @@ Usage:
 
 import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 
 def get_project_root() -> Path:
@@ -116,6 +116,49 @@ def ensure_dir_exists(key: str) -> Path:
     dir_path = get_data_path(key, absolute=True)
     dir_path.mkdir(parents=True, exist_ok=True)
     return dir_path
+
+
+def load_strategies(sport: str = None) -> Dict[str, Any]:
+    """
+    Load all strategy configs from config/strategies/*.yaml.
+
+    Returns a dict keyed by sport, each value being the strategies block
+    from that sport's YAML file.
+
+    Args:
+        sport: Optional filter — e.g. "nfl" or "nba". If None, returns all sports.
+
+    Example:
+        >>> strats = load_strategies()
+        >>> strats["nfl"]["rec_yards"]["oos"]["roi"]
+        0.054
+
+        >>> nfl_only = load_strategies("nfl")
+        >>> list(nfl_only["nfl"].keys())
+        ['sacks', 'rush_attempts', 'rec_yards']
+    """
+    strategies_dir = get_project_root() / "config" / "strategies"
+    result: Dict[str, Any] = {}
+    for path in sorted(strategies_dir.glob("*.yaml")):
+        with open(path) as f:
+            data = yaml.safe_load(f)
+        sport_key = data.get("sport", path.stem)
+        result[sport_key] = data.get("strategies", {})
+    if sport is not None:
+        return {sport: result[sport]} if sport in result else {}
+    return result
+
+
+def list_strategies(sport: str = None) -> List[str]:
+    """
+    Return a flat list of 'sport.market' strategy identifiers.
+
+    Example:
+        >>> list_strategies()
+        ['nba.assists', 'nba.points', 'nfl.rec_yards', 'nfl.rush_attempts', 'nfl.sacks']
+    """
+    strats = load_strategies(sport)
+    return sorted(f"{s}.{m}" for s, markets in strats.items() for m in markets)
 
 
 if __name__ == '__main__':

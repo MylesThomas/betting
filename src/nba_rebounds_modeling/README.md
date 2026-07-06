@@ -120,10 +120,10 @@ Versioned exploration — do not modify. Reference only.
 
 | Script | What it explored |
 |---|---|
-| `v1_build_rebounds_universe.py` | Initial universe build |
-| `v3_run_rebounds_edge_backtest.py` | Edge backtest framework |
-| `v4_run_rebounds_under_only_season_robustness.py` | Under-only strategy robustness across seasons |
-| `v5_compare_rebounds_models_oos.py` | OLS vs XGB OOS comparison |
-| `v6_diagnose_xgb_vs_linear_rebounds_oos.py` | XGB vs linear diagnosis |
-| `v7_spec_sweep_rebounds_oos.py` | Feature spec sweep |
+| `20260323_build_rebounds_universe.py` | Initial universe build |
+| `20260323_run_rebounds_edge_backtest.py` | Edge backtest framework |
+| `20260323_run_rebounds_under_only_season_robustness.py` | Under-only strategy robustness across seasons |
+| `20260323_compare_rebounds_models_oos.py` | OLS vs XGBoost out-of-sample comparison |
+| `20260323_diagnose_xgb_vs_linear_rebounds_oos.py` | XGBoost vs linear diagnosis |
+| `20260323_spec_sweep_rebounds_oos.py` | Feature spec sweep |
 | `compare_dedupe_backtest.py` | Backtest with deduplication at player-game-line level |

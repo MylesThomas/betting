@@ -8,7 +8,7 @@ Context:
   min_edge 0.05 / 0.10), P&L at posted under_odds.
 
 Usage:
-    python src/nba_rebounds_modeling/00_research/scripts/v5_compare_rebounds_models_oos.py \\
+    python src/nba_rebounds_modeling/00_research/scripts/20260323_compare_rebounds_models_oos.py \\
         --feat ~/Downloads/tmp/rebounds_model_features_v2.parquet \\
         --v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet \\
         --models ols,ridge,xgb

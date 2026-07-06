@@ -19,12 +19,12 @@ mlb_strikeouts_model:
 
   training:
     seasons: [2024, 2025, 2026]
-    oof_folds:
+    out_of_sample_folds:
       - test_season: 2025
         train_seasons: [2024]
       - test_season: 2026
         train_seasons: [2024, 2025]
-    oof_rmse: 2.1266           # v5 (Group B: granular price buckets); OLS, 7 features; v4 was 2.1433
+    out_of_sample_rmse: 2.1266  # v5 (Group B: granular price buckets); OLS, 7 features; v4 was 2.1433
     residual_std: 2.1464       # std of full-data training residuals (v5)
 
   inference:
@@ -40,8 +40,8 @@ mlb_strikeouts_model:
     min_books: 2                   # minimum books to include player
     line_min: 3.5                  # exclude extreme alt lines
     line_max: 6.5
-    # OOS (v5): 7,104 bets · 59.36% WR · +528.97u · +7.45% ROI (2025–2026)
-    # IS/OOS ratio: 0.99x (IS and OOS nearly identical — well-calibrated, no overfitting)
+    # Out-of-sample (v5): 7,104 bets · 59.36% WR · +528.97u · +7.45% ROI (2025–2026)
+    # In-sample/out-of-sample ratio: 0.99x (nearly identical — well-calibrated, no overfitting)
 
   s3:
     bucket: the-odds-api-mt

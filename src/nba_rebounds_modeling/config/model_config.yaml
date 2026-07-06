@@ -1,0 +1,127 @@
+strategy_summary: "UNDER only, edge >5pp, all lines, OLS + XGB both run in prod"
+
+model:
+  # Two-model ensemble: OLS (statsmodels) + XGBoost regressor.
+  # Scoring: Option A Normal CDF — P(under) = Phi((line - mean_adj) / sigma)
+  # A play fires when either OLS or XGB clears min_bet_edge.
+  type: ols_statsmodels_plus_xgboost
+  version: v1
+  out_of_sample_rmse: 2.673     # OLS avg across 3 out-of-sample folds (2.742, 2.699, 2.579); XGB: 2.687
+  out_of_sample_r2_pct: 45.5   # OLS avg R-squared × 100 across 3 out-of-sample folds (47.5, 46.9, 42.0); XGB: 44.9
+  n_train_rows: 31946
+  date_min: "2023-10-28"
+  date_max: "2026-04-02"
+
+  numeric_features:
+    - min_line           # min posted line across all books for this player on gameday
+    - max_line           # max posted line across all books
+    - spread_signed      # game spread (negative = home favorite)
+    - roll_reb_mean_60   # rolling 60-game REB avg (season-scoped, shift(1))
+    - roll_fg3a_mean_20  # rolling 20-game 3PA avg
+    - roll_reb_std_5     # rolling 5-game REB std dev — also used as sigma
+
+  categorical_features: []
+
+  calibration:
+    method: option_a_normal_cdf   # no separate calibration model; closed-form Normal CDF
+    sigma_col: roll_reb_std_5
+    sigma_floor: 0.25             # clip sigma to prevent division by zero on low-variance players
+    shrinkage: 0.0                # mean_adj = consensus + 1.0 * (yhat - consensus)
+
+  xgboost_params:
+    n_estimators: 500
+    max_depth: 3
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 5.0
+    reg_alpha: 0.5
+    random_state: 69
+
+  s3:
+    bucket: nba-betting-mt
+    ols_key: "rebounds/models/{run_id}/ols_model.pkl"
+    xgb_key: "rebounds/models/{run_id}/xgb_model.json"
+    manifest_key: "rebounds/models/{run_id}/manifest.json"
+    features_key: "rebounds/features/rebounds_feature_universe.parquet"
+    input_key: "rebounds/input/rebounds_input_universe.parquet"
+    daily_runs_prefix: "rebounds/daily_runs/{date}/{run_id}/"
+    backtest_prefix: "rebounds/backtest/"
+    # Note: no single canonical model artifact — models are rebuilt daily and stored per run_id.
+    # Latest production run: 20260403T191124Z (last game of 2025-26 season: 2026-04-03)
+    # Backtest CSVs generated 2026-07-02: v3_oos_*.txt, v5_oos_*.csv, v7_spec_sweep*.csv
+
+strategy:
+  side: UNDER
+  lines: all          # no line filter — bet any posted line
+  min_bet_edge: 0.05
+  min_track_edge: N/A
+  dogs_only: false    # no odds-direction filter; edge vs raw vigged implied prob
+  min_books: 1
+  novig_min: N/A      # edge computed vs vigged implied prob (not de-vigged)
+
+  # Out-of-sample backtest (test_seasons 2023-24, 2024-25, 2025-26, under_only, edge>5pp, shrink=0):
+  #   OLS: 27311 bets, ROI=+3.61%, PnL=+986.7u across 3 seasons (2 of 3 positive)
+  #   XGB: 42117 bets, ROI=+2.23%, PnL=+940.9u across 3 seasons (3 of 3 positive)
+  #   Results stored at s3://nba-betting-mt/rebounds/backtest/ (generated 2026-07-02)
+  #   Re-run: python src/nba_rebounds_modeling/00_research/scripts/20260323_run_rebounds_edge_backtest.py
+  #           python src/nba_rebounds_modeling/00_research/scripts/20260323_compare_rebounds_models_oos.py
+
+backtest:
+  groupby: ["season", "date", "player_normalized", "game_id", "bookmaker", "line"]
+  edge_col: "edge_under_ols"   # OLS track; XGB uses edge_under_xgb
+  novig_col: N/A               # edge vs raw vigged implied prob; no novig removal
+  payout_col: "under_odds"     # American odds
+
+grid_search:
+  # Grid searched via 20260323_run_rebounds_edge_backtest.py (shrinkage × sigma × min_edge × side_policy)
+  # and 20260323_spec_sweep_rebounds_oos.py (feature spec × model type).
+  # Results regenerated 2026-07-02; stored at s3://nba-betting-mt/rebounds/backtest/
+  dimensions:
+    sigma_window: [5, 10, 20]
+    shrinkage: [0.0, 0.25, 0.50, 0.75]
+    min_edge: [0.01, 0.05, 0.10]
+    side_policy: [both, over_only, under_only]
+    feature_spec:
+      20260403_prod: [min_line, max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]  # ← PRODUCTION
+      P1: [line_mid, line_width, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      P2: [min_line, line_width, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      P3: [max_line, line_width, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      A1: [line_mid, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      A2: [min_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      A3: [max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      E1: [line_mid, line_width, width_eq_0, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+      E2: [line_mid, line_width, line_width_sq, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+
+  out_of_sample_results: |
+    # Generated 2026-07-02. Input: rebounds_full_universe.parquet (38030 rows, 2023-24→2025-26).
+    # S3: s3://nba-betting-mt/rebounds/backtest/
+    #
+    # v5 out-of-sample — OLS vs XGB, under_only, edge>5pp, all books (no dedupe):
+    #   model  seasons  n_bets   pnl_u   roi    hit_rate   RMSE   R²
+    #   OLS    3        27311   +986.7  +3.6%  58.5% avg  2.673  45.5%
+    #   XGB    3        42117   +940.9  +2.2%  55.9% avg  2.687  44.9%
+    #   OLS positive seasons: 2 of 3 (+5.78%, -1.61%, +5.07%)
+    #   XGB positive seasons: 3 of 3 (+2.71%, +1.95%, +1.94%)
+    #
+    # v3 out-of-sample — OLS, under_only, dedupe=True (best-shopped), prod params (σ=5, shrink=0, edge>5pp):
+    #   2023-24: 1331 bets, ROI=+5.35%, PnL=+71.2u
+    #   2024-25:  439 bets, ROI=-1.95%, PnL= -8.6u
+    #   2025-26: 3011 bets, ROI=+4.70%, PnL=+141.5u
+    #
+    # v7 feature spec sweep — 20260403_prod (production) mean_roi=2.85% tied P1/P2/P3 (OLS, linear equiv).
+    #   Best OLS: A3 (max_line only) mean_roi=2.97% — negligible delta vs 20260403_prod. Keep 20260403_prod.
+    #   XGB top specs: P3, E1 — but XGB mean_roi < OLS across all specs.
+    #
+    # Grid search winner: σ=5, shrink=0.0, edge>5pp, under_only (production params confirmed).
+    # Higher σ windows (10, 20) produce fewer but higher-ROI bets; not enough volume.
+  in_sample_results: "N/A — in-sample fit not evaluated separately; use out-of-sample RMSE/R² above"
+
+game_logs:
+  bucket: nba-api-mt
+  prefix: player_game_logs
+  seasons:
+    - "2023-24"
+    - "2024-25"
+    - "2025-26"
+    - "2026-27"

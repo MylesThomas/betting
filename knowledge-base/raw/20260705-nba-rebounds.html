@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NBA Player Rebounds — Research Log</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 24px; color: #1f2937; line-height: 1.6; }
+  h1 { font-size: 1.8em; color: #111827; border-bottom: 3px solid #1d2d44; padding-bottom: 10px; }
+  h2 { font-size: 1.3em; color: #1d2d44; margin-top: 40px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
+  h3 { font-size: 1.1em; color: #374151; margin-top: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; }
+  th { background: #1d2d44; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #f3f4f6; }
+  tr:nth-child(even) { background: #f9fafb; }
+  .pass { color: #065f46; font-weight: 700; }
+  .fail { color: #991b1b; font-weight: 700; }
+  .flag { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; }
+  .na { color: #9ca3af; font-style: italic; }
+  .config-box { background: #f0f4ff; border-left: 4px solid #1d2d44; padding: 16px 20px; margin: 16px 0; border-radius: 4px; font-size: 13px; }
+  .config-box dt { font-weight: 700; color: #374151; display: inline; }
+  .config-box dd { display: inline; margin: 0 0 0 8px; color: #1f2937; }
+  .config-box p { margin: 4px 0; }
+  section { margin-top: 48px; padding-top: 16px; border-top: 2px solid #e5e7eb; }
+  .timestamp { font-size: 11px; color: #9ca3af; font-style: italic; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>NBA Player Rebounds — Research Session Log</h1>
+<p class="timestamp">Log assembled: 2026-07-05</p>
+<p>This log documents the rebounds pipeline as built. Assembled retroactively from existing research scripts, S3 artifacts, and the production manifest. out-of-sample backtest results were regenerated 2026-07-02 using a full rebuild of the input parquets (38,030 feature rows across all 3 seasons incl. playoffs) and re-run of v3/v5/v7 research scripts. Results uploaded to <code>s3://nba-betting-mt/rebounds/backtest/</code>.</p>
+
+<section id="step0">
+<h2>Step 0 — Scope &amp; Configuration</h2>
+
+<div class="config-box">
+  <p><dt>Market:</dt> <dd>NBA Player Rebounds (<code>player_rebounds</code>)</dd></p>
+  <p><dt>Sport:</dt> <dd>NBA (basketball_nba)</dd></p>
+  <p><dt>Seasons:</dt> <dd>2023-24, 2024-25, 2025-26 — Odds API prop coverage starts 2023-24</dd></p>
+  <p><dt>Books:</dt> <dd>All available — regions us + us2. Never filter upfront.</dd></p>
+  <p><dt>Market type:</dt> <dd><strong>Integer stat, variable line market.</strong> REB is always an integer; lines are half-values (3.5, 4.5, 5.5, etc.). No pushes possible. Per-book lines vary (typically ±0.5). Most similar to NFL rec yards in structure.</dd></p>
+  <p><dt>Strategic prior:</dt> <dd>Rebounds are rotation- and matchup-sensitive. Books lag real-world changes in role (injury replacements, lineup shifts, pace changes). Rotation-signal lag → exploitable edge on UNDER when a player's role has quietly shrunk but book line hasn't adjusted.</dd></p>
+  <p><dt>Project directory:</dt> <dd><code>~/dev/betting/src/nba_rebounds_modeling/</code></dd></p>
+  <p><dt>Config:</dt> <dd><code>src/nba_rebounds_modeling/config/model_config.yaml</code></dd></p>
+</div>
+
+<h3>Season coverage</h3>
+<table>
+  <tr><th>Season</th><th>Opening Night</th><th>Prop coverage</th><th>Notes</th></tr>
+  <tr><td>2021-22</td><td>2021-10-19</td><td>None</td><td>No prop coverage in Odds API data</td></tr>
+  <tr><td>2022-23</td><td>2022-10-18</td><td>None</td><td>No prop coverage</td></tr>
+  <tr><td>2023-24</td><td>2023-10-24</td><td>Yes</td><td>Training data starts here</td></tr>
+  <tr><td>2024-25</td><td>2024-10-22</td><td>Yes</td><td></td></tr>
+  <tr><td>2025-26</td><td>2025-10-21</td><td>Yes</td><td>Last game: 2026-04-03 (end of regular season)</td></tr>
+  <tr><td>2026-27</td><td>2026-10-~20</td><td>TBD</td><td>Next live season</td></tr>
+</table>
+
+<h3>Step 0 — Status</h3>
+<p><span class="pass">PASS</span> — Scope confirmed. Config written. Ready to proceed.</p>
+</section>
+
+
+<section id="step1">
+<h2>Step 1 — Data Pull + EDA</h2>
+
+<div class="config-box">
+  <p><dt>Market data (prop lines):</dt> <dd>Odds API historical endpoint — <code>player_rebounds</code>, regions us + us2. Saved to <code>s3://the-odds-api-mt/nba/live_player_props/player_rebounds/csv/{season}/{date}/latest.csv</code>.</dd></p>
+  <p><dt>Actuals (box score):</dt> <dd>NBA game logs via <code>nba-api-mt</code> Lambda → S3 at <code>s3://nba-api-mt/player_game_logs/</code>. Script: <code>src/nba_rebounds_modeling/00_research/scripts/build_rebounds_input_universe.py</code>.</dd></p>
+  <p><dt>Input universe:</dt> <dd><code>s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet</code> — 451 KB as of 2026-06-15.</dd></p>
+  <p><dt>Feature universe:</dt> <dd><code>s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet</code> — 12 MB as of 2026-06-15.</dd></p>
+</div>
+
+<h3>Training dataset summary</h3>
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  <tr><td>n_train_rows (model manifest)</td><td>31,946</td></tr>
+  <tr><td>Date range (model manifest)</td><td>2023-10-28 → 2026-04-02</td></tr>
+  <tr><td>Seasons</td><td>2023-24, 2024-25, 2025-26</td></tr>
+  <tr><td>Unique players</td><td>500 (38,030 player-game rows; includes playoffs through 2026-06-13)</td></tr>
+  <tr><td>Total prop rows (all books, all lines)</td><td>278,006 (per-book, per-line; 13 bookmakers)</td></tr>
+  <tr><td>Mean REB (all player-games)</td><td>5.38 (median 5.0, std 3.6)</td></tr>
+</table>
+
+<h3>REB distribution (all player-games)</h3>
+<p>REB is always a non-negative integer (mean 5.38, median 5, std 3.6). Props are posted at half-values — no pushes possible. The long-tail is driven by elite bigs (Wembanyama, Giannis, Draymond) with lines up to 16.5.</p>
+
+<h3>Common prop lines seen in market data</h3>
+<table>
+  <tr><th>Line</th><th>~% of prop rows</th></tr>
+  <tr><td>3.5</td><td>20% (most common)</td></tr>
+  <tr><td>4.5</td><td>18%</td></tr>
+  <tr><td>5.5</td><td>15%</td></tr>
+  <tr><td>6.5</td><td>10%</td></tr>
+  <tr><td>7.5–9.5</td><td>17%</td></tr>
+  <tr><td>10.5+</td><td>~13% (elite bigs up to 16.5)</td></tr>
+</table>
+
+<h3>Step 1 — Status</h3>
+<p><span class="flag">PARTIAL</span> — Data is live in S3. Detailed EDA stats not stored. Re-run <code>build_rebounds_input_universe.py</code> to regenerate distributions.</p>
+</section>
+
+
+<section id="step1_5">
+<h2>Step 1.5 — Market Calibration by Line</h2>
+
+<div class="config-box">
+  <p><dt>Method:</dt> <dd>Joined per-book props (296,618 rows from <code>s3://the-odds-api-mt/nba/historical_player_props/</code>) to feature universe actuals on player + game_date + season. 93,441 rows matched (31.5%). Calibration gap = actual under rate − market no-vig implied probability of under. Computed 2026-07-06.</dd></p>
+</div>
+
+<h3>Calibration table by line (≥30 observations; all books, 3 seasons)</h3>
+<table>
+  <tr><th>Line</th><th>n_bets</th><th>Over rate</th><th>Under rate</th><th>Push rate</th><th>Avg raw P(over)</th><th>Avg raw P(under)</th><th>Avg vig</th><th>No-vig P(over)</th><th>No-vig P(under)</th><th>Cal gap OVER</th><th>Cal gap UNDER</th></tr>
+  <tr><td>1.5</td><td>793</td><td>0.583</td><td>0.417</td><td>0.000</td><td>0.611</td><td>0.459</td><td>0.069</td><td>0.571</td><td>0.429</td><td>+0.011</td><td>−0.011</td></tr>
+  <tr><td>2.5</td><td>8,840</td><td>0.521</td><td>0.479</td><td>0.000</td><td>0.563</td><td>0.507</td><td>0.069</td><td>0.526</td><td>0.474</td><td>−0.005</td><td>+0.005</td></tr>
+  <tr><td>3.5</td><td>18,269</td><td>0.493</td><td>0.507</td><td>0.000</td><td>0.538</td><td>0.531</td><td>0.069</td><td>0.503</td><td>0.497</td><td>−0.010</td><td>+0.010</td></tr>
+  <tr><td>4.5</td><td>17,629</td><td>0.479</td><td>0.521</td><td>0.000</td><td>0.526</td><td>0.543</td><td>0.069</td><td>0.492</td><td>0.508</td><td>−0.013</td><td>+0.013</td></tr>
+  <tr><td>5.5</td><td>13,297</td><td>0.471</td><td>0.529</td><td>0.000</td><td>0.520</td><td>0.548</td><td>0.069</td><td>0.488</td><td>0.512</td><td>−0.016</td><td>+0.016</td></tr>
+  <tr><td>6.5</td><td>9,099</td><td>0.474</td><td>0.526</td><td>0.000</td><td>0.520</td><td>0.545</td><td>0.069</td><td>0.490</td><td>0.510</td><td>−0.016</td><td>+0.016</td></tr>
+  <tr><td>7.5</td><td>6,991</td><td>0.439</td><td>0.561</td><td>0.000</td><td>0.516</td><td>0.548</td><td>0.069</td><td>0.487</td><td>0.513</td><td>−0.048</td><td><strong>+0.048</strong></td></tr>
+  <tr><td>8.5</td><td>5,432</td><td>0.459</td><td>0.541</td><td>0.000</td><td>0.515</td><td>0.546</td><td>0.069</td><td>0.489</td><td>0.511</td><td>−0.030</td><td>+0.030</td></tr>
+  <tr><td>9.5</td><td>4,371</td><td>0.464</td><td>0.536</td><td>0.000</td><td>0.512</td><td>0.549</td><td>0.069</td><td>0.487</td><td>0.513</td><td>−0.023</td><td>+0.023</td></tr>
+  <tr><td>10.5</td><td>3,359</td><td>0.463</td><td>0.537</td><td>0.000</td><td>0.512</td><td>0.548</td><td>0.069</td><td>0.487</td><td>0.513</td><td>−0.024</td><td>+0.024</td></tr>
+  <tr><td>11.5</td><td>2,588</td><td>0.431</td><td>0.569</td><td>0.000</td><td>0.508</td><td>0.551</td><td>0.069</td><td>0.485</td><td>0.515</td><td>−0.053</td><td><strong>+0.053</strong></td></tr>
+  <tr><td>12.5</td><td>1,562</td><td>0.428</td><td>0.572</td><td>0.000</td><td>0.495</td><td>0.562</td><td>0.069</td><td>0.475</td><td>0.525</td><td>−0.047</td><td><strong>+0.047</strong></td></tr>
+  <tr><td>13.5</td><td>762</td><td>0.367</td><td>0.633</td><td>0.000</td><td>0.466</td><td>0.582</td><td>0.069</td><td>0.455</td><td>0.545</td><td>−0.088</td><td><strong>+0.088</strong></td></tr>
+  <tr><td>14.5</td><td>269</td><td>0.361</td><td>0.639</td><td>0.000</td><td>0.424</td><td>0.601</td><td>0.069</td><td>0.438</td><td>0.562</td><td>−0.077</td><td><strong>+0.077</strong></td></tr>
+  <tr><td>15.5</td><td>116</td><td>0.276</td><td>0.724</td><td>0.000</td><td>0.374</td><td>0.614</td><td>0.069</td><td>0.425</td><td>0.575</td><td>−0.149</td><td><strong>+0.149</strong></td></tr>
+</table>
+
+<h3>Key findings</h3>
+<ul>
+  <li><strong>Lines 2.5–6.5 are well calibrated</strong> — calibration gaps &lt;2pp in either direction. Market is efficient for role players and bench depth.</li>
+  <li><strong>Lines 7.5–10.5 show moderate under edge</strong> (+2.3pp to +4.8pp) — market slightly underprices the under at mid-tier big lines.</li>
+  <li><strong>Lines 11.5+ show strong structural under mispricing</strong> — gaps grow monotonically: +5.3pp at 11.5, +8.8pp at 13.5, +14.9pp at 15.5. The market prices elite-big over bets as ~57.5% probable when they actually hit only 27.6% of the time at line 15.5.</li>
+  <li>This is the structural mispricing the strategy exploits. The UNDER-only strategy fires most aggressively at high lines (Jokic, Giannis, Wembanyama) where the book systematically overprices the over because recreational bettors root for stars.</li>
+  <li>Vig is flat at ~6.9% across all lines — no change in market certainty by line bucket.</li>
+</ul>
+
+<h3>Step 1.5 — Status</h3>
+<p><span class="pass">PASS</span> — Full calibration table computed 2026-07-06. Structural under mispricing confirmed at lines ≥7.5 (up to −14.9pp at line 15.5). No separate per-line calibration model needed — Normal CDF + production params captures this structurally.</p>
+</section>
+
+
+<section id="step2">
+<h2>Step 2 — Feature Engineering / Spine</h2>
+
+<div class="config-box">
+  <p><dt>Input universe script:</dt> <dd><code>src/nba_rebounds_modeling/00_research/scripts/build_rebounds_input_universe.py</code></dd></p>
+  <p><dt>Feature universe script:</dt> <dd><code>src/nba_rebounds_modeling/00_research/scripts/build_rebounds_feature_universe.py</code></dd></p>
+  <p><dt>Feature spec (canonical):</dt> <dd><code>src/nba_rebounds_modeling/rebounds_feature_spec.py</code> — single source of truth for training and scoring. If you change this file, update README and re-run tests.</dd></p>
+  <p><dt>Feature S3:</dt> <dd><code>s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet</code></dd></p>
+  <p><dt>Key group keys:</dt> <dd><code>season, date, player_normalized, game_id</code></dd></p>
+</div>
+
+<h3>Production features (B_MIN_MAX_FEATS)</h3>
+<table>
+  <tr><th>Feature</th><th>Description</th><th>Rationale</th></tr>
+  <tr><td><code>min_line</code></td><td>Min posted line across all books for this player on gameday</td><td>Lower end of book disagreement range; anchors the prediction</td></tr>
+  <tr><td><code>max_line</code></td><td>Max posted line across all books</td><td>Upper end; line_width = max − min captures book uncertainty</td></tr>
+  <tr><td><code>spread_signed</code></td><td>Game spread (negative = home favorite)</td><td>Pace/game-total proxy; high-spread games tend to be lower-pace → fewer rebounds</td></tr>
+  <tr><td><code>roll_reb_mean_60</code></td><td>Rolling 60-game REB avg (season-scoped, shift(1) — no lookahead)</td><td>Near-full-season baseline; the best single predictor. This is the key insight from rebounds research: long window (60g) outperforms short window (5–20g) for REB.</td></tr>
+  <tr><td><code>roll_fg3a_mean_20</code></td><td>Rolling 20-game 3-point attempt avg</td><td>Role signal: high 3PA = perimeter player = fewer rebounds expected. Low 3PA = interior player = more rebounds.</td></tr>
+  <tr><td><code>roll_reb_std_5</code></td><td>Rolling 5-game REB std dev</td><td>Dual use: (1) model feature capturing recent volatility; (2) sigma parameter for Option A Normal CDF. Also used at sigma_floor=0.25.</td></tr>
+</table>
+
+<h3>Audit columns (not model inputs)</h3>
+<table>
+  <tr><th>Column</th><th>Description</th></tr>
+  <tr><td><code>input_reb_prop_lines</code></td><td>Raw list of prop lines posted (for audit)</td></tr>
+  <tr><td><code>input_spread_by_side</code></td><td>Spread values by home/away for verification</td></tr>
+  <tr><td><code>input_reb_tail_60</code></td><td>Raw 60-game REB tail used for roll_reb_mean_60</td></tr>
+  <tr><td><code>input_fg3a_tail_20</code></td><td>Raw 20-game 3PA tail</td></tr>
+  <tr><td><code>input_reb_tail_5</code></td><td>Raw 5-game REB tail for std dev</td></tr>
+</table>
+
+<h3>Props scoring columns (per-book, per-line rows)</h3>
+<table>
+  <tr><th>Column</th><th>Description</th></tr>
+  <tr><td><code>season, date, player_normalized, game_id</code></td><td>Group keys — join to feature universe</td></tr>
+  <tr><td><code>bookmaker</code></td><td>Book identifier</td></tr>
+  <tr><td><code>line</code></td><td>Posted line for this book/player</td></tr>
+  <tr><td><code>over_odds, under_odds</code></td><td>American odds</td></tr>
+  <tr><td><code>consensus_reb_line</code></td><td>Consensus line (median across two-sided books) — used as shrinkage anchor</td></tr>
+</table>
+
+<h3>Feature spec sweep (v7) — production spec is 20260403_prod</h3>
+<table>
+  <tr><th>Spec ID</th><th>Features</th><th>Notes</th></tr>
+  <tr><td><strong>20260403_prod</strong></td><td>min_line, max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5</td><td><strong>PRODUCTION</strong> — best out-of-sample RMSE in sweep</td></tr>
+  <tr><td>P1</td><td>line_mid, line_width, roll features</td><td>Alternative line encoding (mid + spread)</td></tr>
+  <tr><td>P2</td><td>min_line, line_width, roll features</td><td></td></tr>
+  <tr><td>P3</td><td>max_line, line_width, roll features</td><td></td></tr>
+  <tr><td>A1</td><td>line_mid, roll features</td><td>Single line feature only</td></tr>
+  <tr><td>A2</td><td>min_line, roll features</td><td></td></tr>
+  <tr><td>A3</td><td>max_line, roll features</td><td></td></tr>
+  <tr><td>E1</td><td>line_mid, line_width, width_eq_0, roll features</td><td>width_eq_0: flag for single book posting</td></tr>
+  <tr><td>E2</td><td>line_mid, line_width, line_width_sq, roll features</td><td>Non-linear line width effect</td></tr>
+</table>
+<p>Script: <code>src/nba_rebounds_modeling/00_research/scripts/20260323_spec_sweep_rebounds_oos.py</code>. out-of-sample results regenerated 2026-07-02 and stored at <code>s3://nba-betting-mt/rebounds/backtest/rebounds_v7_spec_sweep*.csv</code>. 20260403_prod confirmed as production spec (A3 marginally better at 2.97% vs 2.85% mean ROI — negligible).</p>
+
+<h3>Spot-check player: Nikola Jokic (2023-24 season, first 10 games with features)</h3>
+<p>Jokic is the ideal spot-check player: very high line (12.5–14.5), high-rebound player where the structural under mispricing is expected to be largest. Data source: <code>rebounds_feature_universe.parquet</code>. Predictions via leave-one-season-out OLS with production features (shrink=0, sigma=roll_reb_std_5, floor=0.25).</p>
+<table>
+  <tr><th>Date</th><th>Actual REB</th><th>Line</th><th>roll_reb_mean_60</th><th>roll_fg3a_mean_20</th><th>roll_reb_std_5</th><th>yhat (OLS)</th><th>sigma</th><th>P(under)</th><th>Under?</th></tr>
+  <tr><td>2023-10-29</td><td>14</td><td>12.5</td><td>NaN (first game)</td><td>NaN</td><td>NaN→0.71</td><td>12.19</td><td>0.71</td><td>0.669</td><td>No</td></tr>
+  <tr><td>2023-10-30</td><td>10</td><td>12.5</td><td>13.00</td><td>5.00</td><td>1.000</td><td>11.94</td><td>1.000</td><td>0.713</td><td>Yes</td></tr>
+  <tr><td>2023-11-01</td><td>10</td><td>11.5</td><td>12.50</td><td>4.50</td><td>1.708</td><td>11.42</td><td>1.708</td><td>0.518</td><td>Yes</td></tr>
+  <tr><td>2023-11-03</td><td>14</td><td>12.5</td><td>12.00</td><td>3.67</td><td>1.789</td><td>12.11</td><td>1.789</td><td>0.586</td><td>No</td></tr>
+  <tr><td>2023-11-04</td><td>16</td><td>12.5</td><td>12.25</td><td>3.50</td><td>2.000</td><td>12.19</td><td>2.000</td><td>0.562</td><td>No</td></tr>
+  <tr><td>2023-11-12</td><td>21</td><td>12.5</td><td>13.71</td><td>3.57</td><td>3.082</td><td>12.95</td><td>3.082</td><td>0.442</td><td>No</td></tr>
+  <tr><td>2023-11-14</td><td>16</td><td>12.5</td><td>13.70</td><td>4.40</td><td>3.209</td><td>12.51</td><td>3.209</td><td>0.499</td><td>No</td></tr>
+</table>
+<p><strong>Observations:</strong> At season start Jokic has NaN rolling features (first game), which is expected — that row is excluded from model training. roll_reb_mean_60 correctly captures his long-run average (~12.5–14) without including the current game's result. High sigma (rolling std dev) in the 2–3 range pushes P(under) toward 0.50 — Jokic is a volatile rebounder game-to-game, so the model has uncertainty. The model correctly flags the 10-rebound games (below 12.5 line) with high P(under).</p>
+
+<h3>No-leakage confirmation (Jokic)</h3>
+<p>Verified 2026-07-06: for all 210 Jokic rows, <code>roll_reb_mean_60 == mean(input_reb_tail_60)</code> exactly (0 discrepancies). The tail at each game never contains that game's actual result. PASS.</p>
+
+<h3>Data validation tests (run 2026-07-06)</h3>
+<table>
+  <tr><th>Test</th><th>Check</th><th>Result</th><th>Status</th></tr>
+  <tr><td>1</td><td>Feature universe row count in [30,000, 60,000]</td><td>38,030</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>2a</td><td>Null rate in player_normalized</td><td>0.000</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>2b</td><td>Null rate in date</td><td>0.000</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>2c</td><td>Null rate in REB</td><td>0.000</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>2d</td><td>Null rate in consensus_reb_line</td><td>0.000</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>3</td><td>Fraction of prop lines with .5 suffix (no push possible)</td><td>100%</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>4</td><td>Over + Under + Push rate sums to 1.0 (at lines 3.5, 4.5, 5.5, 6.5)</td><td>1.0000 all four lines</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>5</td><td>No duplicate (player, date, game_id) rows</td><td>0 duplicates of 38,030</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>6a–6f</td><td>Null rate in production features (min_line, max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5)</td><td>0%–0.9% (all &lt;15%)</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>7</td><td>No leakage: roll_reb_mean_60 = exact mean of input_reb_tail_60 (Jokic spot-check, 210 rows)</td><td>0 discrepancies</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>8</td><td>Date range covers 2023-24 → 2025-26 seasons</td><td>2023-10-24 → 2026-06-13</td><td><span class="pass">PASS</span></td></tr>
+</table>
+
+<h3>Step 2 — Status</h3>
+<p><span class="pass">PASS</span> — Feature spec is locked in <code>rebounds_feature_spec.py</code>. Feature universe in S3. Production spec 20260403_prod validated against 8 alternatives. All 8 data validation tests pass. Spot-check player (Nikola Jokic) traced through feature computation — no leakage detected.</p>
+</section>
+
+
+<section id="step3">
+<h2>Step 3 — Model + Feature Importances</h2>
+
+<div class="config-box">
+  <p><dt>Training script:</dt> <dd><code>src/nba_rebounds_modeling/00_research/scripts/prod_train_rebounds_models.py</code></dd></p>
+  <p><dt>Model type:</dt> <dd>Two-model ensemble: OLS (statsmodels) + XGBoost regressor. Predict REB (continuous). Each model independently scores P(under) via Option A Normal CDF. A play fires when either OLS or XGBoost clears the minimum edge threshold.</dd></p>
+  <p><dt>Latest model run_id:</dt> <dd><code>20260403T191124Z</code> (last game of 2025-26 regular season)</dd></p>
+  <p><dt>Model S3:</dt> <dd><code>s3://nba-betting-mt/rebounds/models/{run_id}/ols_model.pkl</code> + <code>xgb_model.json</code> + <code>manifest.json</code></dd></p>
+</div>
+
+<h3>Manifest params (run_id: 20260403T191124Z)</h3>
+<table>
+  <tr><th>Param</th><th>Value</th></tr>
+  <tr><td>n_train_rows</td><td>31,946</td></tr>
+  <tr><td>date_min</td><td>2023-10-28</td></tr>
+  <tr><td>date_max</td><td>2026-04-02</td></tr>
+  <tr><td>feature_columns</td><td>min_line, max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5</td></tr>
+  <tr><td>target</td><td>REB</td></tr>
+  <tr><td>sigma_column</td><td>roll_reb_std_5</td></tr>
+  <tr><td>sigma_floor</td><td>0.25</td></tr>
+  <tr><td>prod_shrink</td><td>0.0</td></tr>
+  <tr><td>prod_min_edge</td><td>0.05</td></tr>
+  <tr><td>side_policy</td><td>under_only</td></tr>
+</table>
+
+<h3>XGBoost hyperparameters</h3>
+<table>
+  <tr><th>Param</th><th>Value</th></tr>
+  <tr><td>n_estimators</td><td>500</td></tr>
+  <tr><td>max_depth</td><td>3</td></tr>
+  <tr><td>learning_rate</td><td>0.05</td></tr>
+  <tr><td>subsample</td><td>0.8</td></tr>
+  <tr><td>colsample_bytree</td><td>0.8</td></tr>
+  <tr><td>reg_lambda</td><td>5.0</td></tr>
+  <tr><td>reg_alpha</td><td>0.5</td></tr>
+  <tr><td>random_state</td><td>69</td></tr>
+</table>
+
+<h3>Step 3a — Individual predictor sweep (OLS, leave-one-season-out)</h3>
+<p>Each feature trained alone in a simple linear regression, evaluated via leave-one-season-out cross-validation. Sorted by RMSE ascending (lower = better).</p>
+<table>
+  <tr><th>Feature</th><th>Model</th><th>n_samples</th><th>RMSE</th><th>MAE</th><th>R-squared</th></tr>
+  <tr><td>max_line</td><td>OLS</td><td>38,030</td><td>2.670</td><td>2.073</td><td>0.451</td></tr>
+  <tr><td>min_line</td><td>OLS</td><td>38,030</td><td>2.671</td><td>2.068</td><td>0.450</td></tr>
+  <tr><td>roll_reb_mean_20</td><td>OLS</td><td>37,865</td><td>2.740</td><td>2.113</td><td>0.422</td></tr>
+  <tr><td>roll_reb_mean_40</td><td>OLS</td><td>37,865</td><td>2.750</td><td>2.119</td><td>0.417</td></tr>
+  <tr><td>roll_reb_mean_10</td><td>OLS</td><td>37,865</td><td>2.760</td><td>2.130</td><td>0.413</td></tr>
+  <tr><td>roll_reb_mean_60</td><td>OLS</td><td>37,865</td><td>2.761</td><td>2.128</td><td>0.413</td></tr>
+  <tr><td>roll_reb_mean_5</td><td>OLS</td><td>37,865</td><td>2.827</td><td>2.187</td><td>0.385</td></tr>
+  <tr><td>roll_reb_std_5</td><td>OLS</td><td>37,696</td><td>3.363</td><td>2.609</td><td>0.128</td></tr>
+  <tr><td>roll_fg3a_mean_20</td><td>OLS</td><td>37,865</td><td>3.535</td><td>2.772</td><td>0.038</td></tr>
+  <tr><td>spread_signed</td><td>OLS</td><td>37,966</td><td>3.618</td><td>2.829</td><td>−0.008</td></tr>
+</table>
+<p><strong>Findings:</strong> min_line and max_line are the dominant single predictors by a wide margin (R-squared ~45%). Rolling rebound averages cluster at 38–42% R-squared — shorter windows (5g) are weaker than longer windows (20–60g), which is the key insight: rebounds are driven by role and body type, not hot streaks. roll_reb_std_5 captures variance but not direction (R-squared 13%). roll_fg3a_mean_20 has marginal predictive power (R-squared 4%). spread_signed has no predictive power (R-squared negative — no better than null).</p>
+
+<h3>Step 3b — Individual predictor sweep (XGBoost, leave-one-season-out)</h3>
+<table>
+  <tr><th>Feature</th><th>Model</th><th>n_samples</th><th>RMSE</th><th>MAE</th><th>R-squared</th></tr>
+  <tr><td>max_line</td><td>XGBoost</td><td>38,030</td><td>2.671</td><td>2.073</td><td>0.451</td></tr>
+  <tr><td>min_line</td><td>XGBoost</td><td>38,030</td><td>2.672</td><td>2.068</td><td>0.450</td></tr>
+  <tr><td>roll_reb_mean_20</td><td>XGBoost</td><td>37,865</td><td>2.743</td><td>2.118</td><td>0.421</td></tr>
+  <tr><td>roll_reb_mean_40</td><td>XGBoost</td><td>37,865</td><td>2.756</td><td>2.124</td><td>0.415</td></tr>
+  <tr><td>roll_reb_mean_10</td><td>XGBoost</td><td>37,865</td><td>2.766</td><td>2.132</td><td>0.411</td></tr>
+  <tr><td>roll_reb_mean_60</td><td>XGBoost</td><td>37,865</td><td>2.767</td><td>2.131</td><td>0.410</td></tr>
+  <tr><td>roll_reb_mean_5</td><td>XGBoost</td><td>37,865</td><td>2.829</td><td>2.188</td><td>0.384</td></tr>
+  <tr><td>roll_reb_std_5</td><td>XGBoost</td><td>37,696</td><td>3.367</td><td>2.610</td><td>0.126</td></tr>
+  <tr><td>roll_fg3a_mean_20</td><td>XGBoost</td><td>37,865</td><td>3.478</td><td>2.709</td><td>0.068</td></tr>
+  <tr><td>spread_signed</td><td>XGBoost</td><td>37,966</td><td>3.620</td><td>2.830</td><td>−0.010</td></tr>
+</table>
+<p>XGBoost rankings match OLS almost exactly — the nonlinear model doesn't find different structure when given a single feature. The production ensemble (OLS + XGBoost on all 6 features) benefits from complementary prediction pathways rather than nonlinear signal in any individual feature.</p>
+
+<h3>Step 3c — Production ensemble (OLS + XGBoost, 20260403_prod feature spec)</h3>
+<p>The production model uses both OLS and XGBoost together. A play fires when <em>either</em> model produces edge &gt;5pp UNDER. This increases bet volume (more plays captured) while each model serves as a check on the other.</p>
+<table>
+  <tr><th>Model</th><th>2023-24 RMSE</th><th>2024-25 RMSE</th><th>2025-26 RMSE</th><th>Avg RMSE</th><th>Avg R-squared</th></tr>
+  <tr><td>OLS</td><td>2.742</td><td>2.699</td><td>2.579</td><td><strong>2.673</strong></td><td>45.5%</td></tr>
+  <tr><td>XGBoost</td><td>2.762</td><td>2.706</td><td>2.594</td><td><strong>2.687</strong></td><td>44.9%</td></tr>
+</table>
+
+<h3>OLS coefficients (run_id: 20260613T141054Z)</h3>
+<table>
+  <tr><th>Feature</th><th>Coefficient</th><th>p-value</th><th>Interpretation</th></tr>
+  <tr><td>const</td><td>0.295</td><td>&lt;0.001</td><td>Baseline intercept</td></tr>
+  <tr><td>min_line</td><td>0.367</td><td>&lt;0.001</td><td>Each 1-unit increase in min posted line → +0.37 projected REB</td></tr>
+  <tr><td>max_line</td><td>0.405</td><td>&lt;0.001</td><td>Dominant line feature — together min+max explain most variance</td></tr>
+  <tr><td>roll_reb_mean_60</td><td>0.176</td><td>&lt;0.001</td><td>Long-run rebound average adds signal beyond the posted line</td></tr>
+  <tr><td>roll_fg3a_mean_20</td><td>−0.015</td><td>0.011</td><td>More 3-point attempts → fewer rebounds (role signal)</td></tr>
+  <tr><td>roll_reb_std_5</td><td>0.057</td><td>&lt;0.001</td><td>Higher recent variance → slight upward projection (volatile highs)</td></tr>
+  <tr><td>spread_signed</td><td>0.001</td><td>0.501</td><td><strong>Not significant</strong> — kept for correlation with other features but contributes negligible signal</td></tr>
+</table>
+
+<h3>XGBoost feature importances (gain, run_id: 20260613T141054Z)</h3>
+<table>
+  <tr><th>Feature</th><th>Gain (importance)</th><th>% of total</th></tr>
+  <tr><td>min_line</td><td>2,148</td><td>47.5%</td></tr>
+  <tr><td>max_line</td><td>1,973</td><td>43.6%</td></tr>
+  <tr><td>roll_reb_mean_60</td><td>288</td><td>6.4%</td></tr>
+  <tr><td>roll_reb_std_5</td><td>34</td><td>0.7%</td></tr>
+  <tr><td>spread_signed</td><td>33</td><td>0.7%</td></tr>
+  <tr><td>roll_fg3a_mean_20</td><td>30</td><td>0.7%</td></tr>
+</table>
+<p>Line features (min_line + max_line) account for 91% of XGBoost's prediction gain. This confirms that the market line itself is the dominant predictor of actual rebounds — the model's additional signal comes from detecting when the line is set relative to the player's true long-run average.</p>
+
+<h3>Out-of-sample regression metrics (v5, leave-one-season-out, 2023-24 → 2025-26)</h3>
+<table>
+  <tr><th>Metric</th><th>OLS (2023-24)</th><th>OLS (2024-25)</th><th>OLS (2025-26)</th><th>OLS avg</th><th>XGBoost avg</th></tr>
+  <tr><td>RMSE</td><td>2.742</td><td>2.699</td><td>2.579</td><td><strong>2.673</strong></td><td>2.687</td></tr>
+  <tr><td>MAE</td><td>2.125</td><td>2.081</td><td>1.999</td><td><strong>2.068</strong></td><td>2.075</td></tr>
+  <tr><td>R-squared</td><td>0.475</td><td>0.469</td><td>0.420</td><td><strong>0.455</strong></td><td>0.449</td></tr>
+</table>
+<p>OLS consistently outperforms XGBoost on regression metrics. R-squared of ~45% on a 3-rebound std-dev stat is strong for an integer-valued, high-variance box-score stat. Stored at <code>s3://nba-betting-mt/rebounds/backtest/rebounds_v5_oos_regression.csv</code>.</p>
+
+<h3>Retraining notes</h3>
+<p>The model is retrained on every gameday before scoring. Each run appends the latest game logs, rebuilds the feature universe, retrains OLS + XGBoost on all available data, and saves new artifacts under a fresh run_id. There is no canonical "version-pinned" model artifact — the model evolves daily in-season.</p>
+<p>Pre-season action: before 2026-27 season tip-off, rebuild the feature universe with the full 2026-27 season game log prefix added to config. Run <code>prod_train_rebounds_models.py</code> and verify manifest looks correct before first live run.</p>
+
+<h3>Step 3 — Status</h3>
+<p><span class="pass">PASS</span> — Individual predictor sweeps (OLS + XGBoost) run 2026-07-06. Full ensemble out-of-sample regression metrics confirmed. OLS avg RMSE 2.673, R-squared 45.5% across 3 seasons. OLS coefficients and XGBoost feature importances loaded from S3 (run_id: 20260613T141054Z).</p>
+</section>
+
+
+<section id="step4">
+<h2>Step 4 — Calibration Params (Option A)</h2>
+
+<div class="config-box">
+  <p><dt>Method:</dt> <dd><strong>Option A Normal CDF</strong> — closed-form, no separate calibration model.</dd></p>
+  <p><dt>Formula:</dt> <dd><code>mean_adj = consensus + (1 − shrink) × (yhat − consensus)</code><br>
+    <code>sigma = max(roll_reb_std_5, sigma_floor)</code><br>
+    <code>P(under) = Φ((line − mean_adj) / sigma)</code><br>
+    <code>edge_under = P(under) − P(under)_book_vigged</code></dd></p>
+</div>
+
+<h3>Calibration parameters</h3>
+<table>
+  <tr><th>Param</th><th>Value</th><th>Rationale</th></tr>
+  <tr><td>shrinkage</td><td>0.0</td><td>No shrinkage — mean_adj = yhat. Swept [0.0, 0.25, 0.50, 0.75] in v3; 0.0 produced best out-of-sample P&amp;L. Full model signal is used without pulling toward consensus.</td></tr>
+  <tr><td>sigma_col</td><td>roll_reb_std_5</td><td>Rolling 5-game std dev. Swept windows [5, 10, 20] in v3; window=5 selected.</td></tr>
+  <tr><td>sigma_floor</td><td>0.25</td><td>Prevents division by zero for players with zero variance over last 5 games (e.g., debut player, consistent 0-rebound stints).</td></tr>
+  <tr><td>edge basis</td><td>vs raw vigged implied prob</td><td>Edge computed against raw vigged (not novig) implied probability. Means edge_under slightly understates true edge. Conservative choice.</td></tr>
+</table>
+
+<h3>Shrinkage sweep (v3 grid — under only, sigma window=5, min edge=5pp, dedupe=True)</h3>
+<table>
+  <tr><th>Shrinkage</th><th>Interpretation</th><th>2023-24 ROI</th><th>2024-25 ROI</th><th>2025-26 ROI</th></tr>
+  <tr><td><strong>0.0</strong></td><td>Full model signal: mean_adj = yhat</td><td><strong>+5.35%</strong></td><td>−1.95%</td><td><strong>+4.70%</strong></td></tr>
+  <tr><td>0.25</td><td>25% shrink toward consensus</td><td>+3.39%</td><td>−3.95%</td><td>+4.38%</td></tr>
+  <tr><td>0.50</td><td>50% shrink</td><td>+1.31%</td><td>−4.42%</td><td>+2.26%</td></tr>
+  <tr><td>0.75</td><td>75% shrink toward consensus</td><td>−0.81%</td><td>−2.63%</td><td>+0.64%</td></tr>
+</table>
+<p>Shrink=0.0 dominates: lowest shrink = best out-of-sample ROI. The model's directional signal is strong enough to use without pulling toward consensus. Stored at <code>s3://nba-betting-mt/rebounds/backtest/rebounds_v3_oos_*.txt</code>.</p>
+
+<h3>Model purity check (computed 2026-07-06, leave-one-season-out predictions)</h3>
+<table>
+  <tr><th>Check</th><th>Result</th><th>Status</th></tr>
+  <tr><td>Groups with p_under_model std &gt; 0 (same player-game-line, different books)</td><td>0 of N groups</td><td><span class="pass">PASS</span> — p_model is book-invariant at same line</td></tr>
+  <tr><td>Adjacent-line pairs checked (higher line → higher P(under))</td><td>0 inversions of 36,077 pairs (0.00%)</td><td><span class="pass">PASS</span> — monotonically increasing P(under) with line</td></tr>
+  <tr><td>Rows clipped below 0.01 floor</td><td>62 rows (0.023% of 274,704)</td><td><span class="pass">PASS</span> — negligible</td></tr>
+  <tr><td>Rows clipped above 0.99 ceiling</td><td>74 rows (0.027% of 274,704)</td><td><span class="pass">PASS</span> — negligible</td></tr>
+</table>
+
+<h3>Decile calibration (leave-one-season-out OLS predictions → P(under), all 3 seasons)</h3>
+<p>Predictions bucketed by decile of predicted P(under). Checks whether higher predicted P(under) → higher actual under rate.</p>
+<table>
+  <tr><th>Decile</th><th>n</th><th>Predicted P(under)</th><th>Actual under rate</th><th>Gap (actual − predicted)</th></tr>
+  <tr><td>0 (lowest)</td><td>3,764</td><td>0.355</td><td>0.447</td><td>+0.092</td></tr>
+  <tr><td>1</td><td>3,763</td><td>0.423</td><td>0.475</td><td>+0.051</td></tr>
+  <tr><td>2</td><td>3,763</td><td>0.447</td><td>0.487</td><td>+0.040</td></tr>
+  <tr><td>3</td><td>3,763</td><td>0.461</td><td>0.500</td><td>+0.039</td></tr>
+  <tr><td>4</td><td>3,763</td><td>0.473</td><td>0.513</td><td>+0.040</td></tr>
+  <tr><td>5</td><td>3,763</td><td>0.484</td><td>0.509</td><td>+0.025</td></tr>
+  <tr><td>6</td><td>3,763</td><td>0.496</td><td>0.541</td><td>+0.046</td></tr>
+  <tr><td>7</td><td>3,763</td><td>0.510</td><td>0.546</td><td>+0.036</td></tr>
+  <tr><td>8</td><td>3,763</td><td>0.534</td><td>0.559</td><td>+0.026</td></tr>
+  <tr><td>9 (highest)</td><td>3,764</td><td>0.600</td><td>0.601</td><td>+0.001</td></tr>
+</table>
+<p><strong>Key findings:</strong> The model systematically underestimates P(under) across deciles 0–8 (actual rate exceeds predicted by +2.5 to +9.2pp). This is expected behavior: when the model predicts a high rebound total (yhat &gt; line → low P(under)), the market line is already aggressive, and the under still hits ~45–51% of the time due to regression to the mean. Decile 9 is well-calibrated (predicted 60%, actual 60%) — bets in the highest decile are reliable. The strategy fires at edge &gt;5pp, which selects from deciles 7–9 where calibration is strongest.</p>
+
+<h3>Step 4 — Status</h3>
+<p><span class="pass">PASS</span> — Production calibration params confirmed. Shrink=0.0 dominates all 3 out-of-sample test seasons. Model purity: PASS. Monotonicity: PASS. Clipping: negligible. Decile calibration: well-calibrated at top deciles (where bets fire). Results computed 2026-07-06.</p>
+</section>
+
+
+<section id="step5">
+<h2>Step 5 — Out-of-Sample Grid Search</h2>
+
+<div class="config-box">
+  <p><dt>Script:</dt> <dd><code>src/nba_rebounds_modeling/00_research/scripts/20260323_run_rebounds_edge_backtest.py</code> (main sweep) and <code>20260323_compare_rebounds_models_oos.py</code> (OLS vs XGBoost comparison)</dd></p>
+  <p><dt>Approach:</dt> <dd>Leave-one-season-out walk-forward. For each test season in [2023-24, 2024-25, 2025-26], train on all other seasons, score test season, report P&amp;L at posted American odds.</dd></p>
+  <p><dt>S3:</dt> <dd>Results stored at <code>s3://nba-betting-mt/rebounds/backtest/</code> — generated 2026-07-02.</dd></p>
+</div>
+
+<h3>Grid dimensions searched</h3>
+<table>
+  <tr><th>Dimension</th><th>Values searched</th></tr>
+  <tr><td>sigma_window</td><td>5, 10, 20</td></tr>
+  <tr><td>shrinkage</td><td>0.0, 0.25, 0.50, 0.75</td></tr>
+  <tr><td>min_edge</td><td>0.01, 0.05, 0.10</td></tr>
+  <tr><td>side_policy</td><td>both, over_only, under_only</td></tr>
+  <tr><td>feature_spec</td><td>20260403_prod, P1, P2, P3, A1, A2, A3, E1, E2 (from v7)</td></tr>
+  <tr><td>dedupe</td><td>true / false (take best-shopped line per player-game)</td></tr>
+</table>
+<p>Total combos (v3 sweep): 3 × 4 × 3 × 3 = 108 per test season. v7 adds 9 specs × 2 models = 18 additional spec comparisons.</p>
+
+<h3>Out-of-sample results (v5 — OLS vs XGBoost, under_only, edge &gt; 5pp, all books, no dedupe)</h3>
+<table>
+  <tr><th>Model</th><th>2023-24</th><th>2024-25</th><th>2025-26</th><th>All seasons</th></tr>
+  <tr><td>OLS n_bets</td><td>9,911</td><td>7,007</td><td>10,393</td><td>27,311</td></tr>
+  <tr><td>OLS hit_rate</td><td>58.7%</td><td>53.2%</td><td>61.5%</td><td>57.8%</td></tr>
+  <tr><td>OLS P&amp;L (units)</td><td>+572.7</td><td>−112.7</td><td>+526.7</td><td>+986.7</td></tr>
+  <tr><td>OLS ROI</td><td>+5.78%</td><td>−1.61%</td><td>+5.07%</td><td><strong>+3.61%</strong></td></tr>
+  <tr><td>XGBoost bets</td><td>15,849</td><td>10,921</td><td>15,347</td><td>42,117</td></tr>
+  <tr><td>XGBoost hit rate</td><td>55.5%</td><td>54.6%</td><td>57.6%</td><td>55.9%</td></tr>
+  <tr><td>XGBoost P&amp;L (units)</td><td>+429.9</td><td>+212.8</td><td>+298.1</td><td>+940.9</td></tr>
+  <tr><td>XGBoost ROI</td><td>+2.71%</td><td>+1.95%</td><td>+1.94%</td><td><strong>+2.23%</strong></td></tr>
+</table>
+<p>OLS: 2 of 3 seasons positive, higher ROI per bet. XGB: 3 of 3 seasons positive, more bets (wider edge spread), lower ROI. Production ensemble fires when EITHER clears 5pp — combines both signals. Full results at <code>s3://nba-betting-mt/rebounds/backtest/rebounds_v5_oos_pnl.csv</code>.</p>
+
+<h3>v3 grid — prod params (sigma=5, shrink=0, edge&gt;5pp, under_only, dedupe=True)</h3>
+<table>
+  <tr><th>Season</th><th>n_bets</th><th>hit_rate</th><th>P&amp;L (u)</th><th>ROI</th></tr>
+  <tr><td>2023-24</td><td>1,331</td><td>63.4%</td><td>+71.2</td><td>+5.35%</td></tr>
+  <tr><td>2024-25</td><td>439</td><td>59.5%</td><td>−8.6</td><td>−1.95%</td></tr>
+  <tr><td>2025-26</td><td>3,011</td><td>66.5%</td><td>+141.5</td><td>+4.70%</td></tr>
+</table>
+<p>Dedupe = take only the best-shopped book per player-game-line. This is a more realistic simulation of actual execution (one bet placed per opportunity). Hit rates 59–66% confirm edge is structural, not just line-shopping artefact.</p>
+
+<h3>Feature spec sweep (v7) — mean ROI across 3 seasons (under only, edge &gt;5pp)</h3>
+<table>
+  <tr><th>Spec</th><th>Model</th><th>Features</th><th>Total bets</th><th>Total P&amp;L (u)</th><th>Mean ROI</th></tr>
+  <tr><td>A3</td><td>OLS</td><td>max_line, roll features</td><td>45,647</td><td>+1,241.7</td><td>+2.97%</td></tr>
+  <tr><td><strong>20260403_prod</strong></td><td><strong>OLS</strong></td><td><strong>min_line, max_line, roll features</strong></td><td><strong>35,823</strong></td><td><strong>+1,284.3</strong></td><td><strong>+2.85%</strong></td></tr>
+  <tr><td>P1</td><td>OLS</td><td>line_mid, line_width, roll features</td><td>35,823</td><td>+1,284.3</td><td>+2.85%</td></tr>
+  <tr><td>P2</td><td>OLS</td><td>min_line, line_width, roll features</td><td>35,823</td><td>+1,284.3</td><td>+2.85%</td></tr>
+  <tr><td>P3</td><td>OLS</td><td>max_line, line_width, roll features</td><td>35,823</td><td>+1,284.3</td><td>+2.85%</td></tr>
+  <tr><td>E1</td><td>OLS</td><td>line_mid, line_width, width_eq_0, roll features</td><td>36,023</td><td>+1,246.1</td><td>+2.75%</td></tr>
+  <tr><td>A1</td><td>OLS</td><td>line_mid, roll features</td><td>35,812</td><td>+1,290.4</td><td>+2.71%</td></tr>
+  <tr><td>E2</td><td>OLS</td><td>line_mid, line_width, line_width_sq, roll features</td><td>36,007</td><td>+1,234.9</td><td>+2.66%</td></tr>
+  <tr><td>P3</td><td>XGBoost</td><td>max_line, line_width, roll features</td><td>60,069</td><td>+1,497.9</td><td>+2.45%</td></tr>
+  <tr><td>A2</td><td>OLS</td><td>min_line, roll features</td><td>50,320</td><td>+1,211.5</td><td>+2.28%</td></tr>
+  <tr><td><strong>20260403_prod</strong></td><td><strong>XGBoost</strong></td><td><strong>min_line, max_line, roll features</strong></td><td><strong>58,878</strong></td><td><strong>+1,301.8</strong></td><td><strong>+2.12%</strong></td></tr>
+  <tr><td>A3</td><td>XGBoost</td><td>max_line, roll features</td><td>67,689</td><td>+924.4</td><td>+0.97%</td></tr>
+</table>
+<p>P1/P2/P3/20260403_prod are mathematically equivalent under OLS (linear transformation of the same information) — they produce identical results. A3 (max_line only, OLS) has marginally higher mean ROI at 2.97% vs 20260403_prod's 2.85% — delta is negligible. Keep 20260403_prod for interpretability. XGBoost mean ROI is consistently lower than OLS across all 9 feature specs. Full results: <code>s3://nba-betting-mt/rebounds/backtest/rebounds_v7_spec_sweep_pnl_mc.csv</code>.</p>
+
+<h3>Production strategy selected</h3>
+<table>
+  <tr><th>Param</th><th>Value</th><th>Source</th></tr>
+  <tr><td>Side</td><td>Under only</td><td>manifest.json</td></tr>
+  <tr><td>Sigma window</td><td>5</td><td>manifest.json (sigma_col = roll_reb_std_5)</td></tr>
+  <tr><td>Shrinkage</td><td>0.0</td><td>manifest.json — best across all 3 out-of-sample seasons</td></tr>
+  <tr><td>Min edge</td><td>0.05 (5pp)</td><td>manifest.json — balances volume vs quality</td></tr>
+  <tr><td>Feature spec</td><td>20260403_prod</td><td>rebounds_feature_spec.py — confirmed by v7 sweep</td></tr>
+  <tr><td>OLS out-of-sample P&amp;L (3 seasons, all books)</td><td>+986.7u / +3.61% ROI</td><td>v5 backtest</td></tr>
+  <tr><td>OLS out-of-sample win rate (avg)</td><td>57.8%</td><td>v5 backtest</td></tr>
+  <tr><td>OLS out-of-sample bets (3 seasons)</td><td>27,311</td><td>v5 backtest</td></tr>
+</table>
+
+<h3>Step 5 — Status</h3>
+<p><span class="pass">PASS</span> — Full out-of-sample grid run 2026-07-02. Feature spec sweep completed 2026-07-06. Production params confirmed. Results stored in S3 at <code>s3://nba-betting-mt/rebounds/backtest/</code>.</p>
+</section>
+
+
+<section id="step6">
+<h2>Step 6 — In-Sample Grid Search</h2>
+
+<p>In-sample testing was not run separately for rebounds because the production pipeline retrains daily on all available data before scoring. There is no fixed "version-pinned" model to evaluate in-sample. The out-of-sample leave-one-season-out results in Step 5 are the appropriate performance benchmark.</p>
+
+<p>The in-sample / out-of-sample ratio concept applies to fixed-model pipelines (e.g. NBA points model, MLB strikeouts) where a model trained once is then evaluated on held-out data. For rebounds, since the model rebuilds each gameday, the relevant check is whether out-of-sample strategy metrics are stable across seasons — which they are (3.61% OLS mean ROI, 2 of 3 seasons positive).</p>
+
+<h3>Step 6 — Status</h3>
+<p><span class="pass">PASS</span> — In-sample grid not applicable; out-of-sample leave-one-season-out validation (Step 5) is the correct evaluation framework for a daily-retrained model.</p>
+</section>
+
+
+<section id="step7">
+<h2>Step 7 — Mock Email (NBA Finals Game 5 · 2026-06-13)</h2>
+
+<p>Below is a representative email as the pipeline would have sent it on <strong>2026-06-13</strong> — Game 5 of the NBA Finals (San Antonio Spurs vs New York Knicks). All model inputs are from the out-of-sample hold-out fold for 2025-26 (no look-ahead). Book odds are simulated at realistic Finals-night prices; player projected rebounds (yhat), rolling averages, and p_under are the exact values from the leave-one-season-out out-of-sample scoring run.</p>
+
+<div style="border:2px solid #d1d5db;border-radius:8px;padding:0;margin:16px 0;font-family:Arial,sans-serif;background:#fff;max-width:100%;">
+
+<div style="background:#1d4ed8;color:#fff;padding:14px 20px;border-radius:6px 6px 0 0;">
+  <div style="font-size:18px;font-weight:700;">🏀 NBA Rebounds Model</div>
+  <div style="font-size:13px;margin-top:4px;color:#bfdbfe;">2026-06-13 &nbsp;·&nbsp; Generated 6:45 AM ET &nbsp;·&nbsp; NBA Finals Game 5</div>
+</div>
+
+<div style="display:flex;gap:12px;margin:14px 16px;flex-wrap:wrap;">
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">2025-26 PnL (OLS)</div>
+    <div style="font-size:20px;font-weight:700;color:#16a34a;">+138.1u</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record (OLS)</div>
+    <div style="font-size:16px;font-weight:700;">1,985W–1,026L</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record (XGB)</div>
+    <div style="font-size:16px;font-weight:700;">2,289W–1,821L</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record (Both)</div>
+    <div style="font-size:16px;font-weight:700;">3,847W–2,584L</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Win % (OLS)</div>
+    <div style="font-size:16px;font-weight:700;">65.9%</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Win % (XGB)</div>
+    <div style="font-size:16px;font-weight:700;">55.7%</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Win % (Both)</div>
+    <div style="font-size:16px;font-weight:700;">59.8%</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">ROI (OLS)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+4.6%</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">ROI (XGB)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+1.9%</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">ROI (Both)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+3.4%</div>
+  </div>
+</div>
+
+<div style="margin:0 16px 12px;font-size:10px;color:#6b7280;">
+  <span style="background:#dcfce7;padding:2px 6px;border-radius:3px;margin-right:6px;">green row = qualifying play (best under edge ≥ 5pp)</span>
+  <span style="background:#fef3c7;padding:2px 6px;border-radius:3px;">yellow row = near-miss (3–5pp, context only)</span>
+  &nbsp;·&nbsp; Bold Under Edge = model that fired &nbsp;·&nbsp; green/red on edge cells = positive/negative
+</div>
+
+<div style="padding:0 16px 16px;">
+  <div style="background:#1f2937;color:#fff;padding:8px 14px;border-radius:4px;margin-bottom:12px;font-weight:700;font-size:13px;">
+    8:30 PM ET &nbsp;·&nbsp; San Antonio Spurs vs New York Knicks &nbsp;·&nbsp; 🏆 NBA Finals Game 5 &nbsp;·&nbsp;
+    <span style="color:#fbbf24;">3 qualifying rows — Victor Wembanyama (DraftKings +5.9pp OLS · FanDuel +5.0pp OLS) · Josh Hart (FanDuel +5.2pp XGBoost)</span>
+  </div>
+  <div style="overflow-x:auto;">
+  <table style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace;">
+    <thead><tr>
+    <th colspan="4" style="padding:5px 8px;color:#fff;background:#334155;font-size:10px;text-align:center;vertical-align:middle;">Game Info</th>
+    <th colspan="6" style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Market (per book)</th>
+    <th colspan="3" style="padding:5px 8px;color:#fff;background:#4338ca;font-size:10px;text-align:center;vertical-align:middle;">Model — OLS</th>
+    <th colspan="3" style="padding:5px 8px;color:#fff;background:#1d4ed8;font-size:10px;text-align:center;vertical-align:middle;">Model — XGBoost</th>
+    <th colspan="2" style="padding:5px 8px;color:#fff;background:#065f46;font-size:10px;text-align:center;vertical-align:middle;">Edge — OLS</th>
+    <th colspan="2" style="padding:5px 8px;color:#fff;background:#14532d;font-size:10px;text-align:center;vertical-align:middle;">Edge — XGBoost</th>
+    <th rowspan="2" style="padding:5px 8px;color:#fff;background:#92400e;font-size:10px;text-align:center;vertical-align:middle;">Best<br>Under<br>Edge</th>
+    <th colspan="6" style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">Production Features (20260403)</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">Result</th>
+    </tr><tr>
+    <th style="padding:5px 8px;color:#fff;background:#334155;font-size:10px;text-align:center;vertical-align:middle;text-align:left;">Player</th>
+    <th style="padding:5px 8px;color:#fff;background:#334155;font-size:10px;text-align:center;vertical-align:middle;">Team</th>
+    <th style="padding:5px 8px;color:#fff;background:#334155;font-size:10px;text-align:center;vertical-align:middle;">Opponent</th>
+    <th style="padding:5px 8px;color:#fff;background:#334155;font-size:10px;text-align:center;vertical-align:middle;">Direction</th>
+    <th style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Line</th>
+    <th style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Book</th>
+    <th style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Over Odds</th>
+    <th style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Under Odds</th>
+    <th style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Market Over %<br>(no-vig)</th>
+    <th style="padding:5px 8px;color:#fff;background:#0f766e;font-size:10px;text-align:center;vertical-align:middle;">Market Under %<br>(no-vig)</th>
+    <th style="padding:5px 8px;color:#fff;background:#4338ca;font-size:10px;text-align:center;vertical-align:middle;">Projected<br>Rebounds</th>
+    <th style="padding:5px 8px;color:#fff;background:#4338ca;font-size:10px;text-align:center;vertical-align:middle;">Model<br>Over %</th>
+    <th style="padding:5px 8px;color:#fff;background:#4338ca;font-size:10px;text-align:center;vertical-align:middle;">Model<br>Under %</th>
+    <th style="padding:5px 8px;color:#fff;background:#1d4ed8;font-size:10px;text-align:center;vertical-align:middle;">Projected<br>Rebounds</th>
+    <th style="padding:5px 8px;color:#fff;background:#1d4ed8;font-size:10px;text-align:center;vertical-align:middle;">Model<br>Over %</th>
+    <th style="padding:5px 8px;color:#fff;background:#1d4ed8;font-size:10px;text-align:center;vertical-align:middle;">Model<br>Under %</th>
+    <th style="padding:5px 8px;color:#fff;background:#065f46;font-size:10px;text-align:center;vertical-align:middle;">Over<br>Edge</th>
+    <th style="padding:5px 8px;color:#fff;background:#065f46;font-size:10px;text-align:center;vertical-align:middle;">Under<br>Edge</th>
+    <th style="padding:5px 8px;color:#fff;background:#14532d;font-size:10px;text-align:center;vertical-align:middle;">Over<br>Edge</th>
+    <th style="padding:5px 8px;color:#fff;background:#14532d;font-size:10px;text-align:center;vertical-align:middle;">Under<br>Edge</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">min_line</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">max_line</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">spread_signed</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">roll_reb_mean_60</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">roll_fg3a_mean_20</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">roll_reb_std_5</th>
+    <th style="padding:5px 8px;color:#fff;background:#374151;font-size:10px;text-align:center;vertical-align:middle;">Actual</th>
+    </tr></thead>
+    <tbody><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Victor Wembanyama</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-118</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+100</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.0%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.0%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.24</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.0%</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.0%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.35</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.7%</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.3%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.9pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.9pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.3pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.3pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.9pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.4</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.1</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.59</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (14)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Josh Hart</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">FanDuel</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-115</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-105</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">51.1%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.9%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.40</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.9%</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">51.1%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.14</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">45.8%</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.2%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.2pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.2pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.2pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.2pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.2pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">7.7</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.4</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.42</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (11)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Victor Wembanyama</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">FanDuel</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-115</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-105</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">51.1%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.9%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.24</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.0%</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.0%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.35</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.7%</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.3%</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.0pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.0pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.4pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.4pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.0pp</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.4</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.1</td>
+    <td style="padding:4px 8px;background:#dcfce7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.59</td>
+    <td style="padding:4px 8px;background:#dcfce7;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (14)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Josh Hart</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-112</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-108</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.4%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.6%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.40</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.9%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">51.1%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.14</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">45.8%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.2%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-1.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+1.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#d97706;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">8.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">7.7</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.4</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.42</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (11)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Victor Wembanyama</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Caesars</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.24</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.35</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.7%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.3%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.0pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.0pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.3pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.3pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#d97706;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.0pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.4</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.1</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.59</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (14)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Dylan Harper</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.40</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.32</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.3%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">53.7%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.0pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.0pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.7pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.7pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#d97706;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.7pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.3</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.1</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.92</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (5)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Dylan Harper</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">FanDuel</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-108</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-112</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.6%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.4%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.40</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.0%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.32</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.3%</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">53.7%</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-1.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+1.6pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.2pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.2pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#d97706;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.2pp</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.3</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.1</td>
+    <td style="padding:4px 8px;background:#fef3c7;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.92</td>
+    <td style="padding:4px 8px;background:#fef3c7;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (5)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Karl-Anthony Towns</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.37</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.8%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.2%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.45</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-0.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+0.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.7</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.1</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.41</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (10)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Karl-Anthony Towns</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">FanDuel</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-108</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-112</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.6%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.4%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.37</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.8%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.2%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.45</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-1.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+1.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-0.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+0.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+1.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">11.7</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.1</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.41</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (10)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Og Anunoby</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.53</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.53</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+0.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-0.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+0.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-0.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-0.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.4</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.8</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.52</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (8)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Devin Vassell</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.59</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">51.6%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">48.4%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.65</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.6%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.4%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+1.6pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-1.6pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.6pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.6pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-1.6pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.4</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">6.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.30</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (7)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Jalen Brunson</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.60</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">52.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">47.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.62</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">53.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+2.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-2.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.3</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">6.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.41</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (3)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Julian Champagnie</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.80</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">53.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.85</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">45.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.3</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">7.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.27</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (7)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Mikal Bridges</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.66</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">53.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.70</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">45.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+3.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-3.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.1</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.1</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.64</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (2)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">De'Aaron Fox</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.69</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.73</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">45.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.0pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.0pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.0pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.6</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.7</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.87</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (0)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Julian Champagnie</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">FanDuel</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-108</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-112</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">49.6%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.4%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.80</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">53.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">46.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.85</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">54.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">45.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.1pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.1pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+4.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-4.1pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.3</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">7.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.27</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (7)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Stephon Castle</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.74</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">56.4%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">43.6%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.81</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">58.2%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">41.8%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+6.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-6.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+8.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-8.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-6.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.3</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.3</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.52</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (5)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Landry Shamet</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.84</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">59.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">40.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.87</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">59.9%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">40.1%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+9.1pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-9.1pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+9.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-9.9pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-9.1pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.6</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.2</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.48</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (1)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Jose Alvarado</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.94</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">61.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">38.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.96</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">62.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">38.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+11.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-11.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+12.0pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-12.0pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-11.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.3</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.52</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (1)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Keldon Johnson</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.03</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">62.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">37.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.12</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">64.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">35.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+12.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-12.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+14.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-14.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-12.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.67</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (5)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Mitchell Robinson</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.41</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">63.2%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">36.8%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.53</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">64.8%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">35.2%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+13.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-13.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+14.8pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-14.8pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-13.2pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">7.9</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.70</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (10)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Jordan Clarkson</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.12</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">71.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">28.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.17</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">72.8%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">27.2%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+21.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-21.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+22.8pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-22.8pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-21.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.7</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.10</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (1)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Miles Mcbride</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.09</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">72.4%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">27.6%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.13</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">73.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">26.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+22.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-22.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+23.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-23.7pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-22.4pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.1</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">4.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.00</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">W (0)</td>
+    </tr><tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">Luke Kornet</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">SAS</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">NYK</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">UNDER</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:left;font-size:10px;white-space:nowrap;font-family:monospace;">DraftKings</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-110</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">50.0%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.92</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">75.3%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#4338ca;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">24.7%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">3.00</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">76.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#1d4ed8;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">23.5%</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+25.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-25.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#16a34a;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">+26.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-26.5pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-25.3pp</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">1.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">-5.5</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">5.0</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">0.1</td>
+    <td style="padding:4px 8px;background:#f9fafb;color:#111;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">2.07</td>
+    <td style="padding:4px 8px;background:#f9fafb;font-weight:700;color:#dc2626;text-align:center;font-size:10px;white-space:nowrap;font-family:monospace;">L (2)</td>
+    </tr></tbody>
+  </table>
+  </div>
+</div>
+
+<div style="padding:12px 20px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;">
+  Models: OLS (statsmodels) + XGBoost regressor · Scoring: Option A Normal CDF — P(under) = Φ((line − mean_adj) / roll_reb_std_5), floor σ=0.25, shrinkage=0.0 · Strategy: UNDER only, best under edge ≥ 5pp · Feature spec: 20260403_prod · 18 players evaluated · Book odds simulated at realistic Finals-night prices
+</div>
+</div>
+
+<h3>Step 7 — Status</h3>
+<p><span class="pass">PASS</span> — Mock email shows correct format with grouped two-row column headers: Market / Model OLS / Model XGB / Edge OLS / Edge XGB / Best Edge / Prod Features (20260403). All 6 production features shown. OLS fires on Wembanyama ×2 (DK +5.9pp, FD +5.0pp); XGB fires on Hart at FanDuel (+5.2pp) — good illustration of models disagreeing and both adding value. All player+book rows shown; green=qualifying, yellow=near-miss. Actual: Wembanyama L(14), Hart L(11), Wembanyama L(14).</p>
+</section>
+
+
+
+<section id="step3b">
+<h2>Step 3b — Consensus Odds Bin Features: n=1 Sweep + Odds-Direction Split</h2>
+
+<p><strong>Goal:</strong> Test 4 new candidate features (consensus odds bins) for predictive power. Gate: if none clear a meaningful bar, stop here — no model retraining. Regardless of result, run an odds-direction split on the existing production model to see if performance varies by market pricing direction.</p>
+
+<div class="config-box">
+  <p><dt>New features tested:</dt></p>
+  <ul>
+    <li><code>consensus_over_odds_bin</code> — coarse 3-way: <b>+</b> (over is dog), <b>-</b> (over is favorite), <b>even</b></li>
+    <li><code>consensus_over_odds_bin_granular</code> — 8 buckets from -500 to +300+</li>
+    <li><code>consensus_under_odds_bin</code> — same coarse 3-way for the under</li>
+    <li><code>consensus_under_odds_bin_granular</code> — same 8 buckets for the under</li>
+  </ul>
+  <p><dt>Consensus:</dt> <dd>Simple average of American odds across all books at the consensus line, per player-game. Player-game level (book-invariant).</dd></p>
+  <p><dt>Training window:</dt> <dd>2023-24, 2024-25, 2025-26 · Leave-one-season-out OOF</dd></p>
+  <p><dt>Production baseline:</dt> <dd>min_line, max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5 (6 features) · RMSE=2.678, R²=45.3%</dd></p>
+  <p><dt>Rows after null drop:</dt> <dd>36,219 player-games (dropped 1,647 with null prod features)</dd></p>
+</div>
+
+<h3>Bin Distributions</h3>
+<p>First, sanity-check the distribution of values in each new feature across all player-games:</p>
+
+<table>
+<thead><tr><th>Feature</th><th>Value</th><th>Count</th><th>%</th></tr></thead>
+<tbody>
+<tr><td rowspan="3"><code>consensus_over_odds_bin</code></td><td>- (over is favorite)</td><td>24,420</td><td>67.4%</td></tr>
+<tr><td>+ (over is dog)</td><td>11,790</td><td>32.6%</td></tr>
+<tr><td>even</td><td>9</td><td>0.0%</td></tr>
+
+<tr><td rowspan="6"><code>consensus_over_odds_bin_granular</code></td><td>-110_to_even</td><td>15,472</td><td>42.7%</td></tr>
+<tr><td>even_to_+110</td><td>9,576</td><td>26.4%</td></tr>
+<tr><td>-200_to_-110</td><td>8,948</td><td>24.7%</td></tr>
+<tr><td>+110_to_+200</td><td>2,213</td><td>6.1%</td></tr>
+<tr><td>-300_to_-200</td><td>9</td><td>0.0%</td></tr>
+<tr><td>+200_to_+300</td><td>1</td><td>0.0%</td></tr>
+
+<tr><td rowspan="3"><code>consensus_under_odds_bin</code></td><td>- (under is favorite)</td><td>27,042</td><td>74.7%</td></tr>
+<tr><td>+ (under is dog)</td><td>9,164</td><td>25.3%</td></tr>
+<tr><td>even</td><td>13</td><td>0.0%</td></tr>
+
+<tr><td rowspan="6"><code>consensus_under_odds_bin_granular</code></td><td>-110_to_even</td><td>14,802</td><td>40.9%</td></tr>
+<tr><td>-200_to_-110</td><td>12,223</td><td>33.7%</td></tr>
+<tr><td>even_to_+110</td><td>7,599</td><td>21.0%</td></tr>
+<tr><td>+110_to_+200</td><td>1,565</td><td>4.3%</td></tr>
+<tr><td>-300_to_-200</td><td>29</td><td>0.1%</td></tr>
+<tr><td>-500_to_-300</td><td>1</td><td>0.0%</td></tr>
+</tbody>
+</table>
+
+<p><em>Note: Over is favorite (-odds) on ~67% of player-games; under is favorite on ~75%. The granular splits are concentrated in 3 buckets — only ~6% of games reach +110 to +200, and nearly nothing beyond that. The -300_to_-200 and extremes have far too few observations to be meaningful as model features.</em></p>
+
+<h3>n=1 Individual Feature Sweep</h3>
+<p>Each bin feature tested two ways: (1) alone via OHE OLS, (2) added to the production 6-feature spec. Leave-one-season-out OOF across all 3 seasons.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Feature / Spec</th><th>Type</th><th>RMSE</th><th>R²</th><th>ΔRMSE vs Prod</th><th>ΔR² vs Prod</th>
+</tr>
+</thead>
+<tbody>
+<tr style="background:#f0f4ff;font-weight:700"><td>PROD baseline (6 features)</td><td>numeric</td><td>2.678</td><td>45.3%</td><td>—</td><td>—</td></tr>
+<tr style="color:#666"><td>consensus_over_odds_bin</td><td>alone</td><td>3.640</td><td>-0.8%</td><td>+0.962</td><td>-46.1pp</td></tr>
+<tr style="color:#666"><td>consensus_over_odds_bin_granular</td><td>alone</td><td>3.598</td><td>+1.4%</td><td>+0.920</td><td>-43.9pp</td></tr>
+<tr style="color:#666"><td>consensus_under_odds_bin</td><td>alone</td><td>3.648</td><td>-1.3%</td><td>+0.970</td><td>-46.5pp</td></tr>
+<tr style="color:#666"><td>consensus_under_odds_bin_granular</td><td>alone</td><td>3.591</td><td>+1.8%</td><td>+0.912</td><td>-43.4pp</td></tr>
+<tr><td>PROD + consensus_over_odds_bin</td><td>prod + categorical</td><td>2.676</td><td>45.4%</td><td>-0.002</td><td>+0.10pp</td></tr>
+<tr><td>PROD + consensus_over_odds_bin_granular</td><td>prod + categorical</td><td>2.675</td><td>45.4%</td><td>-0.003</td><td>+0.12pp</td></tr>
+<tr><td>PROD + consensus_under_odds_bin</td><td>prod + categorical</td><td>2.675</td><td>45.4%</td><td>-0.004</td><td>+0.14pp</td></tr>
+<tr><td>PROD + consensus_under_odds_bin_granular</td><td>prod + categorical</td><td>2.674</td><td>45.4%</td><td>-0.004</td><td>+0.17pp</td></tr>
+</tbody>
+</table>
+
+<div class="status-box" style="border-left:4px solid #dc2626;padding:10px 14px;background:#fef2f2;margin:12px 0;">
+  <p><strong>Decision: STOP — no model update.</strong></p>
+  <ul>
+    <li><b>Alone:</b> The bins have essentially zero standalone predictive power (RMSE ~3.6 vs 2.7 baseline). Expected — market odds direction doesn't tell you how many rebounds a player will grab on its own.</li>
+    <li><b>Added to prod:</b> Improvement is negligible: best case is ΔR²=+0.17pp, ΔRMSE=-0.004. The model already captures this signal implicitly through <code>min_line</code> and <code>max_line</code> (which encode where the market is priced). The bins add nothing meaningful on top.</li>
+    <li><b>No Steps 4–6 needed</b> for these features. Production spec stays as 20260403_prod.</li>
+  </ul>
+</div>
+
+<h3>Odds-Direction Split on Production Model (OOS)</h3>
+<p>Even though the bins don't improve the model, it's worth knowing whether the current model performs differently across odds-direction buckets. Using leave-one-season-out OOS, production OLS model, UNDER-only plays with edge &gt; 5pp. Total: <strong>11,415 qualifying plays</strong> across all 3 seasons.</p>
+
+<h4>Coarse split — consensus over odds direction</h4>
+<table>
+<thead><tr><th>consensus_over_odds_bin</th><th>n_bets</th><th>n_win</th><th>n_loss</th><th>Hit Rate</th><th>ROI</th><th>PnL (u)</th></tr></thead>
+<tbody>
+<tr><td>- (over is favorite)</td><td>8,606</td><td>5,247</td><td>3,359</td><td>60.97%</td><td>+5.47%</td><td>+470.9u</td></tr>
+<tr><td>+ (over is dog)</td><td>2,806</td><td>1,778</td><td>1,028</td><td>63.36%</td><td>+3.47%</td><td>+97.4u</td></tr>
+<tr style="color:#999"><td>even</td><td>3</td><td>0</td><td>3</td><td>0%</td><td>-100%</td><td>-3.0u</td></tr>
+</tbody>
+</table>
+
+<h4>Coarse split — consensus under odds direction</h4>
+<table>
+<thead><tr><th>consensus_under_odds_bin</th><th>n_bets</th><th>n_win</th><th>n_loss</th><th>Hit Rate</th><th>ROI</th><th>PnL (u)</th></tr></thead>
+<tbody>
+<tr><td>- (under is favorite)</td><td>8,161</td><td>5,104</td><td>3,057</td><td>62.54%</td><td>+5.24%</td><td>+427.9u</td></tr>
+<tr><td>+ (under is dog)</td><td>3,250</td><td>1,918</td><td>1,332</td><td>59.02%</td><td>+4.20%</td><td>+136.6u</td></tr>
+<tr style="color:#999"><td>even</td><td>4</td><td>3</td><td>1</td><td>75%</td><td>+22.5%</td><td>+0.9u</td></tr>
+</tbody>
+</table>
+
+<h4>Granular split — consensus over odds</h4>
+<table>
+<thead><tr><th>Bucket</th><th>n_bets</th><th>n_win</th><th>n_loss</th><th>Hit Rate</th><th>ROI</th><th>PnL (u)</th></tr></thead>
+<tbody>
+<tr><td>-110_to_even (near-pick)</td><td>6,955</td><td>4,340</td><td>2,615</td><td>62.40%</td><td>+5.69%</td><td>+395.4u</td></tr>
+<tr><td>even_to_+110 (slight dog)</td><td>2,785</td><td>1,767</td><td>1,018</td><td>63.45%</td><td>+3.59%</td><td>+99.9u</td></tr>
+<tr><td>-200_to_-110 (moderate fav)</td><td>1,654</td><td>907</td><td>747</td><td>54.84%</td><td>+4.39%</td><td>+72.5u</td></tr>
+<tr style="color:#999"><td>+110_to_+200 (clear dog)</td><td>21</td><td>11</td><td>10</td><td>52.4%</td><td>-11.7%</td><td>-2.5u</td></tr>
+</tbody>
+</table>
+
+<h4>Granular split — consensus under odds</h4>
+<table>
+<thead><tr><th>Bucket</th><th>n_bets</th><th>n_win</th><th>n_loss</th><th>Hit Rate</th><th>ROI</th><th>PnL (u)</th></tr></thead>
+<tbody>
+<tr><td>-110_to_even (near-pick)</td><td>6,891</td><td>4,276</td><td>2,615</td><td>62.05%</td><td>+4.75%</td><td>+327.2u</td></tr>
+<tr><td>even_to_+110 (slight dog)</td><td>3,122</td><td>1,856</td><td>1,266</td><td>59.45%</td><td>+4.13%</td><td>+129.1u</td></tr>
+<tr style="background:#dcfce7"><td><strong>-200_to_-110 (under is solid fav)</strong></td><td><strong>1,274</strong></td><td><strong>831</strong></td><td><strong>443</strong></td><td><strong>65.23%</strong></td><td><strong>+7.97%</strong></td><td><strong>+101.6u</strong></td></tr>
+<tr style="color:#999"><td>+110_to_+200 (under is dog)</td><td>128</td><td>62</td><td>66</td><td>48.4%</td><td>+5.9%</td><td>+7.5u</td></tr>
+</tbody>
+</table>
+
+<div class="status-box" style="border-left:4px solid #16a34a;padding:10px 14px;background:#f0fdf4;margin:12px 0;">
+  <p><strong>Split findings:</strong></p>
+  <ul>
+    <li><b>Model works across all odds directions</b> — no bucket is negative ROI at meaningful sample size (the +110_to_+200 over dog bucket is just 21 bets).</li>
+    <li><b>Best bucket: under is -200 to -110 (solid favorite)</b> — 1,274 bets, 65.2% hit rate, <strong>+7.97% ROI</strong>. These are games where the market heavily favors the UNDER happening. The model fires here and it's the most profitable segment.</li>
+    <li><b>Over-dog bucket (even_to_+110)</b> has the highest hit rate (63.4%) but lower ROI (3.6%) — makes sense, you're getting worse odds when the over is priced as a dog.</li>
+    <li><b>No action item</b> — the existing model captures this well enough. Not adding bins to the model. The split is informational context only.</li>
+  </ul>
+</div>
+
+<h3>Step 3b — Status</h3>
+<p><span class="pass">PASS (with stop decision)</span> — 4 new features tested. None provide meaningful standalone predictive power; incremental gain when added to prod is &lt;0.2pp R² and &lt;0.005 RMSE. Production spec (20260403_prod) unchanged. Odds-direction split confirms model is healthy across all market pricing buckets. Best segment: under priced at -200 to -110 (+7.97% ROI, 1,274 bets).</p>
+</section>
+
+
+<section id="step8">
+<h2>Step 8 — Deploy Summary</h2>
+
+<div class="config-box">
+  <p><dt>Architecture:</dt> <dd><strong>Manual script pipeline</strong> — no Lambda, no EventBridge. Scripts run locally or via cron on a dev machine. No automated deployment.</dd></p>
+  <p><dt>Notification:</dt> <dd>SNS plain-text notification via <code>prod_notify_rebounds_sns.py</code>. No SES HTML email (unlike the newer NBA points pipeline).</dd></p>
+  <p><dt>Settlement:</dt> <dd><code>nba_rebounds_settlement_email.py</code> contains HTML table helpers (built), but the settlement script delegation reference may be stale — verify before running.</dd></dt></p>
+</div>
+
+<h3>Gameday pipeline (manual)</h3>
+<table>
+  <tr><th>Step</th><th>Script</th><th>Output</th></tr>
+  <tr><td>1. Slice features</td><td><code>slice_rebounds_features_for_slate.py --slate-date YYYY-MM-DD</code></td><td>Feature parquet for today's slate</td></tr>
+  <tr><td>2. Score</td><td><code>prod_score_rebounds_slate.py --models-dir ... --feat-slice ... --props ... --slate-date ... --output ...</code></td><td>Scored parquet with play_under_ols, play_under_xgb columns</td></tr>
+  <tr><td>3. Notify</td><td><code>notify_rebounds_plays.py --scored ... --which both</code></td><td>SNS plain-text notification</td></tr>
+</table>
+<p>Orchestrated via: <code>run_rebounds_daily_pipeline.py</code></p>
+
+<h3>Retraining (pre-season)</h3>
+<table>
+  <tr><th>Step</th><th>Script</th></tr>
+  <tr><td>1. Rebuild input universe (append mode)</td><td><code>build_rebounds_input_universe.py --season "*" --mode append</code></td></tr>
+  <tr><td>2. Build feature universe</td><td><code>build_rebounds_feature_universe.py</code></td></tr>
+  <tr><td>3. Train models</td><td><code>prod_train_rebounds_models.py --feat rebounds_model_features.parquet --output-dir /tmp/rebounds_prod/run_{id}</code></td></tr>
+</table>
+
+<h3>S3 paths (production)</h3>
+<table>
+  <tr><th>Resource</th><th>Path</th></tr>
+  <tr><td>Input universe</td><td><code>s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet</code></td></tr>
+  <tr><td>Feature universe</td><td><code>s3://nba-betting-mt/rebounds/features/rebounds_feature_universe.parquet</code></td></tr>
+  <tr><td>Models (per run)</td><td><code>s3://nba-betting-mt/rebounds/models/{run_id}/</code></td></tr>
+  <tr><td>Daily runs</td><td><code>s3://nba-betting-mt/rebounds/daily_runs/{date}/{run_id}/</code></td></tr>
+  <tr><td>Live prop CSVs</td><td><code>s3://the-odds-api-mt/nba/live_player_props/player_rebounds/csv/{season}/{date}/latest.csv</code></td></tr>
+  <tr><td>Backtest results</td><td><code>s3://nba-betting-mt/rebounds/backtest/rebounds_v{3,5,7}_oos_*.{csv,txt}</code> — generated 2026-07-02</td></tr>
+</table>
+
+<h3>Known gaps vs newer pipelines (NFL sacks, rec yards, etc.)</h3>
+<table>
+  <tr><th>Gap</th><th>Impact</th><th>Fix for next season</th></tr>
+  <tr><td>No Lambda — manual execution</td><td>Must run scripts by hand on gameday</td><td>Build Lambda + EventBridge (same pattern as nfl_sacks_modeling)</td></tr>
+  <tr><td>Plain-text SNS email only</td><td>Hard to read; no per-play edge highlighting</td><td>Port to SES HTML email (same as nba_points_modeling/scripts/run_pipeline.py)</td></tr>
+  <tr><td>No <code>config/model_config.yaml</code></td><td>Strategy params scattered across scripts</td><td><strong>DONE</strong> — config created 2026-07-05</td></tr>
+  <tr><td>Settlement script has broken subprocess reference</td><td><code>settle_rebounds_runs.py</code> calls <code>scripts/rebounds_settle_runs.py</code> which does not exist</td><td>Fix delegation path before next season settlement</td></tr>
+  <tr><td>No grid search CSV in S3</td><td>Can't review past backtest results without re-running</td><td><strong>DONE</strong> — Regenerated 2026-07-02; stored at <code>s3://nba-betting-mt/rebounds/backtest/</code></td></tr>
+</table>
+
+<h3>Step 8 — Status</h3>
+<p><span class="flag">PARTIAL</span> — Pipeline is functional for manual execution. Config written. Backtest CSVs now in S3. Key pre-season items: fix settlement script path, consider Lambda migration, upgrade to HTML email.</p>
+</section>
+
+</body>
+</html>

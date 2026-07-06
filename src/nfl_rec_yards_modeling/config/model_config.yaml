@@ -1,0 +1,29 @@
+nfl_rec_yards_model:
+  model_type: ols_negbin_hybrid
+  negbin_threshold: 20.5   # lines < 20.5 use bootstrap OLS residuals; >= use NegBin CDF
+  features:
+    numeric:
+      - offered_line
+      - game_total
+      - proj_own_score
+      - receiving_yards_L8
+      - target_share_L8
+      - snap_pct_L8
+      - market_under_prob
+    categorical:
+      - pos_TE              # binary 0/1; 1=TE, 0=WR
+    order:                  # must match the order StandardScaler was fit on in train.py
+      - offered_line
+      - game_total
+      - proj_own_score
+      - receiving_yards_L8
+      - target_share_L8
+      - snap_pct_L8
+      - pos_TE
+      - market_under_prob
+  inference:
+    direction: OVER
+    edge_threshold: 0.03
+    line_min: 0.5
+    line_max: 99.5
+    min_books: 3

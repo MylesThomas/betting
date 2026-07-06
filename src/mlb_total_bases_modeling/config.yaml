@@ -3,8 +3,8 @@ strategy_summary: "UNDER 1.5, dogs, edge ≥5pp"
 model:
   type: xgboost_regression
   version: v2
-  oof_rmse: 1.7229
-  oof_r2_pct: 3.927
+  out_of_sample_rmse: 1.7229
+  out_of_sample_r2_pct: 3.927
   n_samples: 143643
   exclude_doubleheaders: true   # market posts single-game props; DH actuals are summed (data mismatch)
   sklearn_version: "1.7.2"
@@ -34,14 +34,14 @@ model:
 
 strategy:
   side: UNDER
-  lines: [1.5]            # line=0.5 shows no edge in OOS grid search
+  lines: [1.5]            # line=0.5 shows no edge in out-of-sample grid search
   min_bet_edge: 0.05      # green rows in email — actually bet these
   min_track_edge: 0.03    # yellow rows in email — paper track only
   dogs_only: true         # bet only when novig_prob_under < 0.50 (dogs = +odds side)
   min_books: 1
   novig_min: 0.10
 
-  # OOS backtest results (correct payout = under_price - 1):
+  # Out-of-sample backtest results (correct payout = under_price - 1):
   #   edge≥5pp, dogs, line=1.5: n=12,323, win%=50.6%, +211.9u, ROI=+1.72%, MDD=185.1 (MDD<units)
   #   edge≥3pp, dogs, line=1.5: n=14,110, win%=50.2%, +47.7u, ROI=+0.34%, MDD=282.9 (MDD>units)
 
@@ -52,7 +52,7 @@ backtest:
   payout_col: "under_price"
 
 grid_search:
-  # OOS (OOF predictions) and IS (full model) grid search run 2026-07-05.
+  # Out-of-sample and in-sample grid search run 2026-07-05.
   # Dimensions: edge_threshold × odds_bucket × line_bucket.
   # Payout = under_price - 1 (actual book decimal odds, not novig proxy).
   # S3: mlb/total_bases_model/backtest/mlb_tb_v2_oos_grid.csv
@@ -62,9 +62,9 @@ grid_search:
     odds_bucket:    ["all", "dogs (+odds)", "favs (-odds)"]   # dogs = novig_under < 0.50
     line_bucket:    ["all_lines", "0.5_only", "1.5_only"]
 
-  # ── OOS results (67 combos, sorted by units_won desc) ────────────────────
+  # ── Out-of-sample results (67 combos, sorted by units_won desc) ──────────
   # edge  odds_bucket       line_bucket   n_bets  win%    units    roi    mdd
-  oos_results:
+  out_of_sample_results:
     - {edge: 0.05, odds: "dogs",  lines: "1.5",  n: 12323,  win_pct: 0.506, units: +211.90, roi: +0.0172, mdd: 185.09}  # ← PRODUCTION (only MDD<units)
     - {edge: 0.07, odds: "dogs",  lines: "1.5",  n: 10283,  win_pct: 0.500, units: +124.06, roi: +0.0121, mdd: 169.86}
     - {edge: 0.15, odds: "dogs",  lines: "1.5",  n:  2872,  win_pct: 0.481, units:  +71.99, roi: +0.0251, mdd:  80.83}
@@ -133,10 +133,10 @@ grid_search:
     - {edge: 0.01, odds: "all",   lines: "all",  n: 429081, win_pct: 0.553, units: -14088.92, roi: -0.0328, mdd: 14102.05}
     - {edge: 0.00, odds: "all",   lines: "all",  n: 473623, win_pct: 0.549, units: -17007.98, roi: -0.0359, mdd: 17021.11}
 
-  # ── IS results (67 combos, sorted by units_won desc) ─────────────────────
-  # Note: IS win rates on favs are 60–67% — major overfit vs OOS negatives.
-  # Dogs signal is consistent in both IS and OOS.
-  is_results:
+  # ── In-sample results (67 combos, sorted by units_won desc) ─────────────
+  # Note: in-sample win rates on favs are 60–67% — major overfit vs out-of-sample negatives.
+  # Dogs signal is consistent in both in-sample and out-of-sample.
+  in_sample_results:
     - {edge: 0.05, odds: "all",   lines: "all",  n: 218296, win_pct: 0.585, units: +3947.58, roi: +0.0181, mdd:  761.76}
     - {edge: 0.07, odds: "all",   lines: "all",  n: 136230, win_pct: 0.587, units: +3877.00, roi: +0.0285, mdd:  490.11}
     - {edge: 0.07, odds: "all",   lines: "1.5",  n: 103821, win_pct: 0.632, units: +2712.33, roi: +0.0261, mdd:  413.60}

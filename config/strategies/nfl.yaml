@@ -1,0 +1,97 @@
+sport: nfl
+
+strategies:
+
+  sacks:
+    market: player_sacks
+    odds_api_key: player_sacks
+    direction: UNDER
+    pipeline: src/nfl_sacks_modeling/scripts/run_pipeline.py
+    settle: src/nfl_sacks_modeling/scripts/settle_sacks.py
+    deploy_script: src/nfl_sacks_modeling/lambda/deploy_nfl_sacks_lambda.sh
+    lambda_name: nfl-sacks-daily
+    status: not_deployed  # enable EventBridge before 2026-09-09
+    model:
+      type: logistic_regression
+      threshold: prob_over < 0.30  # bet UNDER 0.5 sacks
+    inference:
+      edge_threshold: null  # classification threshold, not edge
+      line_filter: "line == 0.5"
+    oos:
+      seasons: [2024, 2025]
+      n_bets: 1779
+      win_rate: null
+      units: +71.8
+      roi: null
+      max_drawdown: null
+    s3:
+      prefix: s3://the-odds-api-mt/nfl/sacks_model
+      artifacts: s3://the-odds-api-mt/nfl/sacks_model/model/lr_model.pkl
+      spine: s3://the-odds-api-mt/nfl/sacks_model/spine/nfl_sacks_historical_spine.parquet
+      settled: s3://the-odds-api-mt/nfl/sacks_model/daily_runs/{gameday}/bet_sheet_settled.csv
+
+  rush_attempts:
+    market: player_rush_attempts
+    odds_api_key: player_rush_attempts
+    direction: UNDER
+    pipeline: src/nfl_rush_attempts_modeling/scripts/run_pipeline.py
+    settle: src/nfl_rush_attempts_modeling/scripts/settle_rush_attempts.py
+    deploy_script: src/nfl_rush_attempts_modeling/lambda/deploy_nfl_rush_attempts_lambda.sh
+    lambda_name: nfl-rush-attempts-daily
+    status: not_deployed  # enable EventBridge before 2026-09-09
+    model:
+      type: ridge_regression_kde
+      note: Ridge regression + KDE residual CDFs
+    inference:
+      direction: UNDER
+      edge_threshold: 0.03
+      line_min: 6.5
+    oos:
+      seasons: [2023, 2024, 2025]
+      n_bets: 1843
+      win_rate: null
+      units: null
+      roi: 0.1396
+      max_drawdown: null
+    why: >
+      Structural market mispricing — books price QB rush props at ~50% implied;
+      actual over rate is ~39%.
+    s3:
+      prefix: s3://the-odds-api-mt/nfl/rush_attempts_model
+      spine: s3://the-odds-api-mt/nfl/rush_attempts_model/spine/
+      settled: s3://the-odds-api-mt/nfl/rush_attempts_model/settled/settled_bets.parquet
+
+  rec_yards:
+    market: player_reception_yards
+    odds_api_key: player_reception_yards
+    direction: OVER
+    pipeline: src/nfl_rec_yards_modeling/scripts/run_pipeline.py
+    settle: src/nfl_rec_yards_modeling/scripts/settle_rec_yards.py
+    deploy_script: src/nfl_rec_yards_modeling/lambda/deploy_nfl_rec_yards_lambda.sh
+    lambda_name: nfl-rec-yards-daily
+    status: not_deployed  # enable EventBridge before 2026-09-09
+    model:
+      type: ols_negbin_hybrid
+      note: Bootstrap OLS residuals for lines < 20.5; NegBin CDF for lines >= 20.5. Alpha=0.79.
+      features: [offered_line, game_total, proj_own_score, receiving_yards_L8, target_share_L8, snap_pct_L8, pos_TE, market_under_prob]
+    inference:
+      direction: OVER
+      edge_threshold: 0.03
+      line_min: 0.5
+      line_max: 99.5
+      min_books: 3
+    oos:
+      seasons: [2023, 2024, 2025]
+      n_bets: 1131
+      win_rate: 0.577
+      units: +115.6
+      roi: 0.054
+      max_drawdown: 21.9
+    why: >
+      Market shades WR/TE lines low; model catches when market overestimates P(under).
+      83% of bets are -odds favorites; edge comes from win rate (57.8%) beating breakeven (55.4%).
+    s3:
+      prefix: s3://the-odds-api-mt/nfl/rec_yards_model
+      artifacts: s3://the-odds-api-mt/nfl/rec_yards_model/artifacts/
+      spine: s3://the-odds-api-mt/nfl/rec_yards_model/spine/nfl_rec_yards_historical_spine.parquet
+      settled: s3://the-odds-api-mt/nfl/rec_yards_model/settled/settled_bets.parquet

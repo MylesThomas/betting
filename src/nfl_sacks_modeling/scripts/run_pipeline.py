@@ -707,7 +707,7 @@ tr:hover td {{ background: #f9f9f9; }}
 </table>"""}
 <div class="summary">
   <strong>Strategy:</strong> direction=both · thresh=0.45 · edge≥0.03<br>
-  <strong>OOS performance (2025):</strong> 222 bets · 73.9% hit · +0.1348 EV/unit · +29.92u<br>
+  <strong>Out-of-sample performance (2025):</strong> 222 bets · 73.9% hit · +0.1348 EV/unit · +29.92u<br>
   <strong>Model:</strong> lr_norm_2024_2025_v4.pkl — Logistic Regression trained on 2024+2025
 </div>
 </body>

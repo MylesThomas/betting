@@ -1,0 +1,50 @@
+sport: mlb
+
+strategies:
+
+  total_bases:
+    market: batter_total_bases
+    odds_api_key: batter_total_bases
+    direction: UNDER
+    pipeline: src/mlb_total_bases_modeling/scripts/run_pipeline.py
+    settle: src/mlb_total_bases_modeling/scripts/settle_total_bases.py
+    lambda_name: mlb-total-bases-daily
+    status: live  # deployed 2026-07-03, EventBridge enabled
+    model:
+      type: logistic_regression
+      auc_oof: 0.6592
+      n_samples: 143249
+      artifact: s3://the-odds-api-mt/mlb/total_bases_model/model/mlb_tb_logistic.joblib
+      features: [novig_prob_over, line, n_books, ab_Lcareer, ab_L10, tb_Lcareer, tb_L10]
+    inference:
+      line_filter: "line == 1.5"
+      edge_threshold: 0.05
+      min_books: 1
+      novig_min: 0.10
+    oos:
+      seasons: [2026]
+      n_bets: 71
+      win_rate: 0.789
+      units: +8.29
+      roi: +0.1167
+      max_drawdown: 5.22
+    is:
+      seasons: [2024, 2025]
+      n_bets: 449
+      win_rate: 0.708
+      units: +8.48
+      roi: +0.0189
+      max_drawdown: 7.57
+    notes: >
+      Market systematically overprices OVERS at line=1.5; actual over rate 35.1% vs
+      novig market 37.9%. Strategy targets bench/platoon players where model assigns
+      high p(under). Avg 5 bets/week during season. Avg dec_odds_under = 1.438.
+      novig_prob_over >= 0.10 filter required to exclude bad market entries (30 rows
+      from 2026-04-20 with 26x odds). Exclude DH days — market posts separate
+      single-game props but actuals sum both games.
+    s3:
+      prefix: s3://the-odds-api-mt/mlb/total_bases_model
+      spine: s3://the-odds-api-mt/mlb/total_bases_model/spine/mlb_total_bases_spine.parquet
+      actuals: s3://the-odds-api-mt/mlb/total_bases_model/actuals/mlb_batting_statcast.parquet
+      settled: s3://the-odds-api-mt/mlb/total_bases_model/settled/mlb_tb_settled_bets.parquet
+      daily_runs: s3://the-odds-api-mt/mlb/total_bases_model/daily_runs/{gameday}/

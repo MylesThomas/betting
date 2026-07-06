@@ -556,7 +556,7 @@ def build_recommendations_html(bets: pd.DataFrame, gameday: str,
   </div>
   <p style="font-size:12px;color:#78350f;margin:0 0 8px">
     These players have gone Over (bet lost) {abs(COLD_STREAK_THRESHOLD)}+ times in a row.
-    IS hit rate at this streak depth is ~52% (near breakeven). Review before betting.
+    In-sample hit rate at this streak depth is ~52% (near breakeven). Review before betting.
   </p>
   <ul style="font-size:12px;color:#78350f;margin:0;padding-left:18px">
     {cold_rows}
@@ -580,7 +580,7 @@ def build_recommendations_html(bets: pd.DataFrame, gameday: str,
   {cold_section}
   {no_bets_msg}{table}
   <p style="color:#9ca3af;font-size:11px;margin-top:20px">
-    In-sample hit rate: 57.7% (2024–2025, 2,370 bets) — OOS validation pending first live season.
+    In-sample hit rate: 57.7% (2024–2025, 2,370 bets) — out-of-sample validation pending first live season.
   </p>
 </div>
 </body>

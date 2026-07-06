@@ -2,7 +2,7 @@
 
 **Summary**: Known issues and gotchas in the S3 data sources used by this pipeline.
 
-**Last updated**: 2026-05-20
+**Last updated**: 2026-07-03
 
 ---
 
@@ -83,6 +83,39 @@ Books score tackles as: **solo tackle = 1, assisted tackle = 1** (full credit fo
 - Assist: `assist_tackle_1_player_id` … `assist_tackle_4_player_id`
 
 Sum all columns where the player appears — that's their book-scored tackle count. Do not half-credit assists.
+
+---
+
+---
+
+## MLB player props — Odds API returns decimal odds, not American
+
+**Discovered**: 2026-07-03 during MLB pitcher strikeouts pipeline.
+
+The Odds API returns `price` in **decimal odds format** (e.g., 1.91, 2.10, 3.80) when no `oddsFormat` parameter is specified in the request. The MLB `fetch_market_lines.py` script did not pass `"oddsFormat": "american"`, so it received decimal prices.
+
+**The bug**: `build_labeled_dataset.py` called `american_to_decimal(price)` on those decimal values — treating 1.77 as "+1.77 American" → decimal = 1.0177 (wrong). Correct decimal for 1.77 decimal is just 1.77.
+
+**Downstream effect**: All per-line novig values were computed as ≈ 0.50 regardless of actual line (because 1/1.0177 ≈ 98%, and 98%/(98%+98%) ≈ 50%). This corrupted:
+- `novig_prob_over` feature (constant ≈ 0.50 → dead feature in model)
+- p_mkt in backtest (always ≈ 0.50 → inflated edge by 20–40pp at extreme lines)
+- PnL (assumed even-money odds for all bets; real odds at extreme lines are −400 to −600)
+- Reported OOS: 68.8% win rate, +4,512u → correct: 39% win rate, +159u, 1.2% ROI
+
+**What to check**: Look for values like 1.77, 1.91, 2.10 in `over_price` columns — these are decimal odds. Use this correct conversion:
+```python
+def dec_to_american(d):
+    if d >= 2.0: return round((d - 1) * 100)
+    return round(-100 / (d - 1))
+
+def correct_novig(over_dec, under_dec):
+    p_o = 1 / over_dec; p_u = 1 / under_dec
+    return p_o / (p_o + p_u)
+```
+
+**Fix**: Always pass `"oddsFormat": "american"` in Odds API requests. Verify prices look like −110, +150, not 1.91, 2.50. See NBA assists `run_pipeline.py` for the correct pattern.
+
+**Impact**: MLB strikeouts model needs to be rebuilt (labeled dataset regenerated with correct odds, Steps 3c–6 rerun). The novig_prob_over feature scaler's std is near-zero from training on constant values — cannot be corrected by just passing a new novig value; model must be retrained.
 
 ---
 

@@ -1,0 +1,117 @@
+sport: nba
+
+strategies:
+
+  rebounds:
+    market: player_rebounds
+    odds_api_key: player_rebounds
+    direction: UNDER
+    pipeline: src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py
+    settle: src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py
+    deploy_script: null  # no Lambda — SNS notify, manual run
+    lambda_name: null
+    status: legacy_production  # first prod strategy; running live but predates Lambda pattern
+    model:
+      type: ols_and_xgb_ensemble
+      note: >
+        OLS (ols_model.pkl) + XGB (xgb_model.json) trained jointly. Artifacts in
+        s3://nba-betting-mt/rebounds/models/{run_id}/. Params from manifest.json:
+        prod_min_edge, prod_shrink, sigma_floor, sigma_col.
+      features: [min_line, max_line, spread_signed, roll_reb_mean_60, roll_fg3a_mean_20, roll_reb_std_5]
+    inference:
+      direction: UNDER
+      edge_threshold: null  # read from manifest.json prod_min_edge at runtime
+      play_logic: option_a_under_only  # src/nba_rebounds_modeling/option_a_scoring.py
+    oos:
+      seasons: [2024, 2025]
+      n_bets: null   # TODO: pull from knowledge-base/raw/20260623 rebounds backtest.docx
+      win_rate: null
+      units: null
+      roi: null
+      max_drawdown: null
+      note: OOS numbers in knowledge-base/raw/20260623 rebounds backtest w deduping at player game line level.docx
+    why: >
+      Original production strategy. Under-only edge on rebounds props.
+      Proven live before the newer Lambda-based pipelines were built.
+    s3:
+      bucket: nba-betting-mt  # different bucket from newer pipelines
+      input: s3://nba-betting-mt/rebounds/input/rebounds_input_universe.parquet
+      features: s3://nba-betting-mt/rebounds/features/
+      models: s3://nba-betting-mt/rebounds/models/{run_id}/
+      scored: s3://nba-betting-mt/rebounds/scored/
+    notify: SNS  # not email — predates SES email pattern
+
+  assists:
+    market: player_assists
+    odds_api_key: player_assists
+    direction: OVER
+    pipeline: src/nba_assists_modeling/scripts/run_pipeline.py
+    settle: src/nba_assists_modeling/scripts/settle_assists.py
+    deploy_script: src/nba_assists_modeling/lambda/deploy_nba_assists_lambda.sh
+    lambda_name: nba-assists-daily
+    status: not_deployed  # enable EventBridge before 2026-10-28
+    model:
+      type: ols_inline
+      note: >
+        Inline OLS (no pickle). coef = {const: 0.2876, min_line: 0.4478,
+        max_line: 0.3403, ast_roll_20: 0.1833}. RESID_STD = 2.1153.
+        P(over) = 1 - Normal_CDF((line - yhat) / RESID_STD).
+      features: [ast_roll_20, min_line, max_line]
+    inference:
+      direction: OVER
+      edge_threshold: 0.15  # primary; 0.10 is backup shown in email
+      line_filter: null
+    oos:
+      seasons: [2024, 2025]
+      n_bets: 1188
+      win_rate: 0.431
+      units: +28.97
+      roi: 0.0244
+      max_drawdown: null
+      avg_odds: "+152"
+    why: >
+      Dog-betting strategy. 91.4% of primary bets are +odds props; breakeven = 39.7%;
+      model hits 43.6%. BetMGM systematically underprices assists overs (59% of volume,
+      8.9% IS ROI).
+    s3:
+      prefix: s3://the-odds-api-mt/nba/assists_model
+      spine: s3://the-odds-api-mt/nba/assists_model/spine/nba_assists_spine.parquet
+      settled: s3://the-odds-api-mt/nba/assists_model/settled/settled_bets.parquet
+
+  points:
+    market: player_points
+    odds_api_key: player_points
+    direction: UNDER
+    pipeline: src/nba_points_modeling/scripts/run_pipeline.py
+    settle: src/nba_points_modeling/scripts/settle_points.py
+    deploy_script: src/nba_points_modeling/lambda/deploy_nba_points_lambda.sh
+    lambda_name: nba-points-daily
+    status: not_deployed  # enable EventBridge before 2026-10-28
+    model:
+      type: ols_bootstrap
+      note: >
+        OLS predicts pts_actual (15 features). yhat shrunk toward line at 0.25.
+        Bootstrap 10K residual draws → P(under) = fraction <= line. OOF RMSE = 6.54.
+      features: [rolling PTS/MIN/FGA windows, opp_pts_allowed_L10, is_home, days_rest, offered_line, novig_prob_over]
+    inference:
+      direction: UNDER
+      edge_threshold: 0.05
+      shrinkage: 0.25
+      fav_only: true  # p_market_under >= 50%
+      line_filter: null
+    oos:
+      seasons: [2024, 2025]
+      n_bets: 1396
+      win_rate: 0.562
+      units: +149.6
+      roi: 0.1071
+      max_drawdown: 15.2
+    why: >
+      UNDER favorites are underpriced. Shrinkage toward line prevents overconfident
+      predictions on outlier performances. Fav-only filter removes low-conviction +odds bets.
+    s3:
+      prefix: s3://the-odds-api-mt/nba/points_model
+      artifacts: s3://the-odds-api-mt/nba/points_model/model/nba_points_model_ols.joblib
+      residuals: s3://the-odds-api-mt/nba/points_model/model/nba_points_residuals.npy
+      spine: s3://the-odds-api-mt/nba/points_model/spine/nba_points_spine.parquet
+      settled: s3://the-odds-api-mt/nba/points_model/settled/settled_bets.parquet

@@ -5,11 +5,11 @@ Context:
 - For each test season in {2023-24, 2024-25, 2025-26}, trains B_min_max OLS on all
   other seasons, predicts yhat on test-season player-games, merges v3 book rows,
   places under bets when Normal P(under) - p_under_novig > min_edge.
-- Same Option A Normal / no-vig edge / vigged P&L as v3_run_rebounds_edge_backtest.py.
+- Same Option A Normal / no-vig edge / vigged P&L as 20260323_run_rebounds_edge_backtest.py.
 - Does not sweep shrink, sigma, or side_policy (fixed per research plan).
 
 Usage:
-    python src/nba_rebounds_modeling/00_research/scripts/v4_run_rebounds_under_only_season_robustness.py \\
+    python src/nba_rebounds_modeling/00_research/scripts/20260323_run_rebounds_under_only_season_robustness.py \\
         --feat ~/Downloads/tmp/rebounds_model_features_v2.parquet \\
         --v3 ~/Downloads/tmp/v3_rebounds_props_raw.parquet
 """

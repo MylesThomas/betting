@@ -4,6 +4,12 @@ Append-only. Never delete entries.
 
 ---
 
+## 2026-07-03
+
+- data-quirks: added MLB odds format bug — Odds API returns decimal (not American) when `oddsFormat` param is omitted; correct conversion documented; corrupted MLB strikeouts pipeline OOS results (+4,512u was wrong; correct is +159u, 1.2% ROI)
+
+---
+
 ## 2026-05-20
 
 - Created knowledge base scaffold

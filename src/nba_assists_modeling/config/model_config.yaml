@@ -1,0 +1,90 @@
+strategy_summary: "OVER only, edge ≥15pp"
+
+model:
+  type: ols_normal_cdf
+  version: v1
+  residual_std: 2.1153     # walk-forward OOS range: 2.15–2.23
+  n_samples: 27641         # rows with market data across all 3 seasons (full-data IS fit)
+  features:
+    - min_line             # min posted line across all books
+    - max_line             # max posted line across all books
+    - ast_roll_20          # rolling 20-game AST avg (season-scoped, shift(1))
+  coefficients:
+    const:       0.2876
+    min_line:    0.4478
+    max_line:    0.3403
+    ast_roll_20: 0.1833
+  # Model is inline (not pickled) — coefficients are hardcoded in run_pipeline.py
+  # P(over) = 1 - Normal_CDF((line - yhat) / resid_std)
+
+strategy:
+  side: OVER
+  odds_bucket: all          # 91.4% of bets are positive-odds dogs (avg +152) by construction
+  lines: all
+  min_bet_edge: 0.15        # primary bets: highlighted in email
+  min_show_edge: 0.10       # backup bets: also shown as context
+  # OOS (2 walk-forward folds, 2024-25 + 2025-26): 1,188 bets · 43.1% win · +29.0u · 2.44% ROI · 27.7u MDD
+  # IS/OOS ratio: 3.3x — within <5x overfitting threshold
+
+backtest:
+  groupby: player_key, game_date
+  edge_col: edge_over
+  novig_col: novig_prob_over
+  payout_col: best_over_odds
+
+s3:
+  bucket: the-odds-api-mt
+  prefix: nba/assists_model
+  spine_key: nba/assists_model/spine/nba_assists_spine.parquet
+  settled_key: nba/assists_model/settled/settled_bets.parquet
+
+game_logs:
+  bucket: nba-api-mt
+  prefix: player_game_logs
+  seasons:
+    - "2023-24"
+    - "2024-25"
+    - "2025-26"
+
+grid_search:
+  # OLS Normal CDF model — Step 5/6 of research HTML (20260702-nba-player-assists.html)
+  # Dimensions: edge_threshold [0, 0.01, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20] × direction [over, under, both]
+  # 23 strategies evaluated. Odds computed correctly (profit-space avg, not American mean).
+  # Bug note: earlier v5 run showed 50%+ ROI due to arithmetic-mean American odds bug — fixed before Step 5.
+  dimensions:
+    edge_threshold: [0.00, 0.01, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20]
+    direction: [over, under, both]
+
+  # OOS results (2 test seasons: 2024-25, 2025-26). Sorted by units_won descending.
+  out_of_sample_results:
+    # edge   dir        n       win%    push%   units    roi      avg_profit  mdd
+    - {edge: 0.10, dir: over,  n:  4727, win_pct: 0.4735, push_pct: 0.0006, units:  39.43, roi:  0.0083, avg_profit: 1.154, mdd:  59.72, label: "backup"}
+    - {edge: 0.15, dir: over,  n:  1188, win_pct: 0.4310, push_pct: 0.0000, units:  28.97, roi:  0.0244, avg_profit: 1.398, mdd:  27.70, label: "PRIMARY ← PRODUCTION"}
+    - {edge: 0.15, dir: both,  n:  1226, win_pct: 0.4331, push_pct: 0.0000, units:  26.96, roi:  0.0220, avg_profit: 1.383, mdd:  35.70}
+    - {edge: 0.10, dir: both,  n:  4881, win_pct: 0.4724, push_pct: 0.0008, units:  14.11, roi:  0.0029, avg_profit: 1.146, mdd:  85.12}
+    - {edge: 0.20, dir: both,  n:   143, win_pct: 0.3986, push_pct: 0.0000, units:   1.32, roi:  0.0092, avg_profit: 1.584, mdd:  15.31}
+    - {edge: 0.20, dir: over,  n:   136, win_pct: 0.3897, push_pct: 0.0000, units:   0.44, roi:  0.0032, avg_profit: 1.616, mdd:  15.37}
+    - {edge: 0.15, dir: under, n:    38, win_pct: 0.5000, push_pct: 0.0000, units:  -2.00, roi: -0.0527, avg_profit: 0.906, mdd:   9.00}
+    - {edge: 0.05, dir: under, n:  1114, win_pct: 0.4955, push_pct: 0.0009, units:  -7.97, roi: -0.0072, avg_profit: 1.072, mdd:  40.20}
+    - {edge: 0.08, dir: under, n:   313, win_pct: 0.4888, push_pct: 0.0032, units: -13.35, roi: -0.0426, avg_profit: 0.989, mdd:  35.04}
+    - {edge: 0.01, dir: under, n:  3923, win_pct: 0.5029, push_pct: 0.0013, units: -22.41, roi: -0.0057, avg_profit: 1.018, mdd:  64.27}
+    - {edge: 0.03, dir: under, n:  2291, win_pct: 0.4972, push_pct: 0.0004, units: -23.21, roi: -0.0101, avg_profit: 1.045, mdd:  48.91}
+    - {edge: 0.10, dir: under, n:   154, win_pct: 0.4416, push_pct: 0.0065, units: -25.32, roi: -0.1644, avg_profit: 0.914, mdd:  29.00}
+    - {edge: 0.08, dir: over,  n:  6891, win_pct: 0.4812, push_pct: 0.0016, units: -29.32, roi: -0.0043, avg_profit: 1.090, mdd: 122.10}
+    - {edge: 0.08, dir: both,  n:  7204, win_pct: 0.4815, push_pct: 0.0017, units: -42.67, roi: -0.0059, avg_profit: 1.086, mdd: 128.22}
+    - {edge: 0.00, dir: under, n:  4881, win_pct: 0.5001, push_pct: 0.0014, units: -77.55, roi: -0.0159, avg_profit: 1.009, mdd: 140.65}
+    - {edge: 0.05, dir: over,  n: 10394, win_pct: 0.4926, push_pct: 0.0037, units: -96.40, roi: -0.0093, avg_profit: 1.025, mdd: 210.60}
+    - {edge: 0.05, dir: both,  n: 11508, win_pct: 0.4929, push_pct: 0.0034, units: -104.37, roi: -0.0091, avg_profit: 1.030, mdd: 209.23}
+    - {edge: 0.03, dir: over,  n: 12702, win_pct: 0.4952, push_pct: 0.0044, units: -206.32, roi: -0.0162, avg_profit: 0.998, mdd: 315.82}
+    - {edge: 0.03, dir: both,  n: 14993, win_pct: 0.4955, push_pct: 0.0038, units: -229.53, roi: -0.0153, avg_profit: 1.005, mdd: 312.24}
+    - {edge: 0.01, dir: over,  n: 14812, win_pct: 0.4952, push_pct: 0.0047, units: -369.58, roi: -0.0250, avg_profit: 0.979, mdd: 487.92}
+    - {edge: 0.01, dir: both,  n: 18735, win_pct: 0.4968, push_pct: 0.0040, units: -392.00, roi: -0.0209, avg_profit: 0.987, mdd: 469.50}
+    - {edge: 0.00, dir: over,  n: 15810, win_pct: 0.4944, push_pct: 0.0047, units: -482.03, roi: -0.0305, avg_profit: 0.971, mdd: 593.93}
+    - {edge: 0.00, dir: both,  n: 20691, win_pct: 0.4958, push_pct: 0.0040, units: -559.58, roi: -0.0270, avg_profit: 0.980, mdd: 632.83}
+
+  # IS/OOS ratio check (full-data OLS on 27,641 rows). All ratios < 5x = no overfitting.
+  in_sample_results:
+    # strategy                IS_roi   OOS_roi  IS_units  OOS_units  ratio  verdict
+    - {label: "edge≥0.10 over", is_roi: 0.0278, oos_roi: 0.0083, is_units: 160.9, oos_units: 39.4,  ratio: 3.3, flag: "Passes"}
+    - {label: "edge≥0.15 over", is_roi: 0.0809, oos_roi: 0.0244, is_units: 111.6, oos_units: 29.0,  ratio: 3.3, flag: "Passes — CHOSEN"}
+    - {label: "edge≥0.15 both", is_roi: 0.0779, oos_roi: 0.0220, is_units: 109.9, oos_units: 27.0,  ratio: 3.5, flag: "Passes"}

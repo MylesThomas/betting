@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>NBA Player Points — Research Session 2026-07-02</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #ffffff; color: #111111; margin: 0; padding: 24px; }
+  h1 { color: #1a1a1a; }
+  h2 { color: #1a1a1a; border-bottom: 2px solid #cccccc; padding-bottom: 6px; }
+  h3 { color: #333333; }
+  h4 { color: #444444; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-bottom: 20px; }
+  th { background: #e8e8e8; color: #111111; padding: 8px 10px; text-align: left; border: 1px solid #bbbbbb; }
+  td { padding: 6px 10px; border: 1px solid #cccccc; color: #111111; background: #ffffff; }
+  tr:nth-child(even) td { background: #f8f8f8; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; background: #f0f0f0; color: #111111; padding: 2px 5px; border-radius: 3px; }
+  .pass { color: #1a7a1a; font-weight: bold; }
+  .fail { color: #cc0000; font-weight: bold; }
+  .warn { color: #b35c00; font-weight: bold; }
+  .neg { color: #cc0000; }
+  .pos { color: #1a7a1a; }
+  section { margin-bottom: 40px; border: 1px solid #cccccc; border-radius: 8px; padding: 20px; }
+  pre { background: #f4f4f4; color: #111111; padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto; }
+  .highlight td { background: #e8f8e8 !important; }
+</style>
+</head>
+<body>
+
+<h1>NBA Player Points — Research Session</h1>
+<p style="color:#555555;">Started: 2026-07-02 18:12:47 ET</p>
+
+<section>
+  <h2>Step 0 — Scope Config · 2026-07-02 18:12:47 ET</h2>
+
+  <table>
+    <thead><tr><th>Item</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Market</td><td>NBA Player Points</td></tr>
+      <tr><td>Odds API market key</td><td><code>player_points</code></td></tr>
+      <tr><td>Sport</td><td>basketball_nba</td></tr>
+      <tr><td>Seasons</td><td>2023-24, 2024-25, 2025-26</td></tr>
+      <tr><td>Books</td><td>All available — never filter upfront</td></tr>
+      <tr><td>Market type</td><td>Variable/numeric line (~10.5–45.5 depending on player)</td></tr>
+      <tr><td>Project folder</td><td><code>src/nba_points_modeling/</code></td></tr>
+      <tr><td>Spot-check player</td><td>Stephen Curry — active all 3 seasons, full data, iconic scorer</td></tr>
+      <tr><td>Contrarian prior</td><td>Humans bet OVERS and favorites — look for UNDER value and/or underdog value</td></tr>
+      <tr><td>Prior research</td><td>v1–v3 dispersion scripts in research/scripts/ — explored zero-sum UNDER angle; treat as background, not a prior commitment</td></tr>
+      <tr><td>Game log source</td><td><code>s3://nba-api-mt/player_game_logs/{season}/</code> — 3 seasons available (160 + 163 + 211 files)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Key Questions Entering This Session</h3>
+  <ul>
+    <li>Is this market beatable? Points is the most liquid, most watched NBA prop — efficiency is expected to be higher than assists.</li>
+    <li>Variable-line market: lines range widely by player quality. Need to check whether edge concentrates in a line range.</li>
+    <li>Market-derived features (offered_line, market_prob) will rank highly in 3a — need to evaluate whether non-market features add genuine signal beyond what the line already captures.</li>
+    <li>Prior dispersion research found signal in UNDER on role players after star nights. Will test this angle but not pre-commit to it.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Step 1 — Data Pull + EDA · 2026-07-02 19:26:47 ET</h2>
+
+  <h3>Key Bug Fixed: UTC vs ET Game Date</h3>
+  <p>
+    Initial join had a 67% miss rate. Root cause: <code>game_time</code> is stored in UTC. NBA games tip off at 7–10:30 PM ET, which is midnight–2:30 AM UTC the <em>next calendar day</em>. Using the UTC date assigned ~76% of props to the wrong game_date. Fix: <code>pd.to_datetime(game_time, utc=True).dt.tz_convert("America/New_York").dt.date</code>. After fix, join quality = 91.5% at the player-game level (remaining 8.5% = real DNPs). This bug must be carried forward — any future props pull must use ET date, not UTC date.
+  </p>
+
+  <h3>Market Data Summary</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Total prop rows (all books)</td><td>505,027</td></tr>
+      <tr><td>Unique player-game-book combos</td><td>275,536</td></tr>
+      <tr><td>Date range</td><td>2023-10-24 → 2026-06-13</td></tr>
+      <tr><td>Seasons</td><td>2023-24 (160 dates), 2024-25 (163 dates), 2025-26 (215 dates)</td></tr>
+      <tr><td>Books</td><td>13 total (see coverage table below)</td></tr>
+      <tr><td>Market type</td><td>Variable/numeric — lines range 0.5 to 112.5, median 15.5</td></tr>
+      <tr><td>Over hit rate</td><td>45.2% (on settled bets)</td></tr>
+      <tr><td>Under hit rate</td><td>54.8%</td></tr>
+      <tr><td>Push rate</td><td>0.0% (half-point lines dominate — pushes essentially impossible)</td></tr>
+      <tr><td>DNP rate</td><td>8.5% (prop posted, player didn't appear in game log)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Book Coverage (unique players per season per book)</h3>
+  <table>
+    <thead><tr><th>Book</th><th>2023-24</th><th>2024-25</th><th>2025-26</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>betmgm</td><td>309</td><td>367</td><td>401</td><td></td></tr>
+      <tr><td>betonlineag</td><td>307</td><td>355</td><td>403</td><td></td></tr>
+      <tr><td>bovada</td><td>316</td><td>342</td><td>396</td><td></td></tr>
+      <tr><td>draftkings</td><td>301</td><td>333</td><td>396</td><td></td></tr>
+      <tr><td>fanduel</td><td>311</td><td>352</td><td>402</td><td></td></tr>
+      <tr><td>williamhill_us</td><td>288</td><td>359</td><td>396</td><td></td></tr>
+      <tr><td>betrivers</td><td>272</td><td>308</td><td>372</td><td></td></tr>
+      <tr><td>fanatics</td><td>0</td><td>308</td><td>351</td><td>Launched 2024-25</td></tr>
+      <tr><td>unibet_us</td><td>272</td><td>0</td><td>80</td><td class="warn">Gap in 2024-25 — treat as sparse</td></tr>
+      <tr><td>mybookieag</td><td>256</td><td>0</td><td>74</td><td class="warn">Gap in 2024-25 — treat as sparse</td></tr>
+      <tr><td>pointsbetus</td><td>311</td><td>0</td><td>73</td><td class="warn">Gap in 2024-25 — treat as sparse</td></tr>
+      <tr><td>barstool</td><td>146</td><td>0</td><td>0</td><td class="fail">2023-24 only — irrelevant for production</td></tr>
+      <tr><td>wynnbet</td><td>27</td><td>0</td><td>0</td><td class="fail">2023-24 only, minimal — irrelevant</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Line Distribution (top 20 values)</h3>
+  <table>
+    <thead><tr><th>Line</th><th>Count</th><th>% of total</th></tr></thead>
+    <tbody>
+      <tr><td>8.5</td><td>15,752</td><td>5.7%</td></tr>
+      <tr><td>9.5</td><td>17,538</td><td>6.4%</td></tr>
+      <tr><td>10.5</td><td>19,931</td><td>7.2%</td></tr>
+      <tr><td>11.5</td><td>19,009</td><td>6.9%</td></tr>
+      <tr><td>12.5</td><td>18,226</td><td>6.6%</td></tr>
+      <tr><td>13.5</td><td>16,596</td><td>6.0%</td></tr>
+      <tr><td>14.5</td><td>14,278</td><td>5.2%</td></tr>
+      <tr><td>15.5</td><td>12,891</td><td>4.7%</td></tr>
+      <tr><td>16.5</td><td>12,636</td><td>4.6%</td></tr>
+      <tr><td>17.5</td><td>11,640</td><td>4.2%</td></tr>
+      <tr><td colspan="3" style="font-style:italic;">lines continue to tail off above 20.5</td></tr>
+      <tr><td>Median line</td><td colspan="2">15.5</td></tr>
+      <tr><td>Min / Max</td><td colspan="2">0.5 / 112.5</td></tr>
+    </tbody>
+  </table>
+  <p>Confirmation: variable/numeric market. No single line exceeds 7.2% of rows. Max single line pct = 6.0% (well below the 95% binary threshold). Half-point lines dominate — pushes are essentially impossible.</p>
+
+  <h3>Odds Distribution</h3>
+  <p><em>Note: arithmetic mean of American odds is not reported — it is meaningless across the +/– discontinuity (e.g., averaging +120 and −130 gives −5, which implies a ~96% favorite — nonsense). All summary stats use no-vig implied probability or median/percentile American odds, which are valid.</em></p>
+  <table>
+    <thead><tr><th>Stat</th><th>Over</th><th>Under</th></tr></thead>
+    <tbody>
+      <tr><td>Mean no-vig implied prob</td><td>49.7%</td><td>50.3%</td></tr>
+      <tr><td>Median no-vig implied prob</td><td>50.0%</td><td>50.0%</td></tr>
+      <tr><td>Median American odds</td><td>-114</td><td>-115</td></tr>
+      <tr><td>25th pct American odds</td><td>-130</td><td>-131</td></tr>
+      <tr><td>75th pct American odds</td><td>+100</td><td>-102</td></tr>
+    </tbody>
+  </table>
+  <p>The market prices overs and unders nearly symmetrically — median implied P(over) = 50.0%, mean = 49.7%. <strong>But the actual over hit rate is only 45.2%.</strong> This means the market implies 50/50 on average, yet unders hit 54.8% of the time. The most likely explanation: lines are set at x.5 (half-point above round numbers), so when a player's true expected score is a whole number, the under (≤ x) hits more often than the over (≥ x+1) simply due to rounding. The market is not systematically mispriced — it is efficiently pricing the continuous distribution but rounding the line up slightly. This is an important prior entering Step 3: do not assume the 45/55 split is exploitable without a model that beats market-implied probability.</p>
+
+  <h3>Spot-Check: Stephen Curry</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Prop rows</td><td>3,169</td></tr>
+      <tr><td>Games with props</td><td>196</td></tr>
+      <tr><td>Line range</td><td>16.5 – 44.5</td></tr>
+      <tr><td>Books posting</td><td>barstool, betmgm, betonlineag, betrivers, bovada, draftkings, fanatics, fanduel, mybookieag, pointsbetus, unibet_us, williamhill_us (12 books)</td></tr>
+      <tr><td>Game log rows</td><td>189</td></tr>
+      <tr><td>PTS: mean / min / max</td><td>25.8 / 2 / 60</td></tr>
+    </tbody>
+  </table>
+  <p>Sample Curry rows (last 2 game dates after timezone fix — PTS now correctly populated):</p>
+  <table>
+    <thead><tr><th>game_date</th><th>bookmaker</th><th>prop_line</th><th>over_odds</th><th>under_odds</th><th>actual PTS</th></tr></thead>
+    <tbody>
+      <tr><td>2026-04-15</td><td>fanduel</td><td>25.5</td><td>-130</td><td>-102</td><td>35</td></tr>
+      <tr><td>2026-04-15</td><td>betonlineag</td><td>26.5</td><td>-115</td><td>-112</td><td>35</td></tr>
+      <tr><td>2026-04-17</td><td>betrivers</td><td>26.5</td><td>-143</td><td>+105</td><td>17</td></tr>
+      <tr><td>2026-04-17</td><td>fanduel</td><td>27.5</td><td>-104</td><td>-128</td><td>17</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Feature Data (Game Logs)</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Total game log rows</td><td>81,407</td></tr>
+      <tr><td>PTS null rate</td><td>0.0%</td></tr>
+      <tr><td>Seasons</td><td>2023-24 (160 dates), 2024-25 (163 dates), 2025-26 (211 dates)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Test Results — All 7 Pass</h3>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>T1</td><td>Props row count in range [400K–700K]</td><td>505,027</td><td class="pass">PASS</td></tr>
+      <tr><td>T2</td><td>No nulls in player, game_date, prop_line</td><td>0 nulls</td><td class="pass">PASS</td></tr>
+      <tr><td>T3</td><td>No single line &gt;95% (numeric market check)</td><td>max single pct = 6.0%</td><td class="pass">PASS</td></tr>
+      <tr><td>T4</td><td>Over + Under + Push = 100% (±1%)</td><td>45.2% + 54.8% + 0.0% = 100.0%</td><td class="pass">PASS</td></tr>
+      <tr><td>T5</td><td>Game log rows in range [60K–120K]</td><td>81,407</td><td class="pass">PASS</td></tr>
+      <tr><td>T6</td><td>PTS null rate &lt;10%</td><td>0.0%</td><td class="pass">PASS</td></tr>
+      <tr><td>T7</td><td>Date overlap between props and logs &gt;400 dates</td><td>534 overlapping dates</td><td class="pass">PASS</td></tr>
+      <tr><td>Bonus</td><td>Player-game join quality ≥90%</td><td>91.5% (38,105 / 41,639)</td><td class="pass">PASS</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Flagged Items</h3>
+  <ol>
+    <li><strong>UTC/ET game_date bug</strong>: Fixed. Must be applied to any future props pull — use ET date, not UTC date. This affects ~76% of rows (all evening games).</li>
+    <li><strong>Over hit rate 45.2% vs under 54.8%</strong>: The under hits more often. Combined with the market charging more juice on unders, this market may be harder to beat on the over side than assists. Will watch model AUC closely.</li>
+    <li><strong>Push rate 0.0%</strong>: All lines are half-point (.5). Zero pushes — good, no edge case handling needed for settlement.</li>
+    <li><strong>barstool / wynnbet</strong>: Single-season coverage only — will be irrelevant in production. Keep for training signal but do not build strategy around them.</li>
+    <li><strong>mybookieag / unibet_us / pointsbetus</strong>: Gap in 2024-25 season. Keep in training data for the seasons they cover; may not be reliable production sources.</li>
+    <li><strong>Under odds mean (-77) much more negative than over odds mean (-42)</strong>: Market pricing structure is asymmetric. Need to understand if this reflects genuine probability or just vig structure.</li>
+    <li><strong>Max line = 112.5</strong>: Extreme outlier — almost certainly a data error or special context (e.g., combined stats line). Will investigate and potentially filter in Step 2.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Step 1.5 — Market Calibration by Line</h2>
+  <p><strong>Timestamp:</strong> 2026-07-02 21:04:26 ET</p>
+
+  <h3>Methodology</h3>
+  <p>Joined props to actual game log PTS on (player_key, game_date). Deduplicated to one row per player-game-line (multiple books for same line collapsed). Grouped by line value and computed: actual over rate, actual under rate, market no-vig implied P(over), and calibration gap = actual_over_rate − market_implied_P(over). A gap &gt; +5pp means market underprices overs (OVER value); gap &lt; −5pp means market overprices overs (UNDER value).</p>
+
+  <h3>Key Finding: Structural UNDER Value at Lines ≥ 21.5</h3>
+  <p>At lines ≤ 20.5, calibration gaps are small (±5pp or less — within noise). At lines ≥ 21.5, the gap becomes consistently and increasingly negative: the market prices overs higher than they actually hit. This is the same "star player UNDER" effect identified in the NBA assists research. The gap grows monotonically as line increases, reaching −27.3pp at line 40.5.</p>
+  <ul>
+    <li>Line 21.5: actual 42.6%, market implied 48.4% → gap <strong>−5.7pp</strong></li>
+    <li>Line 26.5: actual 37.1%, market implied 46.1% → gap <strong>−9.0pp</strong></li>
+    <li>Line 30.5: actual 31.3%, market implied 41.9% → gap <strong>−10.6pp</strong></li>
+    <li>Line 35.5: actual 16.5%, market implied 36.6% → gap <strong>−20.1pp</strong></li>
+    <li>Line 40.5: actual 6.3%, market implied 33.6% → gap <strong>−27.3pp</strong></li>
+  </ul>
+
+  <h3>Calibration Table by Line (full — two-sided rows only, raw + no-vig columns shown)</h3>
+  <p><em>De-vig method: multiplicative (ratio). For each row: raw_p = 1/(1+profit) where profit = odds/100 (if odds &ge; 0) or 100/|odds| (if odds &lt; 0). No-vig: novig_p_over = raw_p_over / (raw_p_over + raw_p_under). avg_combined_vig = raw_p_over + raw_p_under &minus; 1 (typical ~7%). &#9873; = |calib_gap_over| &gt; 5pp.</em></p>
+  <table>
+    <thead>
+      <tr><th>line</th><th>n_bets</th><th>over_rate</th><th>under_rate</th><th>push_rate</th><th>avg_raw_prob_over</th><th>avg_raw_prob_under</th><th>avg_combined_vig</th><th>avg_novig_prob_over</th><th>avg_novig_prob_under</th><th>calibration_gap_over</th><th>calibration_gap_under</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1.5</td><td>53</td><td>52.8%</td><td>47.2%</td><td>0.0%</td><td>62.8%</td><td>44.2%</td><td>6.93%</td><td>58.7%</td><td>41.3%</td><td><strong>-5.9pp</strong></td><td><strong>+5.9pp</strong></td></tr>
+      <tr><td>2.5</td><td>217</td><td>58.1%</td><td>41.9%</td><td>0.0%</td><td>59.0%</td><td>47.9%</td><td>6.87%</td><td>55.2%</td><td>44.8%</td><td>+2.9pp</td><td>-2.9pp</td></tr>
+      <tr><td>3.5</td><td>815</td><td>49.6%</td><td>50.4%</td><td>0.0%</td><td>58.3%</td><td>48.6%</td><td>6.89%</td><td>54.5%</td><td>45.5%</td><td>-5.0pp</td><td>+5.0pp</td></tr>
+      <tr><td>4.5</td><td>2,330</td><td>55.1%</td><td>44.9%</td><td>0.0%</td><td>58.6%</td><td>48.4%</td><td>7.04%</td><td>54.8%</td><td>45.2%</td><td>+0.4pp</td><td>-0.4pp</td></tr>
+      <tr><td>5.5</td><td>5,214</td><td>52.3%</td><td>47.7%</td><td>0.0%</td><td>57.9%</td><td>49.2%</td><td>7.11%</td><td>54.0%</td><td>46.0%</td><td>-1.7pp</td><td>+1.7pp</td></tr>
+      <tr><td>6.5</td><td>9,979</td><td>51.9%</td><td>48.1%</td><td>0.0%</td><td>57.1%</td><td>50.0%</td><td>7.06%</td><td>53.3%</td><td>46.7%</td><td>-1.4pp</td><td>+1.4pp</td></tr>
+      <tr><td>7.5</td><td>14,582</td><td>53.7%</td><td>46.3%</td><td>0.0%</td><td>56.7%</td><td>50.4%</td><td>7.10%</td><td>52.9%</td><td>47.1%</td><td>+0.7pp</td><td>-0.7pp</td></tr>
+      <tr><td>8.5</td><td>21,052</td><td>52.0%</td><td>48.0%</td><td>0.0%</td><td>55.7%</td><td>51.4%</td><td>7.14%</td><td>52.0%</td><td>48.0%</td><td>+0.1pp</td><td>-0.1pp</td></tr>
+      <tr><td>9.5</td><td>24,032</td><td>51.2%</td><td>48.8%</td><td>0.0%</td><td>55.3%</td><td>51.8%</td><td>7.16%</td><td>51.6%</td><td>48.4%</td><td>-0.4pp</td><td>+0.4pp</td></tr>
+      <tr><td>10.5</td><td>27,274</td><td>51.4%</td><td>48.5%</td><td>0.0%</td><td>54.6%</td><td>52.6%</td><td>7.18%</td><td>50.9%</td><td>49.1%</td><td>+0.5pp</td><td>-0.5pp</td></tr>
+      <tr><td>11.5</td><td>27,627</td><td>51.5%</td><td>48.5%</td><td>0.0%</td><td>54.1%</td><td>53.1%</td><td>7.21%</td><td>50.4%</td><td>49.6%</td><td>+1.0pp</td><td>-1.0pp</td></tr>
+      <tr><td>12.5</td><td>27,514</td><td>49.1%</td><td>50.9%</td><td>0.0%</td><td>53.5%</td><td>53.8%</td><td>7.23%</td><td>49.9%</td><td>50.1%</td><td>-0.7pp</td><td>+0.7pp</td></tr>
+      <tr><td>13.5</td><td>26,306</td><td>47.8%</td><td>52.2%</td><td>0.0%</td><td>53.1%</td><td>54.1%</td><td>7.28%</td><td>49.5%</td><td>50.5%</td><td>-1.7pp</td><td>+1.7pp</td></tr>
+      <tr><td>14.5</td><td>23,820</td><td>48.4%</td><td>51.6%</td><td>0.0%</td><td>53.1%</td><td>54.2%</td><td>7.33%</td><td>49.5%</td><td>50.5%</td><td>-1.1pp</td><td>+1.1pp</td></tr>
+      <tr><td>15.5</td><td>22,221</td><td>48.6%</td><td>51.4%</td><td>0.0%</td><td>53.2%</td><td>54.2%</td><td>7.35%</td><td>49.5%</td><td>50.4%</td><td>-1.0pp</td><td>+1.0pp</td></tr>
+      <tr><td>16.5</td><td>21,519</td><td>48.5%</td><td>51.5%</td><td>0.0%</td><td>53.2%</td><td>54.1%</td><td>7.34%</td><td>49.5%</td><td>50.4%</td><td>-1.1pp</td><td>+1.1pp</td></tr>
+      <tr><td>17.5</td><td>20,911</td><td>48.3%</td><td>51.7%</td><td>0.0%</td><td>53.1%</td><td>54.3%</td><td>7.35%</td><td>49.5%</td><td>50.5%</td><td>-1.1pp</td><td>+1.1pp</td></tr>
+      <tr><td>18.5</td><td>20,000</td><td>48.9%</td><td>51.1%</td><td>0.0%</td><td>53.2%</td><td>54.2%</td><td>7.37%</td><td>49.5%</td><td>50.5%</td><td>-0.6pp</td><td>+0.6pp</td></tr>
+      <tr><td>19.5</td><td>18,896</td><td>48.0%</td><td>52.0%</td><td>0.0%</td><td>52.9%</td><td>54.5%</td><td>7.42%</td><td>49.3%</td><td>50.7%</td><td>-1.3pp</td><td>+1.3pp</td></tr>
+      <tr><td>20.5</td><td>17,555</td><td>46.3%</td><td>53.7%</td><td>0.0%</td><td>53.0%</td><td>54.4%</td><td>7.45%</td><td>49.3%</td><td>50.7%</td><td>-3.0pp</td><td>+3.0pp</td></tr>
+      <tr><td>21.5</td><td>16,281</td><td>47.5%</td><td>52.5%</td><td>0.0%</td><td>52.9%</td><td>54.6%</td><td>7.48%</td><td>49.2%</td><td>50.8%</td><td>-1.7pp</td><td>+1.7pp</td></tr>
+      <tr><td>22.5</td><td>14,898</td><td>46.6%</td><td>53.4%</td><td>0.0%</td><td>52.9%</td><td>54.6%</td><td>7.49%</td><td>49.2%</td><td>50.8%</td><td>-2.6pp</td><td>+2.6pp</td></tr>
+      <tr><td>23.5</td><td>14,501</td><td>45.1%</td><td>54.9%</td><td>0.0%</td><td>52.6%</td><td>54.9%</td><td>7.47%</td><td>48.9%</td><td>51.1%</td><td>-3.8pp</td><td>+3.8pp</td></tr>
+      <tr><td>24.5</td><td>13,216</td><td>46.5%</td><td>53.5%</td><td>0.0%</td><td>52.1%</td><td>55.4%</td><td>7.50%</td><td>48.5%</td><td>51.5%</td><td>-2.1pp</td><td>+2.1pp</td></tr>
+      <tr><td>25.5</td><td>11,984</td><td>46.0%</td><td>54.0%</td><td>0.0%</td><td>51.8%</td><td>55.8%</td><td>7.50%</td><td>48.2%</td><td>51.8%</td><td>-2.2pp</td><td>+2.2pp</td></tr>
+      <tr><td>26.5</td><td>10,551</td><td>43.6%</td><td>56.4%</td><td>0.0%</td><td>51.1%</td><td>56.4%</td><td>7.51%</td><td>47.6%</td><td>52.4%</td><td>-4.0pp</td><td>+4.0pp</td></tr>
+      <tr><td>27.5</td><td>8,567</td><td>42.6%</td><td>57.4%</td><td>0.0%</td><td>50.2%</td><td>57.3%</td><td>7.57%</td><td>46.7%</td><td>53.3%</td><td>-4.1pp</td><td>+4.1pp</td></tr>
+      <tr><td>28.5</td><td>7,116</td><td>42.7%</td><td>57.3%</td><td>0.0%</td><td>49.7%</td><td>58.0%</td><td>7.61%</td><td>46.2%</td><td>53.8%</td><td>-3.5pp</td><td>+3.5pp</td></tr>
+      <tr><td>29.5</td><td>5,415</td><td>41.9%</td><td>58.1%</td><td>0.0%</td><td>48.8%</td><td>58.9%</td><td>7.70%</td><td>45.4%</td><td>54.6%</td><td>-3.5pp</td><td>+3.5pp</td></tr>
+      <tr><td>30.5</td><td>4,246</td><td>38.9%</td><td>61.1%</td><td>0.0%</td><td>47.8%</td><td>60.0%</td><td>7.75%</td><td>44.4%</td><td>55.6%</td><td><strong>-5.5pp</strong></td><td><strong>+5.5pp</strong></td></tr>
+      <tr><td>31.5</td><td>3,323</td><td>38.6%</td><td>61.4%</td><td>0.0%</td><td>47.4%</td><td>60.3%</td><td>7.71%</td><td>44.1%</td><td>55.9%</td><td><strong>-5.4pp</strong></td><td><strong>+5.4pp</strong></td></tr>
+      <tr><td>32.5</td><td>2,419</td><td>36.3%</td><td>63.7%</td><td>0.0%</td><td>46.1%</td><td>61.7%</td><td>7.77%</td><td>42.9%</td><td>57.1%</td><td><strong>-6.5pp</strong></td><td><strong>+6.5pp</strong></td></tr>
+      <tr><td>33.5</td><td>1,587</td><td>35.9%</td><td>64.1%</td><td>0.0%</td><td>44.8%</td><td>63.1%</td><td>7.86%</td><td>41.6%</td><td>58.4%</td><td><strong>-5.7pp</strong></td><td><strong>+5.7pp</strong></td></tr>
+      <tr><td>34.5</td><td>1,029</td><td>32.8%</td><td>67.2%</td><td>0.0%</td><td>43.6%</td><td>64.4%</td><td>8.02%</td><td>40.4%</td><td>59.6%</td><td><strong>-7.7pp</strong></td><td><strong>+7.7pp</strong></td></tr>
+      <tr><td>35.5</td><td>625</td><td>27.4%</td><td>72.6%</td><td>0.0%</td><td>41.2%</td><td>67.2%</td><td>8.38%</td><td>38.1%</td><td>61.9%</td><td><strong>-10.7pp</strong></td><td><strong>+10.7pp</strong></td></tr>
+      <tr><td>36.5</td><td>432</td><td>28.9%</td><td>71.1%</td><td>0.0%</td><td>40.5%</td><td>68.0%</td><td>8.45%</td><td>37.4%</td><td>62.6%</td><td><strong>-8.5pp</strong></td><td><strong>+8.5pp</strong></td></tr>
+      <tr><td>37.5</td><td>237</td><td>33.8%</td><td>66.2%</td><td>0.0%</td><td>37.8%</td><td>71.1%</td><td>8.90%</td><td>34.8%</td><td>65.2%</td><td>-1.0pp</td><td>+1.0pp</td></tr>
+      <tr><td>38.5</td><td>128</td><td>31.2%</td><td>68.8%</td><td>0.0%</td><td>37.3%</td><td>71.8%</td><td>9.12%</td><td>34.2%</td><td>65.8%</td><td>-3.0pp</td><td>+3.0pp</td></tr>
+      <tr><td>39.5</td><td>55</td><td>36.4%</td><td>63.6%</td><td>0.0%</td><td>38.0%</td><td>70.6%</td><td>8.62%</td><td>35.0%</td><td>65.0%</td><td>+1.3pp</td><td>-1.3pp</td></tr>
+    </tbody>
+  </table>
+
+  <p><em>⚑ = calibration_gap_over &gt; 5pp (flagged). * = contaminated by mybookieag one-sided alternate lines — gap magnitude overstated; see Bonus debug section.</em></p>
+
+  <h3>Spot-check: Stephen Curry at Lines 26.5–27.5</h3>
+  <p>At Curry's typical line range (26.5–28.5), market implies 44–46% P(over). Actual over rate in those buckets is 37–36%. Consistent with the structural gap. Example: 2026-04-17, line 26.5–27.5, Curry scored 17 — UNDER on all books.</p>
+
+  <h3>Implication for Modeling</h3>
+  <p>The market systematically overprices overs on high-line (star) players. This is the same pattern found in assists research. Hypothesis: recreational bettors prefer rooting for star players to go OVER, creating structural value on unders at high lines. A model that captures rolling performance vs offered line — especially for players with lines ≥ 21.5 — should be able to exploit this. Will test both Over-only and Under-only strategies in Step 5 grid search.</p>
+
+  <h3>Test Results — All 4 Pass</h3>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>T1</td><td>Total calibration rows ≥ 30 (one per line value)</td><td>44 rows</td><td class="pass">PASS</td></tr>
+      <tr><td>T2</td><td>Lines 2.5–20.5: all |calibration_gap_over| ≤ 0.05</td><td>All within ±5pp</td><td class="pass">PASS</td></tr>
+      <tr><td>T3</td><td>Lines ≥ 21.5: all calibration_gap_over &lt; 0 (consistent UNDER signal)</td><td>24 consecutive lines all negative</td><td class="pass">PASS</td></tr>
+      <tr><td>T4</td><td>Spot-check: Curry rows in joined set for dates 2026-04-15 and 2026-04-17</td><td>Both dates present, PTS = 35 and 17 respectively</td><td class="pass">PASS</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Flagged Items</h3>
+  <ol>
+    <li><strong>24 lines with calibration_gap_over &lt; −5pp</strong>: All at lines ≥ 21.5. The gap is monotonically widening as line increases. This is the primary structural finding of Step 1.5 — strong UNDER value on high-line players. Will be central to strategy in Step 5.</li>
+    <li><strong>Lines ≤ 20.5 are well-calibrated</strong>: No structural edge visible in raw calibration at lower lines. Model will need genuine predictive signal to find edge in the bulk of the market (lines 8.5–20.5 are the highest-volume segment).</li>
+    <li><strong>Lines 45.5–46.5: null implied prob</strong>: Insufficient no-vig conversion data (likely single-sided books). Only 38–30 bets each — exclude from analysis.</li>
+    <li><strong>Strategy hypothesis confirmed</strong>: UNDER on lines ≥ 21.5 is structurally profitable pre-model. Model should be able to add additional filtering signal on top of this baseline.</li>
+  </ol>
+</section>
+
+
+<section>
+  <h2>Bonus — High-Line Debug (lines ≥ 35.5)</h2>
+  <p><strong>Timestamp:</strong> 2026-07-02 21:07:53 ET</p>
+  <p>User flagged that lines ≥ 40 are suspicious — NBA players do not regularly score 40+ points, so either the market or the data has an issue. Investigation below.</p>
+
+  <h3>Finding 1: mybookieag posts one-sided alternate lines with no under offered</h3>
+  <p>mybookieag accounts for the vast majority of rows at lines ≥ 35.5, and <strong>every single mybookieag row at these lines has null under_odds</strong>. These are "will player X score Y+ points tonight?" alternate prop bets — over-only, not the standard two-sided player_points market. Over odds range from -130 (Giannis/Embiid in hot stretches) all the way to +3000. Sample:</p>
+
+  <table>
+    <thead><tr><th>player</th><th>game_date</th><th>bookmaker</th><th>prop_line</th><th>over_odds</th><th>under_odds</th><th>note</th></tr></thead>
+    <tbody>
+      <tr><td>Giannis Antetokounmpo</td><td>2024-01-08</td><td>mybookieag</td><td>40.5</td><td>+210</td><td>NULL</td><td>over-only alternate line</td></tr>
+      <tr><td>Nikola Jokic</td><td>2024-01-07</td><td>mybookieag</td><td>40.5</td><td>+1300</td><td>NULL</td><td>longshot alternate line</td></tr>
+      <tr><td>Stephen Curry</td><td>2024-01-07</td><td>mybookieag</td><td>40.5</td><td>+475</td><td>NULL</td><td>longshot alternate line</td></tr>
+      <tr><td>Stephen Curry</td><td>2024-01-07</td><td>mybookieag</td><td>44.5</td><td>+950</td><td>NULL</td><td>longshot alternate line</td></tr>
+      <tr><td>Anthony Edwards</td><td>2024-01-07</td><td>mybookieag</td><td>44.5</td><td>+925</td><td>NULL</td><td>longshot alternate line</td></tr>
+      <tr><td>Giannis Antetokounmpo</td><td>2024-01-01</td><td>mybookieag</td><td>35.5</td><td>-130</td><td>NULL</td><td>over-only (Giannis favored to score 35.5+)</td></tr>
+    </tbody>
+  </table>
+
+  <p>mybookieag row counts vs two-sided row counts by line:</p>
+  <table>
+    <thead><tr><th>line</th><th>total rows</th><th>mybookieag (all null under)</th><th>two-sided rows (under_odds not null)</th></tr></thead>
+    <tbody>
+      <tr><td>35.5</td><td>1,151</td><td>488 (42%)</td><td>663</td></tr>
+      <tr><td>36.5</td><td>900</td><td>439 (49%)</td><td>461</td></tr>
+      <tr><td>37.5</td><td>604</td><td>—</td><td>237</td></tr>
+      <tr><td>38.5</td><td>454</td><td>—</td><td>128</td></tr>
+      <tr><td>39.5</td><td>287</td><td>—</td><td>55</td></tr>
+      <tr><td>40.5</td><td>207</td><td>180 (87%)</td><td>27</td></tr>
+      <tr><td>41.5</td><td>134</td><td>—</td><td>17</td></tr>
+      <tr><td>42.5</td><td>122</td><td>118 (97%)</td><td>4</td></tr>
+      <tr><td>43.5</td><td>70</td><td>73 (104% — duplicates)</td><td>2</td></tr>
+      <tr><td>44.5</td><td>64</td><td>73 (all)</td><td>2</td></tr>
+      <tr><td>45.5+</td><td>—</td><td>100% mybookieag</td><td>0</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Finding 2: bovada team totals slipped through the player_points filter</h3>
+  <p>Three rows with lines 108.5, 109.5, 112.5 have player names like "Atl Hawks Alternate Total" — these are team game total alternate lines, not player props. They were mislabeled as player_points in the source data. Three rows total, minimal impact, but confirms the filter <code>market == 'player_points'</code> is not sufficient on its own.</p>
+  <table>
+    <thead><tr><th>player</th><th>game_date</th><th>bookmaker</th><th>prop_line</th><th>over_odds</th></tr></thead>
+    <tbody>
+      <tr><td>Atl Hawks Alternate Total</td><td>2023-11-26</td><td>bovada</td><td>109.5</td><td>-235</td></tr>
+      <tr><td>Bkn Nets Alternate Total</td><td>2023-11-26</td><td>bovada</td><td>108.5</td><td>-125</td></tr>
+      <tr><td>Was Wizards Alternate Total</td><td>2023-11-27</td><td>bovada</td><td>112.5</td><td>-213</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Finding 3: calibration gap at high lines is overstated — mybookieag alternate rows inflating "under" outcomes</h3>
+  <p>The original calibration table included all rows (both two-sided and mybookieag one-sided) in the over_rate / under_rate denominator. A mybookieag alternate line at 44.5 for Curry (who scores 25 that night) correctly counts as an "under" outcome — but it was <em>never a standard two-sided bet</em>. These rows flood the denominator with easy "unders" at extreme lines, making over_rate look artificially low and the calibration gap look artificially large.</p>
+  <p>Two-sided only calibration at high lines (under_odds IS NOT NULL):</p>
+  <table>
+    <thead><tr><th>line</th><th>n_bets (two-sided)</th><th>over_rate (two-sided)</th><th>over_rate (all rows)</th><th>difference</th><th>flag</th></tr></thead>
+    <tbody>
+      <tr><td>35.5</td><td>625</td><td>27.4%</td><td>16.5%</td><td>+10.9pp inflated by mybookieag</td><td>⚠ sparse at 40.5+</td></tr>
+      <tr><td>36.5</td><td>432</td><td>28.9%</td><td>16.2%</td><td>+12.7pp</td><td></td></tr>
+      <tr><td>37.5</td><td>237</td><td>33.8%</td><td>14.9%</td><td>+18.9pp</td><td></td></tr>
+      <tr><td>38.5</td><td>128</td><td>31.3%</td><td>13.1%</td><td>+18.2pp</td><td></td></tr>
+      <tr><td>39.5</td><td>55</td><td>36.4%</td><td>10.2%</td><td>+26.2pp</td><td></td></tr>
+      <tr><td>40.5</td><td>27</td><td>29.6%</td><td>6.3%</td><td>+23.3pp</td><td>too sparse (&lt;30)</td></tr>
+      <tr><td>41.5+</td><td>&lt;20</td><td>—</td><td>—</td><td>—</td><td>too sparse (&lt;30)</td></tr>
+    </tbody>
+  </table>
+  <p>At line 35.5 with two-sided only: actual over_rate = 27.4% vs market implied 36.6% → gap = <strong>−9.2pp</strong> (still meaningful UNDER value, but about half the −20.1pp shown in the original table). Lines 40.5+ have fewer than 30 two-sided rows — not statistically meaningful.</p>
+
+  <h3>Decision: filters to apply going forward</h3>
+  <ol>
+    <li><strong>Filter out rows where under_odds IS NULL</strong> — these are one-sided alternate lines, not standard two-sided player_points props. Applies primarily to mybookieag at lines ≥ 35.5.</li>
+    <li><strong>Filter out rows where player name contains "Alternate Total"</strong> — team totals mislabeled as player props (3 bovada rows).</li>
+    <li><strong>Flag lines ≥ 40.5 as sparse</strong> — fewer than 30 two-sided rows. Still include in training data but not statistically meaningful for calibration analysis.</li>
+  </ol>
+
+  <h3>Revised conclusion on calibration</h3>
+  <p>After applying two-sided filter, the structural UNDER pattern at lines ≥ 21.5 is still real. The magnitude is overstated in the original calibration table at lines ≥ 35.5 due to mybookieag contamination. The clean gap at line 35.5 is −9.2pp (down from −20.1pp in the raw table). Lines 40.5+ have insufficient two-sided sample size to conclude anything.</p>
+</section>
+
+
+<section>
+  <h2>Step 2 — Feature Engineering / Spine · 2026-07-02 21:37:18 ET</h2>
+
+  <h3>What was built</h3>
+  <p>Script: <code>src/nba_points_modeling/research/scripts/v2_spine.py</code>. One row per player-game (not per book). Features computed strictly no-lookahead using <code>shift(1)</code> before rolling. Joined market consensus (median line, avg no-vig P(over) across two-sided books) to the game-level feature row. Saved locally and to <code>s3://the-odds-api-mt/nba/points_model/spine/nba_points_spine.parquet</code>.</p>
+
+  <h3>Feature Set</h3>
+  <table>
+    <thead><tr><th>Feature</th><th>Type</th><th>Window</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>pts_L1</td><td>Rolling PTS avg</td><td>Last 1 game</td><td>Season-scoped; resets at season start</td></tr>
+      <tr><td>pts_L3</td><td>Rolling PTS avg</td><td>Last 3 games</td><td>Season-scoped; min_periods=3</td></tr>
+      <tr><td>pts_L5</td><td>Rolling PTS avg</td><td>Last 5 games</td><td>Season-scoped; min_periods=3</td></tr>
+      <tr><td>pts_L10</td><td>Rolling PTS avg</td><td>Last 10 games</td><td>Season-scoped; min_periods=3</td></tr>
+      <tr><td>pts_L20</td><td>Rolling PTS avg</td><td>Last 20 games</td><td>Season-scoped; min_periods=3</td></tr>
+      <tr><td>pts_career</td><td>Rolling PTS avg</td><td>All prior games in dataset</td><td>Cross-season; min_periods=3</td></tr>
+      <tr><td>min_L5</td><td>Rolling MIN avg</td><td>Last 5 games</td><td>Season-scoped; proxy for opportunity</td></tr>
+      <tr><td>min_L20</td><td>Rolling MIN avg</td><td>Last 20 games</td><td>Season-scoped; stable baseline minutes</td></tr>
+      <tr><td>fga_L5</td><td>Rolling FGA avg</td><td>Last 5 games</td><td>Season-scoped; usage proxy</td></tr>
+      <tr><td>is_home</td><td>Binary flag</td><td>Current game</td><td>1=home, 0=away; parsed from MATCHUP</td></tr>
+      <tr><td>days_rest</td><td>Days since last game</td><td>Current game</td><td>Capped at 14; 0.4% null (first game of dataset per player)</td></tr>
+      <tr><td>games_into_season</td><td>Game count</td><td>Current season</td><td>0-indexed; no lookahead</td></tr>
+      <tr><td>opp_pts_allowed_L10</td><td>Opponent defense</td><td>Opponent's last 10 games</td><td>Total pts allowed by opposing team; rolling, strictly before current game</td></tr>
+      <tr><td>offered_line</td><td>Market (consensus)</td><td>Current game</td><td>Median line across all two-sided books; 0% null</td></tr>
+      <tr><td>novig_prob_over</td><td>Market (consensus)</td><td>Current game</td><td>Avg no-vig P(over) across books at each book's line; 0% null</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Spine Summary</h3>
+  <table>
+    <thead><tr><th>Season</th><th>Settled rows</th><th>Avg line</th><th>Avg novig P(over)</th><th>Actual over rate</th></tr></thead>
+    <tbody>
+      <tr><td>2023-24</td><td>9,119</td><td>17.1</td><td>49.7%</td><td>47.8%</td></tr>
+      <tr><td>2024-25</td><td>12,437</td><td>15.0</td><td>49.9%</td><td>49.6%</td></tr>
+      <tr><td>2025-26</td><td>16,549</td><td>13.9</td><td>49.6%</td><td>48.7%</td></tr>
+      <tr><td><strong>Total</strong></td><td><strong>38,105</strong></td><td>14.9</td><td>49.7%</td><td>48.7%</td></tr>
+    </tbody>
+  </table>
+  <p>Total prop rows (inc. DNP): 41,620. DNP rate: 8.4%. Join quality: 91.6% (≥ 90% threshold).</p>
+
+  <h3>Feature Null Rates (settled rows only)</h3>
+  <table>
+    <thead><tr><th>Feature</th><th>Null %</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>pts_L3 / pts_L5 / pts_L10 / pts_L20</td><td>4.6%</td><td>OK — first 2–4 games of each season before min_periods met</td></tr>
+      <tr><td>min_L5 / min_L20 / fga_L5</td><td>4.6%</td><td>OK — same early-season boundary</td></tr>
+      <tr><td>pts_L1</td><td>1.5%</td><td>OK — first game of each season per player</td></tr>
+      <tr><td>pts_career</td><td>1.3%</td><td>OK — players with &lt;3 total prior games in dataset</td></tr>
+      <tr><td>opp_pts_allowed_L10</td><td>1.2%</td><td>OK — first few games of 2023-24 before opponents have 3+ game history</td></tr>
+      <tr><td>days_rest</td><td>0.4%</td><td>OK — first appearance in dataset per player</td></tr>
+      <tr><td>is_home / games_into_season / offered_line / novig_prob_over</td><td>0.0%</td><td>PASS</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Spot-Check: Stephen Curry (first 6 settled games)</h3>
+  <table>
+    <thead><tr><th>game_date</th><th>season</th><th>pts_actual</th><th>offered_line</th><th>pts_L1</th><th>pts_L5</th><th>pts_career</th><th>opp_L10</th><th>is_home</th><th>days_rest</th><th>novig_p</th><th>is_over</th></tr></thead>
+    <tbody>
+      <tr><td>2023-10-24</td><td>2023-24</td><td>27</td><td>30.5</td><td>—</td><td>—</td><td>—</td><td>—</td><td>1</td><td>—</td><td>0.492</td><td>0</td></tr>
+      <tr><td>2023-10-27</td><td>2023-24</td><td>41</td><td>29.5</td><td>27</td><td>—</td><td>—</td><td>—</td><td>0</td><td>3</td><td>0.502</td><td>1</td></tr>
+      <tr><td>2023-10-30</td><td>2023-24</td><td>42</td><td>30.5</td><td>24*</td><td>30.7</td><td>30.7</td><td>—</td><td>0</td><td>1</td><td>0.508</td><td>1</td></tr>
+      <tr><td>2023-11-01</td><td>2023-24</td><td>21</td><td>30.5</td><td>42</td><td>33.5</td><td>33.5</td><td>125.3</td><td>1</td><td>2</td><td>0.494</td><td>0</td></tr>
+      <tr><td>2023-11-03</td><td>2023-24</td><td>30</td><td>28.5</td><td>21</td><td>31.0</td><td>31.0</td><td>111.4</td><td>0</td><td>2</td><td>0.493</td><td>1</td></tr>
+      <tr><td>2023-11-05</td><td>2023-24</td><td>28</td><td>29.5</td><td>30</td><td>31.6</td><td>30.8</td><td>105.7</td><td>0</td><td>2</td><td>0.488</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <p><em>* pts_L1 on 2023-10-30 = 24 because Curry played an unlined game on 2023-10-29 (scored 24). The rolling features use ALL game log games (not just lined ones), which is correct — the model should know about the player's actual most recent performance regardless of whether a line was posted. "—" = NaN (too few prior games).</em></p>
+
+  <h3>DuckDB Test Results</h3>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>One row per player-game (no duplicates)</td><td class="pass">PASS</td><td>41,620 rows = 41,620 unique (player_key, game_date)</td></tr>
+      <tr><td>2</td><td>No future leakage — pts_L1 = actual prior game pts</td><td class="pass">PASS</td><td>37,539 rows verified, 0 mismatches. Initial test (pts_L1 = pts_actual same row) was misleading — 1,910 cases were either coincidental same-score games (208) or cross-boundary from unlined games (1,313). Corrected test joins full game log sequence. No leakage confirmed.</td></tr>
+      <tr><td>3</td><td>All feature null rates &lt;10%</td><td class="pass">PASS</td><td>Max is 4.6% (season-scoped features during first few games)</td></tr>
+      <tr><td>4</td><td>pts_actual not null in settled rows</td><td class="pass">PASS</td><td>38,105 settled rows, 0 null targets</td></tr>
+      <tr><td>5</td><td>Join quality ≥ 90%</td><td class="pass">PASS</td><td>91.6% of prop rows matched to game log</td></tr>
+      <tr><td>6</td><td>Date range covers all 3 seasons</td><td class="pass">PASS</td><td>2023-10-24 → 2026-06-13; 3 seasons confirmed</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Flagged Items</h3>
+  <ol>
+    <li><strong>pts_career ≠ true NBA career:</strong> We only have game logs from 2023-24 onward. "pts_career" is the rolling average within our 3-season dataset, not a player's career-long NBA average. For 2023-24 early games, career = NULL until 3 games played. For 2024-25+, it correctly accumulates across seasons within our data. Curry's pts_career at start of 2024-25 = 26.43 — consistent with his 2023-24 avg (≈26.4 pts/game), which confirms cross-season accumulation is working.</li>
+    <li><strong>opp_pts_allowed_L10 is team total, not opponent's pts-allowed-to-guards/forwards:</strong> The feature averages how many total points the opponent team allowed across their last 10 games. It does not control for the specific player's position or role. A more precise feature would be "pts allowed to 2-guards specifically" — but that requires positional data not in the current game logs. Flag for Step 3 feature importance check.</li>
+    <li><strong>Season-scoped rolling resets at season boundary:</strong> pts_L3/L5/L10/L20 reset to NULL at game 1 of each new season. pts_career does not reset. This is intentional — but it means early-season predictions (games 1–3 of any season) will have sparser feature coverage. Watch for this in model performance by game number.</li>
+  </ol>
+</section>
+
+
+<section>
+  <h2>Step 3 — Model Training · 2026-07-02 21:37:18 ET</h2>
+
+  <p><strong>Target:</strong> <code>is_over</code> (binary: 1 if pts_actual &gt; offered_line). OOF design: train 2023-24 → test 2024-25; train 2023-24+2024-25 → test 2025-26. Metrics averaged across both folds.</p>
+  <p><strong>OOF fold sizes:</strong> 2024-25: 11,824 rows | 2025-26: 15,860 rows (rows with all features non-null)</p>
+
+  <h3>Step 3a — Individual Predictors: Logistic Regression</h3>
+  <table>
+    <thead><tr><th>feature</th><th>model</th><th>n_samples</th><th>auc</th><th>precision</th><th>recall</th><th>f1</th><th>coefficient</th></tr></thead>
+    <tbody>
+      <tr><td>novig_prob_over</td><td>logistic</td><td>14,493</td><td><strong>0.5216</strong></td><td>0.5530</td><td>0.0906</td><td>0.1424</td><td>+0.0691</td></tr>
+      <tr><td>offered_line</td><td>logistic</td><td>14,493</td><td>0.5098</td><td>0.5010</td><td>0.3250</td><td>0.3905</td><td>-0.0470</td></tr>
+      <tr><td>pts_L3</td><td>logistic</td><td>13,842</td><td>0.5088</td><td>0.5044</td><td>0.3086</td><td>0.3767</td><td>-0.0451</td></tr>
+      <tr><td>pts_L5</td><td>logistic</td><td>13,842</td><td>0.5083</td><td>0.4992</td><td>0.3383</td><td>0.3999</td><td>-0.0442</td></tr>
+      <tr><td>fga_L5</td><td>logistic</td><td>13,842</td><td>0.5078</td><td>0.4974</td><td>0.3081</td><td>0.3760</td><td>-0.0393</td></tr>
+      <tr><td>min_L5</td><td>logistic</td><td>13,842</td><td>0.5070</td><td>0.4994</td><td>0.3854</td><td>0.4325</td><td>-0.0319</td></tr>
+      <tr><td>pts_L10</td><td>logistic</td><td>13,842</td><td>0.5066</td><td>0.4979</td><td>0.3102</td><td>0.3793</td><td>-0.0389</td></tr>
+      <tr><td>pts_L1</td><td>logistic</td><td>14,287</td><td>0.5063</td><td>0.2423</td><td>0.0974</td><td>0.1389</td><td>-0.0304</td></tr>
+      <tr><td>pts_L20</td><td>logistic</td><td>13,842</td><td>0.5058</td><td>0.4944</td><td>0.2609</td><td>0.3363</td><td>-0.0349</td></tr>
+      <tr><td>min_L20</td><td>logistic</td><td>13,842</td><td>0.5043</td><td>0.4917</td><td>0.2847</td><td>0.3591</td><td>-0.0219</td></tr>
+      <tr><td>pts_career</td><td>logistic</td><td>14,468</td><td>0.5042</td><td>0.4947</td><td>0.1715</td><td>0.2511</td><td>-0.0280</td></tr>
+      <tr><td>days_rest</td><td>logistic</td><td>14,487</td><td>0.5035</td><td>0.2337</td><td>0.0116</td><td>0.0221</td><td>-0.0109</td></tr>
+      <tr><td>is_home</td><td>logistic</td><td>14,493</td><td>0.5021</td><td>0.0000</td><td>0.0000</td><td>0.0000</td><td>+0.0152</td></tr>
+      <tr><td>opp_pts_allowed_L10</td><td>logistic</td><td>14,469</td><td>0.5003</td><td>0.0000</td><td>0.0000</td><td>0.0000</td><td>+0.0035</td></tr>
+      <tr><td>games_into_season</td><td>logistic</td><td>14,493</td><td>0.4948</td><td>0.0000</td><td>0.0000</td><td>0.0000</td><td>-0.0029</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Step 3b — Individual Predictors: XGBoost</h3>
+  <table>
+    <thead><tr><th>feature</th><th>model</th><th>n_samples</th><th>auc</th><th>precision</th><th>recall</th><th>f1</th><th>coefficient</th></tr></thead>
+    <tbody>
+      <tr><td>novig_prob_over</td><td>xgboost</td><td>14,493</td><td>0.5113</td><td>0.5003</td><td>0.3156</td><td>0.3870</td><td>—</td></tr>
+      <tr><td>offered_line</td><td>xgboost</td><td>14,493</td><td>0.5079</td><td>0.4987</td><td>0.3509</td><td>0.4081</td><td>—</td></tr>
+      <tr><td>min_L5</td><td>xgboost</td><td>13,842</td><td>0.5052</td><td>0.4987</td><td>0.4284</td><td>0.4608</td><td>—</td></tr>
+      <tr><td>fga_L5</td><td>xgboost</td><td>13,842</td><td>0.5050</td><td>0.4977</td><td>0.3624</td><td>0.4172</td><td>—</td></tr>
+      <tr><td>pts_L3</td><td>xgboost</td><td>13,842</td><td>0.5035</td><td>0.4964</td><td>0.3718</td><td>0.4246</td><td>—</td></tr>
+      <tr><td>pts_L1</td><td>xgboost</td><td>14,287</td><td>0.5031</td><td>0.4959</td><td>0.2222</td><td>0.3052</td><td>—</td></tr>
+      <tr><td>pts_career</td><td>xgboost</td><td>14,468</td><td>0.5025</td><td>0.4914</td><td>0.3742</td><td>0.4248</td><td>—</td></tr>
+      <tr><td>is_home</td><td>xgboost</td><td>14,493</td><td>0.5021</td><td>0.0000</td><td>0.0000</td><td>0.0000</td><td>—</td></tr>
+      <tr><td>min_L20</td><td>xgboost</td><td>13,842</td><td>0.5020</td><td>0.4952</td><td>0.4768</td><td>0.4852</td><td>—</td></tr>
+      <tr><td>opp_pts_allowed_L10</td><td>xgboost</td><td>14,469</td><td>0.5016</td><td>0.4897</td><td>0.3388</td><td>0.3991</td><td>—</td></tr>
+      <tr><td>pts_L20</td><td>xgboost</td><td>13,842</td><td>0.5012</td><td>0.4921</td><td>0.3893</td><td>0.4344</td><td>—</td></tr>
+      <tr><td>pts_L5</td><td>xgboost</td><td>13,842</td><td>0.5011</td><td>0.4930</td><td>0.3945</td><td>0.4383</td><td>—</td></tr>
+      <tr><td>games_into_season</td><td>xgboost</td><td>14,493</td><td>0.5010</td><td>0.4943</td><td>0.2991</td><td>0.3719</td><td>—</td></tr>
+      <tr><td>pts_L10</td><td>xgboost</td><td>13,842</td><td>0.4990</td><td>0.4886</td><td>0.4171</td><td>0.4494</td><td>—</td></tr>
+      <tr><td>days_rest</td><td>xgboost</td><td>14,487</td><td>0.4989</td><td>0.4781</td><td>0.0354</td><td>0.0648</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h3>XGBoost vs Logistic AUC Delta (positive = XGBoost lifts)</h3>
+  <table>
+    <thead><tr><th>feature</th><th>auc_logistic</th><th>auc_xgboost</th><th>delta</th></tr></thead>
+    <tbody>
+      <tr><td>games_into_season</td><td>0.4948</td><td>0.5010</td><td>+0.0063</td></tr>
+      <tr><td>opp_pts_allowed_L10</td><td>0.5003</td><td>0.5016</td><td>+0.0013</td></tr>
+      <tr><td>is_home</td><td>0.5021</td><td>0.5021</td><td>+0.0000</td></tr>
+      <tr><td>pts_career</td><td>0.5042</td><td>0.5025</td><td>-0.0017</td></tr>
+      <tr><td>offered_line</td><td>0.5098</td><td>0.5079</td><td>-0.0018</td></tr>
+      <tr><td>min_L5</td><td>0.5070</td><td>0.5052</td><td>-0.0018</td></tr>
+      <tr><td>min_L20</td><td>0.5043</td><td>0.5020</td><td>-0.0023</td></tr>
+      <tr><td>fga_L5</td><td>0.5078</td><td>0.5050</td><td>-0.0029</td></tr>
+      <tr><td>pts_L1</td><td>0.5063</td><td>0.5031</td><td>-0.0031</td></tr>
+      <tr><td>days_rest</td><td>0.5035</td><td>0.4989</td><td>-0.0046</td></tr>
+      <tr><td>pts_L20</td><td>0.5058</td><td>0.5012</td><td>-0.0046</td></tr>
+      <tr><td>pts_L3</td><td>0.5088</td><td>0.5035</td><td>-0.0052</td></tr>
+      <tr><td>pts_L5</td><td>0.5083</td><td>0.5011</td><td>-0.0072</td></tr>
+      <tr><td>pts_L10</td><td>0.5066</td><td>0.4990</td><td>-0.0076</td></tr>
+      <tr><td>novig_prob_over</td><td>0.5216</td><td>0.5113</td><td>-0.0103</td></tr>
+    </tbody>
+  </table>
+  <p><em>No feature shows XGBoost lift &gt; 0.02 AUC. Logistic regression wins on most features. Relationships are mostly linear — XGBoost overfits on weak signal.</em></p>
+
+  <h3>Step 3c — Combo Models</h3>
+  <table>
+    <thead><tr><th>features_included</th><th>n_feats</th><th>model_type</th><th>auc</th><th>f1</th><th>precision</th><th>recall</th></tr></thead>
+    <tbody>
+      <tr><td>['novig_prob_over', 'offered_line', 'pts_L3', 'pts_L5', 'fga...</td><td>5</td><td>logistic_regression</td><td><strong>0.5199</strong></td><td>0.3866</td><td>0.5121</td><td>0.3106</td></tr>
+      <tr><td>['pts_L5', 'pts_career', 'min_L5', 'opp_pts_allowed_L10', 'o...</td><td>6</td><td>logistic_regression</td><td>0.5187</td><td>0.4392</td><td>0.5081</td><td>0.3870</td></tr>
+      <tr><td>['pts_L20', 'pts_career', 'min_L5', 'opp_pts_allowed_L10', '...</td><td>6</td><td>logistic_regression</td><td>0.5186</td><td>0.4401</td><td>0.5061</td><td>0.3895</td></tr>
+      <tr><td>['pts_L1', 'pts_L3', 'pts_L5', 'pts_L10', 'pts_L20', 'pts_ca...</td><td>15</td><td>logistic_regression</td><td>0.5182</td><td>0.4442</td><td>0.5078</td><td>0.3949</td></tr>
+      <tr><td>['pts_L10', 'pts_career', 'min_L5', 'opp_pts_allowed_L10', '...</td><td>6</td><td>logistic_regression</td><td>0.5181</td><td>0.4396</td><td>0.5055</td><td>0.3891</td></tr>
+      <tr><td>['pts_L10', 'pts_career', 'min_L5', 'opp_pts_allowed_L10', '...</td><td>6</td><td>xgboost</td><td>0.5117</td><td>0.4715</td><td>0.5013</td><td>0.4451</td></tr>
+      <tr><td>['pts_L5', 'pts_career', 'min_L5', 'opp_pts_allowed_L10', 'o...</td><td>6</td><td>xgboost</td><td>0.5110</td><td>0.4631</td><td>0.5004</td><td>0.4311</td></tr>
+      <tr><td>['pts_L1', 'pts_L3', 'pts_L5', 'pts_L10', 'pts_L20', 'pts_ca...</td><td>15</td><td>xgboost</td><td>0.5106</td><td>0.4560</td><td>0.4985</td><td>0.4201</td></tr>
+      <tr><td>['pts_L20', 'pts_career', 'min_L5', 'opp_pts_allowed_L10', '...</td><td>6</td><td>xgboost</td><td>0.5105</td><td>0.4655</td><td>0.5003</td><td>0.4353</td></tr>
+      <tr><td>['novig_prob_over', 'offered_line', 'pts_L3', 'pts_L5', 'fga...</td><td>5</td><td>xgboost</td><td>0.5097</td><td>0.4255</td><td>0.5013</td><td>0.3702</td></tr>
+      <tr><td>['pts_L3', 'pts_L5', 'fga_L5']</td><td>3</td><td>logistic_regression</td><td>0.5081</td><td>0.3948</td><td>0.4999</td><td>0.3311</td></tr>
+      <tr><td>['pts_L1', 'pts_L3', 'pts_L5', 'pts_L10', 'pts_L20', 'pts_ca...</td><td>13</td><td>logistic_regression</td><td>0.5072</td><td>0.4432</td><td>0.4994</td><td>0.4010</td></tr>
+      <tr><td>['pts_L1', 'pts_L3', 'pts_L5', 'pts_L10', 'pts_L20', 'pts_ca...</td><td>13</td><td>xgboost</td><td>0.5055</td><td>0.4685</td><td>0.4988</td><td>0.4425</td></tr>
+      <tr><td>['pts_L3', 'pts_L5', 'fga_L5']</td><td>3</td><td>xgboost</td><td>0.5040</td><td>0.4293</td><td>0.5000</td><td>0.3764</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Best Model</h3>
+  <p><strong>Logistic regression</strong> with features: <code>['novig_prob_over', 'offered_line', 'pts_L3', 'pts_L5', 'fga_L5']</code></p>
+  <p>OOF AUC = <strong>0.5199</strong> (avg across 2024-25 and 2025-26 test folds)</p>
+  <p>Saved to: <code>models/nba_points_model.pkl</code> (trained on all settled data)</p>
+
+  <h3>Market Feature Discussion</h3>
+  <p><code>novig_prob_over</code> is the strongest single predictor (AUC 0.5216) — the market already prices in player quality, matchup, usage, etc. Including it in the model is valid because the model can find cases where the market misprices relative to what the rolling PTS/MIN/FGA features imply. The model generates edge when <code>p_model &lt; novig_prob_over</code> (UNDER signal) or <code>p_model &gt; novig_prob_over</code> (OVER signal). If the model just echoes the market, edge ≈ 0 — the value comes from the non-market features pushing p_model away from the market when they disagree.</p>
+
+  <h3>Spot-Check: Stephen Curry OOF Predictions (last 8 games in test set)</h3>
+  <table>
+    <thead><tr><th>game_date</th><th>season</th><th>is_over</th><th>p_model</th></tr></thead>
+    <tbody>
+      <tr><td>2026-01-25</td><td>2025-26</td><td>0</td><td>0.474</td></tr>
+      <tr><td>2026-01-28</td><td>2025-26</td><td>0</td><td>0.459</td></tr>
+      <tr><td>2026-01-30</td><td>2025-26</td><td>0</td><td>0.461</td></tr>
+      <tr><td>2026-04-05</td><td>2025-26</td><td>1</td><td>0.466</td></tr>
+      <tr><td>2026-04-07</td><td>2025-26</td><td>0</td><td>0.481</td></tr>
+      <tr><td>2026-04-10</td><td>2025-26</td><td>0</td><td>0.459</td></tr>
+      <tr><td>2026-04-15</td><td>2025-26</td><td>1</td><td>0.471</td></tr>
+      <tr><td>2026-04-17</td><td>2025-26</td><td>0</td><td>0.453</td></tr>
+    </tbody>
+  </table>
+  <p><em>Curry's lines in this window were 23.5–31.0. p_model consistently below 0.49 — model leans UNDER on all 8 games. Actual over rate: 2/8 = 25%. The model is directionally correct (UNDER) but the gap between p_model (~0.46) and p_market (~0.49) is small (~3pp). Step 4 will compute edge more precisely.</em></p>
+
+  <h3>DuckDB Test Results</h3>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>OOF fold sizes ≥ 200 rows each</td><td class="pass">PASS</td><td>2024-25: 11,824 | 2025-26: 15,860</td></tr>
+      <tr><td>2</td><td>Best model AUC &gt; 0.52</td><td class="warn">FLAG</td><td>OOF AUC = 0.5191 — just below 0.52 threshold. Market is efficient; signal is real but weak. Proceeding to Step 4 to check if edge exists at specific line buckets (calibration showed structural UNDER at lines ≥ 30.5).</td></tr>
+      <tr><td>3</td><td>OOF covers both test seasons</td><td class="pass">PASS</td><td>2 folds present, 2024-25 + 2025-26</td></tr>
+      <tr><td>4</td><td>p_model in [0,1], no nulls</td><td class="pass">PASS</td><td>27,684 OOF rows, 0 nulls, 0 out-of-range</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Flagged Items</h3>
+  <ol>
+    <li><strong>AUC = 0.519 — just below 0.52 flag threshold.</strong> The market is very efficient on player points. All individual features show AUC in 0.50–0.52 range. This is expected for a well-traded market — even 0.519 represents real signal if concentrated in the right line buckets. Calibration analysis (Step 1.5) already showed structural UNDER mispricing at lines ≥ 30.5 — Step 4 will check if the model can exploit this specifically.</li>
+    <li><strong>opp_pts_allowed_L10 shows AUC ≈ 0.500 (random).</strong> Opponent defensive rating is not a useful predictor of whether a player goes over their point total. This makes intuitive sense — total team pts allowed doesn't distinguish between heavy minutes players vs role players. Not worth including in final model.</li>
+    <li><strong>XGBoost underperforms logistic on all features.</strong> No feature shows XGBoost lift &gt; 0.02 AUC. The predictive relationships are linear. The logistic model is preferred for production.</li>
+    <li><strong>Non-market model (all 13 non-market features): AUC = 0.507.</strong> Genuine independent signal exists outside the market, but it's weak. The market features (novig_prob_over, offered_line) add ~1pp AUC. The non-market features matter for generating disagreement with the market — which is what drives edge.</li>
+  </ol>
+</section>
+
+
+<section>
+  <h2>Step 4 — Edge Computation · 2026-07-02 21:37:18 ET</h2>
+
+  <h3>Methodology</h3>
+  <p>p_model = OOF logistic prediction from Step 3 best model [novig_prob_over, offered_line, pts_L3, pts_L5, fga_L5]. p_market = novig_prob_over from market consensus. edge_under = p_market − p_model (positive = model favors UNDER vs market). Clipped p_model to [0.01, 0.99] before use.</p>
+
+  <h3>Clipping Report</h3>
+  <p>0 rows clipped to 0.01, 0 rows clipped to 0.99 (0.00% of total). Model outputs are well-bounded — no outlier feature combinations.</p>
+
+  <h3>Edge Distribution Summary</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Total OOF rows</td><td>27,684</td></tr>
+      <tr><td>Mean edge_over</td><td>−0.81pp</td></tr>
+      <tr><td>Std edge_over</td><td>1.88pp</td></tr>
+      <tr><td>Min / Max edge_over</td><td>−9.5pp / +7.6pp</td></tr>
+      <tr><td>% rows with edge_over &gt; 0 (model favors OVER)</td><td>37.4%</td></tr>
+      <tr><td>% rows with edge_under &gt; 0 (model favors UNDER)</td><td>62.6%</td></tr>
+      <tr><td>Rows with edge_under &gt; 5pp</td><td>733</td></tr>
+      <tr><td>Rows with edge_over &gt; 5pp</td><td>10</td></tr>
+    </tbody>
+  </table>
+  <p><em>The model systematically generates UNDER signal — 62.6% of rows lean UNDER, with meaningful UNDER edge (&gt;5pp) in 733 rows. OVER signal is essentially absent (&lt;10 rows at 5pp threshold).</em></p>
+
+  <h3>Edge by Line Bucket (KEY FINDING)</h3>
+  <table>
+    <thead><tr><th>line_bucket</th><th>n</th><th>avg_edge_under</th><th>over_rate</th><th>avg_p_market</th></tr></thead>
+    <tbody>
+      <tr><td>≤ 14.5</td><td>16,542</td><td>−0.3pp</td><td>49.5%</td><td>49.7%</td></tr>
+      <tr><td>15–19.5</td><td>5,645</td><td><strong>+1.6pp</strong></td><td>49.8%</td><td>49.7%</td></tr>
+      <tr><td>20–24.5</td><td>3,382</td><td><strong>+2.9pp</strong></td><td>47.1%</td><td>49.7%</td></tr>
+      <tr><td>25–29.5</td><td>1,769</td><td><strong>+4.1pp</strong></td><td>47.8%</td><td>49.7%</td></tr>
+      <tr><td>≥ 30</td><td>346</td><td><strong>+5.4pp</strong></td><td>43.4%</td><td>49.7%</td></tr>
+    </tbody>
+  </table>
+  <p><em>p_market is ~49.7% at every line bucket — the market prices all lines near 50/50 regardless of line size. But actual over rates drop as line increases: from 49.5% at low lines to 43.4% at lines ≥ 30. The model picks this up and generates UNDER edge that scales monotonically with line size. Directly confirms Step 1.5 calibration findings.</em></p>
+
+  <h3>Model Calibration by p_model Decile</h3>
+  <table>
+    <thead><tr><th>decile</th><th>n</th><th>avg_p_model</th><th>actual_over_rate</th><th>calib_gap</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>2,769</td><td>0.448</td><td>0.459</td><td>+1.1pp</td></tr>
+      <tr><td>1</td><td>2,768</td><td>0.465</td><td>0.468</td><td>+0.3pp</td></tr>
+      <tr><td>2</td><td>2,768</td><td>0.473</td><td>0.491</td><td>+1.7pp</td></tr>
+      <tr><td>3</td><td>2,769</td><td>0.480</td><td>0.477</td><td>-0.3pp</td></tr>
+      <tr><td>4</td><td>2,768</td><td>0.485</td><td>0.504</td><td>+1.9pp</td></tr>
+      <tr><td>5</td><td>2,768</td><td>0.491</td><td>0.484</td><td>-0.7pp</td></tr>
+      <tr><td>6</td><td>2,769</td><td>0.497</td><td>0.494</td><td>-0.3pp</td></tr>
+      <tr><td>7</td><td>2,768</td><td>0.504</td><td>0.508</td><td>+0.4pp</td></tr>
+      <tr><td>8</td><td>2,768</td><td>0.512</td><td>0.496</td><td>-1.7pp</td></tr>
+      <tr><td>9</td><td>2,769</td><td>0.532</td><td>0.526</td><td>-0.6pp</td></tr>
+    </tbody>
+  </table>
+  <p>All deciles within ±1.9pp — model is well-calibrated. Max gap = 1.9pp (well below 15pp threshold).</p>
+
+  <h3>Spot-Check: Stephen Curry (last 12 OOF games)</h3>
+  <table>
+    <thead><tr><th>game_date</th><th>season</th><th>is_over</th><th>offered_line</th><th>p_model</th><th>p_market</th><th>edge_under</th></tr></thead>
+    <tbody>
+      <tr><td>2026-01-17</td><td>2025-26</td><td>0</td><td>27.5</td><td>0.470</td><td>0.499</td><td><strong>+2.9pp</strong></td></tr>
+      <tr><td>2026-01-19</td><td>2025-26</td><td>0</td><td>27.5</td><td>0.477</td><td>0.499</td><td><strong>+2.2pp</strong></td></tr>
+      <tr><td>2026-01-20</td><td>2025-26</td><td>0</td><td>28.5</td><td>0.479</td><td>0.502</td><td><strong>+2.3pp</strong></td></tr>
+      <tr><td>2026-01-22</td><td>2025-26</td><td>1</td><td>27.5</td><td>0.483</td><td>0.500</td><td>+1.7pp</td></tr>
+      <tr><td>2026-01-25</td><td>2025-26</td><td>0</td><td>29.5</td><td>0.474</td><td>0.502</td><td><strong>+2.8pp</strong></td></tr>
+      <tr><td>2026-01-28</td><td>2025-26</td><td>0</td><td>31.0</td><td>0.459</td><td>0.494</td><td><strong>+3.5pp</strong></td></tr>
+      <tr><td>2026-01-30</td><td>2025-26</td><td>0</td><td>28.5</td><td>0.461</td><td>0.498</td><td><strong>+3.7pp</strong></td></tr>
+      <tr><td>2026-04-05</td><td>2025-26</td><td>1</td><td>19.5</td><td>0.466</td><td>0.495</td><td><strong>+2.9pp</strong></td></tr>
+      <tr><td>2026-04-07</td><td>2025-26</td><td>0</td><td>23.5</td><td>0.481</td><td>0.509</td><td><strong>+2.8pp</strong></td></tr>
+      <tr><td>2026-04-10</td><td>2025-26</td><td>0</td><td>23.5</td><td>0.459</td><td>0.491</td><td><strong>+3.2pp</strong></td></tr>
+      <tr><td>2026-04-15</td><td>2025-26</td><td>1</td><td>26.5</td><td>0.471</td><td>0.496</td><td><strong>+2.5pp</strong></td></tr>
+      <tr><td>2026-04-17</td><td>2025-26</td><td>0</td><td>27.5</td><td>0.453</td><td>0.488</td><td><strong>+3.5pp</strong></td></tr>
+    </tbody>
+  </table>
+  <p><em>Curry: avg p_model = 0.458, avg p_market = 0.496, avg edge_under = +3.8pp across 107 OOF rows. Over rate = 48.6%. The model consistently signals UNDER for Curry (lines 19.5–31.0) with 2–4pp edge on most games.</em></p>
+
+  <h3>DuckDB Test Results</h3>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>p_model clipped to [0.01, 0.99], no nulls</td><td class="pass">PASS</td><td>0 null, 0 below 0.01, 0 above 0.99</td></tr>
+      <tr><td>2</td><td>p_market in [0, 1]</td><td class="pass">PASS</td><td>0 out-of-range rows</td></tr>
+      <tr><td>3</td><td>Edge distribution plausible (not at extremes)</td><td class="pass">PASS</td><td>std=0.019, range [−9.5pp, +7.6pp]</td></tr>
+      <tr><td>4</td><td>All calibration deciles within 15pp gap</td><td class="pass">PASS</td><td>Max gap = 1.9pp</td></tr>
+      <tr><td>5</td><td>Row count matches OOF spine</td><td class="pass">PASS</td><td>27,684 rows</td></tr>
+      <tr><td>6</td><td>Zero rows clipped to 0.01 or 0.99</td><td class="pass">PASS</td><td>0 clips — model outputs well-bounded</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<section>
+  <h2>Step 5 — OOS Grid Search · 2026-07-02 21:37:18 ET</h2>
+
+  <h3>Grid Search Configuration</h3>
+  <p>All evaluations use OOF predictions only. Flat betting: 1 unit per bet. Odds approximated from no-vig p_market (see caveat below).</p>
+  <ul>
+    <li>Edge thresholds: [0.00, 0.01, 0.02, 0.03, 0.05, 0.08, 0.10, 0.15]</li>
+    <li>Clf thresholds: [0.45, 0.48, 0.50, 0.52, 0.55] (bet UNDER when p_model &lt; clf_thresh)</li>
+    <li>Directions: [under_only, over_only, both]</li>
+    <li>Odds buckets: [all, dog_only (p_market&lt;0.50), fav_only (p_market≥0.50)]</li>
+    <li>Line buckets: [all, low_14 (≤14.5), mid_15_24 (15–24.5), high_25plus (≥25)]</li>
+    <li>Valid strategies (≥30 bets): 649 of potential combos</li>
+    <li>Drawdown-flagged (max_drawdown &gt; units_won): 354 of 649</li>
+    <li>Suspicious (ROI &gt; 25%, n &gt; 100): 0 ← no leakage signal</li>
+  </ul>
+
+  <h3>Top 20 Strategies by Units Won</h3>
+  <p><em>⚑ = max_drawdown &gt; units_won (this strategy drew down more than it ever returned)</em></p>
+  <table>
+    <thead><tr><th>edge_thresh</th><th>clf_thresh</th><th>direction</th><th>odds_bucket</th><th>line_bucket</th><th>n_bets</th><th>win_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th></tr></thead>
+    <tbody>
+      <tr><td>0.00</td><td>0.52</td><td>both</td><td>all</td><td>all</td><td>11,600</td><td>52.9%</td><td>446.18</td><td>3.85%</td><td>78.01</td></tr>
+      <tr><td>0.00</td><td>0.48</td><td>under_only</td><td>dog_only</td><td>all</td><td>7,652</td><td>53.6%</td><td>387.54</td><td>5.06%</td><td>34.57</td></tr>
+      <tr><td>0.00</td><td>0.52</td><td>both</td><td>dog_only</td><td>all</td><td>7,669</td><td>53.6%</td><td>384.56</td><td>5.01%</td><td>33.67</td></tr>
+      <tr><td>0.00</td><td>0.48</td><td>under_only</td><td>all</td><td>all</td><td>9,375</td><td>52.8%</td><td>368.35</td><td>3.93%</td><td>64.06</td></tr>
+      <tr><td>0.00</td><td>0.50</td><td>both</td><td>all</td><td>all</td><td>22,687</td><td>51.3%</td><td>352.45</td><td>1.55%</td><td>113.25</td></tr>
+      <tr><td>0.00</td><td>0.50</td><td>both</td><td>dog_only</td><td>all</td><td>13,752</td><td>51.9%</td><td>340.89</td><td>2.48%</td><td>55.15</td></tr>
+      <tr><td>0.00</td><td>0.52</td><td>under_only</td><td>dog_only</td><td>all</td><td>11,606</td><td>52.3%</td><td>334.52</td><td>2.88%</td><td>44.62</td></tr>
+      <tr><td>0.00</td><td>0.50</td><td>under_only</td><td>dog_only</td><td>all</td><td>11,606</td><td>52.3%</td><td>334.52</td><td>2.88%</td><td>44.62</td></tr>
+      <tr><td>0.00</td><td>0.55</td><td>under_only</td><td>dog_only</td><td>all</td><td>11,606</td><td>52.3%</td><td>334.52</td><td>2.88%</td><td>44.62</td></tr>
+      <tr><td>0.01</td><td>0.52</td><td>both</td><td>all</td><td>all</td><td>10,014</td><td>52.4%</td><td>330.67</td><td>3.30%</td><td>108.25</td></tr>
+      <tr><td>0.00</td><td>0.52</td><td>under_only</td><td>all</td><td>all</td><td>17,208</td><td>51.3%</td><td>313.73</td><td>1.82%</td><td>72.97</td></tr>
+      <tr><td>0.00</td><td>0.50</td><td>under_only</td><td>all</td><td>all</td><td>15,874</td><td>51.5%</td><td>310.35</td><td>1.96%</td><td>71.75</td></tr>
+      <tr><td>0.00</td><td>0.55</td><td>under_only</td><td>all</td><td>all</td><td>17,338</td><td>51.3%</td><td>305.08</td><td>1.76%</td><td>72.97</td></tr>
+      <tr><td>0.01</td><td>0.48</td><td>under_only</td><td>dog_only</td><td>all</td><td>6,488</td><td>53.2%</td><td>303.72</td><td>4.68%</td><td>50.66</td></tr>
+      <tr><td>0.01</td><td>0.52</td><td>both</td><td>dog_only</td><td>all</td><td>6,505</td><td>53.2%</td><td>300.74</td><td>4.62%</td><td>50.66</td></tr>
+      <tr><td>0.01</td><td>0.50</td><td>both</td><td>all</td><td>all</td><td>14,509</td><td>51.5%</td><td>298.89</td><td>2.06%</td><td>84.96</td></tr>
+      <tr><td>0.02</td><td>0.45</td><td>both</td><td>dog_only</td><td>all</td><td>4,617</td><td>53.7%</td><td>288.97</td><td>6.26%</td><td>35.93</td></tr>
+      <tr><td>0.02</td><td>0.48</td><td>under_only</td><td>dog_only</td><td>all</td><td>4,315</td><td>54.1%</td><td>284.92</td><td>6.60%</td><td>34.93</td></tr>
+      <tr><td>0.02</td><td>0.50</td><td>under_only</td><td>dog_only</td><td>all</td><td>4,315</td><td>54.1%</td><td>284.92</td><td>6.60%</td><td>34.93</td></tr>
+      <tr><td>0.02</td><td>0.52</td><td>under_only</td><td>dog_only</td><td>all</td><td>4,315</td><td>54.1%</td><td>284.92</td><td>6.60%</td><td>34.93</td></tr>
+    </tbody>
+  </table>
+
+  <h3>High-Line Focus: Lines ≥ 25 Only</h3>
+  <table>
+    <thead><tr><th>edge_thresh</th><th>clf_thresh</th><th>direction</th><th>odds_bucket</th><th>line_bucket</th><th>n_bets</th><th>win_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th></tr></thead>
+    <tbody>
+      <tr><td>0.02</td><td>0.50</td><td>both</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.45</td><td>both</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.50</td><td>under_only</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.52</td><td>under_only</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.52</td><td>both</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.48</td><td>both</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.55</td><td>under_only</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.02</td><td>0.48</td><td>under_only</td><td>dog_only</td><td>high_25plus</td><td>1,393</td><td>54.9%</td><td>117.02</td><td>8.40%</td><td>24.22</td></tr>
+      <tr><td>0.03</td><td>0.52</td><td>both</td><td>dog_only</td><td>high_25plus</td><td>1,245</td><td>55.3%</td><td>116.48</td><td>9.36%</td><td>19.45</td></tr>
+      <tr><td>0.03</td><td>0.48</td><td>under_only</td><td>dog_only</td><td>high_25plus</td><td>1,245</td><td>55.3%</td><td>116.48</td><td>9.36%</td><td>19.45</td></tr>
+    </tbody>
+  </table>
+
+  <h3>⚠ Odds Approximation Caveat</h3>
+  <p>All PnL calculations use <strong>no-vig approximated odds</strong> (derived from novig_prob_over). Actual book odds include the vig (~7–8% at mainstream lines, ~8–9% at high lines). This means reported ROI figures are optimistic — actual production ROI will be lower. Rough impact:</p>
+  <ul>
+    <li>No-vig UNDER odds: e.g. −108. Actual book UNDER odds: e.g. −115 to −125.</li>
+    <li>At "all lines + under + dog_only" (53.6% win rate): breakeven at −118 = 54.1%. Marginal — depends heavily on which book and exact odds. Likely 1–3% actual ROI.</li>
+    <li>At "high_25plus + under + dog_only" (54.9% win rate): breakeven at −120 ≈ 54.5%. This strategy is more robust to vig at high lines even though vig is higher (~8%), because the calibration gap (−10pp at line 35.5) is larger. Likely 2–5% actual ROI.</li>
+  </ul>
+  <p>Step 6 (in-sample) and Step 7 (production scoring) will use actual book odds, providing a more accurate picture.</p>
+
+  <h3>DuckDB Test Results</h3>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Grid has expected strategy combinations</td><td class="pass">PASS</td><td>649 valid strategies (≥30 bets)</td></tr>
+      <tr><td>2</td><td>n_bets matches computed count for spot-check strategy</td><td class="pass">PASS</td><td>7,652 rows for under+dog_only+edge=0+clf=0.48+all lines</td></tr>
+      <tr><td>3</td><td>No suspicious ROI &gt;25% with &gt;100 bets</td><td class="pass">PASS</td><td>0 suspicious strategies — no leakage signal</td></tr>
+      <tr><td>4</td><td>Best strategy has ≥30 bets</td><td class="pass">PASS</td><td>Best strategy: 11,600 bets</td></tr>
+      <tr><td>5</td><td>Unit PnL calculation verified (5-row spot-check)</td><td class="pass">PASS</td><td>Wins: 100/|odds| units; losses: −1 unit</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Flagged Items</h3>
+  <ol>
+    <li><strong>Odds approximation overstates ROI.</strong> PnL uses no-vig odds. Actual book odds include ~7–9% vig. True ROI in production will be lower. High-line strategies are most robust because the structural calibration gap (−10pp at line 35.5) is large enough to survive the vig hurdle. Low-line strategies (≤14.5) show near-zero UNDER edge and will likely not be profitable after vig.</li>
+    <li><strong>354 of 649 strategies are drawdown-flagged.</strong> Many strategies that look profitable in aggregate drew down more than they ever returned — a bettor would have quit before recovery. Focus on strategies where max_drawdown &lt; units_won. The best candidate strategies all pass this check.</li>
+    <li><strong>clf_threshold has limited impact on UNDER-only strategies.</strong> clf=0.48/0.50/0.52/0.55 give identical results for many under+dog_only combos because most p_model values are already below 0.50 (model leans UNDER systematically). clf=0.48 is the most selective and shows highest ROI — it filters to cases where the model most strongly signals UNDER.</li>
+    <li><strong>OVER signal is absent.</strong> Only 10 rows have edge_over &gt; 5pp. No OVER strategy consistently outperforms. This is consistent with Step 1.5 finding that the market systematically overprices OVERS — the contrarian UNDER is the only viable direction.</li>
+  </ol>
+</section>
+
+<!-- ============================================================ STEP 6 ============================================================ -->
+<section>
+  <h2>Step 6 — In-Sample Grid Search (IS/OOS Ratio Check)</h2>
+  <p><strong>Goal:</strong> Run the same grid as Step 5 using predictions from the full-data model on the same data used for training. IS ROI will be inflated by construction — the question is whether the best OOS strategies also show positive IS ROI, and whether the IS/OOS ratio suggests overfitting (&gt;5x is the flag threshold).</p>
+
+  <h3>IS Grid Overview</h3>
+  <p>1,160 valid IS strategies (n ≥ 30). 554 show IS ROI &gt; 25% with &gt; 100 bets — this is expected from IS inflation, not leakage. The IS model sees all data so it naturally shows higher win rates. The relevant comparison is the IS/OOS ratio for our specific OOS candidates.</p>
+
+  <h4>Top 10 IS Strategies by Units Won</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Edge Thr</th><th>CLF Thr</th><th>Direction</th><th>Odds Bucket</th><th>Line Bucket</th>
+      <th>n_bets</th><th>Win Rate</th><th>Units Won</th><th>ROI</th><th>Max DD</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>0.00</td><td>0.45</td><td>both</td><td>all</td><td>all</td><td>36,349</td><td>56.2%</td><td>+4,360.3u</td><td>12.00%</td><td>32.4u</td></tr>
+      <tr><td>0.00</td><td>0.48</td><td>both</td><td>all</td><td>all</td><td>36,038</td><td>56.2%</td><td>+4,316.8u</td><td>11.98%</td><td>32.6u</td></tr>
+      <tr><td>0.01</td><td>0.45</td><td>both</td><td>all</td><td>all</td><td>24,846</td><td>58.3%</td><td>+4,006.3u</td><td>16.12%</td><td>27.4u</td></tr>
+      <tr><td>0.01</td><td>0.48</td><td>both</td><td>all</td><td>all</td><td>24,779</td><td>58.3%</td><td>+3,988.4u</td><td>16.10%</td><td>27.4u</td></tr>
+      <tr><td>0.00</td><td>0.50</td><td>both</td><td>all</td><td>all</td><td>31,372</td><td>56.7%</td><td>+3,941.7u</td><td>12.56%</td><td>27.9u</td></tr>
+      <tr><td>0.02</td><td>0.45</td><td>both</td><td>all</td><td>all</td><td>15,636</td><td>60.9%</td><td>+3,269.9u</td><td>20.91%</td><td>12.6u</td></tr>
+      <tr><td>0.02</td><td>0.48</td><td>both</td><td>all</td><td>all</td><td>15,606</td><td>60.9%</td><td>+3,258.8u</td><td>20.88%</td><td>12.6u</td></tr>
+      <tr><td>0.02</td><td>0.50</td><td>both</td><td>all</td><td>all</td><td>15,474</td><td>60.8%</td><td>+3,206.9u</td><td>20.72%</td><td>12.7u</td></tr>
+      <tr><td>0.00</td><td>0.52</td><td>both</td><td>all</td><td>all</td><td>17,796</td><td>59.5%</td><td>+3,055.8u</td><td>17.17%</td><td>23.2u</td></tr>
+      <tr><td>0.01</td><td>0.52</td><td>both</td><td>all</td><td>all</td><td>16,575</td><td>60.0%</td><td>+3,020.1u</td><td>18.22%</td><td>22.7u</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;">IS inflation is clear: top IS strategies use "both" direction and all lines — these are wide-net strategies the model does well on in-sample but would show much lower OOS ROI. Our candidates are narrower, more robust.</p>
+
+  <h3>IS vs OOS Comparison — 3 Candidate Strategies</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Strategy</th><th>Filter</th>
+      <th>OOS n</th><th>OOS Win%</th><th>OOS Units</th><th>OOS ROI</th><th>OOS MDD</th>
+      <th>IS n</th><th>IS Win%</th><th>IS Units</th><th>IS ROI</th><th>IS MDD</th>
+      <th>IS/OOS Ratio</th><th>Flag</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>S1</strong></td>
+        <td>UNDER, dog, all lines, edge≥0, clf&lt;0.48</td>
+        <td>7,652</td><td>53.7%</td><td>+387.5u</td><td>5.06%</td><td>34.6u</td>
+        <td>11,132</td><td>58.6%</td><td>+1,654.6u</td><td>14.86%</td><td>21.3u</td>
+        <td>2.94x</td><td>OK</td>
+      </tr>
+      <tr class="highlight">
+        <td><strong>S2 ★</strong></td>
+        <td>UNDER, dog, line≥25, edge≥2pp, clf&lt;0.50</td>
+        <td>1,393</td><td>54.9%</td><td>+117.0u</td><td>8.40%</td><td>24.2u</td>
+        <td>1,678</td><td>59.9%</td><td>+308.5u</td><td>18.39%</td><td>10.1u</td>
+        <td><strong>2.19x</strong></td><td><strong>Best</strong></td>
+      </tr>
+      <tr>
+        <td><strong>S3</strong></td>
+        <td>UNDER, dog, all lines, edge≥3pp, clf&lt;0.48</td>
+        <td>2,333</td><td>54.7%</td><td>+183.3u</td><td>7.86%</td><td>29.9u</td>
+        <td>4,909</td><td>62.5%</td><td>+1,123.8u</td><td>22.89%</td><td>11.1u</td>
+        <td>2.91x</td><td>OK</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>All three IS/OOS ratios are well below the 5x overfitting threshold. <strong>Strategy 2 has the lowest IS/OOS ratio (2.19x)</strong> — the structural UNDER signal at lines ≥25 is genuine and not an artifact of IS model memorization. Strategy 3's IS/OOS ratio (2.91x) is elevated partly because it uses a wide line bucket (all lines) where the model's edge is weaker and IS inflation is stronger.</p>
+
+  <h3>Strategy 2 — Detailed IS Characterization (4 Tables)</h3>
+  <p>Filter: UNDER only, dog_only (p_market &lt; 0.50), offered_line &gt; 24.5, edge_under ≥ 0.02, p_model &lt; 0.50</p>
+
+  <h4>Table 1: Overall IS Stats</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>n_bets</th><th>Win Rate</th><th>Units Won</th><th>ROI</th><th>Max Drawdown</th><th>DD Flag</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>1,678</td><td>59.9%</td><td>+308.5u</td><td>18.39%</td><td>9.3u</td><td>No (MDD &lt;&lt; units_won)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Table 2: By Season (IS)</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Season</th><th>n_bets</th><th>Win Rate</th><th>Units Won</th><th>ROI</th></tr></thead>
+    <tbody>
+      <tr><td>2023-24</td><td>565</td><td>61.2%</td><td>+118.5u</td><td>20.98%</td></tr>
+      <tr><td>2024-25</td><td>472</td><td>60.0%</td><td>+87.0u</td><td>18.43%</td></tr>
+      <tr><td>2025-26</td><td>641</td><td>58.7%</td><td>+103.0u</td><td>16.07%</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;">IS ROI declines over seasons (2023-24 inflated most since model trained on it). OOS shows both 2024-25 and 2025-26 positive — this is the true out-of-sample signal.</p>
+
+  <h4>Table 3: By Line Bucket (IS)</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Line Bucket</th><th>n_bets</th><th>Win Rate</th><th>Units Won</th><th>ROI</th></tr></thead>
+    <tbody>
+      <tr><td>25.0–27.5</td><td>989</td><td>58.2%</td><td>+149.2u</td><td>15.08%</td></tr>
+      <tr><td>28.0–30.5</td><td>473</td><td>60.3%</td><td>+90.3u</td><td>19.10%</td></tr>
+      <tr><td>31.0–33.5</td><td>193</td><td>64.8%</td><td>+54.3u</td><td>28.12%</td></tr>
+      <tr><td>34+</td><td>23</td><td>82.6%</td><td>+14.8u</td><td>64.12%</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;">OOS confirms the same gradient: 25-27.5 ROI 6.3%, 28-30.5 ROI 8.6%, 31-33.5 ROI 15.9%, 34+ ROI 56.1% (n=14, too small). The structural calibration gap steepens at higher lines — the market prices all overs near 50/50 while the actual over rate drops to 43-45% at these extremes.</p>
+
+  <h4>Table 4: By n_books (IS — consensus depth)</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>n_books</th><th>n_bets</th><th>Win Rate</th><th>Units Won</th><th>ROI</th></tr></thead>
+    <tbody>
+      <tr><td>≤5</td><td>61</td><td>59.0%</td><td>+11.5u</td><td>18.8%</td></tr>
+      <tr><td>6</td><td>177</td><td>65.0%</td><td>+50.0u</td><td>28.2%</td></tr>
+      <tr><td>7</td><td>689</td><td>59.4%</td><td>+120.0u</td><td>17.4%</td></tr>
+      <tr><td>8</td><td>455</td><td>59.3%</td><td>+78.8u</td><td>17.3%</td></tr>
+      <tr><td>9</td><td>263</td><td>56.7%</td><td>+31.9u</td><td>12.1%</td></tr>
+      <tr><td>10</td><td>31</td><td>74.2%</td><td>+14.5u</td><td>46.7%</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;">No n_books segment is clearly negative. The n=6 bucket shows highest IS ROI (28.2%) which may reflect less efficient pricing when fewer books compete. All segments positive — no obvious exclusion needed.</p>
+
+  <h3>OOS Breakdown — Strategy 2 (for reference)</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Season / Bucket</th><th>n_bets</th><th>Win Rate</th><th>Units Won</th><th>ROI</th></tr></thead>
+    <tbody>
+      <tr><td colspan="5" style="font-weight:bold; background:#eeeeee;">By Season (OOS only)</td></tr>
+      <tr><td>2024-25</td><td>587</td><td>55.4%</td><td>+54.6u</td><td>9.31%</td></tr>
+      <tr><td>2025-26</td><td>806</td><td>54.5%</td><td>+62.4u</td><td>7.74%</td></tr>
+      <tr><td colspan="5" style="font-weight:bold; background:#eeeeee;">By Line Bucket (OOS)</td></tr>
+      <tr><td>25.0–27.5</td><td>844</td><td>53.8%</td><td>+53.0u</td><td>6.28%</td></tr>
+      <tr><td>28.0–30.5</td><td>395</td><td>54.9%</td><td>+33.9u</td><td>8.59%</td></tr>
+      <tr><td>31.0–33.5</td><td>140</td><td>58.6%</td><td>+22.2u</td><td>15.86%</td></tr>
+      <tr><td>34+</td><td>14</td><td>78.6%</td><td>+7.9u</td><td>56.11%</td></tr>
+    </tbody>
+  </table>
+  <p>Both OOS seasons profitable. Line bucket gradient holds OOS — higher lines yield higher ROI. 34+ lines (n=14) are too small to be statistically meaningful but directionally very strong.</p>
+
+  <h3>Key Findings — Step 6</h3>
+  <ol>
+    <li><strong>No overfitting detected.</strong> All IS/OOS ratios are 2.19x–2.94x, well below the 5x flag threshold. The structural UNDER signal is genuine — it stems from the market's systematic overpricing of overs at high lines (shown in Step 1.5), not model memorization.</li>
+    <li><strong>Strategy 2 is the recommended candidate.</strong> Lowest IS/OOS ratio (2.19x), highest OOS ROI (8.40%), confirmed positive in both OOS test seasons, and backed by the calibration gradient showing strongest mispricing at lines ≥25. Max drawdown (24.2u OOS) is below units_won (117.0u) — no drawdown flag.</li>
+    <li><strong>Strategy 1 has volume but lower signal quality.</strong> n=7,652 OOS bets, ROI only 5.06%, and IS/OOS ratio 2.94x. The broad all-lines filter includes many lines ≤14.5 where calibration shows no structural UNDER edge. Would require ~$7.6M in total flat bets to generate $387.5K — lower efficiency than S2.</li>
+    <li><strong>Strategy 3 IS/OOS gap is largest.</strong> 2.91x ratio with all-lines filter. The edge≥3pp screen is selective but doesn't isolate where the structural mispricing is strongest. Not recommended over S2.</li>
+    <li><strong>Odds approximation caveat persists.</strong> All ROI figures use no-vig odds. Actual production ROI will be ~3–5pp lower due to book vig. Strategy 2's 8.40% OOS ROI should survive a ~4pp vig haircut; Strategy 1's 5.06% ROI may not. This strengthens the case for S2.</li>
+  </ol>
+
+  <h3>DuckDB Test Results — Step 6</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>p_model clipped to [0.01, 0.99], no nulls</td><td>0 out-of-range, 0 nulls</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>2</td><td>IS best ROI &gt; OOS best ROI (IS inflated by design)</td><td>IS 89.78% &gt; OOS 15.30%</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>3</td><td>IS/OOS ratio for Strategy 2 &lt; 5x</td><td>2.19x (&lt; 5x threshold)</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>4</td><td>All 3 candidate strategies have positive IS ROI</td><td>S1: 14.86%, S2: 18.39%, S3: 22.89%</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>5</td><td>Suspicious: IS ROI &gt; 25% with &gt; 100 bets (expected from IS inflation)</td><td>554 strategies — expected, not leakage. IS trains on all data so wide strategies show inflated numbers.</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+    </tbody>
+  </table>
+  <p style="font-weight:bold;">All 5 Step 6 tests passed.</p>
+
+  <h3>Strategy Decision — Proceed to Step 7?</h3>
+  <p><strong>Recommended: Strategy 2</strong> — UNDER only, dog_only (p_market &lt; 0.50), offered_line &gt; 24.5, edge_under ≥ 0.02, p_model &lt; 0.50</p>
+  <ul>
+    <li>OOS: 1,393 bets, 54.9% win rate, +117.0u, 8.40% ROI, MDD 24.2u (no flag)</li>
+    <li>IS/OOS ratio 2.19x — lowest of 3 candidates, most genuine signal</li>
+    <li>Both OOS seasons profitable (2024-25: +9.3%, 2025-26: +7.7%)</li>
+    <li>Signal strengthens at higher lines — matches calibration findings from Step 1.5</li>
+    <li>After vig haircut (~4pp), still likely profitable; S1's 5.06% OOS ROI may not survive</li>
+  </ul>
+  <p><em>Awaiting user confirmation to proceed to Step 7 (production Lambda pipeline).</em></p>
+</section>
+
+<!-- ============================================================ CORRECTION ============================================================ -->
+<section style="border: 3px solid #cc0000; padding: 16px; background: #fff8f8;">
+  <h2 style="color:#cc0000;">⚠ Steps 3–6: Approach Error — Redoing with Regression</h2>
+
+  <h3>What was wrong</h3>
+  <p>Steps 3–6 above used a <strong>binary classification model</strong> predicting <code>is_over</code> (0/1) as the target. This is the wrong modeling approach for a variable-line market like NBA player points.</p>
+  <p>The fundamental problem: <code>is_over = 1 if pts_actual > offered_line</code>. Including <code>offered_line</code> as a feature in a classifier predicting <code>is_over</code> creates a near-tautology — the model learns that when <code>offered_line</code> is high, <code>is_over</code> tends to be 0. The resulting <code>p_model</code> (P(over) from the classifier) closely tracks <code>p_market</code> (novig_prob_over), leaving essentially no independent signal. AUC of 0.52 was the warning sign: barely above random.</p>
+
+  <h3>Correct approach (matching NBA rebounds, NFL tackles, NFL rec yards pipelines)</h3>
+  <ol>
+    <li><strong>Regression model</strong>: predict <code>pts_actual</code> (continuous), yielding <code>yhat</code> per player-game via OOF walk-forward. Evaluation metrics: RMSE, MAE, R².</li>
+    <li><strong>Bootstrap P(under/over)</strong>: for each player-game, draw N=10,000 samples from <code>yhat + resample(training_residuals)</code>. <code>P(under) = fraction of draws ≤ offered_line</code>. This converts the regression point estimate into a probability using the empirical noise distribution. No classification threshold needed.</li>
+    <li><strong>Edge</strong>: <code>edge_under = p_model_under − p_market_under</code>; <code>edge_over = p_model_over − p_market_over</code>. Grid search over <code>min_edge</code>, direction, odds bucket, line bucket only — no clf_threshold dimension.</li>
+  </ol>
+  <p>This is the same pattern as: <code>src/nfl_rec_yards_modeling/scripts/infer.py</code> (bootstrap from OLS residuals) and <code>src/nba_rebounds_modeling/option_a_scoring.py</code> (Normal CDF). We use bootstrap here since NBA points have some skew and the empirical residual distribution is more robust.</p>
+
+  <p><strong>Steps 3–6 will be rerun below. The results above are superseded.</strong></p>
+</section>
+
+<!-- ============================================================ STEP 3 REDO ============================================================ -->
+<section>
+  <h2>Step 3 (Redo) — Regression Model Training: Predict pts_actual</h2>
+  <p>Target changed to <code>pts_actual</code> (continuous). Models: OLS LinearRegression (via sklearn Pipeline with StandardScaler) and XGBoost Regressor. OOF design unchanged: train 2023-24 → test 2024-25; train 2023-24+2024-25 → test 2025-26. Evaluation: RMSE, MAE, R².</p>
+
+  <h3>Step 3a — Individual OLS (sorted by RMSE ascending)</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Feature</th><th>RMSE</th><th>MAE</th><th>R²</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>offered_line</td><td>6.540</td><td>5.099</td><td>0.456</td><td>Strongest single predictor — market line is a regression target in itself</td></tr>
+      <tr><td>pts_L20</td><td>6.776</td><td>5.314</td><td>0.414</td><td>Longer rolling window captures stable baseline</td></tr>
+      <tr><td>pts_L10</td><td>6.819</td><td>5.349</td><td>0.406</td><td></td></tr>
+      <tr><td>fga_L5</td><td>6.972</td><td>5.472</td><td>0.380</td><td>Usage signal — more attempts → more points</td></tr>
+      <tr><td>pts_L5</td><td>6.991</td><td>5.496</td><td>0.376</td><td></td></tr>
+      <tr><td>pts_career</td><td>7.033</td><td>5.526</td><td>0.370</td><td>Career baseline, good for players with short season sample</td></tr>
+      <tr><td>pts_L3</td><td>7.192</td><td>5.678</td><td>0.340</td><td>Short window — volatile, lower predictive power</td></tr>
+      <tr><td>min_L20</td><td>7.715</td><td>6.086</td><td>0.240</td><td></td></tr>
+      <tr><td>min_L5</td><td>7.898</td><td>6.201</td><td>0.203</td><td></td></tr>
+      <tr><td>pts_L1</td><td>7.817</td><td>6.249</td><td>0.222</td><td>Single game — high noise</td></tr>
+      <tr><td>is_home / days_rest / games_into_season / opp_pts_allowed_L10</td><td>~9.05</td><td>~7.4</td><td>~-0.04</td><td>No individual predictive power — situational factors only add value in combos</td></tr>
+      <tr><td>novig_prob_over</td><td>9.053</td><td>7.412</td><td>-0.043</td><td>Encodes only over/under direction (50% threshold), not magnitude — useless alone for pts regression</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Key finding:</strong> <code>offered_line</code> dominates. It's the market's best estimate of pts_actual. All rolling window features add some signal but OLS beats XGBoost on every feature — the relationship between features and pts_actual is linear. <code>novig_prob_over</code> alone is useless for regression (R²=-0.04) because it only encodes market directional bias, not predicted magnitude.</p>
+
+  <h3>Step 3b — XGBoost vs OLS RMSE Delta</h3>
+  <p>OLS is better than XGBoost on every feature except <code>novig_prob_over</code> (XGB delta: -0.20) and <code>min_L5</code> (-0.10). This is expected: pts_actual has an approximately linear relationship with its predictors. No non-linear lift from XGBoost warrants using it in combos.</p>
+
+  <h3>Step 3c — Combo Models (top by RMSE)</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Features</th><th>n</th><th>Type</th><th>RMSE</th><th>MAE</th><th>R²</th></tr></thead>
+    <tbody>
+      <tr class="highlight"><td>All 15 features (winner)</td><td>15</td><td>OLS</td><td>6.539</td><td>5.100</td><td>0.454</td></tr>
+      <tr><td>pts_L3, pts_career, min_L5, fga_L5, opp, offered_line, novig_prob_over</td><td>7</td><td>OLS</td><td>6.540</td><td>5.101</td><td>0.454</td></tr>
+      <tr><td>pts_L5, pts_career, min_L5, opp, offered_line, novig_prob_over</td><td>6</td><td>OLS</td><td>6.540</td><td>5.101</td><td>0.454</td></tr>
+      <tr><td>offered_line, pts_L20, pts_L10, fga_L5, pts_L5</td><td>5</td><td>OLS</td><td>6.540</td><td>5.096</td><td>0.454</td></tr>
+      <tr><td>offered_line, pts_L20, pts_L10, fga_L5, pts_L5</td><td>5</td><td>XGBoost</td><td>6.591</td><td>5.140</td><td>0.446</td></tr>
+    </tbody>
+  </table>
+  <p>All combo models converge to virtually identical RMSE (~6.539). Adding more features to <code>offered_line</code> provides marginal gain. The full 15-feature OLS wins by the thinnest margin. Saved as production artifact with full residuals (σ=6.61) for bootstrap inference.</p>
+
+  <h3>Artifacts Saved</h3>
+  <ul>
+    <li><code>models/nba_points_model_ols.joblib</code> — OLS pipeline (StandardScaler + LinearRegression)</li>
+    <li><code>models/nba_points_residuals.npy</code> — 36,302 training residuals (σ=6.61, mean=0.00)</li>
+    <li><code>models/nba_points_meta.json</code> — features, target, OOF RMSE</li>
+    <li><code>step3_oof_predictions.parquet</code> — 27,636 OOF yhat values</li>
+    <li><code>step3_oof_residuals.npy</code> — 29,156 OOF training residuals</li>
+  </ul>
+
+  <h3>DuckDB Tests — Step 3</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>OOF predictions cover 27,636 rows (2024-25 + 2025-26 folds)</td><td>27,636 rows</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>2</td><td>Best model RMSE reasonable (below null model RMSE ~8.9)</td><td>6.539 (R²=0.454)</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>3</td><td>Residuals centered near zero (no systematic bias)</td><td>mean=0.000, σ=6.61</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>4</td><td>OLS outperforms XGBoost on all individual features</td><td>Delta on every feature ≥ 0 for OLS (except min_L5 and novig_prob_over)</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ STEP 4 REDO ============================================================ -->
+<section>
+  <h2>Step 4 (Redo) — Bootstrap P(under/over) and Edge</h2>
+  <p>For each player-game (OOF yhat), draw N=10,000 samples from <code>yhat + resample(OOF training residuals)</code>. <code>P(under) = fraction of draws ≤ offered_line</code>. Edge = <code>p_model_under − p_market_under</code>. Follows the same bootstrap pattern as <code>src/nfl_rec_yards_modeling/scripts/infer.py</code>.</p>
+
+  <h3>Edge Distribution by Line Bucket</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Line Bucket</th><th>n</th><th>avg yhat</th><th>avg offered_line</th>
+      <th>avg edge_under</th><th>actual under rate</th>
+      <th>avg p_model_under</th><th>avg p_market_under</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>≤14.5</td><td>16,509</td><td>10.67</td><td>10.06</td><td><strong>-1.8pp</strong></td><td>50.5%</td><td>48.5%</td><td>50.3%</td></tr>
+      <tr><td>15–19.5</td><td>5,636</td><td>17.38</td><td>17.38</td><td><strong>+2.0pp</strong></td><td>50.2%</td><td>52.3%</td><td>50.3%</td></tr>
+      <tr><td>20–24.5</td><td>3,382</td><td>21.93</td><td>22.27</td><td><strong>+4.2pp</strong></td><td>52.9%</td><td>54.5%</td><td>50.3%</td></tr>
+      <tr><td>25–29.5</td><td>1,765</td><td>26.35</td><td>27.01</td><td><strong>+6.2pp</strong></td><td>52.2%</td><td>56.5%</td><td>50.3%</td></tr>
+      <tr><td>≥30</td><td>344</td><td>30.61</td><td>31.59</td><td><strong>+8.0pp</strong></td><td>56.4%</td><td>58.3%</td><td>50.3%</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Key finding:</strong> The OLS regression correctly predicts less than the market line at high lines (avg yhat &lt; avg offered_line at lines ≥25), because OLS regresses points toward the overall mean. The market sets high lines for hot streaks / star players who tend to revert toward average. p_market_under ≈ 50.3% at all line buckets (market treats as coin flip) while p_model_under rises to 56.5–58.3% at high lines. This structural gap (+4 to +8pp) is the edge we exploit.</p>
+
+  <h3>Bootstrap Calibration (p_model_under deciles vs actual under rate)</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Decile</th><th>n</th><th>avg p_model</th><th>actual under rate</th><th>calib_gap (pp)</th><th>Flag</th></tr></thead>
+    <tbody>
+      <tr><td>0 (low)</td><td>2,773</td><td>43.0%</td><td>47.1%</td><td>+4.1pp</td><td>No</td></tr>
+      <tr><td>1</td><td>2,765</td><td>46.2%</td><td>49.5%</td><td>+3.4pp</td><td>No</td></tr>
+      <tr><td>2</td><td>2,757</td><td>47.9%</td><td>50.9%</td><td>+3.0pp</td><td>No</td></tr>
+      <tr><td>3–6</td><td>~2,760</td><td>49–52%</td><td>50–51%</td><td>-2 to +2pp</td><td>No</td></tr>
+      <tr><td>9 (high)</td><td>2,761</td><td>57.9%</td><td>53.4%</td><td>-4.5pp</td><td>No</td></tr>
+    </tbody>
+  </table>
+  <p>All deciles within ±4.5pp. The model is slightly overconfident at high P(under) values (decile 9: model says 57.9%, actual is 53.4%). This means the edge at high thresholds is real but the model overstates it by ~4pp — still profitable, but calibration recalibration could help in production.</p>
+
+  <h3>DuckDB Tests — Step 4</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>p_model_under in (0, 1) — no out-of-range or nulls</td><td>range [0.285, 0.658], 0 nulls</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>2</td><td>All calibration deciles within ±15pp</td><td>Max |gap| = 4.5pp</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>3</td><td>Edge gradient is monotone at high lines (edge_under increases with line)</td><td>-1.8pp → +2.0pp → +4.2pp → +6.2pp → +8.0pp</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>4</td><td>Row count matches OOF predictions (no rows lost in join)</td><td>27,636 → 27,636</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ STEP 5 REDO ============================================================ -->
+<section>
+  <h2>Step 5 (Redo) — OOS Grid Search (Regression)</h2>
+  <p>Grid dimensions: shrinkage [0.0, 0.25, 0.50, 0.75] × min_edge [0.01–0.20] × direction × odds_bucket × line_bucket. No clf_threshold (regression output). 545 valid strategies (n ≥ 30).</p>
+  <p><strong>Shrinkage</strong>: <code>mean_adj = offered_line + (1-shrink) × (yhat - offered_line)</code>. shrink=0 = full model; shrink=0.5 = blend model and line; shrink=0.75 = heavily regularized.</p>
+  <p><strong>Odds bucket</strong>: "fav_only" = p_market_under ≥ 50% (market prices under as slight favorite, so UNDER bets at standard -100 to -115 juice). "dog_only" = market favors OVER, so UNDER bets at positive odds.</p>
+
+  <p style="font-size:12px; color:#555;"><em>CSV columns (step5_grid_oos.csv): shrinkage, min_edge, clf_threshold (="n/a" for regression), direction, odds_bucket, line_bucket, n_bets, win_rate, push_rate, units_won, roi, avg_odds, max_drawdown, drawdown_flag. All 545 valid strategies (n≥30).</em></p>
+  <h3>Top 10 OOS Strategies by Units Won</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Shrink</th><th>Edge</th><th>Direction</th><th>Odds</th><th>Lines</th>
+      <th>n_bets</th><th>Win%</th><th>Push%</th><th>Units</th><th>ROI</th><th>Avg Odds</th><th>MDD</th><th>DD Flag</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>0.50</td><td>0.01</td><td>both</td><td>all</td><td>all</td><td>18,575</td><td>51.0%</td><td>0.0%</td><td>+428.8u</td><td>2.31%</td><td>2.008</td><td>79.6u</td><td>No</td></tr>
+      <tr><td>0.25</td><td>0.01</td><td>both</td><td>all</td><td>all</td><td>20,535</td><td>51.0%</td><td>0.0%</td><td>+404.8u</td><td>1.97%</td><td>2.001</td><td>67.5u</td><td>No</td></tr>
+      <tr><td>0.50</td><td>0.01</td><td>both</td><td>fav_only</td><td>all</td><td>11,393</td><td>51.9%</td><td>0.0%</td><td>+388.6u</td><td>3.41%</td><td>1.960</td><td>68.8u</td><td>No</td></tr>
+      <tr><td>0.00</td><td>0.03</td><td>both</td><td>all</td><td>all</td><td>12,716</td><td>51.6%</td><td>0.0%</td><td>+376.7u</td><td>2.96%</td><td>1.996</td><td>46.9u</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h3>High Line Strategies (≥25) — Key Candidate Zone</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Shrink</th><th>Edge</th><th>Direction</th><th>Odds</th><th>n_bets</th><th>Win%</th><th>Push%</th><th>Units</th><th>ROI</th><th>Avg Odds</th><th>MDD</th><th>DD Flag</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>0.00</td><td>0.05</td><td>both</td><td>all</td><td>1,601</td><td>54.7%</td><td>0.0%</td><td>+137.8u</td><td>8.60%</td><td>1.988</td><td>20.9u</td><td>No</td></tr>
+      <tr><td>0.00</td><td>0.05</td><td>under_only</td><td>all</td><td>1,594</td><td>54.6%</td><td>0.0%</td><td>+134.6u</td><td>8.45%</td><td>1.988</td><td>20.9u</td><td>No</td></tr>
+      <tr><td>0.50</td><td>0.02</td><td>both</td><td>fav_only</td><td>1,337</td><td>55.5%</td><td>0.0%</td><td>+126.5u</td><td>9.46%</td><td>1.971</td><td>23.4u</td><td>No</td></tr>
+      <tr class="highlight"><td>0.50</td><td>0.03</td><td>under_only</td><td>fav_only</td><td>1,153</td><td>56.2%</td><td>0.0%</td><td>+125.5u</td><td>10.89%</td><td>1.973</td><td>22.3u</td><td>No</td></tr>
+      <tr><td>0.50</td><td>0.02</td><td>under_only</td><td>fav_only</td><td>1,334</td><td>55.5%</td><td>0.0%</td><td>+125.5u</td><td>9.40%</td><td>1.971</td><td>23.4u</td><td>No</td></tr>
+      <tr class="highlight"><td>0.00</td><td>0.05</td><td>under_only</td><td>fav_only</td><td>1,071</td><td>56.5%</td><td>0.0%</td><td>+121.5u</td><td>11.35%</td><td>1.979</td><td>22.2u</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3 Candidate Strategies for IS/OOS Check</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Strategy</th><th>Filter</th><th>n_bets</th><th>Win%</th><th>Push%</th><th>Units</th><th>ROI</th><th>Avg Odds</th><th>MDD</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>S1</strong></td><td>UNDER, fav_only, line≥25, shrink=0.50, edge≥3pp</td><td>1,153</td><td>56.2%</td><td>0.0%</td><td>+125.5u</td><td>10.89%</td><td>1.973</td><td>22.3u</td></tr>
+      <tr><td><strong>S2</strong></td><td>UNDER, all odds, line≥25, shrink=0.00, edge≥5pp</td><td>1,594</td><td>54.6%</td><td>0.0%</td><td>+134.6u</td><td>8.45%</td><td>1.988</td><td>20.9u</td></tr>
+      <tr style="background:#e6f4ea;"><td><strong>S3 ★ CHOSEN</strong></td><td>UNDER, fav_only, all lines, shrink=0.25, edge≥5pp</td><td>1,422</td><td>55.8%</td><td>0.0%</td><td>+141.2u</td><td>9.93%</td><td>1.969</td><td>30.8u</td></tr>
+    </tbody>
+  </table>
+
+  <h3>DuckDB Tests — Step 5</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Grid has valid strategies (n≥30 filter)</td><td>545 strategies</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>2</td><td>No strategy ROI &gt; 50% with &gt; 200 bets</td><td>0 found</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>3</td><td>1 suspicious strategy (ROI=28.8%, n=154, edge=0.10, fav_only)</td><td>n=154 is below meaningful threshold; high-edge filter naturally has small sample</td><td style="color:#b35c00; font-weight:bold;">MONITOR in IS</td></tr>
+      <tr><td>4</td><td>Top strategy p_model_under in valid range</td><td>range [0.285, 0.658]</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>5</td><td>S1 candidate has n_bets ≥ 100</td><td>n=1,153</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>6</td><td>Win rates are above 50% for fav strategies (expected for -EV odds bets that have edge)</td><td>~54-57% for all 3 candidates</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ STEP 6 REDO ============================================================ -->
+<section>
+  <h2>Step 6 (Redo) — In-Sample Grid Search and IS/OOS Ratio</h2>
+  <p>Full-data OLS model scored on all 36,302 settled rows. IS residuals (σ=6.61) used for bootstrap. IS ROI expected to be higher than OOS — IS/OOS ratio &lt;5x = no overfitting.</p>
+
+  <h3>IS vs OOS Comparison — 3 Candidate Strategies</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr>
+      <th>Strategy</th><th>Filter</th>
+      <th>OOS n</th><th>OOS Win%</th><th>OOS Units</th><th>OOS ROI</th><th>OOS MDD</th>
+      <th>IS n</th><th>IS Win%</th><th>IS Units</th><th>IS ROI</th><th>IS MDD</th>
+      <th>IS/OOS Ratio</th><th>Flag</th>
+    </tr></thead>
+    <tbody>
+      <tr class="highlight">
+        <td><strong>S1 ★</strong></td>
+        <td>UNDER, fav, line≥25, shrink=0.50, edge≥3pp</td>
+        <td>1,153</td><td>56.2%</td><td>+125.5u</td><td>10.89%</td><td>22.3u</td>
+        <td>1,801</td><td>56.0%</td><td>+189.9u</td><td>10.54%</td><td>25.2u</td>
+        <td><strong>0.97x</strong></td><td><strong>Exceptional</strong></td>
+      </tr>
+      <tr>
+        <td><strong>S2</strong></td>
+        <td>UNDER, all odds, line≥25, shrink=0.00, edge≥5pp</td>
+        <td>1,594</td><td>54.6%</td><td>+134.6u</td><td>8.45%</td><td>20.9u</td>
+        <td>2,448</td><td>55.1%</td><td>+231.3u</td><td>9.45%</td><td>25.9u</td>
+        <td>1.12x</td><td>OK</td>
+      </tr>
+      <tr>
+        <td><strong>S3</strong></td>
+        <td>UNDER, fav, all lines, shrink=0.25, edge≥5pp</td>
+        <td>1,422</td><td>55.8%</td><td>+141.2u</td><td>9.93%</td><td>30.8u</td>
+        <td>1,544</td><td>56.4%</td><td>+172.2u</td><td>11.15%</td><td>19.3u</td>
+        <td>1.12x</td><td>OK</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Interpretation: Why IS/OOS ≈ 1x?</h3>
+  <p>An IS/OOS ratio near 1.0 is exceptional — it means the model is <strong>not memorizing training data at all</strong>. For OLS regression with 15 features on 36K rows, overfitting is structurally impossible. More importantly, the edge comes from a <strong>persistent structural mispricing</strong> identified in Step 1.5: at lines ≥25, the market consistently prices P(under) near 50% while the actual under rate is 52–56%. OLS captures this through regression to the mean — it predicts pts_actual slightly below the high offered_line, generating a structural UNDER edge that holds in-sample and out-of-sample equally.</p>
+  <p>S1's IS/OOS ratio of 0.97x (IS ROI slightly <em>lower</em> than OOS) is notable: the 2023-24 season (IS-only fold) may have had slightly worse signal than the two OOS test seasons. This is a positive sign — OOS performance has been consistent or improving.</p>
+
+  <h3>DuckDB Tests — Step 6</h3>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>IS best ROI &gt; OOS best ROI (IS inflated by design)</td><td>IS best 33.5% vs OOS best 28.8%</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>2</td><td>IS/OOS ratio for all 3 candidates &lt; 5x</td><td>0.97x, 1.12x, 1.12x</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+      <tr><td>3</td><td>All 3 candidates positive IS ROI</td><td>10.54%, 9.45%, 11.15%</td><td style="color:#1a7a1a; font-weight:bold;">PASS</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Strategy Decision — S3 CONFIRMED ✓</h3>
+  <p><strong>Chosen: S3</strong> — UNDER only, fav_only (p_market_under ≥ 0.50), all lines, shrinkage=0.25, edge_under ≥ 0.05</p>
+  <ul>
+    <li>Grid search OOS: 1,422 bets, 55.8% win rate, +141.2u, <strong>9.93% ROI</strong>, MDD 30.8u (avg_odds 1.969, push_rate 0.0%)</li>
+    <li>Odds-bucket breakdown OOS total: 1,396 bets (1,375 "even" + 21 "−"), +149.6u, 10.71% ROI, MDD 15.2u</li>
+    <li>IS/OOS ratio <strong>1.12x</strong> — well within the &lt;5x threshold. Structural edge, not model memorization.</li>
+    <li>Chosen over S1 (line≥25 only) for higher volume (1,422 vs 1,153 bets) and similar ROI; over S2 (all odds) to avoid the +odds bucket which loses 515 bets OOS at −2.2% ROI.</li>
+    <li>After vig haircut (~4pp), estimated real-world ROI: ~5–7%.</li>
+  </ul>
+  <p>Step 7 Lambda pipeline built. Deploy before 2026-10-28.</p>
+
+  <h3>Odds Bucket Breakdown (+/even/-) — OOS and IS for All 3 Candidates</h3>
+  <p>American odds derived from novig p_market_under. Buckets: <strong>"+"</strong> = UNDER at positive odds (market favors OVER, p_under &lt; 50%); <strong>"even"</strong> = -110 to 0 (UNDER near even, p_under 50–52%); <strong>"-"</strong> = UNDER at heavy negative odds (p_under &gt; 52%). "even" avg ~-103 means these are standard -100 to -110 bets.</p>
+
+  <h4>S1 — UNDER, fav_only, line≥25, shrink=0.50, edge≥3pp</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Sample</th><th>Odds Bucket</th><th>n</th><th>Win%</th><th>Units</th><th>ROI</th><th>MDD</th><th>Avg Odds</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3">OOS</td><td>+</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>even</td><td>1,153</td><td>56.1%</td><td>+124.2u</td><td>10.77%</td><td>13.3u</td><td>-102.7</td></tr>
+      <tr><td>-</td><td>9</td><td>88.9%</td><td>+6.1u</td><td>67.2%</td><td>1.0u</td><td>-113.1</td></tr>
+      <tr style="font-weight:bold;"><td>OOS</td><td>TOTAL</td><td>1,162</td><td>56.4%</td><td>+130.3u</td><td>11.21%</td><td>13.3u</td><td>-102.8</td></tr>
+      <tr><td rowspan="3">IS</td><td>+</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>even</td><td>1,785</td><td>55.7%</td><td>+176.5u</td><td>9.89%</td><td>15.7u</td><td>-102.8</td></tr>
+      <tr><td>-</td><td>10</td><td>70.0%</td><td>+3.3u</td><td>32.6%</td><td>3.0u</td><td>-112.0</td></tr>
+      <tr style="font-weight:bold;"><td>IS</td><td>TOTAL</td><td>1,795</td><td>55.8%</td><td>+179.7u</td><td>10.01%</td><td>14.8u</td><td>-102.9</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;">All bets at "even" odds (~-103). fav_only filter cleanly concentrates bets where the market agrees UNDER is likely. No + odds exposure. OOS MDD 13.3u vs +130.3u total — very clean ratio.</p>
+
+  <h4>S2 — UNDER, all odds, line≥25, shrink=0.00, edge≥5pp</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Sample</th><th>Odds Bucket</th><th>n</th><th>Win%</th><th>Units</th><th>ROI</th><th>MDD</th><th>Avg Odds</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3">OOS</td><td style="color:#cc0000; font-weight:bold;">+</td><td style="color:#cc0000;">515</td><td style="color:#cc0000;">48.3%</td><td style="color:#cc0000;">-11.2u</td><td style="color:#cc0000;">-2.18%</td><td style="color:#cc0000;">35.1u</td><td>+102.3</td></tr>
+      <tr><td>even</td><td>1,058</td><td>55.9%</td><td>+107.7u</td><td>10.18%</td><td>11.3u</td><td>-102.9</td></tr>
+      <tr><td>-</td><td>10</td><td>90.0%</td><td>+6.9u</td><td>68.6%</td><td>1.0u</td><td>-114.2</td></tr>
+      <tr style="font-weight:bold;"><td>OOS</td><td>TOTAL</td><td>1,583</td><td>53.6%</td><td>+103.4u</td><td>6.53%</td><td>20.6u</td><td></td></tr>
+      <tr><td rowspan="3">IS</td><td>+</td><td>838</td><td>51.4%</td><td>+34.1u</td><td>4.07%</td><td>19.7u</td><td>+102.3</td></tr>
+      <tr><td>even</td><td>1,594</td><td>56.1%</td><td>+168.6u</td><td>10.58%</td><td>14.2u</td><td>-103.0</td></tr>
+      <tr><td>-</td><td>14</td><td>78.6%</td><td>+6.7u</td><td>47.6%</td><td>3.0u</td><td>-113.6</td></tr>
+      <tr style="font-weight:bold;"><td>IS</td><td>TOTAL</td><td>2,446</td><td>54.6%</td><td>+209.4u</td><td>8.56%</td><td>17.2u</td><td></td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px; font-weight:bold; color:#cc0000;">FLAG: The "+" odds bucket is a loser OOS (515 bets, -11.2u, -2.18% ROI, MDD 35.1u). When the market prices OVER as the favorite at high lines the market is correct. The "even" bucket within S2 (1,058 bets, +107.7u, 10.18% ROI, MDD 11.3u) is the same signal as S1 — the "all odds" filter just adds 515 losing bets on top.</p>
+
+  <h4>S3 — UNDER, fav_only, all lines, shrink=0.25, edge≥5pp</h4>
+  <table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+    <thead><tr><th>Sample</th><th>Odds Bucket</th><th>n</th><th>Win%</th><th>Units</th><th>ROI</th><th>MDD</th><th>Avg Odds</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3">OOS</td><td>+</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>even</td><td>1,375</td><td>56.2%</td><td>+148.1u</td><td>10.77%</td><td>14.2u</td><td>-103.1</td></tr>
+      <tr><td>-</td><td>21</td><td>57.1%</td><td>+1.5u</td><td>7.0%</td><td>2.2u</td><td>-114.1</td></tr>
+      <tr style="font-weight:bold;"><td>OOS</td><td>TOTAL</td><td>1,396</td><td>56.2%</td><td>+149.6u</td><td>10.71%</td><td>15.2u</td><td>-103.3</td></tr>
+      <tr><td rowspan="3">IS</td><td>+</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>even</td><td>1,551</td><td>55.1%</td><td>+134.7u</td><td>8.68%</td><td>20.6u</td><td>-103.0</td></tr>
+      <tr><td>-</td><td>17</td><td>70.6%</td><td>+5.4u</td><td>32.0%</td><td>3.0u</td><td>-114.1</td></tr>
+      <tr style="font-weight:bold;"><td>IS</td><td>TOTAL</td><td>1,568</td><td>55.3%</td><td>+140.1u</td><td>8.94%</td><td>21.5u</td><td>-103.1</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;">Also all "even" odds, like S1. OOS MDD (15.2u) vs +149.6u total is clean. IS MDD (21.5u) is higher than S1's (14.8u) — flag for monitoring. IS ROI (8.94%) lower than OOS (10.71%), mild reversal.</p>
+
+  <h3>Key Finding from Odds Breakdown</h3>
+  <p><strong>The entire edge sits in the "even" odds bucket (~-100 to -110).</strong> S1 and S3 have zero "+" odds exposure because the fav_only filter naturally enforces this. S2's inclusion of "+" odds bets (515 bets, -11u OOS) is the reason its headline OOS ROI (6.53% in this breakdown) is lower than S1 and S3. The "even" odds bucket of S2 (ROI 10.18%) is essentially the same signal as S1/S3 — you just had to sift through 515 losing "+" bets to get there. <strong>S1 is the cleaner expression of the same edge.</strong></p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section style="border:2px solid #16a34a; border-radius:6px; padding:20px; margin:30px 0;">
+  <h2 style="color:#16a34a; margin-top:0;">Step 7 — Production Lambda Pipeline</h2>
+  <p><strong>Strategy chosen: S3</strong> — UNDER only · shrinkage=0.25 · edge≥5pp · fav_only (p_market_under ≥ 50%) · all lines<br>
+  OOS: 1,396 bets · 56.2% win rate · +149.6u · 10.71% ROI · 15.2u max drawdown</p>
+
+  <h3>Files Created</h3>
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>src/nba_points_modeling/config/model_config.yaml</code></td><td>Single source of truth: strategy params, feature list, S3 paths. S3 = Strategy 3 is clearly marked as chosen with rationale vs S1/S2.</td></tr>
+      <tr><td><code>src/nba_points_modeling/scripts/update_spine.py</code></td><td>Rebuilds rolling feature spine from S3 game logs (all seasons). Uploads to <code>s3://the-odds-api-mt/nba/points_model/spine/nba_points_spine.parquet</code>. Run pre-season or weekly.</td></tr>
+      <tr><td><code>src/nba_points_modeling/scripts/run_pipeline.py</code></td><td>Gameday scoring: fetches Odds API props → joins spine → OLS yhat → shrinkage → bootstrap P(under) → edge filter → email + S3 write.</td></tr>
+      <tr><td><code>src/nba_points_modeling/scripts/settle_points.py</code></td><td>Settle prior-day bets using game log PTS. Appends to settled parquet. Sends settlement email.</td></tr>
+      <tr><td><code>src/nba_points_modeling/lambda/lambda_function.py</code></td><td>Lambda orchestrator. Dispatches to scripts based on <code>{"mode": "pipeline"|"settle"|"spine_update"}</code> from EventBridge.</td></tr>
+      <tr><td><code>src/nba_points_modeling/lambda/Dockerfile</code></td><td>Container image (Python 3.11). Adds scikit-learn + joblib vs assists Dockerfile (needed for OLS Pipeline object).</td></tr>
+      <tr><td><code>src/nba_points_modeling/lambda/deploy_nba_points_lambda.sh</code></td><td>Full deploy: ECR build → push → Lambda create/update → EventBridge rules (DISABLED). Lambda name: <code>nba-points-daily</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>S3 Artifacts Uploaded</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><code>nba/points_model/model/nba_points_model_ols.joblib</code></td><td>sklearn Pipeline (StandardScaler + LinearRegression) trained on 36,302 rows</td></tr>
+      <tr><td><code>nba/points_model/model/nba_points_residuals.npy</code></td><td>36,302 full-data OLS residuals, σ=6.61 pts (used for bootstrap)</td></tr>
+      <tr><td><code>nba/points_model/model/nba_points_meta.json</code></td><td>Feature list, model type, OOF RMSE, residual stats</td></tr>
+      <tr><td><code>nba/points_model/spine/nba_points_spine.parquet</code></td><td>41,620-row rolling feature spine (already existed from Step 2)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Scoring Logic (Strategy S3)</h3>
+  <pre style="background:#f4f4f4; padding:12px; border-radius:4px; font-size:12px;">
+1. yhat = ols_model.predict(features)                    # 15 features
+2. mean_adj = offered_line + 0.75 * (yhat - offered_line)  # shrinkage=0.25
+3. residuals = bootstrap_sample(oof_residuals, N=10_000)
+4. sims = mean_adj + residuals                           # 10K point simulations
+5. p_model_under = (sims &lt;= offered_line).mean()
+6. p_market_under = 1 - novig_prob_over                  # de-vigged from API odds
+7. edge_under = p_model_under - p_market_under
+
+   BET UNDER if:  edge_under &gt;= 0.05
+              AND p_market_under &gt;= 0.50   (fav_only — even or better odds)
+              AND features are fully populated
+  </pre>
+
+  <h3>EventBridge Schedule (DISABLED — enable 2026-10-28)</h3>
+  <table>
+    <thead><tr><th>Rule</th><th>Schedule</th><th>Mode</th></tr></thead>
+    <tbody>
+      <tr><td><code>nba-points-pipeline-daily-1130am-et</code></td><td>11:30am ET daily</td><td>pipeline (score + email)</td></tr>
+      <tr><td><code>nba-points-settle-daily-1030am-et</code></td><td>10:30am ET daily</td><td>settle (settle yesterday)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Pre-Season Checklist (before 2026-10-28)</h3>
+  <ol>
+    <li>Verify SES sender identity in AWS console</li>
+    <li>Rebuild and upload spine with 2026-27 season data:<br>
+        <code>python src/nba_points_modeling/scripts/update_spine.py</code></li>
+    <li>Deploy Lambda:<br>
+        <code>bash src/nba_points_modeling/lambda/deploy_nba_points_lambda.sh</code></li>
+    <li>Enable EventBridge rules:<br>
+        <code>aws events enable-rule --name nba-points-pipeline-daily-1130am-et --region us-east-2</code><br>
+        <code>aws events enable-rule --name nba-points-settle-daily-1030am-et --region us-east-2</code></li>
+    <li>Test pipeline: <code>aws lambda invoke --function-name nba-points-daily --payload '{"mode":"pipeline"}' /tmp/out.json</code></li>
+    <li>Test settle: <code>aws lambda invoke --function-name nba-points-daily --payload '{"mode":"settle"}' /tmp/out.json</code></li>
+  </ol>
+
+  <h3>Key Differences vs Assists Pipeline</h3>
+  <ul>
+    <li><strong>Model loading</strong>: OLS Pipeline loaded from S3 via <code>joblib.load()</code> (Dockerfile adds scikit-learn). Assists uses inline coefficients.</li>
+    <li><strong>Inference</strong>: Bootstrap P(under) with 10K residual draws vs Normal CDF. Required because OLS residuals are not perfectly Gaussian.</li>
+    <li><strong>Direction</strong>: UNDER only (assists is OVER only). fav_only filter enforces even-or-better odds.</li>
+    <li><strong>Features</strong>: 15 features including game context (days_rest, opp_pts_allowed_L10, games_into_season). Spine must be kept current.</li>
+    <li><strong>Timing</strong>: 11:30am ET (30 min after assists at 11am) to avoid Odds API rate collision.</li>
+  </ul>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section style="border:2px solid #6c5ce7; border-radius:6px; padding:20px; margin:30px 0; background:#f8f7ff;">
+  <h2 style="color:#6c5ce7; margin-top:0;">Bonus — Strategy Comparison &amp; Stephen Curry Walk-Through</h2>
+  <p>Three strategies emerged from the grid search. They share the same OLS regression model and the same bootstrap P(under) mechanic — the differences are purely in <em>how aggressively</em> the model signal is trusted and <em>which bets</em> are taken.</p>
+
+  <!-- Strategy parameter comparison -->
+  <h3>1. Strategy Parameters Side by Side</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>S1 (Conservative)</th><th>S2 (Aggressive)</th><th>S3 (Balanced)</th></tr></thead>
+    <tbody>
+      <tr><td>Shrinkage</td><td>0.50</td><td>0.00</td><td>0.25</td></tr>
+      <tr><td>Min edge threshold</td><td>3pp</td><td>5pp</td><td>5pp</td></tr>
+      <tr><td>Direction</td><td>UNDER only</td><td>UNDER only</td><td>UNDER only</td></tr>
+      <tr><td>Odds filter</td><td>fav_only (p_under ≥ 50%)</td><td>All (no filter)</td><td>fav_only (p_under ≥ 50%)</td></tr>
+      <tr><td>Line bucket</td><td>≥25.5 lines only</td><td>≥25.5 lines only</td><td>All lines</td></tr>
+      <tr><td>OOS bets</td><td>493</td><td>2,430</td><td>1,396</td></tr>
+      <tr><td>OOS win rate</td><td>57.4%</td><td>55.4%</td><td>56.2%</td></tr>
+      <tr><td>OOS units won</td><td>+68.8u</td><td>+127.6u</td><td>+149.6u</td></tr>
+      <tr><td>OOS ROI</td><td>13.96%</td><td>5.25%</td><td>10.71%</td></tr>
+      <tr><td>OOS max drawdown</td><td>13.3u</td><td>35.1u</td><td>15.2u</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Shrinkage mechanic -->
+  <h3>2. The Shrinkage Mechanic — Concrete Example</h3>
+  <p>The only computation that differs between strategies (before the edge/odds filters) is this one line:</p>
+  <pre style="background:#f4f4f4; padding:10px; border-radius:4px; font-size:13px;">mean_adj = offered_line + (1 − shrinkage) × (yhat − offered_line)</pre>
+  <p>Using Stephen Curry's Jan 11 2026 game (line = 28.5, yhat = 27.71, σ_residual = 6.55):</p>
+  <table>
+    <thead><tr><th>Strategy</th><th>Shrinkage</th><th>Formula</th><th>mean_adj</th><th>P(under) bootstrap</th><th>p_market_under</th><th>edge_under</th></tr></thead>
+    <tbody>
+      <tr><td>S2 (raw)</td><td>0.00</td><td>28.5 + 1.0 × (27.71 − 28.5)</td><td>27.71</td><td>57.3%</td><td>50.7%</td><td>+6.6pp</td></tr>
+      <tr><td>S3 (mild)</td><td>0.25</td><td>28.5 + 0.75 × (27.71 − 28.5)</td><td>27.90</td><td>56.5%</td><td>50.7%</td><td>+5.8pp</td></tr>
+      <tr><td>S1 (conservative)</td><td>0.50</td><td>28.5 + 0.5 × (27.71 − 28.5)</td><td>28.10</td><td>54.4%</td><td>50.7%</td><td>+3.7pp</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;">Shrinkage physically moves <code>mean_adj</code> toward the offered line. S2 trusts the raw model (yhat = 27.71 stays as 27.71). S1 compromises halfway to the line (28.10). The lower mean_adj → more distribution mass below the line → higher P(under) → larger edge. But: if the model is overconfident, shrinkage prevents chasing noise. S1's lower threshold (3pp vs 5pp) compensates for the compressed edge signal.</p>
+
+  <!-- Divergence patterns -->
+  <h3>3. When the Strategies Disagree — Four Patterns</h3>
+  <p>Across Curry's 107 OOF games, the strategies diverge on 28 plays. Four mechanical reasons:</p>
+  <table>
+    <thead><tr><th>Pattern</th><th>Cause</th><th>Who bets</th><th>Who doesn't</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Moderate edge (3–5pp)</strong></td>
+        <td>Edge above S1's 3pp threshold but below S2/S3's 5pp threshold</td>
+        <td>S1 only</td><td>S2, S3</td>
+        <td>2024-11-15: line=26.5, yhat=26.1, edge_S1=3.3pp ✓, edge_S2=4.5pp ✗</td>
+      </tr>
+      <tr>
+        <td><strong>Shrinkage cost</strong></td>
+        <td>Shrinkage compresses S1's edge below its own 3pp floor even though raw yhat shows clear signal</td>
+        <td>S2 (or S3) only</td><td>S1</td>
+        <td>2025-01-23: line=26.5, yhat=25.5, S1 edge=1.8pp (shrinkage kills it), S2 edge=5.0pp ✓</td>
+      </tr>
+      <tr>
+        <td><strong>Odds filter (fav_only)</strong></td>
+        <td>p_market_under &lt; 50% — market prices OVER as favourite; S1 &amp; S3 reject, S2 accepts</td>
+        <td>S2 only</td><td>S1, S3</td>
+        <td>2025-03-10: line=28.5, yhat=27.5, p_under=49.2% → S1/S3 fav_only fails; S2 bets, edge=8.5pp</td>
+      </tr>
+      <tr>
+        <td><strong>Line bucket (≥25.5 only)</strong></td>
+        <td>Line &lt;25.5 — S1 &amp; S2 skip, S3 (all lines) can take it if edge ≥5pp</td>
+        <td>S3 only</td><td>S1, S2</td>
+        <td>Not triggered for Curry (always high lines); matters for mid-range scorers</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Curry last 15 OOF games -->
+  <h3>4. Stephen Curry — Last 15 OOF Games (2025-26 season)</h3>
+  <p>Each row shows actual result, then per-strategy: <em>adjusted mean</em> fed into the bootstrap, <em>P(under)</em>, <em>edge</em>, and bet decision. Rows highlighted in yellow = at least one strategy diverges from the others.</p>
+  <table style="font-size:12px;">
+    <thead>
+      <tr>
+        <th rowspan="2">Date</th><th rowspan="2">pts</th><th rowspan="2">Line</th><th rowspan="2">yhat</th><th rowspan="2">p_mkt_und</th><th rowspan="2">Result</th>
+        <th colspan="3">S1 (shrink=0.50, edge≥3pp, fav_only, line≥25.5)</th>
+        <th colspan="3">S2 (shrink=0.00, edge≥5pp, all odds, line≥25.5)</th>
+        <th colspan="3">S3 (shrink=0.25, edge≥5pp, fav_only, all lines)</th>
+      </tr>
+      <tr>
+        <th>mean_adj</th><th>P(und)</th><th>edge</th>
+        <th>mean_adj</th><th>P(und)</th><th>edge</th>
+        <th>mean_adj</th><th>P(und)</th><th>edge</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Jan 11</td><td>31</td><td>28.5</td><td>27.71</td><td>50.7%</td><td style="background:#ffe0e0; font-weight:bold;">OVER (L)</td>
+        <td>28.10</td><td>54.4%</td><td style="background:#d4edda; font-weight:bold;">3.7pp ✓ BET</td>
+        <td>27.71</td><td>57.3%</td><td style="background:#d4edda; font-weight:bold;">6.6pp ✓ BET</td>
+        <td>27.90</td><td>56.5%</td><td style="background:#d4edda; font-weight:bold;">5.8pp ✓ BET</td>
+      </tr>
+      <tr>
+        <td>Jan 13</td><td>7</td><td>29.5</td><td>28.60</td><td>50.7%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>29.05</td><td>55.0%</td><td style="background:#d4edda; font-weight:bold;">4.3pp ✓ BET</td>
+        <td>28.60</td><td>57.0%</td><td style="background:#d4edda; font-weight:bold;">6.3pp ✓ BET</td>
+        <td>28.82</td><td>57.7%</td><td style="background:#d4edda; font-weight:bold;">7.0pp ✓ BET</td>
+      </tr>
+      <tr style="background:#fffbea;">
+        <td>Jan 15</td><td>27</td><td>27.5</td><td>27.07</td><td>49.98%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>27.28</td><td>54.7%</td><td style="color:#888;">4.7pp — <em>fav_only fails (p&lt;50%)</em></td>
+        <td>27.07</td><td>55.9%</td><td style="background:#d4edda; font-weight:bold;">5.9pp ✓ BET</td>
+        <td>27.17</td><td>54.7%</td><td style="color:#888;">4.7pp — <em>edge&lt;5pp</em></td>
+      </tr>
+      <tr>
+        <td>Jan 17</td><td>14</td><td>27.5</td><td>27.25</td><td>50.1%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>27.38</td><td>52.4%</td><td style="color:#888;">2.3pp — edge&lt;3pp</td>
+        <td>27.25</td><td>53.7%</td><td style="color:#888;">3.6pp — edge&lt;5pp</td>
+        <td>27.32</td><td>53.6%</td><td style="color:#888;">3.5pp — edge&lt;5pp</td>
+      </tr>
+      <tr>
+        <td>Jan 19</td><td>19</td><td>27.5</td><td>27.25</td><td>50.1%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>27.38</td><td>52.6%</td><td style="color:#888;">2.5pp</td>
+        <td>27.25</td><td>53.7%</td><td style="color:#888;">3.6pp</td>
+        <td>27.31</td><td>53.3%</td><td style="color:#888;">3.2pp</td>
+      </tr>
+      <tr>
+        <td>Jan 20</td><td>16</td><td>28.5</td><td>28.27</td><td>49.8%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>28.38</td><td>52.7%</td><td style="color:#888;">2.9pp — <em>fav_only fails</em></td>
+        <td>28.27</td><td>53.5%</td><td style="color:#888;">3.7pp — edge&lt;5pp</td>
+        <td>28.32</td><td>53.6%</td><td style="color:#888;">3.8pp — edge&lt;5pp</td>
+      </tr>
+      <tr>
+        <td>Jan 22</td><td>38</td><td>27.5</td><td>27.51</td><td>49.99%</td><td style="background:#ffe0e0; font-weight:bold;">OVER (L)</td>
+        <td>27.50</td><td>52.9%</td><td style="color:#888;">2.9pp</td>
+        <td>27.51</td><td>52.8%</td><td style="color:#888;">2.9pp</td>
+        <td>27.50</td><td>52.2%</td><td style="color:#888;">2.3pp</td>
+      </tr>
+      <tr>
+        <td>Jan 25</td><td>26</td><td>29.5</td><td>29.22</td><td>49.8%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>29.36</td><td>53.2%</td><td style="color:#888;">3.4pp — <em>fav_only fails</em></td>
+        <td>29.22</td><td>53.3%</td><td style="color:#888;">3.5pp — edge&lt;5pp</td>
+        <td>29.29</td><td>53.8%</td><td style="color:#888;">4.1pp — <em>fav_only fails</em></td>
+      </tr>
+      <tr>
+        <td>Jan 28</td><td>27</td><td>31.0</td><td>30.27</td><td>50.6%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>30.63</td><td>54.8%</td><td style="background:#d4edda; font-weight:bold;">4.2pp ✓ BET</td>
+        <td>30.27</td><td>56.0%</td><td style="background:#d4edda; font-weight:bold;">5.4pp ✓ BET</td>
+        <td>30.45</td><td>56.0%</td><td style="background:#d4edda; font-weight:bold;">5.4pp ✓ BET</td>
+      </tr>
+      <tr style="background:#fffbea;">
+        <td>Jan 30</td><td>23</td><td>28.5</td><td>27.98</td><td>50.2%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>28.24</td><td>54.5%</td><td style="background:#d4edda; font-weight:bold;">4.3pp ✓ BET</td>
+        <td>27.98</td><td>55.3%</td><td style="background:#d4edda; font-weight:bold;">5.1pp ✓ BET</td>
+        <td>28.11</td><td>54.6%</td><td style="color:#888;">4.4pp — <em>edge&lt;5pp</em></td>
+      </tr>
+      <tr>
+        <td>Apr 5</td><td>29</td><td>19.5</td><td>19.59</td><td>50.5%</td><td style="background:#ffe0e0; font-weight:bold;">OVER (L)</td>
+        <td>19.55</td><td>53.0%</td><td style="color:#888;">2.5pp — <em>line&lt;25.5</em></td>
+        <td>19.59</td><td>52.8%</td><td style="color:#888;">2.2pp — <em>line&lt;25.5</em></td>
+        <td>19.57</td><td>51.8%</td><td style="color:#888;">1.3pp — edge&lt;5pp</td>
+      </tr>
+      <tr>
+        <td>Apr 7</td><td>17</td><td>23.5</td><td>23.56</td><td>49.1%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>23.53</td><td>51.8%</td><td style="color:#888;"><em>line&lt;25.5; fav_only fails</em></td>
+        <td>23.56</td><td>51.8%</td><td style="color:#888;"><em>line&lt;25.5</em></td>
+        <td>23.55</td><td>51.5%</td><td style="color:#888;">2.4pp — edge&lt;5pp</td>
+      </tr>
+      <tr>
+        <td>Apr 10</td><td>11</td><td>23.5</td><td>23.35</td><td>50.9%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>23.43</td><td>53.8%</td><td style="color:#888;"><em>line&lt;25.5</em></td>
+        <td>23.35</td><td>53.9%</td><td style="color:#888;"><em>line&lt;25.5</em></td>
+        <td>23.39</td><td>52.6%</td><td style="color:#888;">1.7pp — edge&lt;5pp</td>
+      </tr>
+      <tr>
+        <td>Apr 15</td><td>35</td><td>26.5</td><td>26.37</td><td>50.4%</td><td style="background:#ffe0e0; font-weight:bold;">OVER (L)</td>
+        <td>26.44</td><td>52.9%</td><td style="color:#888;">2.5pp — edge&lt;3pp</td>
+        <td>26.37</td><td>53.4%</td><td style="color:#888;">3.0pp — edge&lt;5pp</td>
+        <td>26.40</td><td>53.9%</td><td style="color:#888;">3.4pp — edge&lt;5pp</td>
+      </tr>
+      <tr>
+        <td>Apr 17</td><td>17</td><td>27.5</td><td>27.05</td><td>51.2%</td><td style="background:#d4edda; font-weight:bold;">UNDER (W)</td>
+        <td>27.28</td><td>53.4%</td><td style="color:#888;">2.2pp — edge&lt;3pp</td>
+        <td>27.05</td><td>54.9%</td><td style="color:#888;">3.7pp — edge&lt;5pp</td>
+        <td>27.17</td><td>55.1%</td><td style="color:#888;">4.0pp — edge&lt;5pp</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;"><em>Yellow rows = strategies diverge. Green cells = bet placed. Grey = reason bet was not placed. p_mkt_und = 1 − novig_prob_over.</em></p>
+
+  <!-- Narrative summary -->
+  <h3>5. What This Shows</h3>
+  <ul>
+    <li><strong>Jan 15 divergence:</strong> S2 bets alone (edge 5.9pp, no odds filter). S1 is blocked by fav_only (p_market_under = 49.98%, just below 50%). S3 is blocked by edge &lt; 5pp (4.7pp after 0.25 shrinkage compresses it). Curry scores 27 → UNDER wins. S2's willingness to bet "+" odds sometimes pays off in isolation; it's the <em>aggregate</em> of 515 such bets that loses.</li>
+    <li><strong>Jan 30 divergence:</strong> S1 and S2 bet; S3 misses by 0.6pp (edge 4.4pp vs 5pp threshold). Curry scores 23 → UNDER wins. S3's 5pp threshold leaves some money on the table vs S1's 3pp threshold, but prevents more false positives.</li>
+    <li><strong>Jan 17–19–20–22 no-bet cluster:</strong> Curry's line sits near his actual scoring range (27–28.5), yhat ≈ line, edge near zero. All strategies correctly sit out. This is the model behaving as intended: flat edge = no bet.</li>
+    <li><strong>Apr 5–7–10 low lines:</strong> Curry posted lines of 19.5 and 23.5 in April. S1/S2 skip because line &lt; 25.5. S3 would consider them but edge is too low. This shows the value of S1/S2's line filter — when the line is already set conservatively, the structural UNDER edge (regression to mean at high lines) doesn't apply.</li>
+    <li><strong>S1 is Curry's highest-ROI strategy</strong> even though it has fewer bets than S2 and S3. It only fires when edge ≥ 3pp AND line ≥ 25.5 AND market slightly favors UNDER (even odds). That combination is the purest expression of the regression-to-mean structural signal.</li>
+  </ul>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,93 @@
+strategy_summary: "UNDER, favs, all lines, edge ≥5pp"
+
+model:
+  type: ols_bootstrap
+  version: v1
+  out_of_sample_rmse: 6.539
+  residual_std: 6.6081
+  residual_mean: 0.0
+  n_samples: 36302      # settled rows across all 3 seasons (full-data in-sample model)
+  n_bootstrap: 10000    # residual draws per player-game for P(under)
+  shrinkage: 0.25       # mean_adj = offered_line + 0.75*(yhat - offered_line)
+  numeric_features:
+    - pts_L1
+    - pts_L3
+    - pts_L5
+    - pts_L10
+    - pts_L20
+    - pts_career        # cross-season career rolling average
+    - min_L5
+    - min_L20
+    - fga_L5
+    - is_home
+    - days_rest
+    - games_into_season
+    - opp_pts_allowed_L10
+  market_features:
+    - offered_line      # median line across two-sided books
+    - novig_prob_over   # consensus de-vigged P(over)
+  s3_key: nba/points_model/model/nba_points_model_ols.joblib
+  residuals_key: nba/points_model/model/nba_points_residuals.npy
+  spine_key: nba/points_model/spine/nba_points_spine.parquet
+
+strategy:
+  side: UNDER
+  odds_bucket: fav_only   # p_market_under >= 0.50 (even or better UNDER odds)
+  lines: all
+  min_bet_edge: 0.05
+  # Out-of-sample (2 walk-forward folds, 2024-25 + 2025-26): 1,396 bets · 56.2% win · +149.6u · 10.71% ROI · 15.2u MDD
+  # In-sample/out-of-sample ratio: 1.12x (well within <5x overfitting threshold — structural mispricing, not model memory)
+
+backtest:
+  groupby: player_key, game_date
+  edge_col: edge_under
+  novig_col: novig_prob_over
+  payout_col: best_under_odds
+
+s3:
+  bucket: the-odds-api-mt
+  prefix: nba/points_model
+  model_key: nba/points_model/model/nba_points_model_ols.joblib
+  residuals_key: nba/points_model/model/nba_points_residuals.npy
+  meta_key: nba/points_model/model/nba_points_meta.json
+  spine_key: nba/points_model/spine/nba_points_spine.parquet
+  settled_key: nba/points_model/settled/settled_bets.parquet
+
+game_logs:
+  bucket: nba-api-mt
+  prefix: player_game_logs
+  seasons:
+    - "2023-24"
+    - "2024-25"
+    - "2025-26"
+
+grid_search:
+  # Redo grid (regression, not logistic) — Step 5/6 of research HTML (20260702-nba-player-points.html)
+  # Dimensions: shrinkage [0.0, 0.25, 0.50, 0.75] × min_edge [0.01–0.20] × direction × odds_bucket × line_bucket
+  # 545 valid strategies (n ≥ 30). Odds: actual book odds (not no-vig approx).
+  dimensions:
+    shrinkage: [0.0, 0.25, 0.50, 0.75]
+    min_edge: [0.01, 0.02, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20]
+    direction: [under_only, over_only, both]
+    odds_bucket: [all, fav_only, dog_only]
+    line_bucket: [all, high_25plus]
+
+  # Out-of-sample candidates (2 test seasons: 2024-25, 2025-26). Sorted by units_won.
+  out_of_sample_results:
+    # shrink  edge   direction  odds       lines       n      win%   units   roi     mdd    flag
+    - {shrink: 0.50, edge: 0.01, dir: both,       odds: all,      lines: all,       n: 18575, win_pct: 0.510, units:  428.8, roi: 0.0231, mdd: 79.6}
+    - {shrink: 0.25, edge: 0.01, dir: both,       odds: all,      lines: all,       n: 20535, win_pct: 0.510, units:  404.8, roi: 0.0197, mdd: 67.5}
+    - {shrink: 0.50, edge: 0.01, dir: both,       odds: fav_only, lines: all,       n: 11393, win_pct: 0.519, units:  388.6, roi: 0.0341, mdd: 68.8}
+    - {shrink: 0.00, edge: 0.03, dir: both,       odds: all,      lines: all,       n: 12716, win_pct: 0.516, units:  376.7, roi: 0.0296, mdd: 46.9}
+    # ── 3 candidate strategies for in-sample/out-of-sample check ──────────────
+    - {shrink: 0.50, edge: 0.03, dir: under_only, odds: fav_only, lines: high_25plus, n:  1153, win_pct: 0.562, units:  125.5, roi: 0.1089, mdd: 22.3, label: S1}
+    - {shrink: 0.00, edge: 0.05, dir: under_only, odds: all,      lines: high_25plus, n:  1594, win_pct: 0.546, units:  134.6, roi: 0.0845, mdd: 20.9, label: S2}
+    - {shrink: 0.25, edge: 0.05, dir: under_only, odds: fav_only, lines: all,         n:  1422, win_pct: 0.558, units:  141.2, roi: 0.0993, mdd: 30.8, label: "S3 ← PRODUCTION (actual-odds breakdown: 1,396 bets +149.6u 10.71% ROI 15.2u MDD)"}
+
+  # In-sample/out-of-sample ratio check (full-data OLS model on all 36,302 rows). All ratios < 5x = no overfitting.
+  # Ratio near 1.0x because edge is structural (market calibration gap at high lines), not model memory.
+  in_sample_results:
+    # strategy  filter                                              oos_n  oos_win  oos_u   oos_roi  oos_mdd  is_n   is_win  is_u    is_roi   is_mdd  ratio
+    - {label: S1, filter: "UNDER fav line≥25 shrink=0.50 edge≥3pp", oos_n: 1153, oos_win: 0.562, oos_units: 125.5, oos_roi: 0.1089, oos_mdd: 22.3, is_n: 1801, is_win: 0.560, is_units: 189.9, is_roi: 0.1054, is_mdd: 25.2, ratio: 0.97, flag: "Exceptional"}
+    - {label: S2, filter: "UNDER all  line≥25 shrink=0.00 edge≥5pp", oos_n: 1594, oos_win: 0.546, oos_units: 134.6, oos_roi: 0.0845, oos_mdd: 20.9, is_n: 2448, is_win: 0.551, is_units: 231.3, is_roi: 0.0945, is_mdd: 25.9, ratio: 1.12, flag: "OK"}
+    - {label: S3, filter: "UNDER fav  all     shrink=0.25 edge≥5pp", oos_n: 1422, oos_win: 0.558, oos_units: 141.2, oos_roi: 0.0993, oos_mdd: 30.8, is_n: 1544, is_win: 0.564, is_units: 172.2, is_roi: 0.1115, is_mdd: 19.3, ratio: 1.12, flag: "OK — CHOSEN"}

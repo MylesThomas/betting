@@ -13,9 +13,9 @@ For each pitcher with a pitcher_strikeouts prop on the given gameday:
 
 Strategy: BOTH directions, edge >= 3%, no shrinkage, any odds tier
   Lines 3.5–6.5 only · shrinkage=0.0
-OOS (v5, both): 7,104 bets · 59.36% WR · +528.97u · +7.45% ROI (2025–2026)
+Out-of-sample (v5, both): 7,104 bets · 59.36% WR · +528.97u · +7.45% ROI (2025–2026)
   Model: OLS, 7 features — v5 adds over_price_bucket_fine + under_price_bucket_fine
-  IS/OOS ratio: 0.99x (nearly identical — no overfitting)
+  In-sample/out-of-sample ratio: 0.99x (nearly identical — no overfitting)
 Research: knowledge-base/raw/20260703-mlb-pitcher-strikeouts-v2.html
 
 S3 paths read:
@@ -742,7 +742,7 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
     <tr><td style='font-family:{_MONO}'>under_price_bucket_fine</td><td>—</td><td>9-tier bin of avg American under odds at consensus line (player-game level, book-independent)</td><td>v5 odds signal</td></tr>
   </table>
   <p style='font-size:11px;color:#555;margin-top:8px'>
-    Model: OLS (StandardScaler + LinearRegression) · OOF RMSE=2.127 · residual σ=2.146 · shrinkage=0.0 · bootstrap N=10,000<br>
+    Model: OLS (StandardScaler + LinearRegression) · out-of-sample RMSE=2.127 · residual σ=2.146 · shrinkage=0.0 · bootstrap N=10,000<br>
     Prediction: yhat → P(over) = fraction of 10k simulated K counts above line (no shrinkage, full model signal)<br>
     novig_prob_over removed (v3): per-book pricing varies → raw K projection was book-dependent (nonsensical).<br>
     consensus_line retained: player-level modal line, same for all books — legitimate, stable predictor.<br>
@@ -752,7 +752,7 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
 </details>
 
 <div class='footer'>
-  OOS (v5, 2025–2026): 7,104 bets &nbsp;·&nbsp; 59.36% WR &nbsp;·&nbsp; +528.97u &nbsp;·&nbsp; +7.45% ROI &nbsp;|&nbsp; IS/OOS ratio: 0.99x (no overfitting)
+  Out-of-sample (v5, 2025–2026): 7,104 bets &nbsp;·&nbsp; 59.36% WR &nbsp;·&nbsp; +528.97u &nbsp;·&nbsp; +7.45% ROI &nbsp;|&nbsp; In-sample/out-of-sample ratio: 0.99x (no overfitting)
 </div>
 
 </body></html>"""
