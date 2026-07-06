@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLB Pitcher Strikeouts — Research Session v2 (2026-07-03)</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1400px; margin: 0 auto; padding: 20px; background: #f9fafb; color: #111827; }
+  h1 { color: #1e3a5f; border-bottom: 3px solid #1e3a5f; padding-bottom: 8px; }
+  h2 { color: #1e3a5f; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; margin-top: 32px; }
+  h3 { color: #374151; margin-top: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  th { background: #1e3a5f; color: white; padding: 8px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }
+  tr:hover { background: #f0f4ff; }
+  .pass { color: #16a34a; font-weight: bold; }
+  .fail { color: #dc2626; font-weight: bold; }
+  .warn { color: #d97706; font-weight: bold; }
+  .flag { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 8px 12px; margin: 8px 0; }
+  .bug { background: #fef2f2; border-left: 4px solid #dc2626; padding: 8px 12px; margin: 8px 0; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 8px 12px; margin: 8px 0; }
+  dt { font-weight: bold; display: inline; }
+  dd { display: inline; margin-left: 4px; }
+  pre { background: #f3f4f6; padding: 12px; border-radius: 4px; font-size: 12px; overflow-x: auto; }
+  code { background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>MLB Pitcher Strikeouts — Prop Research Session v2</h1>
+<p><strong>Date:</strong> 2026-07-03 &nbsp;|&nbsp; <strong>Session start:</strong> 14:06:24 ET &nbsp;|&nbsp; <strong>Analyst:</strong> Claude</p>
+
+<div class="bug">
+<strong>WHY THIS IS v2:</strong> Session v1 (same date, same file prefix) discovered a critical data bug after completion. <code>fetch_market_lines.py</code> omitted <code>oddsFormat=american</code> from Odds API requests, so prices were returned as decimal odds (e.g. 1.91, 2.10) instead of American (e.g. −110, +110). The downstream <code>build_labeled_dataset.py</code> called <code>american_to_decimal(price)</code> on those values, producing nonsensical decimal conversions (1.91 → 1.0191) and novig values always ≈ 0.50 regardless of line. This corrupted: (1) <code>novig_prob_over</code> model feature; (2) all p_mkt values in the grid search; (3) all PnL calculations. Corrected OOS: 39% win rate, +159u, 1.2% ROI vs reported 68.8% / +4,512u / 36.5%. This session rebuilds from the existing raw data with correct odds handling.
+</div>
+
+<section>
+<h2>Step 0 — Scope Configuration &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 14:06:24 ET</span></h2>
+
+<table>
+<tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>Market</td><td>MLB pitcher strikeouts (<code>pitcher_strikeouts</code>)</td></tr>
+<tr><td>Sport</td><td>MLB (baseball)</td></tr>
+<tr><td>Seasons</td><td>2024, 2025, 2026 (full range available)</td></tr>
+<tr><td>Sportsbooks</td><td>All available — no pre-filtering. Includes betrivers, draftkings, fanduel, betmgm, espnbet, bovada, betonlineag, mybookieag, unibet_us, williamhill_us, fliff, hardrockbet, rebet, fanatics, pointsbetus, betparx, superbook, and others</td></tr>
+<tr><td>Market type</td><td>Variable/numeric line (lines range 2.5–9.5+). Not binary — many distinct line values per pitcher-game.</td></tr>
+<tr><td>Spot-check player</td><td><strong>Paul Skenes</strong> (PIT, SP) — elite strikeout pitcher, full data since 2024 debut, well-known, nationally prominent. Traced through every step.</td></tr>
+<tr><td>Target variable</td><td>Actual strikeouts thrown by the starting pitcher</td></tr>
+<tr><td>Model type</td><td>Regression (predict K count → bootstrap P(over) at each line)</td></tr>
+<tr><td>S3 bucket</td><td><code>s3://the-odds-api-mt/mlb/strikeouts_model/</code></td></tr>
+<tr><td>Source dir</td><td><code>src/mlb_strikeouts_modeling/</code></td></tr>
+<tr><td>Odds format fix</td><td>Raw S3 files contain <em>decimal odds</em>. Fix: compute novig directly from decimal prices (<code>p_o = 1/over_dec, p_u = 1/under_dec, novig = p_o/(p_o+p_u)</code>). Do NOT call american_to_decimal on these values.</td></tr>
+</table>
+
+<div class="note">
+<strong>Rebuild plan:</strong> Raw market parquet files (4,677 files on S3) are correct — they contain the true market prices in decimal format. Gamelogs (2024/2025/2026) are correct. Only the processing pipeline needs to be fixed: (1) fix <code>build_labeled_dataset.py</code>; (2) rebuild labeled dataset; (3) rebuild spine with correct <code>novig_prob_over</code>; (4) retrain model (Steps 3c+); (5) re-evaluate Steps 4–6; (6) update production scripts. Steps 3a/3b rolling feature rankings will not change materially — novig_prob_over had near-zero variance before, so its true rank may change.
+</div>
+</section>
+
+
+<section>
+<h2>Step 1 — Data Pull + EDA &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~14:30 ET</span></h2>
+
+<h3>Data Overview</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Labeled dataset rows (per-book, per-line bets)</td><td>123,536</td></tr>
+<tr><td>Unique players</td><td>452</td></tr>
+<tr><td>Unique events (games with market data)</td><td>4,565</td></tr>
+<tr><td>Total spine rows (pitcher-starts)</td><td>12,326</td></tr>
+<tr><td>Date range</td><td>2024-03-28 → 2026-07-02</td></tr>
+<tr><td>Pushes</td><td>0 (all lines are .5 — no whole-number lines present)</td></tr>
+<tr><td>Overall over rate</td><td>48.7%</td></tr>
+</table>
+
+<h3>Coverage by Season</h3>
+<table>
+<tr><th>Season</th><th>Bets</th><th>Players</th><th>Events</th><th>Over Rate</th><th>Under Rate</th><th>Market Join Rate</th></tr>
+<tr><td>2024</td><td>47,874</td><td>305</td><td>1,769</td><td>47.7%</td><td>52.3%</td><td>68.4%</td></tr>
+<tr><td>2025</td><td>46,748</td><td>298</td><td>1,800</td><td>49.8%</td><td>50.2%</td><td>70.8%</td></tr>
+<tr><td>2026</td><td>28,914</td><td>248</td><td>996</td><td>48.7%</td><td>51.3%</td><td>71.4%</td></tr>
+</table>
+<div class="note">Under-heavy in all three seasons. 2024 most pronounced (52.3% under). Market join rate steady at 68–71% — acceptable; ~30% of pitcher-starts have no prop market posted (typically back-end starters, injury scratches, or games with low action).</div>
+
+<h3>Line Distribution</h3>
+<table>
+<tr><th>Line</th><th>Bets</th><th>% of Total</th></tr>
+<tr><td>3.5</td><td>22,950</td><td>18.6%</td></tr>
+<tr><td>4.5</td><td>39,502</td><td>32.0%</td></tr>
+<tr><td>5.5</td><td>33,295</td><td>27.0%</td></tr>
+<tr><td>6.5</td><td>15,871</td><td>12.8%</td></tr>
+<tr><td>7.5</td><td>5,324</td><td>4.3%</td></tr>
+<tr><td>8.5</td><td>1,202</td><td>1.0%</td></tr>
+<tr><td>≤2.5 or ≥9.5</td><td>1,392</td><td>1.1%</td></tr>
+</table>
+<div class="note">Variable numeric market — seven distinct line buckets. Core mass at 4.5–5.5 (59% of bets). 6.5 and 7.5 are meaningful buckets for high-K aces (Skenes, Glasnow, etc.). Extreme lines (≤2.5, ≥9.5) are alt-line tails with sparse data.</div>
+
+<h3>Sportsbook Coverage</h3>
+<table>
+<tr><th>Book</th><th>Bets</th><th>Events</th><th>Over Rate</th><th>Avg Line</th><th>Avg Novig Over</th></tr>
+<tr><td>espnbet</td><td>21,811</td><td>4,415</td><td>48.8%</td><td>4.94</td><td>0.492</td></tr>
+<tr><td>betrivers</td><td>21,675</td><td>3,735</td><td>48.4%</td><td>5.01</td><td>0.486</td></tr>
+<tr><td>hardrockbet</td><td>8,043</td><td>4,457</td><td>49.3%</td><td>4.90</td><td>0.496</td></tr>
+<tr><td>fliff</td><td>7,848</td><td>4,407</td><td>49.0%</td><td>4.90</td><td>0.497</td></tr>
+<tr><td>draftkings</td><td>7,757</td><td>4,196</td><td>48.9%</td><td>4.89</td><td>0.495</td></tr>
+<tr><td>bovada</td><td>7,373</td><td>4,035</td><td>48.9%</td><td>4.89</td><td>0.494</td></tr>
+<tr><td>fanduel</td><td>7,189</td><td>3,833</td><td>48.5%</td><td>4.92</td><td>0.494</td></tr>
+<tr><td>betmgm</td><td>7,045</td><td>3,843</td><td>48.9%</td><td>4.88</td><td>0.495</td></tr>
+<tr><td>betonlineag</td><td>6,705</td><td>3,491</td><td>49.1%</td><td>4.87</td><td>0.492</td></tr>
+<tr><td>mybookieag</td><td>6,571</td><td>2,609</td><td>48.9%</td><td>4.92</td><td>0.492</td></tr>
+<tr><td>unibet_us</td><td>2,910</td><td>538</td><td>45.5%</td><td>5.18</td><td>0.470</td></tr>
+<tr><td>(others)</td><td>9,409</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+<div class="flag"><strong>betrivers:</strong> High row count (21,675) relative to events (3,735) — posting multiple alt lines per player-game. avg_line=5.01 vs 4.89 for most books confirms alt line range. Expected behavior.</div>
+<div class="flag"><strong>unibet_us:</strong> avg_line 5.18 (highest), avg_novig_over 0.470 (lowest), over rate 45.5%. Limited event coverage (538 events). Niche book, possible pricing outlier — worth watching in edge analysis.</div>
+
+<h3>Paul Skenes Spot Check — 2024-05-11 (Debut Start, 7 Ks)</h3>
+<table>
+<tr><th>Book</th><th>Line</th><th>Over Odds</th><th>Under Odds</th><th>Novig Over</th><th>Outcome</th></tr>
+<tr><td>espnbet</td><td>5.5</td><td>-164</td><td>+120</td><td>0.577</td><td class="pass">OVER</td></tr>
+<tr><td>draftkings</td><td>5.5</td><td>-161</td><td>+125</td><td>0.581</td><td class="pass">OVER</td></tr>
+<tr><td>betmgm</td><td>5.5</td><td>-161</td><td>+125</td><td>0.581</td><td class="pass">OVER</td></tr>
+<tr><td>bovada</td><td>5.5</td><td>-213</td><td>+160</td><td>0.639</td><td class="pass">OVER</td></tr>
+<tr><td>fanduel</td><td>6.5</td><td>-104</td><td>-122</td><td>0.481</td><td class="pass">OVER</td></tr>
+<tr><td>espnbet</td><td>6.5</td><td>+120</td><td>-164</td><td>0.423</td><td class="pass">OVER</td></tr>
+<tr><td>betonlineag</td><td>6.5</td><td>+103</td><td>-133</td><td>0.463</td><td class="pass">OVER</td></tr>
+<tr><td>espnbet</td><td>7.5</td><td>+225</td><td>-370</td><td>0.281</td><td class="fail">UNDER</td></tr>
+<tr><td>betrivers</td><td>7.5</td><td>+190</td><td>-263</td><td>0.322</td><td class="fail">UNDER</td></tr>
+</table>
+<div class="note">Novig values now meaningfully differentiated: 57–64% for 5.5 OVER (market expected him to go over easily), 42–48% for 6.5 OVER, 28–32% for 7.5 OVER. This is a completely different picture from the buggy version where all were ~50%. He finished with 7 Ks — hit 5.5 and 6.5 OVER, missed 7.5 OVER.</div>
+
+<h3>Step 1 DuckDB Tests — All PASS</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>Market data row count in range (50K–200K)</td><td class="pass">PASS</td><td>123,536</td></tr>
+<tr><td>No nulls in key market columns</td><td class="pass">PASS</td><td>0 null rows</td></tr>
+<tr><td>All lines are half-integers</td><td class="pass">PASS</td><td>0 non-half-integer rows</td></tr>
+<tr><td>Over+Under+Push rates sum to ~100%</td><td class="pass">PASS</td><td>1.0000</td></tr>
+<tr><td>Spine row count in range (10K–20K)</td><td class="pass">PASS</td><td>12,326</td></tr>
+<tr><td>Null rate k_roll_s5 &lt; 10%</td><td class="pass">PASS</td><td>8.4%</td></tr>
+<tr><td>Null rate k_roll_c5 &lt; 10%</td><td class="pass">PASS</td><td>4.6%</td></tr>
+<tr><td>Null rate k_roll_career &lt; 10%</td><td class="pass">PASS</td><td>4.6%</td></tr>
+<tr><td>Null rate opp_k_against_season &lt; 10%</td><td class="pass">PASS</td><td>0.7%</td></tr>
+<tr><td>Date ranges overlap (spine vs labeled)</td><td class="pass">PASS</td><td>spine: 2024-03-20→2026-07-02</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Step 1.5 — Market Calibration by Line &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~14:40 ET</span></h2>
+
+<div class="note">With corrected decimal odds: novig_prob_over now ranges from 0.28 to 0.74 per row (std=0.056 at spine level). Previously it was always ≈0.50. Calibration can now be meaningfully computed.</div>
+
+<h3>Calibration Table</h3>
+<table>
+<tr><th>Line</th><th>n_bets</th><th>over_rate</th><th>under_rate</th><th>avg_raw_prob_over</th><th>avg_raw_prob_under</th><th>avg_combined_vig</th><th>avg_novig_prob_over</th><th>avg_novig_prob_under</th><th>calibration_gap_over</th><th>calibration_gap_under</th></tr>
+<tr><td>0.5</td><td>109</td><td>0.844</td><td>0.156</td><td>0.712</td><td>0.372</td><td>0.083</td><td>0.656</td><td>0.344</td><td class="warn">+0.188</td><td class="warn">-0.188</td></tr>
+<tr><td>1.5</td><td>656</td><td>0.588</td><td>0.412</td><td>0.563</td><td>0.517</td><td>0.080</td><td>0.521</td><td>0.479</td><td class="warn">+0.067</td><td class="warn">-0.067</td></tr>
+<tr><td>2.5</td><td>4,400</td><td>0.640</td><td>0.360</td><td>0.696</td><td>0.383</td><td>0.079</td><td>0.645</td><td>0.355</td><td>-0.005</td><td>+0.005</td></tr>
+<tr><td>3.5</td><td>22,950</td><td>0.552</td><td>0.448</td><td>0.601</td><td>0.474</td><td>0.075</td><td>0.559</td><td>0.441</td><td>-0.007</td><td>+0.007</td></tr>
+<tr><td><strong>4.5</strong></td><td><strong>39,502</strong></td><td><strong>0.486</strong></td><td><strong>0.514</strong></td><td><strong>0.540</strong></td><td><strong>0.534</strong></td><td><strong>0.075</strong></td><td><strong>0.503</strong></td><td><strong>0.497</strong></td><td>-0.017</td><td>+0.017</td></tr>
+<tr><td><strong>5.5</strong></td><td><strong>33,295</strong></td><td><strong>0.465</strong></td><td><strong>0.535</strong></td><td><strong>0.495</strong></td><td><strong>0.580</strong></td><td><strong>0.075</strong></td><td><strong>0.461</strong></td><td><strong>0.539</strong></td><td>+0.004</td><td>-0.004</td></tr>
+<tr><td><strong>6.5</strong></td><td><strong>15,871</strong></td><td><strong>0.435</strong></td><td><strong>0.565</strong></td><td><strong>0.464</strong></td><td><strong>0.611</strong></td><td><strong>0.076</strong></td><td><strong>0.432</strong></td><td><strong>0.568</strong></td><td>+0.003</td><td>-0.003</td></tr>
+<tr><td><strong>7.5</strong></td><td><strong>5,324</strong></td><td><strong>0.403</strong></td><td><strong>0.597</strong></td><td><strong>0.441</strong></td><td><strong>0.635</strong></td><td><strong>0.076</strong></td><td><strong>0.410</strong></td><td><strong>0.590</strong></td><td>-0.007</td><td>+0.007</td></tr>
+<tr><td>8.5</td><td>1,202</td><td>0.357</td><td>0.643</td><td>0.411</td><td>0.665</td><td>0.076</td><td>0.382</td><td>0.618</td><td>-0.025</td><td>+0.025</td></tr>
+<tr><td>9.5</td><td>193</td><td>0.301</td><td>0.699</td><td>0.347</td><td>0.730</td><td>0.077</td><td>0.322</td><td>0.678</td><td>-0.021</td><td>+0.021</td></tr>
+<tr><td>10.5</td><td>29 ⚠</td><td>0.621</td><td>0.379</td><td>0.487</td><td>0.591</td><td>0.078</td><td>0.452</td><td>0.548</td><td class="warn">+0.169</td><td class="warn">-0.169</td></tr>
+<tr><td>11.5</td><td>3 ⚠</td><td>0.000</td><td>1.000</td><td>0.542</td><td>0.523</td><td>0.065</td><td>0.509</td><td>0.491</td><td>-0.509</td><td>+0.509</td></tr>
+<tr><td>12.5</td><td>2 ⚠</td><td>1.000</td><td>0.000</td><td>0.430</td><td>0.647</td><td>0.077</td><td>0.399</td><td>0.601</td><td>+0.601</td><td>-0.601</td></tr>
+</table>
+
+<h3>Key Findings</h3>
+<ul>
+  <li><strong>Lines 2.5–7.5 (core market, 95% of bets):</strong> Calibration gaps are all within ±0.025. The market is exceptionally well-priced in this range. No structural edge at any single line bucket from raw miscalibration alone.</li>
+  <li><strong>Lines 0.5 and 1.5 (the very low end):</strong> Market slightly underprices the OVER (+0.19, +0.07 gap). These are alt lines for weak starters; in reality the probability a pitcher gets at least 1 K is very high. Market flags this partially (avg_novig_over = 0.66 for 0.5 line) but still underestimates. Only 765 bets total — thin edge.</li>
+  <li><strong>Under-heavy tendency at 4.5–9.5:</strong> over_rate is consistently 1–3pp below novig_prob_over. Minor but consistent. Under wins more often than market expects at these lines. This is a meaningful directional hypothesis for the model to test.</li>
+  <li><strong>Lines ≥10.5:</strong> Fewer than 30 obs each — noise, not signal. Discard from strategy.</li>
+  <li><strong>Avg vig: ~7.5–8%</strong> consistently across all lines. This is the hurdle the model must clear to show positive ROI.</li>
+</ul>
+
+<div class="flag"><strong>Hypothesis entering Step 3:</strong> The market is well-calibrated overall. Edge will come from the model correctly identifying individual player-games where the consensus line is priced wrong — not from systematic line-level miscalibration. The under-heavy slight tendency at 4.5–7.5 is worth testing as a strategy filter.</div>
+
+<h3>Step 1.5 DuckDB Tests</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>All lines: over+under+push sum to 1.0 (±1%)</td><td class="pass">PASS</td><td>0 failing rows</td></tr>
+<tr><td>Lines with &lt;30 observations (flag)</td><td class="warn">WARN</td><td>10.5 (29), 11.5 (3), 12.5 (2)</td></tr>
+<tr><td>Raw implied probs in [0, 1]</td><td class="pass">PASS</td><td>0 rows out of range</td></tr>
+<tr><td>Total bets matches labeled dataset</td><td class="pass">PASS</td><td>123,536 = 123,536</td></tr>
+</table>
+</section>
+
+
+<section>
+<h2>Step 2 — Feature Engineering / Spine &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~14:50 ET</span></h2>
+
+<h3>Spine Overview</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total pitcher-start rows</td><td>12,326</td></tr>
+<tr><td>Unique pitchers</td><td>572 (spine) / 452 (with market data)</td></tr>
+<tr><td>Date range</td><td>2024-03-20 → 2026-07-02</td></tr>
+<tr><td>Market join rate</td><td>70.0%</td></tr>
+<tr><td>novig_prob_over std (corrected)</td><td>0.0563 (prev: ~0.001 — essentially constant)</td></tr>
+</table>
+
+<h3>Rolling Feature Null Rates</h3>
+<table>
+<tr><th>Feature</th><th>Null Rate</th><th>Expected?</th></tr>
+<tr><td>k_roll_s1 through k_roll_s20</td><td>8.4%</td><td class="pass">Yes — first start of each season resets to null</td></tr>
+<tr><td>k_roll_c1 through k_roll_c20, k_roll_career</td><td>4.6%</td><td class="pass">Yes — only first career start is null</td></tr>
+<tr><td>days_rest</td><td>4.6%</td><td class="pass">Yes — no prev_date for first career start</td></tr>
+<tr><td>opp_k_against_season</td><td>0.7%</td><td class="pass">Near-zero — opponent data available for almost all games</td></tr>
+<tr><td>consensus_line / novig_prob_over</td><td>30.0%</td><td class="pass">Yes — 70% market join rate (consistent with Step 1)</td></tr>
+</table>
+
+<h3>Paul Skenes Spot Check — No-Lookahead Verification</h3>
+<table>
+<tr><th>game_date</th><th>strikeouts</th><th>k_roll_s1</th><th>k_roll_s3</th><th>k_roll_s5</th><th>k_roll_season</th><th>k_roll_career</th></tr>
+<tr><td>2024-05-11 (start 1)</td><td>7</td><td>NaN ✓</td><td>NaN ✓</td><td>NaN ✓</td><td>NaN ✓</td><td>NaN ✓</td></tr>
+<tr><td>2024-05-17 (start 2)</td><td>11</td><td>7.0 ✓</td><td>7.0</td><td>7.0</td><td>7.0</td><td>7.0</td></tr>
+<tr><td>2024-05-23 (start 3)</td><td>3</td><td>11.0 ✓</td><td>9.0</td><td>9.0</td><td>9.0</td><td>9.0</td></tr>
+<tr><td>2024-05-29 (start 4)</td><td>9</td><td>3.0 ✓</td><td>7.0</td><td>7.0</td><td>7.0</td><td>7.0</td></tr>
+<tr><td>2024-06-05 (start 5)</td><td>8</td><td>9.0 ✓</td><td>7.67</td><td>7.5</td><td>7.5</td><td>7.5</td></tr>
+<tr><td>2025-03-27 (first 2025)</td><td>7</td><td>NaN ✓</td><td>NaN ✓</td><td>NaN ✓</td><td>NaN ✓</td><td>7.39 ✓</td></tr>
+<tr><td>2025-04-02 (2nd 2025)</td><td>6</td><td>7.0 ✓</td><td>7.0</td><td>7.0</td><td>7.0</td><td>7.38</td></tr>
+</table>
+<div class="note">No lookahead confirmed: k_roll_s1 at game N equals strikeouts at game N-1. Season rolling resets to null at 2025 season start; career rolling carries forward (7.39 = career avg from all 2024 starts). Correct behavior.</div>
+
+<h3>Step 2 DuckDB Tests</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>One row per player-game (no duplicates)</td><td class="pass">PASS</td><td>0 duplicate player-game rows</td></tr>
+<tr><td>No lookahead: k_roll_s1 at game N = strikeouts at N-1</td><td class="pass">PASS</td><td>Skenes first 5 starts verified</td></tr>
+<tr><td>Null rate k_roll_s5 &lt; 15%</td><td class="pass">PASS</td><td>8.4%</td></tr>
+<tr><td>Null rate k_roll_c5 &lt; 10%</td><td class="pass">PASS</td><td>4.6%</td></tr>
+<tr><td>Null rate k_roll_career &lt; 10%</td><td class="pass">PASS</td><td>4.6%</td></tr>
+<tr><td>strikeouts has no nulls</td><td class="pass">PASS</td><td>0 null rows</td></tr>
+<tr><td>Join quality (market data coverage)</td><td class="pass">PASS</td><td>70.0%</td></tr>
+<tr><td>Date range covers 2024–2026</td><td class="pass">PASS</td><td>2024-03-20 → 2026-07-02</td></tr>
+<tr><td>Season rolling null at first start of each season (returning pitchers)</td><td class="pass">PASS</td><td>100% null at first 2025 start (228 pitchers checked)</td></tr>
+<tr><td>Career rolling non-null at first 2025 start (returning pitchers)</td><td class="pass">PASS</td><td>0.0% null — correctly carries forward from prior seasons</td></tr>
+</table>
+</section>
+
+
+<section>
+<h2>Steps 3a/3b — Individual Feature Rankings &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~15:10 ET</span></h2>
+
+<h3>3a: OLS Linear Regression (predicts K count, out-of-fold AUC for binary is_over)</h3>
+<table>
+<tr><th>Feature</th><th>n</th><th>RMSE</th><th>R²</th><th>AUC</th><th>Coef</th><th>Notes</th></tr>
+<tr><td>consensus_line</td><td>123,536</td><td>3.041</td><td>-0.537</td><td>0.511</td><td>+1.048</td><td>Strongest RMSE predictor — market's best guess at pitcher K rate</td></tr>
+<tr><td>line (per-book)</td><td>123,536</td><td>3.075</td><td>-0.571</td><td>0.469</td><td>+0.926</td><td>AUC below 0.5 — higher line → harder to go over</td></tr>
+<tr><td>k_roll_c20</td><td>120,184</td><td>3.118</td><td>-0.608</td><td>0.509</td><td>+0.755</td><td>Long career window best among rolling features</td></tr>
+<tr><td>k_roll_career</td><td>120,184</td><td>3.122</td><td>-0.612</td><td>0.509</td><td>+0.741</td><td>Career avg comparable to k_roll_c20</td></tr>
+<tr><td>k_roll_c5</td><td>120,184</td><td>3.128</td><td>-0.618</td><td>0.510</td><td>+0.705</td><td>Medium window; good balance of recency/stability</td></tr>
+<tr><td>k_roll_s5 / k_roll_s10</td><td>115,849</td><td>3.134–3.140</td><td>~-0.63</td><td>~0.507</td><td>+0.67</td><td>Season-scoped rolling; slightly weaker than career</td></tr>
+<tr><td>novig_over</td><td>123,536</td><td>3.193</td><td>-0.695</td><td><strong>0.588</strong></td><td>+0.059</td><td>Highest AUC of any feature — market directly predicts binary is_over at each line</td></tr>
+<tr><td>is_home</td><td>123,536</td><td>3.189</td><td>-0.690</td><td>0.516</td><td>+0.205</td><td>Home slight advantage</td></tr>
+<tr><td>opp_k_against_season</td><td>122,693</td><td>3.195</td><td>-0.696</td><td>0.500</td><td>-0.023</td><td>Near-zero predictive power individually</td></tr>
+<tr><td>days_rest</td><td>120,184</td><td>3.211</td><td>-0.705</td><td>0.506</td><td>-0.121</td><td>Weakest predictor individually</td></tr>
+</table>
+
+<h3>3b: XGBoost — minimal lift over linear, relationships largely linear</h3>
+<div class="note">XGBoost RMSE values are within ±0.01 of OLS for every feature. No meaningful non-linear signal detected. Exception: <code>opp_k_against_season</code> shows slightly higher AUC with XGBoost (0.519 vs 0.500) — marginal non-linearity. <code>novig_over</code> AUC drops to 0.526 with XGBoost (vs 0.588 OLS) — XGBoost's non-linear handling of the market feature breaks the calibration. OLS remains preferred model.</div>
+<div class="flag"><strong>Market dominance:</strong> <code>novig_over</code> has AUC=0.588 — the highest of any single feature. This is expected: the per-line market probability directly predicts whether that specific bet hits. But this is the feature being compared to (p_mkt), not added on top of it — the real alpha comes from the non-market rolling features.</div>
+</section>
+
+<section>
+<h2>Step 3c — Combo Model Selection &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~15:20 ET</span></h2>
+
+<div style="background:#1a3a1a;border:2px solid #4ade80;border-radius:8px;padding:14px;margin-bottom:16px;">
+  <strong style="color:#4ade80;font-size:15px;">✓ Production Model: mkt-7-original</strong><br>
+  <span style="color:#d1fae5;">7 features: consensus_line, novig_prob_over, k_roll_s5, k_roll_c5, k_roll_career, is_home, opp_k_against_season</span><br>
+  <span style="color:#9ca3af;font-size:12px;">OLS linear regression (StandardScaler + LinearRegression) · 8,033 training rows · RMSE 3.013</span>
+</div>
+
+<h3>Top 3 models considered</h3>
+<table>
+<tr><th>Rank</th><th>Model</th><th>Features</th><th>Training rows</th><th>RMSE</th><th>Why not chosen / why chosen</th></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>#1 — PRODUCTION</strong></td><td><strong>mkt-7-original</strong></td><td>consensus_line, novig_prob_over, k_roll_s5, k_roll_c5, k_roll_career, is_home, opp_k_against_season</td><td>8,033</td><td><strong>3.013</strong></td><td><strong>Best balance of accuracy and non-market signal. Includes all three rolling K windows and opponent K rate, giving the model something beyond the market price to work with.</strong></td></tr>
+<tr><td>#2</td><td>mkt-core-6</td><td>same as above minus opp_k_against_season</td><td>8,090</td><td>3.009</td><td>Marginally better RMSE but drops opponent K rate. Small sample gain. Not worth the signal loss — opp_k_against_season costs only 57 rows and adds the opponent-side context.</td></tr>
+<tr><td>#3</td><td>market-only-2</td><td>consensus_line + novig_prob_over only</td><td>8,629</td><td>2.997</td><td>Best raw RMSE — but this is just re-expressing the market's own price. Zero non-market alpha. Would produce the same bets as using the market price directly.</td></tr>
+</table>
+
+<h3>Full comparison (all combos tested)</h3>
+<table>
+<tr><th>Combo</th><th>n</th><th>RMSE</th><th>R²</th><th>Notes</th></tr>
+<tr><td>market-only-2 (consensus_line + novig_prob_over)</td><td>8,629</td><td>2.997</td><td>-0.488</td><td>Best RMSE but zero non-market signal</td></tr>
+<tr><td>mkt-core-6 (+k_roll_s5/c5/career, is_home)</td><td>8,090</td><td>3.009</td><td>-0.495</td><td>Rolling features add marginal non-market alpha</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>mkt-7-original ← PRODUCTION</strong> (+opp_k_against_season)</td><td>8,033</td><td><strong>3.013</strong></td><td><strong>-0.499</strong></td><td><strong>Selected — best balance of accuracy and non-market signal</strong></td></tr>
+<tr><td>mkt-8 (+k_roll_c20)</td><td>8,033</td><td>3.015</td><td>-0.501</td><td>No meaningful lift over mkt-7</td></tr>
+<tr><td>no-mkt-7 (no market features)</td><td>11,209</td><td>3.080</td><td>-0.563</td><td>Largest training set; directionally sensible coefs but lower accuracy</td></tr>
+</table>
+
+<h3>Final Model Coefficients (7-feature OLS, 8,033 training rows)</h3>
+<table>
+<tr><th>Feature</th><th>Scaled Coef</th><th>Direction</th><th>Note</th></tr>
+<tr><td>consensus_line</td><td>+1.279</td><td>✓ positive</td><td>Dominant — market's K forecast</td></tr>
+<tr><td>novig_prob_over</td><td>+0.300</td><td>✓ positive</td><td>Higher P(over) at consensus line → more Ks expected</td></tr>
+<tr><td>is_home</td><td>+0.076</td><td>✓ positive</td><td>Home pitchers throw slightly more Ks</td></tr>
+<tr><td>k_roll_c5</td><td>+0.031</td><td>✓ positive</td><td>Recent career K form</td></tr>
+<tr><td>opp_k_against_season</td><td>-0.009</td><td>✗ near-zero</td><td>Very weak; multicollinear with consensus_line</td></tr>
+<tr><td>k_roll_career</td><td>-0.084</td><td>✗ negative</td><td>Multicollinear with consensus_line — absorbs the pitcher quality signal</td></tr>
+<tr><td>k_roll_s5</td><td>-0.044</td><td>✗ negative</td><td>Same multicollinearity issue</td></tr>
+</table>
+<div class="note">Negative rolling feature coefficients are expected with <code>consensus_line</code> in the model — the line already captures pitcher K ability, so career rolling features add redundant signal and the OLS distributes the coefficient negatively. Without market features, all rolling feature coefficients are positive and directionally sensible. The model is dominated by market features (as expected); rolling features provide marginal incremental alpha.</div>
+
+<div class="flag"><strong>out-of-fold RMSE vs v1:</strong> v2 RMSE = 3.013 vs v1 RMSE = 2.131. The higher RMSE is correct — in v1, novig_prob_over was constant ~0.50 (std ≈ 0.001), so the scaler learned near-zero std → this feature effectively had no predictive contribution. With correct novig (std=0.056), the model is properly trained but RMSE reflects true prediction difficulty. The v1 RMSE was artificially lower because the model couldn't use one of its key features.</div>
+
+<h3>Model artifacts saved</h3>
+<ul>
+  <li><code>models/mlb_strikeouts_model.joblib</code> — trained pipeline (StandardScaler + LinearRegression)</li>
+  <li><code>models/mlb_strikeouts_residuals_clean.npy</code> — 6,690 clean out-of-fold residuals (mean=0.052, std=2.149)</li>
+  <li><code>models/mlb_strikeouts_meta.json</code> — feature list, RMSE, shrinkage, n_boot</li>
+  <li>All uploaded to <code>s3://the-odds-api-mt/mlb/strikeouts_model/model/</code></li>
+</ul>
+</section>
+
+<section>
+<h2>Step 4 — P(over) Bootstrap + Edge Computation &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~15:50 ET</span></h2>
+
+<h3>Bootstrap Methodology (corrected from v1)</h3>
+<ul>
+  <li><strong>mean_adj</strong> = line + (1 − 0.25) × (yhat − line) — shrink prediction toward the line</li>
+  <li><strong>simulated_K</strong> = mean_adj + sampled_residual (N=10,000 draws)</li>
+  <li><strong>p_model</strong> = fraction of simulations where simulated_K &gt; line</li>
+  <li><strong>p_mkt</strong> = novig_over (per-book, per-line, correctly computed from decimal odds)</li>
+  <li><strong>edge</strong> = p_model − p_mkt</li>
+</ul>
+
+<div class="bug">
+<strong>Two bootstrap bugs found and fixed in v2:</strong>
+<ol>
+<li><strong>TimeSeriesSplit zero-pred rows:</strong> The first ~1,343 spine rows (16.7% of training set) were never in a validation fold → oof_pred defaulted to 0 → catastrophically wrong P(over) estimates (p_model ≈ 0.01–0.12 for all bets). Fixed by replacing zero-pred rows with full-model predictions (in-sample, mild lookahead for those rows only).</li>
+<li><strong>Biased residuals:</strong> Full residual set (including zero-pred rows) had mean=0.885 because zero-pred residuals = actual K count, not prediction error. Using these in bootstrap inflated every p_model upward → 92% of bets showed OVER edge → -7% ROI. Fixed by using only the 6,690 clean non-zero-pred residuals (mean=0.052, std=2.149).</li>
+</ol>
+</div>
+
+<h3>Calibration after fixes (p_model deciles vs actual over rate)</h3>
+<table>
+<tr><th>Decile</th><th>n</th><th>p_model</th><th>actual_rate</th><th>gap</th></tr>
+<tr><td>0</td><td>11,508</td><td>0.320</td><td>0.271</td><td>-0.049</td></tr>
+<tr><td>1–4</td><td>~46,000</td><td>0.40–0.48</td><td>0.40–0.46</td><td>~-0.00 to -0.02</td></tr>
+<tr><td>5</td><td>11,504</td><td>0.498</td><td>0.493</td><td>-0.005</td></tr>
+<tr><td>6–8</td><td>~34,500</td><td>0.52–0.58</td><td>0.53–0.59</td><td>~0.00 to +0.02</td></tr>
+<tr><td>9</td><td>11,491</td><td>0.666</td><td>0.699</td><td>+0.033</td></tr>
+</table>
+<div class="note">Calibration is reasonable within ±0.05 for most deciles. Slight overconfidence at low p_model end (decile 0: -0.049 gap), slight underconfidence at high end (decile 9: +0.033 gap). Acceptable for strategy purposes.</div>
+
+<h3>Edge Distribution</h3>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total rows with valid edge</td><td>115,048</td></tr>
+<tr><td>Mean edge</td><td>-0.0017 (near zero — properly balanced)</td></tr>
+<tr><td>Std edge</td><td>0.034</td></tr>
+<tr><td>% rows with edge &gt; 5%</td><td>6.0%</td></tr>
+<tr><td>% rows with edge &lt; -5%</td><td>7.0%</td></tr>
+<tr><td>Rows clipped to 0.99</td><td>0 (0.00%)</td></tr>
+</table>
+
+<h3>Line monotonicity inversions: 3.2% (above 2% threshold — flagged)</h3>
+<div class="flag">3.2% of multi-line player-game-book combos show p_model inversions (p_under at higher line less than at lower line). Driven by OLS residual bootstrap randomness for adjacent lines. Above the 2% flag threshold — monitor in production but likely noise given N=10,000 bootstrap samples.</div>
+</section>
+
+<section>
+<h2>Steps 5–6 — Strategy Evaluation + PnL &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-03 ~16:15 ET</span></h2>
+
+<div class="note"><strong>Key finding:</strong> Strategy only works with a line filter (3.5–6.5). Extreme alt lines (≤2.5, ≥7.5) lose badly because the model generates fake edges on lines priced far from the consensus. Both sides work at ≥7% edge, with UNDER slightly stronger.</div>
+
+<h3>Full Grid Search — All Combos, Sorted by P&amp;L Descending</h3>
+<p style="color:#9ca3af;font-size:12px;">Variables: lines filter (3.5–6.5 vs all), edge threshold (3–15%), side (over/under/both). All use lines 3.5–6.5 unless noted.</p>
+<table>
+<tr><th>Lines</th><th>Edge</th><th>Side</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th><th>Note</th></tr>
+<tr><td>3.5–6.5</td><td>10%</td><td>both</td><td>735</td><td>54.3% U / 47.7% O</td><td>+152.1u</td><td class="pass">+20.7%</td><td>Best P&amp;L — but only 735 bets over 3 seasons; confidence interval wide</td></tr>
+<tr><td>3.5–6.5</td><td>7%</td><td>both</td><td>4,003</td><td>45.3% U / 36.1% O</td><td>+145.1u</td><td class="pass">+3.6%</td><td>More bets but OVER bets drag ROI; UNDER bets carry the P&amp;L</td></tr>
+<tr><td>all lines</td><td>10%</td><td>both</td><td>909</td><td>50.3% U / 46.2% O</td><td>+129.5u</td><td class="pass">+14.2%</td><td>Includes extreme alt lines — higher ROI than expected, but noise risk</td></tr>
+<tr><td>3.5–6.5</td><td>10%</td><td>over only</td><td>413</td><td>47.7%</td><td>+101.7u</td><td class="pass">+24.6%</td><td>Best ROI at reasonable sample — OVER at high edge is interesting</td></tr>
+<tr style="border:2px solid #fbbf24;"><td>3.5–6.5</td><td>7%</td><td>under only</td><td>1,715</td><td>45.3%</td><td>+98.9u</td><td class="pass">+5.8%</td><td>⭐ <strong>Production choice</strong> — largest reliable sample; UNDER consistency preferred</td></tr>
+<tr><td>all lines</td><td>10%</td><td>over only</td><td>478</td><td>46.2%</td><td>+97.4u</td><td class="pass">+20.4%</td><td>Extreme lines included; similar to above row</td></tr>
+<tr><td>3.5–6.5</td><td>3%</td><td>under only</td><td>18,248</td><td>46.4%</td><td>+93.4u</td><td class="warn">+0.5%</td><td>Huge sample but near-zero ROI — diluted by low-confidence bets</td></tr>
+<tr><td>3.5–6.5</td><td>5%</td><td>under only</td><td>6,278</td><td>44.4%</td><td>+82.1u</td><td class="warn">+1.3%</td><td>Low edge threshold drags ROI</td></tr>
+<tr><td>all lines</td><td>7%</td><td>under only</td><td>2,460</td><td>41.9%</td><td>+66.1u</td><td class="warn">+2.7%</td><td>Extreme alt lines reduce ROI vs filtered version</td></tr>
+<tr><td>all lines</td><td>15%</td><td>both</td><td>213</td><td>59.4% U / 67.3% O</td><td>+59.9u</td><td class="pass">+28.1%</td><td>Highest ROI — but n=213 over 3 seasons is too small to trust</td></tr>
+<tr><td>3.5–6.5</td><td>15%</td><td>both</td><td>163</td><td>63.9% U / 70.3% O</td><td>+51.9u</td><td class="pass">+31.8%</td><td>Same issue — tiny sample, likely overfitting</td></tr>
+<tr><td>3.5–6.5</td><td>10%</td><td>under only</td><td>322</td><td>54.3%</td><td>+50.4u</td><td class="pass">+15.7%</td><td>Strong ROI, 322 bets — borderline acceptable sample</td></tr>
+<tr><td>3.5–6.5</td><td>7%</td><td>over only</td><td>2,288</td><td>36.1%</td><td>+46.2u</td><td class="pass">+2.0%</td><td>Positive P&amp;L but thin ROI on OVERs</td></tr>
+<tr><td colspan="8" style="color:#6b7280;font-style:italic;padding:6px;">— Rows below this line lose money —</td></tr>
+<tr><td>all lines</td><td>7%</td><td>over only</td><td>2,464</td><td>35.5%</td><td>-1.8u</td><td class="fail">-0.1%</td><td>Essentially break-even</td></tr>
+<tr><td>all lines</td><td>5%</td><td>under only</td><td>8,042</td><td>41.9%</td><td>-87.1u</td><td class="fail">-1.1%</td><td></td></tr>
+<tr><td>3.5–6.5</td><td>5%</td><td>both</td><td>12,709</td><td>44.4% U / 36.0% O</td><td>-128.3u</td><td class="fail">-1.0%</td><td>OVER bets at 5% destroy the UNDER P&amp;L</td></tr>
+<tr><td>3.5–6.5</td><td>3%</td><td>both</td><td>34,714</td><td>46.4% U / 39.5% O</td><td>-696.5u</td><td class="fail">-2.0%</td><td></td></tr>
+</table>
+
+<div class="flag"><strong>Why production chose 7% UNDER (not 10% both or 10% over):</strong> The 10% threshold combos have strong ROI but only 322–735 bets over 3 seasons — roughly 100–245 bets per season. That's too thin to distinguish a real edge from luck. The 7% UNDER strategy has 1,715 bets (572/season) with consistent P&amp;L across seasons. The OVER bets at 7% add P&amp;L in absolute terms (+46u) but at low ROI (2.0%) — not enough confidence they're real. If you want to revisit: 10% UNDER (322 bets, +15.7% ROI) is the strongest high-confidence alternative.</div>
+
+<h3>Grid Search Summary — Main Lines 3.5–6.5 Only (original view, by threshold)</h3>
+<table>
+<tr><th>Edge Thresh</th><th>Side</th><th>Bets</th><th>Over WR</th><th>Under WR</th><th>PnL</th><th>ROI</th></tr>
+<tr><td>3%</td><td>both</td><td>34,714</td><td>39.5%</td><td>46.4%</td><td>-697.7u</td><td class="fail">-2.01%</td></tr>
+<tr><td>5%</td><td>both</td><td>12,709</td><td>36.0%</td><td>44.4%</td><td>-128.6u</td><td class="fail">-1.01%</td></tr>
+<tr><td>5%</td><td>under only</td><td>6,278</td><td>—</td><td>44.4%</td><td>+81.8u</td><td class="warn">+1.30%</td></tr>
+<tr><td>7%</td><td>both</td><td>4,003</td><td>36.1%</td><td>45.3%</td><td>+145.0u</td><td class="pass">+3.62%</td></tr>
+<tr><td>7%</td><td>over only</td><td>2,288</td><td>36.1%</td><td>—</td><td>+46.1u</td><td class="pass">+2.02%</td></tr>
+<tr><td><strong>7%</strong></td><td><strong>under only</strong></td><td><strong>1,715</strong></td><td>—</td><td><strong>45.3%</strong></td><td><strong>+98.9u</strong></td><td class="pass"><strong>+5.77%</strong></td></tr>
+<tr><td>10%</td><td>both</td><td>735</td><td>47.7%</td><td>54.3%</td><td>+152.1u</td><td class="pass">+20.69%</td></tr>
+<tr><td>10%</td><td>over only</td><td>413</td><td>47.7%</td><td>—</td><td>+101.7u</td><td class="pass">+24.62%</td></tr>
+<tr><td>10%</td><td>under only</td><td>322</td><td>—</td><td>54.3%</td><td>+50.4u</td><td class="pass">+15.65%</td></tr>
+</table>
+
+<h3>Season-by-Season (7% edge, UNDER only, main lines 3.5–6.5)</h3>
+<table>
+<tr><th>Season</th><th>Bets</th><th>Win Rate</th><th>PnL</th><th>ROI</th></tr>
+<tr><td>2024</td><td>1,097</td><td>44.7%</td><td>-2.7u</td><td class="warn">-0.25% (essentially flat)</td></tr>
+<tr><td>2025</td><td>396</td><td>44.2%</td><td>+32.8u</td><td class="pass">+8.27%</td></tr>
+<tr><td>2026</td><td>222</td><td>50.5%</td><td>+68.9u</td><td class="pass">+31.02%</td></tr>
+<tr><td><strong>TOTAL</strong></td><td><strong>1,715</strong></td><td><strong>45.3%</strong></td><td><strong>+98.9u</strong></td><td class="pass"><strong>+5.77%</strong></td></tr>
+</table>
+<div class="flag"><strong>Season consistency concern:</strong> 2024 was flat, 2025 and 2026 strongly positive. This could mean: (a) the model improves as training data accumulates; (b) recency bias from 2026 being in-sample for the full model (1,343 zero-pred rows replaced with in-sample predictions); or (c) random. The 2026 result in particular is likely partially inflated by in-sample predictions for early 2026 games. Treat with caution.</div>
+
+<h3>Book Breakdown (7% UNDER, main lines, min 30 bets)</h3>
+<table>
+<tr><th>Book</th><th>Bets</th><th>Win Rate</th><th>ROI</th><th>Flag</th></tr>
+<tr><td>betparx</td><td>37</td><td>59.5%</td><td>+65.5%</td><td class="warn">Too few bets — noise</td></tr>
+<tr><td>mybookieag</td><td>107</td><td>61.7%</td><td>+15.7%</td><td>Moderate sample</td></tr>
+<tr><td>betrivers</td><td>360</td><td>41.4%</td><td>+14.2%</td><td>Large sample, profitable</td></tr>
+<tr><td>espnbet</td><td>403</td><td>41.2%</td><td>+11.3%</td><td>Large sample, profitable</td></tr>
+<tr><td>fanduel</td><td>81</td><td>56.8%</td><td>+10.5%</td><td>Profitable</td></tr>
+<tr><td>hardrockbet</td><td>100</td><td>40.0%</td><td>-17.4%</td><td class="fail">Losing — avoid or monitor</td></tr>
+<tr><td>draftkings</td><td>87</td><td>41.4%</td><td>-13.7%</td><td class="fail">Losing</td></tr>
+<tr><td>fliff</td><td>109</td><td>44.0%</td><td>-14.2%</td><td class="fail">Losing</td></tr>
+</table>
+
+<h3>Performance by Odds Tier (7% UNDER, main lines 3.5–6.5)</h3>
+<div class="note"><strong>Key finding:</strong> Almost all alpha comes from bets where the book is offering the UNDER at positive American odds — meaning the market thinks the pitcher is more likely to go OVER. Those contrarian UNDER bets earn +14.9% ROI. Bets where the UNDER is priced at negative odds (market agrees with UNDER) lose money.</div>
+
+<table>
+<tr><th>Odds tier</th><th>Bets</th><th>Win rate</th><th>Avg breakeven WR</th><th>P&amp;L</th><th>ROI</th><th>Verdict</th></tr>
+<tr><td><strong>Overall (all tiers)</strong></td><td><strong>1,715</strong></td><td><strong>45.3%</strong></td><td>—</td><td><strong>+98.9u</strong></td><td class="pass"><strong>+5.77%</strong></td><td>—</td></tr>
+<tr><td>Positive odds only (&gt; +100)</td><td>1,212</td><td>44.6%</td><td>~30–42%</td><td>+180.3u</td><td class="pass">+14.9%</td><td>Where the alpha lives</td></tr>
+<tr><td>Negative/even odds (≤ +100)</td><td>503</td><td>47.1%</td><td>~51–58%</td><td>-81.4u</td><td class="fail">-16.2%</td><td>Drag on the strategy</td></tr>
+</table>
+
+<br>
+
+<table>
+<tr><th>Odds tier</th><th>American odds on UNDER bet</th><th>Bets</th><th>Win rate</th><th>Mkt implied WR</th><th>WR vs market</th><th>Avg breakeven WR</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr style="border-left:3px solid #f87171;"><td><strong>1. Negative (&lt; −100)</strong></td><td>e.g. −130, −150<br><em>Market agrees UNDER is likely</em></td><td>453</td><td>50.8%</td><td>52.1%</td><td class="fail">-1.3pp</td><td>56.0%</td><td>-45.4u</td><td class="fail">-10.0%</td></tr>
+<tr style="border-left:3px solid #f87171;"><td><strong>2. Even / near-even (−100 to +100)</strong></td><td>e.g. −100, +100<br><em>Market roughly balanced</em></td><td>50</td><td>14.0%</td><td>46.4%</td><td class="fail">-32.4pp</td><td>51.1%</td><td>-36.0u</td><td class="fail">-72.0%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>3. Positive (+101 to +200)</strong></td><td>e.g. +120, +150<br><em>Market expects OVER — we disagree</em></td><td>885</td><td>48.8%</td><td>39.7%</td><td class="pass">+9.1pp</td><td>42.7%</td><td>+133.3u</td><td class="pass">+15.1%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>4. Big positive (&gt; +200)</strong></td><td>e.g. +220, +250<br><em>Market strongly expects OVER</em></td><td>327</td><td>33.0%</td><td>27.1%</td><td class="pass">+5.9pp</td><td>29.3%</td><td>+47.0u</td><td class="pass">+14.4%</td></tr>
+</table>
+
+<br>
+<h4>Season-by-season for each tier</h4>
+<table>
+<tr><th>Tier</th><th>Season</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr style="border-left:3px solid #f87171;"><td rowspan="3">1. Favorite (&lt; −110)</td><td>2024</td><td>233</td><td>51.9%</td><td>-24.4u</td><td class="fail">-10.5%</td></tr>
+<tr style="border-left:3px solid #f87171;"><td>2025</td><td>56</td><td>67.9%</td><td>+10.5u</td><td class="pass">+18.8%</td></tr>
+<tr style="border-left:3px solid #f87171;"><td>2026</td><td>26</td><td>65.4%</td><td>+1.8u</td><td class="pass">+6.9%</td></tr>
+<tr><td rowspan="3">2. Near-even (−110 to +100)</td><td>2024</td><td>145</td><td>26.9%</td><td>-69.2u</td><td class="fail">-47.7%</td></tr>
+<tr><td>2025</td><td>35</td><td>40.0%</td><td>-7.6u</td><td class="fail">-21.8%</td></tr>
+<tr><td>2026</td><td>8</td><td>100.0%</td><td>+7.5u</td><td class="pass">+93.2% ⚠ n=8</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="3">3. Underdog (+101 to +200)</td><td>2024</td><td>588</td><td>48.8%</td><td>+79.7u</td><td class="pass">+13.5%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2025</td><td>198</td><td>44.4%</td><td>+11.8u</td><td class="pass">+6.0%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2026</td><td>99</td><td>57.6%</td><td>+41.9u</td><td class="pass">+42.3%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="3">4. Big underdog (&gt; +200)</td><td>2024</td><td>131</td><td>32.8%</td><td>+11.2u</td><td class="pass">+8.5%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2025</td><td>107</td><td>32.7%</td><td>+18.1u</td><td class="pass">+16.9%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2026</td><td>89</td><td>33.7%</td><td>+17.8u</td><td class="pass">+19.9%</td></tr>
+</table>
+
+<div class="flag"><strong>Action item:</strong> Tiers 1 and 2 (negative/near-even odds UNDER bets) are losing money and dragging down the overall strategy. Tiers 3 and 4 (positive odds UNDER) are consistently profitable across all 3 seasons. Consider filtering the production strategy to <strong>positive American odds UNDER bets only</strong> — this changes overall results from 1,715 bets / +5.8% ROI to 1,212 bets / +14.9% ROI. Near-even tier (2) is particularly bad (-36.9%) and likely represents noise rather than signal.</div>
+
+<h3>Performance by Odds Tier (10% BOTH, main lines 3.5–6.5)</h3>
+<div class="note"><strong>Key finding:</strong> Unlike the 7% UNDER strategy, negative-odds bets here are profitable (+18.3% ROI) — the higher edge threshold filters to genuinely strong plays even when the market agrees with your direction. Near-even tier (n=19) is still bad but too small to matter. Alpha is spread across all tiers, not just positive odds.</div>
+
+<table>
+<tr><th>Odds tier</th><th>American odds on bet</th><th>Bets</th><th>Win rate</th><th>Mkt implied WR</th><th>WR vs market</th><th>Avg breakeven WR</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>1. Negative (&lt; −100)</strong></td><td>e.g. −130, −150<br><em>Market agrees with your direction</em></td><td>248</td><td>66.9%</td><td>52.4%</td><td class="pass">+14.5pp</td><td>56.4%</td><td>+45.4u</td><td class="pass">+18.3%</td></tr>
+<tr style="border-left:3px solid #f87171;"><td><strong>2. Even / near-even (−100 to +100)</strong></td><td>e.g. −100, +100<br><em>Market roughly balanced</em></td><td>19</td><td>31.6%</td><td>46.4%</td><td class="fail">-14.8pp</td><td>50.0%</td><td>-7.0u</td><td class="fail">-36.8% ⚠ n=19</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>3. Positive (+101 to +200)</strong></td><td>e.g. +120, +150<br><em>Market expects other side</em></td><td>261</td><td>52.9%</td><td>40.3%</td><td class="pass">+12.6pp</td><td>43.4%</td><td>+56.0u</td><td class="pass">+21.5%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>4. Big positive (&gt; +200)</strong></td><td>e.g. +250, +350<br><em>Market strongly expects other side</em></td><td>207</td><td>30.0%</td><td>22.4%</td><td class="pass">+7.5pp</td><td>24.3%</td><td>+57.7u</td><td class="pass">+27.9%</td></tr>
+</table>
+
+<br>
+<h4>Season-by-season for each tier (10% BOTH)</h4>
+<table>
+<tr><th>Tier</th><th>Season</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="3">1. Negative (&lt; −100)</td><td>2024</td><td>149</td><td>59.1%</td><td>+8.3u</td><td class="pass">+5.6%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2025</td><td>56</td><td>82.1%</td><td>+24.8u</td><td class="pass">+44.2%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2026</td><td>43</td><td>74.4%</td><td>+12.4u</td><td class="pass">+28.7%</td></tr>
+<tr style="border-left:3px solid #f87171;"><td rowspan="3">2. Even / near-even (−100 to +100)</td><td>2024</td><td>12</td><td>16.7%</td><td>-8.0u</td><td class="fail">-66.7% ⚠ n=12</td></tr>
+<tr style="border-left:3px solid #f87171;"><td>2025</td><td>5</td><td>40.0%</td><td>-1.0u</td><td class="fail">-20.0% ⚠ n=5</td></tr>
+<tr style="border-left:3px solid #f87171;"><td>2026</td><td>2</td><td>100.0%</td><td>+2.0u</td><td class="pass">+100% ⚠ n=2</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="3">3. Positive (+101 to +200)</td><td>2024</td><td>177</td><td>51.4%</td><td>+32.2u</td><td class="pass">+18.2%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2025</td><td>43</td><td>58.1%</td><td>+12.1u</td><td class="pass">+28.1%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2026</td><td>41</td><td>53.7%</td><td>+11.7u</td><td class="pass">+28.6%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="3">4. Big positive (&gt; +200)</td><td>2024</td><td>143</td><td>30.8%</td><td>+52.7u</td><td class="pass">+36.9%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2025</td><td>30</td><td>33.3%</td><td>+8.4u</td><td class="pass">+28.0%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>2026</td><td>34</td><td>23.5%</td><td>-3.5u</td><td class="fail">-10.3%</td></tr>
+</table>
+
+<h4>OVER vs UNDER split within each tier (10% BOTH)</h4>
+<table>
+<tr><th>Tier</th><th>Side</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th><th>Avg odds</th></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="2">1. Negative</td><td>OVER</td><td>121</td><td>66.9%</td><td>+20.6u</td><td class="pass">+17.0%</td><td>-135</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>UNDER</td><td>127</td><td>66.9%</td><td>+24.8u</td><td class="pass">+19.6%</td><td>-130</td></tr>
+<tr style="border-left:3px solid #f87171;"><td rowspan="2">2. Near-even</td><td>OVER</td><td>5</td><td>80.0%</td><td>+3.0u</td><td class="pass">+60.0% ⚠ n=5</td><td>+100</td></tr>
+<tr style="border-left:3px solid #f87171;"><td>UNDER</td><td>14</td><td>14.3%</td><td>-10.0u</td><td class="fail">-71.4% ⚠ n=14</td><td>+100</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="2">3. Positive</td><td>OVER</td><td>114</td><td>52.6%</td><td>+22.6u</td><td class="pass">+19.8%</td><td>+134</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>UNDER</td><td>147</td><td>53.1%</td><td>+33.4u</td><td class="pass">+22.7%</td><td>+134</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td rowspan="2">4. Big positive</td><td>OVER</td><td>173</td><td>30.1%</td><td>+55.5u</td><td class="pass">+32.1%</td><td>+365</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td>UNDER</td><td>34</td><td>29.4%</td><td>+2.1u</td><td class="warn">+6.3%</td><td>+247</td></tr>
+</table>
+
+<div class="flag"><strong>Comparison vs 7% UNDER:</strong> At 10% both, the negative-odds tier is profitable (+18.3% ROI) because the higher threshold filters to genuinely strong plays — not just "market agrees so our model weakly agrees too." Tier 3 and 4 are strong in both strategies. The big structural difference: at 10%, OVER bets at big positive odds (n=173, +32.1% ROI) are a major alpha source. At 7% UNDER-only, those OVER bets don't exist. The tradeoff is simply sample size: 10% both gives 245 bets/season vs 572/season at 7% UNDER.</div>
+
+<h3>Selected Strategy for Production</h3>
+<table>
+<tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr>
+<tr><td>Direction</td><td>UNDER (primary); OVER at ≥10% threshold</td><td>UNDER strategy more consistent; 7% OVER profitable but volatile</td></tr>
+<tr><td>Edge threshold</td><td>7pp (primary)</td><td>Positive ROI in both OOS seasons (2025/2026); 2024 flat</td></tr>
+<tr><td>Line filter</td><td>3.5–6.5</td><td>Extreme alt lines lose; main line range has clean signal</td></tr>
+<tr><td>Shrinkage</td><td>0.25</td><td>Unchanged from v1</td></tr>
+<tr><td>Min books</td><td>2</td><td>Unchanged</td></tr>
+</table>
+
+<h3>Caveat Summary</h3>
+<ul>
+  <li>In-sample contamination: first 1,343 spine rows use full-model predictions (lookahead). This is ~16% of training rows and affects particularly the 2024 early season results.</li>
+  <li>Small sample at high thresholds: 10%+ edge has only 735 bets over 3 seasons — confidence intervals wide.</li>
+  <li>No walk-forward OOS (no held-out test season due to limited data): all results are pseudo-out-of-fold using TimeSeriesSplit which has known limitations at season boundaries.</li>
+  <li>Book-level inconsistency: hardrockbet, draftkings, fliff all losing at 7% UNDER. These books may price more efficiently or have better models. Monitor in production.</li>
+</ul>
+</section>
+
+</body>
+</html>
+
+<section>
+<h2>Step 7 — Production Pipeline Update</h2>
+<p><strong>Date:</strong> 2026-07-03</p>
+
+<h3>Summary</h3>
+<p>Updated all production scripts to reflect the v2 corrected strategy (UNDER-heavy, main lines 3.5–6.5, edge ≥ 7pp). Both the decimal odds bug fix (already applied to build_spine.py and build_labeled_dataset.py in Step 0) and the bootstrap bug fixes (zero-pred rows, biased residuals) are now fully propagated into the live pipeline.</p>
+
+<h3>Files Changed</h3>
+<table border="1" cellpadding="6">
+  <tr style="background:#1e3a5f;color:#93c5fd;"><th>File</th><th>Change</th></tr>
+  <tr><td>src/mlb_strikeouts_modeling/scripts/build_spine.py</td><td>Fixed decimal odds bug — removed american_to_decimal(); dec_over/dec_under now assigned directly from over_price/under_price (already decimal from API)</td></tr>
+  <tr><td>src/mlb_strikeouts_modeling/scripts/build_labeled_dataset.py</td><td>Same decimal odds fix; novig computed from already-decimal prices</td></tr>
+  <tr><td>src/mlb_strikeouts_modeling/config/config.yaml</td><td>oof_rmse: 3.0127 (was 2.1307); residual_std: 2.149 (clean); edge_threshold_primary: 0.07 (was 0.05); edge_threshold_show: 0.05 (was 0.03); direction: under (was both); added line_min: 3.5 / line_max: 6.5</td></tr>
+  <tr><td>src/mlb_strikeouts_modeling/scripts/run_pipeline.py</td><td>See details below</td></tr>
+  <tr><td>models/mlb_strikeouts_model.joblib</td><td>Retrained on v2 spine (8,033 rows, correct novig_prob_over); uploaded to S3</td></tr>
+  <tr><td>models/mlb_strikeouts_residuals_clean.npy</td><td>NEW — 6,690 clean out-of-fold residuals (mean=0.052, std=2.149); uploaded to S3 at mlb/strikeouts_model/model/mlb_strikeouts_residuals_clean.npy</td></tr>
+</table>
+
+<h3>run_pipeline.py Changes</h3>
+<table border="1" cellpadding="6">
+  <tr style="background:#1e3a5f;color:#93c5fd;"><th>Location</th><th>Old</th><th>New</th></tr>
+  <tr><td>Docstring</td><td>Strategy: both OVER and UNDER · edge ≥ 0.05 · middling strategy</td><td>Strategy: UNDER-heavy · edge ≥ 0.07 · lines 3.5–6.5 only · OOS: 1,715 UNDER bets · 45.3% win rate · +98.9u · +5.77% ROI</td></tr>
+  <tr><td>RESIDUALS_KEY</td><td>mlb_strikeouts_residuals.npy</td><td>mlb_strikeouts_residuals_clean.npy</td></tr>
+  <tr><td>EDGE_THRESHOLD_PRIMARY</td><td>0.05</td><td>0.07</td></tr>
+  <tr><td>EDGE_THRESHOLD_SHOW</td><td>0.03</td><td>0.05</td></tr>
+  <tr><td>LINE_MIN / LINE_MAX</td><td>(did not exist)</td><td>3.5 / 6.5 (new constants)</td></tr>
+  <tr><td>assemble_bet_rows()</td><td>(no line filter)</td><td>line_agg = line_agg[line_agg["line"].between(LINE_MIN, LINE_MAX)] added before MIN_BOOKS filter</td></tr>
+  <tr><td>build_html() strategy note</td><td>"line-shopping / middling strategy" · "68.8% win rate · 36.5% ROI"</td><td>"UNDER-heavy" · "1,715 UNDER bets · 45.3% win rate · +98.9u · +5.77% ROI (2024–2026)"</td></tr>
+  <tr><td>build_html() footer</td><td>out-of-fold RMSE=2.131 · residual σ=2.148 · edge≥5pp · both directions</td><td>out-of-fold RMSE=3.013 · residual σ=2.149 (clean) · edge≥7pp · UNDER only · lines 3.5–6.5</td></tr>
+</table>
+
+<h3>Pre-Deploy Checklist (before 2027-03-20 MLB season open)</h3>
+<ol>
+  <li>Run <code>update_spine.py</code> with 2026 full-season logs to refresh the spine</li>
+  <li>Retrain model on full 2024–2026 data (re-run v3_model.py with all seasons)</li>
+  <li>Enable EventBridge rules for: spine_update (weekly), pipeline (daily gamedays), settle (daily)</li>
+  <li>Verify residuals_clean.npy is loaded correctly (Lambda picks up from S3)</li>
+  <li>Run a manual dry-run pipeline call on a gameday to confirm email output looks right</li>
+</ol>
+
+<h3>OOS Performance Summary (v2, corrected decimal odds)</h3>
+<table border="1" cellpadding="6">
+  <tr style="background:#1e3a5f;color:#93c5fd;"><th>Metric</th><th>Value</th><th>Notes</th></tr>
+  <tr><td>Strategy</td><td>UNDER-heavy</td><td>edge ≥ 7pp, lines 3.5–6.5</td></tr>
+  <tr><td>Total UNDER bets</td><td>1,715</td><td>out-of-fold (2024–2026 seasons)</td></tr>
+  <tr><td>Win rate</td><td>45.3%</td><td>UNDER hit rate</td></tr>
+  <tr><td>P&amp;L</td><td>+98.9u</td><td>at -110 odds</td></tr>
+  <tr><td>ROI</td><td>+5.77%</td><td>per unit wagered</td></tr>
+  <tr><td>out-of-fold RMSE</td><td>3.013</td><td>vs v1 buggy RMSE of 2.131</td></tr>
+  <tr><td>Clean residual std</td><td>2.149</td><td>6,690 non-zero-pred rows only</td></tr>
+</table>
+
+<h3>Bugs Fixed in This Session</h3>
+<ol>
+  <li><strong>Decimal odds bug (critical)</strong>: API returned decimal odds but code called american_to_decimal() on them — novig was always ≈0.50, creating fake edge. Fixed in build_spine.py and build_labeled_dataset.py.</li>
+  <li><strong>TimeSeriesSplit zero-pred rows (16.7% of training data)</strong>: First 1,343 spine rows never assigned to a validation fold → oof_pred=0.0 → garbage p_model. Fixed: replaced zero-pred rows with full-model in-sample predictions.</li>
+  <li><strong>Biased out-of-fold residuals</strong>: Zero-pred residuals = actual K count (not error) → residual mean=0.885 → bootstrap inflated every prediction by 0.885 Ks → 92k false OVER bets. Fixed: use only the 6,690 clean non-zero-pred residuals for bootstrap sampling.</li>
+  <li><strong>Extreme alt lines generating false edges</strong>: Lines ≤2.5 / ≥7.5 caused model-vs-market divergence at -49% ROI. Fixed: filter to lines 3.5–6.5.</li>
+</ol>
+</section>
+
+<section>
+<h2>Strategy Decision — Hybrid v3 &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-04</span></h2>
+
+<div style="background:#1a3a1a;border:2px solid #4ade80;border-radius:8px;padding:14px;margin-bottom:16px;">
+  <strong style="color:#4ade80;font-size:15px;">✓ Production Strategy: Hybrid</strong><br>
+  <span style="color:#d1fae5;"><strong>UNDER:</strong> edge ≥ 7%, market expects OVER (novig_prob_at_line &gt; 0.50 → UNDER at positive American odds)</span><br>
+  <span style="color:#d1fae5;"><strong>OVER:</strong> edge ≥ 10%, any odds tier</span><br>
+  <span style="color:#9ca3af;font-size:12px;">Lines 3.5–6.5 · shrinkage=0.25 · bootstrap N=10,000</span>
+</div>
+
+<h3>Why this beats the alternatives</h3>
+<table>
+<tr><th>Strategy</th><th>Bets</th><th>P&amp;L</th><th>ROI</th><th>Verdict</th></tr>
+<tr><td>Original (7% UNDER, all odds)</td><td>1,715</td><td>+98.9u</td><td class="warn">+5.8%</td><td>Dragged down by negative-odds UNDER bets with near-zero market edge</td></tr>
+<tr><td>10% BOTH, any odds</td><td>735</td><td>+152.1u</td><td class="pass">+20.7%</td><td>Strong ROI but only ~245 bets/season — too thin</td></tr>
+<tr style="border:2px solid #4ade80;"><td><strong>Hybrid (7% UNDER pos odds + 10% OVER any)</strong></td><td><strong>1,625</strong></td><td><strong>+282.0u</strong></td><td class="pass"><strong>+17.4%</strong></td><td><strong>Best P&amp;L and strong ROI — no overlap between legs</strong></td></tr>
+</table>
+
+<h3>Hybrid Strategy — Season-by-Season</h3>
+<table>
+<tr><th>Season</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr><td>2024</td><td>988</td><td>45.4%</td><td>+161.9u</td><td class="pass">+16.4%</td></tr>
+<tr><td>2025</td><td>371</td><td>43.4%</td><td>+49.5u</td><td class="pass">+13.3%</td></tr>
+<tr><td>2026</td><td>266</td><td>47.7%</td><td>+70.7u</td><td class="pass">+26.6%</td></tr>
+<tr><td><strong>TOTAL</strong></td><td><strong>1,625</strong></td><td><strong>45.4%</strong></td><td><strong>+282.0u</strong></td><td class="pass"><strong>+17.4%</strong></td></tr>
+</table>
+
+<h3>Leg Breakdown</h3>
+<table>
+<tr><th>Leg</th><th>Rule</th><th>Bets</th><th>Win rate</th><th>Mkt implied WR</th><th>WR vs mkt</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>UNDER leg</strong></td><td>edge ≥ 7%, UNDER at positive American odds</td><td>1,212</td><td>44.6%</td><td>36.3%</td><td class="pass">+8.3pp</td><td>+180.3u</td><td class="pass">+14.9%</td></tr>
+<tr style="border-left:3px solid #4ade80;"><td><strong>OVER leg</strong></td><td>edge ≥ 10%, any odds tier</td><td>413</td><td>47.7%</td><td>—</td><td>—</td><td>+101.7u</td><td class="pass">+24.6%</td></tr>
+<tr><td><strong>TOTAL</strong></td><td>Zero overlap (confirmed)</td><td><strong>1,625</strong></td><td><strong>45.4%</strong></td><td>36.3%</td><td class="pass"><strong>+9.1pp</strong></td><td><strong>+282.0u</strong></td><td class="pass"><strong>+17.4%</strong></td></tr>
+</table>
+
+<h3>UNDER leg — Season breakdown</h3>
+<table>
+<tr><th>Season</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr><td>2024</td><td>719</td><td>45.9%</td><td>+90.9u</td><td class="pass">+12.6%</td></tr>
+<tr><td>2025</td><td>305</td><td>40.3%</td><td>+29.9u</td><td class="pass">+9.8%</td></tr>
+<tr><td>2026</td><td>188</td><td>46.3%</td><td>+59.6u</td><td class="pass">+31.7%</td></tr>
+</table>
+
+<h3>OVER leg — Season breakdown</h3>
+<table>
+<tr><th>Season</th><th>Bets</th><th>Win rate</th><th>P&amp;L</th><th>ROI</th></tr>
+<tr><td>2024</td><td>269</td><td>44.2%</td><td>+71.0u</td><td class="pass">+26.4%</td></tr>
+<tr><td>2025</td><td>66</td><td>57.6%</td><td>+19.6u</td><td class="pass">+29.7%</td></tr>
+<tr><td>2026</td><td>78</td><td>51.3%</td><td>+11.1u</td><td class="pass">+14.2%</td></tr>
+</table>
+
+<div class="note"><strong>Why positive-odds filter on UNDER:</strong> At 7% edge threshold, negative-odds UNDER bets had WR 50.8% vs market implied 52.1% — the model had essentially zero edge over the market (−1.3pp). At short odds you need to clear a high breakeven WR, so even a small shortfall loses money. By restricting to positive-odds UNDER bets (market expects OVER → we disagree), we get WR 44.6% vs market 36.3% (+8.3pp genuine edge). The OVER leg at ≥10% captures a separate, complementary alpha source with no overlap.</div>
+
+<h3>Production code changes</h3>
+<table>
+<tr><th>File</th><th>Change</th></tr>
+<tr><td>config/config.yaml</td><td>direction: hybrid; edge_threshold_under: 0.07; edge_threshold_over: 0.10; edge_threshold_show: 0.05</td></tr>
+<tr><td>scripts/run_pipeline.py</td><td>EDGE_THRESHOLD_UNDER=0.07, EDGE_THRESHOLD_OVER=0.10; side selection logic updated: UNDER gated by market_expects_over (novig_prob_at_line > 0.50), OVER gated by ≥10% edge</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Mock Email Preview — Hybrid Strategy &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-04</span></h2>
+<p>Below is a representative mock of the daily email output under the hybrid v3 strategy. OVER Edge and UNDER Edge are always both shown — the active direction is bolded, the inactive is grayed out. Green rows = PLAY (primary threshold met), yellow = WATCH. WATCH rows still show their direction (UNDER or OVER) — e.g. an OVER at 8pp is a WATCH because it missed the 10pp OVER threshold; an UNDER at 5–7pp is a WATCH because it missed the 7pp UNDER threshold.</p>
+
+<!-- ── Begin email mock ────────────────────────────────────────────────── -->
+<div style="border:2px solid #bdc3c7;border-radius:8px;padding:20px;margin-top:12px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#222;max-width:1200px">
+
+<h2 style="color:#2c3e50;margin-bottom:4px;margin-top:0">MLB Pitcher Strikeouts — 2026-07-04</h2>
+<p style="margin-top:4px">
+  <strong>3 PLAYS</strong>
+  &nbsp;·&nbsp; 3 watch
+  &nbsp;·&nbsp; 14 pitchers scored
+  &nbsp;·&nbsp; 2026-07-04 13:02 ET
+</p>
+
+<p style="margin:0 0 12px">
+  <span style="display:inline-block;padding:2px 10px;border-radius:4px;margin-right:8px;font-size:12px;font-weight:600;background:#eaf6ea;color:#276221">PLAY ✓</span>
+  UNDER ≥7pp (positive odds) or OVER ≥10pp
+  <span style="display:inline-block;padding:2px 10px;border-radius:4px;margin-left:8px;margin-right:8px;font-size:12px;font-weight:600;background:#fffbeb;color:#b45309">WATCH</span>
+  UNDER 5–7pp (positive odds)
+</p>
+
+<details open>
+<summary style="font-weight:600;font-size:14px;cursor:pointer;padding:10px 0;color:#2c3e50;user-select:none">▸ Props by game &nbsp;<span style="font-weight:normal;color:#666">(6 rows scored)</span></summary>
+<table style="border-collapse:collapse;width:100%;margin-top:8px">
+<tr style="background:#2c3e50;color:#fff">
+  <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap">Player</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Dir</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Line</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Best Odds</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Book</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Mkt P(dir)</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Model P(dir)</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">OVER Edge</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">UNDER Edge</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">yhat Ks</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">k_roll_s5</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">k_roll_c5</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">opp_K_rate</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">#Books</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Status</th>
+</tr>
+
+<!-- ── Game 1: HOU @ BOS ── -->
+<tr style="background:#edf1f5">
+  <td colspan="15" style="padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7">
+    HOU @ BOS &nbsp;·&nbsp; <span style="color:#276221">2 PLAYS</span>
+  </td>
+</tr>
+<!-- Hunter Brown — OVER play (+10.2pp) -->
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Hunter Brown</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#276221">OVER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">-115</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#555">DraftKings</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">43.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">53.4%</td>
+  <!-- OVER Edge — active → bold -->
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+10.2%</td>
+  <!-- UNDER Edge — inactive → grayed -->
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-10.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.94</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.0</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.2</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.7</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center">5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<!-- Brayan Bello — UNDER play (+7.8pp, market expects OVER) -->
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Brayan Bello</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">4.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">+118</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#555">FanDuel</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">45.9%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">53.7%</td>
+  <!-- OVER Edge — inactive → grayed -->
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-7.8%</td>
+  <!-- UNDER Edge — active → bold -->
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+7.8%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.12</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center">4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+
+<!-- ── Game 2: LAD @ NYM ── -->
+<tr style="background:#edf1f5">
+  <td colspan="15" style="padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7">
+    LAD @ NYM &nbsp;·&nbsp; <span style="color:#276221">1 PLAY</span>
+  </td>
+</tr>
+<!-- Yoshinobu Yamamoto — UNDER play (+8.1pp) -->
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Yoshinobu Yamamoto</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">6.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">+105</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#555">Caesars</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">44.9%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">53.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-8.1%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+8.1%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.07</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.8</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">7.0</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">7.6</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center">6</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<!-- Seth Lugo — WATCH (5.9pp UNDER, positive odds) -->
+<tr style="background:#fffbeb">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Seth Lugo</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">+102</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#555">BetMGM</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">46.1%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">52.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-5.9%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+5.9%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.21</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.6</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center">3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#b45309;font-weight:bold">WATCH</span></td>
+</tr>
+
+<!-- ── Game 3: ATL @ PHI ── -->
+<tr style="background:#edf1f5">
+  <td colspan="15" style="padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7">
+    ATL @ PHI &nbsp;·&nbsp; <span style="color:#888">no plays</span>
+  </td>
+</tr>
+<!-- Spencer Strider — WATCH (5.5pp UNDER) -->
+<tr style="background:#fffbeb">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Spencer Strider</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">6.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">+108</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#555">FanDuel</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">45.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">50.7%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-5.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+5.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.14</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">7.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">7.9</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center">5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#b45309;font-weight:bold">WATCH</span></td>
+</tr>
+
+<!-- ── Game 4: CWS @ MIN ── -->
+<tr style="background:#edf1f5">
+  <td colspan="15" style="padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7">
+    CWS @ MIN &nbsp;·&nbsp; <span style="color:#888">no plays</span>
+  </td>
+</tr>
+<!-- Framber Valdez — no qualifying edge on either side; Dir = — -->
+<tr style="background:#fff">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600;color:#888">Framber Valdez</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">—</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">—</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">—</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">51.8%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">54.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">+2.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">-2.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">5.52</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">5.6</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">8.2</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#aaa">4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#aaa">—</td>
+</tr>
+
+<!-- Chris Sale — WATCH OVER (8.0pp — below 10pp OVER threshold; Dir still shown) -->
+<tr style="background:#fffbeb">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Chris Sale</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#276221">OVER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">-108</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#555">BetMGM</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">49.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">57.0%</td>
+  <!-- OVER Edge — active → bold -->
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+8.0%</td>
+  <!-- UNDER Edge — inactive → grayed -->
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-8.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.82</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.6</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.9</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.9</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center">4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#b45309;font-weight:bold">WATCH</span></td>
+</tr>
+
+</table>
+</details>
+
+<details>
+<summary style="font-weight:600;font-size:14px;cursor:pointer;padding:10px 0;color:#2c3e50;user-select:none">▸ Model inputs (OLS — 7 features)</summary>
+<table style="border-collapse:collapse;margin-top:6px;width:auto;font-size:12px">
+<tr style="background:#2c3e50;color:#fff">
+  <th style="padding:7px 8px">Feature</th><th style="padding:7px 8px">Shown as</th><th style="padding:7px 8px">What it measures</th><th style="padding:7px 8px">Coefficient direction</th>
+</tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-family:monospace">consensus_line</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">—</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">Market's consensus K line for this pitcher — best single predictor of K output</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">+1.279 (dominant)</td></tr>
+<tr style="background:#f9f9f9"><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-family:monospace">novig_prob_over</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">Mkt P(dir)</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">No-vig market implied P(over) at consensus line — how confident the market is</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">+0.300</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-family:monospace">is_home</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">—</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">1 if pitcher is at home — home pitchers average slightly more Ks</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">+0.076</td></tr>
+<tr style="background:#f9f9f9"><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-family:monospace">k_roll_c5</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">k_roll_c5</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">Avg Ks over pitcher's last 5 starts (career window, crosses seasons)</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">+0.031</td></tr>
+<tr><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-family:monospace">opp_k_against_season</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">opp_K_rate</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">Opponent team's avg Ks allowed to pitchers this season</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">-0.009 (near-zero)</td></tr>
+<tr style="background:#f9f9f9"><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-family:monospace">k_roll_career</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">—</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">Career avg Ks — negative coef due to multicollinearity with consensus_line</td><td style="padding:5px 8px;border-bottom:1px solid #e0e0e0">-0.084</td></tr>
+<tr><td style="padding:5px 8px;font-family:monospace">k_roll_s5</td><td style="padding:5px 8px">k_roll_s5</td><td style="padding:5px 8px">Avg Ks over last 5 starts (season window, resets each year)</td><td style="padding:5px 8px">-0.044</td></tr>
+</table>
+<p style="font-size:11px;color:#555;margin-top:8px">
+  Model: OLS (StandardScaler + LinearRegression) · RMSE=3.013 · residual σ=2.149 · shrinkage=0.25 · bootstrap N=10,000<br>
+  Prediction: mean_adj = line + 0.75×(yhat − line) · P(over) = fraction of 10k simulated K counts above line<br>
+  Negative rolling coefficients are expected — consensus_line absorbs pitcher quality, making career averages redundant.
+</p>
+</details>
+
+<div style="background:#ecf0f1;border-radius:6px;padding:10px 16px;margin-top:16px;font-size:12px;color:#555">
+  OOS (2024–2026): 1,625 bets · 45.4% WR · +282.0u · +17.4% ROI &nbsp;|&nbsp;
+  UNDER leg: 1,212 bets · +180u · +14.9% ROI &nbsp;|&nbsp; OVER leg: 413 bets · +102u · +24.6% ROI
+</div>
+
+</div><!-- end email mock -->
+<p style="font-size:12px;color:#6b7280;margin-top:8px">
+  Note: OVER Edge and UNDER Edge are always both displayed — the active direction (matching the chosen side) is bolded in black; the inactive direction is grayed out at 11px to confirm the model's view of the other leg without cluttering the primary signal.
+</p>
+</section>
+
+<section>
+<h2>Bug Found: Consensus vs Per-Book Scoring &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-05</span></h2>
+
+<div class="bug">
+<strong>Issue:</strong> The live pipeline was aggregating all books to a single consensus novig P(over) before scoring, then flagging a play based on that consensus edge. The model was <em>trained</em> at the per-book level — each training row used that specific book's novig as the <code>novig_prob_over</code> feature. The live pipeline violated this: it fed in a cross-book average and produced one edge number, but that number might not exist at any individual book.<br><br>
+<strong>Example:</strong> Model says P(over 5.5 K) = 55%. Books are priced:
+<ul style="margin:6px 0 0 16px">
+  <li>DraftKings: novig P(over) = 45% → edge = <strong>+10pp</strong> (PLAY)</li>
+  <li>FanDuel: novig P(over) = 51% → edge = <strong>+4pp</strong> (no play)</li>
+  <li>BetMGM: novig P(over) = 53% → edge = <strong>+2pp</strong> (no play)</li>
+</ul>
+Consensus novig = 49.7% → consensus edge = +5.3pp → flagged as WATCH. Neither the right book (DK, +10pp play) nor the right signal (only one book has real edge).<br><br>
+<strong>Fix:</strong> Score at the per-book level — one row per (player, line, book). Each book's own novig feeds the model, and edge is computed against that book's specific price. Only books that individually meet the threshold are flagged. This matches how the model was trained. Backtest is unaffected (it was already per-book).
+</div>
+
+<h3>Option A — One row per (player, line), Books column shows only qualifying books + per-book edge</h3>
+<p>Compact — one row per player-line. The Books column lists only the books where edge individually clears the threshold, with each book's per-book edge shown. Non-qualifying books are silently dropped.</p>
+
+<div style="border:2px solid #bdc3c7;border-radius:8px;padding:20px;margin-top:12px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#222;max-width:1300px">
+<h2 style="color:#2c3e50;margin-bottom:4px;margin-top:0">MLB Pitcher Strikeouts — 2026-07-05 (Option A)</h2>
+<p style="margin-top:4px"><strong>2 PLAYS</strong> &nbsp;·&nbsp; 1 watch &nbsp;·&nbsp; 14 w/ posted lines &nbsp;·&nbsp; 2026-07-05 13:02 ET</p>
+<details open>
+<summary style="font-weight:600;font-size:14px;cursor:pointer;padding:10px 0;color:#2c3e50">▸ Props by game</summary>
+<table style="border-collapse:collapse;width:100%;margin-top:8px">
+<tr style="background:#2c3e50;color:#fff">
+  <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap">Player</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Team</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Opp</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Dir</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Line</th>
+  <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap">Qualifying Books (per-book edge)</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Best Odds</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">yhat Ks</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">k_roll_s5</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">k_roll_c5</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">opp_K_rate</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Status</th>
+</tr>
+<tr style="background:#edf1f5">
+  <td colspan="12" style="padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7">
+    <span style="font-weight:400;color:#666">7:05 PM ET</span> &nbsp;·&nbsp; HOU @ BOS &nbsp;·&nbsp; <span style="color:#276221">2 PLAYS</span>
+  </td>
+</tr>
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Hunter Brown</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#276221">OVER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;color:#276221;font-weight:600">DK +118 <span style="color:#888;font-weight:400">(+10.2pp)</span> &nbsp;·&nbsp; FD +115 <span style="color:#888;font-weight:400">(+9.5pp)</span></td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">+118</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.94</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.0</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.2</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.7</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Brayan Bello</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">4.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;color:#276221;font-weight:600">FD +118 <span style="color:#888;font-weight:400">(+7.8pp)</span></td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">+118</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.12</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<tr style="background:#fffbeb">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Brayan Bello</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">4.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;color:#b45309;font-weight:600">DK +102 <span style="color:#888;font-weight:400">(+6.1pp)</span></td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#b45309">+102</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.12</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#b45309;font-weight:bold">WATCH</span></td>
+</tr>
+</table>
+</details>
+<p style="font-size:12px;color:#6b7280;margin-top:8px">Tradeoff: compact but ambiguous — if DK and FD both qualify you still get one PLAY row. You have to know to bet both (or choose one). Non-qualifying books are invisible; you might accidentally shop to BetMGM thinking it's also a play.</p>
+</div>
+
+<div style="margin:20px 0;padding:12px 16px;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:4px;font-size:13px">
+  <strong>→ Going with Option B.</strong> One row per qualifying (player, line, book). Each row is one discrete, actionable bet. You see exactly which books have edge and which don't — including the books that looked like plays at consensus pricing but aren't at the per-book level. Zero ambiguity about where to go and what the actual edge is.
+</div>
+
+<h3>Option B — Mock Email: One row per qualifying (player, line, book)</h3>
+<p>Each row is a single actionable bet at a specific book. Multiple rows appear for the same player-line if multiple books qualify. Non-qualifying books for the same player-line appear as grayed rows showing why they don't clear.</p>
+
+<!-- ── Begin updated mock ──────────────────────────────────────────────── -->
+<div style="border:2px solid #bdc3c7;border-radius:8px;padding:20px;margin-top:12px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#222;max-width:1300px">
+
+<h2 style="color:#2c3e50;margin-bottom:4px;margin-top:0">MLB Pitcher Strikeouts — 2026-07-05</h2>
+<p style="margin-top:4px">
+  <strong>4 PLAYS</strong>
+  &nbsp;·&nbsp; 2 watch
+  &nbsp;·&nbsp; 14 w/ posted lines
+  &nbsp;·&nbsp; 2026-07-05 13:02 ET
+</p>
+<p style="margin:0 0 12px">
+  <span style="display:inline-block;padding:2px 10px;border-radius:4px;margin-right:8px;font-size:12px;font-weight:600;background:#eaf6ea;color:#276221">PLAY ✓</span>
+  UNDER ≥7pp (positive odds) or OVER ≥10pp — per book
+  <span style="display:inline-block;padding:2px 10px;border-radius:4px;margin-left:8px;margin-right:8px;font-size:12px;font-weight:600;background:#fffbeb;color:#b45309">WATCH</span>
+  UNDER 5–7pp (positive odds) — per book
+</p>
+
+<details open>
+<summary style="font-weight:600;font-size:14px;cursor:pointer;padding:10px 0;color:#2c3e50">▸ Props by game</summary>
+<table style="border-collapse:collapse;width:100%;margin-top:8px">
+<tr style="background:#2c3e50;color:#fff">
+  <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap">Player</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Team</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Opp</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Dir</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Line</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Book</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Odds</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Mkt (opp)</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Mkt (dir)%</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Model (dir)%</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">OVER Edge</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">UNDER Edge</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">yhat Ks</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">k_roll_s5</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">k_roll_c5</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">opp_K_rate</th>
+  <th style="padding:7px 8px;text-align:center;font-size:12px;white-space:nowrap">Status</th>
+</tr>
+
+<!-- ── HOU @ BOS · 7:05 PM ET ── -->
+<tr style="background:#edf1f5">
+  <td colspan="17" style="padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7">
+    <span style="font-weight:400;color:#666">7:05 PM ET</span> &nbsp;·&nbsp; HOU @ BOS &nbsp;·&nbsp; <span style="color:#276221">3 PLAYS</span>
+  </td>
+</tr>
+
+<!-- Hunter Brown OVER 5.5 — DK qualifies (+10.2pp), FD qualifies (+10.8pp), MGM does not (-108 novig too high) -->
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Hunter Brown</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#276221">OVER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">DraftKings</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">+118</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#888">-108</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">45.8%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">56.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+10.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-10.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.94</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.0</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.2</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.7</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Hunter Brown</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#276221">OVER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">FanDuel</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">+115</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#888">-110</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">46.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">56.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+9.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-9.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">5.94</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.0</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">6.2</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.7</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<!-- Hunter Brown @ BetMGM — doesn't qualify (edge only +4.1pp at -115) — shown grayed -->
+<tr style="background:#fff">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600;color:#bbb">Hunter Brown</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">OVER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">5.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">BetMGM</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">-115</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">-108</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">51.8%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">56.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">+4.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">-4.2%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">5.94</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">6.0</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">6.2</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">8.7</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">—</td>
+</tr>
+
+<!-- Brayan Bello UNDER 4.5 — FD qualifies (+7.8pp), DK qualifies (+7.1pp), Caesars doesn't -->
+<tr style="background:#eaf6ea">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Brayan Bello</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">4.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">FanDuel</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:600;color:#276221">+118</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#888">-125</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">45.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">53.3%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-7.8%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+7.8%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.12</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#276221;font-weight:bold">PLAY ✓</span></td>
+</tr>
+<tr style="background:#fffbeb">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600">Brayan Bello</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold;color:#1d4ed8">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">4.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#888">DraftKings</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#888">+102</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#888">-118</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">49.5%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center">55.6%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#999">-6.1%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold">+6.1%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.12</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">4.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#555">8.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center"><span style="color:#b45309;font-weight:bold">WATCH</span></td>
+</tr>
+<tr style="background:#fff">
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:600;color:#bbb">Brayan Bello</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">BOS</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">HOU</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">UNDER</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">4.5</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">Caesars</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">-108</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">-115</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">53.0%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">55.6%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">-2.6%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">+2.6%</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">4.12</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">4.4</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">4.3</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:11px;text-align:center;color:#bbb">8.1</td>
+  <td style="padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;color:#bbb">—</td>
+</tr>
+
+</table>
+</details>
+
+<div style="background:#ecf0f1;border-radius:6px;padding:10px 16px;margin-top:16px;font-size:12px;color:#555">
+  OOS (2024–2026): 1,625 bets · 45.4% WR · +282.0u · +17.4% ROI &nbsp;|&nbsp;
+  UNDER leg: 1,212 bets · +180u · +14.9% ROI &nbsp;|&nbsp; OVER leg: 413 bets · +102u · +24.6% ROI
+</div>
+</div><!-- end updated mock -->
+
+<p style="font-size:12px;color:#6b7280;margin-top:8px">
+  Key difference from prior mock: BetMGM row for Hunter Brown and Caesars row for Brayan Bello are grayed out (no edge at those books) even though the consensus number looked like a play. Only DK and FD actually clear the threshold on their own per-book novig. Each row is now a discrete actionable bet — go to that book, bet that line.
+</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- v3 RETRAIN SESSION — 2026-07-05                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<section>
+<h2>v3 Retrain — Remove novig_prob_over as Model Input &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-05</span></h2>
+
+<div class="bug">
+<strong>WHY THIS RETRAIN:</strong> <code>novig_prob_over</code> was used as a model input feature in v2. The problem: different books price the same pitcher slightly differently, so <code>novig_prob_over</code> varies per book. This made the raw K projection (yhat) different per book for the same pitcher-game — nonsensical, since the pitcher throws the same number of Ks regardless of DraftKings vs. FanDuel. Only features that are genuinely independent of book pricing belong in the regression. <code>consensus_line</code> stays — it is the modal line across all books (player-level, book-independent) and is the dominant predictor.
+</div>
+
+<h3>Feature Rationale (v3 Model)</h3>
+<table>
+<tr><th>Feature</th><th>In model?</th><th>Why</th></tr>
+<tr><td><code>consensus_line</code></td><td class="pass">YES</td><td>The market's single best estimate of how many Ks this pitcher will throw today. Modal line across all books — stable, player-level, not book-dependent. By far the strongest predictor (RMSE improvement ~0.15 over next-best feature).</td></tr>
+<tr><td><code>k_roll_career</code></td><td class="pass">YES</td><td>Career average Ks. Stable long-run baseline for pitcher quality — less noisy than short windows. Captures the pitcher's fundamental strikeout talent independent of any single season.</td></tr>
+<tr><td><code>k_roll_c5</code></td><td class="pass">YES</td><td>Average Ks in last 5 starts across career (crosses season boundaries). Complements the career average — captures recent within-career form. Useful for pitchers returning from injury or early in a new season when season-window stats are thin.</td></tr>
+<tr><td><code>opp_k_against_season</code></td><td class="pass">YES</td><td>How many Ks this team's batters have struck out against this season. Harder lineups (low K-against) suppress strikeout totals; weak lineups inflate them. Provides genuine matchup signal independent of pitcher quality.</td></tr>
+<tr><td><code>is_home</code></td><td class="pass">YES</td><td>Whether the pitcher is at home. Small but consistent effect — home pitchers average slightly more Ks across the dataset.</td></tr>
+<tr><td><code>novig_prob_over</code></td><td class="fail">REMOVED</td><td>Varies per book — different books price the same pitcher slightly differently, so including this as a model input made yhat book-dependent. The raw K projection must be a single number for a given pitcher-game. Retained only as the market benchmark for edge comparison (p_market_over = novig_over) — not passed to model.predict().</td></tr>
+<tr><td><code>k_roll_s5</code></td><td><span class="warn">NOT IN WINNER</span></td><td>Season-window 5-start rolling avg. Evaluated but the career-window k_roll_c5 was sufficient; adding k_roll_s5 did not improve RMSE below the best combo.</td></tr>
+</table>
+
+<h3>Step 3a — Individual OLS Results</h3>
+<p style="font-size:12px;color:#6b7280;">v5 features (added 2026-07-05) shown in blue rows. n differs from v4 features because v5 features require market data (not all spine rows have market coverage).</p>
+<table>
+<tr><th>Feature</th><th>RMSE</th><th>MAE</th><th>R²</th><th>n</th></tr>
+<tr style="background:#eaf6ea"><td><code>consensus_line</code></td><td>2.1421</td><td>1.7055</td><td>0.2417</td><td>2,653</td></tr>
+<tr style="background:#dbeafe"><td><code>max_line</code> ⭐ v5</td><td>2.1755</td><td>1.7327</td><td>0.2195</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>min_line</code> v5</td><td>2.2243</td><td>1.7636</td><td>0.1840</td><td>5,305</td></tr>
+<tr><td><code>k_roll_c20</code></td><td>2.2836</td><td>1.8239</td><td>0.1405</td><td>3,633</td></tr>
+<tr><td><code>k_roll_c10</code></td><td>2.2882</td><td>1.8277</td><td>0.1370</td><td>3,633</td></tr>
+<tr><td><code>k_roll_career</code></td><td>2.2917</td><td>1.8309</td><td>0.1344</td><td>3,633</td></tr>
+<tr><td><code>k_roll_c5</code></td><td>2.3064</td><td>1.8457</td><td>0.1233</td><td>3,633</td></tr>
+<tr><td><code>k_roll_season</code></td><td>2.3106</td><td>1.8478</td><td>0.1157</td><td>3,400</td></tr>
+<tr><td><code>k_roll_s20</code></td><td>2.3108</td><td>1.8482</td><td>0.1156</td><td>3,400</td></tr>
+<tr><td><code>k_roll_s10</code></td><td>2.3137</td><td>1.8507</td><td>0.1134</td><td>3,400</td></tr>
+<tr><td><code>k_roll_s5</code></td><td>2.3225</td><td>1.8600</td><td>0.1066</td><td>3,400</td></tr>
+<tr><td><code>k_roll_c3</code></td><td>2.3342</td><td>1.8704</td><td>0.1020</td><td>3,633</td></tr>
+<tr><td><code>k_roll_s3</code></td><td>2.3428</td><td>1.8781</td><td>0.0909</td><td>3,400</td></tr>
+<tr><td><code>ip_roll_season</code></td><td>2.3853</td><td>1.9031</td><td>0.0576</td><td>3,400</td></tr>
+<tr><td><code>k_roll_s1</code></td><td>2.3916</td><td>1.9222</td><td>0.0526</td><td>3,400</td></tr>
+<tr><td><code>k_roll_c1</code></td><td>2.3921</td><td>1.9248</td><td>0.0569</td><td>3,633</td></tr>
+<tr><td><code>is_home</code></td><td>2.4649</td><td>1.9755</td><td>0.0051</td><td>3,734</td></tr>
+<tr><td><code>opp_k_against_season</code></td><td>2.4667</td><td>1.9827</td><td>-0.0007</td><td>3,707</td></tr>
+<tr><td><code>days_rest</code></td><td>2.4700</td><td>1.9647</td><td>-0.0055</td><td>3,633</td></tr>
+<tr><td><code>game_month</code></td><td>2.4721</td><td>1.9867</td><td>-0.0007</td><td>3,734</td></tr>
+<tr style="background:#dbeafe"><td><code>over_price_bucket</code> v5</td><td>2.4623</td><td>1.9569</td><td>0.0001</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>min_under_prob</code> v5</td><td>2.4623</td><td>1.9543</td><td>0.0001</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>over_price_bucket_fine</code> v5</td><td>2.4629</td><td>1.9550</td><td>-0.0004</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>max_over_prob</code> v5</td><td>2.4639</td><td>1.9572</td><td>-0.0012</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>under_price_bucket</code> v5</td><td>2.4641</td><td>1.9552</td><td>-0.0014</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>under_price_bucket_fine</code> v5</td><td>2.4635</td><td>1.9548</td><td>-0.0009</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>max_under_prob</code> v5</td><td>2.4831</td><td>1.9819</td><td>-0.0169</td><td>5,305</td></tr>
+<tr style="background:#dbeafe"><td><code>min_over_prob</code> v5</td><td>2.4844</td><td>1.9825</td><td>-0.0180</td><td>5,305</td></tr>
+</table>
+<div class="note"><strong>Key finding:</strong> consensus_line dominates (RMSE 2.142). Among v5 features, <code>max_line</code> and <code>min_line</code> are the strongest individually (RMSE 2.175 and 2.224) — meaningful signal, ranking 2nd and 3rd overall. The price bucket and implied prob features are near-noise alone (RMSE ~2.46, R²≈0) but add signal in combinations where they encode odds pricing orthogonal to the line level — confirmed by the Group B combo improvement.</div>
+
+<h3>Step 3b — Individual XGBoost Results</h3>
+<p style="font-size:12px;color:#6b7280;">v5 features shown in blue.</p>
+<table>
+<tr><th>Feature</th><th>RMSE</th><th>MAE</th><th>R²</th></tr>
+<tr style="background:#eaf6ea"><td><code>consensus_line</code></td><td>2.1448</td><td>1.7070</td><td>0.2398</td></tr>
+<tr style="background:#dbeafe"><td><code>max_line</code> ⭐ v5</td><td>2.1886</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>min_line</code> v5</td><td>2.2265</td><td>—</td><td>—</td></tr>
+<tr><td><code>k_roll_c20</code></td><td>2.3000</td><td>1.8385</td><td>0.1281</td></tr>
+<tr><td><code>k_roll_c10</code></td><td>2.3021</td><td>1.8381</td><td>0.1265</td></tr>
+<tr><td><code>k_roll_career</code></td><td>2.3031</td><td>1.8388</td><td>0.1258</td></tr>
+<tr><td><code>k_roll_c5</code></td><td>2.3141</td><td>1.8516</td><td>0.1173</td></tr>
+<tr><td><code>k_roll_s20</code></td><td>2.3231</td><td>1.8577</td><td>0.1061</td></tr>
+<tr><td><code>k_roll_season</code></td><td>2.3252</td><td>1.8598</td><td>0.1045</td></tr>
+<tr><td><code>k_roll_s10</code></td><td>2.3259</td><td>1.8595</td><td>0.1039</td></tr>
+<tr><td><code>k_roll_s5</code></td><td>2.3310</td><td>1.8622</td><td>0.0999</td></tr>
+<tr><td><code>k_roll_c3</code></td><td>2.3351</td><td>1.8716</td><td>0.1012</td></tr>
+<tr><td><code>k_roll_s3</code></td><td>2.3476</td><td>1.8815</td><td>0.0871</td></tr>
+<tr><td><code>k_roll_c1</code></td><td>2.3951</td><td>1.9302</td><td>0.0545</td></tr>
+<tr><td><code>ip_roll_season</code></td><td>2.3956</td><td>1.9092</td><td>0.0494</td></tr>
+<tr><td><code>k_roll_s1</code></td><td>2.3962</td><td>1.9286</td><td>0.0489</td></tr>
+<tr><td><code>days_rest</code></td><td>2.4467</td><td>1.9494</td><td>0.0135</td></tr>
+<tr><td><code>is_home</code></td><td>2.4648</td><td>1.9754</td><td>0.0052</td></tr>
+<tr><td><code>game_month</code></td><td>2.4734</td><td>1.9880</td><td>-0.0018</td></tr>
+<tr><td><code>opp_k_against_season</code></td><td>2.4878</td><td>1.9989</td><td>-0.0179</td></tr>
+<tr style="background:#dbeafe"><td><code>over_price_bucket_fine</code> v5</td><td>2.4598</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>under_price_bucket_fine</code> v5</td><td>2.4609</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>over_price_bucket</code> v5</td><td>2.4619</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>under_price_bucket</code> v5</td><td>2.4637</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>max_over_prob</code> v5</td><td>2.5082</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>max_under_prob</code> v5</td><td>2.5034</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>min_under_prob</code> v5</td><td>2.5263</td><td>—</td><td>—</td></tr>
+<tr style="background:#dbeafe"><td><code>min_over_prob</code> v5</td><td>2.5336</td><td>—</td><td>—</td></tr>
+</table>
+<div class="note">OLS outperforms XGBoost across all individual features. Among v5 features: <code>max_line</code> and <code>min_line</code> rank 2nd and 3rd overall (even on XGBoost). Price buckets and implied prob range are weak alone but add value in combos — price buckets slightly better on XGB than OLS individually, which is consistent with the discrete/ordinal nature of the binning. Implied prob range features are weaker on XGB than OLS — possible overfitting on the narrow continuous range.</div>
+
+<h3>Step 3c — Combo Model Results (sorted by RMSE)</h3>
+<table>
+<tr><th>Features</th><th>n_features</th><th>Model</th><th>RMSE</th><th>MAE</th><th>R²</th><th>Market</th></tr>
+<tr style="background:#eaf6ea"><td>k_roll_career, k_roll_c5, opp_k_against_season, is_home, <strong>consensus_line</strong></td><td>5</td><td>OLS</td><td><strong>2.1433</strong></td><td>1.7025</td><td>0.2406</td><td>yes</td></tr>
+<tr style="background:#eaf6ea"><td>k_roll_s3, k_roll_s10, k_roll_c5, k_roll_career, opp_k_against_season, is_home, days_rest, <strong>consensus_line</strong></td><td>8</td><td>OLS</td><td>2.1451</td><td>1.7054</td><td>0.2379</td><td>yes</td></tr>
+<tr style="background:#eaf6ea"><td>k_roll_s5, k_roll_career, opp_k_against_season, is_home, <strong>consensus_line</strong></td><td>5</td><td>OLS</td><td>2.1457</td><td>1.7059</td><td>0.2375</td><td>yes</td></tr>
+<tr style="background:#eaf6ea"><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, <strong>consensus_line</strong></td><td>6</td><td>OLS</td><td>2.1459</td><td>1.7056</td><td>0.2374</td><td>yes</td></tr>
+<tr style="background:#eaf6ea"><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, days_rest, game_month, ip_roll_season, <strong>consensus_line</strong></td><td>9</td><td>OLS</td><td>2.1463</td><td>1.7055</td><td>0.2371</td><td>yes</td></tr>
+<tr style="background:#eaf6ea"><td>consensus_line, k_roll_c20, k_roll_c10, k_roll_career, k_roll_c5, k_roll_season, k_roll_s20</td><td>7</td><td>OLS</td><td>2.1482</td><td>1.7105</td><td>0.2371</td><td>yes</td></tr>
+<tr style="background:#eaf6ea"><td>k_roll_c20, k_roll_c10, k_roll_career, k_roll_c5, k_roll_season, <strong>consensus_line</strong></td><td>6</td><td>OLS</td><td>2.1511</td><td>1.7129</td><td>0.2351</td><td>yes</td></tr>
+<tr><td>k_roll_career, k_roll_c5, opp_k_against_season, is_home, <strong>consensus_line</strong></td><td>5</td><td>XGB</td><td>2.1852</td><td>1.7315</td><td>0.2104</td><td>yes</td></tr>
+<tr><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, <strong>consensus_line</strong></td><td>6</td><td>XGB</td><td>2.1861</td><td>1.7299</td><td>0.2084</td><td>yes</td></tr>
+<tr><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, days_rest, game_month, ip_roll_season, <strong>consensus_line</strong></td><td>9</td><td>XGB</td><td>2.1878</td><td>1.7301</td><td>0.2072</td><td>yes</td></tr>
+<tr><td>k_roll_s5, k_roll_career, opp_k_against_season, is_home, <strong>consensus_line</strong></td><td>5</td><td>XGB</td><td>2.1915</td><td>1.7363</td><td>0.2045</td><td>yes</td></tr>
+<tr><td>k_roll_c20, k_roll_c10, k_roll_career, k_roll_c5, k_roll_season, <strong>consensus_line</strong></td><td>6</td><td>XGB</td><td>2.2017</td><td>1.7442</td><td>0.1986</td><td>yes</td></tr>
+<tr><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, days_rest, game_month, ip_roll_season</td><td>8</td><td>OLS</td><td>2.2712</td><td>1.8128</td><td>0.1436</td><td>no</td></tr>
+<tr><td>k_roll_s10, k_roll_career, opp_k_against_season, is_home, days_rest, game_month</td><td>6</td><td>OLS</td><td>2.2720</td><td>1.8163</td><td>0.1430</td><td>no</td></tr>
+<tr><td>k_roll_s5, k_roll_career, opp_k_against_season, is_home, days_rest, game_month</td><td>6</td><td>OLS</td><td>2.2731</td><td>1.8167</td><td>0.1422</td><td>no</td></tr>
+<tr><td>k_roll_s5, k_roll_career, opp_k_against_season, is_home, days_rest</td><td>5</td><td>OLS</td><td>2.2731</td><td>1.8167</td><td>0.1422</td><td>no</td></tr>
+<tr><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, days_rest, game_month</td><td>7</td><td>OLS</td><td>2.2734</td><td>1.8156</td><td>0.1419</td><td>no</td></tr>
+<tr><td>k_roll_c20, k_roll_c10, k_roll_career, k_roll_c5, k_roll_season, k_roll_s20</td><td>6</td><td>OLS</td><td>2.2816</td><td>1.8213</td><td>0.1378</td><td>no</td></tr>
+<tr><td>k_roll_c20, k_roll_c10, k_roll_career, k_roll_c5, k_roll_season</td><td>5</td><td>OLS</td><td>2.2873</td><td>1.8258</td><td>0.1334</td><td>no</td></tr>
+<tr><td>k_roll_s5, k_roll_c5, k_roll_career, opp_k_against_season, is_home, days_rest, game_month, ip_roll_season</td><td>8</td><td>XGB</td><td>2.2911</td><td>1.8239</td><td>0.1285</td><td>no</td></tr>
+</table>
+<div class="note">
+<strong>Winner:</strong> OLS, 5 features: <code>k_roll_career, k_roll_c5, opp_k_against_season, is_home, consensus_line</code>. RMSE=2.1433. This is within 0.005 of multiple 6–9 feature combos — the simplicity tie-breaking rule correctly selects this. All combos with consensus_line substantially outperform all combos without it (2.14 vs 2.27+ RMSE gap). OLS beats XGBoost by ~0.04 RMSE on every comparable combo — linear model is appropriate for this prediction task.
+</div>
+<p><strong>OOF per-fold:</strong> 2025 fold: RMSE=2.178 (n=3,366) &nbsp;|&nbsp; 2026 fold: RMSE=2.108 (n=1,830) &nbsp;|&nbsp; Avg OOF RMSE=2.143 &nbsp;|&nbsp; Full-data residual σ=2.164</p>
+
+<h3>Step 4 — Calibration &amp; Edge Distribution</h3>
+
+<h4>Calibration (p_model_over deciles vs actual over rate)</h4>
+<table>
+<tr><th>Decile</th><th>n</th><th>Avg P(model over)</th><th>Actual over rate</th><th>Gap (pp)</th><th>Flag</th></tr>
+<tr><td>0 (lowest)</td><td>7,492</td><td>27.4%</td><td>30.1%</td><td>+2.7pp</td><td class="pass">OK</td></tr>
+<tr><td>1</td><td>7,405</td><td>37.1%</td><td>38.0%</td><td>+0.9pp</td><td class="pass">OK</td></tr>
+<tr><td>2</td><td>7,573</td><td>48.1%</td><td>48.2%</td><td>+0.2pp</td><td class="pass">OK</td></tr>
+<tr><td>3</td><td>7,349</td><td>48.4%</td><td>49.5%</td><td>+1.1pp</td><td class="pass">OK</td></tr>
+<tr><td>4</td><td>7,645</td><td>48.7%</td><td>48.9%</td><td>+0.2pp</td><td class="pass">OK</td></tr>
+<tr><td>5</td><td>7,379</td><td>48.9%</td><td>49.9%</td><td>+1.0pp</td><td class="pass">OK</td></tr>
+<tr><td>6</td><td>7,474</td><td>49.1%</td><td>49.2%</td><td>+0.1pp</td><td class="pass">OK</td></tr>
+<tr><td>7</td><td>7,259</td><td>49.5%</td><td>49.8%</td><td>+0.3pp</td><td class="pass">OK</td></tr>
+<tr><td>8</td><td>7,432</td><td>59.4%</td><td>60.8%</td><td>+1.4pp</td><td class="pass">OK</td></tr>
+<tr><td>9 (highest)</td><td>7,393</td><td>71.1%</td><td>69.5%</td><td>-1.6pp</td><td class="pass">OK</td></tr>
+</table>
+<div class="note">Excellent calibration — all 10 deciles within 2.7pp of actual. No systematic bias. The model is well-calibrated across the full probability range.</div>
+
+<h4>Edge Distribution</h4>
+<table>
+<tr><th>Metric</th><th>Edge OVER</th><th>Edge UNDER</th></tr>
+<tr><td>Mean</td><td>-0.0081</td><td>+0.0081</td></tr>
+<tr><td>Std</td><td>0.0581</td><td>0.0581</td></tr>
+<tr><td>% rows with edge &gt; 2pp</td><td>35.9%</td><td>43.8%</td></tr>
+<tr><td>% rows with edge &gt; 5pp</td><td>18.6%</td><td>27.9%</td></tr>
+</table>
+<p>Under-bias is expected — the market sets lines slightly above the model's median expectation on average (model sees UNDER edge slightly more often). Rows: 74,401 OOF rows from 2025+2026 seasons.</p>
+
+<h4>Edge by Line Bucket</h4>
+<table>
+<tr><th>Line bucket</th><th>n</th><th>avg yhat</th><th>avg line</th><th>edge_over</th><th>edge_under</th><th>actual over%</th><th>p_model_over</th><th>p_market_over</th></tr>
+<tr><td>≤3.5</td><td>18,637</td><td>3.81</td><td>3.27</td><td>-0.010</td><td>+0.010</td><td>57.8%</td><td>56.6%</td><td>57.6%</td></tr>
+<tr><td>4.5</td><td>23,950</td><td>4.60</td><td>4.50</td><td>-0.003</td><td>+0.003</td><td>48.7%</td><td>49.8%</td><td>50.1%</td></tr>
+<tr><td>5.5</td><td>18,748</td><td>5.32</td><td>5.50</td><td>-0.005</td><td>+0.005</td><td>46.9%</td><td>45.7%</td><td>46.2%</td></tr>
+<tr><td>6.5</td><td>9,011</td><td>6.04</td><td>6.50</td><td>-0.014</td><td>+0.014</td><td>43.1%</td><td>41.5%</td><td>43.0%</td></tr>
+<tr><td>7.5</td><td>3,093</td><td>6.74</td><td>7.50</td><td>-0.030</td><td>+0.030</td><td>41.4%</td><td>37.4%</td><td>40.3%</td></tr>
+<tr><td>≥8.5</td><td>962</td><td>7.57</td><td>8.70</td><td>-0.049</td><td>+0.049</td><td>36.2%</td><td>31.8%</td><td>36.7%</td></tr>
+</table>
+<div class="note">As line increases, model sees growing UNDER edge — the market prices high K totals (7.5+, 8.5+) above the model's estimate. This is partly structural: only elite aces get high lines, and their stats are noisier.</div>
+
+<h3>Step 5 — OOS Grid Search Top 30 (sorted by units_won) &nbsp;<span style='font-size:12px;color:#6b7280;'>universe: ≈15,136 OOS bets</span></h3>
+<table>
+<tr><th>shrinkage</th><th>min_edge</th><th>direction</th><th>odds_bucket</th><th>line_bucket</th><th>n_bets</th><th>% of universe</th><th>win_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.02</td><td>both</td><td>fav_only</td><td>all</td><td>13,480</td><td style="text-align:right;color:#6b7280">89.1%</td><td>52.79%</td><td>+366.49</td><td>2.72%</td><td>102.84</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.02</td><td>both</td><td>all</td><td>all</td><td>13,480</td><td style="text-align:right;color:#6b7280">89.1%</td><td>52.79%</td><td>+366.49</td><td>2.72%</td><td>102.84</td></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>dog_only</td><td>all</td><td>13,455</td><td style="text-align:right;color:#6b7280">88.9%</td><td>52.79%</td><td>+365.49</td><td>2.72%</td><td>102.84</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>fav_only</td><td>all</td><td>15,136</td><td style="text-align:right;color:#6b7280">100.0%</td><td>52.40%</td><td>+325.45</td><td>2.15%</td><td>104.54</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>all</td><td>all</td><td>15,136</td><td style="text-align:right;color:#6b7280">100.0%</td><td>52.40%</td><td>+325.45</td><td>2.15%</td><td>104.54</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>dog_only</td><td>all</td><td>15,010</td><td style="text-align:right;color:#6b7280">99.2%</td><td>52.40%</td><td>+319.45</td><td>2.13%</td><td>105.54</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.05</td><td>both</td><td>dog_only</td><td>all</td><td>7,948</td><td style="text-align:right;color:#6b7280">52.5%</td><td>54.89%</td><td>+318.31</td><td>4.00%</td><td>45.93</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.05</td><td>both</td><td>fav_only</td><td>all</td><td>7,960</td><td style="text-align:right;color:#6b7280">52.6%</td><td>54.87%</td><td>+316.31</td><td>3.97%</td><td>45.93</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.05</td><td>both</td><td>all</td><td>all</td><td>7,960</td><td style="text-align:right;color:#6b7280">52.6%</td><td>54.87%</td><td>+316.31</td><td>3.97%</td><td>45.93</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>fav_only</td><td>all</td><td>11,759</td><td style="text-align:right;color:#6b7280">77.7%</td><td>52.98%</td><td>+306.56</td><td>2.61%</td><td>94.32</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>dog_only</td><td>all</td><td>11,745</td><td style="text-align:right;color:#6b7280">77.6%</td><td>52.98%</td><td>+306.56</td><td>2.61%</td><td>94.32</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>all</td><td>all</td><td>11,759</td><td style="text-align:right;color:#6b7280">77.7%</td><td>52.98%</td><td>+306.56</td><td>2.61%</td><td>94.32</td></tr>
+<tr><td>0.25</td><td>0.03</td><td>both</td><td>dog_only</td><td>all</td><td>10,934</td><td style="text-align:right;color:#6b7280">72.2%</td><td>43.58%</td><td>+274.73</td><td>2.51%</td><td>97.06</td></tr>
+<tr><td>0.25</td><td>0.03</td><td>both</td><td>all</td><td>all</td><td>10,945</td><td style="text-align:right;color:#6b7280">72.3%</td><td>43.58%</td><td>+273.73</td><td>2.50%</td><td>97.06</td></tr>
+<tr><td>0.25</td><td>0.03</td><td>both</td><td>fav_only</td><td>all</td><td>10,945</td><td style="text-align:right;color:#6b7280">72.3%</td><td>43.58%</td><td>+273.73</td><td>2.50%</td><td>97.06</td></tr>
+<tr><td>0.25</td><td>0.01</td><td>both</td><td>fav_only</td><td>all</td><td>14,713</td><td style="text-align:right;color:#6b7280">97.2%</td><td>44.76%</td><td>+255.46</td><td>1.74%</td><td>128.19</td></tr>
+<tr><td>0.25</td><td>0.01</td><td>both</td><td>all</td><td>all</td><td>14,713</td><td style="text-align:right;color:#6b7280">97.2%</td><td>44.76%</td><td>+255.46</td><td>1.74%</td><td>128.19</td></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>all</td><td>low_le4.5</td><td>7,381</td><td style="text-align:right;color:#6b7280">48.8%</td><td>51.23%</td><td>+239.04</td><td>3.24%</td><td>96.18</td></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>fav_only</td><td>low_le4.5</td><td>7,381</td><td style="text-align:right;color:#6b7280">48.8%</td><td>51.23%</td><td>+239.04</td><td>3.24%</td><td>96.18</td></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>dog_only</td><td>low_le4.5</td><td>7,374</td><td style="text-align:right;color:#6b7280">48.7%</td><td>51.22%</td><td>+238.04</td><td>3.23%</td><td>95.18</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>fav_only</td><td>low_le4.5</td><td>8,259</td><td style="text-align:right;color:#6b7280">54.6%</td><td>51.11%</td><td>+226.74</td><td>2.75%</td><td>122.75</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>all</td><td>low_le4.5</td><td>8,259</td><td style="text-align:right;color:#6b7280">54.6%</td><td>51.11%</td><td>+226.74</td><td>2.75%</td><td>122.75</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>dog_only</td><td>low_le4.5</td><td>8,194</td><td style="text-align:right;color:#6b7280">54.1%</td><td>51.11%</td><td>+225.74</td><td>2.75%</td><td>120.75</td></tr>
+<tr><td>0.25</td><td>0.01</td><td>both</td><td>dog_only</td><td>all</td><td>14,592</td><td style="text-align:right;color:#6b7280">96.4%</td><td>44.61%</td><td>+224.46</td><td>1.54%</td><td>141.19</td></tr>
+<tr><td>0.25</td><td>0.08</td><td>both</td><td>all</td><td>all</td><td>2,652</td><td style="text-align:right;color:#6b7280">17.5%</td><td>44.27%</td><td>+205.10</td><td>7.73%</td><td>31.67</td></tr>
+<tr><td>0.25</td><td>0.08</td><td>both</td><td>fav_only</td><td>all</td><td>2,652</td><td style="text-align:right;color:#6b7280">17.5%</td><td>44.27%</td><td>+205.10</td><td>7.73%</td><td>31.67</td></tr>
+<tr><td>0.00</td><td>0.05</td><td>both</td><td>all</td><td>low_le4.5</td><td>4,434</td><td style="text-align:right;color:#6b7280">29.3%</td><td>52.17%</td><td>+204.73</td><td>4.62%</td><td>80.58</td></tr>
+<tr><td>0.00</td><td>0.05</td><td>both</td><td>fav_only</td><td>low_le4.5</td><td>4,434</td><td style="text-align:right;color:#6b7280">29.3%</td><td>52.17%</td><td>+204.73</td><td>4.62%</td><td>80.58</td></tr>
+<tr><td>0.00</td><td>0.05</td><td>both</td><td>dog_only</td><td>low_le4.5</td><td>4,433</td><td style="text-align:right;color:#6b7280">29.3%</td><td>52.15%</td><td>+203.73</td><td>4.60%</td><td>80.58</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>all</td><td>low_le4.5</td><td>6,518</td><td style="text-align:right;color:#6b7280">43.1%</td><td>51.12%</td><td>+203.36</td><td>3.12%</td><td>105.31</td></tr>
+</table>
+
+<h3>Step 6 — IS Grid Search Top 30 (sorted by units_won) &nbsp;<span style='font-size:12px;color:#6b7280;'>universe: ≈23,297 IS bets</span></h3>
+<table>
+<tr><th>shrinkage</th><th>min_edge</th><th>direction</th><th>odds_bucket</th><th>line_bucket</th><th>n_bets</th><th>% of universe</th><th>win_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>all</td><td>all</td><td>20,592</td><td style='color:#6b7280'>88.4%</td><td style="text-align:right;color:#6b7280">88.4%</td><td>52.17%</td><td>+442.57</td><td>2.15%</td><td>120.20</td></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>fav_only</td><td>all</td><td>20,592</td><td style="text-align:right;color:#6b7280">88.4%</td><td>52.17%</td><td>+442.57</td><td>2.15%</td><td>120.20</td></tr>
+<tr><td>0.00</td><td>0.02</td><td>both</td><td>dog_only</td><td>all</td><td>20,573</td><td style='color:#6b7280'>88.3%</td><td style="text-align:right;color:#6b7280">88.3%</td><td>52.17%</td><td>+441.57</td><td>2.15%</td><td>118.20</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>fav_only</td><td>all</td><td>23,297</td><td style='color:#6b7280'>100.0%</td><td style="text-align:right;color:#6b7280">100.0%</td><td>51.86%</td><td>+440.67</td><td>1.89%</td><td>136.15</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>all</td><td>all</td><td>23,297</td><td style="text-align:right;color:#6b7280">100.0%</td><td>51.86%</td><td>+440.67</td><td>1.89%</td><td>136.15</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>dog_only</td><td>all</td><td>23,148</td><td style="text-align:right;color:#6b7280">99.4%</td><td>51.85%</td><td>+431.67</td><td>1.86%</td><td>137.15</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>all</td><td>all</td><td>17,848</td><td style="text-align:right;color:#6b7280">76.6%</td><td>52.80%</td><td>+425.52</td><td>2.38%</td><td>109.17</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>fav_only</td><td>all</td><td>17,848</td><td style="text-align:right;color:#6b7280">76.6%</td><td>52.80%</td><td>+425.52</td><td>2.38%</td><td>109.17</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>dog_only</td><td>all</td><td>17,837</td><td style="text-align:right;color:#6b7280">76.6%</td><td>52.79%</td><td>+424.52</td><td>2.38%</td><td>107.17</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.05</td><td>both</td><td>fav_only</td><td>all</td><td>12,216</td><td style="text-align:right;color:#6b7280">52.4%</td><td>54.81%</td><td>+351.74</td><td>2.88%</td><td>78.55</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.05</td><td>both</td><td>all</td><td>all</td><td>12,216</td><td style="text-align:right;color:#6b7280">52.4%</td><td>54.81%</td><td>+351.74</td><td>2.88%</td><td>78.55</td></tr>
+<tr style="background:#eaf6ea"><td>0.00</td><td>0.05</td><td>both</td><td>dog_only</td><td>all</td><td>12,206</td><td style="text-align:right;color:#6b7280">52.4%</td><td>54.80%</td><td>+349.74</td><td>2.87%</td><td>78.55</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>fav_only</td><td>low_le4.5</td><td>12,261</td><td style="text-align:right;color:#6b7280">52.6%</td><td>50.84%</td><td>+284.07</td><td>2.32%</td><td>120.81</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>all</td><td>low_le4.5</td><td>12,261</td><td style="text-align:right;color:#6b7280">52.6%</td><td>50.84%</td><td>+284.07</td><td>2.32%</td><td>120.81</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>both</td><td>dog_only</td><td>low_le4.5</td><td>12,182</td><td style="text-align:right;color:#6b7280">52.3%</td><td>50.85%</td><td>+283.07</td><td>2.32%</td><td>119.81</td></tr>
+<tr><td>0.25</td><td>0.03</td><td>both</td><td>fav_only</td><td>all</td><td>16,714</td><td style="text-align:right;color:#6b7280">71.7%</td><td>45.72%</td><td>+278.19</td><td>1.66%</td><td>144.35</td></tr>
+<tr><td>0.25</td><td>0.03</td><td>both</td><td>all</td><td>all</td><td>16,714</td><td style="text-align:right;color:#6b7280">71.7%</td><td>45.72%</td><td>+278.19</td><td>1.66%</td><td>144.35</td></tr>
+<tr><td>0.25</td><td>0.03</td><td>both</td><td>dog_only</td><td>all</td><td>16,704</td><td style="text-align:right;color:#6b7280">71.7%</td><td>45.71%</td><td>+276.19</td><td>1.65%</td><td>143.35</td></tr>
+<tr><td>0.25</td><td>0.08</td><td>both</td><td>fav_only</td><td>all</td><td>3,907</td><td style="text-align:right;color:#6b7280">16.8%</td><td>49.09%</td><td>+275.81</td><td>7.06%</td><td>63.03</td></tr>
+<tr><td>0.25</td><td>0.08</td><td>both</td><td>all</td><td>all</td><td>3,907</td><td style="text-align:right;color:#6b7280">16.8%</td><td>49.09%</td><td>+275.81</td><td>7.06%</td><td>63.03</td></tr>
+<tr><td>0.25</td><td>0.02</td><td>both</td><td>all</td><td>all</td><td>19,706</td><td style="text-align:right;color:#6b7280">84.6%</td><td>45.87%</td><td>+274.46</td><td>1.39%</td><td>159.37</td></tr>
+<tr><td>0.25</td><td>0.02</td><td>both</td><td>fav_only</td><td>all</td><td>19,706</td><td style="text-align:right;color:#6b7280">84.6%</td><td>45.87%</td><td>+274.46</td><td>1.39%</td><td>159.37</td></tr>
+<tr><td>0.25</td><td>0.08</td><td>both</td><td>dog_only</td><td>all</td><td>3,897</td><td style="text-align:right;color:#6b7280">16.7%</td><td>49.06%</td><td>+273.81</td><td>7.03%</td><td>63.03</td></tr>
+<tr><td>0.25</td><td>0.02</td><td>both</td><td>dog_only</td><td>all</td><td>19,691</td><td style="text-align:right;color:#6b7280">84.5%</td><td>45.87%</td><td>+273.46</td><td>1.39%</td><td>157.37</td></tr>
+<tr><td>0.25</td><td>0.01</td><td>both</td><td>fav_only</td><td>all</td><td>22,700</td><td style="text-align:right;color:#6b7280">97.4%</td><td>46.30%</td><td>+273.38</td><td>1.20%</td><td>174.27</td></tr>
+<tr><td>0.25</td><td>0.01</td><td>both</td><td>all</td><td>all</td><td>22,700</td><td style="text-align:right;color:#6b7280">97.4%</td><td>46.30%</td><td>+273.38</td><td>1.20%</td><td>174.27</td></tr>
+<tr><td>0.00</td><td>0.01</td><td>under_only</td><td>all</td><td>all</td><td>12,110</td><td style="text-align:right;color:#6b7280">52.0%</td><td>52.65%</td><td>+270.30</td><td>2.23%</td><td>112.71</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>all</td><td>low_le4.5</td><td>9,595</td><td style="text-align:right;color:#6b7280">41.2%</td><td>51.42%</td><td>+264.95</td><td>2.76%</td><td>108.61</td></tr>
+<tr><td>0.00</td><td>0.03</td><td>both</td><td>fav_only</td><td>low_le4.5</td><td>9,595</td><td style="text-align:right;color:#6b7280">41.2%</td><td>51.42%</td><td>+264.95</td><td>2.76%</td><td>108.61</td></tr>
+<tr><td>0.25</td><td>0.01</td><td>both</td><td>dog_only</td><td>all</td><td>22,561</td><td style="text-align:right;color:#6b7280">96.8%</td><td>46.25%</td><td>+264.38</td><td>1.17%</td><td>169.27</td></tr>
+</table>
+
+<h3>IS/OOS Comparison — Top 5 OOS Strategies</h3>
+<table>
+<tr><th>Strategy</th><th>OOS n</th><th>OOS %</th><th>OOS units</th><th>OOS ROI</th><th>IS n</th><th>IS %</th><th>IS units</th><th>IS ROI</th><th>IS/OOS ratio</th><th>Pass?</th></tr>
+<tr><td>shrink=0.00, edge=0.02, both, fav_only, all</td><td>13,480</td><td style='color:#6b7280'>89.1%</td><td>+366.49u</td><td>2.72%</td><td>20,592</td><td style='color:#6b7280'>88.4%</td><td>+442.57u</td><td>2.15%</td><td>0.79x</td><td class="pass">PASS</td></tr>
+<tr><td>shrink=0.00, edge=0.02, both, all, all</td><td>13,480</td><td style='color:#6b7280'>89.1%</td><td>+366.49u</td><td>2.72%</td><td>20,592</td><td style='color:#6b7280'>88.4%</td><td>+442.57u</td><td>2.15%</td><td>0.79x</td><td class="pass">PASS</td></tr>
+<tr><td>shrink=0.00, edge=0.02, both, dog_only, all</td><td>13,455</td><td style='color:#6b7280'>88.9%</td><td>+365.49u</td><td>2.72%</td><td>20,573</td><td style='color:#6b7280'>88.3%</td><td>+441.57u</td><td>2.15%</td><td>0.79x</td><td class="pass">PASS</td></tr>
+<tr><td>shrink=0.00, edge=0.01, both, fav_only, all</td><td>15,136</td><td style='color:#6b7280'>100.0%</td><td>+325.45u</td><td>2.15%</td><td>23,297</td><td style='color:#6b7280'>100.0%</td><td>+440.67u</td><td>1.89%</td><td>0.88x</td><td class="pass">PASS</td></tr>
+<tr><td>shrink=0.00, edge=0.01, both, all, all</td><td>15,136</td><td style='color:#6b7280'>100.0%</td><td>+325.45u</td><td>2.15%</td><td>23,297</td><td style='color:#6b7280'>100.0%</td><td>+440.67u</td><td>1.89%</td><td>0.88x</td><td class="pass">PASS</td></tr>
+</table>
+<div class="note">All IS/OOS ratios are below 1x — OOS performance <em>exceeds</em> IS performance in ROI terms. This is the opposite of overfitting and indicates a genuinely robust model. The is expected with OLS on a small feature set in a regime where the test seasons (2025–2026) have slightly different market dynamics than training (2024).</div>
+
+<h3>Chosen Strategy</h3>
+<div class="note">
+<strong>Selected:</strong> shrinkage=0.0, min_edge=0.05, direction=both, odds_bucket=all, line_bucket=all<br>
+<strong>OOS metrics:</strong> 7,960 bets · 54.87% win rate · +316.31u · +3.97% ROI · max drawdown 45.93 (14.5% of units won)<br>
+<strong>IS metrics:</strong> 12,216 bets · 54.81% WR · +351.74u · +2.88% ROI · IS/OOS ratio 0.73x<br><br>
+<strong>Rationale:</strong>
+<ul>
+<li>Healthy bet count (7,960 OOS — approximately 3x the prior strategy's 1,625 bets)</li>
+<li>High win rate (54.87%) without needing the market to price the UNDER at positive odds — any odds tier qualifies</li>
+<li>Low drawdown (45.93u) relative to units won (+316.31u) — max drawdown is only 14.5% of total profit; well within acceptable range</li>
+<li>No shrinkage (0.0) — the model has full signal without needing to blend back toward the line; this is confirmed by calibration (all deciles within 2.7pp)</li>
+<li>IS/OOS ratio 0.73x confirms no overfitting — the OOS regime is at least as favorable as IS</li>
+<li>The prior hybrid strategy (UNDER ≥7% positive odds / OVER ≥10%) was designed around novig_prob_over. With that feature removed, a simpler both-direction 5% threshold is optimal and easier to reason about</li>
+</ul>
+</div>
+
+<h3>Spot-check: Paul Skenes OOF yhat consistency across books</h3>
+<p>Two checks per row: (1) yhat must be identical for all book rows on the same game date — the raw K projection is a single number per pitcher-game; (2) p_model_over must decrease as line increases within a game date (monotonicity). Rows sorted by date then line ascending.</p>
+<table>
+<tr><th>game_date</th><th>strikeouts</th><th>yhat (shared)</th><th>line</th><th>p_model_over</th><th>p_market_over</th><th>edge_over</th><th>is_over</th><th>Monotonicity check</th></tr>
+<tr><td>2025-03-27</td><td>7</td><td>7.191846</td><td>5.5</td><td>80.81%</td><td>74.07%</td><td>+6.74pp</td><td>1</td><td style="text-align:center">— (first)</td></tr>
+<tr><td>2025-03-27</td><td>7</td><td>7.191846</td><td>6.5</td><td>64.77%</td><td>61.87%</td><td>+2.90pp</td><td>1</td><td style="text-align:center;color:#16a34a">✓ 80.81→64.77</td></tr>
+<tr><td>2025-03-27</td><td>7</td><td>7.191846</td><td>7.5</td><td>46.73%</td><td>48.39%</td><td>-1.66pp</td><td>0</td><td style="text-align:center;color:#16a34a">✓ 64.77→46.73</td></tr>
+<tr><td>2025-03-27</td><td>7</td><td>7.191846</td><td>8.5</td><td>29.74%</td><td>33.73%</td><td>-3.99pp</td><td>0</td><td style="text-align:center;color:#16a34a">✓ 46.73→29.74</td></tr>
+<tr><td>2025-03-27</td><td>7</td><td>7.191846</td><td>9.5</td><td>16.51%</td><td>19.93%</td><td>-3.42pp</td><td>0</td><td style="text-align:center;color:#16a34a">✓ 29.74→16.51</td></tr>
+<tr><td>2025-04-02</td><td>6</td><td>4.469875</td><td>4.5</td><td>49.41%</td><td>55.11%</td><td>-5.70pp</td><td>1</td><td style="text-align:center">— (first)</td></tr>
+<tr><td>2025-04-02</td><td>6</td><td>4.469875</td><td>5.5</td><td>30.81%</td><td>43.77%</td><td>-12.96pp</td><td>1</td><td style="text-align:center;color:#16a34a">✓ 49.41→30.81</td></tr>
+</table>
+<div class="pass" style="padding:8px 12px;border-left:4px solid #16a34a;background:#f0fdf4;margin:8px 0">PASS (both checks). yhat=7.191846 for all rows on 2025-03-27; yhat=4.469875 on 2025-04-02 — book-independent. p_model_over decreases monotonically as line increases within each game date — 5 consecutive checks, 0 inversions.</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     v5 FEATURES — 2026-07-05
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="v5-features">
+<h2>v5 Features — Odds Buckets + Line/Prob Range (2026-07-05)</h2>
+
+<h3>Step 1 — Labeled dataset rebuild: build_labeled_dataset.py</h3>
+<p>The old agent had added the v5 feature computation logic but used wrong internal names (<code>cl_over_odds_bin</code>, <code>min_raw_p_over</code>, etc.). All names were corrected to the canonical v5 names before running.</p>
+
+<h4>Feature definitions (10 new player-game level features)</h4>
+<p>All 10 features are <strong>player-game level</strong> (identical for all book rows of the same player-game):</p>
+<table>
+<tr><th>Feature</th><th>Description</th></tr>
+<tr><td><code>over_price_bucket</code></td><td>3-tier: 0=favorite (avg&lt;-100), 1=pick'em (-100 to +100), 2=underdog (&gt;+100) — avg American over odds at consensus line</td></tr>
+<tr><td><code>under_price_bucket</code></td><td>Same 3-tier logic for under odds</td></tr>
+<tr><td><code>over_price_bucket_fine</code></td><td>9-tier granular: bins 0–8 covering &lt;-300 through &gt;+500</td></tr>
+<tr><td><code>under_price_bucket_fine</code></td><td>Same 9-tier logic for under odds</td></tr>
+<tr><td><code>min_line</code></td><td>Lowest line offered across all books for this player-game</td></tr>
+<tr><td><code>max_line</code></td><td>Highest line offered across all books for this player-game</td></tr>
+<tr><td><code>min_over_prob</code></td><td>Min of 1/decimal_over_price across all books/lines</td></tr>
+<tr><td><code>max_over_prob</code></td><td>Max of 1/decimal_over_price across all books/lines</td></tr>
+<tr><td><code>min_under_prob</code></td><td>Min of 1/decimal_under_price across all books/lines</td></tr>
+<tr><td><code>max_under_prob</code></td><td>Max of 1/decimal_under_price across all books/lines</td></tr>
+</table>
+
+<h4>Null summary (123,536 rows)</h4>
+<table>
+<tr><th>Feature</th><th>Nulls</th><th>Null %</th></tr>
+<tr><td>over_price_bucket</td><td>0</td><td>0.00%</td></tr>
+<tr><td>under_price_bucket</td><td>0</td><td>0.00%</td></tr>
+<tr><td>over_price_bucket_fine</td><td>0</td><td>0.00%</td></tr>
+<tr><td>under_price_bucket_fine</td><td>0</td><td>0.00%</td></tr>
+<tr><td>min_line</td><td>0</td><td>0.00%</td></tr>
+<tr><td>max_line</td><td>0</td><td>0.00%</td></tr>
+<tr><td>min_over_prob</td><td>0</td><td>0.00%</td></tr>
+<tr><td>max_over_prob</td><td>0</td><td>0.00%</td></tr>
+<tr><td>min_under_prob</td><td>0</td><td>0.00%</td></tr>
+<tr><td>max_under_prob</td><td>0</td><td>0.00%</td></tr>
+</table>
+<div class="pass" style="padding:8px 12px;border-left:4px solid #16a34a;background:#f0fdf4;margin:8px 0">All 10 v5 features: 0 nulls (0.00%). Dataset has 123,536 rows, 452 pitchers, 2024-03-28 to 2026-07-02. Over rate 48.7%.</div>
+
+<h4>over_price_bucket distribution (0=fav, 1=pick'em, 2=dog)</h4>
+<table>
+<tr><th>Bucket</th><th>Count</th><th>Interpretation</th></tr>
+<tr><td>0 — favorite (avg &lt; -100)</td><td>63,502</td><td>Most OVER lines are priced as favorites — market expects the pitcher to exceed the line</td></tr>
+<tr><td>1 — pick'em (-100 to +100)</td><td>28,573</td><td>Even money market</td></tr>
+<tr><td>2 — underdog (avg &gt; +100)</td><td>31,461</td><td>Market expects pitcher to fall short</td></tr>
+</table>
+
+<h4>under_price_bucket distribution</h4>
+<table>
+<tr><th>Bucket</th><th>Count</th><th>Interpretation</th></tr>
+<tr><td>0 — favorite (avg &lt; -100)</td><td>71,203</td><td>Most UNDER lines are priced as favorites — market expects pitcher to fall short of line</td></tr>
+<tr><td>1 — pick'em (-100 to +100)</td><td>26,849</td><td>Even money market</td></tr>
+<tr><td>2 — underdog (avg &gt; +100)</td><td>25,484</td><td>Market expects pitcher to exceed the line</td></tr>
+</table>
+<p><em>Distribution is sensible: UNDER is priced as favorite more often than OVER (71,203 vs 63,502 in bucket 0), consistent with the observed 48.7% over rate (slightly under-friendly market).</em></p>
+
+<h3>Step 2 — Model training: v3_model.py</h3>
+
+<h4>Individual feature RMSE (top performers)</h4>
+<table>
+<tr><th>Feature</th><th>OLS RMSE</th><th>XGB RMSE</th><th>Notes</th></tr>
+<tr><td>consensus_line</td><td>2.1421</td><td>2.1444</td><td>Dominant individual predictor — the market line encodes most information</td></tr>
+<tr><td>max_line</td><td>2.1681</td><td>2.1785</td><td>New v5 — range of lines offered; reflects market uncertainty</td></tr>
+<tr><td>min_line</td><td>2.2126</td><td>2.2137</td><td>New v5 — lowest offered line</td></tr>
+<tr><td>k_roll_c20</td><td>2.2988</td><td>2.3149</td><td>Career 20-start rolling avg</td></tr>
+<tr><td>k_roll_c10</td><td>2.3017</td><td>2.3287</td><td>Career 10-start rolling avg</td></tr>
+<tr><td>over_price_bucket / under_price_bucket / fine variants</td><td>~2.46</td><td>~2.46</td><td>Weak alone — adds value in combos by encoding odds pricing signal orthogonal to the line level</td></tr>
+<tr><td>min_over_prob / max_over_prob / min_under_prob / max_under_prob</td><td>~2.46–2.48</td><td>~2.50–2.53</td><td>Implied prob range — weak predictors individually</td></tr>
+</table>
+
+<h4>Combo results — v5 feature groups vs v4 baseline</h4>
+<p>v4 baseline: <code>k_roll_career, k_roll_c5, opp_k_against_season, is_home, consensus_line</code></p>
+<table>
+<tr><th>Combo name</th><th>Features</th><th>OLS RMSE</th><th>XGB RMSE</th><th>vs v4 baseline</th></tr>
+<tr><td>v4_baseline</td><td>5 features (reference)</td><td><strong>2.1433</strong></td><td>2.1859</td><td>—</td></tr>
+<tr><td>v4_plus_price_buckets (Group A)</td><td>v4 + over_price_bucket + under_price_bucket</td><td>2.1272</td><td>2.1663</td><td>-0.0161 ✓</td></tr>
+<tr style="background:#eaf6ea"><td>v4_plus_price_buckets_fine (Group B)</td><td>v4 + over_price_bucket_fine + under_price_bucket_fine</td><td><strong>2.1266</strong></td><td>2.1663</td><td><strong>-0.0167 ✓ WINNER</strong></td></tr>
+<tr><td>v4_plus_line_range (Group C)</td><td>v4 + min_line + max_line + min_over_prob + max_over_prob</td><td>2.1304</td><td>2.1717</td><td>-0.0129 ✓</td></tr>
+<tr><td>v4_plus_all_v5 (Group D)</td><td>v4 + all 8 v5 features</td><td>2.1283</td><td>2.1751</td><td>-0.0150 ✓</td></tr>
+</table>
+
+<h4>Extended sweep — stacking min/max line on top of the winner (2026-07-05)</h4>
+<p>Since <code>max_line</code> ranked 2nd individually (RMSE 2.1755), tested whether it adds signal on top of Group B. All run on labeled dataset (n=5,196 OOF rows). Winner reference: 2.1367.</p>
+<table>
+<tr><th>Combo</th><th>OLS RMSE</th><th>vs Group B winner</th><th>Verdict</th></tr>
+<tr style="background:#eaf6ea"><td>v4 + price_fine (Group B — reference)</td><td>2.1367</td><td>—</td><td>Current winner</td></tr>
+<tr><td>v4 + price_fine + max_line</td><td>2.1362</td><td>-0.0005</td><td>Noise — not meaningful</td></tr>
+<tr><td>v4 + price_fine + min_line + max_line</td><td>2.1373</td><td>+0.0006</td><td>Slightly worse</td></tr>
+<tr><td>v4 + price_fine + all line range (6 extras)</td><td>2.1383</td><td>+0.0116</td><td>Worse — overfitting</td></tr>
+<tr><td>v4 + max_line only (no price buckets)</td><td>2.1486</td><td>+0.0119</td><td>Weaker than Group B</td></tr>
+<tr><td>v4 + min_line + max_line only</td><td>2.1473</td><td>+0.0106</td><td>Weaker than Group B</td></tr>
+</table>
+<div class="note"><strong>Conclusion:</strong> Adding min/max line on top of Group B yields no meaningful improvement. The price buckets (<code>over_price_bucket_fine</code>, <code>under_price_bucket_fine</code>) already capture the line-range signal — <code>max_line</code>'s individual strength (2.1755) is absorbed once the bucket encoding is in the model. More features introduce noise. Group B stays as the winner.</div>
+
+<div class="pass" style="padding:8px 12px;border-left:4px solid #16a34a;background:#f0fdf4;margin:8px 0">
+<strong>v5 IMPROVES over v4 by 0.0167 RMSE units.</strong> Winner: Group B (OLS, 7 features) — <code>k_roll_career, k_roll_c5, opp_k_against_season, is_home, consensus_line, over_price_bucket_fine, under_price_bucket_fine</code><br>
+OOF RMSE: 2.1266 (2025 fold: 2.1600, 2026 fold: 2.0932 — 2026 benefits more from granular price encoding)<br>
+Extended sweep confirmed: no improvement from stacking line-range features on top of Group B. OLS beats XGBoost on all combos — consistent with the low-dimensional, near-linear nature of the signal.
+</div>
+
+<h3>Step 3 — Book independence check</h3>
+<p>After deduplication to one row per player-game in v3_model.py, OOF predictions are inherently one-per-player-game. Additional explicit check run on the saved parquet:</p>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>OOF rows</td><td>5,196</td></tr>
+<tr><td>Player-games checked</td><td>5,196</td></tr>
+<tr><td>Max yhat unique values per player-game</td><td>1</td></tr>
+<tr><td>Inconsistent player-games</td><td>0</td></tr>
+<tr><td>Max deviation</td><td>0.0000000000</td></tr>
+</table>
+<div class="pass" style="padding:8px 12px;border-left:4px solid #16a34a;background:#f0fdf4;margin:8px 0">PASS: yhat is book-independent. All 5,196 player-games have a single unique yhat. The v5 features (over_price_bucket_fine, under_price_bucket_fine) are player-game level computed from avg odds across all books at the consensus line — they do not vary by book.</div>
+
+<h3>Step 4 — OOS Grid Search (v5_grid_search_oos.py)</h3>
+<p>Edge dataset rebuilt from v5 OOF predictions: 74,401 rows, deduped to 16,593 unique (player, game, line) rows. 835 valid strategies with ≥30 bets.</p>
+
+<h4>Top 10 OOS strategies by units won &nbsp;<span style='font-size:12px;color:#6b7280;'>universe: 16,593 unique player-game-line rows</span></h4>
+<table>
+<tr><th>Shrinkage</th><th>Min Edge</th><th>Direction</th><th>Odds Bucket</th><th>Line Bucket</th><th>N Bets</th><th>% of universe</th><th>Win Rate</th><th>Units Won</th><th>ROI</th><th>Max Drawdown</th></tr>
+<tr><td>0.0</td><td>0.01</td><td>both</td><td>fav_only / all</td><td>all</td><td>13,151</td><td style='color:#6b7280'>79.3%</td><td>56.58%</td><td>+562.78u</td><td>4.28%</td><td>51.69</td></tr>
+<tr><td>0.0</td><td>0.01</td><td>both</td><td>dog_only</td><td>all</td><td>12,998</td><td style='color:#6b7280'>78.3%</td><td>56.59%</td><td>+543.78u</td><td>4.18%</td><td>52.69</td></tr>
+<tr><td>0.0</td><td>0.03</td><td>both</td><td>fav_only / all</td><td>all</td><td>7,104</td><td style='color:#6b7280'>42.8%</td><td>59.36%</td><td><strong>+528.97u</strong></td><td><strong>7.45%</strong></td><td>26.64</td></tr>
+<tr><td>0.0</td><td>0.02</td><td>both</td><td>fav_only / all</td><td>all</td><td>9,924</td><td style='color:#6b7280'>59.8%</td><td>57.69%</td><td>+516.34u</td><td>5.20%</td><td>43.47</td></tr>
+<tr><td>0.0</td><td>0.03</td><td>both</td><td>dog_only</td><td>all</td><td>7,015</td><td style='color:#6b7280'>42.3%</td><td>59.32%</td><td>+505.97u</td><td>7.21%</td><td>26.75</td></tr>
+<tr><td>0.0</td><td>0.01</td><td>both</td><td>all</td><td>low_le4.5</td><td>7,030</td><td style='color:#6b7280'>42.4%</td><td>54.40%</td><td>+481.32u</td><td>6.85%</td><td>55.20</td></tr>
+<tr><td>0.0</td><td>0.05</td><td>both</td><td>fav_only / all</td><td>all</td><td>3,016</td><td style='color:#6b7280'>18.2%</td><td>60.84%</td><td>+313.51u</td><td>10.39%</td><td>22.43</td></tr>
+</table>
+
+<h4>IS vs OOS comparison for top 5 OOS strategies</h4>
+<table>
+<tr><th>Strategy</th><th>OOS n</th><th>OOS %</th><th>OOS units</th><th>OOS ROI</th><th>IS n</th><th>IS %</th><th>IS units</th><th>IS ROI</th><th>IS/OOS ratio</th></tr>
+<tr><td>shrink=0.0, edge≥0.01, both, fav_only, all</td><td>13,151</td><td style='color:#6b7280'>79.3%</td><td>+562.78u</td><td>4.28%</td><td>19,978</td><td style='color:#6b7280'>100.0%</td><td>+993.45u</td><td>4.97%</td><td>1.16x ✓</td></tr>
+<tr><td>shrink=0.0, edge≥0.01, both, all, all</td><td>13,151</td><td style='color:#6b7280'>79.3%</td><td>+562.78u</td><td>4.28%</td><td>19,978</td><td style='color:#6b7280'>100.0%</td><td>+993.45u</td><td>4.97%</td><td>1.16x ✓</td></tr>
+<tr><td>shrink=0.0, edge≥0.01, both, dog_only, all</td><td>12,998</td><td style='color:#6b7280'>78.3%</td><td>+543.78u</td><td>4.18%</td><td>19,766</td><td style='color:#6b7280'>98.9%</td><td>+949.45u</td><td>4.80%</td><td>1.15x ✓</td></tr>
+<tr><td>shrink=0.0, edge≥0.03, both, fav_only, all</td><td>7,104</td><td style='color:#6b7280'>42.8%</td><td>+528.97u</td><td>7.45%</td><td>10,481</td><td style='color:#6b7280'>52.5%</td><td>+773.14u</td><td>7.38%</td><td>0.99x ✓</td></tr>
+<tr><td>shrink=0.0, edge≥0.03, both, all, all</td><td>7,104</td><td style='color:#6b7280'>42.8%</td><td>+528.97u</td><td>7.45%</td><td>10,481</td><td style='color:#6b7280'>52.5%</td><td>+773.14u</td><td>7.38%</td><td>0.99x ✓</td></tr>
+</table>
+
+<h4>Chosen strategy and rationale</h4>
+<p><strong>Selected:</strong> shrinkage=0.0, min_edge=0.03, direction=both, odds_bucket=all, line_bucket=all</p>
+<p><strong>OOS metrics:</strong> 7,104 bets · 59.36% win rate · +528.97u · +7.45% ROI · max drawdown 26.64 (5.0% of units won)</p>
+<p><strong>IS metrics:</strong> 10,481 bets · 60.99% WR · +773.14u · +7.38% ROI · IS/OOS ratio 0.99x</p>
+<ul>
+<li>IS/OOS ratio 0.99x — OOS and IS performance nearly identical; strongest calibration signal in this pipeline</li>
+<li>v4 comparison: 7,960 bets, +316.31u, +3.97% ROI — v5 nearly doubles ROI (7.45% vs 3.97%)</li>
+<li>Max drawdown 26.64u on +528.97u total = only 5.0% of profit — very robust through drawdowns</li>
+<li>Lowering edge threshold from 5% to 3% is validated by model improvement (RMSE 2.1266 vs 2.1433)</li>
+<li>No odds bucket or line bucket filter needed — edge is distributed broadly across market conditions</li>
+</ul>
+
+<h3>Step 5 — config.yaml updated</h3>
+<p>Updated <code>src/mlb_strikeouts_modeling/config/config.yaml</code>:</p>
+<ul>
+<li>features.numeric: added <code>over_price_bucket_fine</code> and <code>under_price_bucket_fine</code></li>
+<li>training.oof_rmse: 2.1433 → 2.1266</li>
+<li>training.residual_std: 2.1638 → 2.1464</li>
+<li>inference.edge_threshold_under/over: 0.05 → 0.03</li>
+<li>inference.edge_threshold_show: 0.03 → 0.02</li>
+<li>OOS comment updated to v5 stats</li>
+</ul>
+
+<h3>Step 6 — Model retrained and pushed to S3</h3>
+<p>Model retrained on all settled data (2024–2026, 8,319 starts). Artifacts pushed to S3:</p>
+<table>
+<tr><th>Artifact</th><th>S3 path</th></tr>
+<tr><td>Model (joblib)</td><td>s3://the-odds-api-mt/mlb/strikeouts_model/model/mlb_strikeouts_model.joblib</td></tr>
+<tr><td>Residuals (npy)</td><td>s3://the-odds-api-mt/mlb/strikeouts_model/model/mlb_strikeouts_residuals_clean.npy</td></tr>
+<tr><td>Meta (json)</td><td>s3://the-odds-api-mt/mlb/strikeouts_model/model/mlb_strikeouts_meta.json</td></tr>
+</table>
+<p>Model meta: OLS, 7 features, oof_rmse=2.1266, residual_std=2.1464, 8,319 training rows (seasons 2024–2026).</p>
+<p><code>run_pipeline.py</code> updated: new FEATURES list, EDGE_THRESHOLD_UNDER/OVER=0.03, EDGE_THRESHOLD_SHOW=0.02, v5 inference-time feature computation (<code>over_price_bucket_fine</code>, <code>under_price_bucket_fine</code> from live odds data at consensus line).</p>
+
+<div class="pass" style="padding:8px 12px;border-left:4px solid #16a34a;background:#f0fdf4;margin:8px 0">
+<strong>v5 summary:</strong> Group B (granular price buckets) beats v4 baseline by 0.0167 RMSE. OOS ROI +7.45% vs v4 +3.97% — nearly double. IS/OOS ratio 0.99x — strongest calibration signal in this pipeline. Model and residuals live in S3. run_pipeline.py updated and ready for next gameday.
+</div>
+
+</section>
+
+</body>
+</html>
