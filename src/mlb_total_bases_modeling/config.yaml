@@ -1,0 +1,208 @@
+strategy_summary: "UNDER 1.5, dogs, edge ≥5pp"
+
+model:
+  type: xgboost_regression
+  version: v2
+  oof_rmse: 1.7229
+  oof_r2_pct: 3.927
+  n_samples: 143643
+  exclude_doubleheaders: true   # market posts single-game props; DH actuals are summed (data mismatch)
+  sklearn_version: "1.7.2"
+  xgboost_version: "2.1.4"
+
+  # All player-game-level features — identical across every (bookmaker, line) row
+  # for the same player-game. Satisfies Idea 3: y_hat is a single player projection.
+  numeric_features:
+    - tb_Lcareer
+    - tb_L20
+    - tb_L10
+    - ab_Lcareer
+    - hr_Lcareer
+    - tb_Lseason
+    - min_line      # min of all lines posted for this player on gameday
+    - max_line      # max of all lines posted for this player on gameday
+
+  categorical_features: []
+
+  calibration:
+    method: C_per_line_logistic     # per-line LogisticRegression(y_hat → P(over))
+    production_lines: [0.5, 1.5]   # lines with calibration models in bundle
+    # Params (IS):  line=0.5: a=+1.188 b=-1.255 | line=1.5: a=+1.224 b=-2.391
+
+  s3_key: "mlb/total_bases_model/model/mlb_tb_regression_v2.joblib"
+  spine_key: "mlb/total_bases_model/spine/mlb_total_bases_spine.parquet"
+
+strategy:
+  side: UNDER
+  lines: [1.5]            # line=0.5 shows no edge in OOS grid search
+  min_bet_edge: 0.05      # green rows in email — actually bet these
+  min_track_edge: 0.03    # yellow rows in email — paper track only
+  dogs_only: true         # bet only when novig_prob_under < 0.50 (dogs = +odds side)
+  min_books: 1
+  novig_min: 0.10
+
+  # OOS backtest results (correct payout = under_price - 1):
+  #   edge≥5pp, dogs, line=1.5: n=12,323, win%=50.6%, +211.9u, ROI=+1.72%, MDD=185.1 (MDD<units)
+  #   edge≥3pp, dogs, line=1.5: n=14,110, win%=50.2%, +47.7u, ROI=+0.34%, MDD=282.9 (MDD>units)
+
+backtest:
+  groupby: ["name_norm", "game_date", "bookmaker", "line"]
+  edge_col: "edge_under"
+  novig_col: "novig_prob_under"
+  payout_col: "under_price"
+
+grid_search:
+  # OOS (OOF predictions) and IS (full model) grid search run 2026-07-05.
+  # Dimensions: edge_threshold × odds_bucket × line_bucket.
+  # Payout = under_price - 1 (actual book decimal odds, not novig proxy).
+  # S3: mlb/total_bases_model/backtest/mlb_tb_v2_oos_grid.csv
+  #     mlb/total_bases_model/backtest/mlb_tb_v2_is_grid.csv
+  dimensions:
+    edge_threshold: [0.00, 0.01, 0.03, 0.05, 0.07, 0.10, 0.15, 0.20]
+    odds_bucket:    ["all", "dogs (+odds)", "favs (-odds)"]   # dogs = novig_under < 0.50
+    line_bucket:    ["all_lines", "0.5_only", "1.5_only"]
+
+  # ── OOS results (67 combos, sorted by units_won desc) ────────────────────
+  # edge  odds_bucket       line_bucket   n_bets  win%    units    roi    mdd
+  oos_results:
+    - {edge: 0.05, odds: "dogs",  lines: "1.5",  n: 12323,  win_pct: 0.506, units: +211.90, roi: +0.0172, mdd: 185.09}  # ← PRODUCTION (only MDD<units)
+    - {edge: 0.07, odds: "dogs",  lines: "1.5",  n: 10283,  win_pct: 0.500, units: +124.06, roi: +0.0121, mdd: 169.86}
+    - {edge: 0.15, odds: "dogs",  lines: "1.5",  n:  2872,  win_pct: 0.481, units:  +71.99, roi: +0.0251, mdd:  80.83}
+    - {edge: 0.15, odds: "dogs",  lines: "all",  n:  2998,  win_pct: 0.474, units:  +61.41, roi: +0.0205, mdd:  87.03}
+    - {edge: 0.15, odds: "all",   lines: "1.5",  n:  4907,  win_pct: 0.521, units:  +59.42, roi: +0.0121, mdd: 137.92}
+    - {edge: 0.15, odds: "all",   lines: "all",  n:  5033,  win_pct: 0.516, units:  +48.84, roi: +0.0097, mdd: 142.82}
+    - {edge: 0.03, odds: "dogs",  lines: "1.5",  n: 14110,  win_pct: 0.502, units:  +47.73, roi: +0.0034, mdd: 282.90}
+    - {edge: 0.20, odds: "all",   lines: "1.5",  n:  1241,  win_pct: 0.475, units:  +40.09, roi: +0.0323, mdd:  52.16}
+    - {edge: 0.20, odds: "dogs",  lines: "1.5",  n:  1186,  win_pct: 0.472, units:  +40.03, roi: +0.0338, mdd:  57.46}
+    - {edge: 0.20, odds: "all",   lines: "all",  n:  1243,  win_pct: 0.475, units:  +38.09, roi: +0.0306, mdd:  53.16}
+    - {edge: 0.20, odds: "dogs",  lines: "all",  n:  1188,  win_pct: 0.471, units:  +38.03, roi: +0.0320, mdd:  58.46}
+    - {edge: 0.07, odds: "dogs",  lines: "all",  n: 28375,  win_pct: 0.437, units:  +10.54, roi: +0.0004, mdd: 328.60}
+    - {edge: 0.20, odds: "favs",  lines: "1.5",  n:    55,  win_pct: 0.545, units:   +0.06, roi: +0.0011, mdd:  14.76}
+    - {edge: 0.20, odds: "favs",  lines: "all",  n:    55,  win_pct: 0.545, units:   +0.06, roi: +0.0011, mdd:  14.76}
+    - {edge: 0.20, odds: "dogs",  lines: "0.5",  n:     2,  win_pct: 0.000, units:   -2.00, roi: -1.0000, mdd:   1.00}
+    - {edge: 0.20, odds: "all",   lines: "0.5",  n:     2,  win_pct: 0.000, units:   -2.00, roi: -1.0000, mdd:   1.00}
+    - {edge: 0.03, odds: "favs",  lines: "0.5",  n:    11,  win_pct: 0.273, units:   -5.43, roi: -0.4936, mdd:   8.00}
+    - {edge: 0.15, odds: "dogs",  lines: "0.5",  n:   126,  win_pct: 0.318, units:  -10.58, roi: -0.0840, mdd:  15.75}
+    - {edge: 0.15, odds: "all",   lines: "0.5",  n:   126,  win_pct: 0.318, units:  -10.58, roi: -0.0840, mdd:  15.75}
+    - {edge: 0.15, odds: "favs",  lines: "all",  n:  2035,  win_pct: 0.578, units:  -12.57, roi: -0.0062, mdd:  92.61}
+    - {edge: 0.15, odds: "favs",  lines: "1.5",  n:  2035,  win_pct: 0.578, units:  -12.57, roi: -0.0062, mdd:  92.61}
+    - {edge: 0.01, odds: "dogs",  lines: "1.5",  n: 15256,  win_pct: 0.501, units:  -19.90, roi: -0.0013, mdd: 356.58}
+    - {edge: 0.01, odds: "favs",  lines: "0.5",  n:   335,  win_pct: 0.472, units:  -44.09, roi: -0.1316, mdd:  50.09}
+    - {edge: 0.00, odds: "favs",  lines: "0.5",  n:   763,  win_pct: 0.509, units:  -50.40, roi: -0.0661, mdd:  85.55}
+    - {edge: 0.05, odds: "dogs",  lines: "all",  n: 50786,  win_pct: 0.433, units:  -74.62, roi: -0.0015, mdd: 531.29}
+    - {edge: 0.07, odds: "all",   lines: "0.5",  n: 18092,  win_pct: 0.401, units: -113.52, roi: -0.0063, mdd: 437.52}
+    - {edge: 0.07, odds: "dogs",  lines: "0.5",  n: 18092,  win_pct: 0.401, units: -113.52, roi: -0.0063, mdd: 437.52}
+    - {edge: 0.00, odds: "dogs",  lines: "1.5",  n: 15679,  win_pct: 0.497, units: -147.83, roi: -0.0094, mdd: 487.24}
+    - {edge: 0.10, odds: "dogs",  lines: "1.5",  n:  6764,  win_pct: 0.470, units: -191.58, roi: -0.0283, mdd: 327.03}
+    - {edge: 0.10, odds: "favs",  lines: "1.5",  n: 31271,  win_pct: 0.594, units: -262.34, roi: -0.0084, mdd: 649.99}
+    - {edge: 0.10, odds: "favs",  lines: "all",  n: 31271,  win_pct: 0.594, units: -262.34, roi: -0.0084, mdd: 649.99}
+    - {edge: 0.05, odds: "all",   lines: "0.5",  n: 38463,  win_pct: 0.410, units: -286.52, roi: -0.0074, mdd: 549.97}
+    - {edge: 0.05, odds: "dogs",  lines: "0.5",  n: 38463,  win_pct: 0.410, units: -286.52, roi: -0.0074, mdd: 549.97}
+    - {edge: 0.10, odds: "all",   lines: "0.5",  n:  4373,  win_pct: 0.352, units: -331.58, roi: -0.0758, mdd: 432.63}
+    - {edge: 0.10, odds: "dogs",  lines: "0.5",  n:  4373,  win_pct: 0.352, units: -331.58, roi: -0.0758, mdd: 432.63}
+    - {edge: 0.10, odds: "all",   lines: "1.5",  n: 38035,  win_pct: 0.572, units: -453.92, roi: -0.0119, mdd: 811.38}
+    - {edge: 0.10, odds: "dogs",  lines: "all",  n: 11137,  win_pct: 0.424, units: -523.16, roi: -0.0470, mdd: 656.50}
+    - {edge: 0.10, odds: "all",   lines: "all",  n: 42408,  win_pct: 0.549, units: -785.50, roi: -0.0185, mdd: 1028.85}
+    - {edge: 0.07, odds: "all",   lines: "1.5",  n: 113295, win_pct: 0.590, units: -1733.80, roi: -0.0153, mdd: 2101.43}
+    - {edge: 0.07, odds: "all",   lines: "all",  n: 131387, win_pct: 0.564, units: -1847.32, roi: -0.0141, mdd: 2097.97}
+    - {edge: 0.07, odds: "favs",  lines: "all",  n: 103012, win_pct: 0.599, units: -1857.86, roi: -0.0180, mdd: 2138.52}
+    - {edge: 0.07, odds: "favs",  lines: "1.5",  n: 103012, win_pct: 0.599, units: -1857.86, roi: -0.0180, mdd: 2138.52}
+    - {edge: 0.03, odds: "dogs",  lines: "all",  n: 85940,  win_pct: 0.425, units: -1929.83, roi: -0.0225, mdd: 1998.45}
+    - {edge: 0.03, odds: "dogs",  lines: "0.5",  n: 71830,  win_pct: 0.410, units: -1977.56, roi: -0.0275, mdd: 2007.49}
+    - {edge: 0.03, odds: "all",   lines: "0.5",  n: 71841,  win_pct: 0.410, units: -1982.99, roi: -0.0276, mdd: 2012.92}
+    - {edge: 0.05, odds: "all",   lines: "1.5",  n: 186978, win_pct: 0.597, units: -4025.43, roi: -0.0215, mdd: 4325.77}
+    - {edge: 0.05, odds: "favs",  lines: "all",  n: 174655, win_pct: 0.603, units: -4237.33, roi: -0.0243, mdd: 4438.70}
+    - {edge: 0.05, odds: "favs",  lines: "1.5",  n: 174655, win_pct: 0.603, units: -4237.33, roi: -0.0243, mdd: 4438.70}
+    - {edge: 0.05, odds: "all",   lines: "all",  n: 225441, win_pct: 0.565, units: -4311.95, roi: -0.0191, mdd: 4445.00}
+    - {edge: 0.01, odds: "dogs",  lines: "0.5",  n: 116059, win_pct: 0.412, units: -4948.11, roi: -0.0426, mdd: 4983.26}
+    - {edge: 0.01, odds: "dogs",  lines: "all",  n: 131315, win_pct: 0.422, units: -4968.01, roi: -0.0378, mdd: 4983.67}
+    - {edge: 0.01, odds: "all",   lines: "0.5",  n: 116394, win_pct: 0.412, units: -4992.20, roi: -0.0429, mdd: 5027.35}
+    - {edge: 0.00, odds: "dogs",  lines: "0.5",  n: 140695, win_pct: 0.414, units: -6579.71, roi: -0.0468, mdd: 6609.12}
+    - {edge: 0.00, odds: "all",   lines: "0.5",  n: 141458, win_pct: 0.415, units: -6630.11, roi: -0.0469, mdd: 6659.52}
+    - {edge: 0.00, odds: "dogs",  lines: "all",  n: 156374, win_pct: 0.422, units: -6727.54, roi: -0.0430, mdd: 6738.15}
+    - {edge: 0.03, odds: "all",   lines: "1.5",  n: 258749, win_pct: 0.600, units: -7298.93, roi: -0.0282, mdd: 7474.98}
+    - {edge: 0.03, odds: "favs",  lines: "1.5",  n: 244639, win_pct: 0.606, units: -7346.66, roi: -0.0300, mdd: 7382.06}
+    - {edge: 0.03, odds: "favs",  lines: "all",  n: 244650, win_pct: 0.606, units: -7352.09, roi: -0.0301, mdd: 7390.06}
+    - {edge: 0.01, odds: "favs",  lines: "1.5",  n: 297431, win_pct: 0.610, units: -9076.82, roi: -0.0305, mdd: 9130.20}
+    - {edge: 0.01, odds: "all",   lines: "1.5",  n: 312687, win_pct: 0.605, units: -9096.72, roi: -0.0291, mdd: 9246.04}
+    - {edge: 0.01, odds: "favs",  lines: "all",  n: 297766, win_pct: 0.610, units: -9120.91, roi: -0.0306, mdd: 9168.03}
+    - {edge: 0.03, odds: "all",   lines: "all",  n: 330590, win_pct: 0.559, units: -9281.92, roi: -0.0281, mdd: 9307.11}
+    - {edge: 0.00, odds: "favs",  lines: "1.5",  n: 316486, win_pct: 0.611, units: -10230.04, roi: -0.0323, mdd: 10244.17}
+    - {edge: 0.00, odds: "favs",  lines: "all",  n: 317249, win_pct: 0.611, units: -10280.44, roi: -0.0324, mdd: 10294.57}
+    - {edge: 0.00, odds: "all",   lines: "1.5",  n: 332165, win_pct: 0.606, units: -10377.87, roi: -0.0312, mdd: 10464.15}
+    - {edge: 0.01, odds: "all",   lines: "all",  n: 429081, win_pct: 0.553, units: -14088.92, roi: -0.0328, mdd: 14102.05}
+    - {edge: 0.00, odds: "all",   lines: "all",  n: 473623, win_pct: 0.549, units: -17007.98, roi: -0.0359, mdd: 17021.11}
+
+  # ── IS results (67 combos, sorted by units_won desc) ─────────────────────
+  # Note: IS win rates on favs are 60–67% — major overfit vs OOS negatives.
+  # Dogs signal is consistent in both IS and OOS.
+  is_results:
+    - {edge: 0.05, odds: "all",   lines: "all",  n: 218296, win_pct: 0.585, units: +3947.58, roi: +0.0181, mdd:  761.76}
+    - {edge: 0.07, odds: "all",   lines: "all",  n: 136230, win_pct: 0.587, units: +3877.00, roi: +0.0285, mdd:  490.11}
+    - {edge: 0.07, odds: "all",   lines: "1.5",  n: 103821, win_pct: 0.632, units: +2712.33, roi: +0.0261, mdd:  413.60}
+    - {edge: 0.05, odds: "all",   lines: "1.5",  n: 163275, win_pct: 0.632, units: +2571.56, roi: +0.0157, mdd:  555.21}
+    - {edge: 0.07, odds: "favs",  lines: "1.5",  n:  98658, win_pct: 0.638, units: +2373.74, roi: +0.0241, mdd:  432.93}
+    - {edge: 0.07, odds: "favs",  lines: "all",  n:  98690, win_pct: 0.638, units: +2373.08, roi: +0.0240, mdd:  437.93}
+    - {edge: 0.10, odds: "all",   lines: "all",  n:  54479, win_pct: 0.586, units: +2229.80, roi: +0.0409, mdd:  312.20}
+    - {edge: 0.05, odds: "favs",  lines: "1.5",  n: 156650, win_pct: 0.637, units: +2117.15, roi: +0.0135, mdd:  534.49}
+    - {edge: 0.05, odds: "favs",  lines: "all",  n: 156978, win_pct: 0.636, units: +2111.79, roi: +0.0135, mdd:  534.60}
+    - {edge: 0.05, odds: "dogs",  lines: "all",  n:  61318, win_pct: 0.453, units: +1835.79, roi: +0.0299, mdd:  437.40}
+    - {edge: 0.10, odds: "all",   lines: "1.5",  n:  42385, win_pct: 0.628, units: +1735.07, roi: +0.0409, mdd:  225.00}
+    - {edge: 0.10, odds: "favs",  lines: "all",  n:  38808, win_pct: 0.641, units: +1602.69, roi: +0.0413, mdd:  214.38}
+    - {edge: 0.10, odds: "favs",  lines: "1.5",  n:  38808, win_pct: 0.641, units: +1602.69, roi: +0.0413, mdd:  214.38}
+    - {edge: 0.07, odds: "dogs",  lines: "all",  n:  37540, win_pct: 0.454, units: +1503.92, roi: +0.0401, mdd:  411.52}
+    - {edge: 0.05, odds: "dogs",  lines: "0.5",  n:  54693, win_pct: 0.445, units: +1381.38, roi: +0.0253, mdd:  488.19}
+    - {edge: 0.05, odds: "all",   lines: "0.5",  n:  55021, win_pct: 0.445, units: +1376.02, roi: +0.0250, mdd:  488.34}
+    - {edge: 0.07, odds: "dogs",  lines: "0.5",  n:  32377, win_pct: 0.444, units: +1165.33, roi: +0.0360, mdd:  495.20}
+    - {edge: 0.07, odds: "all",   lines: "0.5",  n:  32409, win_pct: 0.444, units: +1164.67, roi: +0.0359, mdd:  494.43}
+    - {edge: 0.03, odds: "dogs",  lines: "all",  n:  94568, win_pct: 0.448, units:  +993.53, roi: +0.0105, mdd:  617.28}
+    - {edge: 0.01, odds: "dogs",  lines: "1.5",  n:  10074, win_pct: 0.534, units:  +767.77, roi: +0.0762, mdd:  131.96}
+    - {edge: 0.00, odds: "dogs",  lines: "1.5",  n:  10892, win_pct: 0.530, units:  +719.24, roi: +0.0660, mdd:  129.98}
+    - {edge: 0.03, odds: "all",   lines: "all",  n: 313544, win_pct: 0.576, units:  +684.54, roi: +0.0022, mdd: 1133.14}
+    - {edge: 0.03, odds: "dogs",  lines: "1.5",  n:   8347, win_pct: 0.532, units:  +654.00, roi: +0.0784, mdd:  135.89}
+    - {edge: 0.10, odds: "dogs",  lines: "all",  n:  15671, win_pct: 0.451, units:  +627.11, roi: +0.0400, mdd:  364.52}
+    - {edge: 0.15, odds: "all",   lines: "1.5",  n:   6926, win_pct: 0.613, units:  +615.51, roi: +0.0889, mdd:   96.22}
+    - {edge: 0.15, odds: "all",   lines: "all",  n:   7800, win_pct: 0.587, units:  +586.68, roi: +0.0752, mdd:  105.32}
+    - {edge: 0.15, odds: "favs",  lines: "1.5",  n:   4778, win_pct: 0.673, units:  +575.31, roi: +0.1204, mdd:   66.34}
+    - {edge: 0.15, odds: "favs",  lines: "all",  n:   4778, win_pct: 0.673, units:  +575.31, roi: +0.1204, mdd:   66.34}
+    - {edge: 0.10, odds: "all",   lines: "0.5",  n:  12094, win_pct: 0.437, units:  +494.73, roi: +0.0409, mdd:  441.86}
+    - {edge: 0.10, odds: "dogs",  lines: "0.5",  n:  12094, win_pct: 0.437, units:  +494.73, roi: +0.0409, mdd:  441.86}
+    - {edge: 0.05, odds: "dogs",  lines: "1.5",  n:   6625, win_pct: 0.522, units:  +454.41, roi: +0.0686, mdd:  163.29}
+    - {edge: 0.03, odds: "all",   lines: "0.5",  n:  87475, win_pct: 0.441, units:  +376.59, roi: +0.0043, mdd:  699.77}
+    - {edge: 0.03, odds: "dogs",  lines: "0.5",  n:  86221, win_pct: 0.440, units:  +339.53, roi: +0.0039, mdd:  683.27}
+    - {edge: 0.07, odds: "dogs",  lines: "1.5",  n:   5163, win_pct: 0.516, units:  +338.59, roi: +0.0656, mdd:  145.81}
+    - {edge: 0.03, odds: "all",   lines: "1.5",  n: 226069, win_pct: 0.628, units:  +307.95, roi: +0.0014, mdd: 1125.93}
+    - {edge: 0.10, odds: "dogs",  lines: "1.5",  n:   3577, win_pct: 0.496, units:  +132.38, roi: +0.0370, mdd:   92.27}
+    - {edge: 0.01, odds: "favs",  lines: "0.5",  n:   3686, win_pct: 0.563, units:   +79.53, roi: +0.0216, mdd:   97.17}
+    - {edge: 0.20, odds: "all",   lines: "all",  n:   1335, win_pct: 0.510, units:   +61.91, roi: +0.0464, mdd:   44.65}
+    - {edge: 0.20, odds: "all",   lines: "1.5",  n:   1319, win_pct: 0.511, units:   +58.06, roi: +0.0440, mdd:   45.45}
+    - {edge: 0.20, odds: "dogs",  lines: "all",  n:   1022, win_pct: 0.480, units:   +44.00, roi: +0.0431, mdd:   40.94}
+    - {edge: 0.15, odds: "dogs",  lines: "1.5",  n:   2148, win_pct: 0.480, units:   +40.20, roi: +0.0187, mdd:   57.82}
+    - {edge: 0.20, odds: "dogs",  lines: "1.5",  n:   1006, win_pct: 0.480, units:   +40.15, roi: +0.0399, mdd:   38.94}
+    - {edge: 0.00, odds: "favs",  lines: "0.5",  n:   5516, win_pct: 0.557, units:   +38.23, roi: +0.0069, mdd:  114.52}
+    - {edge: 0.03, odds: "favs",  lines: "0.5",  n:   1254, win_pct: 0.565, units:   +37.06, roi: +0.0296, mdd:   39.69}
+    - {edge: 0.20, odds: "favs",  lines: "all",  n:    313, win_pct: 0.610, units:   +17.91, roi: +0.0572, mdd:   30.41}
+    - {edge: 0.20, odds: "favs",  lines: "1.5",  n:    313, win_pct: 0.610, units:   +17.91, roi: +0.0572, mdd:   30.41}
+    - {edge: 0.15, odds: "dogs",  lines: "all",  n:   3022, win_pct: 0.452, units:   +11.37, roi: +0.0038, mdd:  118.06}
+    - {edge: 0.20, odds: "all",   lines: "0.5",  n:     16, win_pct: 0.438, units:    +3.85, roi: +0.2406, mdd:    3.00}
+    - {edge: 0.20, odds: "dogs",  lines: "0.5",  n:     16, win_pct: 0.438, units:    +3.85, roi: +0.2406, mdd:    3.00}
+    - {edge: 0.07, odds: "favs",  lines: "0.5",  n:     32, win_pct: 0.531, units:    -0.66, roi: -0.0206, mdd:    5.00}
+    - {edge: 0.05, odds: "favs",  lines: "0.5",  n:    328, win_pct: 0.537, units:    -5.36, roi: -0.0163, mdd:   31.99}
+    - {edge: 0.15, odds: "all",   lines: "0.5",  n:    874, win_pct: 0.381, units:   -28.83, roi: -0.0330, mdd:  101.89}
+    - {edge: 0.15, odds: "dogs",  lines: "0.5",  n:    874, win_pct: 0.381, units:   -28.83, roi: -0.0330, mdd:  101.89}
+    - {edge: 0.03, odds: "favs",  lines: "all",  n: 218976, win_pct: 0.631, units:  -308.99, roi: -0.0014, mdd: 1214.32}
+    - {edge: 0.03, odds: "favs",  lines: "1.5",  n: 217722, win_pct: 0.631, units:  -346.05, roi: -0.0016, mdd: 1264.55}
+    - {edge: 0.01, odds: "dogs",  lines: "all",  n: 134761, win_pct: 0.442, units: -1110.55, roi: -0.0082, mdd: 1251.21}
+    - {edge: 0.01, odds: "all",   lines: "0.5",  n: 128373, win_pct: 0.438, units: -1798.79, roi: -0.0140, mdd: 1822.93}
+    - {edge: 0.01, odds: "dogs",  lines: "0.5",  n: 124687, win_pct: 0.435, units: -1878.32, roi: -0.0151, mdd: 1899.63}
+    - {edge: 0.01, odds: "all",   lines: "1.5",  n: 281623, win_pct: 0.625, units: -2492.77, roi: -0.0089, mdd: 3191.94}
+    - {edge: 0.00, odds: "dogs",  lines: "all",  n: 156152, win_pct: 0.439, units: -2780.52, roi: -0.0178, mdd: 2820.07}
+    - {edge: 0.01, odds: "favs",  lines: "all",  n: 275235, win_pct: 0.627, units: -3181.01, roi: -0.0116, mdd: 3665.98}
+    - {edge: 0.01, odds: "favs",  lines: "1.5",  n: 271549, win_pct: 0.628, units: -3260.54, roi: -0.0120, mdd: 3723.39}
+    - {edge: 0.00, odds: "all",   lines: "0.5",  n: 150776, win_pct: 0.437, units: -3461.53, roi: -0.0230, mdd: 3484.07}
+    - {edge: 0.00, odds: "dogs",  lines: "0.5",  n: 145260, win_pct: 0.432, units: -3499.76, roi: -0.0241, mdd: 3519.97}
+    - {edge: 0.00, odds: "all",   lines: "1.5",  n: 304005, win_pct: 0.624, units: -3686.79, roi: -0.0121, mdd: 4297.57}
+    - {edge: 0.01, odds: "all",   lines: "all",  n: 409996, win_pct: 0.566, units: -4291.56, roi: -0.0105, mdd: 4616.59}
+    - {edge: 0.00, odds: "favs",  lines: "all",  n: 298629, win_pct: 0.626, units: -4367.80, roi: -0.0146, mdd: 4883.28}
+    - {edge: 0.00, odds: "favs",  lines: "1.5",  n: 293113, win_pct: 0.627, units: -4406.03, roi: -0.0150, mdd: 4858.84}
+    - {edge: 0.00, odds: "all",   lines: "all",  n: 454781, win_pct: 0.562, units: -7148.32, roi: -0.0157, mdd: 7279.25}
