@@ -1,0 +1,69 @@
+strategy_summary: "Unders on lines <= 17.5, shrinkage of 25%, needs 10%+ edge — OOS 446 bets, +74.2u, +16.63% ROI (2026-07-07)"
+
+mlb_pitcher_outs_model:
+  model_type: consensus_line    # yhat = consensus_line directly (no OLS model); residuals = outs_recorded - consensus_line
+  target: outs_recorded         # int(innings_pitched)*3 + fractional_outs
+  sklearn_version: "1.6.1"      # pin in Lambda Dockerfile even though no sklearn model used (spine build uses it)
+
+  features:
+    numeric:
+      - consensus_line          # Best single predictor (RMSE 3.5185, R² 0.102); all combos degrade
+    # NOTE: no other features improve OOF RMSE — the market line already encodes all signal.
+    # novig_prob_over EXCLUDED — varies per book, breaks yhat book-invariance.
+    categorical: []
+
+  training:
+    seasons: [2024, 2025, 2026]
+    out_of_sample_folds:
+      - test_season: 2025
+        train_seasons: [2024]
+      - test_season: 2026
+        train_seasons: [2024, 2025]
+
+  inference:
+    shrinkage: 0.25            # shrink p_model toward 0.5; best IS/OOS at 0.25
+    n_bootstrap: 10000
+    rng_seed: 42
+    direction: under           # UNDER only — no evidence of OVER edge
+    edge_threshold_under: 0.10 # primary bets: OOS ROI +16.63% at this threshold (C2b)
+    edge_threshold_over: 0.99  # effectively disabled
+    edge_threshold_show: 0.05  # show caution bets (5-10pp edge); display only
+    odds_bucket: minus_odds    # minus_odds only (decimal ≤ 2.00); plus_odds has no edge
+    min_books: 2
+    line_min: 12.5             # exclude extreme alt lines (< 4 innings)
+    line_max: 17.5             # cap at 17.5 — ≥17.5 bucket loses -21.3% IS ROI
+    plus_odds_only: false      # UNDER bets are minus_odds; plus_odds_only must be false
+
+  s3:
+    bucket: the-odds-api-mt
+    prefix: mlb/pitcher_outs_model
+    spine_key:     mlb/pitcher_outs_model/spine/mlb_pitcher_outs_spine.parquet
+    model_key:     mlb/pitcher_outs_model/model/mlb_pitcher_outs_model.joblib
+    residuals_key: mlb/pitcher_outs_model/model/mlb_pitcher_outs_residuals.npy
+    settled_key:   mlb/pitcher_outs_model/settled/settled_bets.parquet
+    market_raw:    mlb/pitcher_outs_model/market_raw/
+
+  market:
+    sport:   baseball_mlb
+    markets: pitcher_outs          # pitcher_outs_alternate has NO historical coverage (verified 2026-07-06)
+    regions: us,us2
+    odds_format: decimal           # historical API returns decimal odds (not American)
+
+  game_logs:
+    bucket: the-odds-api-mt
+    prefix: mlb/strikeouts_model/pitcher_gamelogs   # reuse existing gamelogs
+    seasons: [2024, 2025, 2026]
+
+backtest:
+  groupby: ["player_key", "game_date", "bookmaker", "line"]
+  edge_col: "book_edge"
+  novig_col: "novig_prob_over"
+
+grid_search:
+  method: ["consensus_line", "ols"]    # consensus_line: yhat=market line directly (no ML); ols: yhat from LinearRegression(consensus_line)
+  edge_threshold: [0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20]
+  direction: ["over", "under", "both"]
+  odds_bucket: ["all", "plus_odds", "minus_odds"]
+  shrinkage: [0, 0.25, 0.50, 0.75]
+  line_max: [null, 17.0, 17.5, 18.0]   # null = no cap; winner: 17.5 (≥17.5 bucket -21.3% IS)
+  line_min: [null, 15.5]               # null = no floor; 15.5 removes very few bets in this market but kept for completeness

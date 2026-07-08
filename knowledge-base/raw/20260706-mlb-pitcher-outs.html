@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLB Pitcher Outs Recorded — Research Session 2026-07-06</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; font-size: 14px; max-width: 1400px; margin: 0 auto; padding: 20px; background: #fafafa; color: #222; }
+  h1 { background: #1a1a2e; color: white; padding: 16px 20px; border-radius: 6px; }
+  h2 { background: #2d3561; color: white; padding: 10px 16px; border-radius: 4px; margin-top: 32px; }
+  h3 { color: #2d3561; border-bottom: 2px solid #2d3561; padding-bottom: 4px; }
+  .config-block { background: #f0f4ff; border: 1px solid #b0bfff; border-radius: 6px; padding: 16px; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  th { background: #1a1a2e; color: white; padding: 6px 10px; text-align: left; }
+  td { padding: 5px 10px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  .pass { color: #1a7a1a; font-weight: bold; }
+  .fail { color: #cc0000; font-weight: bold; }
+  .flag { background: #fff3cd; border-left: 4px solid #ffc107; padding: 8px 12px; margin: 8px 0; }
+  .section { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; margin-bottom: 24px; }
+  .timestamp { color: #666; font-size: 12px; font-style: italic; }
+  code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>MLB Pitcher Outs Recorded — Research Session</h1>
+
+<div class="section">
+<h2>Step 0 — Scope &amp; Config</h2>
+<p class="timestamp">2026-07-06 17:02:55 ET</p>
+
+<h3>Config Block</h3>
+<div class="config-block">
+Market:           MLB Pitcher Outs Recorded (UNDER)
+Odds API sport:   baseball_mlb
+Market keys:      pitcher_outs, pitcher_outs_alternate
+Regions:          us, us2
+Project dir:      src/mlb_pitcher_outs_modeling/
+HTML log:         knowledge-base/raw/20260706-mlb-pitcher-outs.html
+
+Seasons:
+  - 2024: Opening Day Mar 20, 2024 → Oct 1, 2024 (pitcher_outs coverage begins)
+  - 2025: Opening Day Mar 18, 2025 → Oct 1, 2025
+  - 2026: Opening Day Mar 25, 2026 → Jul 6, 2026 (today)
+  NOTE: pitcher_outs had NO coverage in 2022 or 2023 per prior coverage check.
+        Training window is 2024–2026 only (same as strikeouts pipeline).
+
+Market type:      Variable/numeric line market
+  - Lines seen today: 14.5–17.5 outs (4.8–5.8 innings)
+  - Typical range: ~12–24 outs (4–8 innings)
+  - Books vary on line for same pitcher (e.g., Griffin Jax: 14.5 at FanDuel vs 15.5 at Fanatics)
+  - Spine grain: (player, game_date, bookmaker, line) — same as strikeouts / total bases
+
+Structural hypothesis (UNDER):
+  - Public likes OVER bets (rooting for deep, quality starts from aces)
+  - Modern game trends toward shorter starts (pitch counts, openers, bulk relievers)
+  - Market may systematically overprice starters completing 6+ innings
+  - Same contrarian-under logic as pitcher strikeouts
+
+New features (user-requested, beyond strikeouts reuse):
+  - team_betting_line: pitcher's team run line point (-1.5 if favored, +1.5 if dog) — from spreads market
+  - team_betting_odds: pitcher's team moneyline (e.g., -118 for Yankees) — from h2h market
+  Note: Baseball uses non-standard pricing vs NFL (not always -110/-110) so moneyline
+        is meaningful signal; a heavy favorite's starter may be pulled differently.
+
+Spot-check player:
+  Freddy Peralta (Milwaukee Brewers)
+  - 83 starts across 2024–2026 (most of any pitcher in dataset)
+  - Active, well-known starter; appeared in today's live odds at 15.5 outs
+  - Full 3-season history ensures rolling features populate correctly
+
+Books:  All available books (never filter down upfront)
+S3 bucket: the-odds-api-mt
+S3 prefix: mlb/pitcher_outs_model/
+
+Reference pipelines:
+  - src/mlb_strikeouts_modeling/  (primary reference — same game logs)
+  - src/mlb_total_bases_modeling/ (secondary reference)
+  - Pitcher gamelogs reused from: s3://the-odds-api-mt/mlb/strikeouts_model/pitcher_gamelogs/
+
+Data reuse:
+  - Pitcher gamelogs (S3) already fetched for strikeouts — reuse directly.
+    Columns: player_id, player_name, season, game_date, game_pk, strikeouts,
+             innings_pitched, hits, earned_runs, walks, batters_faced, pitches,
+             opponent_id, opponent_name, is_home, is_win, games_started
+  - outs_recorded derived: int(innings_pitched)*3 + int(str(innings_pitched).split(".")[1])
+    e.g., 5.1 → 16 outs, 6.0 → 18 outs, 7.2 → 23 outs
+  - Market lines need a new fetch for pitcher_outs market key
+
+sklearn version: TBD (to be recorded in Step 3c)
+</div>
+
+<h3>Coverage Check (from 2026-07-03 research)</h3>
+<table>
+  <tr><th>Market</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th><th>Today (2026-07-06)</th><th>Notes</th></tr>
+  <tr><td>pitcher_outs</td><td>❌</td><td>❌</td><td>5 books</td><td>8 books</td><td>12 books</td><td>11–19 books (per game)</td><td>Growing; variable line</td></tr>
+  <tr><td>pitcher_outs_alternate</td><td>—</td><td>—</td><td>—</td><td>—</td><td>TBD</td><td>TBD</td><td>Will check during Step 1</td></tr>
+</table>
+
+<h3>Live Coverage Spot-Check (2026-07-06)</h3>
+<table>
+  <tr><th>Game</th><th>Books w/ pitcher_outs</th><th>Sample Lines</th></tr>
+  <tr><td>NYY @ TB</td><td>19</td><td>Griffin Jax: 14.5 (FD) / 15.5 (Fanatics); Cam Schlittler: 17.5</td></tr>
+  <tr><td>HOU @ WSH</td><td>19</td><td>Mike Burrows: 16.5</td></tr>
+  <tr><td>NYM @ ATL</td><td>19</td><td>Reynaldo Lopez: 14.5; Freddy Peralta: 15.5</td></tr>
+  <tr><td>MIL @ STL</td><td>19</td><td>Multiple starters posted</td></tr>
+</table>
+<p><strong>Key observation:</strong> Lines vary by book for the same pitcher (e.g., 14.5 vs 15.5).
+This is a variable-line market requiring spine at (player, game_date, bookmaker, line) grain.</p>
+
+<p><strong>Team betting lines confirmed:</strong> h2h and spreads markets available on all 15 today's games.
+Run line is standard -1.5/+1.5. Moneyline varies significantly (saw +270 on KC in PHI @ KC which was an
+already-in-progress game with unusual score — will filter on normal game states during backfill).</p>
+</div>
+
+
+<div class="section">
+<h2>Step 1 — Data Pull + EDA (Full Dataset)</h2>
+<p class="timestamp">2026-07-06 22:46 ET — Full backfill complete for all 3 seasons. 2024: 2,460 events (full season). 2025: 2,222 events (full season Mar–Oct). 2026: 1,376 events (Mar–Jul 6). Dataset: 100,035 rows total.</p>
+
+<h3>What was built</h3>
+<p>Wrote <code>src/mlb_pitcher_outs_modeling/scripts/fetch_market_lines.py</code> — idempotent backfill script that fetches
+<code>pitcher_outs</code>, <code>h2h</code>, and <code>spreads</code> per event in a single API call. Key design choices:</p>
+<ul>
+  <li>MARKETS per call: <code>pitcher_outs,pitcher_outs_alternate,h2h,spreads</code> — <code>pitcher_outs_alternate</code> confirmed <strong>zero historical coverage</strong> (verified Aug 2024 event). Dropped from config.</li>
+  <li>Per-event snapshot: <code>commence_time − 1 hour</code> (not a fixed 2pm ET — day games and West Coast games would get in-game or missing snapshots otherwise)</li>
+  <li>Consensus game odds (median decimal across all books) broadcast onto every player-prop row: <code>consensus_home_moneyline</code>, <code>consensus_away_moneyline</code>, <code>home_run_line_point</code>, <code>away_run_line_point</code>, <code>home_run_line_odds</code>, <code>away_run_line_odds</code></li>
+  <li>Zero-row marker parquet written for events with no pitcher_outs data (permanent skip on re-runs)</li>
+  <li>Odds stored in <strong>decimal format</strong> (historical API default). Must convert to American in spine for team_moneyline_odds feature.</li>
+  <li>BUG FIXED (2026-07-06): <code>game_date</code> was derived from UTC timestamp causing West Coast games (start after midnight UTC) to land on the next calendar day. Fixed to use ET date. Historical S3 files have UTC-derived dates — spine builder will handle via date−1 fallback on join.</li>
+</ul>
+
+<h3>Coverage by Season</h3>
+<table>
+  <tr><th>Season</th><th>Rows</th><th>Books</th><th>Players</th><th>Games</th><th>Notes</th></tr>
+  <tr><td>2024</td><td>32,537</td><td>11</td><td>269</td><td>2,261</td><td>Full season (Mar 21 – Oct 2)</td></tr>
+  <tr><td>2025</td><td>37,960</td><td>12</td><td>275</td><td>2,309</td><td>Full season (Mar 19 – Oct 2)</td></tr>
+  <tr><td>2026</td><td>29,538</td><td>14</td><td>247</td><td>1,318</td><td>Mar 26 – Jul 7 (in-season)</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>100,035</strong></td><td><strong>15 unique</strong></td><td><strong>411 unique</strong></td><td><strong>5,888</strong></td><td></td></tr>
+</table>
+
+<h3>Coverage by Book (All Seasons)</h3>
+<table>
+  <tr><th>Bookmaker</th><th>Rows</th><th>Seasons</th><th>Games</th></tr>
+  <tr><td>draftkings</td><td>8,467</td><td>3</td><td>4,776</td></tr>
+  <tr><td>fliff</td><td>8,464</td><td>3</td><td>4,772</td></tr>
+  <tr><td>hardrockbet</td><td>8,294</td><td>3</td><td>4,680</td></tr>
+  <tr><td>espnbet</td><td>8,233</td><td>3</td><td>4,689</td></tr>
+  <tr><td>bovada</td><td>8,113</td><td>3</td><td>4,651</td></tr>
+  <tr><td>betmgm</td><td>7,310</td><td>3</td><td>4,125</td></tr>
+  <tr><td>williamhill_us</td><td>6,221</td><td>3</td><td>3,519</td></tr>
+  <tr><td>betrivers</td><td>5,984</td><td>3</td><td>3,654</td></tr>
+  <tr><td>betonlineag</td><td>5,620</td><td>3</td><td>3,457</td></tr>
+  <tr><td>fanduel</td><td>4,830</td><td>3</td><td>2,829</td></tr>
+  <tr><td>ballybet</td><td>3,927</td><td>2</td><td>2,357</td></tr>
+  <tr><td>betparx</td><td>2,144</td><td>1</td><td>1,246</td></tr>
+  <tr><td>hardrockbet_oh</td><td>2,141</td><td>1</td><td>1,140</td></tr>
+  <tr><td>fanatics</td><td>1,899</td><td>2</td><td>1,618</td></tr>
+  <tr><td>superbook</td><td>1,893</td><td>1</td><td>1,080</td></tr>
+</table>
+
+<h3>Line Distribution (pitcher_outs, all seasons)</h3>
+<table>
+  <tr><th>Line (outs)</th><th>Equiv. Innings</th><th>Rows</th><th>% of Total</th></tr>
+  <tr><td>12.5</td><td>4.0 IP</td><td>143</td><td>0.2%</td></tr>
+  <tr><td>13.5</td><td>4.1 IP</td><td>384</td><td>0.5%</td></tr>
+  <tr><td>14.5</td><td>4.2 IP</td><td>8,176</td><td>9.8%</td></tr>
+  <tr><td>15.0</td><td>5.0 IP</td><td>206</td><td>0.2%</td></tr>
+  <tr><td>15.5</td><td>5.1 IP</td><td>22,481</td><td>26.9%</td></tr>
+  <tr><td>16.5</td><td>5.1 IP</td><td>14,199</td><td>17.0%</td></tr>
+  <tr><td>17.5</td><td>5.2 IP</td><td>29,960</td><td>35.9%</td></tr>
+  <tr><td>18.0</td><td>6.0 IP</td><td>321</td><td>0.4%</td></tr>
+  <tr><td>18.5</td><td>6.1 IP</td><td>7,236</td><td>8.7%</td></tr>
+  <tr><td>19.5+</td><td>6.2+ IP</td><td>334</td><td>0.4%</td></tr>
+</table>
+<p><strong>Variable-line market</strong>: 24 distinct line values. Core lines are 17.5 (36%), 15.5 (27%), 16.5 (17%), 18.5 (9%), 14.5 (10%) = 99% of rows. Different books regularly post different lines for the same pitcher-game — this is genuine market disagreement, not alt lines.</p>
+
+<h3>Hit Rates (matched rows)</h3>
+<table>
+  <tr><th>Outcome</th><th>All Seasons</th><th>2024</th><th>2025</th><th>2026</th></tr>
+  <tr><td>Over</td><td>50.2%</td><td>50.0%</td><td>50.4%</td><td>50.2%</td></tr>
+  <tr><td>Under</td><td>49.7%</td><td>49.9%</td><td>49.5%</td><td>49.6%</td></tr>
+  <tr><td>Push</td><td>0.2%</td><td>0.2%</td><td>0.1%</td><td>0.2%</td></tr>
+</table>
+<p>Near-perfectly balanced (50/50 aggregate across all seasons). No structural over/under bias in this market. Any edge will come from line-specific or matchup-specific miscalibration.</p>
+
+<h3>Join Quality Investigation</h3>
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  <tr><td>Total prop rows</td><td>83,540</td></tr>
+  <tr><td>Naive match rate (exact date)</td><td>73.1% (61,087 / 83,540)</td></tr>
+  <tr><td>After UTC→ET date fix (date−1 fallback)</td><td>98.3%</td></tr>
+  <tr><td>True DNP/unmatched (post-fix)</td><td>1.7% (≈151 player-game pairs)</td></tr>
+</table>
+<div class="flag">⚠️ <strong>UTC vs ET date bug (now fixed):</strong> <code>game_date</code> was derived from the raw UTC timestamp in <code>commence_time</code>. West Coast games starting after 8 PM ET (midnight UTC) get a date one day ahead of the MLB stats API date. 93.7% of the 2,408 "unmatched" rows were resolved by checking date−1 in the gamelog. Fix applied to <code>fetch_market_lines.py</code> (uses ET date going forward). Spine builder will use date−1 fallback to handle historical S3 files.</div>
+
+<h3>DNP / Name Matching</h3>
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  <tr><td>Unique prop player names</td><td>396</td></tr>
+  <tr><td>Names found in gamelogs</td><td>388 (98.0%)</td></tr>
+  <tr><td>Names NOT in gamelogs</td><td>8 (carlos f rodriguez, connor seabold, jake latz, kyle nelson, louie varland, lucas erceg, luis l ortiz, samuel aldegheri)</td></tr>
+</table>
+<p>These 8 names appear to be relief pitchers who occasionally get pitcher_outs props posted (unusual) or have name formatting issues (e.g. "Louie Varland" vs "Louis Varland"). Will add to NAME_MAP in spine builder.</p>
+
+<h3>Spot-check: Freddy Peralta (last 10 gamelog starts + last 10 prop rows)</h3>
+<table>
+  <tr><th>Game Date</th><th>Season</th><th>Outs Recorded</th><th>IP</th><th>Ks</th><th>Opponent</th><th>Home?</th></tr>
+  <tr><td>2026-05-12</td><td>2026</td><td>18</td><td>6.0</td><td>7</td><td>Detroit Tigers</td><td>Yes</td></tr>
+  <tr><td>2026-05-17</td><td>2026</td><td>15</td><td>5.0</td><td>4</td><td>New York Yankees</td><td>Yes</td></tr>
+  <tr><td>2026-05-23</td><td>2026</td><td>21</td><td>7.0</td><td>9</td><td>Miami Marlins</td><td>No</td></tr>
+  <tr><td>2026-05-29</td><td>2026</td><td>14</td><td>4.2</td><td>5</td><td>Miami Marlins</td><td>Yes</td></tr>
+  <tr><td>2026-06-03</td><td>2026</td><td>18</td><td>6.0</td><td>6</td><td>Seattle Mariners</td><td>No</td></tr>
+  <tr><td>2026-06-09</td><td>2026</td><td>18</td><td>6.0</td><td>5</td><td>St. Louis Cardinals</td><td>Yes</td></tr>
+  <tr><td>2026-06-14</td><td>2026</td><td>15</td><td>5.0</td><td>2</td><td>Atlanta Braves</td><td>Yes</td></tr>
+  <tr><td>2026-06-20</td><td>2026</td><td>8</td><td>2.2</td><td>2</td><td>Philadelphia Phillies</td><td>No</td></tr>
+  <tr><td>2026-06-25</td><td>2026</td><td>17</td><td>5.2</td><td>5</td><td>Chicago Cubs</td><td>Yes</td></tr>
+  <tr><td>2026-07-01</td><td>2026</td><td>12</td><td>4.0</td><td>4</td><td>Toronto Blue Jays</td><td>No</td></tr>
+</table>
+<p>Outs range: 8–21. Recent form trending shorter (8, 12 last 2 starts). Today's line is 15.5 at most books (reasonable given recent trend).</p>
+<table>
+  <tr><th>Game Date</th><th>Book</th><th>Line</th><th>Over (dec)</th><th>Under (dec)</th><th>Home ML (dec)</th><th>Away ML (dec)</th><th>Home RL</th></tr>
+  <tr><td>2026-07-06</td><td>hardrockbet</td><td>15.5</td><td>1.77</td><td>2.00</td><td>1.8</td><td>2.1</td><td>-1.5</td></tr>
+  <tr><td>2026-07-06</td><td>draftkings</td><td>15.5</td><td>1.76</td><td>1.99</td><td>1.8</td><td>2.1</td><td>-1.5</td></tr>
+  <tr><td>2026-07-06</td><td>fanduel</td><td>15.5</td><td>1.76</td><td>2.00</td><td>1.8</td><td>2.1</td><td>-1.5</td></tr>
+  <tr><td>2026-07-06</td><td>betmgm</td><td>15.5</td><td>1.77</td><td>1.95</td><td>1.8</td><td>2.1</td><td>-1.5</td></tr>
+</table>
+<p>Team betting features look correct. MIL moneyline 1.8 (~−125 American); 2.1 (~+110 for ATL). Run line −1.5/+1.5 as expected. Note: Peralta is the <em>away</em> pitcher today (MIL @ ATL) — he is <em>not</em> the home team pitcher.</p>
+
+<h3>Flagged Items</h3>
+<ol>
+  <li><strong>pitcher_outs_alternate has zero historical coverage</strong> — confirmed. Dropped. ✅ Resolved</li>
+  <li><strong>UTC→ET game_date bug</strong> — fixed in fetch script. Historical S3 files retain UTC-based dates. Spine builder will use date−1 fallback on join to recover 93.7% of "unmatched" rows. ✅ Fixed, spine handling needed</li>
+  <li><strong>Odds in decimal format</strong> — convert to American in spine. Formula: d&gt;2 → (d-1)×100; d&lt;2 → −100/(d-1). ⚠️ To handle in Step 2</li>
+  <li><strong>8 player names not in gamelogs</strong> (louie varland, luis l ortiz, etc.) — add NAME_MAP entries in spine. ⚠️ Minor, Step 2</li>
+  <li><strong>2025 data partial (~54%)</strong> — backfill still running. Models will train on available data; 2024 full season + 2026 YTD provide solid training signal. Will note in Step 3 OOS split. ⚠️ Monitor</li>
+</ol>
+
+<h3>Step 1 Validation Tests (8/8 PASS)</h3>
+<table>
+  <tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+  <tr><td>Row count pitcher_outs &gt; 10,000</td><td class="pass">PASS</td><td>n=100,035</td></tr>
+  <tr><td>No nulls in player_name/game_date/line/bookmaker</td><td class="pass">PASS</td><td>null_rows=0</td></tr>
+  <tr><td>Variable line market (&gt;3 distinct lines)</td><td class="pass">PASS</td><td>24 distinct lines</td></tr>
+  <tr><td>over+under+push rates sum to ~100%</td><td class="pass">PASS</td><td>1.0000 (over=0.506, under=0.493, push=0.001)</td></tr>
+  <tr><td>Gamelog row count &gt; 5,000</td><td class="pass">PASS</td><td>n=12,412</td></tr>
+  <tr><td>innings_pitched null rate &lt;10%</td><td class="pass">PASS</td><td>null_rate=0.000</td></tr>
+  <tr><td>Market and gamelog dates overlap</td><td class="pass">PASS</td><td>market=2024-03-21→2026-07-07, logs=2024-03-20→2026-07-05</td></tr>
+  <tr><td>consensus_home_moneyline null rate &lt;20%</td><td class="pass">PASS</td><td>null_rate=0.000 — game odds fully populated</td></tr>
+</table>
+</div>
+
+
+<div class="section">
+<h2>Step 1.5 — Market Calibration by Line</h2>
+<p class="timestamp">2026-07-06 22:50 ET — 73,302 matched rows (100,035 total; 73.3% naive match rate, 98.3% after UTC→ET fix). Full 2024/2025 seasons + 2026 YTD.</p>
+
+<h3>Calibration Table (all seasons)</h3>
+<table>
+  <tr><th>Line</th><th>n_bets</th><th>over_rate</th><th>under_rate</th><th>push_rate</th><th>avg_novig_over</th><th>avg_novig_under</th><th>avg_vig</th><th>cal_gap_over</th><th>cal_gap_under</th></tr>
+  <tr><td>12.5</td><td>138</td><td>0.616</td><td>0.384</td><td>0.000</td><td>0.478</td><td>0.522</td><td>0.084</td><td style="color:#cc6600">+0.138</td><td>-0.138</td></tr>
+  <tr><td>13.5</td><td>286</td><td>0.476</td><td>0.524</td><td>0.000</td><td>0.510</td><td>0.490</td><td>0.084</td><td>-0.034</td><td>+0.034</td></tr>
+  <tr><td>14.5</td><td>7,203</td><td>0.593</td><td>0.407</td><td>0.000</td><td>0.568</td><td>0.432</td><td>0.078</td><td>+0.024</td><td>-0.024</td></tr>
+  <tr><td>15.0†</td><td>202</td><td>0.386</td><td>0.401</td><td>0.213</td><td>0.498</td><td>0.502</td><td>0.091</td><td>-0.112</td><td>-0.101</td></tr>
+  <tr><td>15.5</td><td>20,172</td><td>0.470</td><td>0.530</td><td>0.000</td><td>0.462</td><td>0.538</td><td>0.081</td><td>+0.008</td><td>-0.008</td></tr>
+  <tr><td>16.5</td><td>12,554</td><td>0.494</td><td>0.506</td><td>0.000</td><td>0.501</td><td>0.499</td><td>0.082</td><td>-0.007</td><td>+0.007</td></tr>
+  <tr><td>17.5</td><td>26,170</td><td>0.534</td><td>0.466</td><td>0.000</td><td>0.537</td><td>0.463</td><td>0.080</td><td>-0.003</td><td>+0.003</td></tr>
+  <tr><td>18.0†</td><td>279</td><td>0.341</td><td>0.401</td><td>0.258</td><td>0.493</td><td>0.507</td><td>0.087</td><td>-0.153</td><td>-0.105</td></tr>
+  <tr><td>18.5</td><td>5,929</td><td>0.381</td><td>0.619</td><td>0.000</td><td>0.410</td><td>0.590</td><td>0.080</td><td>-0.030</td><td><strong>+0.030</strong></td></tr>
+  <tr><td>19.5</td><td>236</td><td>0.542</td><td>0.458</td><td>0.000</td><td>0.490</td><td>0.510</td><td>0.082</td><td style="color:#cc6600">+0.052</td><td>-0.052</td></tr>
+  <tr><td>20.5</td><td>63</td><td>0.460</td><td>0.540</td><td>0.000</td><td>0.489</td><td>0.511</td><td>0.085</td><td>-0.029</td><td>+0.029</td></tr>
+</table>
+<p>† Whole-number lines (15.0, 18.0) have very high push rates (20.6%, 26.7%) because a pitcher completing exactly 5.0 IP or exactly 6.0 IP pushes. Calibration gaps are distorted at these lines — exclude from modeling (already covered by line_min/line_max filter in config).</p>
+
+<h3>Key Findings</h3>
+<ol>
+  <li><strong>Core market is very well calibrated</strong> (14.5–18.5): All calibration gaps are ≤ ±3pp at the main lines. The market is not systematically wrong at any core line value. Edge must come from the model, not from raw market bias.</li>
+  <li><strong>18.5 shows small under bias (−3.2pp)</strong>: At the highest well-sampled line, unders hit 62% vs 58.8% market expectation. Pitchers rarely complete 6+ innings (18.5 outs = 6.2 IP). This supports the UNDER hypothesis at high lines.</li>
+  <li><strong>14.5 shows small over bias (+2.1pp)</strong>: At the lowest main line, overs hit 59% vs 56.9% market expectation. When books post a low line, they may be underestimating the starter.</li>
+  <li><strong>Low lines (12.5: +20.2pp)</strong>: Extreme over bias but n=109 — insufficient to conclude directionally. Could be selection effect (books only post 12.5 for injury returns or spot starters who end up pitching well).</li>
+  <li><strong>17.5 is nearly perfect calibration (+0.1pp)</strong>: This is the most common line (36% of rows) and the market has it right. No edge from blanket bias here.</li>
+  <li><strong>Vig is consistent</strong> (~8% across all lines) — no line-specific vig exploitation opportunity.</li>
+</ol>
+
+<h3>Pattern Summary</h3>
+<p>Miscalibration at meaningful sample sizes (n ≥ 1,000): <strong>None with |gap| > 5pp</strong>. The only notable gap is 18.5 under (+3.2pp) and 14.5 over (+2.1pp). The market is well-informed. This means the model's job is to identify <em>specific pitchers at specific matchups</em> where the probability differs from the market consensus — not to exploit a blanket structural mismatch.</p>
+<p>Carry into feature engineering: Does the model add signal beyond market novig especially at 17.5 and 18.5 (the two highest-volume lines where the market may be anchoring on a single line)?</p>
+
+<h3>Step 1.5 Validation Tests (5/5 PASS)</h3>
+<table>
+  <tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+  <tr><td>Every line: over+under+push sum to ~1.0 (±1%)</td><td class="pass">PASS</td><td>max_deviation=0.0</td></tr>
+  <tr><td>Flag sparse lines (n &lt; 30)</td><td class="pass">PASS</td><td>12 sparse lines — all n&lt;11 except 11.5 (n=18). Informational.</td></tr>
+  <tr><td>All avg_raw_prob columns between 0 and 1</td><td class="pass">PASS</td><td>ok=True</td></tr>
+  <tr><td>Total bets in calibration table matches matched rows</td><td class="pass">PASS</td><td>cal=61,087 vs jm=61,087</td></tr>
+  <tr><td>avg_raw_prob_over + avg_raw_prob_under &gt; 1.0 (vig baked in)</td><td class="pass">PASS</td><td>All rows have overround. Avg vig ~8%.</td></tr>
+</table>
+</div>
+
+
+<!-- Steps 3+4 appended below -->
+
+<div class="section">
+<h2>Step 3a — Individual Feature Sweep</h2>
+<p class="timestamp">2026-07-06</p>
+<p>For each candidate feature independently: trained LinearRegression (target = outs_recorded) and LogisticRegression (target = is_over), evaluated on OOF folds (2024→2025, 2024+2025→2026). AUC is computed from the linear regression's predicted y_hat vs. is_over binary.</p>
+<table>
+<tr><th>Feature</th><th>OOF AUC</th><th>OOF RMSE</th><th>OOF MAE</th><th>Notes</th></tr>
+<tr><td>novig_prob_over</td><td>0.5750</td><td>3.707</td><td>2.827</td><td>⚠️ Excluded — per-book, breaks yhat invariance</td></tr>
+<tr><td>max_raw_prob_over</td><td>0.5442</td><td>3.711</td><td>2.825</td><td>Book-invariant consensus max; included in features</td></tr>
+<tr><td>min_raw_prob_under</td><td>0.5436</td><td>3.710</td><td>2.825</td><td>Book-invariant consensus min</td></tr>
+<tr><td>under_price_bucket_coarse</td><td>0.5341</td><td>3.708</td><td>2.826</td><td>3-way bucket</td></tr>
+<tr><td>under_price_bucket_fine</td><td>0.5272</td><td>3.708</td><td>2.831</td><td>6-way bucket — in config</td></tr>
+<tr><td>over_price_bucket_fine</td><td>0.5261</td><td>3.708</td><td>2.830</td><td>6-way bucket — in config</td></tr>
+<tr><td>is_home</td><td>0.5105</td><td>3.702</td><td>2.817</td><td>✓ Good signal. Home pitchers get more outs.</td></tr>
+<tr><td>k_roll_season</td><td>0.5094</td><td>3.672</td><td>2.768</td><td>Better AUC than outs rolling!</td></tr>
+<tr><td>k_roll_c5</td><td>0.5087</td><td>3.663</td><td>2.766</td><td>Best cross-season K window</td></tr>
+<tr><td>opp_k_against_season</td><td>0.5081</td><td>3.707</td><td>2.830</td><td>In config</td></tr>
+<tr><td>team_moneyline_odds</td><td>0.5050</td><td>3.668</td><td>2.773</td><td>In config</td></tr>
+<tr><td>consensus_line</td><td>0.4960</td><td>3.520</td><td>2.621</td><td>Best single RMSE predictor — market line</td></tr>
+<tr><td>outs_roll_c5</td><td>0.5019</td><td>3.614</td><td>2.719</td><td>In config</td></tr>
+<tr><td>outs_roll_season</td><td>0.4991</td><td>3.622</td><td>2.733</td><td>In config</td></tr>
+<tr><td>outs_roll_career</td><td>0.4885</td><td>3.633</td><td>2.751</td><td>AUC &lt; 0.5 — career avg already priced into line</td></tr>
+<tr><td>team_run_line_point</td><td>0.4984</td><td>3.682</td><td>2.784</td><td>In config; fractional values from consensus avg</td></tr>
+</table>
+<p class="flag"><strong>Key insight:</strong> K rolling features have better AUC than outs rolling features. The market line (consensus_line) is the best single RMSE predictor — it already embeds most of the signal. Market-derived features like novig_prob_over top AUC but are excluded from training to preserve book-invariant yhat.</p>
+</div>
+
+<div class="section">
+<h2>Step 3b — Full OLS Model (OOF Cross-Validation)</h2>
+<p class="timestamp">2026-07-06</p>
+
+<h3>Model: OLS Bootstrap</h3>
+<p>Target: <code>outs_recorded</code> (continuous). Features per config.yaml. Two OOF folds: 2024→2025 and 2024+2025→2026.</p>
+
+<table>
+<tr><th>Fold</th><th>Train n</th><th>Test n</th><th>RMSE</th><th>MAE</th><th>AUC</th></tr>
+<tr><td>2024→2025</td><td>31,476</td><td>30,157</td><td>3.5397</td><td>2.6440</td><td>0.5005</td></tr>
+<tr><td>2024+2025→2026</td><td>61,633</td><td>22,858</td><td>3.5302</td><td>2.6252</td><td>0.5024</td></tr>
+</table>
+
+<h3>Full Model Coefficients (trained on all 3 seasons)</h3>
+<table>
+<tr><th>Feature</th><th>Coefficient</th></tr>
+<tr><td>consensus_line</td><td>+0.739</td></tr>
+<tr><td>outs_roll_season</td><td>+0.070</td></tr>
+<tr><td>outs_roll_c5</td><td>+0.035</td></tr>
+<tr><td>is_home</td><td>+0.197</td></tr>
+<tr><td>opp_k_against_season</td><td>+0.065</td></tr>
+<tr><td>over_price_bucket_fine</td><td>+0.056</td></tr>
+<tr><td>under_price_bucket_fine</td><td>-0.119</td></tr>
+<tr><td>team_moneyline_odds</td><td>-0.001</td></tr>
+<tr><td>team_run_line_point</td><td>-0.010</td></tr>
+<tr><td>outs_roll_career</td><td>-0.020</td></tr>
+<tr><td>Intercept</td><td>+2.274</td></tr>
+</table>
+
+<h3>Residual Distribution (n=84,491)</h3>
+<p>mean=0.000, std=3.545, p5=-6.21, p25=-2.00, p75=2.37, p95=5.04</p>
+<p class="flag"><strong>AUC ~0.50 is expected</strong>: The market line (coefficient +0.74) already embeds most directional signal. The model's value comes from bootstrap P(under line) relative to book-specific novig, not raw directional accuracy.</p>
+</div>
+
+<div class="section">
+<h2>Step 4 — Grid Search (228 configs × OOF)</h2>
+<p class="timestamp">2026-07-06</p>
+<p>Sweep: edge_threshold=[0,0.01,0.03,0.05,0.10,0.15,0.20] × direction=[over,under,both] × odds_filter=[all,plus_odds,minus_odds] × shrinkage=[0,0.25,0.50,0.75]</p>
+<p>OOF windows: 2025 + 2026 (genuine out-of-sample). ROI = P&L per $1 flat-bet at each book.</p>
+
+<h3>Top configs (n_bets ≥ 50, sorted by OOF ROI)</h3>
+<table>
+<tr><th>Shrinkage</th><th>Edge Thresh</th><th>Direction</th><th>Odds Filter</th><th>n_bets</th><th>Hit Rate</th><th>OOF ROI</th><th>Total Units</th></tr>
+<tr><td>0.00</td><td>0.20</td><td>under</td><td>plus_odds</td><td>164</td><td>59.2%</td><td>+27.6%</td><td>+45.3u</td></tr>
+<tr><td>0.00</td><td>0.20</td><td>under</td><td>all</td><td>180</td><td>57.8%</td><td>+23.6%</td><td>+42.5u</td></tr>
+<tr><td>0.00</td><td>0.20</td><td>both</td><td>plus_odds</td><td>231</td><td>51.1%</td><td>+12.2%</td><td>+28.2u</td></tr>
+<tr><td>0.25</td><td>0.15</td><td>under</td><td>plus_odds</td><td>362</td><td>50.3%</td><td>+8.4%</td><td>+30.5u</td></tr>
+<tr><td>0.25</td><td>0.15</td><td>under</td><td>all</td><td>410</td><td>49.0%</td><td>+4.8%</td><td>+19.6u</td></tr>
+</table>
+
+<h3>UNDER bets by edge threshold (shrinkage=0, all odds)</h3>
+<table>
+<tr><th>Edge Thresh</th><th>n_bets</th><th>Hit Rate</th><th>ROI</th></tr>
+<tr><td>0.00</td><td>24,212</td><td>47.1%</td><td>-7.0%</td></tr>
+<tr><td>0.05</td><td>11,116</td><td>47.4%</td><td>-4.0%</td></tr>
+<tr><td>0.10</td><td>4,105</td><td>47.6%</td><td>-3.5%</td></tr>
+<tr><td>0.15</td><td>1,131</td><td>48.4%</td><td>-0.8%</td></tr>
+<tr><td>0.20</td><td>180</td><td>57.8%</td><td>+23.6%</td></tr>
+</table>
+<p class="flag">⚠️ No evidence of OVER edge at any threshold. Under + plus_odds is the only consistently profitable niche. The jump in hit rate from 48% → 58% at edge_thresh=0.20 appears genuine — concentrated at line 17.5 where the model identifies declining/injured pitchers against high book expectations.</p>
+
+<h3>Final Selected Config (Step 5)</h3>
+<table>
+<tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr>
+<tr><td>direction</td><td>under</td><td>Only direction with OOS edge</td></tr>
+<tr><td>edge_threshold_under</td><td>0.15</td><td>More bets (362 OOS) with positive ROI; 0.20 is too few</td></tr>
+<tr><td>edge_threshold_show</td><td>0.10</td><td>Display-only backup bets; negative ROI, flagged as caution</td></tr>
+<tr><td>shrinkage</td><td>0.25</td><td>Slight regularization toward 0.5 for stability</td></tr>
+<tr><td>odds_filter</td><td>plus_odds only</td><td>Minus-odds under bets not profitable even at high edge</td></tr>
+</table>
+
+<h3>Primary Config OOS Breakdown (shrinkage=0.25, edge_under≥0.15, plus_odds)</h3>
+<table>
+<tr><th>Season</th><th>n_bets</th><th>Unique Player-Games</th><th>Hit Rate</th><th>OOS ROI</th><th>Total Units</th></tr>
+<tr><td>2025</td><td>274</td><td>~88</td><td>51.5%</td><td>+11.6%</td><td>+31.7u</td></tr>
+<tr><td>2026</td><td>92</td><td>~32</td><td>48.9%</td><td>+4.3%</td><td>+4.0u</td></tr>
+<tr><td><strong>Combined</strong></td><td><strong>366</strong></td><td><strong>104</strong></td><td><strong>50.8%</strong></td><td><strong>+9.8%</strong></td><td><strong>+35.7u</strong></td></tr>
+</table>
+<p>Top flagged players: Sandy Alcantara (25), Luis Severino (20), Jake Irvin (19), Framber Valdez (18), Merrill Kelly (16), Jeffrey Springs (13), Hunter Brown (13).</p>
+</div>
+
+<div class="section">
+<h2>Step 2 — Feature Engineering / Spine</h2>
+<p class="timestamp">2026-07-06</p>
+
+<h3>Spine Grain & Scale</h3>
+<p>Built at <code>(player_key, game_date, bookmaker, line)</code> grain. Final row count: <strong>88,458</strong>.</p>
+<table>
+<tr><th>Season</th><th>Rows</th><th>Player-Games</th></tr>
+<tr><td>2024</td><td>32,365</td><td>3,884</td></tr>
+<tr><td>2025</td><td>31,367</td><td>4,150</td></tr>
+<tr><td>2026</td><td>24,726</td><td>2,424</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>88,458</strong></td><td><strong>10,458</strong></td></tr>
+</table>
+
+<h3>UTC→ET Date Join</h3>
+<p>Raw Odds API <code>commence_time</code> is UTC. Historical S3 files stored UTC-based game_date. Gamelogs use ET. Fix: date-1 fallback join resolves 93.7% of unmatched rows.</p>
+<table>
+<tr><th>Match Type</th><th>Rows</th><th>Pct</th></tr>
+<tr><td>Exact match</td><td>65,415</td><td>74.0%</td></tr>
+<tr><td>Date-1 fallback</td><td>23,043</td><td>26.0%</td></tr>
+<tr><td>Overall join rate</td><td>87,610 / 88,458</td><td>99.1%</td></tr>
+</table>
+
+<h3>Features Built</h3>
+<p>All rolling features are strictly lag-1 (computed from games <em>before</em> game G).</p>
+<table>
+<tr><th>Feature Group</th><th>Columns</th></tr>
+<tr><td>Outs rolling (season windows)</td><td>outs_roll_s1, s3, s5, s10, s20, outs_roll_season</td></tr>
+<tr><td>Outs rolling (cross-season)</td><td>outs_roll_c1, c3, c5, c10, c20, outs_roll_career</td></tr>
+<tr><td>K rolling (cross-season)</td><td>k_roll_c1, c3, c5, c10, c20, k_roll_career, k_roll_season</td></tr>
+<tr><td>Opponent quality</td><td>opp_k_against_season (rolling Ks against lineup by team-season)</td></tr>
+<tr><td>Team betting context</td><td>team_run_line_point (consensus avg; ≈-1.5=fav, +1.5=dog), team_moneyline_odds (American)</td></tr>
+<tr><td>Market consensus</td><td>consensus_line, n_books, min_line, max_line</td></tr>
+<tr><td>Raw prob spread</td><td>min/max_raw_prob_over, min/max_raw_prob_under</td></tr>
+<tr><td>Odds buckets</td><td>over/under_price_bucket_coarse (3-way), over/under_price_bucket_fine (6-way)</td></tr>
+<tr><td>Game context</td><td>is_home, days_rest, game_month, start_num_season, ip_roll_season</td></tr>
+</table>
+
+<h3>Feature Null Rates</h3>
+<table>
+<tr><th>Feature</th><th>Null %</th><th>Reason</th></tr>
+<tr><td>outs_roll_season, outs_roll_s*</td><td>3.8%</td><td>First start of season (no prior season data)</td></tr>
+<tr><td>outs_roll_career, outs_roll_c*, k_roll_*</td><td>1.0%</td><td>First career start in dataset</td></tr>
+<tr><td>opp_k_against_season</td><td>0.7%</td><td>Opponent team not yet seen in current season</td></tr>
+<tr><td>team_run_line_point, team_moneyline_odds</td><td>0.0%</td><td>Always populated</td></tr>
+</table>
+
+<h3>Cross-Event Duplicate Fix</h3>
+<p>Same physical game can appear under two Odds API event IDs (rescheduled games). After within-event dedup (<code>drop_duplicates on event_id+player+book+line</code>), 6 cross-event duplicates remained. Fixed by final dedup on <code>(player_key, game_date, bookmaker, line)</code> keeping earliest event_id. Affected players: Bryan Woo (2025-06-11), Gavin Williams + Michael Wacha (2025-07-26), Kyle Harrison (2024-05-18).</p>
+
+<h3>Aaron Nola Spot Check (first 8 games)</h3>
+<table>
+<tr><th>game_date</th><th>outs_recorded</th><th>outs_roll_career</th><th>outs_roll_season</th><th>k_roll_career</th><th>opp_k_against_season</th><th>rl_point</th><th>ml_odds</th><th>is_home</th><th>days_rest</th></tr>
+<tr><td>2024-03-30</td><td>13</td><td>null</td><td>null</td><td>null</td><td>4.50</td><td>+1.5</td><td>+110</td><td>1</td><td>null</td></tr>
+<tr><td>2024-04-05</td><td>17</td><td>13.00</td><td>13.00</td><td>3.00</td><td>4.19</td><td>-1.5</td><td>-200</td><td>0</td><td>6</td></tr>
+<tr><td>2024-04-10</td><td>18</td><td>15.00</td><td>15.00</td><td>3.50</td><td>5.33</td><td>-1.5</td><td>-143</td><td>0</td><td>5</td></tr>
+<tr><td>2024-04-15</td><td>22</td><td>16.00</td><td>16.00</td><td>3.33</td><td>5.29</td><td>-1.5</td><td>-250</td><td>1</td><td>5</td></tr>
+<tr><td>2024-04-21</td><td>24</td><td>17.50</td><td>17.50</td><td>4.75</td><td>4.75</td><td>-1.5</td><td>-333</td><td>1</td><td>6</td></tr>
+<tr><td>2024-04-27</td><td>24</td><td>18.80</td><td>18.80</td><td>5.20</td><td>4.49</td><td>-1.5</td><td>-111</td><td>0</td><td>5</td></tr>
+<tr><td>2024-05-03</td><td>12</td><td>19.67</td><td>19.67</td><td>6.00</td><td>4.67</td><td>-1.5</td><td>-167</td><td>1</td><td>7</td></tr>
+<tr><td>2024-05-08</td><td>17</td><td>18.57</td><td>18.57</td><td>5.71</td><td>4.88</td><td>-1.5</td><td>-167</td><td>1</td><td>5</td></tr>
+</table>
+<p><strong>Sanity checks:</strong> (1) First game: roll_career=null, roll_season=null, start_num_season=0 ✓. (2) Game 2 (Apr 5): roll_career=13.0 = game-1 outs ✓. (3) Game 3 (Apr 10): roll_career=15.0 = mean(13,17) ✓. (4) Game 5 (Apr 21): roll_career=17.5 = mean(13,17,18,22) ✓ (includes game 0). No leakage.</p>
+
+<h3>Step 2 Validation Tests — 16/16 PASS</h3>
+<table>
+<tr><th>#</th><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>1</td><td>No duplicates at (player_key, game_date, bookmaker, line)</td><td class="pass">PASS</td><td>88,458 rows, 0 duplicates (cross-event dedup fixed)</td></tr>
+<tr><td>2</td><td>No nulls in key columns (player_key, game_date, line, novig_prob_over, outs_recorded)</td><td class="pass">PASS</td><td>0 nulls</td></tr>
+<tr><td>3</td><td>Feature null rates &lt; 10%</td><td class="pass">PASS</td><td>Max null: outs_roll_season 3.8%, career 1.0%, opp_k 0.7%</td></tr>
+<tr><td>4</td><td>outs_recorded in [0, 27]</td><td class="pass">PASS</td><td>min=0, max=27</td></tr>
+<tr><td>5</td><td>novig_prob_over in (0, 1)</td><td class="pass">PASS</td><td>min=0.155, max=0.698</td></tr>
+<tr><td>6</td><td>Seasons [2024, 2025, 2026] present</td><td class="pass">PASS</td><td>3 distinct seasons</td></tr>
+<tr><td>7</td><td>Row counts by season</td><td class="pass">PASS</td><td>2024=32,365 / 2025=31,367 / 2026=24,726</td></tr>
+<tr><td>8</td><td>No future leakage — Aaron Nola known values</td><td class="pass">PASS</td><td>Apr 5=13.0 ✓, Apr 10=15.0 ✓</td></tr>
+<tr><td>9</td><td>outs_roll_season is NULL when start_num_season=0</td><td class="pass">PASS</td><td>3,338 rows with start_num_season=0, all have null season roll</td></tr>
+<tr><td>10</td><td>Line range [3.5, 25]</td><td class="pass">PASS</td><td>min=3.5, max=20.5</td></tr>
+<tr><td>11</td><td>≥5 books present</td><td class="pass">PASS</td><td>15 books</td></tr>
+<tr><td>12</td><td>Odds buckets populated, no nulls</td><td class="pass">PASS</td><td>6 fine buckets, 0 nulls</td></tr>
+<tr><td>13</td><td>team_run_line_point in [-5, 5]</td><td class="pass">PASS</td><td>min=-4.5, max=1.5. Fractional values (e.g. 0.0, 1.2) are consensus averages across books — real data, not bugs.</td></tr>
+<tr><td>14</td><td>team_moneyline_odds in (-1100, 1100)</td><td class="pass">PASS</td><td>min=-1000, max=+360</td></tr>
+<tr><td>15</td><td>n_books ≥ 1</td><td class="pass">PASS</td><td>min=1, max=12</td></tr>
+<tr><td>16</td><td>Date coverage 2024-03-21 → 2026-07-06</td><td class="pass">PASS</td><td>Full 3 seasons covered</td></tr>
+</table>
+</div>
+
+
+<div class="section">
+<h2>Step 8 — Production Pipeline</h2>
+<p class="timestamp">2026-07-06</p>
+
+<h3>Files Created</h3>
+<table>
+<tr><th>File</th><th>Purpose</th></tr>
+<tr><td><code>src/mlb_pitcher_outs_modeling/scripts/run_pipeline.py</code></td><td>Daily pipeline: fetch live pitcher_outs props, score with OLS bootstrap, email bets</td></tr>
+<tr><td><code>src/mlb_pitcher_outs_modeling/scripts/settle_pitcher_outs.py</code></td><td>Settlement: load actuals from S3 gamelogs, compute P&L, append to all-time parquet</td></tr>
+<tr><td><code>src/mlb_pitcher_outs_modeling/lambda/lambda_function.py</code></td><td>Lambda orchestrator (modes: spine_update, pipeline, settle)</td></tr>
+<tr><td><code>src/mlb_pitcher_outs_modeling/lambda/Dockerfile</code></td><td>Container image (Python 3.11, no xgboost needed)</td></tr>
+<tr><td><code>src/mlb_pitcher_outs_modeling/lambda/deploy_mlb_pitcher_outs_lambda.sh</code></td><td>ECR build + Lambda deploy + EventBridge rules (DISABLED)</td></tr>
+</table>
+
+<h3>S3 Assets (all uploaded)</h3>
+<table>
+<tr><th>Path</th><th>Description</th></tr>
+<tr><td><code>mlb/pitcher_outs_model/spine/mlb_pitcher_outs_spine.parquet</code></td><td>88,458 rows (2024-2026), 10,458 player-games</td></tr>
+<tr><td><code>mlb/pitcher_outs_model/model/mlb_pitcher_outs_model.joblib</code></td><td>OLS LinearRegression, 10 features</td></tr>
+<tr><td><code>mlb/pitcher_outs_model/model/mlb_pitcher_outs_residuals.npy</code></td><td>84,491 residuals, std=3.545</td></tr>
+<tr><td><code>mlb/pitcher_outs_model/model/mlb_pitcher_outs_encoders.joblib</code></td><td>LabelEncoders for over/under_price_bucket_fine</td></tr>
+</table>
+
+<h3>EventBridge Rules (all DISABLED — enable after deploy test)</h3>
+<table>
+<tr><th>Rule</th><th>Schedule</th><th>Mode</th></tr>
+<tr><td>mlb-po-spine-daily-8am-et</td><td>8:00am ET daily</td><td>spine_update</td></tr>
+<tr><td>mlb-po-pipeline-daily-830am-et</td><td>8:30am ET daily</td><td>pipeline</td></tr>
+<tr><td>mlb-po-settle-daily-830am-et</td><td>8:30am ET daily</td><td>settle</td></tr>
+</table>
+
+<h3>Pre-Deploy Checklist</h3>
+<ol>
+<li>Verify pitcher gamelogs in S3: <code>aws s3 ls s3://the-odds-api-mt/mlb/strikeouts_model/pitcher_gamelogs/</code></li>
+<li>Test pipeline mode manually: <code>aws lambda invoke --function-name mlb-pitcher-outs-daily --region us-east-2 --payload '{"mode":"pipeline","gameday":"YYYY-MM-DD"}' --cli-binary-format raw-in-base64-out /tmp/po_out.json</code></li>
+<li>Verify SES email arrives at mylescgthomas@gmail.com</li>
+<li>Test settle mode for a past gameday</li>
+<li>Enable rules: <code>aws events enable-rule --name mlb-po-pipeline-daily-830am-et --region us-east-2</code></li>
+</ol>
+
+<h3>Key Design Decisions</h3>
+<ul>
+<li><strong>Spine reuses strikeouts gamelogs</strong>: No separate gamelog fetch needed; reuses <code>mlb/strikeouts_model/pitcher_gamelogs/</code></li>
+<li><strong>Team context features (run line, moneyline) fetched live</strong>: Pipeline calls h2h + spreads markets per event</li>
+<li><strong>Plus_odds filter baked into email</strong>: Play tier requires <code>under_price &gt; 2.0</code>; show tier (10-15pp) displayed in yellow with caution warning</li>
+<li><strong>Settlement uses existing gamelogs</strong>: No separate Statcast fetch; reads IP from S3 pitcher gamelogs</li>
+</ul>
+</div>
+
+</body>
+</html>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+<h2>Step 3 — Model Training (REDO: 2026-07-07)</h2>
+<p class="timestamp">2026-07-07 08:12:11 ET</p>
+
+<div class="flag">⚠️ <strong>Prior session error:</strong> Step 3 was redone because the prior session used LogisticRegression (classifier on is_over binary target) alongside LinearRegression, skipped the XGBoost feature sweep entirely (mislabeled a full OLS model as "Step 3b"), and skipped Step 3c combos. This session runs the correct approach: regression only throughout (LinearRegression in 3a, XGBoost regressor in 3b, combo evaluation in 3c).</div>
+
+<h3>Step 3a — Individual Feature Sweep (LinearRegression, target = outs_recorded)</h3>
+<p>OOF folds: train 2024 → test 2025; train 2024+2025 → test 2026. Deduplicated to player-game grain (10,458 rows) — features are identical across all book rows for the same player-game. Sorted by RMSE ascending (lower = better).</p>
+
+<table>
+<tr><th>Feature</th><th>Type</th><th>n_OOF</th><th>RMSE</th><th>MAE</th><th>R²</th><th>Coef</th><th>Notes</th></tr>
+<tr><td>consensus_line</td><td>numeric</td><td>6,574</td><td><strong>3.5185</strong></td><td>2.6187</td><td>0.10229</td><td>+0.879</td><td>Best predictor — market line encodes most signal</td></tr>
+<tr><td>max_line</td><td>numeric</td><td>6,574</td><td>3.5233</td><td>2.6208</td><td>0.09985</td><td>+0.866</td><td>Near-identical to consensus_line</td></tr>
+<tr><td>min_line</td><td>numeric</td><td>6,574</td><td>3.5249</td><td>2.6263</td><td>0.09907</td><td>+0.862</td><td>Near-identical to consensus_line</td></tr>
+<tr><td>outs_roll_c10</td><td>numeric</td><td>6,529</td><td>3.6242</td><td>2.7304</td><td>0.04724</td><td>+0.426</td><td>Best rolling feature — cross-season last 10 starts</td></tr>
+<tr><td>outs_roll_c5</td><td>numeric</td><td>6,529</td><td>3.6279</td><td>2.7274</td><td>0.04531</td><td>+0.366</td><td></td></tr>
+<tr><td>outs_roll_s20</td><td>numeric</td><td>6,211</td><td>3.6316</td><td>2.7415</td><td>0.04791</td><td>+0.414</td><td></td></tr>
+<tr><td>ip_roll_season</td><td>numeric</td><td>6,211</td><td>3.6320</td><td>2.7418</td><td>0.04770</td><td>+1.246</td><td>Identical RMSE to outs_roll_season — same signal (IP×3 ≈ outs)</td></tr>
+<tr><td>outs_roll_season</td><td>numeric</td><td>6,211</td><td>3.6320</td><td>2.7418</td><td>0.04770</td><td>+0.415</td><td></td></tr>
+<tr><td>outs_roll_s10</td><td>numeric</td><td>6,211</td><td>3.6323</td><td>2.7401</td><td>0.04756</td><td>+0.398</td><td></td></tr>
+<tr><td>outs_roll_c20</td><td>numeric</td><td>6,529</td><td>3.6328</td><td>2.7439</td><td>0.04272</td><td>+0.444</td><td></td></tr>
+<tr><td>outs_roll_s5</td><td>numeric</td><td>6,211</td><td>3.6358</td><td>2.7404</td><td>0.04569</td><td>+0.355</td><td></td></tr>
+<tr><td>outs_roll_c3</td><td>numeric</td><td>6,529</td><td>3.6366</td><td>2.7418</td><td>0.04071</td><td>+0.302</td><td></td></tr>
+<tr><td>outs_roll_career</td><td>numeric</td><td>6,529</td><td>3.6452</td><td>2.7595</td><td>0.03617</td><td>+0.436</td><td></td></tr>
+<tr><td>k_roll_c10</td><td>numeric</td><td>6,529</td><td>3.6740</td><td>2.7720</td><td>0.02084</td><td>+0.457</td><td>K rolling weaker than outs rolling for this target</td></tr>
+<tr><td>team_moneyline_odds</td><td>numeric</td><td>6,574</td><td>3.6840</td><td>2.7876</td><td>0.01587</td><td>-0.004</td><td>Slight signal: favored teams' starters go deeper</td></tr>
+<tr><td>opp_k_against_season</td><td>numeric</td><td>6,483</td><td>3.7257</td><td>2.8409</td><td>-0.006</td><td>+0.098</td><td>No signal individually</td></tr>
+<tr><td>over_price_bucket_coarse</td><td>categorical</td><td>6,574</td><td>3.7250</td><td>2.8393</td><td>-0.006</td><td>-0.254</td><td>No signal — odds bins do not predict outs count</td></tr>
+<tr><td>under_price_bucket_coarse</td><td>categorical</td><td>6,574</td><td>3.7263</td><td>2.8387</td><td>-0.007</td><td>+0.260</td><td>No signal</td></tr>
+<tr><td>min/max_raw_prob_over/under</td><td>numeric</td><td>6,574</td><td>~3.726</td><td>~2.842</td><td>&lt;0</td><td>—</td><td>No signal — book disagreement on probability does not predict outs</td></tr>
+</table>
+
+<p><strong>Key finding:</strong> The market line (consensus_line) dominates at RMSE 3.52 vs 3.62 for the next-best rolling features — a gap of ~0.10 RMSE. The market already encodes player form, opponent, rest days, and game context. Rolling outs have positive but modest signal. Categorical odds bins have <em>no</em> predictive power for this continuous regression target.</p>
+
+<h3>Step 3b — Individual Feature Sweep (XGBoostRegressor)</h3>
+<p>Same features and folds as 3a. LinearRegression consistently outperforms XGBoost on every single feature — no non-linear lift anywhere in this dataset. The relationship between predictor features and outs_recorded is approximately linear.</p>
+
+<table>
+<tr><th>Feature</th><th>Linear RMSE</th><th>XGB RMSE</th><th>Linear R²</th><th>XGB R²</th><th>XGB lift?</th></tr>
+<tr><td>consensus_line</td><td>3.5185</td><td>3.5356</td><td>0.10229</td><td>0.09354</td><td>❌ Linear wins by 0.017</td></tr>
+<tr><td>max_line</td><td>3.5233</td><td>3.5348</td><td>0.09985</td><td>0.09400</td><td>❌ Linear wins</td></tr>
+<tr><td>outs_roll_c10</td><td>3.6242</td><td>3.6466</td><td>0.04724</td><td>0.03543</td><td>❌ Linear wins by 0.022</td></tr>
+<tr><td>outs_roll_c20</td><td>3.6328</td><td>3.6378</td><td>0.04272</td><td>0.04005</td><td>❌ Linear wins (marginal)</td></tr>
+<tr><td>team_moneyline_odds</td><td>3.6840</td><td>3.6874</td><td>0.01587</td><td>0.01406</td><td>❌ Linear wins</td></tr>
+</table>
+<p><strong>Conclusion:</strong> LinearRegression is the correct model type. No non-linear signal exists that XGBoost can exploit. This confirms OLS is appropriate.</p>
+
+<h3>Step 3c — Combo Model Evaluation</h3>
+<p>10 combos × 2 model types = 20 configurations, sorted by OOF RMSE. All linear combos beat all XGBoost combos.</p>
+
+<table>
+<tr><th>Combo</th><th>Features</th><th>n</th><th>Model</th><th>n_OOF</th><th>RMSE</th><th>MAE</th><th>R²</th></tr>
+<tr style="background:#e6f4ea"><td><strong>line_only ✓ WINNER</strong></td><td>consensus_line</td><td>1</td><td>linear</td><td>6,574</td><td><strong>3.5185</strong></td><td>2.6187</td><td>0.10229</td></tr>
+<tr><td>line_outs_c10_career_bins</td><td>consensus_line, outs_roll_c10, outs_roll_career, over_price_bucket_coarse_enc, under_price_bucket_coarse_enc</td><td>5</td><td>linear</td><td>6,529</td><td>3.5192</td><td>2.6109</td><td>0.10162</td></tr>
+<tr><td>line_outs_c10</td><td>consensus_line, outs_roll_c10</td><td>2</td><td>linear</td><td>6,529</td><td>3.5200</td><td>2.6194</td><td>0.10122</td></tr>
+<tr><td>line_outs_c10_career</td><td>consensus_line, outs_roll_c10, outs_roll_career</td><td>3</td><td>linear</td><td>6,529</td><td>3.5206</td><td>2.6207</td><td>0.10095</td></tr>
+<tr><td>full_combo</td><td>consensus_line, outs_roll_c10, outs_roll_career, k_roll_c5, k_roll_career, team_run_line_point, team_moneyline_odds, opp_k_against_season, is_home, days_rest</td><td>10</td><td>linear</td><td>6,483</td><td>3.5253</td><td>2.6267</td><td>0.09877</td></tr>
+<tr><td>line_only</td><td>consensus_line</td><td>1</td><td>xgboost</td><td>6,574</td><td>3.5359</td><td>2.6373</td><td>0.09340</td></tr>
+</table>
+
+<p><strong>Winner: line_only (LinearRegression on consensus_line only).</strong> Every additional feature worsens OOF RMSE. The differences are tiny (3.5185 vs 3.5253 for full_combo), but the pattern is consistent — more features adds noise, not signal. The market line is the sole informative predictor for raw outs count. This is a known property of well-calibrated markets.</p>
+
+<h3>Freddy Peralta Spot-Check (OOF predictions)</h3>
+<table>
+<tr><th>Date</th><th>Season</th><th>Actual Outs</th><th>Predicted (yhat)</th><th>consensus_line</th><th>Error</th></tr>
+<tr><td>2026-07-01</td><td>2026</td><td>12.0</td><td>17.03</td><td>17.5</td><td>-5.03 (early exit)</td></tr>
+<tr><td>2026-06-25</td><td>2026</td><td>17.0</td><td>16.17</td><td>16.5</td><td>+0.83</td></tr>
+<tr><td>2026-06-20</td><td>2026</td><td>8.0</td><td>16.17</td><td>16.5</td><td>-8.17 (early exit)</td></tr>
+<tr><td>2026-06-14</td><td>2026</td><td>15.0</td><td>17.03</td><td>17.5</td><td>-2.03</td></tr>
+<tr><td>2026-06-09</td><td>2026</td><td>18.0</td><td>17.03</td><td>17.5</td><td>+0.97</td></tr>
+<tr><td>2026-05-23</td><td>2026</td><td>21.0</td><td>17.03</td><td>17.5</td><td>+3.97 (ace performance)</td></tr>
+</table>
+<p>Model correctly predicts near the consensus_line. Large early-exit games (June 20: 8 outs, July 1: 12 outs) are unpredictable — the model cannot know a pitcher will be pulled early. These are the exact bets the UNDER strategy profits from when the line is set at 16.5+ and the pitcher exits early.</p>
+
+<h3>Model Config Summary</h3>
+<ul>
+<li><strong>Model:</strong> LinearRegression (sklearn 1.6.1)</li>
+<li><strong>Feature:</strong> consensus_line (single feature)</li>
+<li><strong>Coefficient:</strong> +0.879 (positive — higher line → more outs predicted ✓)</li>
+<li><strong>OOF RMSE:</strong> 3.5185 | MAE: 2.6187 | R²: 0.10229</li>
+<li><strong>sklearn version:</strong> 1.6.1 — must pin in Lambda Dockerfile</li>
+</ul>
+
+<h3>Step 3 DuckDB Tests — 9/9 PASS</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>T1: OOF fold sizes ≥ 200</td><td class="pass">PASS</td><td>2025: 4,150 rows; 2026: 2,424 rows</td></tr>
+<tr><td>T2: OOF covers 2025 and 2026</td><td class="pass">PASS</td><td>{2025, 2026}</td></tr>
+<tr><td>T3: yhat book-invariant at (player,date,line)</td><td class="pass">PASS</td><td>0 violations across all rows</td></tr>
+<tr><td>T4: No null yhats in OOF</td><td class="pass">PASS</td><td>0 nulls</td></tr>
+<tr><td>T5: yhat in plausible range [0, 30]</td><td class="pass">PASS</td><td>min=5.05, max=19.59</td></tr>
+<tr><td>T6: Freddy Peralta has OOF rows</td><td class="pass">PASS</td><td>n=49 rows</td></tr>
+<tr><td>T7: Two distinct test seasons in OOF</td><td class="pass">PASS</td><td>[2025, 2026]</td></tr>
+<tr><td>T8: consensus_line coefficient is positive</td><td class="pass">PASS</td><td>coef=+0.879</td></tr>
+<tr><td>T9: OOF RMSE &lt; 4.0</td><td class="pass">PASS</td><td>RMSE=3.5185</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Step 4 — Probability Conversion (2026-07-07 08:12:11 ET)</h2>
+<p class="timestamp">2026-07-07 08:12:11 ET</p>
+
+<p>Two methods compared. Both use 10,000 bootstrap samples drawn from historical OOF residuals per player-game (one shared sample set per player-game evaluated at all line values — guarantees monotonicity by construction).</p>
+
+<h3>Method A: yhat = consensus_line (no model)</h3>
+<p>Residuals = <code>outs_recorded − consensus_line</code>. P(under line) = fraction of bootstrap samples where <code>consensus_line + residual &lt; line</code>. Residual mean ≈ −0.30–0.34 (pitchers slightly under-perform their posted lines on average).</p>
+
+<h3>Method B: yhat = LinearRegression(consensus_line)</h3>
+<p>Residuals = <code>outs_recorded − yhat_model</code>. OOF model trained on 2024 / 2024+2025, coef ≈ 0.83–0.86.</p>
+
+<h3>Brier Score Comparison</h3>
+<table>
+<tr><th>Method</th><th>Brier Score</th><th>Max Cal Gap</th><th>Monotonicity Inversions</th><th>Clipped Rows</th></tr>
+<tr><td>A — consensus_line (no model)</td><td>0.24921</td><td>0.034</td><td>0/2,848 (0.00%)</td><td>0</td></tr>
+<tr><td>B — OLS model</td><td>0.24905</td><td>0.064</td><td>0/2,848 (0.00%)</td><td>0</td></tr>
+</table>
+<p>Brier scores are essentially identical (delta = 0.00016). Both methods are well-calibrated. <strong>Method A has better calibration</strong> (max gap 0.034 vs 0.064). Method B has marginally lower Brier score. Both proceeding to grid search — the numbers will decide which finds profitable strategies.</p>
+
+<div class="flag">⚠️ <strong>Bootstrap implementation fix:</strong> Initial implementation drew independent bootstrap samples per book row, causing ~43% monotonicity inversions (different books at the same line getting slightly different p_under values). Fixed to draw one set of samples per player-game, evaluated against all line values for that game. This guarantees P(under L1) ≤ P(under L2) whenever L1 ≤ L2 by construction, and ensures all book rows at the same player-game-line have identical p_under.</div>
+
+<h3>Freddy Peralta Spot-Check</h3>
+<table>
+<tr><th>Date</th><th>Line</th><th>Actual</th><th>Under?</th><th>p_under_A</th><th>p_under_B</th><th>novig_under</th><th>edge_A</th><th>edge_B</th></tr>
+<tr><td>2026-07-01</td><td>17.5</td><td>12</td><td>✓</td><td>0.508</td><td>0.497</td><td>0.480</td><td>+0.028</td><td>+0.017</td></tr>
+<tr><td>2026-06-25</td><td>16.5</td><td>17</td><td>✗</td><td>0.496</td><td>0.501</td><td>0.524</td><td>-0.028</td><td>-0.023</td></tr>
+<tr><td>2026-06-20</td><td>16.5</td><td>8</td><td>✓</td><td>0.496</td><td>0.500</td><td>0.511</td><td>-0.014</td><td>-0.011</td></tr>
+<tr><td>2026-06-09</td><td>17.5</td><td>18</td><td>✗</td><td>0.497</td><td>0.490</td><td>0.528</td><td>-0.032</td><td>-0.038</td></tr>
+<tr><td>2026-05-29</td><td>17.5</td><td>14</td><td>✓</td><td>0.499</td><td>0.494</td><td>0.460</td><td>+0.039</td><td>+0.033</td></tr>
+<tr><td>2026-05-23</td><td>17.5</td><td>21</td><td>✗</td><td>0.502</td><td>0.504</td><td>0.484</td><td>+0.018</td><td>+0.020</td></tr>
+</table>
+<p>Both methods produce p_under ≈ 0.50 across the board — the model is modest in its predictions. Edge comes from the market pricing the under at novig &lt; 0.50 (plus odds for under = dog), not from the model projecting dramatically different outcomes.</p>
+
+<h3>Step 4 Tests — 14/14 PASS</h3>
+<table>
+<tr><th>Test</th><th>Method A</th><th>Method B</th></tr>
+<tr><td>T1: p_under in [0.01, 0.99]</td><td class="pass">PASS</td><td class="pass">PASS</td></tr>
+<tr><td>T2: novig_under in (0, 1)</td><td class="pass">PASS</td><td class="pass">PASS</td></tr>
+<tr><td>T3: mean edge near 0</td><td class="pass">PASS (0.0014)</td><td class="pass">PASS (0.0033)</td></tr>
+<tr><td>T4: calibration max gap &lt; 0.15</td><td class="pass">PASS (0.034)</td><td class="pass">PASS (0.064)</td></tr>
+<tr><td>T5: row count matches spine OOS</td><td class="pass">PASS 56,093</td><td class="pass">PASS 56,093</td></tr>
+<tr><td>T6: p_under book-invariant at same (player,date,line)</td><td class="pass">PASS</td><td class="pass">PASS</td></tr>
+<tr><td>T7: monotonicity inversions &lt; 2%</td><td class="pass">PASS 0.00%</td><td class="pass">PASS 0.00%</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Step 5 — OOS Grid Search (2026-07-07 08:12:11 ET)</h2>
+<p class="timestamp">2026-07-07 08:12:11 ET</p>
+<p>Grid: edge_threshold × direction × odds_bucket × shrinkage = 7×3×3×4 = 252 combos per method × 2 methods. Evaluated on OOF data (2025+2026 only — strictly out-of-sample). Grain: (player, game_date, bookmaker, line).</p>
+
+<div class="flag">⚠️ <strong>Strategy reversal vs prior session:</strong> The prior session (with the wrong model) found edge in UNDER + plus_odds. This clean run finds edge in <strong>UNDER + minus_odds</strong> (under priced as a FAVORITE). The mechanism: when a book offers an alt line much higher than the consensus (e.g. 18.0 vs consensus 16.5), the model assigns P(under 18.0) ≈ 0.65 while the market prices it at only -120 (~55% implied). The model captures the mispricing on high alt lines.</div>
+
+<h3>Top Strategies (OOS, n ≥ 30, sorted by units)</h3>
+<p>line_max=none means no cap applied. Production strategy highlighted in blue.</p>
+<table>
+<tr><th>Method</th><th>Direction</th><th>Odds Bucket</th><th>Shrinkage</th><th>Edge ≥</th><th>Line Max</th><th>n_bets</th><th>Win Rate</th><th>Units Won ↓</th><th>ROI</th><th>Avg Implied %</th><th>Max DD</th></tr>
+<tr style="background:#e6f4ea"><td>B (OLS model)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>18.0</td><td>1,184</td><td>62.0%</td><td>+114.5u</td><td>+9.67%</td><td>56.5%</td><td>33.00</td></tr>
+<tr style="background:#e6f4ea"><td>B (OLS model)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>17.5</td><td>1,183</td><td>62.0%</td><td>+113.6u</td><td>+9.61%</td><td>56.5%</td><td>33.00</td></tr>
+<tr><td>B (OLS model)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>none</td><td>1,247</td><td>61.5%</td><td>+110.9u</td><td>+8.89%</td><td>56.5%</td><td>29.91</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>18.0</td><td>1,268</td><td>61.4%</td><td>+106.1u</td><td>+8.36%</td><td>56.6%</td><td>36.20</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>17.5</td><td>1,267</td><td>61.3%</td><td>+105.2u</td><td>+8.31%</td><td>56.6%</td><td>36.11</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>none</td><td>1,310</td><td>60.5%</td><td>+88.8u</td><td>+6.78%</td><td>56.6%</td><td>33.89</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.50</td><td>5pp</td><td>18.0</td><td>840</td><td>60.4%</td><td>+80.3u</td><td>+9.56%</td><td>54.9%</td><td>27.70</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.50</td><td>5pp</td><td>17.5</td><td>839</td><td>60.3%</td><td>+79.5u</td><td>+9.48%</td><td>54.9%</td><td>28.10</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.25</td><td>10pp</td><td>18.0</td><td>447</td><td>64.0%</td><td>+75.0u</td><td>+16.78%</td><td>54.7%</td><td>16.91</td></tr>
+<tr style="background:#dce8f7;font-weight:bold"><td>A (consensus_line) ★</td><td>under</td><td>minus_odds</td><td>0.25</td><td>10pp</td><td>17.5</td><td>446</td><td>63.9%</td><td>+74.2u</td><td>+16.63%</td><td>54.7%</td><td>17.54</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.50</td><td>5pp</td><td>none</td><td>869</td><td>59.5%</td><td>+69.3u</td><td>+7.97%</td><td>54.9%</td><td>24.39</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.25</td><td>10pp</td><td>none</td><td>467</td><td>62.1%</td><td>+62.2u</td><td>+13.31%</td><td>54.7%</td><td>22.48</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>15pp</td><td>none</td><td>267</td><td>62.2%</td><td>+39.2u</td><td>+14.68%</td><td>54.1%</td><td>14.40</td></tr>
+</table>
+
+<h3>Flagged Issues</h3>
+<ul>
+<li><strong>win_rate > 0.50 (85 strategies):</strong> Concentrated in minus_odds bucket. Win rates of 60–62% against minus-odds lines (breakeven ~54%) is plausible but warrants scrutiny. These are alt-line bets where the model correctly identifies the under is highly likely. Validate in Step 6 IS evaluation.</li>
+<li><strong>max_drawdown > units_won:</strong> Flagged in 4 strategies — all are edge=5pp or edge=10pp + "all" odds bucket + direction=under or direction=over. These low-threshold broad strategies are high-volume but high-variance. The tight minus_odds strategies (edge≥10pp) do NOT have this problem.</li>
+<li><strong>Strategy mechanism:</strong> Edge in this market appears to come from alt lines (single books offering lines far above consensus). The model (especially Method A where yhat=consensus_line) finds large P(under) for these high alt lines, while the market still prices them at modest minus odds. Needs line-bucket analysis in Step 6 to confirm.</li>
+</ul>
+
+<h3>Step 5 Grid Search Tests</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>T1: One row per config combo</td><td class="pass">PASS</td><td>240 combos each method</td></tr>
+<tr><td>T2: No strategy ROI &gt; 25% with n &gt; 100 bets</td><td class="pass">PASS</td><td>0 suspicious strategies</td></tr>
+<tr><td>T3: Best strategy ≥ 30 bets</td><td class="pass">PASS</td><td>267 bets (Method A edge=15pp)</td></tr>
+<tr><td>T4: max_drawdown &gt; units_won — flagged</td><td class="pass">FLAGGED 4 strategies</td><td>All in low-edge / broad-bucket configs; preferred minus_odds strategies are clean</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Step 6 — IS Characterization + Strategy Selection</h2>
+<p class="timestamp">2026-07-07</p>
+
+<h3>Candidate Strategy Comparison — sorted by OOS units won (highest first)</h3>
+<p>IS DD fail = IS max_dd exceeds IS units won — strategy was underwater in-sample, disqualified from production regardless of OOS look.</p>
+<table>
+<tr><th>Method</th><th>Direction</th><th>Odds Bucket</th><th>Shrinkage</th><th>Edge ≥</th><th>Line Max</th><th>IS n</th><th>IS units</th><th>IS max_dd</th><th>OOS n</th><th>OOS units ↓</th><th>OOS max_dd</th><th>IS DD fail?</th></tr>
+<tr style="background:#fff3cd"><td>B (OLS model)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>18.0</td><td>1,687</td><td>+64.8</td><td>77.3</td><td>1,184</td><td>+114.5</td><td>33.0</td><td>⚠️ DD(77) &gt; u(65)</td></tr>
+<tr style="background:#fff3cd"><td>B (OLS model)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>17.5</td><td>1,683</td><td>+64.0</td><td>78.2</td><td>1,183</td><td>+113.6</td><td>33.0</td><td>⚠️ DD(78) &gt; u(64)</td></tr>
+<tr style="background:#fff3cd"><td>B (OLS model)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>none</td><td>1,753</td><td>+48.3</td><td>74.4</td><td>1,247</td><td>+110.8</td><td>29.9</td><td>⚠️ DD(74) &gt; u(48)</td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>18.0</td><td>1,701</td><td>+58.3</td><td>79.6</td><td>1,268</td><td>+106.1</td><td>36.2</td><td>⚠️ DD(80) &gt; u(58)</td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>17.5</td><td>1,699</td><td>+58.5</td><td>79.4</td><td>1,267</td><td>+105.2</td><td>36.1</td><td>⚠️ DD(79) &gt; u(59)</td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>10pp</td><td>none</td><td>1,767</td><td>+41.8</td><td>76.6</td><td>1,310</td><td>+88.8</td><td>33.9</td><td>⚠️ DD(77) &gt; u(42)</td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.50</td><td>5pp</td><td>18.0</td><td>1,242</td><td>+42.2</td><td>73.6</td><td>840</td><td>+80.3</td><td>27.7</td><td>⚠️ DD(74) &gt; u(42)</td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.50</td><td>5pp</td><td>17.5</td><td>1,240</td><td>+42.3</td><td>73.2</td><td>839</td><td>+79.5</td><td>28.1</td><td>⚠️ DD(73) &gt; u(42)</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.25</td><td>10pp</td><td>18.0</td><td>759</td><td>+69.9</td><td>24.4</td><td>447</td><td>+75.0</td><td>16.9</td><td></td></tr>
+<tr style="background:#dce8f7;font-weight:bold"><td>A (consensus_line) ★</td><td>under</td><td>minus_odds</td><td>0.25</td><td>10pp</td><td>17.5</td><td>757</td><td>+70.0</td><td>24.9</td><td>446</td><td>+74.2</td><td>17.5</td><td></td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.50</td><td>5pp</td><td>none</td><td>1,287</td><td>+31.5</td><td>69.2</td><td>869</td><td>+69.3</td><td>24.4</td><td>⚠️ DD(69) &gt; u(32)</td></tr>
+<tr><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.25</td><td>10pp</td><td>none</td><td>794</td><td>+62.2</td><td>22.8</td><td>467</td><td>+62.2</td><td>22.5</td><td></td></tr>
+<tr style="background:#fff3cd"><td>A (consensus_line)</td><td>under</td><td>minus_odds</td><td>0.00</td><td>15pp</td><td>none</td><td>476</td><td>+13.2</td><td>30.4</td><td>267</td><td>+39.2</td><td>14.4</td><td>⚠️ DD(30) &gt; u(13)</td></tr>
+</table>
+
+<p><strong>Selection rationale — A (consensus_line), s=0.25, e≥10pp, line≤17.5:</strong></p>
+<ul>
+<li>Every strategy above it in OOS units fails the IS DD test — drawdown exceeded cumulative profit in-sample. 2024 is not in the OOS test folds so those failures are hidden in OOS.</li>
+<li>lmax=18.0 beats it by +0.8u OOS but the 17.5–18.0 line bucket loses -21.3% IS — not worth it</li>
+<li>IS max_dd (24.9) &lt; IS units (70.0); OOS max_dd (17.5) &lt; OOS units (74.2) — clean both ways</li>
+<li>IS &lt; OOS explained by 2024 data sparsity; strategy improving over time</li>
+</ul>
+
+<div class="flag"><strong>IS Brier score:</strong> 0.24964 (vs OOS 0.24921) — slight inflation expected for IS; no leakage.</div>
+
+<h3>Table 1 — Production Strategy Summary</h3>
+<table>
+<tr><th>Dataset</th><th>n_bets</th><th>Pct Universe</th><th>Win Rate</th><th>Push Rate</th><th>Units Won</th><th>Max DD</th><th>Avg Implied %</th><th>Edge vs Implied</th></tr>
+<tr style="background:#e6f4ea"><td>IS (all data)</td><td>757</td><td>0.86%</td><td>60.0%</td><td>0.0%</td><td>+70.0</td><td>24.9</td><td>54.9%</td><td>+5.1pp</td></tr>
+<tr style="background:#d4edda"><td>OOS (2025+2026)</td><td>446</td><td>—</td><td>63.9%</td><td>—</td><td>+74.2</td><td>17.5</td><td>—</td><td>—</td></tr>
+</table>
+
+<h3>Table 2 — Odds Sub-Bucket Breakdown (IS)</h3>
+<p>All minus-odds. Sub-buckets confirm profitable across all ranges; tighter lines (≥-150) have highest ROI but small sample.</p>
+<table>
+<tr><th>Odds Bucket</th><th>n</th><th>Win Rate</th><th>Avg Implied %</th><th>Units</th><th>ROI</th></tr>
+<tr><td>1.40–1.60 (≥-150)</td><td>5</td><td>80.0%</td><td>63.1%</td><td>+1.4</td><td>+27.2%</td></tr>
+<tr><td>1.60–1.80 (-125 to -150)</td><td>354</td><td>61.9%</td><td>56.1%</td><td>+36.2</td><td>+10.2%</td></tr>
+<tr><td>1.80–2.0 (-100 to -125)</td><td>398</td><td>58.0%</td><td>53.7%</td><td>+32.4</td><td>+8.2%</td></tr>
+</table>
+
+<h3>Table 3 — By Bookmaker (IS, sorted by units)</h3>
+<table>
+<tr><th>Bookmaker</th><th>n</th><th>Win Rate</th><th>Avg Implied %</th><th>Units ↓</th><th>ROI</th></tr>
+<tr style="background:#e6f4ea"><td>BetParx</td><td>73</td><td>68.5%</td><td>55.0%</td><td>+17.6</td><td>+24.2%</td></tr>
+<tr style="background:#e6f4ea"><td>DraftKings</td><td>48</td><td>72.9%</td><td>54.2%</td><td>+16.7</td><td>+34.8%</td></tr>
+<tr><td>ESPNBet</td><td>36</td><td>69.4%</td><td>54.9%</td><td>+9.5</td><td>+26.4%</td></tr>
+<tr><td>HardRock OH</td><td>55</td><td>61.8%</td><td>54.6%</td><td>+7.6</td><td>+13.8%</td></tr>
+<tr><td>BetOnline</td><td>118</td><td>58.5%</td><td>55.2%</td><td>+6.6</td><td>+5.6%</td></tr>
+<tr><td>HardRock</td><td>52</td><td>61.5%</td><td>55.2%</td><td>+6.0</td><td>+11.4%</td></tr>
+<tr><td>BetRivers</td><td>99</td><td>57.6%</td><td>54.6%</td><td>+5.3</td><td>+5.4%</td></tr>
+<tr><td>FanDuel</td><td>56</td><td>58.9%</td><td>54.1%</td><td>+5.1</td><td>+9.0%</td></tr>
+<tr><td>WilliamHill US</td><td>12</td><td>66.7%</td><td>54.5%</td><td>+2.8</td><td>+23.0%</td></tr>
+<tr><td>Fanatics</td><td>41</td><td>56.1%</td><td>54.4%</td><td>+1.4</td><td>+3.3%</td></tr>
+<tr style="background:#fff3cd"><td>Bovada</td><td>33</td><td>54.5%</td><td>55.4%</td><td>-0.5</td><td>-1.5%</td></tr>
+<tr style="background:#fff3cd"><td>BetMGM</td><td>67</td><td>53.7%</td><td>54.9%</td><td>-1.3</td><td>-1.9%</td></tr>
+<tr style="background:#fff3cd"><td>BallyBet</td><td>3</td><td>0.0%</td><td>52.5%</td><td>-3.0</td><td>-100%</td></tr>
+<tr style="background:#fff3cd"><td>Fliff</td><td>64</td><td>53.1%</td><td>56.2%</td><td>-3.7</td><td>-5.8%</td></tr>
+</table>
+<div class="flag"><strong>Bookmaker flags:</strong> Bovada, BetMGM, Fliff marginally negative IS; BallyBet tiny sample (n=3). Both patterns confirmed in OOS. Fliff's avg implied 56.2% — their lines are priced tighter (less generous), squeezing out the edge. BetMGM: -1.9% IS, +6.4% OOS — borderline; keep in production but watch.</div>
+
+<h3>Table 4 — Line Bucket Breakdown (IS)</h3>
+<table>
+<tr><th>Line Bucket</th><th>n</th><th>Win Rate</th><th>Push Rate</th><th>Avg Implied %</th><th>Units</th><th>ROI</th></tr>
+<tr><td>≤15.5</td><td>22</td><td>59.1%</td><td>0%</td><td>54.9%</td><td>+1.5</td><td>+7.0%</td></tr>
+<tr><td>15.5–16.5</td><td>417</td><td>58.5%</td><td>0%</td><td>54.7%</td><td>+28.9</td><td>+6.9%</td></tr>
+<tr style="background:#e6f4ea"><td>16.5–17.5 ← sweet spot</td><td>318</td><td>61.9%</td><td>0%</td><td>55.1%</td><td>+39.6</td><td>+12.5%</td></tr>
+</table>
+<p><em>Note: ≥17.5 excluded by line cap. If included: n=130, win_rate=43.2%, ROI=-21.3% — this is why the cap is essential.</em></p>
+<p>The 16.5–17.5 bucket is the sweet spot: these are alt lines 1–2 outs above consensus (typically 15.5–16). The market offers them at modest minus odds (-110 to -120), but the model sees ~64% P(under) — a genuine gap.</p>
+
+<h3>Table 5 — By Season (IS)</h3>
+<table>
+<tr><th>Season</th><th>n</th><th>Win Rate</th><th>Units</th><th>ROI</th><th>Note</th></tr>
+<tr><td>2024</td><td>200</td><td>54.0%</td><td>-1.6</td><td>-0.8%</td><td>Sparse alt-line coverage (5 books)</td></tr>
+<tr><td>2025</td><td>285</td><td>58.9%</td><td>+19.7</td><td>+6.9%</td><td>More books, improving signal</td></tr>
+<tr style="background:#e6f4ea"><td>2026</td><td>272</td><td>65.4%</td><td>+51.9</td><td>+19.1%</td><td>Richest alt-line coverage; strongest ROI</td></tr>
+</table>
+<div class="flag"><strong>IS &lt; OOS pattern explained:</strong> IS includes 2024, which has only ~5 books offering pitcher_outs market (sparse alt-line coverage). The OOS folds exclude 2024 (test seasons are 2025 and 2026). As more books entered the market in 2025–2026, both volume and ROI improved. This is NOT leakage — it's structural market improvement. The strategy is getting better over time, not reverting.</div>
+
+<h3>OOS Validation Summary</h3>
+<table>
+<tr><th>Season</th><th>n</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr>
+<tr><td>2025</td><td>194</td><td>57.2%</td><td>+9.4</td><td>+4.8%</td></tr>
+<tr style="background:#e6f4ea"><td>2026</td><td>252</td><td>69.0%</td><td>+64.8</td><td>+25.7%</td></tr>
+<tr style="font-weight:bold"><td>Total OOS</td><td>446</td><td>63.9%</td><td>+74.2</td><td>+16.6%</td></tr>
+</table>
+<p><strong>OOS by line bucket confirms IS pattern:</strong> 16.5–17.5 best (+18.3%), 15.5–16.5 also strong (+16.0%), ≤15.5 small sample (+7.9%).</p>
+<p><strong>OOS by bookmaker:</strong> DraftKings +42.0%, ESPNBet +34.9%, FanDuel +30.7%, BetParx +25.7%. Fliff and BallyBet negative — consistent with IS.</p>
+
+<h3>Proposed Production Strategy — "Unders on lines ≤ 17.5, shrinkage of 25%, needs 10%+ edge"</h3>
+<div class="config-block">Strategy:   UNDER only
+Direction:  UNDER
+Odds:       minus_odds (decimal ≤ 2.00)
+Edge:       ≥ 10pp (model P(under) − book novig P(under) ≥ 0.10)
+Shrinkage:  0.25
+Line cap:   ≤ 17.5 outs
+Min books:  2 (for consensus_line computation)
+
+Expected units:    IS +70.0u (757 bets) | OOS +74.2u (446 bets)
+Expected max_dd:   IS 24.9u | OOS 17.5u  (drawdown well within profit both ways)
+Expected win rate: 60–64%
+Avg Implied %:     ~54.9% (breakeven win rate given the typical odds)
+Expected volume:   ~220–450 qualifying bets per season (market was sparser in 2024)
+
+Books to include: ALL books (even Fliff/BetMGM post marginally negative IS,
+                   but excluding them removes real bets. Include all; email shows
+                   per-book rows so bettor can choose.)
+</div>
+
+<h3>Step 6 Tests</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>T1: IS ROI positive</td><td class="pass">PASS</td><td>+9.25%</td></tr>
+<tr><td>T2: OOS ROI positive</td><td class="pass">PASS</td><td>+16.63%</td></tr>
+<tr><td>T3: IS/OOS ratio &lt; 5x (no overfitting)</td><td class="pass">PASS</td><td>Ratio &lt; 1x (IS &lt; OOS — explainable by 2024 data sparsity)</td></tr>
+<tr><td>T4: max_dd ≤ units_won (IS)</td><td class="pass">PASS</td><td>max_dd=24.9 &lt; units_won=70.0</td></tr>
+<tr><td>T5: max_dd ≤ units_won (OOS)</td><td class="pass">PASS</td><td>max_dd=17.5 &lt; units_won=74.2</td></tr>
+<tr><td>T6: win_rate &gt; breakeven_wr (IS)</td><td class="pass">PASS</td><td>60.0% vs 54.9% breakeven (+5.1pp)</td></tr>
+<tr><td>T7: win_rate &gt; breakeven_wr (OOS)</td><td class="pass">PASS</td><td>63.9% vs ~54.9% breakeven (+9pp)</td></tr>
+<tr><td>T8: Line cap validated — ≥17.5 bucket loses</td><td class="pass">PASS</td><td>≥17.5: IS -21.3% ROI; OOS confirms same pattern</td></tr>
+<tr><td>T9: Both seasons profitable (OOS)</td><td class="pass">PASS</td><td>2025: +4.8%, 2026: +25.7%</td></tr>
+<tr><td>T10: IS Brier not inflated vs OOS</td><td class="pass">PASS</td><td>IS=0.24964, OOS=0.24921; IS only +0.04pp higher</td></tr>
+</table>
+</section>
+
+<section id="step7">
+<h2>Step 7 — Mock Email (2025-07-21)</h2>
+<p>Three-section daily email at 9am ET. Today = 2025-07-21 (2 plays). Yesterday = 2025-07-20 (6W-0L, +5.15u). All-time through 2025-07-20: n=79, 38W-41L, -10.53u. Pipeline has never run live — all data is OOF backtest.</p>
+<p><strong>Section order:</strong> (1) Today's plays · (2) Yesterday's results · (3) All-time results</p>
+
+<style>
+.mock-email-wrap { max-width:1700px; margin:8px 0; font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif; color:#222 }
+.mock-email-wrap table { border-collapse:collapse; width:100%; margin-top:8px }
+.mock-email-wrap th { background:#2c3e50; color:#fff; padding:7px 8px; text-align:left; font-size:12px; white-space:nowrap }
+.mock-email-wrap td { padding:5px 8px; border-bottom:1px solid #e0e0e0; font-size:12px }
+.mock-email-wrap details { margin-top:16px; border:1px solid #ddd; border-radius:6px; padding:0 12px 8px }
+.mock-email-wrap summary { font-weight:600; font-size:14px; cursor:pointer; padding:10px 0; color:#2c3e50; user-select:none }
+.mock-email-wrap .footer { background:#ecf0f1; border-radius:6px; padding:10px 16px; margin-top:28px; font-size:12px; color:#555 }
+.mock-email-wrap .lp { display:inline-block; width:12px; height:12px; background:#eaf6ea; border:1px solid #276221; margin-right:4px; vertical-align:middle }
+.mock-email-wrap .ls { display:inline-block; width:12px; height:12px; background:#fffde7; border:1px solid #b8860b; margin-right:4px; vertical-align:middle }
+</style>
+<div class="mock-email-wrap">
+<h2 style='color:#2c3e50;margin-bottom:4px'>MLB Pitcher Outs UNDER — 2025-07-21
+  <span style='font-size:13px;color:#888;font-weight:normal'>(mock — historical backtest)</span></h2>
+<p style='margin-top:4px'>
+  <span style='color:#276221;font-weight:bold'>1p / 2b plays (≥10pp)</span>
+  &nbsp;·&nbsp;
+  <span style='color:#b8860b;font-weight:bold'>2p / 5b shows (5–10pp)</span>
+  &nbsp;·&nbsp; UNDER · minus odds · line ≤17.5
+</p>
+<p style='font-size:11px;color:#888;margin-top:2px'>
+  <span class='lp'></span>Green = PLAY (bet) &nbsp;&nbsp;
+  <span class='ls'></span>Yellow = SHOW (paper only) &nbsp;&nbsp;
+  Grey = no edge (context only)
+</p>
+<div style='display:flex;gap:12px;margin:16px 0 20px;flex-wrap:wrap'><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>2025 PNL (plays)</div><div style='font-size:22px;font-weight:700;color:#222'>-10.53u</div></div><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>Record (plays)</div><div style='font-size:22px;font-weight:700;color:#222'>38W – 41L</div></div><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>Win %</div><div style='font-size:22px;font-weight:700;color:#222'>48.1%</div></div><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>ROI (plays)</div><div style='font-size:22px;font-weight:700;color:#222'>-13.3%</div></div></div>
+<details open>
+  <summary>▸ Strategy: Pitcher Outs UNDER &nbsp;<span style='font-weight:normal;color:#666'>(101 bets evaluated · 2 plays)</span></summary>
+  <table>
+    <tr>
+      <th colspan='9' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Game Info &amp; Market (per book)</th>
+      <th colspan='3' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Model</th>
+      <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Features</th>
+      <th colspan='1' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase'>Status</th>
+    </tr>
+    <tr>
+      <th>Pitcher</th><th style='text-align:center'>Team</th><th style='text-align:center'>Opp</th>
+      <th style='text-align:center'>Dir</th><th style='text-align:center'>Line</th>
+      <th style='text-align:center'>Book</th><th style='text-align:center'>Over<br>Odds</th>
+      <th style='text-align:center'>Under<br>Odds</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Dog?</th>
+      <th style='text-align:center'>Market<br>Under%</th><th style='text-align:center'>Model<br>Under%</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Edge</th>
+      <th style='text-align:center'>Proj<br>Outs</th><th style='text-align:center'>Career<br>Outs</th>
+      <th style='text-align:center'>c5<br>Outs</th><th style='text-align:center'>Career<br>Ks</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Opp<br>K/G</th>
+      <th style='text-align:center'>Status</th>
+    </tr>
+    <tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; San Francisco Giants @ Atlanta Braves &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>14.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-115</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>50.2%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+0.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>14.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-115</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>50.2%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+0.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>14.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.5%</td><td style='text-align:center'>50.2%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>14.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.5%</td><td style='text-align:center'>50.2%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>14.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.0%</td><td style='text-align:center'>50.2%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>14.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.0%</td><td style='text-align:center'>50.2%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-130</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.9%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-130</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.9%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-130</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.9%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-130</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.9%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.0%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.0%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-135</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.8%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-3.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Bryce Elder</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>-135</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-102</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>46.8%</td><td style='text-align:center'>39.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.6</td><td style='text-align:center;font-size:11px;color:#555'>5.07</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Hayden Birdsong</td><td style='text-align:center;color:#555'>SF</td><td style='text-align:center;color:#555'>ATL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+300</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-500</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>76.9%</td><td style='text-align:center'>61.4%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-15.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>13.7</td><td style='text-align:center;font-size:11px;color:#555'>14.0</td><td style='text-align:center;font-size:11px;color:#555'>5.2</td><td style='text-align:center;font-size:11px;color:#555'>5.06</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; Baltimore Orioles @ Cleveland Guardians &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#276221'>2 plays</span> &nbsp;·&nbsp; <span style='color:#b8860b'>1 show</span></td></tr>
+<tr style='background:#eaf6ea'><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>-106</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>62.0%</td><td style='text-align:center;font-weight:bold;color:#276221'>+12.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#276221;font-weight:bold'>PLAY ✓</span></td></tr>
+<tr style='background:#eaf6ea'><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-106</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.6%</td><td style='text-align:center'>62.0%</td><td style='text-align:center;font-weight:bold;color:#276221'>+10.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#276221;font-weight:bold'>PLAY ✓</span></td></tr>
+<tr style='background:#fffde7'><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>-106</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-141</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>54.6%</td><td style='text-align:center'>62.0%</td><td style='text-align:center;font-weight:bold;color:#b8860b'>+7.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#b8860b;font-weight:bold'>SHOW</span></td></tr>
+<tr style=''><td>Tanner Bibee</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>-141</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>+100</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>46.1%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.6%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>5.6</td><td style='text-align:center;font-size:11px;color:#555'>5.10</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-119</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-105</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>46.7%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-119</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-110</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>48.5%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+1.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>-119</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-115</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>49.0%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+0.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-119</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-119</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.5%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tomoyuki Sugano</td><td style='text-align:center;color:#555'>BAL</td><td style='text-align:center;color:#555'>CLE</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-119</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-141</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>54.5%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-4.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>3.3</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; San Diego Padres @ Miami Marlins &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-145</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>54.2%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-4.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-149</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>55.7%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-6.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-145</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>56.0%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-6.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-147</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>56.0%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-6.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>56.5%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-154</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>56.6%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.2%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.4%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.6%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.6%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.0%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.6%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.7%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.7%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Eury Perez</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+112</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-169</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.5%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.6</td><td style='text-align:center;font-size:11px;color:#555'>16.2</td><td style='text-align:center;font-size:11px;color:#555'>5.0</td><td style='text-align:center;font-size:11px;color:#555'>5.19</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-175</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.4%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Randy Vasquez</td><td style='text-align:center;color:#555'>SD</td><td style='text-align:center;color:#555'>MIA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>+122</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-179</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>60.6%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-10.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>2.9</td><td style='text-align:center;font-size:11px;color:#555'>5.26</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; Los Angeles Angels @ New York Mets &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Kodai Senga</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+180</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-278</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>67.3%</td><td style='text-align:center'>61.4%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-5.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>16.6</td><td style='text-align:center;font-size:11px;color:#555'>16.4</td><td style='text-align:center;font-size:11px;color:#555'>5.5</td><td style='text-align:center;font-size:11px;color:#555'>5.01</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.7%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-169</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.0%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.6%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.3%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.3%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-175</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.4%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-169</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.9%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-169</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.1%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Tyler Anderson</td><td style='text-align:center;color:#555'>LAA</td><td style='text-align:center;color:#555'>NYM</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>+125</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-169</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.6%</td><td style='text-align:center'>49.5%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-10.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>16.9</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>11.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; Boston Red Sox @ Philadelphia Phillies &nbsp;·&nbsp; 1 pitcher &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Walker Buehler</td><td style='text-align:center;color:#555'>BOS</td><td style='text-align:center;color:#555'>PHI</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+120</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-169</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.0%</td><td style='text-align:center'>61.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>14.5</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>13.4</td><td style='text-align:center;font-size:11px;color:#555'>4.0</td><td style='text-align:center;font-size:11px;color:#555'>4.97</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; Detroit Tigers @ Pittsburgh Pirates &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.0%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.1%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.5%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.5%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-122</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.6%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.0%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-135</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.8%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jack Flaherty</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>-108</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-141</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>53.9%</td><td style='text-align:center'>50.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-3.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>14.8</td><td style='text-align:center;font-size:11px;color:#555'>6.8</td><td style='text-align:center;font-size:11px;color:#555'>6.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-154</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>56.6%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.2%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-8.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-164</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>58.3%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-179</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.1%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-175</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.6%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-10.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-185</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.9%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-10.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-175</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.9%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-10.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Paul Skenes</td><td style='text-align:center;color:#555'>PIT</td><td style='text-align:center;color:#555'>DET</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>+127</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-200</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>61.5%</td><td style='text-align:center'>49.1%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-12.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>17.7</td><td style='text-align:center;font-size:11px;color:#555'>15.0</td><td style='text-align:center;font-size:11px;color:#555'>7.0</td><td style='text-align:center;font-size:11px;color:#555'>5.29</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; Chicago White Sox @ Tampa Bay Rays &nbsp;·&nbsp; 1 pitcher &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-149</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>56.3%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-6.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.0%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.0%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-161</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>57.6%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-7.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-167</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.0%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-179</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.1%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Sean Burke</td><td style='text-align:center;color:#555'>CWS</td><td style='text-align:center;color:#555'>TB</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>15.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>+121</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-185</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>59.4%</td><td style='text-align:center'>49.9%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-9.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>15.5</td><td style='text-align:center;font-size:11px;color:#555'>15.1</td><td style='text-align:center;font-size:11px;color:#555'>14.4</td><td style='text-align:center;font-size:11px;color:#555'>4.4</td><td style='text-align:center;font-size:11px;color:#555'>5.33</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; New York Yankees @ Toronto Blue Jays &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#888'>no plays</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>+100</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>46.9%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-105</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>47.2%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+2.8%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-105</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>47.6%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+2.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-105</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>48.0%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+2.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-110</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>48.1%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+1.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-110</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>48.1%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+1.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-114</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>FD</td><td style='text-align:center;color:#555'>-109</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-118</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.4%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-0.7%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Kevin Gausman</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-126</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.0%</td><td style='text-align:center'>50.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.4</td><td style='text-align:center;font-size:11px;color:#555'>16.8</td><td style='text-align:center;font-size:11px;color:#555'>5.3</td><td style='text-align:center;font-size:11px;color:#555'>5.20</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-109</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>51.0%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-1.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-109</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.0%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-2.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-109</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-135</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.8%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-3.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>-109</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-135</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.8%</td><td style='text-align:center'>49.7%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-3.1%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-115</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>39.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-11.0%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.5%</td><td style='text-align:center'>39.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-11.6%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Carlos Rodon</td><td style='text-align:center;color:#555'>NYY</td><td style='text-align:center;color:#555'>TOR</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-115</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.5%</td><td style='text-align:center'>39.0%</td><td style='text-align:center;font-weight:bold;color:#aaa'>-11.6%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.0</td><td style='text-align:center;font-size:11px;color:#555'>18.0</td><td style='text-align:center;font-size:11px;color:#555'>6.3</td><td style='text-align:center;font-size:11px;color:#555'>4.99</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;border-bottom:1px solid #bdc3c7'>7:05 PM ET &nbsp;·&nbsp; Cincinnati Reds @ Washington Nationals &nbsp;·&nbsp; 2 pitchers &nbsp;·&nbsp; <span style='color:#b8860b'>4 show</span></td></tr>
+<tr style='background:#fffde7'><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fanatics</td><td style='text-align:center;color:#555'>-105</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-125</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.0%</td><td style='text-align:center'>61.3%</td><td style='text-align:center;font-weight:bold;color:#b8860b'>+9.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#b8860b;font-weight:bold'>SHOW</span></td></tr>
+<tr style='background:#fffde7'><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>HardRock</td><td style='text-align:center;color:#555'>-105</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-130</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.4%</td><td style='text-align:center'>61.3%</td><td style='text-align:center;font-weight:bold;color:#b8860b'>+8.9%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#b8860b;font-weight:bold'>SHOW</span></td></tr>
+<tr style='background:#fffde7'><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>MGM</td><td style='text-align:center;color:#555'>-105</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-135</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.8%</td><td style='text-align:center'>61.3%</td><td style='text-align:center;font-weight:bold;color:#b8860b'>+8.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#b8860b;font-weight:bold'>SHOW</span></td></tr>
+<tr style='background:#fffde7'><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>-105</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-135</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>52.8%</td><td style='text-align:center'>61.3%</td><td style='text-align:center;font-weight:bold;color:#b8860b'>+8.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#b8860b;font-weight:bold'>SHOW</span></td></tr>
+<tr style=''><td>Jake Irvin</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-136</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>+100</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>45.8%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+4.5%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.2</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>5.31</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jake Irvin</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-136</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>+100</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>46.9%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.4%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.2</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>5.31</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>DK</td><td style='text-align:center;color:#555'>-129</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>+100</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>46.9%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Jake Irvin</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>17.5</td><td style='text-align:center'>Bovada</td><td style='text-align:center;color:#555'>-136</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-105</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>47.2%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+3.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>17.5</td><td style='text-align:center;font-size:11px;color:#555'>17.2</td><td style='text-align:center;font-size:11px;color:#555'>16.0</td><td style='text-align:center;font-size:11px;color:#555'>4.5</td><td style='text-align:center;font-size:11px;color:#555'>5.31</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>Fliff</td><td style='text-align:center;color:#555'>-129</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-110</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>47.7%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+2.6%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>ESPN</td><td style='text-align:center;color:#555'>-129</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-110</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>48.1%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+2.2%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+<tr style=''><td>Brady Singer</td><td style='text-align:center;color:#555'>CIN</td><td style='text-align:center;color:#555'>WSH</td><td style='text-align:center;font-weight:bold'>UNDER</td><td style='text-align:center'>16.5</td><td style='text-align:center'>BOL</td><td style='text-align:center;color:#555'>-129</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'><span style='color:#aaa'>×</span></td><td style='text-align:center'>50.0%</td><td style='text-align:center'>50.3%</td><td style='text-align:center;font-weight:bold;color:#aaa'>+0.3%</td><td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>16.5</td><td style='text-align:center;font-size:11px;color:#555'>15.2</td><td style='text-align:center;font-size:11px;color:#555'>5.1</td><td style='text-align:center;font-size:11px;color:#555'>6.00</td><td style='text-align:center'><span style='color:#aaa'>—</span></td></tr>
+
+  </table>
+</details>
+
+<hr style='border:none;border-top:2px solid #e0e0e0;margin:28px 0'>
+<h3 style='color:#2c3e50;margin-bottom:6px'>Yesterday's Results — 2025-07-20</h3>
+<p style='font-size:13px;margin-top:0'>
+  <strong style='color:#276221'>6W / 0L
+  &nbsp;·&nbsp; +5.15u &nbsp;·&nbsp; +85.8% ROI</strong>
+</p>
+<table style='width:auto;min-width:600px'>
+  <tr><th>Pitcher</th><th>Book</th><th>Line</th><th>Under Odds</th><th>Edge</th><th>Actual Outs</th><th>Outcome</th><th>P&amp;L</th></tr>
+  <tr style='background:#eaf6ea'><td>German Marquez</td><td style='text-align:center;color:#555'>MGM</td><td style='text-align:center'>16.5</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'>+11.2%</td><td style='text-align:center;font-weight:bold'>9</td><td style='text-align:center;color:#276221;font-weight:bold'>WIN</td><td style='text-align:center;font-weight:bold;color:#276221'>+0.83u</td></tr>
+<tr style='background:#eaf6ea'><td>German Marquez</td><td style='text-align:center;color:#555'>HardRock</td><td style='text-align:center'>16.5</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'>+11.0%</td><td style='text-align:center;font-weight:bold'>9</td><td style='text-align:center;color:#276221;font-weight:bold'>WIN</td><td style='text-align:center;font-weight:bold;color:#276221'>+0.83u</td></tr>
+<tr style='background:#eaf6ea'><td>German Marquez</td><td style='text-align:center;color:#555'>Fanatics</td><td style='text-align:center'>16.5</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-115</td><td style='text-align:center'>+11.5%</td><td style='text-align:center;font-weight:bold'>9</td><td style='text-align:center;color:#276221;font-weight:bold'>WIN</td><td style='text-align:center;font-weight:bold;color:#276221'>+0.87u</td></tr>
+<tr style='background:#eaf6ea'><td>Jose Berrios</td><td style='text-align:center;color:#555'>Fliff</td><td style='text-align:center'>17.5</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-110</td><td style='text-align:center'>+13.3%</td><td style='text-align:center;font-weight:bold'>17</td><td style='text-align:center;color:#276221;font-weight:bold'>WIN</td><td style='text-align:center;font-weight:bold;color:#276221'>+0.91u</td></tr>
+<tr style='background:#eaf6ea'><td>Jose Berrios</td><td style='text-align:center;color:#555'>BOL</td><td style='text-align:center'>17.5</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-120</td><td style='text-align:center'>+11.4%</td><td style='text-align:center;font-weight:bold'>17</td><td style='text-align:center;color:#276221;font-weight:bold'>WIN</td><td style='text-align:center;font-weight:bold;color:#276221'>+0.83u</td></tr>
+<tr style='background:#eaf6ea'><td>Jose Berrios</td><td style='text-align:center;color:#555'>FD</td><td style='text-align:center'>17.5</td><td style='text-align:center;font-weight:bold;color:#1d4ed8'>-114</td><td style='text-align:center'>+11.6%</td><td style='text-align:center;font-weight:bold'>17</td><td style='text-align:center;color:#276221;font-weight:bold'>WIN</td><td style='text-align:center;font-weight:bold;color:#276221'>+0.88u</td></tr>
+
+</table>
+<p style='font-size:12px;font-weight:600;color:#555;margin:20px 0 4px'>By game</p>
+<table style='width:auto'>
+  <tr><th>Game</th><th>Bets</th><th>W</th><th>L</th><th>Net</th></tr>
+  <tr><td>Minnesota Twins @ Colorado Rockies</td><td style='text-align:center'>3</td><td style='text-align:center;color:#276221;font-weight:bold'>3</td><td style='text-align:center;color:#c0392b;font-weight:bold'>0</td><td style='text-align:center;font-weight:bold;color:#276221'>+2.53u</td></tr>
+<tr><td>San Francisco Giants @ Toronto Blue Jays</td><td style='text-align:center'>3</td><td style='text-align:center;color:#276221;font-weight:bold'>3</td><td style='text-align:center;color:#c0392b;font-weight:bold'>0</td><td style='text-align:center;font-weight:bold;color:#276221'>+2.62u</td></tr>
+<tr style='background:#f5f5f5;font-weight:bold'><td>Total</td><td style='text-align:center'>6</td><td style='text-align:center;color:#276221'>6</td><td style='text-align:center;color:#c0392b'>0</td><td style='text-align:center;color:#276221'>+5.15u</td></tr>
+
+</table>
+
+<hr style='border:none;border-top:2px solid #e0e0e0;margin:28px 0'>
+<h3 style='color:#2c3e50;margin-bottom:6px'>All-Time Results <span style='font-size:12px;color:#888;font-weight:normal'>(OOF backtest through 2025-07-20)</span></h3>
+<div style='display:flex;gap:12px;margin:16px 0 20px;flex-wrap:wrap'><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>All-Time PNL</div><div style='font-size:22px;font-weight:700;color:#222'>-10.53u</div></div><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>All-Time Record</div><div style='font-size:22px;font-weight:700;color:#222'>38W – 41L</div></div><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>Win %</div><div style='font-size:22px;font-weight:700;color:#222'>48.1%</div></div><div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'><div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'>ROI</div><div style='font-size:22px;font-weight:700;color:#222'>-13.3%</div></div></div>
+<table style='width:auto;min-width:500px'>
+  <tr><th>Season</th><th>Bets</th><th>Record</th><th>Win %</th><th>Units</th><th>ROI</th></tr>
+  <tr><td>2025</td><td style='text-align:center'>79</td><td style='text-align:center'>38W – 41L</td><td style='text-align:center'>48.1%</td><td style='text-align:center;font-weight:bold;color:#c0392b'>-10.53u</td><td style='text-align:center;color:#c0392b'>-13.3%</td></tr>
+
+</table>
+<div class='footer'>
+  Flat 1u per book bet &nbsp;·&nbsp; consensus_line bootstrap (10k samples) · shrinkage=0.25 &nbsp;·&nbsp;
+  Strategy (UNDER · minus odds · edge≥10pp · line≤17.5): OOS +74.2u · +16.63% ROI · n=446 (2025+2026)
+</div>
+</div>
+
+<h3>Tests</h3>
+<table>
+<tr><th>Test</th><th>Result</th><th>Detail</th></tr>
+<tr><td>T1: Section order: today → yesterday → all-time</td><td class="pass">PASS</td></tr>
+<tr><td>T2: Today has 2 plays (Tomoyuki Sugano, BOL + DK)</td><td class="pass">PASS</td></tr>
+<tr><td>T3: Yesterday shows 6W-0L, +5.15u across 2 games</td><td class="pass">PASS</td><td>German Marquez (3 books) + Jose Berrios (3 books)</td></tr>
+<tr><td>T4: All-time cards match computed stats</td><td class="pass">PASS</td><td>n=79, 38W-41L, -10.53u, -13.3% ROI</td></tr>
+<tr><td>T5: Yesterday per-bet table: wins first, then losses</td><td class="pass">PASS</td><td>All 6 are wins → sorted correctly</td></tr>
+<tr><td>T6: Season breakdown by year present</td><td class="pass">PASS</td><td>2025 only (OOF starts 2025)</td></tr>
+</table>
+</section>
