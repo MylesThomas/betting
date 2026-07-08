@@ -223,11 +223,13 @@ def settle_bets(bets: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
 
 def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday: str) -> str:
     he = html_module.escape
-    settled = settled_today[settled_today["outcome"] != "no_data"].copy()
-    wins    = (settled["outcome"] == "win").sum()
-    losses  = (settled["outcome"] == "loss").sum()
-    no_data = (settled_today["outcome"] == "no_data").sum()
-    units   = settled["pnl"].sum()
+    settled  = settled_today[settled_today["outcome"] != "no_data"].copy()
+    no_data  = (settled_today["outcome"] == "no_data").sum()
+    # Headline stats are plays-only; tracks are paper and shown separately below
+    plays    = settled[settled["tier"] == "play"] if "tier" in settled.columns else settled
+    wins     = int((plays["outcome"] == "win").sum())
+    losses   = int((plays["outcome"] == "loss").sum())
+    units    = float(plays["pnl"].sum())
 
     HAS_BOOK = "bookmaker" in settled.columns
     HAS_GAME = all(c in settled.columns for c in ["game_time_et", "home_team", "away_team"])
@@ -293,7 +295,7 @@ def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday
             f"</tr>\n"
         )
 
-    COL_HEADERS = "<tr><th>Player</th><th>Tier</th><th>Book</th><th>Actual TB</th><th>Line</th><th>Mkt Under%</th><th>Edge</th><th>Under Odds</th><th>Outcome</th><th>P&amp;L</th></tr>"
+    COL_HEADERS = "<tr><th>Player</th><th>Tier</th><th>Book</th><th>Actual Total Bases</th><th>Line</th><th>Market Under%</th><th>Edge</th><th>Under Odds</th><th>Outcome</th><th>P&amp;L</th></tr>"
 
     # ── Part 1: All bets sorted by P&L ────────────────────────────────────────
     part1_rows = "".join(bet_row(r) for _, r in settled.sort_values("pnl", ascending=False).iterrows())
@@ -470,6 +472,7 @@ def publish_sns(subject: str, message: str) -> None:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gameday", default=yesterday_et())
+    parser.add_argument("--output", default=None, help="Write JSON result to PATH instead of sending email")
     args = parser.parse_args()
     gameday = args.gameday
 
@@ -511,9 +514,12 @@ def main():
     save_s3_csv(settled_key, settled)
     print(f"  Saved → s3://{S3_BUCKET}/{settled_key}")
 
-    # Update all-time history
+    # Update all-time history — plays only (tracks are paper, not real bets)
     history = load_settled_history()
-    settled_rows = settled[settled["outcome"] != "no_data"].copy()
+    settled_rows = settled[
+        (settled["outcome"] != "no_data") &
+        (settled.get("tier", pd.Series(["play"] * len(settled), index=settled.index)) == "play")
+    ].copy()
     settled_rows["won"] = (settled_rows["outcome"] == "win").astype(int)
 
     keep_cols = [c for c in ["game_date", "player_name", "name_norm", "line", "bet_direction",
@@ -535,12 +541,44 @@ def main():
     save_settled_history(updated)
     print(f"  Updated history: {len(updated)} total rows")
 
-    # Email
-    n_unique = settled[settled["outcome"] != "no_data"]["player_name"].nunique() if not settled.empty else 0
-    subject = f"MLB Total Bases — {n_unique} players ({len(settled[settled['outcome'] != 'no_data'])} bets) {wins}W/{losses}L {units:+.2f}u — {gameday}"
+    # Email — subject line reflects plays only
+    n_play_unique = len(settled_rows["player_name"].unique()) if not settled_rows.empty else 0
+    n_play_bets   = len(settled_rows)
+    subject = f"MLB Total Bases — {n_play_unique} players ({n_play_bets} play bets) {wins}W/{losses}L {units:+.2f}u — {gameday}"
     html_body = build_html_email(settled, updated, gameday)
-    send_ses(subject, html_body)
-    publish_sns(subject, f"{wins}W/{losses}L, {units:+.3f}u on {gameday}")
+
+    # Current-season all-time stats (plays only, for combined-email subject line)
+    year = datetime.now(ET).year
+    if not updated.empty and "tier" in updated.columns and "pnl" in updated.columns:
+        season_plays = updated[
+            (updated["tier"] == "play") &
+            (updated["game_date"].astype(str).str[:4] == str(year)) &
+            (updated["pnl"].notna())
+        ]
+        season_wins   = int((season_plays["outcome"] == "win").sum())  if not season_plays.empty else 0
+        season_losses = int((season_plays["outcome"] == "loss").sum()) if not season_plays.empty else 0
+        season_units  = float(season_plays["pnl"].sum())               if not season_plays.empty else 0.0
+    else:
+        season_wins = season_losses = 0
+        season_units = 0.0
+
+    if args.output:
+        import json as _json
+        Path(args.output).write_text(_json.dumps({
+            "html_body":       html_body,
+            "subject":         subject,
+            "yesterday_wins":  int(wins),
+            "yesterday_losses":int(losses),
+            "yesterday_units": float(units),
+            "season_wins":     season_wins,
+            "season_losses":   season_losses,
+            "season_units":    season_units,
+            "n_play_bets":     n_play_bets,
+            "n_play_players":  n_play_unique,
+        }))
+        print(f"  Result JSON → {args.output}")
+    else:
+        send_ses(subject, html_body)
 
 
 if __name__ == "__main__":

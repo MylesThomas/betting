@@ -3,9 +3,8 @@
 # Deploy MLB Batter Total Bases Lambda via container image (ECR)
 #
 # EventBridge schedule (all rules start DISABLED — enable after confirming):
-#   Daily 8:30am ET → spine_update  (incremental Statcast fetch + spine rebuild)
-#   Daily 9:00am ET → pipeline      (fetch live props, score, email bets)
-#   Daily 9:00am ET → settle        (settle prior-day games, email P&L)
+#   Daily 8:30am ET → spine_update  (incremental Statcast fetch + spine rebuild + confirmation email)
+#   Daily 9:00am ET → combined      (settle yesterday + today's plays → ONE email)
 #
 # All S3 assets are already in place (model + spine uploaded during research):
 #   s3://the-odds-api-mt/mlb/total_bases_model/model/mlb_tb_regression_v2.joblib
@@ -13,7 +12,6 @@
 #
 # Usage:
 #   export ODDS_API_KEY="<key>"
-#   export SNS_TOPIC_ARN="arn:aws:sns:us-east-2:<acct>:betting-arb-alerts"
 #   export SES_SOURCE="<verified-ses-email>"
 #   export SES_TO="mylescgthomas@gmail.com"
 #   cd ~/dev/betting && bash src/mlb_total_bases_modeling/lambda/deploy_mlb_total_bases_lambda.sh
@@ -30,12 +28,10 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 DOCKER_PLATFORM="${DOCKER_PLATFORM:-linux/amd64}"
 
 RULE_SPINE="mlb-tb-spine-daily-830am-et"
-RULE_PIPELINE="mlb-tb-pipeline-daily-9am-et"
-RULE_SETTLE="mlb-tb-settle-daily-9am-et"
+RULE_COMBINED="mlb-tb-combined-daily-9am-et"
 
-CRON_SPINE="cron(30 12 * * ? *)"   # 8:30am ET daily (12:30 UTC, EDT=UTC-4)
-CRON_PIPELINE="cron(0 13 * * ? *)" # 9:00am ET daily (13:00 UTC)
-CRON_SETTLE="cron(0 13 * * ? *)"   # 9:00am ET daily (13:00 UTC)
+CRON_SPINE="cron(30 12 * * ? *)"    # 8:30am ET daily (12:30 UTC, EDT=UTC-4)
+CRON_COMBINED="cron(0 13 * * ? *)"  # 9:00am ET daily (13:00 UTC)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -129,15 +125,13 @@ LAMBDA_ARN=$(aws lambda get-function \
 
 declare -A RULE_MODES
 RULE_MODES["$RULE_SPINE"]="spine_update"
-RULE_MODES["$RULE_PIPELINE"]="pipeline"
-RULE_MODES["$RULE_SETTLE"]="settle"
+RULE_MODES["$RULE_COMBINED"]="combined"
 
 declare -A RULE_CRONS
 RULE_CRONS["$RULE_SPINE"]="$CRON_SPINE"
-RULE_CRONS["$RULE_PIPELINE"]="$CRON_PIPELINE"
-RULE_CRONS["$RULE_SETTLE"]="$CRON_SETTLE"
+RULE_CRONS["$RULE_COMBINED"]="$CRON_COMBINED"
 
-for RULE_NAME in "$RULE_PIPELINE" "$RULE_SETTLE" "$RULE_SPINE"; do
+for RULE_NAME in "$RULE_COMBINED" "$RULE_SPINE"; do
   MODE="${RULE_MODES[$RULE_NAME]}"
   CRON="${RULE_CRONS[$RULE_NAME]}"
 
@@ -174,7 +168,6 @@ echo "    --payload '{\"mode\":\"pipeline\",\"gameday\":\"$(date +%Y-%m-%d)\"}' 
 echo "    --cli-binary-format raw-in-base64-out /tmp/tb_out.json && cat /tmp/tb_out.json"
 echo ""
 echo "When ready to go live — enable EventBridge rules:"
-echo "  aws events enable-rule --name $RULE_PIPELINE --region $REGION"
-echo "  aws events enable-rule --name $RULE_SETTLE   --region $REGION"
+echo "  aws events enable-rule --name $RULE_COMBINED --region $REGION"
 echo "  aws events enable-rule --name $RULE_SPINE    --region $REGION"
 echo ""

@@ -67,6 +67,7 @@ S3_BUCKET     = "the-odds-api-mt"
 SPINE_KEY     = "mlb/total_bases_model/spine/mlb_total_bases_spine.parquet"
 MODEL_KEY     = "mlb/total_bases_model/model/mlb_tb_regression_v2.joblib"
 DAILY_PREFIX  = "mlb/total_bases_model/daily_runs"
+SETTLED_KEY   = "mlb/total_bases_model/settled/mlb_tb_settled_bets.parquet"
 
 SES_SOURCE    = os.environ.get("SES_SOURCE", "").strip()
 SES_TO_RAW    = os.environ.get("SES_TO", "mylescgthomas@gmail.com").strip()
@@ -422,6 +423,46 @@ def _time_sort_key(t: str) -> int:
         return 9999
 
 
+def _season_cards_html(season_stats: dict | None) -> str:
+    def card(label: str, value: str, green: bool = False) -> str:
+        color = "#276221" if green else "#222"
+        return (
+            f"<div style='border:1px solid #ddd;border-radius:6px;padding:12px 20px;"
+            f"min-width:120px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)'>"
+            f"<div style='font-size:10px;color:#888;font-weight:600;text-transform:uppercase;"
+            f"letter-spacing:.5px;margin-bottom:4px'>{label}</div>"
+            f"<div style='font-size:22px;font-weight:700;color:{color}'>{value}</div>"
+            f"</div>"
+        )
+
+    if not season_stats:
+        pnl_str    = "—"
+        record_str = "—"
+        win_str    = "—"
+        roi_str    = "—"
+        is_pos     = False
+    else:
+        u    = season_stats.get("units", 0.0)
+        w    = season_stats.get("wins", 0)
+        l    = season_stats.get("losses", 0)
+        roi  = season_stats.get("roi", 0.0)
+        pnl_str    = f"{u:+.2f}u"
+        record_str = f"{w}W – {l}L"
+        win_str    = f"{w/(w+l)*100:.1f}%" if (w + l) > 0 else "—"
+        roi_str    = f"{roi*100:+.1f}%"
+        is_pos     = u >= 0
+
+    year = datetime.now(ET).year
+    return (
+        f"<div style='display:flex;gap:12px;margin:16px 0 20px;flex-wrap:wrap'>"
+        f"{card(f'{year} PNL (plays)', pnl_str, green=is_pos)}"
+        f"{card('Record (plays)', record_str)}"
+        f"{card('Win %', win_str, green=season_stats is not None and (season_stats.get('wins',0)/(season_stats.get('wins',0)+season_stats.get('losses',1)))>0.5)}"
+        f"{card('ROI (plays)', roi_str, green=season_stats is not None and season_stats.get('roi',0)>=0)}"
+        f"</div>"
+    )
+
+
 def build_html_email(
     tiered_books: pd.DataFrame,
     all_scored: pd.DataFrame,
@@ -429,6 +470,7 @@ def build_html_email(
     bet_lines: list,
     min_bet_edge: float,
     min_track_edge: float,
+    season_stats: dict | None = None,
 ) -> str:
     he = html_module.escape
 
@@ -524,8 +566,9 @@ def build_html_email(
         for _, r in game_tiered.iterrows():
             tier = r.get("tier")
             if tier == "play":
+                direction = str(r.get("bet_direction", "UNDER")).upper()
                 bg     = "background:#eaf6ea"
-                status = "<span style='color:#276221;font-weight:bold'>PLAY ✓</span>"
+                status = f"<span style='color:#276221;font-weight:bold'>PLAY - {direction}</span>"
             else:
                 bg     = "background:#fffde7"
                 status = "<span style='color:#b8860b;font-weight:bold'>TRACK</span>"
@@ -657,16 +700,36 @@ def build_html_email(
   Grey = no edge (context only)
 </p>
 
+{_season_cards_html(season_stats)}
+
 <details open>
   <summary>▸ Strategy: UNDER {lines_str} &nbsp;<span style='font-weight:normal;color:#666'>({n_s1_rows} players scored · {n_play_bets} bets)</span></summary>
   <table>
     <tr>
-      <th>Player</th><th>Team</th><th>Opp</th><th>Line</th>
-      <th>Book</th><th>Over</th><th>Under</th><th>Dog?</th>
-      <th>Mkt Under%</th><th>Model Under%</th><th>Edge</th>
-      <th>Proj TB</th>
-      <th>AB/G (C)</th><th>AB/G (L10)</th><th>TB/G (C)</th><th>TB/G (L10)</th>
-      <th>Status</th>
+      <th colspan='3' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Game Info</th>
+      <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Market (per book)</th>
+      <th colspan='4' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Model</th>
+      <th colspan='4' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Features</th>
+      <th colspan='1' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase'></th>
+    </tr>
+    <tr>
+      <th>Player</th>
+      <th style='text-align:center'>Team</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Opponent</th>
+      <th style='text-align:center'>Line</th>
+      <th style='text-align:center'>Book</th>
+      <th style='text-align:center'>Over Odds</th>
+      <th style='text-align:center'>Under Odds</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Dog?</th>
+      <th style='text-align:center'>Market<br>Under%</th>
+      <th style='text-align:center'>Model<br>Under%</th>
+      <th style='text-align:center'>Edge</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Projected<br>Total Bases</th>
+      <th style='text-align:center'>Career<br>At-Bats/Game</th>
+      <th style='text-align:center'>Last 10<br>At-Bats/Game</th>
+      <th style='text-align:center'>Career<br>Total Bases/Game</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Last 10<br>Total Bases/Game</th>
+      <th style='text-align:center'>Status</th>
     </tr>
     {rows_bet}
   </table>
@@ -700,7 +763,7 @@ def build_html_email(
     <tr style='background:#f9f9f9'><td style='padding:5px 10px;font-size:12px;font-family:{_MONO}'>tb_L10</td><td style='padding:5px 10px;font-size:12px'>Last 10 games avg total bases — recent form</td><td style='padding:5px 10px;font-size:12px'>3.7%</td></tr>
   </table>
   <p style='font-size:11px;color:#888;margin-top:6px'>
-    Model: XGBoost regressor → y_hat (projected TB) → Method C calibration per line → P(under) → edge.<br>
+    Model: XGBoost regressor → y_hat (projected total bases) → Method C calibration per line → P(under) → edge.<br>
     Strategy: UNDER line=1.5 · dogs only (novig_under &lt; 50%) · play ≥5pp · track ≥3pp.
   </p>
 </details>
@@ -734,6 +797,7 @@ def publish_sns(subject: str, message: str) -> None:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gameday", default=today_et())
+    parser.add_argument("--output", default=None, help="Write JSON result to PATH instead of sending email")
     args = parser.parse_args()
     gameday = args.gameday
 
@@ -847,16 +911,49 @@ def main():
         s3_put_csv(bets_key, tiered_books)
         print(f"  Recs   → s3://{S3_BUCKET}/{bets_key}  ({n_play_bets} plays + {n_track_bets} tracks)")
 
+    # Load settled history for season P&L cards (best-effort — never blocks pipeline)
+    season_stats = None
+    try:
+        body = _s3().get_object(Bucket=S3_BUCKET, Key=SETTLED_KEY)["Body"].read()
+        hist = pd.read_parquet(BytesIO(body))
+        if not hist.empty and "tier" in hist.columns and "pnl" in hist.columns:
+            year = datetime.now(ET).year
+            plays = hist[
+                (hist["tier"] == "play") &
+                (hist["game_date"].astype(str).str[:4] == str(year)) &
+                (hist["pnl"].notna())
+            ]
+            if not plays.empty:
+                season_stats = {
+                    "units":  float(plays["pnl"].sum()),
+                    "wins":   int((plays["pnl"] > 0).sum()),
+                    "losses": int((plays["pnl"] < 0).sum()),
+                    "roi":    float(plays["pnl"].mean()),
+                }
+                print(f"  Season stats (plays): {season_stats}")
+    except Exception as e:
+        print(f"  Season stats unavailable: {e}")
+
     # Email — always send (even 0 bets, so we know the pipeline ran)
     lines_str = "+".join(str(l) for l in sorted(BET_LINES))
     subject = (
         f"MLB Total Bases — {n_play_bets} play{'s' if n_play_bets != 1 else ''} · "
         f"{n_track_bets} track{'s' if n_track_bets != 1 else ''} — {gameday}"
     )
-    html_body = build_html_email(tiered_books, scored, gameday, BET_LINES, MIN_BET_EDGE, MIN_TRACK_EDGE)
-    send_ses(subject, html_body)
-    if n_play_bets > 0:
-        publish_sns(subject, f"{n_play_players} players, {n_play_bets} UNDER {lines_str} plays for {gameday}. Check email.")
+    html_body = build_html_email(tiered_books, scored, gameday, BET_LINES, MIN_BET_EDGE, MIN_TRACK_EDGE, season_stats)
+
+    if args.output:
+        import json as _json
+        Path(args.output).write_text(_json.dumps({
+            "html_body":      html_body,
+            "subject":        subject,
+            "n_play_bets":    n_play_bets,
+            "n_play_players": n_play_players,
+            "n_track_bets":   n_track_bets,
+        }))
+        print(f"  Result JSON → {args.output}")
+    else:
+        send_ses(subject, html_body)
 
 
 if __name__ == "__main__":

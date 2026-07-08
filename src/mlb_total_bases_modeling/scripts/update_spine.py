@@ -20,11 +20,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import time
 import unicodedata
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 
@@ -33,15 +34,22 @@ import botocore.exceptions
 import numpy as np
 import pandas as pd
 import pybaseball as pb
+from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
+load_dotenv(REPO_ROOT / ".env")
 
 pb.cache.enable()
 
 S3_BUCKET    = "the-odds-api-mt"
 ACTUALS_KEY  = "mlb/total_bases_model/actuals/mlb_batting_statcast.parquet"
 SPINE_KEY    = "mlb/total_bases_model/spine/mlb_total_bases_spine.parquet"
+
+SES_SOURCE   = os.environ.get("SES_SOURCE", "").strip()
+SES_TO_RAW   = os.environ.get("SES_TO", "mylescgthomas@gmail.com").strip()
+ET           = ZoneInfo("America/New_York")
 
 SEASON_START = {2024: "2024-03-20", 2025: "2025-03-18", 2026: "2026-03-25"}
 ROLLING_WINDOWS = [1, 3, 5, 10, 20]
@@ -224,6 +232,30 @@ def build_rolling_features(actuals: pd.DataFrame) -> pd.DataFrame:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+def send_ses_spine(n_rows: int, n_players: int) -> None:
+    if not SES_SOURCE or not SES_TO_RAW:
+        return
+    today = datetime.now(ET).strftime("%Y-%m-%d")
+    subject = f"MLB Total Bases — Spine updated ({n_rows:,} rows · {n_players:,} players) — {today}"
+    body = (
+        f"<html><body style=\"font-family:sans-serif;color:#222;padding:20px\">"
+        f"<h3 style='color:#2c3e50'>MLB Total Bases — Spine Update</h3>"
+        f"<p><strong>{n_rows:,}</strong> player-dates &nbsp;·&nbsp; <strong>{n_players:,}</strong> players</p>"
+        f"<p style='color:#555;font-size:12px'>Updated: {today}</p>"
+        f"</body></html>"
+    )
+    to_list = [e.strip() for e in SES_TO_RAW.split(",") if e.strip()]
+    boto3.client("ses", region_name="us-east-2").send_email(
+        Source=SES_SOURCE,
+        Destination={"ToAddresses": to_list},
+        Message={
+            "Subject": {"Data": subject, "Charset": "UTF-8"},
+            "Body": {"Html": {"Data": body, "Charset": "UTF-8"}},
+        },
+    )
+    print(f"  Spine email sent to {to_list}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full",   action="store_true", help="Full re-fetch from 2024-03-20")
@@ -288,8 +320,12 @@ def main():
     spine.to_parquet(buf, index=False)
     buf.seek(0)
     _s3().put_object(Bucket=S3_BUCKET, Key=SPINE_KEY, Body=buf.getvalue())
-    print(f"Uploaded spine → s3://{S3_BUCKET}/{SPINE_KEY}  ({len(spine):,} rows)")
+    n_spine_rows    = len(spine)
+    n_spine_players = spine["name_norm"].nunique()
+    print(f"Uploaded spine → s3://{S3_BUCKET}/{SPINE_KEY}  ({n_spine_rows:,} rows)")
     print("Done.")
+
+    send_ses_spine(n_spine_rows, n_spine_players)
 
 
 if __name__ == "__main__":
