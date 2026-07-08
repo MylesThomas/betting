@@ -47,15 +47,16 @@ from src.io_utils import read_parquet_any  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import B_MIN_MAX_FEATS  # noqa: E402
 
 # ── colour palette matching the mock email ───────────────────────────────────
-_G_PLAYER = "#334155"
-_G_MARKET = "#0f766e"
-_G_OLS = "#4338ca"
-_G_XGB = "#1d4ed8"
-_G_EDGE_O = "#065f46"
-_G_EDGE_X = "#14532d"
-_G_BEST = "#92400e"
-_G_FEAT = "#374151"
-_G_RESULT = "#374151"
+_G_PLAYER  = "#334155"   # Player / Game
+_G_BOOK    = "#0f766e"   # Book
+_G_ODDS    = "#1e40af"   # American Odds
+_G_IMPLIED = "#6d28d9"   # Implied (raw probs)
+_G_NOVIG   = "#047857"   # No-Vig (fair probs)
+_G_OLS     = "#4338ca"   # Model — OLS
+_G_XGB     = "#1d4ed8"   # Model — XGBoost
+_G_EDGE_O  = "#065f46"   # Edge — OLS
+_G_EDGE_X  = "#14532d"   # Edge — XGBoost
+_G_FEAT    = "#374151"   # Model Inputs / Status
 
 _TH = "padding:5px 8px;color:#fff;font-size:10px;text-align:center;vertical-align:middle;"
 
@@ -233,15 +234,36 @@ def _compute_display_cols(df: pd.DataFrame) -> pd.DataFrame:
 
     p_raw_o = _american_to_raw_implied(out["over_odds"].to_numpy())
     p_raw_u = _american_to_raw_implied(out["under_odds"].to_numpy())
-    total = p_raw_o + p_raw_u
-    out["novig_prob_over"] = p_raw_o / total
-    out["novig_prob_under"] = p_raw_u / total
+    raw_total = p_raw_o + p_raw_u
 
-    out["p_over_ols"] = 1.0 - out["p_under_ols"]
-    out["p_over_xgb"] = 1.0 - out["p_under_xgb"]
-    out["edge_over_ols"] = out["p_over_ols"] - p_raw_o
-    out["edge_over_xgb"] = out["p_over_xgb"] - p_raw_o
+    # Raw implied (vig-inclusive)
+    out["raw_prob_over"]  = p_raw_o
+    out["raw_prob_under"] = p_raw_u
+    out["raw_total"]      = raw_total
+
+    # No-vig (proportional de-vig)
+    out["fair_over"]  = p_raw_o / raw_total
+    out["fair_under"] = p_raw_u / raw_total
+    out["fair_total"] = 1.0                        # always 100% by construction
+    out["vig"]        = raw_total - 1.0
+
+    # Keep novig aliases so _game_label still works
+    out["novig_prob_over"]  = out["fair_over"]
+    out["novig_prob_under"] = out["fair_under"]
+
+    out["p_over_ols"]  = 1.0 - out["p_under_ols"]
+    out["p_over_xgb"]  = 1.0 - out["p_under_xgb"]
+    out["edge_over_ols"]  = out["p_over_ols"]  - p_raw_o
+    out["edge_over_xgb"]  = out["p_over_xgb"]  - p_raw_o
     out["best_under_edge"] = out[["edge_under_ols", "edge_under_xgb"]].max(axis=1)
+
+    # Status replaces the old Direction column
+    def _status(row: pd.Series) -> str:
+        if bool(row.get("play_under_ols", False)) or bool(row.get("play_under_xgb", False)):
+            return "PLAY - UNDER"
+        return ""
+
+    out["status"] = out.apply(_status, axis=1)
 
     if "team_normalized" in out.columns and "home_team_norm" in out.columns:
         def _opp(row: pd.Series) -> str:
@@ -256,7 +278,12 @@ def _compute_display_cols(df: pd.DataFrame) -> pd.DataFrame:
         out["opponent"] = ""
         out["team"] = ""
 
-    out["direction"] = "UNDER"
+    # Game time for the per-row Time (ET) column
+    if "game_time" in out.columns:
+        out["game_time_et"] = out["game_time"].fillna("").astype(str).str.strip()
+    else:
+        out["game_time_et"] = ""
+
     return out
 
 
@@ -449,49 +476,61 @@ def _th(text: str, bg: str, *, rowspan: int = 1, colspan: int = 1, align: str = 
 
 
 def _build_thead() -> str:
+    # Row 1: group headers
+    # 5 + 1 + 2 + 3 + 4 + 3 + 3 + 2 + 2 + (6 features + 1 Status + 1 Actual) = 33 cols
     r1 = "    "
-    r1 += _th("Game Info", _G_PLAYER, colspan=4)
-    r1 += _th("Market (per book)", _G_MARKET, colspan=6)
-    r1 += _th("Model — OLS", _G_OLS, colspan=3)
-    r1 += _th("Model — XGBoost", _G_XGB, colspan=3)
-    r1 += _th("Edge — OLS", _G_EDGE_O, colspan=2)
-    r1 += _th("Edge — XGBoost", _G_EDGE_X, colspan=2)
-    r1 += _th("Best<br>Under<br>Edge", _G_BEST, rowspan=2)
-    r1 += _th("Production Features (20260403)", _G_FEAT, colspan=6)
-    r1 += _th("Result", _G_RESULT)
+    r1 += _th("Player / Game",        _G_PLAYER,  colspan=5)
+    r1 += _th("Book",                 _G_BOOK,    colspan=1)
+    r1 += _th("American Odds",        _G_ODDS,    colspan=2)
+    r1 += _th("Implied",              _G_IMPLIED, colspan=3)
+    r1 += _th("No-Vig",               _G_NOVIG,   colspan=4)
+    r1 += _th("Model — OLS",          _G_OLS,     colspan=3)
+    r1 += _th("Model — XGBoost",      _G_XGB,     colspan=3)
+    r1 += _th("Edge — OLS",           _G_EDGE_O,  colspan=2)
+    r1 += _th("Edge — XGBoost",       _G_EDGE_X,  colspan=2)
+    r1 += _th("Model Inputs (20260403)", _G_FEAT, colspan=len(B_MIN_MAX_FEATS) + 2)
 
+    # Row 2: individual column names
     r2 = "    "
-    # Game Info
-    r2 += _th("Player", _G_PLAYER, align="left")
-    r2 += _th("Team", _G_PLAYER)
-    r2 += _th("Opponent", _G_PLAYER)
-    r2 += _th("Direction", _G_PLAYER)
-    # Market
-    r2 += _th("Line", _G_MARKET)
-    r2 += _th("Book", _G_MARKET)
-    r2 += _th("Over Odds", _G_MARKET)
-    r2 += _th("Under Odds", _G_MARKET)
-    r2 += _th("Market Over %<br>(no-vig)", _G_MARKET)
-    r2 += _th("Market Under %<br>(no-vig)", _G_MARKET)
-    # OLS
-    r2 += _th("Projected<br>Rebounds", _G_OLS)
-    r2 += _th("Model<br>Over %", _G_OLS)
-    r2 += _th("Model<br>Under %", _G_OLS)
-    # XGB
-    r2 += _th("Projected<br>Rebounds", _G_XGB)
-    r2 += _th("Model<br>Over %", _G_XGB)
-    r2 += _th("Model<br>Under %", _G_XGB)
-    # Edge OLS
-    r2 += _th("Over<br>Edge", _G_EDGE_O)
-    r2 += _th("Under<br>Edge", _G_EDGE_O)
-    # Edge XGB
-    r2 += _th("Over<br>Edge", _G_EDGE_X)
-    r2 += _th("Under<br>Edge", _G_EDGE_X)
-    # Features
+    # Player / Game (5)
+    r2 += _th("Player",     _G_PLAYER, align="left")
+    r2 += _th("Team",       _G_PLAYER)
+    r2 += _th("Opp",        _G_PLAYER)
+    r2 += _th("Time (ET)",  _G_PLAYER)
+    r2 += _th("Line",       _G_PLAYER)
+    # Book (1)
+    r2 += _th("Book",       _G_BOOK)
+    # American Odds (2)
+    r2 += _th("Over",       _G_ODDS)
+    r2 += _th("Under",      _G_ODDS)
+    # Implied (3)
+    r2 += _th("Raw Over",   _G_IMPLIED)
+    r2 += _th("Raw Under",  _G_IMPLIED)
+    r2 += _th("Raw Total",  _G_IMPLIED)
+    # No-Vig (4)
+    r2 += _th("Fair Over",  _G_NOVIG)
+    r2 += _th("Fair Under", _G_NOVIG)
+    r2 += _th("Fair Total", _G_NOVIG)
+    r2 += _th("Vig",        _G_NOVIG)
+    # Model OLS (3)
+    r2 += _th("Prediction<br>(yhat)", _G_OLS)
+    r2 += _th("Pred Over",            _G_OLS)
+    r2 += _th("Pred Under",           _G_OLS)
+    # Model XGB (3)
+    r2 += _th("Prediction<br>(yhat)", _G_XGB)
+    r2 += _th("Pred Over",            _G_XGB)
+    r2 += _th("Pred Under",           _G_XGB)
+    # Edge OLS (2)
+    r2 += _th("Over Edge",  _G_EDGE_O)
+    r2 += _th("Under Edge", _G_EDGE_O)
+    # Edge XGB (2)
+    r2 += _th("Over Edge",  _G_EDGE_X)
+    r2 += _th("Under Edge", _G_EDGE_X)
+    # Model Inputs: features + Status + Actual
     for feat in B_MIN_MAX_FEATS:
         r2 += _th(feat, _G_FEAT)
-    # Result
-    r2 += _th("Actual", _G_RESULT)
+    r2 += _th("Status", _G_FEAT)
+    r2 += _th("Actual", _G_FEAT)
 
     return f"<thead><tr>\n{r1}</tr><tr>\n{r2}</tr></thead>\n"
 
@@ -514,18 +553,19 @@ def _td(content: str, color: str = "#111", bold: bool = False, align: str = "cen
 
 def _build_data_row(row: pd.Series, min_edge: float) -> str:
     best = float(row["best_under_edge"])
+    ols_fired = bool(row.get("play_under_ols", False))
+    xgb_fired = bool(row.get("play_under_xgb", False))
+    is_play = ols_fired or xgb_fired
+
     if best >= min_edge:
         bg = "#dcfce7"
         border = "border-left:3px solid #16a34a;"
-    elif best >= min_edge * 0.6:  # near-miss: 3pp when min_edge=5pp
+    elif best >= min_edge * 0.6:
         bg = "#fefce8"
         border = "border-left:3px solid #ca8a04;"
     else:
         bg = "#ffffff"
         border = ""
-
-    ols_fired = bool(row.get("play_under_ols", False))
-    xgb_fired = bool(row.get("play_under_xgb", False))
 
     def _pct(v: float) -> str:
         return f"{v * 100:.1f}%"
@@ -535,48 +575,64 @@ def _build_data_row(row: pd.Series, min_edge: float) -> str:
         txt = f"{sign}{v * 100:.1f}pp"
         return f"<b>{txt}</b>" if bold else txt
 
-    over_odds = int(row["over_odds"]) if not pd.isna(row["over_odds"]) else "NA"
-    under_odds = int(row["under_odds"]) if not pd.isna(row["under_odds"]) else "NA"
-    over_odds_str = f"+{over_odds}" if isinstance(over_odds, int) and over_odds > 0 else str(over_odds)
-    under_odds_str = f"+{under_odds}" if isinstance(under_odds, int) and under_odds > 0 else str(under_odds)
+    over_odds_raw = int(row["over_odds"]) if not pd.isna(row["over_odds"]) else "NA"
+    under_odds_raw = int(row["under_odds"]) if not pd.isna(row["under_odds"]) else "NA"
+    over_odds_str  = f"+{over_odds_raw}" if isinstance(over_odds_raw, int) and over_odds_raw > 0 else str(over_odds_raw)
+    under_odds_str = f"+{under_odds_raw}" if isinstance(under_odds_raw, int) and under_odds_raw > 0 else str(under_odds_raw)
 
-    actual = str(row["REB"]) if "REB" in row.index and not pd.isna(row.get("REB")) else "—"
+    actual = str(int(row["REB"])) if "REB" in row.index and not pd.isna(row.get("REB")) else "—"
+    status = str(row.get("status", ""))
+    game_time = str(row.get("game_time_et", "")) or "—"
 
     cells = f'<tr style="background:{bg};{border}">\n'
+    # Player / Game (5)
     cells += _td(str(row["player_normalized"]), bold=True, align="left")
     cells += _td(str(row["team"]))
     cells += _td(str(row["opponent"]))
-    cells += _td("UNDER", color="#1d4ed8", bold=True)
+    cells += _td(game_time)
     cells += _td(str(row["line"]))
+    # Book (1)
     cells += _td(str(row["bookmaker"]))
+    # American Odds (2)
     cells += _td(over_odds_str)
     cells += _td(under_odds_str)
-    cells += _td(_pct(row["novig_prob_over"]))
-    cells += _td(_pct(row["novig_prob_under"]))
-    # OLS
+    # Implied (3)
+    cells += _td(_pct(row["raw_prob_over"]),  color="#6d28d9")
+    cells += _td(_pct(row["raw_prob_under"]), color="#6d28d9")
+    cells += _td(_pct(row["raw_total"]),      color="#6d28d9")
+    # No-Vig (4)
+    cells += _td(_pct(row["fair_over"]),  color="#047857")
+    cells += _td(_pct(row["fair_under"]), color="#047857")
+    cells += _td("100.0%",                color="#047857")
+    cells += _td(_pct(row["vig"]),        color="#6b7280")
+    # Model OLS (3)
     cells += _td(f"{row['yhat_ols']:.2f}", color="#4338ca")
-    cells += _td(_pct(row["p_over_ols"]), color="#4338ca")
+    cells += _td(_pct(row["p_over_ols"]),  color="#4338ca")
     cells += _td(_pct(row["p_under_ols"]), color="#4338ca")
-    # XGB
+    # Model XGB (3)
     cells += _td(f"{row['yhat_xgb']:.2f}", color="#1d4ed8")
-    cells += _td(_pct(row["p_over_xgb"]), color="#1d4ed8")
+    cells += _td(_pct(row["p_over_xgb"]),  color="#1d4ed8")
     cells += _td(_pct(row["p_under_xgb"]), color="#1d4ed8")
-    # Edge OLS
+    # Edge OLS (2)
     eo_ols = float(row["edge_over_ols"])
     eu_ols = float(row["edge_under_ols"])
-    cells += _td(_pp(eo_ols), color=_edge_color(eo_ols))
+    cells += _td(_pp(eo_ols),              color=_edge_color(eo_ols))
     cells += _td(_pp(eu_ols, bold=ols_fired), color=_edge_color(eu_ols))
-    # Edge XGB
+    # Edge XGB (2)
     eo_xgb = float(row["edge_over_xgb"])
     eu_xgb = float(row["edge_under_xgb"])
-    cells += _td(_pp(eo_xgb), color=_edge_color(eo_xgb))
+    cells += _td(_pp(eo_xgb),              color=_edge_color(eo_xgb))
     cells += _td(_pp(eu_xgb, bold=xgb_fired), color=_edge_color(eu_xgb))
-    # Best under edge
-    cells += _td(_pp(best, bold=ols_fired or xgb_fired), color=_edge_color(best))
-    # Features
+    # Model Inputs: features
     for feat in B_MIN_MAX_FEATS:
         v = row.get(feat)
         cells += _td("NA" if pd.isna(v) else f"{float(v):.2f}")
+    # Status
+    cells += _td(
+        status,
+        color="#16a34a" if is_play else "#6b7280",
+        bold=is_play,
+    )
     # Actual
     cells += _td(actual, bold=True)
     cells += "</tr>\n"
@@ -654,7 +710,7 @@ def build_html_email(
         f'green row = qualifying play (best under edge ≥ {edge_pct}pp)</span>\n'
         f'  <span style="background:#fefce8;padding:2px 6px;border-radius:3px;margin-right:8px;">'
         f'yellow row = near-miss ({near_pct}–{edge_pct}pp, context only)</span>\n'
-        '  &middot; <b>Bold Under Edge</b> = model that fired'
+        '  &middot; <b>Bold edge cell</b> = model that fired'
         ' &middot; green/red on edge cells = positive/negative\n'
         '</div>\n\n'
     )
