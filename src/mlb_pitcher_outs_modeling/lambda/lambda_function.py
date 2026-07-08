@@ -88,8 +88,7 @@ def lambda_handler(event, context):
     try:
         if mode == "spine_update":
             out = _run_capture(
-                [sys.executable, str(scripts_dir / "build_spine.py"),
-                 "--seasons", "2024", "2025", "2026"],
+                [sys.executable, str(scripts_dir / "build_spine.py")],
                 cwd=root,
             )
             step_results.append({"step": "spine_update", "status": "ok"})
