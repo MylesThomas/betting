@@ -564,12 +564,16 @@ def main():
 
     if args.output:
         import json as _json
+        # plays-only stats for the combined-email subject line
+        play_wins   = int((settled_rows["outcome"] == "win").sum())   if not settled_rows.empty else 0
+        play_losses = int((settled_rows["outcome"] == "loss").sum())  if not settled_rows.empty else 0
+        play_units  = float(settled_rows["pnl"].dropna().sum())       if not settled_rows.empty else 0.0
         Path(args.output).write_text(_json.dumps({
             "html_body":       html_body,
             "subject":         subject,
-            "yesterday_wins":  int(wins),
-            "yesterday_losses":int(losses),
-            "yesterday_units": float(units),
+            "yesterday_wins":  play_wins,
+            "yesterday_losses":play_losses,
+            "yesterday_units": play_units,
             "season_wins":     season_wins,
             "season_losses":   season_losses,
             "season_units":    season_units,
