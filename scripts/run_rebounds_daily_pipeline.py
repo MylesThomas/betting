@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-train", action="store_true", help="Train fresh models for this run before scoring.")
     parser.add_argument("--models-dir", type=str, default="", help="Existing local models dir when train is skipped.")
     parser.add_argument("--notify-which", type=str, default="both", choices=("ols", "xgb", "both"))
+    parser.add_argument("--no-notify", action="store_true", help="Skip plays notification send (caller handles unified email).")
     parser.add_argument("--skip-audit", action="store_true", help="Skip audit-list checks in feature universe build.")
     parser.add_argument("--input-universe-mode", type=str, choices=("append", "replace"), default="append", help="Mode for input universe build.")
     return parser.parse_args()
@@ -308,7 +309,7 @@ def main() -> None:
     run_cmd(score_cmd, repo_root)
 
     # --- notify ---
-    if cfg["notify_enabled"]:
+    if cfg["notify_enabled"] and not args.no_notify:
         run_cmd(
             [
                 sys.executable,

@@ -85,6 +85,18 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Path to compile_rebounds_strategy_records.py output CSV for season stats panels.",
     )
+    p.add_argument(
+        "--yesterday-rollup",
+        type=str,
+        default="",
+        help="Path or s3:// URI to yesterday settlement rollup CSV for yesterday's results section.",
+    )
+    p.add_argument(
+        "--output-html",
+        type=str,
+        default="",
+        help="Write HTML body to this local path instead of sending via SNS.",
+    )
     p.add_argument("--topic-arn", type=str, default="", help="SNS topic ARN (or set SNS_TOPIC_ARN).")
     p.add_argument("--subject", type=str, default="NBA rebounds plays")
     return p.parse_args()
@@ -248,6 +260,22 @@ def _compute_display_cols(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _read_csv_any(path: str) -> pd.DataFrame | None:
+    """Read a CSV from a local path or s3:// URI. Returns None on any error."""
+    if not path.strip():
+        return None
+    try:
+        if path.startswith("s3://"):
+            import boto3
+            from io import BytesIO
+            bucket, _, key = path[5:].partition("/")
+            body = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
+            return pd.read_csv(BytesIO(body))
+        return pd.read_csv(path)
+    except Exception:
+        return None
+
+
 def _load_records(records_csv: str) -> dict:
     """
     Parse compile_rebounds_strategy_records CSV into season stats per model.
@@ -258,7 +286,9 @@ def _load_records(records_csv: str) -> dict:
     if not records_csv.strip():
         return {}
     try:
-        rec = pd.read_csv(records_csv)
+        rec = _read_csv_any(records_csv)
+        if rec is None:
+            return {}
     except Exception:
         return {}
 
@@ -280,6 +310,78 @@ def _load_records(records_csv: str) -> dict:
         "xgb": _agg(["both", "xgb"]),
         "both": _agg(["both"]),
     }
+
+
+def _build_yesterday_section(yesterday_rollup_csv: str) -> str:
+    """Build an HTML 'Yesterday's Results' section from a settlement rollup CSV."""
+    rec = _read_csv_any(yesterday_rollup_csv)
+    if rec is None or len(rec) == 0:
+        return (
+            '<div style="margin:16px 16px 0;padding:12px 16px;background:#f9fafb;'
+            'border:1px solid #e5e7eb;border-radius:6px;">\n'
+            '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Yesterday\'s Results</div>\n'
+            '<div style="font-size:12px;color:#6b7280;">No settled results available.</div>\n'
+            '</div>\n'
+        )
+
+    agg = (
+        rec.groupby("strategy_bucket", as_index=False)
+        .agg(
+            n_bets=("n_bets", "sum"),
+            n_win=("n_win", "sum"),
+            n_loss=("n_loss", "sum"),
+            n_push=("n_push", "sum"),
+            n_unsettled=("n_unsettled", "sum"),
+            pnl_units=("pnl_units", "sum"),
+        )
+        .sort_values("strategy_bucket")
+        .reset_index(drop=True)
+    )
+
+    th_style = "padding:5px 10px;font-size:10px;text-align:center;background:#1e293b;color:#fff;"
+    td_style = "padding:5px 10px;font-size:11px;text-align:center;border-bottom:1px solid #f1f5f9;"
+
+    rows_html = ""
+    for _, row in agg.iterrows():
+        bucket = str(row["strategy_bucket"]).upper()
+        wlp = f"{int(row['n_win'])}-{int(row['n_loss'])}-{int(row['n_push'])}"
+        n_settled = int(row["n_win"]) + int(row["n_loss"]) + int(row["n_push"])
+        pnl = float(row["pnl_units"])
+        pnl_str = f"+{pnl:.2f}u" if pnl >= 0 else f"{pnl:.2f}u"
+        pnl_color = "#16a34a" if pnl >= 0 else "#dc2626"
+        hit = int(row["n_win"]) / n_settled if n_settled > 0 else float("nan")
+        roi = pnl / n_settled if n_settled > 0 else float("nan")
+        hit_str = f"{hit * 100:.1f}%" if not np.isnan(hit) else "—"
+        roi_str = (f"+{roi * 100:.1f}%" if roi >= 0 else f"{roi * 100:.1f}%") if not np.isnan(roi) else "—"
+        roi_color = "#16a34a" if (not np.isnan(roi) and roi >= 0) else "#dc2626"
+        rows_html += (
+            f'<tr>'
+            f'<td style="{td_style}font-weight:600;">{bucket}</td>'
+            f'<td style="{td_style}">{int(row["n_bets"])}</td>'
+            f'<td style="{td_style}">{wlp}</td>'
+            f'<td style="{td_style};color:{pnl_color};font-weight:600;">{pnl_str}</td>'
+            f'<td style="{td_style}">{hit_str}</td>'
+            f'<td style="{td_style};color:{roi_color};font-weight:600;">{roi_str}</td>'
+            f'</tr>\n'
+        )
+
+    return (
+        '<div style="margin:16px 16px 0;padding:12px 16px;background:#f9fafb;'
+        'border:1px solid #e5e7eb;border-radius:6px;">\n'
+        '<div style="font-size:13px;font-weight:600;margin-bottom:10px;">Yesterday\'s Results</div>\n'
+        f'<table style="border-collapse:collapse;width:auto;">\n'
+        f'<thead><tr>'
+        f'<th style="{th_style}text-align:left;">Strategy</th>'
+        f'<th style="{th_style}">Bets</th>'
+        f'<th style="{th_style}">W-L-P</th>'
+        f'<th style="{th_style}">PnL</th>'
+        f'<th style="{th_style}">Hit Rate</th>'
+        f'<th style="{th_style}">ROI</th>'
+        f'</tr></thead>\n'
+        f'<tbody>{rows_html}</tbody>\n'
+        f'</table>\n'
+        '</div>\n'
+    )
 
 
 def _panel(label: str, value: str, large: bool = False, green: bool = False) -> str:
@@ -509,7 +611,13 @@ def _game_label(game_rows: pd.DataFrame) -> str:
     return f"{game_time}{teams_str} · {qual_str}"
 
 
-def build_html_email(df: pd.DataFrame, which: str, records_csv: str, slate_date: str = "") -> str:
+def build_html_email(
+    df: pd.DataFrame,
+    which: str,
+    records_csv: str,
+    slate_date: str = "",
+    yesterday_rollup_csv: str = "",
+) -> str:
     df = _compute_display_cols(df)
 
     records = _load_records(records_csv)
@@ -577,6 +685,10 @@ def build_html_email(df: pd.DataFrame, which: str, records_csv: str, slate_date:
             html += _build_data_row(row, min_edge)
         html += "</tbody>\n</table>\n</div>\n\n"
 
+    if yesterday_rollup_csv.strip():
+        html += _build_yesterday_section(yesterday_rollup_csv)
+        html += "\n"
+
     html += "</div>\n"
     return html
 
@@ -588,10 +700,20 @@ def main() -> None:
     df = read_parquet_any(args.scored)
 
     if args.format == "html":
-        body = build_html_email(df, args.which, args.records_csv)
+        body = build_html_email(
+            df,
+            args.which,
+            args.records_csv,
+            yesterday_rollup_csv=args.yesterday_rollup,
+        )
     else:
         plays = build_plays_table(df, args.which)
         body = build_text_body(plays, args.which)
+
+    if args.output_html.strip():
+        Path(args.output_html).write_text(body, encoding="utf-8")
+        print(f"html_written | path={args.output_html}")
+        return
 
     topic = args.topic_arn.strip() or os.environ.get("SNS_TOPIC_ARN", "").strip()
     if not topic:

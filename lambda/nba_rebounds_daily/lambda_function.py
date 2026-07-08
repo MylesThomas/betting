@@ -23,6 +23,7 @@ from __future__ import annotations
 import html
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -525,6 +526,102 @@ def _publish_combined_settlement_sns(
     return last_message_id or ses_message_id
 
 
+def _run_settle(
+    root: Path,
+    settle_bucket: str,
+    settle_prefix: str,
+    start_date_et,
+    end_date_et,
+    rollup_s3_uri: str,
+    settle_max_unmatched_bet_rows: int,
+) -> str:
+    cmd = [
+        sys.executable,
+        "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
+        "--bucket", settle_bucket,
+        "--runs-prefix", settle_prefix,
+        "--start-date", start_date_et.isoformat(),
+        "--end-date", end_date_et.isoformat(),
+        "--latest-only",
+        "--allow-empty",
+        "--overwrite",
+        "--max-unmatched-bet-rows", str(settle_max_unmatched_bet_rows),
+        "--rollup-s3-uri", rollup_s3_uri,
+    ]
+    return _run_capture(cmd, root)
+
+
+def _parse_s3_run_prefix(pipeline_stdout: str) -> str | None:
+    """Extract s3_run_prefix from pipeline stdout. Returns None if not found."""
+    m = re.search(r"s3_run_prefix=(\S+)", pipeline_stdout)
+    return m.group(1) if m else None
+
+
+def _send_unified_email(
+    root: Path,
+    scored_uri: str | None,
+    yesterday_rollup_uri: str,
+    all_time_rollup_uri: str,
+    today_et: str,
+    ses_source: str,
+    ses_to_list: list[str],
+    n_qualifying: int = 0,
+) -> str:
+    """Build and send the unified daily plays + results email via SES."""
+    mono = "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
+    tmp_html = f"/tmp/rebounds_plays_email_{today_et}.html"
+
+    if scored_uri:
+        # Build the rich plays HTML via subprocess (includes yesterday + all-time sections)
+        notify_cmd = [
+            sys.executable,
+            "src/nba_rebounds_modeling/00_research/scripts/prod_notify_rebounds_sns.py",
+            "--scored", scored_uri,
+            "--which", "both",
+            "--format", "html",
+            "--records-csv", all_time_rollup_uri,
+            "--yesterday-rollup", yesterday_rollup_uri,
+            "--output-html", tmp_html,
+        ]
+        _run(notify_cmd, root)
+        plays_html = Path(tmp_html).read_text(encoding="utf-8")
+    else:
+        # No games today — use existing settlement text formatters wrapped in pre blocks
+        yesterday_rollup = _read_csv_s3(yesterday_rollup_uri)
+        all_time_rollup = _read_csv_s3(all_time_rollup_uri)
+        yesterday_lines = _format_window_section("yesterday", yesterday_rollup)
+        all_time_lines = _format_window_section("all-time", all_time_rollup)
+        plays_html = (
+            f'<p style="font-size:13px;color:#374151;margin:16px;">'
+            f'No NBA games on the slate today ({today_et}) — no plays generated.</p>\n'
+            + _html_pre_block(yesterday_lines, mono)
+            + _html_pre_block(all_time_lines, mono)
+        )
+
+    full_html = (
+        "<!DOCTYPE html><html lang='en'><head>"
+        "<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "</head>"
+        f"<body style='margin:0;padding:16px;background:#f4f4f5;font-family:Arial,sans-serif;'>"
+        f"{plays_html}"
+        "</body></html>"
+    )
+
+    plays_word = f"{n_qualifying} play{'s' if n_qualifying != 1 else ''}"
+    subject = f"NBA Rebounds · {today_et} · {plays_word}"
+    text_body = f"NBA rebounds daily | {today_et} | {plays_word}"
+
+    msg_id = _send_settlement_ses_email(ses_source, ses_to_list, subject, text_body, full_html)
+    print(
+        "sent_unified_email_ses",
+        f"message_id={msg_id}",
+        f"to={ses_to_list}",
+        f"n_qualifying={n_qualifying}",
+        sep=" | ",
+    )
+    return msg_id
+
+
 def lambda_handler(event, context):
     # DuckDB httpfs expects a writable home directory in Lambda.
     os.environ.setdefault("HOME", "/tmp")
@@ -548,95 +645,91 @@ def lambda_handler(event, context):
         settle_all_time_start_date_et = datetime(1900, 1, 1).date()
     else:
         settle_all_time_start_date_et = settle_end_date_et - timedelta(days=settle_all_time_days - 1)
-    sns_topic_arn = os.environ.get("SNS_TOPIC_ARN", "").strip()
+    ses_source = os.environ.get("SETTLEMENT_SES_SOURCE", "").strip()
+    ses_to_raw = os.environ.get("SETTLEMENT_SES_TO", "").strip()
+    ses_to_list = [a.strip() for a in ses_to_raw.split(",") if a.strip()] if ses_to_raw else []
     mode = _resolve_mode(event if isinstance(event, dict) else None)
 
     step_results = []
+    scored_uri: str | None = None
+    n_qualifying = 0
     try:
-        if mode in {"pipeline", "both"}:
-            pipeline_cmd = [
-                sys.executable,
-                "src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py",
-                "--config",
-                config_path,
-                "--slate-date",
-                today_et,
-            ]
-            _run(pipeline_cmd, root)
-            step_results.append({"step": "pipeline", "status": "ok"})
-
+        # ── settlement ────────────────────────────────────────────────────────
+        # Always settle before scoring so results are ready for the unified email.
+        yesterday_rollup_uri = ""
+        all_time_rollup_uri = ""
         if mode in {"settlement", "both"}:
             stamp = datetime.now(ET).strftime("%Y%m%dT%H%M%S")
             base_rollup_prefix = f"{settle_prefix.rstrip('/')}/_rollups/{today_et}/{stamp}"
             yesterday_rollup_uri = f"s3://{settle_bucket}/{base_rollup_prefix}/yesterday.csv"
             all_time_rollup_uri = f"s3://{settle_bucket}/{base_rollup_prefix}/all_time.csv"
 
-            settle_yesterday_cmd = [
-                sys.executable,
-                "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
-                "--bucket",
-                settle_bucket,
-                "--runs-prefix",
-                settle_prefix,
-                "--start-date",
-                settle_start_date_et.isoformat(),
-                "--end-date",
-                settle_end_date_et.isoformat(),
-                "--latest-only",
-                "--allow-empty",
-                "--overwrite",
-                "--max-unmatched-bet-rows",
-                str(settle_max_unmatched_bet_rows),
-                "--rollup-s3-uri",
-                yesterday_rollup_uri,
-            ]
-            yesterday_out = _run_capture(settle_yesterday_cmd, root)
+            yesterday_out = _run_settle(
+                root, settle_bucket, settle_prefix,
+                settle_start_date_et, settle_end_date_et,
+                yesterday_rollup_uri, settle_max_unmatched_bet_rows,
+            )
+            all_time_out = _run_settle(
+                root, settle_bucket, settle_prefix,
+                settle_all_time_start_date_et, settle_end_date_et,
+                all_time_rollup_uri, settle_max_unmatched_bet_rows,
+            )
 
-            settle_all_time_cmd = [
-                sys.executable,
-                "src/nba_rebounds_modeling/00_research/scripts/settle_rebounds_runs.py",
-                "--bucket",
-                settle_bucket,
-                "--runs-prefix",
-                settle_prefix,
-                "--start-date",
-                settle_all_time_start_date_et.isoformat(),
-                "--end-date",
-                settle_end_date_et.isoformat(),
-                "--latest-only",
-                "--allow-empty",
-                "--overwrite",
-                "--max-unmatched-bet-rows",
-                str(settle_max_unmatched_bet_rows),
-                "--rollup-s3-uri",
-                all_time_rollup_uri,
-            ]
-            all_time_out = _run_capture(settle_all_time_cmd, root)
+            warnings = sorted(set(
+                line for line in (yesterday_out + "\n" + all_time_out).splitlines()
+                if "status=partial" in line and "settlement_guardrail" in line
+            ))
+            if warnings:
+                print("settlement_warnings", "\n".join(warnings), sep=" | ")
 
-            warnings = []
-            for line in (yesterday_out + "\n" + all_time_out).splitlines():
-                if "status=partial" in line and "settlement_guardrail" in line:
-                    warnings.append(line)
-            warnings = sorted(list(set(warnings)))
-
-            if sns_topic_arn.strip() or (
-                os.environ.get("SETTLEMENT_SES_SOURCE", "").strip()
-                and os.environ.get("SETTLEMENT_SES_TO", "").strip()
-            ):
-                msg_id = _publish_combined_settlement_sns(
-                    sns_topic_arn,
-                    settle_end_date_et,
-                    yesterday_rollup_uri,
-                    all_time_rollup_uri,
-                    warnings,
-                )
-                print(
-                    "published_settlement_notifications",
-                    f"topic_arn={sns_topic_arn or '(none)'}",
-                    f"message_id={msg_id or '(none)'}",
-                    sep=" | ",
-                )
             step_results.append({"step": "settlement", "status": "ok"})
+
+        # ── scoring pipeline ──────────────────────────────────────────────────
+        if mode in {"pipeline", "both"}:
+            pipeline_cmd = [
+                sys.executable,
+                "src/nba_rebounds_modeling/00_research/scripts/run_rebounds_daily_pipeline.py",
+                "--config", config_path,
+                "--slate-date", today_et,
+                "--no-notify",
+            ]
+            pipeline_out = _run_capture(pipeline_cmd, root)
+            print(pipeline_out)
+
+            if "no_games_for_slate" not in pipeline_out:
+                s3_run_prefix = _parse_s3_run_prefix(pipeline_out)
+                if s3_run_prefix:
+                    scored_uri = f"{s3_run_prefix}/rebounds_scored_{today_et}.parquet"
+
+            step_results.append({"step": "pipeline", "status": "ok"})
+
+        # ── 3. Unified email ──────────────────────────────────────────────────
+        if mode == "both":
+            if scored_uri:
+                try:
+                    bucket, key = _parse_s3_uri(scored_uri)
+                    body_bytes = boto3.client("s3").get_object(Bucket=bucket, Key=key)["Body"].read()
+                    scored_df = pd.read_parquet(BytesIO(body_bytes))
+                    n_qualifying = int(
+                        (scored_df["play_under_ols"] | scored_df["play_under_xgb"]).sum()
+                    )
+                except Exception as exc:
+                    print(f"n_qualifying_read_failed | {exc}")
+
+            if ses_source and ses_to_list:
+                _send_unified_email(
+                    root=root,
+                    scored_uri=scored_uri,
+                    yesterday_rollup_uri=yesterday_rollup_uri,
+                    all_time_rollup_uri=all_time_rollup_uri,
+                    today_et=today_et,
+                    ses_source=ses_source,
+                    ses_to_list=ses_to_list,
+                    n_qualifying=n_qualifying,
+                )
+                step_results.append({"step": "unified_email", "status": "ok"})
+            else:
+                print("unified_email_skipped | reason=SETTLEMENT_SES_SOURCE / SETTLEMENT_SES_TO not set")
 
         return {
             "statusCode": 200,
@@ -650,6 +743,7 @@ def lambda_handler(event, context):
                     "settle_end_date_et": settle_end_date_et.isoformat(),
                     "settle_window_days": settle_window_days,
                     "settle_all_time_days": settle_all_time_days,
+                    "n_qualifying": n_qualifying,
                     "steps": step_results,
                 }
             ),
