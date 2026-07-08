@@ -255,6 +255,8 @@ def _compute_display_cols(df: pd.DataFrame) -> pd.DataFrame:
     out["p_over_xgb"]  = 1.0 - out["p_under_xgb"]
     out["edge_over_ols"]  = out["p_over_ols"]  - p_raw_o
     out["edge_over_xgb"]  = out["p_over_xgb"]  - p_raw_o
+    out["delta_ols"] = out["yhat_ols"] - out["line"]
+    out["delta_xgb"] = out["yhat_xgb"] - out["line"]
     out["best_under_edge"] = out[["edge_under_ols", "edge_under_xgb"]].max(axis=1)
 
     # Status replaces the old Direction column
@@ -484,8 +486,8 @@ def _build_thead() -> str:
     r1 += _th("American Odds",        _G_ODDS,    colspan=2)
     r1 += _th("Implied",              _G_IMPLIED, colspan=3)
     r1 += _th("No-Vig",               _G_NOVIG,   colspan=4)
-    r1 += _th("Model — OLS",          _G_OLS,     colspan=3)
-    r1 += _th("Model — XGBoost",      _G_XGB,     colspan=3)
+    r1 += _th("Model — OLS",          _G_OLS,     colspan=4)
+    r1 += _th("Model — XGBoost",      _G_XGB,     colspan=4)
     r1 += _th("Edge — OLS",           _G_EDGE_O,  colspan=2)
     r1 += _th("Edge — XGBoost",       _G_EDGE_X,  colspan=2)
     r1 += _th("Model Inputs (20260403)", _G_FEAT, colspan=len(B_MIN_MAX_FEATS) + 2)
@@ -512,12 +514,14 @@ def _build_thead() -> str:
     r2 += _th("Fair Under", _G_NOVIG)
     r2 += _th("Fair Total", _G_NOVIG)
     r2 += _th("Vig",        _G_NOVIG)
-    # Model OLS (3)
+    # Model OLS (4)
     r2 += _th("Prediction<br>(yhat)", _G_OLS)
+    r2 += _th("Delta<br>(yhat−line)", _G_OLS)
     r2 += _th("Pred Over",            _G_OLS)
     r2 += _th("Pred Under",           _G_OLS)
-    # Model XGB (3)
+    # Model XGB (4)
     r2 += _th("Prediction<br>(yhat)", _G_XGB)
+    r2 += _th("Delta<br>(yhat−line)", _G_XGB)
     r2 += _th("Pred Over",            _G_XGB)
     r2 += _th("Pred Under",           _G_XGB)
     # Edge OLS (2)
@@ -605,12 +609,18 @@ def _build_data_row(row: pd.Series, min_edge: float) -> str:
     cells += _td(_pct(row["fair_under"]), color="#047857")
     cells += _td("100.0%",                color="#047857")
     cells += _td(_pct(row["vig"]),        color="#6b7280")
-    # Model OLS (3)
+    # Model OLS (4)
+    d_ols = float(row["delta_ols"])
+    d_ols_str = f"+{d_ols:.2f}" if d_ols >= 0 else f"{d_ols:.2f}"
     cells += _td(f"{row['yhat_ols']:.2f}", color="#4338ca")
+    cells += _td(d_ols_str, color=_edge_color(d_ols), bold=False)
     cells += _td(_pct(row["p_over_ols"]),  color="#4338ca")
     cells += _td(_pct(row["p_under_ols"]), color="#4338ca")
-    # Model XGB (3)
+    # Model XGB (4)
+    d_xgb = float(row["delta_xgb"])
+    d_xgb_str = f"+{d_xgb:.2f}" if d_xgb >= 0 else f"{d_xgb:.2f}"
     cells += _td(f"{row['yhat_xgb']:.2f}", color="#1d4ed8")
+    cells += _td(d_xgb_str, color=_edge_color(d_xgb), bold=False)
     cells += _td(_pct(row["p_over_xgb"]),  color="#1d4ed8")
     cells += _td(_pct(row["p_under_xgb"]), color="#1d4ed8")
     # Edge OLS (2)
