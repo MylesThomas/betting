@@ -187,7 +187,7 @@ def main() -> None:
     run_cmd(feat_universe_cmd, repo_root)
 
     sns_healthcheck_message_id = ""
-    if cfg["notify_enabled"]:
+    if cfg["notify_enabled"] and not args.no_notify:
         sns_healthcheck_message_id = publish_sns_healthcheck(str(cfg["sns_topic_arn"]), run_id, slate_date)
         print(f"sns_healthcheck\n  topic_arn={cfg['sns_topic_arn']}\n  message_id={sns_healthcheck_message_id}")
 
