@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NBA Rebounds — LLM Feature Experiments</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 24px; color: #1f2937; line-height: 1.6; }
+  h1 { font-size: 1.8em; color: #111827; border-bottom: 3px solid #1d2d44; padding-bottom: 10px; }
+  h2 { font-size: 1.3em; color: #1d2d44; margin-top: 40px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
+  h3 { font-size: 1.1em; color: #374151; margin-top: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; }
+  th { background: #1d2d44; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #f3f4f6; }
+  tr:nth-child(even) { background: #f9fafb; }
+  .pass  { color: #065f46; font-weight: 700; }
+  .fail  { color: #991b1b; font-weight: 700; }
+  .warn  { color: #92400e; font-weight: 700; }
+  .flag  { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; }
+  .good  { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; }
+  .na    { color: #9ca3af; font-style: italic; }
+  .config-box { background: #f0f4ff; border-left: 4px solid #1d2d44; padding: 16px 20px; margin: 16px 0; border-radius: 4px; font-size: 13px; }
+  .config-box dt { font-weight: 700; color: #374151; display: inline; }
+  .config-box dd { display: inline; margin: 0 0 0 8px; color: #1f2937; }
+  .config-box p  { margin: 4px 0; }
+  .verdict-box { padding: 16px 20px; margin: 20px 0; border-radius: 4px; font-size: 13px; }
+  .verdict-pass { background: #d1fae5; border-left: 4px solid #059669; }
+  .verdict-fail { background: #fee2e2; border-left: 4px solid #dc2626; }
+  .verdict-warn { background: #fef3c7; border-left: 4px solid #d97706; }
+  section { margin-top: 48px; padding-top: 16px; border-top: 2px solid #e5e7eb; }
+  .timestamp { font-size: 11px; color: #9ca3af; font-style: italic; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .highlight { background: #fef9c3; }
+</style>
+</head>
+<body>
+
+<h1>NBA Rebounds — LLM Feature Experiments</h1>
+<p class="timestamp">Started: 2026-07-10</p>
+<p>Running log of experiments using LLM-generated features to improve on the production rebounds strategy:
+OLS + XGB ensemble, UNDER only, edge &gt;5pp, all lines, all books — OOS result:
+<strong>+986u OLS / +940u XGB across 3 seasons (2023-24 → 2025-26)</strong>.
+Reference: <code>knowledge-base/raw/20260705-nba-rebounds.html</code>.</p>
+
+<!-- ================================================================ -->
+<section id="exp1">
+<h2>Experiment 1 — Recognition Tier as a Bet Filter (2026-07-10)</h2>
+
+<h3>Hypothesis</h3>
+<p>Markets anchor on player identity: books set lines for superstars based on heavy public betting action,
+while fringe/obscure players receive less sharp attention and softer lines. If true, the model's edge
+should be higher and more reliable for lower-recognition players.</p>
+<p>Two-step test: (1) check raw under hit rates by tier — does any tier systematically beat the population
+baseline without the model? (2) run the full OLS backtest filtered to each tier — does restricting to a
+tier improve ROI or consistency vs betting all players?</p>
+
+<h3>Setup</h3>
+<div class="config-box">
+  <p><dt>Tier generation:</dt> <dd>Claude Haiku (<code>claude-haiku-4-5</code>), 499 unique players, batches of 50</dd></p>
+  <p><dt>Script:</dt> <dd><code>src/nba_rebounds_modeling/00_research/scripts/20260706_generate_player_tiers.py</code></dd></p>
+  <p><dt>Output:</dt> <dd><code>~/Downloads/tmp/rebounds_player_tiers.parquet</code> (499 rows)</dd></p>
+  <p><dt>Tiers:</dt> <dd>superstar / known_starter / fringe / unknown</dd></p>
+  <p><dt>Tier distribution:</dt> <dd>fringe 209, unknown 135, known_starter 120, superstar 35</dd></p>
+  <p><dt>Backtest params:</dt> <dd>OLS only, sigma=5, shrink=0, edge&gt;5pp, UNDER only — production params</dd></p>
+  <p><dt>Backtest script:</dt> <dd><code>src/nba_rebounds_modeling/00_research/scripts/20260710_tier_filter_backtest.py</code></dd></p>
+  <p><dt>Data:</dt> <dd><code>rebounds_features.parquet</code> (37,866 rows) + <code>rebounds_props.parquet</code> (276,876 rows)</dd></p>
+</div>
+
+<h3>Step 1 — Raw Hit Rates by Tier</h3>
+<p>Validation script: <code>20260706_validate_tier_signal.py</code>. Population under hit rate (baseline): <strong>51.89%</strong> across 276,876 rows (excl. push). Baseline diff = tier rate − 51.89%, in pp.</p>
+
+<table>
+  <tr><th>Tier</th><th>n_bets</th><th>Hit Rate (UNDER)</th><th>Baseline Diff (pp)</th><th>Signal?</th></tr>
+  <tr><td>superstar</td>    <td>50,912</td><td>51.72%</td><td>−0.17</td><td class="na">None</td></tr>
+  <tr><td>known_starter</td><td>119,247</td><td>51.80%</td><td>−0.08</td><td class="na">None</td></tr>
+  <tr><td class="highlight">fringe</td><td class="highlight">80,949</td><td class="highlight">51.86%</td><td class="highlight">−0.03</td><td class="na">None</td></tr>
+  <tr><td>unknown</td>      <td>25,768</td><td>52.68%</td><td>+0.80</td><td class="na">None</td></tr>
+</table>
+<p>All four tiers within ±1pp of the population baseline. <strong>No tier has standalone predictive power</strong> for raw outcomes — the market prices all recognition levels similarly on average.</p>
+
+<p>The 57% under hit rate visible in the raw data is driven entirely by odds direction, not tier:</p>
+<table>
+  <tr><th>Tier</th><th>Odds Dir</th><th>n_bets</th><th>Hit Rate (UNDER)</th><th>Baseline Diff (pp)</th></tr>
+  <tr><td>superstar</td>    <td>fav</td> <td>30,204</td><td>56.94%</td><td>+5.06</td></tr>
+  <tr><td>superstar</td>    <td>dog</td> <td>10,251</td><td>40.64%</td><td>−11.25</td></tr>
+  <tr><td>known_starter</td><td>fav</td> <td>71,248</td><td>55.98%</td><td>+4.10</td></tr>
+  <tr><td>known_starter</td><td>dog</td> <td>23,883</td><td>41.93%</td><td>−9.96</td></tr>
+  <tr><td>fringe</td>       <td>fav</td> <td>48,450</td><td>56.51%</td><td>+4.63</td></tr>
+  <tr><td>fringe</td>       <td>dog</td> <td>16,812</td><td>42.08%</td><td>−9.80</td></tr>
+  <tr><td>unknown</td>      <td>fav</td> <td>15,751</td><td>57.24%</td><td>+5.36</td></tr>
+  <tr><td>unknown</td>      <td>dog</td> <td>5,458</td> <td>42.18%</td><td>−9.71</td></tr>
+</table>
+<p>Within each odds bucket, all tiers land within ~1.3pp of each other. The fav/dog spread (~15pp) is the existing model's exploitable signal — already captured by the edge calculation.</p>
+
+<h3>Step 2 — OLS Backtest Filtered by Tier</h3>
+<p>Production OLS model trained on leave-one-season-out, scored per-book, UNDER only, edge &gt;5pp.
+Results per test season:</p>
+
+<table>
+  <tr><th>Test Season</th><th>Tier Filter</th><th>n_bets</th><th>PnL (u)</th><th>ROI</th><th>Hit Rate</th></tr>
+  <tr><td rowspan="5">2023-24</td><td>all</td>          <td>3,962</td><td>+226.6</td><td>+5.72%</td><td>61.4%</td></tr>
+  <tr class="highlight"><td>fringe</td>                 <td>876</td>  <td>+168.1</td><td class="pass">+19.18%</td><td>67.0%</td></tr>
+  <tr><td>known_starter</td>                            <td>1,885</td><td>+87.9</td> <td>+4.66%</td><td>61.6%</td></tr>
+  <tr><td>unknown</td>                                  <td>94</td>   <td>−3.3</td>  <td class="fail">−3.46%</td><td>50.0%</td></tr>
+  <tr><td>superstar</td>                                <td>1,107</td><td>−26.1</td> <td class="fail">−2.36%</td><td>57.6%</td></tr>
+
+  <tr><td rowspan="5">2024-25</td><td>all</td>          <td>2,605</td><td>−23.4</td> <td class="fail">−0.90%</td><td>55.1%</td></tr>
+  <tr><td>superstar</td>                                <td>442</td>  <td>+36.1</td> <td class="pass">+8.17%</td><td>61.8%</td></tr>
+  <tr><td>known_starter</td>                            <td>1,154</td><td>+5.7</td>  <td>+0.49%</td><td>56.2%</td></tr>
+  <tr><td>fringe</td>                                   <td>759</td>  <td>−55.9</td> <td class="fail">−7.36%</td><td>50.7%</td></tr>
+  <tr><td>unknown</td>                                  <td>250</td>  <td>−9.3</td>  <td class="fail">−3.71%</td><td>51.6%</td></tr>
+
+  <tr><td rowspan="5">2025-26</td><td>all</td>          <td>4,848</td><td>+362.2</td><td>+7.47%</td><td>65.1%</td></tr>
+  <tr><td>unknown</td>                                  <td>1,040</td><td>+101.4</td><td class="pass">+9.75%</td><td>64.5%</td></tr>
+  <tr class="highlight"><td>fringe</td><td>1,502</td><td>+138.3</td><td class="pass">+9.21%</td><td>66.1%</td></tr>
+  <tr><td>known_starter</td>                            <td>1,605</td><td>+126.2</td><td>+7.86%</td><td>66.6%</td></tr>
+  <tr><td>superstar</td>                                <td>701</td>  <td>−3.6</td>  <td class="fail">−0.52%</td><td>60.2%</td></tr>
+</table>
+
+<h3>Aggregate — All 3 Seasons</h3>
+<table>
+  <tr><th>Tier Filter</th><th>n_bets</th><th>PnL (u)</th><th>ROI</th><th>Seasons Positive</th><th>vs Baseline</th></tr>
+  <tr><td>all (baseline)</td>    <td>11,415</td><td>+565u</td><td>+4.95%</td><td>2 / 3</td><td>—</td></tr>
+  <tr class="highlight"><td><strong>fringe</strong></td><td>3,137</td><td><strong>+250u</strong></td><td class="pass"><strong>+7.98%</strong></td><td>2 / 3</td><td class="pass">+3.03pp ROI</td></tr>
+  <tr><td>known_starter</td>     <td>4,644</td><td>+220u</td><td>+4.73%</td><td class="pass"><strong>3 / 3</strong></td><td class="warn">−0.22pp ROI</td></tr>
+  <tr><td>unknown</td>           <td>1,384</td><td>+89u</td> <td>+6.42%</td><td>1 / 3</td><td class="warn">+1.47pp ROI, low vol</td></tr>
+  <tr><td>superstar</td>         <td>2,250</td><td>+6u</td>  <td class="fail">+0.28%</td><td>1 / 3</td><td class="fail">−4.67pp ROI</td></tr>
+</table>
+
+<h3>Findings</h3>
+<ul>
+  <li><strong>Superstar = dead weight.</strong> 2,250 bets across 3 seasons, only +6u (+0.28% ROI), positive in just 1 of 3. The model has no edge on superstars — likely because books price them efficiently given high public betting volume.</li>
+  <li><strong>Fringe leads in ROI (+7.98%)</strong> but is inconsistent: blowout in 2023-24 (+19%) offset by a bad 2024-25 (−7%). Only 2/3 positive seasons.</li>
+  <li><strong>Known_starter is the most consistent</strong>: 3/3 positive seasons, adequate volume (4,644 bets), but ROI barely below the all-tier baseline.</li>
+  <li><strong>Excluding superstars</strong> would improve the all-tier strategy: n_bets drops from 11,415 → 9,165, PnL stays roughly the same (+559u), ROI lifts from 4.95% → ~6.1%.</li>
+</ul>
+
+<div class="verdict-box verdict-warn">
+  <strong>Verdict: Weak signal at tier level.</strong> No single tier dominates consistently. The clearest finding is that <strong>superstar bets should be excluded</strong> — +6u / +0.28% ROI across 3 seasons while consuming 20% of bet volume. Grid search below confirms this is robust.
+</div>
+
+<h3>Step 3 — Full Grid Search: all vs non_superstar</h3>
+<p>Script: <code>src/nba_rebounds_modeling/00_research/scripts/20260710_tier_grid_search.py</code>.
+Sweep: σ ∈ {5,10,20} × shrink ∈ {0, 0.25, 0.50, 0.75} × min_edge ∈ {0.01, 0.05, 0.10} × side_policy ∈ {under_only, over_only, both}.
+36 unique under_only param combos evaluated across all 3 OOS seasons.</p>
+
+<h4>Production params (σ=5, shrink=0, edge&gt;5pp, under_only)</h4>
+<table>
+  <tr><th>Tier Filter</th><th>n_bets</th><th>PnL (u)</th><th>ROI</th><th>Seasons Positive</th><th>Δ vs all</th></tr>
+  <tr><td>all</td>          <td>11,415</td><td>+565.4u</td><td>+4.95%</td><td>2 / 3</td><td>—</td></tr>
+  <tr class="highlight"><td><strong>non_superstar</strong></td><td>9,165</td><td>+559.0u</td><td class="pass"><strong>+6.10%</strong></td><td>2 / 3</td><td class="pass"><strong>+1.15pp ROI</strong></td></tr>
+</table>
+<p>Dropping superstars removes 2,250 bets, costs only −6u in absolute PnL, and lifts ROI from 4.95% → 6.10%.</p>
+
+<h4>Full under_only sweep — ROI delta (non_superstar − all)</h4>
+<table>
+  <tr><th>σ</th><th>shrink</th><th>min_edge</th><th>ROI (all)</th><th>ROI (non_superstar)</th><th>Δ ROI (pp)</th><th>Δ PnL (u)</th></tr>
+  <tr><td>5</td> <td>0.00</td><td>0.01</td><td>+2.97%</td><td>+4.31%</td><td class="pass">+1.34</td><td>+165.6</td></tr>
+  <tr class="highlight"><td>5</td> <td>0.00</td><td>0.05</td><td>+4.95%</td><td>+6.10%</td><td class="pass">+1.15</td><td>−6.4</td></tr>
+  <tr><td>5</td> <td>0.00</td><td>0.10</td><td>+2.50%</td><td>+2.50%</td><td class="warn">−0.00</td><td>−24.3</td></tr>
+  <tr><td>5</td> <td>0.25</td><td>0.01</td><td>+2.79%</td><td>+4.01%</td><td class="pass">+1.22</td><td>+141.1</td></tr>
+  <tr><td>5</td> <td>0.25</td><td>0.05</td><td>+3.69%</td><td>+3.96%</td><td class="pass">+0.27</td><td>−46.0</td></tr>
+  <tr><td>5</td> <td>0.50</td><td>0.05</td><td>+1.78%</td><td>+1.92%</td><td class="pass">+0.14</td><td>−17.5</td></tr>
+  <tr><td>5</td> <td>0.50</td><td>0.10</td><td>+3.95%</td><td>+5.67%</td><td class="pass">+1.72</td><td>+20.3</td></tr>
+  <tr><td>10</td><td>0.00</td><td>0.05</td><td>+3.64%</td><td>+4.21%</td><td class="pass">+0.57</td><td>−13.8</td></tr>
+  <tr><td>10</td><td>0.25</td><td>0.10</td><td>+1.58%</td><td>+4.56%</td><td class="pass">+2.97</td><td>+17.5</td></tr>
+  <tr><td>10</td><td>0.50</td><td>0.10</td><td>−2.27%</td><td>+1.66%</td><td class="pass">+3.94</td><td>+33.5</td></tr>
+  <tr><td>20</td><td>0.00</td><td>0.05</td><td>+7.31%</td><td>+8.42%</td><td class="pass">+1.10</td><td>−18.6</td></tr>
+  <tr><td>20</td><td>0.25</td><td>0.05</td><td>+2.28%</td><td>+5.18%</td><td class="pass">+2.90</td><td>+46.2</td></tr>
+  <tr><td>20</td><td>0.25</td><td>0.10</td><td>+4.32%</td><td>+8.16%</td><td class="pass">+3.84</td><td>+5.7</td></tr>
+  <tr><td>20</td><td>0.50</td><td>0.10</td><td>−6.70%</td><td>−0.35%</td><td class="pass">+6.35</td><td>+20.7</td></tr>
+</table>
+
+<div class="config-box">
+  <p><dt>non_superstar beats all:</dt> <dd><strong>35 / 36 combos</strong> (under_only sweep)</dd></p>
+  <p><dt>Mean ROI delta:</dt> <dd><strong>+1.41pp</strong> across all 36 under_only combos</dd></p>
+  <p><dt>Mean PnL delta:</dt> <dd>+65.5u</dd></p>
+  <p><dt>Only combo where all wins:</dt> <dd>σ=5, shrink=0, min_edge=0.10 (Δ = −0.004pp, negligible)</dd></p>
+</div>
+
+<div class="verdict-box verdict-pass">
+  <strong>Verdict: Exclude superstars.</strong> 35/36 param combos improve when superstar bets are dropped, with a mean +1.41pp ROI lift. The signal is robust across σ, shrinkage, and min_edge settings — not just a one-combo artefact. At production params (σ=5, shrink=0, edge&gt;5pp): +559u / +6.10% ROI vs +565u / +4.95% — essentially same PnL, better efficiency. Recommended as a production filter on the next season.
+</div>
+
+<h3>Next Steps</h3>
+<ul>
+  <li><strong>Prod change:</strong> add <code>tier_filter = non_superstar</code> to the daily scoring pipeline. Requires tiers to be regenerated each season start (or updated incrementally for new players).</li>
+  <li>Experiment 2: Obscurity score — continuous 0–10 LLM-generated feature per player. Might capture finer-grained signal that discrete tiers miss.</li>
+</ul>
+
+<h3>Email Mock — ★ Column in Production Plays</h3>
+<p>Representative slate showing the new superstar flag column. Superstar rows are still included as plays — the ★ cell is informational only. Play at your discretion.</p>
+
+<div style="border:2px solid #d1d5db;border-radius:8px;padding:0;margin:16px 0;font-family:Arial,sans-serif;background:#fff;max-width:100%;">
+
+<div style="background:#1d4ed8;color:#fff;padding:14px 20px;border-radius:6px 6px 0 0;">
+  <div style="font-size:18px;font-weight:700;">🏀 NBA Rebounds Model</div>
+  <div style="font-size:13px;margin-top:4px;color:#bfdbfe;">2026-11-04 &nbsp;·&nbsp; Generated 6:12 PM ET &nbsp;·&nbsp; daily slate</div>
+</div>
+
+<div style="display:flex;gap:12px;margin:14px 16px;flex-wrap:wrap;">
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record (OLS)</div>
+    <div style="font-size:16px;font-weight:700;">18–14</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record (XGB)</div>
+    <div style="font-size:16px;font-weight:700;">22–19</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record (Both)</div>
+    <div style="font-size:16px;font-weight:700;">14–11</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units (OLS)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+12.4u</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units (XGB)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+9.1u</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units (Both)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+7.3u</div>
+  </div>
+</div>
+<div style="display:flex;gap:12px;margin:0 16px 14px;flex-wrap:wrap;">
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units (★ Star)</div>
+    <div style="font-size:16px;font-weight:700;color:#dc2626;">−1.4u</div>
+  </div>
+  <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 16px;min-width:100px;">
+    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units (Non-★)</div>
+    <div style="font-size:16px;font-weight:700;color:#16a34a;">+13.8u</div>
+  </div>
+</div>
+
+<div style="margin:0 16px 12px;font-size:10px;color:#6b7280;">
+  <span style="background:#dcfce7;padding:2px 6px;border-radius:3px;margin-right:8px;">green row = qualifying play (edge ≥ 5pp)</span>
+  <span style="background:#fefce8;padding:2px 6px;border-radius:3px;margin-right:8px;">yellow row = near-miss (3–5pp, context only)</span>
+  &middot; <b>Bold edge</b> = model that fired &middot;
+  <span style="background:#fef9c3;padding:2px 6px;border-radius:3px;">★ superstar</span> = low-edge tier historically (+0.28% ROI / 3 seasons); play at your discretion
+</div>
+
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;font-size:11px;border-top:1px solid #e5e7eb;">
+<thead>
+<tr>
+  <th colspan="6" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#334155;">Player / Game</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#0f766e;">Book</th>
+  <th colspan="2" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1e40af;">American Odds</th>
+  <th colspan="4" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#4338ca;">Model — OLS</th>
+  <th colspan="4" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1d4ed8;">Model — XGBoost</th>
+  <th colspan="2" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#065f46;">Edge — OLS</th>
+  <th colspan="2" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#14532d;">Edge — XGB</th>
+  <th colspan="2" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#374151;">Model Inputs</th>
+  <th colspan="2" style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#374151;"></th>
+</tr>
+<tr>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:left;background:#334155;">Player</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#334155;">★</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#334155;">Team</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#334155;">Opp</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#334155;">Time (ET)</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#334155;">Line</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#0f766e;">Book</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1e40af;">Over</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1e40af;">Under</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#4338ca;">yhat</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#4338ca;">Δ</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#4338ca;">P(over)</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#4338ca;">P(under)</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1d4ed8;">yhat</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1d4ed8;">Δ</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1d4ed8;">P(over)</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#1d4ed8;">P(under)</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#065f46;">Over</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#065f46;">Under</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#14532d;">Over</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#14532d;">Under</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#374151;">roll_reb_mean_60</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#374151;">roll_reb_std_5</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#374151;">Status</th>
+  <th style="padding:5px 8px;color:#fff;font-size:10px;text-align:center;background:#374151;">Actual</th>
+</tr>
+</thead>
+<tbody>
+
+<!-- Bam Adebayo — known_starter, both models fire, green row, no star -->
+<tr style="background:#dcfce7;border-left:3px solid #16a34a;">
+  <td style="padding:5px 8px;font-size:11px;text-align:left;font-weight:700;white-space:nowrap;">Bam Adebayo</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">—</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">MIA</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">BOS</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">7:30 PM</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">9.5</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">draftkings</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">+105</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">-130</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">7.81</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.69</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">25.3%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">74.7%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">7.74</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.76</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">24.8%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">75.2%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−16.5pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;"><b>+9.7pp</b></td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−17.0pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;"><b>+10.2pp</b></td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">9.14</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">2.31</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;">OLS+XGB</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;font-weight:700;white-space:nowrap;">—</td>
+</tr>
+
+<!-- Giannis — superstar, OLS fires, yellow ★ cell -->
+<tr style="background:#dcfce7;border-left:3px solid #16a34a;">
+  <td style="padding:5px 8px;font-size:11px;text-align:left;font-weight:700;white-space:nowrap;">Giannis Antetokounmpo</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;background:#fef9c3;color:#92400e;font-weight:700;white-space:nowrap;">★</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">MIL</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">IND</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">8:00 PM</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">11.5</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">fanduel</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">+108</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">-135</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">9.73</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.77</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">27.1%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">72.9%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">10.42</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.08</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">34.6%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">65.4%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−14.8pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;"><b>+7.3pp</b></td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−8.3pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">+0.8pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">11.22</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">2.88</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;">OLS</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;font-weight:700;white-space:nowrap;">—</td>
+</tr>
+
+<!-- Isaiah Hartenstein — fringe, XGB only, green row, no star -->
+<tr style="background:#dcfce7;border-left:3px solid #16a34a;">
+  <td style="padding:5px 8px;font-size:11px;text-align:left;font-weight:700;white-space:nowrap;">Isaiah Hartenstein</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">—</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">OKC</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">DEN</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">9:00 PM</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">7.5</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">betmgm</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">+115</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">-145</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">6.38</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.12</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">30.4%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">69.6%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">6.01</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.49</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">24.1%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">75.9%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−11.6pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">+4.6pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−17.9pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;"><b>+11.0pp</b></td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">6.88</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">1.74</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;">XGB</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;font-weight:700;white-space:nowrap;">—</td>
+</tr>
+
+<!-- Nikola Jokic — superstar, near-miss yellow row, ★ flagged -->
+<tr style="background:#fefce8;border-left:3px solid #ca8a04;">
+  <td style="padding:5px 8px;font-size:11px;text-align:left;font-weight:700;white-space:nowrap;">Nikola Jokic</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;background:#fef9c3;color:#92400e;font-weight:700;white-space:nowrap;">★</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">DEN</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">OKC</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">9:00 PM</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">13.5</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">bovada</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">+110</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">-140</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">11.92</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.58</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">28.8%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">71.2%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">12.14</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.36</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">30.9%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">69.1%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−13.0pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">+3.2pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−10.9pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">+3.9pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">12.87</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">3.12</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#6b7280;white-space:nowrap;">near-miss</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;font-weight:700;white-space:nowrap;">—</td>
+</tr>
+
+<!-- Darius Garland — fringe, both models, green row, no star -->
+<tr style="background:#dcfce7;border-left:3px solid #16a34a;">
+  <td style="padding:5px 8px;font-size:11px;text-align:left;font-weight:700;white-space:nowrap;">Darius Garland</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">—</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">CLE</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">NYK</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">7:30 PM</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">3.5</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">fanduel</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">+120</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">-155</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">2.44</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−1.06</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">20.8%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#4338ca;white-space:nowrap;">79.2%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">2.51</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;white-space:nowrap;">−0.99</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">21.5%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#1d4ed8;white-space:nowrap;">78.5%</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−20.5pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;"><b>+13.7pp</b></td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#dc2626;white-space:nowrap;">−19.8pp</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;"><b>+13.0pp</b></td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">3.02</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">1.22</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;color:#16a34a;font-weight:700;white-space:nowrap;">OLS+XGB</td>
+  <td style="padding:5px 8px;font-size:11px;text-align:center;font-weight:700;white-space:nowrap;">—</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+</section>
+
+</body>
+</html>

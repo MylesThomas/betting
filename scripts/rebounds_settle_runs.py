@@ -43,6 +43,8 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+import yaml  # noqa: E402
+
 from src.player_team_history.name_normalization import normalize_from_nba_api  # noqa: E402
 from src.nba_rebounds_settlement_email import (  # noqa: E402
     format_settlement_email_plays_table,
@@ -809,6 +811,47 @@ def main() -> None:
             
     print(format_strategy_summary_for_console(total_summary))
     print("=" * 80 + "\n")
+
+    # ── superstar split ───────────────────────────────────────────────────────
+    try:
+        _cfg_path = Path(__file__).resolve().parent.parent / "src" / "nba_rebounds_modeling" / "config" / "model_config.yaml"
+        with open(_cfg_path) as _f:
+            _cfg = yaml.safe_load(_f)
+        _superstar_set = set(_cfg.get("llm_features", {}).get("superstar_players", []))
+        if _superstar_set:
+            rollup["_is_superstar"] = rollup["player_normalized"].isin(_superstar_set) if "player_normalized" in rollup.columns else False
+            _star_split = (
+                rollup.groupby(["strategy_bucket", "_is_superstar"], as_index=False)
+                .agg(n_bets=("n_bets","sum"), pnl=("reference_pnl_units","sum"), n_win=("n_win","sum"), n_loss=("n_loss","sum"))
+            )
+            _star_split["roi"] = (_star_split["pnl"] / _star_split["n_bets"]).round(3)
+            _star_split["hit_rate"] = (_star_split["n_win"] / (_star_split["n_win"] + _star_split["n_loss"])).round(3)
+            _star_split["tier"] = _star_split["_is_superstar"].map({True: "superstar", False: "non_superstar"})
+            print("SUPERSTAR SPLIT (strategy_bucket × tier)")
+            print("-" * 60)
+            print(_star_split[["strategy_bucket","tier","n_bets","pnl","roi","hit_rate"]].to_string(index=False))
+            print("-" * 60 + "\n")
+
+            # Append summary rows into the rollup so the email panels can read them.
+            # strategy_bucket values "star_split_superstar" / "star_split_non_superstar"
+            # are picked up by _load_records in prod_notify_rebounds_sns.py.
+            _both_star = _star_split[
+                (_star_split["strategy_bucket"] == "both") & (_star_split["_is_superstar"] == True)  # noqa: E712
+            ]
+            _both_non = _star_split[
+                (_star_split["strategy_bucket"] == "both") & (_star_split["_is_superstar"] == False)  # noqa: E712
+            ]
+            _extra_rows = []
+            if len(_both_star):
+                _r = _both_star.iloc[0]
+                _extra_rows.append({**{c: np.nan for c in rollup.columns}, "strategy_bucket": "star_split_superstar", "pnl_units": float(_r["pnl"]), "reference_pnl_units": float(_r["pnl"]), "n_bets": int(_r["n_bets"]), "n_win": int(_r["n_win"]), "n_loss": int(_r["n_loss"])})
+            if len(_both_non):
+                _r = _both_non.iloc[0]
+                _extra_rows.append({**{c: np.nan for c in rollup.columns}, "strategy_bucket": "star_split_non_superstar", "pnl_units": float(_r["pnl"]), "reference_pnl_units": float(_r["pnl"]), "n_bets": int(_r["n_bets"]), "n_win": int(_r["n_win"]), "n_loss": int(_r["n_loss"])})
+            if _extra_rows:
+                rollup = pd.concat([rollup, pd.DataFrame(_extra_rows)], ignore_index=True)
+    except Exception as _e:
+        print(f"[superstar split skipped: {_e}]")
 
     sns_topic_arn = args.sns_topic_arn.strip()
     if sns_topic_arn:

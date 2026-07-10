@@ -117,6 +117,48 @@ grid_search:
     # Higher σ windows (10, 20) produce fewer but higher-ROI bets; not enough volume.
   in_sample_results: "N/A — in-sample fit not evaluated separately; use out-of-sample RMSE/R² above"
 
+# LLM-generated features (2026-07-10)
+# Superstar list: players with near-zero OLS edge across 3 OOS seasons (+6u / +0.28% ROI, 2,250 bets).
+# Excluding these improves ROI from +4.95% → +6.10% at prod params; 35/36 grid combos improve.
+# NOT yet a hard exclusion filter — flagged yellow in email, tracked separately in settlement.
+# Source: rebounds_player_tiers.parquet (claude-haiku-4-5, 2026-07-10). Refresh each season start.
+llm_features:
+  superstar_players:
+    - "Anthony Davis"
+    - "Anthony Edwards"
+    - "Ben Simmons"
+    - "Chris Paul"
+    - "Damian Lillard"
+    - "De'Aaron Fox"
+    - "Demar Derozan"
+    - "Devin Booker"
+    - "Donovan Mitchell"
+    - "Draymond Green"
+    - "Giannis Antetokounmpo"
+    - "Ja Morant"
+    - "Jalen Brunson"
+    - "Jamal Murray"
+    - "James Harden"
+    - "Jaylen Brown"
+    - "Jayson Tatum"
+    - "Jimmy Butler"
+    - "Joel Embiid"
+    - "Kawhi Leonard"
+    - "Kevin Durant"
+    - "Kyrie Irving"
+    - "Lebron James"
+    - "Luka Doncic"
+    - "Nikola Jokic"
+    - "Paolo Banchero"
+    - "Paul George"
+    - "Rudy Gobert"
+    - "Russell Westbrook"
+    - "Shai Gilgeous-Alexander"
+    - "Stephen Curry"
+    - "Trae Young"
+    - "Victor Wembanyama"
+    - "Zion Williamson"
+
 game_logs:
   bucket: nba-api-mt
   prefix: player_game_logs

@@ -43,8 +43,18 @@ def ensure_repo_root_on_syspath() -> Path:
 
 ensure_repo_root_on_syspath()
 
+import yaml  # noqa: E402
+
 from src.io_utils import read_parquet_any  # noqa: E402
 from src.nba_rebounds_modeling.rebounds_feature_spec import B_MIN_MAX_FEATS  # noqa: E402
+
+def _load_superstar_set() -> set[str]:
+    cfg_path = Path(__file__).resolve().parents[2] / "config" / "model_config.yaml"
+    with open(cfg_path) as f:
+        cfg = yaml.safe_load(f)
+    return set(cfg.get("llm_features", {}).get("superstar_players", []))
+
+_SUPERSTAR_PLAYERS: set[str] = _load_superstar_set()
 
 # ── colour palette matching the mock email ───────────────────────────────────
 _G_PLAYER  = "#334155"   # Player / Game
@@ -334,10 +344,18 @@ def _load_records(records_csv: str) -> dict:
         roi = pnl / n_bets if n_bets > 0 else float("nan")
         return {"n_win": n_win, "n_loss": n_loss, "n_push": n_push, "pnl": pnl, "hit": hit, "roi": roi}
 
+    def _star_pnl(bucket: str) -> float | None:
+        sub = rec.loc[rec["strategy_bucket"] == bucket]
+        if len(sub) == 0:
+            return None
+        return float(sub["pnl_units"].sum())
+
     return {
-        "ols": _agg(["both", "ols"]),
-        "xgb": _agg(["both", "xgb"]),
-        "both": _agg(["both"]),
+        "ols":          _agg(["both", "ols"]),
+        "xgb":          _agg(["both", "xgb"]),
+        "both":         _agg(["both"]),
+        "star_pnl":     _star_pnl("star_split_superstar"),
+        "non_star_pnl": _star_pnl("star_split_non_superstar"),
     }
 
 
@@ -444,29 +462,36 @@ def _fmt_roi(val: float | None) -> str:
     return f"{sign}{val * 100:.1f}%"
 
 
-def _build_stats_panels(records: dict, pnl_ols: float | None) -> str:
+def _fmt_pnl(val: float | None) -> str:
+    if val is None or (isinstance(val, float) and np.isnan(val)):
+        return "N/A"
+    sign = "+" if val >= 0 else ""
+    return f"{sign}{val:.1f}u"
+
+
+def _build_stats_panels(records: dict) -> str:
     ols = records.get("ols", {})
     xgb = records.get("xgb", {})
     both = records.get("both", {})
-
-    pnl_label = "Season PnL (OLS)"
-    pnl_val = f"+{pnl_ols:.1f}u" if pnl_ols is not None and pnl_ols >= 0 else (f"{pnl_ols:.1f}u" if pnl_ols is not None else "N/A")
-    pnl_green = pnl_ols is not None and pnl_ols >= 0
+    star_pnl = records.get("star_pnl")
+    non_star_pnl = records.get("non_star_pnl")
 
     panels = '<div style="display:flex;gap:12px;margin:14px 16px;flex-wrap:wrap;">\n'
-    panels += _panel(pnl_label, pnl_val, large=True, green=pnl_green)
-    panels += _panel("Record (OLS)", _fmt_record(ols))
+    panels += _panel("Record (OLS)",  _fmt_record(ols))
     panels += _panel("Record (XGB)", _fmt_record(xgb))
     panels += _panel("Record (Both)", _fmt_record(both))
     panels += _panel("Win % (OLS)", _fmt_pct(ols.get("hit")))
     panels += _panel("Win % (XGB)", _fmt_pct(xgb.get("hit")))
     panels += _panel("Win % (Both)", _fmt_pct(both.get("hit")))
-    roi_ols = ols.get("roi")
-    roi_xgb = xgb.get("roi")
-    roi_both = both.get("roi")
-    panels += _panel("ROI (OLS)", _fmt_roi(roi_ols), green=roi_ols is not None and roi_ols >= 0)
-    panels += _panel("ROI (XGB)", _fmt_roi(roi_xgb), green=roi_xgb is not None and roi_xgb >= 0)
-    panels += _panel("ROI (Both)", _fmt_roi(roi_both), green=roi_both is not None and roi_both >= 0)
+    pnl_xgb  = xgb.get("pnl")
+    pnl_both = both.get("pnl")
+    panels += _panel("Units (OLS)",   _fmt_pnl(pnl_ols),      green=pnl_ols  is not None and pnl_ols  >= 0)
+    panels += _panel("Units (XGB)",   _fmt_pnl(pnl_xgb),      green=pnl_xgb  is not None and pnl_xgb  >= 0)
+    panels += _panel("Units (Both)",  _fmt_pnl(pnl_both),     green=pnl_both is not None and pnl_both >= 0)
+    panels += "</div>\n"
+    panels += '<div style="display:flex;gap:12px;margin:0 16px 14px;flex-wrap:wrap;">\n'
+    panels += _panel("Units (★ Star)", _fmt_pnl(star_pnl),    green=star_pnl     is not None and star_pnl     >= 0)
+    panels += _panel("Units (Non-★)", _fmt_pnl(non_star_pnl), green=non_star_pnl is not None and non_star_pnl >= 0)
     panels += "</div>\n"
     return panels
 
@@ -481,7 +506,7 @@ def _build_thead() -> str:
     # Row 1: group headers
     # 5 + 1 + 2 + 3 + 4 + 3 + 3 + 2 + 2 + (6 features + 1 Status + 1 Actual) = 33 cols
     r1 = "    "
-    r1 += _th("Player / Game",        _G_PLAYER,  colspan=5)
+    r1 += _th("Player / Game",        _G_PLAYER,  colspan=6)
     r1 += _th("Book",                 _G_BOOK,    colspan=1)
     r1 += _th("American Odds",        _G_ODDS,    colspan=2)
     r1 += _th("Implied",              _G_IMPLIED, colspan=3)
@@ -494,8 +519,9 @@ def _build_thead() -> str:
 
     # Row 2: individual column names
     r2 = "    "
-    # Player / Game (5)
+    # Player / Game (6)
     r2 += _th("Player",     _G_PLAYER, align="left")
+    r2 += _th("★",          _G_PLAYER)
     r2 += _th("Team",       _G_PLAYER)
     r2 += _th("Opp",        _G_PLAYER)
     r2 += _th("Time (ET)",  _G_PLAYER)
@@ -588,9 +614,18 @@ def _build_data_row(row: pd.Series, min_edge: float) -> str:
     status = str(row.get("status", ""))
     game_time = str(row.get("game_time_et", "")) or "—"
 
+    is_superstar = str(row["player_normalized"]) in _SUPERSTAR_PLAYERS
+    star_cell = (
+        f'<td style="padding:5px 8px;font-size:11px;text-align:center;'
+        f'background:#fef9c3;color:#92400e;font-weight:700;white-space:nowrap;">★</td>\n'
+        if is_superstar else
+        f'<td style="padding:5px 8px;font-size:11px;text-align:center;white-space:nowrap;">—</td>\n'
+    )
+
     cells = f'<tr style="background:{bg};{border}">\n'
-    # Player / Game (5)
+    # Player / Game (6)
     cells += _td(str(row["player_normalized"]), bold=True, align="left")
+    cells += star_cell
     cells += _td(str(row["team"]))
     cells += _td(str(row["opponent"]))
     cells += _td(game_time)
@@ -687,7 +722,6 @@ def build_html_email(
     df = _compute_display_cols(df)
 
     records = _load_records(records_csv)
-    pnl_ols = records.get("ols", {}).get("pnl")
 
     min_edge = float(df["score_min_edge_used"].iloc[0]) if "score_min_edge_used" in df.columns else 0.05
 
@@ -709,7 +743,7 @@ def build_html_email(
     )
 
     # ── stats panels ──────────────────────────────────────────────────────────
-    html += _build_stats_panels(records, pnl_ols)
+    html += _build_stats_panels(records)
 
     # ── legend ────────────────────────────────────────────────────────────────
     edge_pct = int(min_edge * 100)
@@ -722,6 +756,8 @@ def build_html_email(
         f'yellow row = near-miss ({near_pct}–{edge_pct}pp, context only)</span>\n'
         '  &middot; <b>Bold edge cell</b> = model that fired'
         ' &middot; green/red on edge cells = positive/negative\n'
+        f'  &middot; <span style="background:#fef9c3;padding:2px 6px;border-radius:3px;">★ superstar</span>'
+        ' = low-edge tier historically (+0.28% ROI / 3 seasons); play at your discretion\n'
         '</div>\n\n'
     )
 
