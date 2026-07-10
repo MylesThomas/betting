@@ -5,13 +5,13 @@ Strategy params come from config.yaml strategy block:
   lines: [1.5]
   min_bet_edge:   0.05  → green rows in email (place these bets)
   min_track_edge: 0.03  → yellow rows in email (paper track only)
-  dogs_only: true       → only bet +odds side (novig_under < 0.50)
+  dogs_only: false      → all odds (raw-edge reanalysis 2026-07-10: signal is in favs)
 
 For each batter with a total-bases prop on the given gameday:
   1. Fetch live batter_total_bases events + props from The Odds API
   2. Load rolling features from the spine (S3) — take each player's most recent row
   3. Score with v2 XGBoost regression + Method C calibration (S3)
-  4. Compute no-vig market P(over) and edge_under = p_model_under - novig_prob_under (per book)
+  4. Compute edge_under = p_model_under - raw_prob_under (per book) — raw price, not novig
   5. Tag: tier=play (edge≥min_bet_edge) or tier=track (edge≥min_track_edge)
   6. Send SES HTML email + SNS notification
   7. Save recommendations CSV (plays + tracks) to S3
@@ -101,17 +101,36 @@ def commence_to_et(commence_time: str) -> str:
         return ""
 
 
-BOOK_DISPLAY = {
-    "draftkings": "DK", "fanduel": "FD", "betmgm": "MGM",
-    "betrivers": "BR", "caesars": "CZR", "pointsbetus": "PBU",
-    "betparx": "PX", "espnbet": "ESPN", "fliff": "FLF",
-    "hardrock": "HR", "mybookieag": "MB", "bovada": "BVD",
-    "lowvig": "LV", "betus": "BTU", "betonlineag": "BOL", "pinnacle": "PIN",
+BOOK_FULLNAME = {
+    "draftkings":     "DraftKings",
+    "fanduel":        "FanDuel",
+    "betmgm":         "BetMGM",
+    "betrivers":      "BetRivers",
+    "caesars":        "Caesars",
+    "pointsbetus":    "PointsBet",
+    "betparx":        "BetParx",
+    "espnbet":        "ESPN Bet",
+    "fliff":          "Fliff",
+    "hardrock":       "Hard Rock Bet",
+    "hardrockbet":    "Hard Rock Bet",
+    "hardrockbet_oh": "Hard Rock Bet OH",
+    "mybookieag":     "MyBookie",
+    "bovada":         "Bovada",
+    "lowvig":         "LowVig",
+    "betus":          "BetUS",
+    "betonlineag":    "BetOnline",
+    "pinnacle":       "Pinnacle",
+    "williamhill_us": "William Hill",
+    "unibet_us":      "Unibet",
+    "bet365":         "Bet365",
+    "ballybet":       "Bally Bet",
+    "betanysports":   "BetAnySports",
+    "fanatics":       "Fanatics",
 }
 
 
-def display_book(key: str) -> str:
-    return BOOK_DISPLAY.get(str(key).lower(), str(key)[:4].upper())
+def full_book_name(key: str) -> str:
+    return BOOK_FULLNAME.get(str(key).lower(), str(key))
 
 MANUAL_MAP = {
     "daniel vogelbach":   "Dan Vogelbach",
@@ -308,7 +327,7 @@ def score_slate(
 
     y_hat = XGBoost prediction of expected total bases (player-game level).
     P(over | line) = per-line LogisticRegression(y_hat) from calib_models.
-    edge_under = P(under | model) - novig_prob_under (consensus).
+    edge_under = P(under | model) - raw_prob_under (per book, actual payout price).
     """
     reg_model    = model_bundle["model"]
     scaler       = model_bundle["scaler"]
@@ -345,9 +364,12 @@ def score_slate(
             "min_line":          row.get("min_line", np.nan),
             "max_line":          row.get("max_line", np.nan),
             "tb_Lcareer":        feat_row.get("tb_Lcareer",  np.nan),
+            "tb_L20":            feat_row.get("tb_L20",       np.nan),
             "tb_L10":            feat_row.get("tb_L10",       np.nan),
             "ab_Lcareer":        feat_row.get("ab_Lcareer",  np.nan),
             "ab_L10":            feat_row.get("ab_L10",       np.nan),
+            "hr_Lcareer":        feat_row.get("hr_Lcareer",  np.nan),
+            "tb_Lseason":        feat_row.get("tb_Lseason",  np.nan),
         }
 
         # Build feature vector using player-game-level features
@@ -376,8 +398,8 @@ def score_slate(
 
         rec["p_model"]        = p_over
         rec["p_market"]       = row["novig_prob_over"]
-        rec["edge_over"]      = p_over - row["novig_prob_over"]
-        rec["edge_under"]     = (1 - p_over) - row["novig_prob_under"]
+        rec["edge_over"]      = p_over - row["avg_raw_prob_over"]
+        rec["edge_under"]     = (1 - p_over) - row["avg_raw_prob_under"]
         rec["dec_odds_under"] = 1.0 / row["avg_raw_prob_under"]
         rec["over_odds"]      = 1.0 / row["avg_raw_prob_over"]
         rec["bet_direction"]  = "UNDER"
@@ -397,11 +419,12 @@ def expand_to_books(scored: pd.DataFrame, all_book_rows: pd.DataFrame) -> pd.Dat
         return pd.DataFrame()
     base_keep = ["name_norm", "line", "p_model", "team", "opponent",
                  "n_books", "novig_prob_over", "novig_prob_under"]
-    optional  = ["y_hat", "tb_Lcareer", "tb_L20", "tb_L10", "ab_Lcareer", "ab_L10"]
+    optional  = ["y_hat", "min_line", "max_line", "tb_Lcareer", "tb_L20", "tb_L10",
+                 "ab_Lcareer", "ab_L10", "hr_Lcareer", "tb_Lseason"]
     keep = base_keep + [c for c in optional if c in scored.columns]
     slim = scored[keep].copy()
     merged = all_book_rows.merge(slim, on=["name_norm", "line"], how="inner")
-    merged["edge_under"]     = (1 - merged["p_model"]) - merged["novig_under"]
+    merged["edge_under"]     = (1 - merged["p_model"]) - merged["raw_prob_under"]
     merged["dec_odds_under"] = merged["under_price"]  # alias for settle compatibility
     return merged
 
@@ -476,10 +499,10 @@ def build_html_email(
 
     play_books  = tiered_books[tiered_books["tier"] == "play"]  if not tiered_books.empty else pd.DataFrame()
     track_books = tiered_books[tiered_books["tier"] == "track"] if not tiered_books.empty else pd.DataFrame()
-    n_play_bets  = len(play_books)
-    n_track_bets = len(track_books)
-    n_play_players  = play_books["name_norm"].nunique()  if not play_books.empty  else 0
-    n_track_players = track_books["name_norm"].nunique() if not track_books.empty else 0
+    n_play_bets      = len(play_books)
+    n_track_bets     = len(track_books)
+    n_play_players   = play_books["name_norm"].nunique()  if not play_books.empty  else 0
+    n_track_players  = track_books["name_norm"].nunique() if not track_books.empty else 0
 
     def fmt(v, fmt_str):
         try:
@@ -487,16 +510,24 @@ def build_html_email(
         except (TypeError, ValueError):
             return "—"
 
-    # ── Section 1: per-book rows for qualifying, consensus row for non-qualifying ──
+    def _implied(over_price, under_price):
+        """(ro, ru, rt, fair_o, fair_u, vig) from decimal odds."""
+        try:
+            ro = 1.0 / float(over_price)
+            ru = 1.0 / float(under_price)
+            rt = ro + ru
+            return ro, ru, rt, ro / rt, ru / rt, rt - 1.0
+        except Exception:
+            return None, None, None, None, None, None
+
+    # ── Section 1: per-book qualifying + consensus non-qualifying ──
     at_bet = all_scored[all_scored["line"].isin(bet_lines)].copy()
 
-    # Per-book qualifying rows at bet lines
     tiered_bet = (
         tiered_books[tiered_books["line"].isin(bet_lines)].copy()
         if not tiered_books.empty else pd.DataFrame()
     )
 
-    # Non-qualifying: players in at_bet with no qualifying book row
     if not tiered_bet.empty:
         qual_set = set(zip(tiered_bet["name_norm"].astype(str), tiered_bet["line"].astype(float)))
         non_qual = at_bet[~at_bet.apply(
@@ -505,7 +536,6 @@ def build_html_email(
     else:
         non_qual = at_bet.copy()
 
-    # Sort tiered: plays first, then tracks; within tier by edge desc
     if not tiered_bet.empty:
         tiered_bet["_tsort"]      = tiered_bet["game_time_et"].map(_time_sort_key)
         tiered_bet["_tier_order"] = tiered_bet["tier"].map({"play": 0, "track": 1})
@@ -519,7 +549,6 @@ def build_html_email(
         ["_tsort", "home_team", "line", "edge_under"], ascending=[True, True, True, False]
     )
 
-    # Build sorted unique game list
     game_srcs = []
     if not tiered_bet.empty:
         game_srcs.append(tiered_bet[["_tsort", "game_time_et", "home_team", "away_team"]])
@@ -532,7 +561,12 @@ def build_html_email(
         if game_srcs else pd.DataFrame()
     )
 
-    S1_COLS = 17
+    S1_COLS = 31
+    # Group header style / border helpers (no curly braces — safe in f-strings)
+    _GH = "background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase"
+    _BR = "border-right:2px solid #374f5e"
+    _CB = "border-right:2px solid #1e2a35"
+
     rows_bet = ""
 
     for _, grow in all_games.iterrows():
@@ -562,88 +596,150 @@ def build_html_email(
             f"</td></tr>\n"
         )
 
-        # One row per qualifying book
+        # Per-book qualifying rows (plays and tracks)
         for _, r in game_tiered.iterrows():
             tier = r.get("tier")
             if tier == "play":
-                direction = str(r.get("bet_direction", "UNDER")).upper()
                 bg     = "background:#eaf6ea"
-                status = f"<span style='color:#276221;font-weight:bold'>PLAY - {direction}</span>"
+                status = "<span style='color:#276221;font-weight:bold'>PLAY - UNDER</span>"
             else:
                 bg     = "background:#fffde7"
                 status = "<span style='color:#b8860b;font-weight:bold'>TRACK</span>"
 
-            book_abbrev = he(display_book(str(r.get("bookmaker", ""))))
-            under_odds  = to_american(r.get("under_price"))
-            over_odds   = to_american(r.get("over_price"))
-            mkt_under   = fmt(r.get("novig_under"), ".1%")
-            model_under = fmt(1 - float(r.get("p_model", np.nan)), ".1%")
-            edge_str    = fmt(r.get("edge_under"), "+.1%")
-            proj_tb     = fmt(r.get("y_hat"), ".2f")
-            is_dog = float(r.get("novig_under", 1.0)) < 0.50
-            dog_cell = (
-                "<td style='text-align:center;color:#276221;font-weight:bold'>✓</td>"
-                if is_dog else
-                "<td style='text-align:center;color:#aaa'>✗</td>"
-            )
+            ro, ru, rt, fo, fu, vig = _implied(r.get("over_price"), r.get("under_price"))
+            pm = float(r.get("p_model", np.nan))
+            try:
+                pred_o  = pm
+                pred_u  = 1.0 - pm
+                edge_o  = pred_o - fo if fo is not None else None
+                edge_u  = pred_u - fu if fu is not None else None
+            except Exception:
+                pred_o = pred_u = edge_o = edge_u = None
+            try:
+                delta_str = format(float(r.get("y_hat", np.nan)) - float(r.get("line", np.nan)), "+.2f")
+            except Exception:
+                delta_str = "—"
 
             rows_bet += (
                 f"<tr style='{bg}'>"
-                f"<td>{he(str(r.get('player_name', '')))}</td>"
-                f"<td style='text-align:center;color:#555'>{he(str(r.get('team','—')))}</td>"
-                f"<td style='text-align:center;color:#555'>{he(str(r.get('opponent','—')))}</td>"
-                f"<td style='text-align:center'>{fmt(r.get('line'), '.1f')}</td>"
-                f"<td style='text-align:center;font-weight:600'>{book_abbrev}</td>"
-                f"<td style='text-align:center;color:#555'>{over_odds}</td>"
-                f"<td style='text-align:center;font-weight:bold;color:#1d4ed8'>{under_odds}</td>"
-                f"{dog_cell}"
-                f"<td style='text-align:center'>{mkt_under}</td>"
-                f"<td style='text-align:center'>{model_under}</td>"
-                f"<td style='text-align:center'>{edge_str}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>{proj_tb}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r.get('ab_Lcareer'), '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r.get('ab_L10'), '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r.get('tb_Lcareer'), '.2f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r.get('tb_L10'), '.2f')}</td>"
+                # Player / Game (5)
+                f"<td>{he(str(r.get('player_name','')))}</td>"
+                f"<td style='text-align:center'>{he(str(r.get('team','—')))}</td>"
+                f"<td style='text-align:center'>{he(str(r.get('opponent','—')))}</td>"
+                f"<td style='text-align:center'>{he(str(r.get('game_time_et','—')))}</td>"
+                f"<td style='text-align:center;{_CB}'>{fmt(r.get('line'),'.1f')}</td>"
+                # Book (1)
+                f"<td style='text-align:center;font-weight:600;{_CB}'>{he(full_book_name(str(r.get('bookmaker',''))))}</td>"
+                # American Odds (2)
+                f"<td style='text-align:center'>{to_american(r.get('over_price'))}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:#1d4ed8;{_CB}'>{to_american(r.get('under_price'))}</td>"
+                # Implied (3)
+                f"<td style='text-align:center'>{fmt(ro,'.3f') if ro is not None else '—'}</td>"
+                f"<td style='text-align:center'>{fmt(ru,'.3f') if ru is not None else '—'}</td>"
+                f"<td style='text-align:center;{_CB}'>{fmt(rt,'.3f') if rt is not None else '—'}</td>"
+                # No-Vig (4)
+                f"<td style='text-align:center'>{fmt(fo,'.3f') if fo is not None else '—'}</td>"
+                f"<td style='text-align:center'>{fmt(fu,'.3f') if fu is not None else '—'}</td>"
+                f"<td style='text-align:center'>100%</td>"
+                f"<td style='text-align:center;{_CB}'>{fmt(vig*100,'.2f') if vig is not None else '—'}%</td>"
+                # Strategy (1)
+                f"<td style='text-align:center;font-weight:bold;color:#276221;{_CB}'>{'✓' if float(r.get('novig_under', 1.0)) < 0.50 else '—'}</td>"
+                # Model Prediction (4)
+                f"<td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>{fmt(r.get('y_hat'),'.2f')}</td>"
+                f"<td style='text-align:center'>{delta_str}</td>"
+                f"<td style='text-align:center'>{fmt(pred_o,'.3f') if pred_o is not None else '—'}</td>"
+                f"<td style='text-align:center;{_CB}'>{fmt(pred_u,'.3f') if pred_u is not None else '—'}</td>"
+                # Edge (2) — under edge positive = favorable
+                f"<td style='text-align:center'>{fmt(edge_o,'+.1%') if edge_o is not None else '—'}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:#276221;{_CB}'>{fmt(edge_u,'+.1%') if edge_u is not None else '—'}</td>"
+                # Model Inputs — 8 features in importance order (45.8 → 3.7%) + Status
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('max_line'),'.1f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('min_line'),'.1f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('tb_Lcareer'),'.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('ab_Lcareer'),'.1f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('tb_Lseason'),'.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('hr_Lcareer'),'.3f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('tb_L20'),'.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px'>{fmt(r.get('tb_L10'),'.2f')}</td>"
                 f"<td style='text-align:center'>{status}</td>"
                 f"</tr>\n"
             )
 
-        # One consensus row per non-qualifying player-line in this game
+        # Consensus non-qualifying rows for this game (greyed out)
         game_non_qual = non_qual[
             (non_qual["home_team"] == home) & (non_qual["away_team"] == away)
         ] if not non_qual.empty else pd.DataFrame()
 
         for _, r in game_non_qual.iterrows():
-            best_book  = str(r.get("best_under_book", "") or "—")
-            under_odds = to_american(r.get("best_under_price"))
-            over_odds  = to_american(r.get("over_odds"))
-            nq_is_dog  = float(r.get("novig_prob_under", 1.0)) < 0.50
-            nq_dog_cell = (
-                "<td style='text-align:center;color:#888'>✓</td>"
-                if nq_is_dog else
-                "<td style='text-align:center;color:#ccc'>✗</td>"
-            )
+            # Use avg raw probs directly (already = 1/decimal_odds averaged across books)
+            nq_ro = float(r.get("avg_raw_prob_over",  np.nan))
+            nq_ru = float(r.get("avg_raw_prob_under", np.nan))
+            try:
+                nq_rt  = nq_ro + nq_ru
+                nq_fo  = nq_ro / nq_rt
+                nq_fu  = nq_ru / nq_rt
+                nq_vig = nq_rt - 1.0
+            except Exception:
+                nq_rt = nq_fo = nq_fu = nq_vig = None
+                nq_ro = nq_ru = None
+
+            pm = float(r.get("p_model", np.nan))
+            try:
+                pred_o  = pm
+                pred_u  = 1.0 - pm
+                edge_o  = pred_o - nq_fo if nq_fo is not None else None
+                edge_u  = pred_u - nq_fu if nq_fu is not None else None
+            except Exception:
+                pred_o = pred_u = edge_o = edge_u = None
+            try:
+                nq_delta_str = format(float(r.get("y_hat", np.nan)) - float(r.get("line", np.nan)), "+.2f")
+            except Exception:
+                nq_delta_str = "—"
+
+            best_book = he(full_book_name(str(r.get("best_under_book", "") or "—")))
 
             rows_bet += (
                 f"<tr>"
-                f"<td style='color:#888'>{he(str(r.get('player_name', '')))}</td>"
+                # Player / Game (5)
+                f"<td style='color:#888'>{he(str(r.get('player_name','')))}</td>"
                 f"<td style='text-align:center;color:#aaa'>{he(str(r.get('team','—')))}</td>"
                 f"<td style='text-align:center;color:#aaa'>{he(str(r.get('opponent','—')))}</td>"
-                f"<td style='text-align:center;color:#aaa'>{fmt(r.get('line'), '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#aaa'>{he(display_book(best_book))}</td>"
-                f"<td style='text-align:center;color:#aaa'>{over_odds}</td>"
-                f"<td style='text-align:center;color:#aaa'>{under_odds}</td>"
-                f"{nq_dog_cell}"
-                f"<td style='text-align:center;color:#aaa'>{fmt(r.get('novig_prob_under'), '.1%')}</td>"
-                f"<td style='text-align:center;color:#aaa'>{fmt(1 - float(r.get('p_model', np.nan)), '.1%')}</td>"
-                f"<td style='text-align:center;color:#aaa'>{fmt(r.get('edge_under'), '+.1%')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('y_hat'), '.2f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('ab_Lcareer'), '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('ab_L10'), '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('tb_Lcareer'), '.2f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('tb_L10'), '.2f')}</td>"
-                f"<td style='text-align:center'><span style='color:#aaa'>—</span></td>"
+                f"<td style='text-align:center;color:#aaa'>{he(str(r.get('game_time_et','—')))}</td>"
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{fmt(r.get('line'),'.1f')}</td>"
+                # Book (1) — best under book
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{best_book}</td>"
+                # American Odds (2) — from avg decimal odds
+                f"<td style='text-align:center;color:#aaa'>{to_american(r.get('over_odds'))}</td>"
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{to_american(r.get('dec_odds_under'))}</td>"
+                # Implied (3)
+                f"<td style='text-align:center;color:#aaa'>{fmt(nq_ro,'.3f') if nq_ro is not None else '—'}</td>"
+                f"<td style='text-align:center;color:#aaa'>{fmt(nq_ru,'.3f') if nq_ru is not None else '—'}</td>"
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{fmt(nq_rt,'.3f') if nq_rt is not None else '—'}</td>"
+                # No-Vig (4)
+                f"<td style='text-align:center;color:#aaa'>{fmt(nq_fo,'.3f') if nq_fo is not None else '—'}</td>"
+                f"<td style='text-align:center;color:#aaa'>{fmt(nq_fu,'.3f') if nq_fu is not None else '—'}</td>"
+                f"<td style='text-align:center;color:#aaa'>100%</td>"
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{fmt(nq_vig*100,'.2f') if nq_vig is not None else '—'}%</td>"
+                # Strategy (1)
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{'✓' if float(r.get('novig_prob_under', 1.0)) < 0.50 else '—'}</td>"
+                # Model Prediction (4)
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('y_hat'),'.2f')}</td>"
+                f"<td style='text-align:center;color:#aaa'>{nq_delta_str}</td>"
+                f"<td style='text-align:center;color:#aaa'>{fmt(pred_o,'.3f') if pred_o is not None else '—'}</td>"
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{fmt(pred_u,'.3f') if pred_u is not None else '—'}</td>"
+                # Edge (2)
+                f"<td style='text-align:center;color:#aaa'>{fmt(edge_o,'+.1%') if edge_o is not None else '—'}</td>"
+                f"<td style='text-align:center;color:#aaa;{_CB}'>{fmt(edge_u,'+.1%') if edge_u is not None else '—'}</td>"
+                # Model Inputs (8) + Status
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('max_line'),'.1f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('min_line'),'.1f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('tb_Lcareer'),'.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('ab_Lcareer'),'.1f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('tb_Lseason'),'.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('hr_Lcareer'),'.3f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('tb_L20'),'.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#aaa'>{fmt(r.get('tb_L10'),'.2f')}</td>"
+                f"<td style='text-align:center;color:#aaa'>—</td>"
                 f"</tr>\n"
             )
 
@@ -668,14 +764,17 @@ def build_html_email(
         )
 
     lines_str   = "+".join(str(l) for l in sorted(bet_lines))
-    play_label  = f"{n_play_players}p / {n_play_bets}b plays (≥{min_bet_edge*100:.0f}pp)"
-    track_label = f"{n_track_players}p / {n_track_bets}b tracks ({min_track_edge*100:.0f}–{min_bet_edge*100:.0f}pp)"
+    _pb  = "book"   if n_play_bets    == 1 else "books"
+    _ppl = "player" if n_play_players  == 1 else "players"
+    _tpl = "player" if n_track_players == 1 else "players"
+    play_label  = f"{n_play_players} {_ppl} to bet · {n_play_bets} {_pb}"
+    track_label = f"{n_track_players} {_tpl} on watchlist"
     n_s1_rows   = len(at_bet)
 
     return f"""<!DOCTYPE html>
 <html><head><meta charset='utf-8'>
 <style>
-  body {{font-family:{_SANS};color:#222;max-width:1200px;margin:auto;padding:20px}}
+  body {{font-family:{_SANS};color:#222;max-width:1600px;margin:auto;padding:20px}}
   h2 {{color:#2c3e50;margin-bottom:4px}}
   table {{border-collapse:collapse;width:100%;margin-top:8px}}
   th {{background:#2c3e50;color:#fff;padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap}}
@@ -692,7 +791,7 @@ def build_html_email(
   <span style='color:#276221;font-weight:bold'>{play_label}</span>
   &nbsp;·&nbsp;
   <span style='color:#b8860b;font-weight:bold'>{track_label}</span>
-  &nbsp;·&nbsp; UNDER {lines_str}
+  &nbsp;·&nbsp; Betting UNDER {lines_str} total bases
 </p>
 <p style='font-size:11px;color:#888;margin-top:2px'>
   <span class='legend-play'></span>Green = PLAY (bet) &nbsp;&nbsp;
@@ -706,29 +805,47 @@ def build_html_email(
   <summary>▸ Strategy: UNDER {lines_str} &nbsp;<span style='font-weight:normal;color:#666'>({n_s1_rows} players scored · {n_play_bets} bets)</span></summary>
   <table>
     <tr>
-      <th colspan='3' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Game Info</th>
-      <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Market (per book)</th>
-      <th colspan='4' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Model</th>
-      <th colspan='4' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Features</th>
-      <th colspan='1' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase'></th>
+      <th colspan='5' style='{_GH};{_BR}'>Player / Game</th>
+      <th colspan='1' style='{_GH};{_BR}'>Book</th>
+      <th colspan='2' style='{_GH};{_BR}'>American Odds</th>
+      <th colspan='3' style='{_GH};{_BR}'>Implied</th>
+      <th colspan='4' style='{_GH};{_BR}'>No-Vig</th>
+      <th colspan='1' style='{_GH};{_BR}'>Strategy</th>
+      <th colspan='4' style='{_GH};{_BR}'>Model Prediction</th>
+      <th colspan='2' style='{_GH};{_BR}'>Edge</th>
+      <th colspan='9' style='{_GH}'>Model Inputs</th>
     </tr>
     <tr>
       <th>Player</th>
       <th style='text-align:center'>Team</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Opponent</th>
-      <th style='text-align:center'>Line</th>
-      <th style='text-align:center'>Book</th>
-      <th style='text-align:center'>Over Odds</th>
-      <th style='text-align:center'>Under Odds</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Dog?</th>
-      <th style='text-align:center'>Market<br>Under%</th>
-      <th style='text-align:center'>Model<br>Under%</th>
-      <th style='text-align:center'>Edge</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Projected<br>Total Bases</th>
-      <th style='text-align:center'>Career<br>At-Bats/Game</th>
-      <th style='text-align:center'>Last 10<br>At-Bats/Game</th>
-      <th style='text-align:center'>Career<br>Total Bases/Game</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Last 10<br>Total Bases/Game</th>
+      <th style='text-align:center'>Opp</th>
+      <th style='text-align:center'>Time (ET)</th>
+      <th style='text-align:center;{_CB}'>Line</th>
+      <th style='text-align:center;{_CB}'>Book</th>
+      <th style='text-align:center'>Over</th>
+      <th style='text-align:center;{_CB}'>Under</th>
+      <th style='text-align:center'>Raw Over</th>
+      <th style='text-align:center'>Raw Under</th>
+      <th style='text-align:center;{_CB}'>Raw Total</th>
+      <th style='text-align:center'>Fair Over</th>
+      <th style='text-align:center'>Fair Under</th>
+      <th style='text-align:center'>Fair Total</th>
+      <th style='text-align:center;{_CB}'>Vig</th>
+      <th style='text-align:center;{_CB}'>Dog?</th>
+      <th style='text-align:center'>Prediction<br>(yhat)</th>
+      <th style='text-align:center'>Delta</th>
+      <th style='text-align:center'>Pred Over</th>
+      <th style='text-align:center;{_CB}'>Pred Under</th>
+      <th style='text-align:center'>Over Edge</th>
+      <th style='text-align:center;{_CB}'>Under Edge</th>
+      <th style='text-align:center'>Market High</th>
+      <th style='text-align:center'>Market Low</th>
+      <th style='text-align:center'>Career TB/G</th>
+      <th style='text-align:center'>Career AB/G</th>
+      <th style='text-align:center'>Season TB/G</th>
+      <th style='text-align:center'>Career HR/G</th>
+      <th style='text-align:center'>Last 20 TB/G</th>
+      <th style='text-align:center'>Last 10 TB/G</th>
       <th style='text-align:center'>Status</th>
     </tr>
     {rows_bet}
@@ -885,10 +1002,7 @@ def main():
         ].copy()
         if not subset.empty:
             subset["tier"] = "track"
-            # Play tier: edge≥bet threshold AND dogs only (novig_under < 0.50 = +odds)
             play_mask = subset["edge_under"] >= MIN_BET_EDGE
-            if DOGS_ONLY:
-                play_mask = play_mask & (subset["novig_under"] < 0.50)
             subset.loc[play_mask, "tier"] = "play"
             tiered_books = subset
 
