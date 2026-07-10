@@ -45,9 +45,9 @@ def run_grid_search(oof, method_name):
         oof["p_under_s"] = oof["p_under_raw"] * (1 - shrinkage) + 0.5 * shrinkage
         oof["p_over_s"]  = 1 - oof["p_under_s"]
 
-        # Per-book edge (uses that book's own novig)
-        oof["edge_under"] = oof["p_under_s"] - oof["novig_prob_under"]
-        oof["edge_over"]  = oof["p_over_s"]  - oof["novig_prob_over"]
+        # Per-book edge: p_model − raw_implied_prob (break-even at actual price, never novig)
+        oof["edge_under"] = oof["p_under_s"] - (1.0 / oof["under_price_decimal"])
+        oof["edge_over"]  = oof["p_over_s"]  - (1.0 / oof["over_price_decimal"])
 
         for edge_thresh, direction, odds_bucket in itertools.product(
             EDGE_THRESHOLDS, DIRECTIONS, ODDS_BUCKETS

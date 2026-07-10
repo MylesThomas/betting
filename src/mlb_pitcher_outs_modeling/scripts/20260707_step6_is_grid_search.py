@@ -67,8 +67,9 @@ results = []
 for shrinkage in SHRINKAGES:
     is_df["p_under_s"] = is_df["p_under"] * (1-shrinkage) + 0.5*shrinkage
     is_df["p_over_s"]  = 1 - is_df["p_under_s"]
-    is_df["edge_under"] = is_df["p_under_s"] - is_df["novig_prob_under"]
-    is_df["edge_over"]  = is_df["p_over_s"]  - is_df["novig_prob_over"]
+    # Per-book edge: p_model − raw_implied_prob (break-even at actual price, never novig)
+    is_df["edge_under"] = is_df["p_under_s"] - (1.0 / is_df["under_price"])
+    is_df["edge_over"]  = is_df["p_over_s"]  - (1.0 / is_df["over_price"])
 
     for edge_thresh, direction, odds_bucket in itertools.product(EDGE_THRESHOLDS, DIRECTIONS, ODDS_BUCKETS):
         if direction == "under":

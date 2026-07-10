@@ -1,0 +1,82 @@
+# Active Production Strategies
+# Single source of truth for pipeline deployment status.
+#
+# status values:
+#   active              — deployed, EventBridge rules enabled, sending emails
+#   inactive_offseason  — edge confirmed, Lambda built, waiting for season start
+#   inactive_no_edge    — researched, no deployable edge found, not going to prod
+#
+# goes_live: only set for inactive_offseason pipelines
+
+pipelines:
+
+  # ── MLB ──────────────────────────────────────────────────────────────────────
+
+  - name: mlb_total_bases
+    status: active
+    strategy: "UNDER 1.5, all odds, edge ≥5pp (raw)"
+    config: src/mlb_total_bases_modeling/config.yaml
+    lambda: mlb-total-bases-daily
+
+  - name: mlb_strikeouts
+    status: active
+    strategy: "UNDER or OVER, edge ≥3pp vs raw implied prob, both directions — 911 bets · +95.08u · +10.44% ROI OOS"
+    config: src/mlb_strikeouts_modeling/config/config.yaml
+    lambda: mlb-strikeouts-daily
+
+  - name: mlb_pitcher_outs
+    status: active
+    strategy: "UNDER, minus odds, edge ≥5pp (raw implied), line ≤17.5, shrinkage=0.25 — OOS 689 bets, +95.3u, +13.83% ROI"
+    config: src/mlb_pitcher_outs_modeling/config/config.yaml
+    lambda: mlb-pitcher-outs-daily
+
+  - name: mlb_pitcher_walks
+    status: inactive_no_edge
+    strategy: "No deployable edge found — monitoring only at edge ≥10pp"
+    config: src/mlb_pitcher_walks_modeling/config/config.yaml
+    notes: "Rebuild target 2027 when Odds API pitcher_walks coverage improves (43% in 2025, 65% in 2026)"
+
+  # ── NBA ──────────────────────────────────────────────────────────────────────
+
+  - name: nba_rebounds
+    status: inactive_offseason
+    strategy: "UNDER only, edge >5pp, all lines, OLS + XGB ensemble"
+    config: src/nba_rebounds_modeling/config/model_config.yaml
+    lambda: nba-rebounds-daily
+    goes_live: "2026-10-20"
+
+  - name: nba_assists
+    status: inactive_offseason
+    strategy: "OVER only, edge ≥15pp"
+    config: src/nba_assists_modeling/config/model_config.yaml
+    lambda: nba-assists-daily
+    goes_live: "2026-10-20"
+
+  - name: nba_points
+    status: inactive_offseason
+    strategy: "UNDER, favs (minus odds), edge ≥5pp"
+    config: src/nba_points_modeling/config/model_config.yaml
+    lambda: nba-points-daily
+    goes_live: "2026-10-20"
+
+  # ── NFL ──────────────────────────────────────────────────────────────────────
+
+  - name: nfl_sacks
+    status: inactive_offseason
+    strategy: "UNDER 0.5, edge ≥3pp (raw)"
+    config: src/nfl_sacks_modeling/config.yaml
+    lambda: nfl-sacks-daily
+    goes_live: "2026-09-09"
+
+  - name: nfl_rec_yards
+    status: inactive_offseason
+    strategy: "OVER all odds, edge ≥3pp, min_books=1"
+    config: src/nfl_rec_yards_modeling/config/model_config.yaml
+    lambda: nfl-rec-yards-daily
+    goes_live: "2026-09-09"
+
+  - name: nfl_tackles
+    status: inactive_no_edge
+    strategy: "No deployable edge found — max drawdown exceeds units won across all combos"
+    config: src/nfl_tackles_modeling/config/tackles_model_specs.yaml
+    notes: "Only 2 seasons of Odds API data; revisit 2027 with fuller history"

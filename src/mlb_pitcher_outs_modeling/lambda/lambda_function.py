@@ -5,8 +5,8 @@ Modes (set via EventBridge payload {"mode": "..."}):
   spine_update  — Rebuild rolling spine from existing gamelogs on S3 (weekly)
   daily         — Settle yesterday's bets + score today + send combined email (daily 9am ET)
 
-Strategy: UNDER minus_odds · edge ≥ 10pp · shrinkage=0.25 · line ≤ 17.5
-OOS ROI: +16.63% (n=446, 2025+2026) · model: yhat = consensus_line (no ML)
+Strategy: UNDER minus_odds · edge ≥ 5pp (raw implied) · shrinkage=0.25 · line ≤ 17.5
+OOS ROI: +13.83% (n=689, 2025+2026) · model: yhat = consensus_line (no ML)
 
 Env vars:
   ODDS_API_KEY           (required for daily mode)

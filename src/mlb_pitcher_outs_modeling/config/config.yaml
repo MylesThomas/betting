@@ -1,4 +1,4 @@
-strategy_summary: "Unders on lines <= 17.5, shrinkage of 25%, needs 10%+ edge — OOS 446 bets, +74.2u, +16.63% ROI (2026-07-07)"
+strategy_summary: "Unders on lines <= 17.5, shrinkage of 25%, needs 5%+ raw edge — OOS 689 bets, +95.3u, +13.83% ROI (2026-07-10)"
 
 mlb_pitcher_outs_model:
   model_type: consensus_line    # yhat = consensus_line directly (no OLS model); residuals = outs_recorded - consensus_line
@@ -25,7 +25,7 @@ mlb_pitcher_outs_model:
     n_bootstrap: 10000
     rng_seed: 42
     direction: under           # UNDER only — no evidence of OVER edge
-    edge_threshold_under: 0.10 # primary bets: OOS ROI +16.63% at this threshold (C2b)
+    edge_threshold_under: 0.05 # primary bets: OOS +95.3u +13.83% ROI at this threshold (689 bets, raw edge vs 1/under_price)
     edge_threshold_over: 0.99  # effectively disabled
     edge_threshold_show: 0.05  # show caution bets (5-10pp edge); display only
     odds_bucket: minus_odds    # minus_odds only (decimal ≤ 2.00); plus_odds has no edge

@@ -9,8 +9,8 @@ Sections (in order):
 Strategy (from config.yaml):
   direction:    under
   odds_bucket:  minus_odds (under_price ≤ 2.00)
-  edge_play:    ≥ 10pp
-  edge_show:    ≥  5pp (display only)
+  edge_play:    ≥ 5pp  (raw implied: p_model - 1/under_price)
+  edge_show:    ≥ 2pp  (display only)
   shrinkage:    0.25
   line_max:     17.5
   model:        consensus_line (yhat = consensus_line; no OLS/ML model)
@@ -364,8 +364,8 @@ def score_slate(
         p_under_s = p_under * (1 - shrinkage) + 0.5 * shrinkage
         p_over_s  = p_over  * (1 - shrinkage) + 0.5 * shrinkage
 
-        edge_under = p_under_s - float(row["novig_prob_under"])
-        edge_over  = p_over_s  - float(row["novig_prob_over"])
+        edge_under = p_under_s - (1.0 / float(row["under_price"]))
+        edge_over  = p_over_s  - (1.0 / float(row["over_price"]))
 
         # Rolling features from spine (display only)
         feat = latest_feats.loc[pk] if pk in latest_feats.index else {}
@@ -820,7 +820,7 @@ def build_html_email(
 {s3}
 <div class='footer'>
   Flat 1u per book bet &nbsp;·&nbsp; consensus_line bootstrap (10k samples) · shrinkage=0.25 &nbsp;·&nbsp;
-  Strategy (UNDER · minus odds · edge≥10pp · line≤17.5): OOS +74.2u · +16.63% ROI · n=446 (2025+2026)
+  Strategy (UNDER · minus odds · edge≥5pp raw · line≤17.5): OOS +95.3u · +13.83% ROI · n=689 (2025+2026)
 </div>
 </body></html>"""
 
