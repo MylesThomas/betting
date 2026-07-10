@@ -9,8 +9,8 @@ Since this is a variable-line market, different lines for the same game
 produce different P(over) estimates — each (player, game, book, line) row
 is a genuinely distinct bet.
 
-Edge = p_model_over - p_market_over  (positive → bet OVER)
-Edge = p_model_under - p_market_under (positive → bet UNDER)
+Edge = p_model_over - raw_p_over  (positive → bet OVER; raw_p = actual breakeven from posted odds)
+Edge = p_model_under - raw_p_under (positive → bet UNDER)
 
 Outputs:
   ~/Downloads/tmp/mlb_strikeouts/step4_edge.parquet
@@ -78,7 +78,7 @@ def main():
     print(f"  After join with OOF: {len(df):,} rows  ({len(df)/len(lbl):.1%} of labeled)")
 
     # Drop rows missing market probability or yhat
-    df = df.dropna(subset=["novig_over", "line", "yhat"])
+    df = df.dropna(subset=["novig_over", "raw_p_over", "raw_p_under", "line", "yhat"])
     print(f"  After dropping nulls: {len(df):,} rows")
 
     # ── Bootstrap P(over) for each unique (player, game, line) ────────────────
@@ -110,16 +110,19 @@ def main():
           f"({(n_clip_high+n_clip_low)/len(df):.2%} of total)")
 
     # ── Market probabilities ───────────────────────────────────────────────────
-    df["p_market_over"]  = df["novig_over"]
-    df["p_market_under"] = 1.0 - df["novig_over"]
+    # raw_p = actual breakeven (1/decimal_odds) — this is what determines payout
+    # novig_over retained for calibration and fav/dog classification only
+    df["p_market_over"]  = df["raw_p_over"]
+    df["p_market_under"] = df["raw_p_under"]
 
     # ── Edge ──────────────────────────────────────────────────────────────────
     df["edge_over"]  = df["p_model_over"]  - df["p_market_over"]
     df["edge_under"] = df["p_model_under"] - df["p_market_under"]
 
     print(f"\nP(model over) range:  [{df['p_model_over'].min():.4f}, {df['p_model_over'].max():.4f}]")
-    print(f"avg p_model_over:  {df['p_model_over'].mean():.4f}  avg p_market_over:  {df['p_market_over'].mean():.4f}")
-    print(f"avg p_model_under: {df['p_model_under'].mean():.4f}  avg p_market_under: {df['p_market_under'].mean():.4f}")
+    print(f"avg p_model_over:  {df['p_model_over'].mean():.4f}  avg p_market_over (raw):  {df['p_market_over'].mean():.4f}")
+    print(f"avg p_model_under: {df['p_model_under'].mean():.4f}  avg p_market_under (raw): {df['p_market_under'].mean():.4f}")
+    print(f"avg novig_over:    {df['novig_over'].mean():.4f}  (retained for fav/dog filter)")
     print(f"\nEdge distribution:")
     print(f"  edge_over:  mean={df['edge_over'].mean():.4f}  std={df['edge_over'].std():.4f}")
     print(f"  edge_under: mean={df['edge_under'].mean():.4f}  std={df['edge_under'].std():.4f}")

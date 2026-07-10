@@ -3,9 +3,9 @@
 # Deploy MLB Pitcher Strikeouts Lambda via container image (ECR)
 #
 # EventBridge schedule (all rules start DISABLED — enable at season start):
-#   Daily 8:30am ET → spine_update (refresh gamelogs + rebuild spine)
-#   Daily 9:00am ET → pipeline     (fetch live props, score, email)
-#   Daily 9:00am ET → settle       (settle prior-day games; no-op if none)
+#   Daily 8:30am ET → settle_and_rebuild  (settle yesterday + rebuild spine + Email 1)
+#   Daily 9:00am ET → pipeline            (score today + Email 2: plays + results + all-time)
+#   Weekly Sunday   → spine_update        (full spine rebuild; pre-season use)
 #
 # Pre-season checklist (run before enabling rules for 2027 season):
 #   1. Verify SES identity in AWS console
@@ -16,8 +16,8 @@
 #   3. Upload initial spine:
 #        python src/mlb_strikeouts_modeling/scripts/update_spine.py
 #   4. Enable EventBridge rules (see bottom of this script)
-#   5. Test pipeline: aws lambda invoke --payload '{"mode":"pipeline"}' ...
-#   6. Test settle:   aws lambda invoke --payload '{"mode":"settle"}' ...
+#   5. Test pipeline:          aws lambda invoke --payload '{"mode":"pipeline"}' ...
+#   6. Test settle_and_rebuild: aws lambda invoke --payload '{"mode":"settle_and_rebuild"}' ...
 #
 # Usage:
 #   export ODDS_API_KEY="<key>"
@@ -131,12 +131,12 @@ LAMBDA_ARN=$(aws lambda get-function \
 
 declare -A RULE_MODES
 RULE_MODES["$RULE_PIPELINE"]="pipeline"
-RULE_MODES["$RULE_SETTLE"]="settle"
+RULE_MODES["$RULE_SETTLE"]="settle_and_rebuild"
 RULE_MODES["$RULE_SPINE"]="spine_update"
 
 declare -A RULE_CRONS
 RULE_CRONS["$RULE_PIPELINE"]="$CRON_DAILY_9AM"
-RULE_CRONS["$RULE_SETTLE"]="$CRON_DAILY_9AM"
+RULE_CRONS["$RULE_SETTLE"]="$CRON_DAILY_830AM"
 RULE_CRONS["$RULE_SPINE"]="$CRON_DAILY_830AM"
 
 for RULE_NAME in "$RULE_PIPELINE" "$RULE_SETTLE" "$RULE_SPINE"; do
@@ -181,7 +181,7 @@ echo "  3. Enable EventBridge rules:"
 echo "       aws events enable-rule --name $RULE_PIPELINE --region $REGION"
 echo "       aws events enable-rule --name $RULE_SETTLE   --region $REGION"
 echo "       aws events enable-rule --name $RULE_SPINE    --region $REGION"
-echo "  4. Test pipeline:     aws lambda invoke --function-name $LAMBDA_NAME --payload '{\"mode\":\"pipeline\"}' /tmp/out.json && cat /tmp/out.json"
-echo "  5. Test settle:       aws lambda invoke --function-name $LAMBDA_NAME --payload '{\"mode\":\"settle\"}' /tmp/out.json && cat /tmp/out.json"
-echo "  6. Test spine_update: aws lambda invoke --function-name $LAMBDA_NAME --payload '{\"mode\":\"spine_update\"}' /tmp/out.json && cat /tmp/out.json"
+echo "  4. Test pipeline:           aws lambda invoke --function-name $LAMBDA_NAME --payload '{\"mode\":\"pipeline\"}' /tmp/out.json && cat /tmp/out.json"
+echo "  5. Test settle_and_rebuild: aws lambda invoke --function-name $LAMBDA_NAME --payload '{\"mode\":\"settle_and_rebuild\"}' /tmp/out.json && cat /tmp/out.json"
+echo "  6. Test spine_update:       aws lambda invoke --function-name $LAMBDA_NAME --payload '{\"mode\":\"spine_update\"}' /tmp/out.json && cat /tmp/out.json"
 echo ""

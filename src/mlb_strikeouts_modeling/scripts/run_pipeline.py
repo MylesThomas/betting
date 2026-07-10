@@ -70,6 +70,7 @@ SPINE_KEY    = "mlb/strikeouts_model/spine/mlb_strikeouts_spine.parquet"
 MODEL_KEY    = "mlb/strikeouts_model/model/mlb_strikeouts_model.joblib"
 RESIDUALS_KEY= "mlb/strikeouts_model/model/mlb_strikeouts_residuals_clean.npy"
 DAILY_PREFIX = "mlb/strikeouts_model/daily_runs"
+SETTLED_KEY  = "mlb/strikeouts_model/settled/settled_bets.parquet"
 
 SES_SOURCE    = os.environ.get("SETTLEMENT_SES_SOURCE", "").strip()
 SES_TO_RAW    = os.environ.get("SETTLEMENT_SES_TO", "mylescgthomas@gmail.com").strip()
@@ -83,15 +84,15 @@ FEATURES = [
     "under_price_bucket_fine",  # v5: 9-tier granular bin of avg American under odds at consensus line
 ]
 # novig_prob_over is NOT a model feature (v3): it varies per book, making raw K projection
-# book-dependent. It is used only as the market benchmark for edge calculation (p_market_over).
+# book-dependent. raw_p_over/raw_p_under ARE used for edge (v6): edge = p_model - raw_p (breakeven).
 # consensus_line IS a feature: it is player-level (modal line across all books), book-independent.
 # over_price_bucket_fine / under_price_bucket_fine (v5): player-game level, book-independent.
 SHRINKAGE               = 0.0
 N_BOOT                  = 10_000
 RNG                     = np.random.default_rng(42)
-EDGE_THRESHOLD_UNDER    = 0.03   # UNDER bets: edge >= 3%, any odds tier (lowered from 5% in v4)
-EDGE_THRESHOLD_OVER     = 0.03   # OVER bets: edge >= 3%, any odds tier (lowered from 5% in v4)
-EDGE_THRESHOLD_SHOW     = 0.02   # show backup bets (2–3% edge) in email
+EDGE_THRESHOLD_UNDER    = 0.03   # UNDER bets: edge >= 3% vs raw implied prob (v6)
+EDGE_THRESHOLD_OVER     = 0.03   # OVER bets:  edge >= 3% vs raw implied prob (v6)
+EDGE_THRESHOLD_SHOW     = 0.02   # show backup bets (2–3% vs raw) in email
 MIN_BOOKS               = 2
 LINE_MIN                = 3.5    # exclude extreme alt lines that generate false edges
 LINE_MAX                = 6.5
@@ -125,6 +126,28 @@ BOOK_ABBREV = {
     "hardrockbet":    "HR",
     "ballybet":       "BB",
     "superbook":      "SB",
+}
+
+BOOK_DISPLAY = {
+    "draftkings":     "DraftKings",
+    "fanduel":        "FanDuel",
+    "betmgm":         "BetMGM",
+    "caesars":        "Caesars",
+    "pointsbet":      "PointsBet",
+    "bet365":         "Bet365",
+    "williamhill_us": "William Hill",
+    "bovada":         "Bovada",
+    "betonlineag":    "BetOnline",
+    "mybookieag":     "MyBookie",
+    "lowvig":         "LowVig",
+    "pinnacle":       "Pinnacle",
+    "fliff":          "Fliff",
+    "espnbet":        "ESPN Bet",
+    "fanatics":       "Fanatics",
+    "betrivers":      "BetRivers",
+    "hardrockbet":    "Hard Rock Bet",
+    "ballybet":       "Bally Bet",
+    "superbook":      "SuperBook",
 }
 
 
@@ -177,6 +200,14 @@ def s3_put_csv(key: str, df: pd.DataFrame) -> None:
     df.to_csv(buf, index=False)
     buf.seek(0)
     _s3().put_object(Bucket=S3_BUCKET, Key=key, Body=buf.getvalue())
+
+
+def load_settled() -> pd.DataFrame:
+    try:
+        body = _s3().get_object(Bucket=S3_BUCKET, Key=SETTLED_KEY)["Body"].read()
+        return pd.read_parquet(BytesIO(body))
+    except Exception:
+        return pd.DataFrame()
 
 
 # ── MLB Stats API ─────────────────────────────────────────────────────────────
@@ -334,7 +365,7 @@ def assemble_bet_rows(
     comparison (p_market_over = novig_over) and is NOT passed to model.predict().
     """
     if props.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), []
 
     props = props.copy()
     props["player_key"] = props["player"].apply(_normalize_name)
@@ -357,7 +388,7 @@ def assemble_bet_rows(
     over_props  = props[props["side"] == "over"].copy()
     under_props = props[props["side"] == "under"].copy()
     if over_props.empty or under_props.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), []
 
     # Player-level features (not book-level)
     consensus_line = (
@@ -460,6 +491,11 @@ def assemble_bet_rows(
 
     book_rows["opp_k_against_season"] = book_rows["opp_key"].map(opp_rate)
 
+    unmatched = book_rows.loc[book_rows["team_raw"].isna(), "player_key"].unique().tolist()
+    if unmatched:
+        print(f"  WARNING: {len(unmatched)} player(s) with no probables match, dropping: {unmatched}")
+        book_rows = book_rows[book_rows["team_raw"].notna()].copy()
+
     book_rows["player_id"] = book_rows["player_key"].map(
         {k: v.get("player_id") for k, v in probables.items()}
     ).combine_first(book_rows.get("player_id", pd.Series(dtype=float)))
@@ -475,7 +511,7 @@ def assemble_bet_rows(
     book_rows = book_rows.dropna(subset=["k_roll_career", "consensus_line"]).copy()
 
     if book_rows.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), unmatched
 
     book_rows["opp_k_against_season"] = book_rows["opp_k_against_season"].fillna(
         book_rows["opp_k_against_season"].median() if book_rows["opp_k_against_season"].notna().any() else 5.5
@@ -508,14 +544,16 @@ def assemble_bet_rows(
         on=["player_key", "line"],
         how="left",
     )
-    book_rows["p_market_over"]  = book_rows["novig_over"]
-    book_rows["p_market_under"] = book_rows["novig_under"]
+    # Edge vs raw implied prob (actual breakeven from posted odds) — not novig.
+    # novig compares against a price never actually offered; raw_p is what you get paid.
+    book_rows["p_market_over"]  = book_rows["raw_p_over"]
+    book_rows["p_market_under"] = book_rows["raw_p_under"]
 
     book_rows["edge_over"]  = book_rows["p_model_over"]  - book_rows["p_market_over"]
     book_rows["edge_under"] = book_rows["p_model_under"] - book_rows["p_market_under"]
 
-    # Simple strategy (v5, per book row):
-    #   OVER:  edge >= EDGE_THRESHOLD_OVER (3%), any odds tier
+    # Simple strategy (v6, per book row):
+    #   OVER:  edge >= EDGE_THRESHOLD_OVER (3%) vs raw implied prob, any odds tier
     #   UNDER: edge >= EDGE_THRESHOLD_UNDER (3%), any odds tier
     #   SHOW:  either direction >= EDGE_THRESHOLD_SHOW (2%) in email
     #   When both over and under qualify, pick the larger edge.
@@ -539,12 +577,14 @@ def assemble_bet_rows(
         book_rows["edge_over"].abs(), book_rows["edge_under"].abs()
     )
 
-    return book_rows.sort_values("max_abs_edge", ascending=False).reset_index(drop=True)
+    return book_rows.sort_values("max_abs_edge", ascending=False).reset_index(drop=True), unmatched
 
 
 # ── HTML email ────────────────────────────────────────────────────────────────
 
-def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
+def build_html(bets: pd.DataFrame, gameday: str, n_scored: int,
+               settled_yesterday: pd.DataFrame | None = None,
+               settled_all: pd.DataFrame | None = None) -> str:
     he       = html_module.escape
     now_str  = datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")
     n_primary = int(bets["is_primary"].sum())
@@ -564,15 +604,25 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
     bets["_away"] = bets.apply(
         lambda r: r.get("opp_raw", "") if r.get("is_home") else r.get("team_raw", ""), axis=1
     )
-    NCOLS = 19  # Player Team Opp Dir Line ProjKs Book Over Under MktO% MktU% MdlO% MdlU% OVREdge UNDEdge k_career k_c5 opp_k Status
+    NCOLS = 25  # Player Team Opp Time(ET) Line | Book | Over Under | RawO RawU RawT | FairO FairU FairT Vig | Pred Delta PredO PredU | OvrEdge UndEdge | k_career k_c5 opp_k Status
 
     bets["max_abs_edge"] = bets["max_abs_edge"] if "max_abs_edge" in bets.columns else (
         bets[["edge_over", "edge_under"]].abs().max(axis=1)
     )
-    # Sort: games by start time, then within each game: primary first, then by max abs edge desc
-    bets = bets.sort_values(
-        ["commence_time", "is_primary", "max_abs_edge"],
-        ascending=[True, False, False]
+    # Sort: game start time first, then matchup (keeps same-time games together),
+    # then within each game: primary first, then by max abs edge desc.
+    _SORT_COLS = ["commence_time", "_home", "_away", "is_primary", "max_abs_edge"]
+    _SORT_ASC  = [True, True, True, False, False]
+    bets = bets.sort_values(_SORT_COLS, ascending=_SORT_ASC)
+
+    # Collapse no-edge rows to one per (player_key, line) — keeps the book with highest abs edge.
+    # PLAY/WATCH rows stay per-book so you can see which book to bet on.
+    no_edge_mask = bets["side"].isna()
+    bets = pd.concat([
+        bets[~no_edge_mask],
+        bets[no_edge_mask].drop_duplicates(subset=["player_key", "line"], keep="first"),
+    ]).sort_values(
+        _SORT_COLS, ascending=_SORT_ASC
     )
 
     rows_html = ""
@@ -606,8 +656,9 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
         is_over    = side == "over"
 
         if is_primary:
-            bg     = "background:#eaf6ea"
-            status = "<span style='color:#276221;font-weight:bold'>PLAY ✓</span>"
+            side_dir = "OVER" if side == "over" else "UNDER"
+            bg       = "background:#eaf6ea"
+            status   = f"<span style='color:#276221;font-weight:bold'>PLAY - {side_dir}</span>"
         elif has_side:
             bg     = "background:#fffbeb"
             status = "<span style='color:#b45309;font-weight:bold'>WATCH</span>"
@@ -617,45 +668,70 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
 
         dim = "color:#bbb;font-size:11px"  # style for no-edge rows
 
+        # ── Player / Game group ──────────────────────────────────────────────
         team = he(str(r.get("team_raw") or "—"))
         opp  = he(str(r.get("opp_raw")  or "—"))
-        team_cell = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>{team}</td>"
-        opp_cell  = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>{opp}</td>"
+        name_style = "font-weight:600" if has_side else f"font-weight:600;{dim}"
+        team_cell  = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>{team}</td>"
+        opp_cell   = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>{opp}</td>"
+        game_time_val = he(str(r.get("game_time_et") or "—"))
+        time_cell  = f"<td style='text-align:center;font-size:11px;{'color:#666' if has_side else dim}'>{game_time_val}</td>"
+        line_cell  = f"<td style='text-align:center;{'font-size:12px' if has_side else dim}'>{fmt(r.get('line'), '.1f')}</td>"
 
-        book_abbrev = he(str(r.get("book_abbrev") or "—"))
-        over_odds   = r.get("odds")
-        under_odds  = r.get("odds_u")
-
+        # ── Book group ───────────────────────────────────────────────────────
+        book_full  = BOOK_DISPLAY.get(str(r.get("bookmaker", "")).lower(),
+                                      str(r.get("bookmaker", "")).title())
+        book_disp  = he(book_full)
         if has_side:
-            side_lbl   = "OVER" if is_over else "UNDER"
-            side_color = "#276221" if is_over else "#1d4ed8"
-            dir_cell   = f"<td style='text-align:center;font-weight:bold;color:{side_color}'>{side_lbl}</td>"
             book_color = "#276221;font-weight:600" if is_primary else "#555"
-            book_cell  = f"<td style='font-size:11px;color:{book_color};text-align:center'>{book_abbrev}</td>"
+            book_cell  = f"<td style='font-size:11px;color:{book_color};text-align:center'>{book_disp}</td>"
+        else:
+            book_cell = f"<td style='font-size:11px;text-align:center;{dim}'>{book_disp}</td>"
+
+        # ── American Odds group ──────────────────────────────────────────────
+        over_odds  = r.get("odds")
+        under_odds = r.get("odds_u")
+        if has_side:
             over_color = "#276221;font-weight:bold" if is_over  else "#555"
             undr_color = "#1d4ed8;font-weight:bold" if not is_over else "#555"
             over_cell  = f"<td style='text-align:center;font-size:12px;color:{over_color}'>{fmt_odds(over_odds)}</td>"
             undr_cell  = f"<td style='text-align:center;font-size:12px;color:{undr_color}'>{fmt_odds(under_odds)}</td>"
         else:
-            dir_cell  = f"<td style='text-align:center;{dim}'>—</td>"
-            book_cell = f"<td style='font-size:11px;text-align:center;{dim}'>{book_abbrev}</td>"
             over_cell = f"<td style='text-align:center;font-size:12px;{dim}'>{fmt_odds(over_odds)}</td>"
             undr_cell = f"<td style='text-align:center;font-size:12px;{dim}'>{fmt_odds(under_odds)}</td>"
 
-        # 4 probability columns: Mkt O% / Mkt U% / Mdl O% / Mdl U%
-        # Highlight the bet direction in bold; dim the other side.
-        def _prob_cell(val, bold: bool) -> str:
+        # ── Implied + No-Vig groups ───────────────────────────────────────────
+        raw_o = r.get("raw_p_over")
+        raw_u = r.get("raw_p_under")
+        raw_t = float(raw_o) + float(raw_u) if pd.notna(raw_o) and pd.notna(raw_u) else None
+
+        def _pct_cell(val, bold: bool = False) -> str:
             s = fmt(val, '.1%') if pd.notna(val) else '—'
             if not has_side:
-                return f"<td style='text-align:center;{dim}'>{s}</td>"
-            style = "text-align:center;font-weight:bold" if bold else "text-align:center;color:#999;font-size:11px"
+                return f"<td style='text-align:center;font-size:11px;{dim}'>{s}</td>"
+            style = "text-align:center;font-size:11px;font-weight:bold" if bold else "text-align:center;font-size:11px;color:#999"
             return f"<td style='{style}'>{s}</td>"
 
-        mkt_over_cell  = _prob_cell(r.get("p_market_over"),  is_over)
-        mkt_under_cell = _prob_cell(r.get("p_market_under"), not is_over)
-        mdl_over_cell  = _prob_cell(r.get("p_model_over"),   is_over)
-        mdl_under_cell = _prob_cell(r.get("p_model_under"),  not is_over)
+        raw_over_cell   = _pct_cell(raw_o)
+        raw_under_cell  = _pct_cell(raw_u)
+        raw_total_cell  = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>{fmt(raw_t, '.1%') if raw_t is not None else '—'}</td>"
+        fair_over_cell  = _pct_cell(r.get("novig_over"),  is_over)
+        fair_under_cell = _pct_cell(r.get("novig_under"), not is_over)
+        fair_total_cell = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>100.0%</td>"
+        vig_val  = raw_t - 1.0 if raw_t is not None else None
+        vig_cell = f"<td style='text-align:center;font-size:11px;{'color:#555' if has_side else dim}'>{fmt(vig_val, '.1%') if vig_val is not None else '—'}</td>"
 
+        # ── Model Prediction group ───────────────────────────────────────────
+        yhat  = r.get("yhat")
+        line  = r.get("line")
+        delta = float(yhat) - float(line) if pd.notna(yhat) and pd.notna(line) else None
+        delta_color = "#276221" if (delta is not None and delta > 0) else "#c0392b" if (delta is not None and delta < 0) else "#555"
+        pred_cell       = f"<td style='text-align:center;font-weight:600;{'color:#2c3e50' if has_side else dim}'>{fmt(yhat, '.2f')}</td>"
+        delta_cell      = f"<td style='text-align:center;font-weight:600;{'color:' + delta_color if has_side else dim}'>{(f'{delta:+.2f}' if delta is not None else '—')}</td>"
+        pred_over_cell  = _pct_cell(r.get("p_model_over"),  is_over)
+        pred_under_cell = _pct_cell(r.get("p_model_under"), not is_over)
+
+        # ── Edge group ───────────────────────────────────────────────────────
         edge_over  = float(r.get("edge_over",  0) or 0)
         edge_under = float(r.get("edge_under", 0) or 0)
 
@@ -666,17 +742,18 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
                 style = f"text-align:center;{dim}"
             return f"<td style='{style}'>{val:+.1%}</td>"
 
-        name_style = "font-weight:600" if has_side else f"font-weight:600;{dim}"
+        # ── Model Inputs group ───────────────────────────────────────────────
         stat_style = f"text-align:center;font-size:11px;{'color:#555' if has_side else 'color:#bbb'}"
 
         rows_html += (
             f"<tr style='{bg}'>"
             f"<td style='{name_style}'>{he(str(r.get('player', '—')))}</td>"
-            + team_cell + opp_cell + dir_cell
-            + f"<td style='text-align:center;{'font-size:12px' if has_side else dim}'>{fmt(r.get('line'), '.1f')}</td>"
-            + f"<td style='text-align:center;font-weight:600;{'color:#2c3e50' if has_side else dim}'>{fmt(r.get('yhat'), '.2f')}</td>"
-            + book_cell + over_cell + undr_cell
-            + mkt_over_cell + mkt_under_cell + mdl_over_cell + mdl_under_cell
+            + team_cell + opp_cell + time_cell + line_cell
+            + book_cell
+            + over_cell + undr_cell
+            + raw_over_cell + raw_under_cell + raw_total_cell
+            + fair_over_cell + fair_under_cell + fair_total_cell + vig_cell
+            + pred_cell + delta_cell + pred_over_cell + pred_under_cell
             + _edge_cell(edge_over,  is_over)
             + _edge_cell(edge_under, not is_over)
             + f"<td style='{stat_style}'>{fmt(r.get('k_roll_career'), '.1f')}</td>"
@@ -710,19 +787,35 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
 </p>
 
 <p class='legend'>
-  <span style='background:#eaf6ea;color:#276221'>PLAY ✓</span> OVER or UNDER ≥{EDGE_THRESHOLD_OVER*100:.0f}pp, any odds
+  <span style='background:#eaf6ea;color:#276221'>PLAY - OVER / PLAY - UNDER</span> edge ≥{EDGE_THRESHOLD_OVER*100:.0f}pp, any odds
   <span style='background:#fffbeb;color:#b45309;margin-left:8px'>WATCH</span> OVER or UNDER {EDGE_THRESHOLD_SHOW*100:.0f}–{EDGE_THRESHOLD_UNDER*100:.0f}pp
 </p>
 
 <details open>
   <summary>▸ Props by game &nbsp;<span style='font-weight:normal;color:#666'>({n_total} rows scored)</span></summary>
   <table>
+    <thead>
     <tr>
-      <th>Player</th><th>Team</th><th>Opp</th><th>Dir</th><th>Line</th><th>Proj Ks</th><th>Book</th>
-      <th>Over</th><th>Under</th><th>Mkt O%</th><th>Mkt U%</th><th>Mdl O%</th><th>Mdl U%</th>
-      <th>OVER Edge</th><th>UNDER Edge</th>
-      <th>k_roll_career</th><th>k_roll_c5</th><th>opp_K_rate</th><th>Status</th>
+      <th colspan="5" style="text-align:center;border-right:1px solid #6a8fb0">Player / Game</th>
+      <th colspan="1" style="text-align:center;border-right:1px solid #6a8fb0">Book</th>
+      <th colspan="2" style="text-align:center;border-right:1px solid #6a8fb0">American Odds</th>
+      <th colspan="3" style="text-align:center;border-right:1px solid #6a8fb0">Implied</th>
+      <th colspan="4" style="text-align:center;border-right:1px solid #6a8fb0">No-Vig</th>
+      <th colspan="4" style="text-align:center;border-right:1px solid #6a8fb0">Model Prediction</th>
+      <th colspan="2" style="text-align:center;border-right:1px solid #6a8fb0">Edge</th>
+      <th colspan="4" style="text-align:center">Model Inputs</th>
     </tr>
+    <tr>
+      <th>Player</th><th>Team</th><th>Opp</th><th>Time (ET)</th><th>Line</th>
+      <th>Book</th>
+      <th>Over</th><th>Under</th>
+      <th>Raw Over</th><th>Raw Under</th><th>Raw Total</th>
+      <th>Fair Over</th><th>Fair Under</th><th>Fair Total</th><th>Vig</th>
+      <th>Prediction</th><th>Delta</th><th>Pred Over</th><th>Pred Under</th>
+      <th>Over Edge</th><th>Under Edge</th>
+      <th>k_roll_career</th><th>k_roll_c5</th><th>opp_k_against_season</th><th>Status</th>
+    </tr>
+    </thead>
     {rows_html}
   </table>
 </details>
@@ -755,7 +848,164 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int) -> str:
   Out-of-sample (v5, 2025–2026): 7,104 bets &nbsp;·&nbsp; 59.36% WR &nbsp;·&nbsp; +528.97u &nbsp;·&nbsp; +7.45% ROI &nbsp;|&nbsp; In-sample/out-of-sample ratio: 0.99x (no overfitting)
 </div>
 
+{build_section2_html(settled_yesterday if settled_yesterday is not None else pd.DataFrame(),
+                     (pd.Timestamp(gameday) - pd.Timedelta(days=1)).strftime("%Y-%m-%d"))}
+{build_section3_html(settled_all if settled_all is not None else pd.DataFrame())}
+
 </body></html>"""
+
+
+def build_warning_html(unmatched: list[str], probables: dict, gameday: str) -> str:
+    he = html_module.escape
+    rows = "".join(
+        f"<tr><td style='padding:6px 10px;font-family:{_MONO}'>{he(name)}</td></tr>"
+        for name in sorted(unmatched)
+    )
+    prob_rows = "".join(
+        f"<tr><td style='padding:4px 10px;font-family:{_MONO};color:#555'>{he(k)}</td></tr>"
+        for k in sorted(probables.keys())
+    )
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  body {{font-family:{_SANS};color:#222;max-width:800px;margin:auto;padding:20px}}
+  h2 {{color:#b45309}}
+  table {{border-collapse:collapse;margin-top:8px}}
+  th {{background:#b45309;color:#fff;padding:7px 10px;text-align:left;font-size:12px}}
+  td {{border-bottom:1px solid #e0e0e0;font-size:12px}}
+</style>
+</head><body>
+<h2>⚠ MLB Strikeouts — Unmatched Players — {gameday}</h2>
+<p>The following players had props on The Odds API but could <strong>not be matched</strong>
+to a probable starter from the MLB Stats API. They were <strong>excluded</strong> from today's
+recommendations. Add a <code>NAME_MAP</code> entry in <code>run_pipeline.py</code> to fix.</p>
+<h3 style='margin-bottom:4px'>Unmatched (Odds API names, normalised)</h3>
+<table><tr><th>player_key</th></tr>{rows}</table>
+<h3 style='margin-top:16px;margin-bottom:4px'>Available probables keys (MLB API)</h3>
+<table><tr><th>player_key</th></tr>{prob_rows}</table>
+</body></html>"""
+
+
+def build_section2_html(settled_yesterday: pd.DataFrame, yesterday: str) -> str:
+    he = html_module.escape
+    if settled_yesterday.empty:
+        return f"<details open><summary>▸ Yesterday's results &nbsp;<span style='font-weight:normal;color:#666'>({yesterday})</span></summary><p style='padding:8px;color:#888'>No settled bets for {yesterday}.</p></details>\n"
+
+    df = settled_yesterday[settled_yesterday["outcome"].isin(["WIN", "LOSS", "PUSH", "DNP"])].copy()
+    wins   = int((df["outcome"] == "WIN").sum())
+    losses = int((df["outcome"] == "LOSS").sum())
+    pushes = int((df["outcome"] == "PUSH").sum())
+    dnps   = int((df["outcome"] == "DNP").sum())
+    day_pnl = float(df["pnl"].sum())
+    pnl_color = "#276221" if day_pnl >= 0 else "#c0392b"
+    record = f"{wins}W–{losses}L{f'–{pushes}P' if pushes else ''}{f'–{dnps}DNP' if dnps else ''}"
+
+    def _oc_color(oc: str) -> str:
+        return {"WIN": "#276221", "LOSS": "#c0392b", "PUSH": "#b45309", "DNP": "#888"}.get(oc, "#222")
+
+    rows = ""
+    for _, r in df.sort_values(["outcome", "player_key"]).iterrows():
+        side     = str(r.get("side", "")).upper()
+        side_c   = "#276221" if side == "OVER" else "#1d4ed8"
+        oc       = str(r.get("outcome", "—"))
+        raw_odds = r.get("odds") if side == "OVER" else r.get("odds_u")
+        odds_str = f"{int(float(raw_odds)):+d}" if pd.notna(raw_odds) else "—"
+        actual_k = "—" if pd.isna(r.get("actual_k")) else int(r["actual_k"])
+        pnl_val  = float(r.get("pnl") or 0)
+        edge_val = float(r.get("edge") or 0)
+        pnl_c    = "#276221" if pnl_val > 0 else "#c0392b" if pnl_val < 0 else "#888"
+        book     = he(str(r.get("book_abbrev") or r.get("bookmaker") or "—"))
+        rows += (
+            f"<tr>"
+            f"<td style='padding:5px 8px;font-weight:600'>{he(str(r.get('player_key', '—')))}</td>"
+            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{side_c}'>{side}</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{r.get('line', '—')}</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{book}</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{odds_str}</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{edge_val*100:+.1f}pp</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{actual_k}</td>"
+            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{_oc_color(oc)}'>{oc}</td>"
+            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{pnl_c}'>{pnl_val:+.2f}u</td>"
+            f"</tr>\n"
+        )
+
+    return f"""<details open>
+  <summary>▸ Yesterday's results &nbsp;<span style='font-weight:normal;color:#666'>({yesterday} &nbsp;·&nbsp; {record} &nbsp;·&nbsp; <span style='color:{pnl_color};font-weight:bold'>{day_pnl:+.2f}u</span>)</span></summary>
+  <table style='margin-top:6px'>
+    <tr>
+      <th>Player</th><th>Side</th><th>Line</th><th>Book</th><th>Odds</th><th>Edge</th><th>Actual K</th><th>Outcome</th><th>P&amp;L</th>
+    </tr>
+    {rows}
+  </table>
+</details>
+"""
+
+
+def build_section3_html(settled_all: pd.DataFrame) -> str:
+    if settled_all.empty:
+        return "<details><summary>▸ All-time results</summary><p style='padding:8px;color:#888'>No history yet.</p></details>\n"
+
+    settled = settled_all[settled_all["outcome"].isin(["WIN", "LOSS"])].copy()
+    if settled.empty:
+        return ""
+
+    total_bets = len(settled)
+    wins       = int((settled["outcome"] == "WIN").sum())
+    losses     = int((settled["outcome"] == "LOSS").sum())
+    total_pnl  = float(settled["pnl"].dropna().sum())
+    roi        = total_pnl / total_bets * 100 if total_bets else 0.0
+    wr         = wins / total_bets * 100 if total_bets else 0.0
+    pnl_color  = "#276221" if total_pnl >= 0 else "#c0392b"
+
+    def _card(label: str, value: str, color: str = "#2c3e50") -> str:
+        return (
+            f"<div style='background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;"
+            f"padding:10px 16px;min-width:100px;display:inline-block;margin:0 8px 8px 0'>"
+            f"<div style='font-size:11px;color:#666;text-transform:uppercase'>{label}</div>"
+            f"<div style='font-size:18px;font-weight:700;color:{color}'>{value}</div>"
+            f"</div>"
+        )
+
+    settled["_season"] = pd.to_datetime(settled["game_date"]).dt.year
+    season_rows = ""
+    for season, grp in settled.groupby("_season"):
+        s_bets   = len(grp)
+        s_wins   = int((grp["outcome"] == "WIN").sum())
+        s_losses = int((grp["outcome"] == "LOSS").sum())
+        s_pnl    = float(grp["pnl"].dropna().sum())
+        s_roi    = s_pnl / s_bets * 100 if s_bets else 0.0
+        s_wr     = s_wins / s_bets * 100 if s_bets else 0.0
+        s_c      = "#276221" if s_pnl >= 0 else "#c0392b"
+        season_rows += (
+            f"<tr>"
+            f"<td style='padding:5px 8px'>{season}</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{s_bets}</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{s_wins}W–{s_losses}L</td>"
+            f"<td style='padding:5px 8px;text-align:center'>{s_wr:.1f}%</td>"
+            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{s_c}'>{s_pnl:+.2f}u</td>"
+            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{s_c}'>{s_roi:+.1f}%</td>"
+            f"</tr>\n"
+        )
+
+    return f"""<details>
+  <summary>▸ All-time results</summary>
+  <div style='margin:8px 0 16px'>
+    {_card("All-time P&L", f"{total_pnl:+.2f}u", pnl_color)}
+    {_card("Record", f"{wins}W–{losses}L")}
+    {_card("Win %", f"{wr:.1f}%")}
+    {_card("ROI", f"{roi:+.1f}%", pnl_color)}
+    {_card("Bets", str(total_bets))}
+  </div>
+  <table style='width:auto'>
+    <tr><th>Season</th><th>Bets</th><th>Record</th><th>Win %</th><th>Units</th><th>ROI</th></tr>
+    {season_rows}
+  </table>
+  <p style='font-size:11px;color:#555;margin-top:8px'>
+    Flat-bet 1u &nbsp;·&nbsp; UNDER or OVER ≥{EDGE_THRESHOLD_UNDER*100:.0f}pp &nbsp;·&nbsp;
+    OOS baseline (v5, 2025–2026): +528.97u · +7.45% ROI
+  </p>
+</details>
+"""
 
 
 # ── Send / notify ─────────────────────────────────────────────────────────────
@@ -837,8 +1087,13 @@ def main():
 
     # 5. Assemble features + score
     print("Scoring bets...", flush=True)
-    bets = assemble_bet_rows(props, player_latest, probables, opp_rate, gameday, model, residuals)
+    bets, unmatched = assemble_bet_rows(props, player_latest, probables, opp_rate, gameday, model, residuals)
     n_scored = bets["player_key"].nunique() if not bets.empty else 0
+
+    if unmatched:
+        warn_subject  = f"⚠ MLB Strikeouts {gameday} — {len(unmatched)} unmatched player(s)"
+        warn_html     = build_warning_html(unmatched, probables, gameday)
+        send_email(warn_subject, warn_html)
     print(f"  Pitchers scored: {n_scored}")
 
     if bets.empty:
@@ -868,11 +1123,21 @@ def main():
     s3_put_csv(rec_key, bets[[c for c in save_cols if c in bets.columns]])
     print(f"  Saved → s3://{S3_BUCKET}/{rec_key}")
 
-    # 7. Email + SNS
+    # 7. Load settled history for sections 2 & 3
+    yesterday = (pd.Timestamp(gameday) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    print("Loading settled history...", flush=True)
+    settled_all = load_settled()
+    settled_yesterday = (
+        settled_all[settled_all["game_date"] == yesterday].copy()
+        if not settled_all.empty and "game_date" in settled_all.columns
+        else pd.DataFrame()
+    )
+    print(f"  All-time bets: {len(settled_all)} · Yesterday ({yesterday}): {len(settled_yesterday)}")
+
+    # 8. Email + SNS
     subject   = f"MLB Strikeouts {gameday} — {n_primary} plays · {n_watch} watch · {n_scored} w/ posted lines"
-    html_body = build_html(bets, gameday, n_scored)
+    html_body = build_html(bets, gameday, n_scored, settled_yesterday, settled_all)
     send_email(subject, html_body)
-    publish_sns(subject, f"{n_primary} primary bets (UNDER≥{EDGE_THRESHOLD_UNDER:.0%} or OVER≥{EDGE_THRESHOLD_OVER:.0%}). See email.")
 
     print(f"\nDone. {n_primary} primary bets, {len(bets)} total.")
 

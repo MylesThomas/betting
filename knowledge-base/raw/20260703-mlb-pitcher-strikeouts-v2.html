@@ -1630,3 +1630,301 @@ Extended sweep confirmed: no improvement from stacking line-range features on to
 
 </body>
 </html>
+
+
+<h2>Step 3d — Team Spread / Game Context Features &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-09 ~20:22 ET</span></h2>
+
+<div class="note">
+<strong>Hypothesis:</strong> The pitcher's team moneyline (win probability) encodes expected game script —
+big favorites get more run support, stay in longer, and strikeout totals should be higher.
+This tests whether h2h / run-line features add signal on top of v5's 7 existing features.
+</div>
+
+<h3>Data</h3>
+<ul style="font-size:13px">
+  <li>Source: Odds API historical endpoint (<code>h2h,spreads</code>) — 20 credits/event</li>
+  <li>Snapshot time: 11am, 1pm, or 3pm ET on game day (first that returns ≥1 book)</li>
+  <li>Events fetched: <strong>4,565</strong> of 4,557 unique events in labeled dataset</li>
+  <li>Player-game match rate: <strong>100.0%</strong> (rows with game lines joined)</li>
+  <li>No-vig method: proportional de-vig across both sides of h2h / spreads market</li>
+  <li>Consensus: median no-vig prob across all US books returning that market</li>
+</ul>
+
+<h3>New features</h3>
+<table style="width:auto;margin-bottom:16px">
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Feature</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Description</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Source</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Book-invariant?</th>
+  </tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">team_ml_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">No-vig win prob for pitcher's team</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">h2h</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes (consensus median)</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">opp_ml_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">1 − team_ml_prob (opponent win prob)</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">h2h</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">team_rl_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">No-vig prob pitcher's team covers −1.5 run line</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">spreads</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes (consensus median)</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">is_favorite</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Binary: team_ml_prob &gt; 0.5</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">derived</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">ml_delta</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">team_ml_prob − 0.5 (signed distance from even)</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">derived</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+</table>
+
+<h3>Step 3a — Individual feature rankings (OLS, walk-forward OOF)</h3>
+<p style="font-size:12px;color:#555">Baseline: <code>consensus_line</code> alone. Lower RMSE = better. ↓ delta = improvement.</p>
+<table>
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Feature</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">n (OOF rows)</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">RMSE</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">R²</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">vs baseline</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Notes</th>
+  </tr>
+  <tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>team_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2582</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>opp_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2582</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,573</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4528</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0061</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.3107</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>is_favorite</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4227</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0302</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2806</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2582</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+
+</table>
+
+<h3>Step 3b — Combo tests (v5 baseline + spread features)</h3>
+<p style="font-size:12px;color:#555">v5 baseline RMSE = <strong>2.1421</strong>. Accept threshold: RMSE improvement ≥ 0.005.</p>
+<table>
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Model</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">N features</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">n (OOF rows)</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">OOF RMSE</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">R²</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">vs v5 baseline</th>
+  </tr>
+  <tr style='background:#f0f7ff'><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:bold'>v5 baseline</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>7</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.1266</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2524</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0155</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + opp_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,507</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1264</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2534</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0157</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + is_favorite</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1266</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2524</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0156</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob + team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>9</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,507</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1265</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2534</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0156</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob + ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>9</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+
+</table>
+
+<div class="pass" style="margin-top:16px">
+  <strong>Conclusion:</strong> <strong>ACCEPT</strong> — best combo (<code>v5 + team_rl_prob</code>) reduces OOF RMSE by <strong>0.0157</strong> vs v5 baseline. Add to feature set and retrain.
+</div>
+
+
+<h2>Step 3d — Team Spread / Game Context Features &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-09 ~20:26 ET</span></h2>
+
+<div class="note">
+<strong>Hypothesis:</strong> The pitcher's team moneyline (win probability) encodes expected game script —
+big favorites get more run support, stay in longer, and strikeout totals should be higher.
+This tests whether h2h / run-line features add signal on top of v5's 7 existing features.
+</div>
+
+<h3>Data</h3>
+<ul style="font-size:13px">
+  <li>Source: Odds API historical endpoint (<code>h2h,spreads</code>) — 20 credits/event</li>
+  <li>Snapshot time: 11am, 1pm, or 3pm ET on game day (first that returns ≥1 book)</li>
+  <li>Events fetched: <strong>4,565</strong> of 4,557 unique events in labeled dataset</li>
+  <li>Player-game match rate: <strong>100.0%</strong> (rows with game lines joined)</li>
+  <li>No-vig method: proportional de-vig across both sides of h2h / spreads market</li>
+  <li>Consensus: median no-vig prob across all US books returning that market</li>
+</ul>
+
+<h3>New features</h3>
+<table style="width:auto;margin-bottom:16px">
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Feature</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Description</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Source</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Book-invariant?</th>
+  </tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">team_ml_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">No-vig win prob for pitcher's team</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">h2h</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes (consensus median)</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">opp_ml_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">1 − team_ml_prob (opponent win prob)</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">h2h</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">team_rl_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">No-vig prob pitcher's team covers −1.5 run line</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">spreads</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes (consensus median)</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">is_favorite</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Binary: team_ml_prob &gt; 0.5</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">derived</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">ml_delta</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">team_ml_prob − 0.5 (signed distance from even)</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">derived</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+</table>
+
+<h3>Step 3a — Individual feature rankings (OLS, walk-forward OOF)</h3>
+<p style="font-size:12px;color:#555">Baseline: <code>consensus_line</code> alone. Lower RMSE = better. ↓ delta = improvement.</p>
+<table>
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Feature</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">n (OOF rows)</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">RMSE</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">R²</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">vs baseline</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Notes</th>
+  </tr>
+  <tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>team_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2582</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>opp_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2582</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,573</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4528</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0061</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.3107</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>is_favorite</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4227</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0302</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2806</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2582</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+
+</table>
+
+<h3>Step 3b — Combo tests (v5 baseline + spread features)</h3>
+<p style="font-size:12px;color:#555">v5 baseline RMSE = <strong>2.1421</strong>. Accept threshold: RMSE improvement ≥ 0.005.</p>
+<table>
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Model</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">N features</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">n (OOF rows)</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">OOF RMSE</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">R²</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">vs v5 baseline</th>
+  </tr>
+  <tr style='background:#f0f7ff'><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:bold'>v5 baseline</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>7</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.1266</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2524</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0155</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + opp_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,507</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1264</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2534</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0157</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + is_favorite</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1266</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2524</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0156</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob + team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>9</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,507</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1265</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2534</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0156</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob + ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>9</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#276221;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#276221;font-weight:bold'>↓0.0154</span></td></tr>
+
+</table>
+
+<div class="pass" style="margin-top:16px">
+  <strong>Conclusion:</strong> <strong>ACCEPT</strong> — best combo (<code>v5 + team_rl_prob</code>) reduces OOF RMSE by <strong>0.0157</strong> vs v5 baseline. Add to feature set and retrain.
+</div>
+
+<section style="margin:2em 0;padding:1.5em;border:1px solid #e0e0e0;border-radius:6px">
+<h2 style="margin-top:0">Step 3e — Opponent Rolling K Rate + start_num_season (2026-07-09 21:15)</h2>
+
+<h3>Motivation</h3>
+<p><code>opp_k_against_season</code> (in v5) uses the season-expanding mean — smoothed over all prior games.
+The hypothesis here is that <em>recent</em> opponent batting form (last 3 or 5 games) captures
+hot/cold streaks better than the season average. <code>start_num_season</code> captures where
+in the season the pitcher is — early starts (rust, pitch-count limits) vs mid-season groove.</p>
+
+<p>Both <code>days_rest</code> and <code>game_month</code> were already swept in Step 3a and did not improve RMSE.
+These candidates were not included in that sweep.</p>
+
+<h3>Feature Descriptions</h3>
+<table border="1" style="border-collapse:collapse;width:100%;font-size:0.9em">
+<thead><tr style="background:#f0f0f0"><th>Feature</th><th>Description</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td><code>opp_k_roll_L3</code></td><td>Opponent team's avg Ks allowed per game over last 3 games (within season, shift(1) to avoid leakage)</td><td>Spine (computed)</td></tr>
+<tr><td><code>opp_k_roll_L5</code></td><td>Same, last 5 games</td><td>Spine (computed)</td></tr>
+<tr><td><code>start_num_season</code></td><td>Pitcher's start number this season (1st start, 2nd start, …)</td><td>Spine</td></tr>
+</tbody>
+</table>
+
+<h3>V5 Baseline</h3>
+<p>OOF RMSE (walk-forward 2024→2025, 2024+2025→2026, avg): <strong>2.1266</strong></p>
+
+<h3>Individual Feature Sweep</h3>
+<table border="1" style="border-collapse:collapse;width:100%;font-size:0.9em">
+<thead><tr style="background:#f0f0f0">
+<th>Feature</th><th>OOF RMSE</th><th>Δ vs baseline</th><th>N (avg per fold)</th><th>Verdict</th>
+</tr></thead>
+<tbody>
+<tr><td><code>opp_k_roll_L3</code></td><td>2.4605</td><td style='color:#dc2626'>+0.3339</td><td>2,635</td><td>✗ worse</td></tr>
+<tr><td><code>opp_k_roll_L5</code></td><td>2.4606</td><td style='color:#dc2626'>+0.3340</td><td>2,635</td><td>✗ worse</td></tr>
+<tr><td><code>start_num_season</code></td><td>2.4517</td><td style='color:#dc2626'>+0.3251</td><td>2,652</td><td>✗ worse</td></tr>
+
+</tbody>
+</table>
+
+<h3>Combo Sweep (v5 + new features)</h3>
+<table border="1" style="border-collapse:collapse;width:100%;font-size:0.9em">
+<thead><tr style="background:#f0f0f0">
+<th>Feature Set</th><th>#</th><th>OOF RMSE</th><th>Δ vs v5 baseline</th><th>N</th><th>Verdict</th>
+</tr></thead>
+<tbody>
+<tr><td><code>v5 baseline</code></td><td>7</td><td>2.1266</td><td style='color:#6b7280'>+0.0000</td><td>2,598</td><td>≈ neutral</td></tr>
+<tr><td><code>v5 + opp_k_roll_L3</code></td><td>8</td><td>2.1255</td><td style='color:#6b7280'>-0.0011</td><td>2,581</td><td>✗ worse</td></tr>
+<tr><td><code>v5 + opp_k_roll_L5</code></td><td>8</td><td>2.1253</td><td style='color:#6b7280'>-0.0013</td><td>2,581</td><td>✗ worse</td></tr>
+<tr><td><code>v5 + start_num_season</code></td><td>8</td><td>2.1265</td><td style='color:#6b7280'>-0.0000</td><td>2,598</td><td>≈ neutral</td></tr>
+<tr><td><code>v5 + opp_k_roll_L3 + opp_k_roll_L5</code></td><td>9</td><td>2.1253</td><td style='color:#6b7280'>-0.0013</td><td>2,581</td><td>✗ worse</td></tr>
+<tr><td><code>v5 - opp_k_against_season + opp_k_roll_L5</code></td><td>7</td><td>2.1265</td><td style='color:#6b7280'>-0.0001</td><td>2,598</td><td>≈ neutral</td></tr>
+<tr><td><code>v5 - opp_k_against_season + opp_k_roll_L3</code></td><td>7</td><td>2.1266</td><td style='color:#6b7280'>+0.0001</td><td>2,598</td><td>≈ neutral</td></tr>
+<tr><td><code>v5 + opp_k_roll_L5 + start_num_season</code></td><td>9</td><td>2.1252</td><td style='color:#6b7280'>-0.0014</td><td>2,581</td><td>✗ worse</td></tr>
+
+</tbody>
+</table>
+
+<h3>Conclusion</h3>
+<p>Best combo: <code>v5 + opp_k_roll_L5 + start_num_season</code> → RMSE 2.1252 (Δ -0.0014)</p>
+<p><strong style='color:#dc2626'>REJECT</strong> — no combo beats baseline by ≥ 0.005 RMSE</p>
+</section>
+
+
+<h2>Step 3d — Team Spread / Game Context Features &nbsp;<span style="font-size:13px;color:#6b7280;">2026-07-09 ~21:15 ET</span></h2>
+
+<div class="note">
+<strong>Hypothesis:</strong> The pitcher's team moneyline (win probability) encodes expected game script —
+big favorites get more run support, stay in longer, and strikeout totals should be higher.
+This tests whether h2h / run-line features add signal on top of v5's 7 existing features.
+</div>
+
+<h3>Data</h3>
+<ul style="font-size:13px">
+  <li>Source: Odds API historical endpoint (<code>h2h,spreads</code>) — 20 credits/event</li>
+  <li>Snapshot time: 11am, 1pm, or 3pm ET on game day (first that returns ≥1 book)</li>
+  <li>Events fetched: <strong>4,565</strong> of 4,557 unique events in labeled dataset</li>
+  <li>Player-game match rate: <strong>100.0%</strong> (rows with game lines joined)</li>
+  <li>No-vig method: proportional de-vig across both sides of h2h / spreads market</li>
+  <li>Consensus: median no-vig prob across all US books returning that market</li>
+</ul>
+
+<h3>New features</h3>
+<table style="width:auto;margin-bottom:16px">
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Feature</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Description</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Source</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Book-invariant?</th>
+  </tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">team_ml_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">No-vig win prob for pitcher's team</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">h2h</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes (consensus median)</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">opp_ml_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">1 − team_ml_prob (opponent win prob)</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">h2h</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">team_rl_prob</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">No-vig prob pitcher's team covers −1.5 run line</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">spreads</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes (consensus median)</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">is_favorite</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Binary: team_ml_prob &gt; 0.5</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">derived</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+  <tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">ml_delta</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">team_ml_prob − 0.5 (signed distance from even)</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">derived</td><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px">Yes</td></tr>
+</table>
+
+<h3>Step 3a — Individual feature rankings (OLS, walk-forward OOF)</h3>
+<p style="font-size:12px;color:#555">Baseline: <code>consensus_line</code> alone. Lower RMSE = better. ↓ delta = improvement.</p>
+<table>
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Feature</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">n (OOF rows)</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">RMSE</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">R²</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">vs baseline</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Notes</th>
+  </tr>
+  <tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>team_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2738</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>opp_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2738</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,573</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4528</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0061</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.3262</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>is_favorite</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4227</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0302</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2961</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+<tr><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace'>ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,305</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.4004</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.0480</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#c0392b;font-weight:bold'>↑0.2738</span></td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px'>no improvement alone</td></tr>
+
+</table>
+
+<h3>Step 3b — Combo tests (v5 baseline + spread features)</h3>
+<p style="font-size:12px;color:#555">v5 baseline RMSE = <strong>2.1266</strong>. Accept threshold: RMSE improvement ≥ 0.005.</p>
+<table>
+  <tr>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">Model</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">N features</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">n (OOF rows)</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">OOF RMSE</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">R²</th>
+    <th style="padding:7px 10px;background:#2c3e50;color:#fff;font-size:12px;text-align:left;white-space:nowrap">vs v5 baseline</th>
+  </tr>
+  <tr style='background:#f0f7ff'><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:bold'>v5 baseline</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>7</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center;font-weight:bold'>2.1266</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2524</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0000</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0001</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + opp_ml_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0001</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,507</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1264</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2534</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0002</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + is_favorite</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1266</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2524</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0000</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>8</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0001</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob + team_rl_prob</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>9</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>3,507</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1265</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2534</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0001</span></td></tr>
+<tr style=''><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;font-weight:normal'>v5 + team_ml_prob + ml_delta</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>9</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>5,196</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;color:#555;font-weight:bold'>2.1267</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'>+0.2523</td><td style='padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:12px;text-align:center'><span style='color:#888;font-weight:bold'>–0.0001</span></td></tr>
+
+</table>
+
+<div class="fail" style="margin-top:16px">
+  <strong>Conclusion:</strong> <strong>REJECT</strong> — no meaningful RMSE improvement (best delta: 0.0002). Team spread does not add signal on top of v5 features. <code>consensus_line</code> already captures expected-game-quality signal.
+</div>

@@ -41,11 +41,9 @@ sys.path.insert(0, str(REPO_ROOT))
 MLB_API_BASE  = "https://statsapi.mlb.com/api/v1"
 SLEEP_S       = 0.05
 
-S3_BUCKET     = "the-odds-api-mt"
-S3_PREFIX     = "mlb/strikeouts_model"
-SES_SOURCE    = os.environ.get("SETTLEMENT_SES_SOURCE", "").strip()
-SES_TO_RAW    = os.environ.get("SETTLEMENT_SES_TO", "mylescgthomas@gmail.com").strip()
-SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN", "").strip()
+S3_BUCKET          = "the-odds-api-mt"
+S3_PREFIX          = "mlb/strikeouts_model"
+SETTLE_SUMMARY_KEY = f"{S3_PREFIX}/settled/last_settle_summary.json"
 
 ET    = ZoneInfo("America/New_York")
 _MONO = "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
@@ -100,6 +98,17 @@ def save_settled(df: pd.DataFrame) -> None:
     buf.seek(0)
     _s3().put_object(Bucket=S3_BUCKET, Key=key, Body=buf.getvalue())
     print(f"  Saved settled → s3://{S3_BUCKET}/{key}")
+
+
+def save_settle_summary(summary: dict) -> None:
+    import json
+    _s3().put_object(
+        Bucket=S3_BUCKET,
+        Key=SETTLE_SUMMARY_KEY,
+        Body=json.dumps(summary).encode(),
+        ContentType="application/json",
+    )
+    print(f"  Saved settle summary → s3://{S3_BUCKET}/{SETTLE_SUMMARY_KEY}")
 
 
 # ── MLB Stats API ─────────────────────────────────────────────────────────────
@@ -242,7 +251,41 @@ def settle(recs: pd.DataFrame, actuals: dict[str, dict]) -> pd.DataFrame:
 
 # ── HTML email ────────────────────────────────────────────────────────────────
 
-def build_settlement_html(df: pd.DataFrame, gameday: str) -> str:
+def _build_alltime_block(df: pd.DataFrame | None) -> str:
+    if df is None or df.empty:
+        return ""
+    settled = df[df["outcome"].isin(["WIN", "LOSS"])].copy()
+    if settled.empty:
+        return ""
+    total_bets = len(settled)
+    wins       = (settled["outcome"] == "WIN").sum()
+    losses     = (settled["outcome"] == "LOSS").sum()
+    total_pnl  = settled["pnl"].dropna().sum()
+    roi        = total_pnl / total_bets * 100 if total_bets > 0 else 0.0
+    wr         = wins / total_bets * 100 if total_bets > 0 else 0.0
+    pnl_color  = "#4ade80" if total_pnl >= 0 else "#f87171"
+    def _bubble(label: str, value: str, val_color: str = "#e2e8f0") -> str:
+        return (
+            f"<td style='padding-right:16px;vertical-align:top'>"
+            f"<div style='background:#1a1f2e;border:1px solid #2d3748;border-radius:8px;padding:14px 20px;min-width:100px'>"
+            f"<div style='font-size:11px;color:#6b7280;text-transform:uppercase'>{label}</div>"
+            f"<div style='font-size:18px;font-weight:700;color:{val_color}'>{value}</div>"
+            f"</div></td>"
+        )
+    return (
+        f"<div style='margin-top:24px'>"
+        f"<div style='font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:8px'>All-time</div>"
+        f"<table cellpadding='0' cellspacing='0' border='0'><tr>"
+        + _bubble("Total PnL", f"{total_pnl:+.2f}u", pnl_color)
+        + _bubble("Record",    f"{wins}W–{losses}L")
+        + _bubble("Win rate",  f"{wr:.1f}%")
+        + _bubble("ROI",       f"{roi:+.1f}%")
+        + _bubble("Bets",      str(total_bets))
+        + "</tr></table></div>"
+    )
+
+
+def build_settlement_html(df: pd.DataFrame, gameday: str, all_time: pd.DataFrame | None = None) -> str:
     now_str    = datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")
     total_pnl  = df["pnl"].sum()
     total_bets = len(df)
@@ -313,6 +356,8 @@ def build_settlement_html(df: pd.DataFrame, gameday: str) -> str:
   </tr>
   {rows_html}
 </table>
+
+{_build_alltime_block(all_time)}
 </body></html>"""
 
 
@@ -382,15 +427,35 @@ def main():
     settled_all = pd.concat([settled_all, settled_new], ignore_index=True)
     save_settled(settled_all)
 
-    total_pnl  = settled_all["pnl"].sum()
-    total_bets = len(settled_all[settled_all["outcome"] != "DNP"])
-    print(f"\n  All-time: {total_bets} bets · {total_pnl:+.2f}u cumulative PnL")
+    wins       = int((settled_new["outcome"] == "WIN").sum())
+    losses     = int((settled_new["outcome"] == "LOSS").sum())
+    pushes     = int((settled_new["outcome"] == "PUSH").sum())
+    dnps       = int((settled_new["outcome"] == "DNP").sum())
+    day_pnl    = float(settled_new["pnl"].sum())
 
-    wins   = (settled_new["outcome"] == "WIN").sum()
-    losses = (settled_new["outcome"] == "LOSS").sum()
-    day_pnl = settled_new["pnl"].sum()
-    subject = f"MLB Strikeouts Settlement {gameday} — {wins}W/{losses}L · {day_pnl:+.2f}u"
-    send_email(subject, build_settlement_html(settled_new, gameday))
+    at_settled  = settled_all[settled_all["outcome"].isin(["WIN", "LOSS"])]
+    at_bets     = int(len(at_settled))
+    at_wins     = int((at_settled["outcome"] == "WIN").sum())
+    at_losses   = int((at_settled["outcome"] == "LOSS").sum())
+    at_pnl      = float(at_settled["pnl"].dropna().sum())
+
+    print(f"\n  All-time: {at_bets} bets · {at_pnl:+.2f}u cumulative PnL")
+    print(f"  Yesterday: {wins}W/{losses}L · {day_pnl:+.2f}u")
+
+    save_settle_summary({
+        "gameday":        gameday,
+        "bets_settled":   len(settled_new),
+        "wins":           wins,
+        "losses":         losses,
+        "pushes":         pushes,
+        "dnps":           dnps,
+        "pnl":            day_pnl,
+        "all_time_bets":  at_bets,
+        "all_time_wins":  at_wins,
+        "all_time_losses": at_losses,
+        "all_time_pnl":   at_pnl,
+        "settled_at":     datetime.now(ET).strftime("%Y-%m-%d %H:%M ET"),
+    })
     print("Done.")
 
 

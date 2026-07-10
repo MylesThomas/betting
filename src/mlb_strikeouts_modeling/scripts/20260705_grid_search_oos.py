@@ -9,7 +9,7 @@ Shrinkage: mean_adj = line + (1-shrink) * (yhat - line)
   shrink=0.5 → blend model and line
   shrink=1.0 → no signal (would never bet)
 
-Units: flat 1-unit bets at American odds derived from novig p_market.
+Units: flat 1-unit bets at actual posted odds (raw_p = 1/decimal_odds, mean across books).
 Max drawdown: largest peak-to-trough loss in chronological bet sequence.
 
 Outputs:
@@ -81,9 +81,13 @@ def run_grid_search(df: pd.DataFrame, residuals: np.ndarray) -> pd.DataFrame:
         p_model_over  = bootstrap_p_over_batch(mean_adj, line_arr, residuals)
         p_model_under = 1.0 - p_model_over
 
+        # p_market = actual raw breakeven prob (mean across books); used for edge + P&L
         p_market_over  = df["p_market_over"].values
         p_market_under = df["p_market_under"].values
-        is_over_arr    = df["is_over"].values
+        # novig used only for fav/dog classification (both raw sides can exceed 0.50 at -110/-110)
+        novig_over_arr  = df["novig_over"].values
+        novig_under_arr = 1.0 - novig_over_arr
+        is_over_arr     = df["is_over"].values
 
         edge_over  = p_model_over  - p_market_over
         edge_under = p_model_under - p_market_under
@@ -107,13 +111,12 @@ def run_grid_search(df: pd.DataFrame, residuals: np.ndarray) -> pd.DataFrame:
                 )
 
             if odds_bucket == "dog_only":
-                # Betting side is underdog (market prices you below 50%)
-                under_dog = (direction in ("under_only", "both")) & (p_market_under < 0.50)
-                over_dog  = (direction in ("over_only",  "both")) & (p_market_over  < 0.50)
+                under_dog = (direction in ("under_only", "both")) & (novig_under_arr < 0.50)
+                over_dog  = (direction in ("over_only",  "both")) & (novig_over_arr  < 0.50)
                 bet_mask  = bet_mask & (under_dog | over_dog)
             elif odds_bucket == "fav_only":
-                under_fav = (direction in ("under_only", "both")) & (p_market_under >= 0.50)
-                over_fav  = (direction in ("over_only",  "both")) & (p_market_over  >= 0.50)
+                under_fav = (direction in ("under_only", "both")) & (novig_under_arr >= 0.50)
+                over_fav  = (direction in ("over_only",  "both")) & (novig_over_arr  >= 0.50)
                 bet_mask  = bet_mask & (under_fav | over_fav)
 
             if line_bucket == "low_le4.5":
@@ -176,12 +179,22 @@ def main():
     print(f"  Rows: {len(df):,}  Residuals: {len(residuals):,}  σ={sigma:.4f}")
     print(f"  Seasons: {sorted(df['season'].unique())}")
 
-    # Deduplicate to one row per (player_key, game_date, line).
-    # Multiple books post the same line — the model edge is identical across them.
-    # Keeping all would inflate n_bets by ~n_books with no new information.
+    # Before deduplicating, aggregate raw market prices to mean across books per
+    # (player, game, line). This gives a consensus actual price for edge + P&L.
+    # novig_over is also averaged (book-invariant after vig removal, small variation).
+    price_agg = (
+        df.groupby(["player_key", "game_date", "line"], as_index=False)
+        .agg(p_market_over=("p_market_over", "mean"),
+             p_market_under=("p_market_under", "mean"),
+             novig_over=("novig_over", "mean"))
+    )
     n_before = len(df)
     df = df.drop_duplicates(subset=["player_key", "game_date", "line"], keep="first")
+    df = df.drop(columns=["p_market_over", "p_market_under", "novig_over"])
+    df = df.merge(price_agg, on=["player_key", "game_date", "line"])
     print(f"  Deduped to 1 row per (player, game, line): {n_before:,} → {len(df):,} rows")
+    print(f"  avg p_market_over (raw, mean across books): {df['p_market_over'].mean():.4f}")
+    print(f"  avg novig_over (for fav/dog filter):        {df['novig_over'].mean():.4f}")
 
     print(f"\nRunning OOS grid search...")
     print(f"  Dimensions: {len(SHRINKAGES)} shrink × {len(MIN_EDGES)} edge × "

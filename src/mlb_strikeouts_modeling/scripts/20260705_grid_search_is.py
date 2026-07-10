@@ -74,6 +74,8 @@ def run_grid_search(df: pd.DataFrame, residuals: np.ndarray) -> pd.DataFrame:
     line_arr       = df["line"].values
     p_market_over  = df["p_market_over"].values
     p_market_under = df["p_market_under"].values
+    novig_over_arr  = df["novig_over"].values
+    novig_under_arr = 1.0 - novig_over_arr
     is_over_arr    = df["is_over"].values
     rows = []
 
@@ -105,12 +107,12 @@ def run_grid_search(df: pd.DataFrame, residuals: np.ndarray) -> pd.DataFrame:
                 )
 
             if odds_bucket == "dog_only":
-                under_dog = (direction in ("under_only", "both")) & (p_market_under < 0.50)
-                over_dog  = (direction in ("over_only",  "both")) & (p_market_over  < 0.50)
+                under_dog = (direction in ("under_only", "both")) & (novig_under_arr < 0.50)
+                over_dog  = (direction in ("over_only",  "both")) & (novig_over_arr  < 0.50)
                 bet_mask  = bet_mask & (under_dog | over_dog)
             elif odds_bucket == "fav_only":
-                under_fav = (direction in ("under_only", "both")) & (p_market_under >= 0.50)
-                over_fav  = (direction in ("over_only",  "both")) & (p_market_over  >= 0.50)
+                under_fav = (direction in ("under_only", "both")) & (novig_under_arr >= 0.50)
+                over_fav  = (direction in ("over_only",  "both")) & (novig_over_arr  >= 0.50)
                 bet_mask  = bet_mask & (under_fav | over_fav)
 
             if line_bucket == "low_le4.5":
@@ -201,13 +203,14 @@ def main():
         if still_missing:
             print(f"  WARNING: features still missing after spine join: {still_missing}")
 
-    df = df.dropna(subset=features + ["novig_over", "line", "strikeouts"])
+    df = df.dropna(subset=features + ["novig_over", "raw_p_over", "raw_p_under", "line", "strikeouts"])
     print(f"  Rows after dropna: {len(df):,}")
 
     # Score with full-data IS model
     df["yhat"]           = model.predict(df[features])
-    df["p_market_over"]  = df["novig_over"]
-    df["p_market_under"] = 1.0 - df["novig_over"]
+    # p_market = actual raw breakeven prob; novig retained for fav/dog filter
+    df["p_market_over"]  = df["raw_p_over"]
+    df["p_market_under"] = df["raw_p_under"]
 
     print(f"  yhat range: [{df['yhat'].min():.2f}, {df['yhat'].max():.2f}]")
 
@@ -215,10 +218,19 @@ def main():
     df.to_parquet(OUT_DIR / "step6_is_predictions.parquet", index=False)
     print(f"  IS predictions saved → {OUT_DIR}/step6_is_predictions.parquet")
 
-    # Deduplicate to one row per (player_key, game_date, line) — same as OOS
+    # Aggregate raw prices to mean across books before deduplicating
+    price_agg = (
+        df.groupby(["player_key", "game_date", "line"], as_index=False)
+        .agg(p_market_over=("p_market_over", "mean"),
+             p_market_under=("p_market_under", "mean"),
+             novig_over=("novig_over", "mean"))
+    )
     n_before = len(df)
     df = df.drop_duplicates(subset=["player_key", "game_date", "line"], keep="first")
+    df = df.drop(columns=["p_market_over", "p_market_under", "novig_over"])
+    df = df.merge(price_agg, on=["player_key", "game_date", "line"])
     print(f"  Deduped: {n_before:,} → {len(df):,} rows")
+    print(f"  avg p_market_over (raw, mean across books): {df['p_market_over'].mean():.4f}")
 
     print("\nRunning IS grid search...", flush=True)
     results = run_grid_search(df, residuals)
