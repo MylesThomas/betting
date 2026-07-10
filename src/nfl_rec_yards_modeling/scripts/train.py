@@ -47,7 +47,7 @@ BEST_FEATS = [
     "offered_line",
     "game_total",
     "proj_own_score",
-    "rec_yards_L8",
+    "receiving_yards_L8",
     "target_share_L8",
     "snap_pct_L8",
     "pos_TE",
@@ -93,7 +93,7 @@ def main():
     # ── NegBin NB2 ───────────────────────────────────────────────────────────
     print("\n  Fitting NegBin NB2 GLM (same features)...")
     X_const   = sm.add_constant(X)
-    nb_result = NegativeBinomial(y, X_const).fit(disp=False, maxiter=300)
+    nb_result = NegativeBinomial(y, X_const).fit(disp=False, maxiter=1000)
     nb_coefs  = nb_result.params[:-1]
     nb_alpha  = float(np.exp(nb_result.lnalpha))
     converged = nb_result.mle_retvals["converged"]

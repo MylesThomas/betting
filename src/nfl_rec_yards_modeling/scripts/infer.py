@@ -55,7 +55,7 @@ BEST_FEATS = [
     "offered_line",
     "game_total",
     "proj_own_score",
-    "rec_yards_L8",
+    "receiving_yards_L8",
     "target_share_L8",
     "snap_pct_L8",
     "pos_TE",
@@ -260,6 +260,69 @@ def main():
 
     print(f"\n  Running inference [bootstrap: {N_BOOT:,} draws per row]...")
     results = run_inference(df, artifacts)
+
+    # ── Step 3 assert: yhat book-invariant ───────────────────────────────────
+    # market_under_prob is in BEST_FEATS and varies by book, so ols_pred will
+    # vary across books for the same (player, game, line). This is intentional
+    # but means the model uses a per-book feature — flagged here for awareness.
+    scored_mask = results["ols_pred"].notna()
+    if scored_mask.any():
+        yhat_check = (
+            results[scored_mask]
+            .groupby(["player_name_norm", "game_id", "offered_line"])["ols_pred"]
+            .nunique()
+        )
+        n_viol = int((yhat_check > 1).sum())
+        if n_viol:
+            print(f"\n  ⚠ ols_pred NOT book-invariant: {n_viol} (player, game, line) groups "
+                  f"have varying predictions across books. market_under_prob is a per-book "
+                  f"feature in BEST_FEATS — this is the expected cause.")
+        else:
+            print(f"\n  ✓ ols_pred book-invariant: 0 violations")
+
+    # ── Step 4 assert: p_model clipping [0.01, 0.99] ─────────────────────────
+    phyb_scored = results.loc[scored_mask, "p_hybrid"]
+    n_low  = int((phyb_scored < 0.01).sum())
+    n_high = int((phyb_scored > 0.99).sum())
+    results.loc[scored_mask, "p_hybrid"] = phyb_scored.clip(0.01, 0.99)
+    total_clip = n_low + n_high
+    n_scored   = scored_mask.sum()
+    if total_clip:
+        print(f"  p_model clip [0.01, 0.99]: {n_low} rows → 0.01, {n_high} rows → 0.99 "
+              f"({total_clip / n_scored:.2%} of {n_scored} scored rows) — review these rows")
+    else:
+        print(f"  p_model clip [0.01, 0.99]: 0 rows hit boundary across {n_scored} scored rows ✓")
+
+    # ── Step 4 assert: line monotonicity ─────────────────────────────────────
+    # Higher line → easier to go under → p(under) must be non-decreasing.
+    scored_df = results[results["p_hybrid"].notna()].copy()
+    pg_counts = scored_df.groupby(["player_name_norm", "game_id"])["offered_line"].nunique()
+    multi_pg  = set(pg_counts[pg_counts > 1].index)
+    n_inv, inv_examples = 0, []
+    for (pn, gid), grp in scored_df.groupby(["player_name_norm", "game_id"]):
+        if (pn, gid) not in multi_pg:
+            continue
+        grp_s = grp.sort_values("offered_line")
+        pu = grp_s["p_hybrid"].values
+        ls = grp_s["offered_line"].values
+        for i in range(len(pu) - 1):
+            if pu[i + 1] < pu[i]:
+                n_inv += 1
+                if len(inv_examples) < 3:
+                    inv_examples.append(
+                        f"{pn} game={gid} line {ls[i]:.1f}→{ls[i+1]:.1f} "
+                        f"p_u {pu[i]:.3f}→{pu[i+1]:.3f}"
+                    )
+    if multi_pg:
+        rate = n_inv / len(multi_pg)
+        flag = " ⚠ rate > 2% — investigate line feature" if rate > 0.02 else " ✓ OK"
+        print(f"  Line monotonicity: {n_inv} inversions / {len(multi_pg)} multi-line "
+              f"player-games ({rate:.1%}){flag}")
+        for ex in inv_examples:
+            print(f"    example: {ex}")
+    else:
+        print("  Line monotonicity: no multi-line player-games found")
+    print()
 
     if TARGET in results.columns:
         results["actual_under"] = (results[TARGET] <= results["offered_line"]).astype(float)

@@ -243,72 +243,57 @@ def _summary_box(label: str, s: dict) -> str:
 </div>"""
 
 
-def build_settlement_html(gameday: str, today_settled: pd.DataFrame | None,
-                          all_time_summary: dict, had_games: bool) -> str:
+def build_ops_health_email(gameday: str, today_settled: pd.DataFrame | None,
+                           all_time_summary: dict, had_games: bool) -> str:
     today_summary = compute_summary(today_settled) if today_settled is not None and len(today_settled) else {
         "n_bets": 0, "n_win": 0, "n_loss": 0, "hit_rate": float("nan"), "pnl": 0.0, "roi": float("nan"),
     }
 
-    if had_games and today_settled is not None and len(today_settled):
-        settled_rows = today_settled[today_settled["outcome"].isin(["win", "loss", "unmatched"])].copy()
-        settled_rows["_ord"] = settled_rows["outcome"].map({"win": 0, "loss": 1, "unmatched": 2})
-        settled_rows = settled_rows.sort_values(["_ord", "edge"], ascending=[True, False]).drop(columns=["_ord"])
-        rows_html = ""
-        for _, r in settled_rows.iterrows():
-            actual_s = f"{r['actual_yards']:.0f}" if not pd.isna(r.get("actual_yards", float("nan"))) else "—"
-            odds_s   = f"{int(r['consensus_over_price']):+d}" if not pd.isna(r.get("consensus_over_price", float("nan"))) else "—"
-            mkt_s    = f"{float(r['p_market'])*100:.1f}%" if not pd.isna(r.get("p_market", float("nan"))) else "—"
-            model_s  = f"{float(r['p_hybrid'])*100:.1f}%" if not pd.isna(r.get("p_hybrid", float("nan"))) else "—"
-            edge_s   = f"+{abs(float(r['edge']))*100:.1f}pp" if not pd.isna(r.get("edge", float("nan"))) else "—"
-            rows_html += f"""
-<tr style="border-bottom:1px solid #f3f4f6">
-  <td style="padding:8px 12px;font-weight:600">{html_module.escape(str(r.get('player_name', '')))}</td>
-  <td style="padding:8px 12px">{html_module.escape(str(r.get('team', '')))}</td>
-  <td style="padding:8px 12px;text-align:center;font-weight:600;color:#1d6fa4">{html_module.escape(str(r.get('recommendation', 'OVER')))}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{r.get('offered_line', '—'):.1f}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{actual_s}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{odds_s}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{mkt_s}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{model_s}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{edge_s}</td>
-  <td style="padding:8px 12px;text-align:center">{_outcome_badge(r['outcome'])}</td>
-  {_pnl_cell(r['outcome'], float(r['consensus_over_price']))}
-</tr>"""
+    # Unmatched player warnings
+    unmatched_html = ""
+    if today_settled is not None and len(today_settled):
+        unmatched = today_settled[today_settled["outcome"] == "unmatched"]
+        if not unmatched.empty:
+            urows = "".join(
+                f'<tr><td style="padding:4px 8px;font-family:{_MONO}">'
+                f'{html_module.escape(str(r.get("player_name", "")))}</td>'
+                f'<td style="padding:4px 8px;color:#6b7280">'
+                f'{html_module.escape(str(r.get("player_norm", "")))}</td></tr>'
+                for _, r in unmatched.iterrows()
+            )
+            unmatched_html = f"""
+<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:12px 14px;margin-top:12px">
+  <div style="font-weight:600;font-size:12px;color:#c2410c;margin-bottom:6px">&#9888; Unmatched players ({len(unmatched)})</div>
+  <p style="font-size:12px;color:#7c2d12;margin:0 0 8px">Name in recommendations.csv didn't match nfl_data_py. Add to NAME_MAP if the player played.</p>
+  <table style="font-size:12px;border-collapse:collapse">
+  <thead><tr style="color:#9ca3af">
+    <th style="padding:4px 8px;text-align:left">Player (from rec)</th>
+    <th style="padding:4px 8px;text-align:left">Normalized</th>
+  </tr></thead>
+  <tbody>{urows}</tbody>
+  </table>
+</div>"""
 
-        today_section = f"""
-<h3 style="font-size:14px;font-weight:600;margin:20px 0 8px">Yesterday ({gameday})</h3>
-{_summary_box(f"Results — {gameday}", today_summary)}
-<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">
-<thead><tr style="background:#1d2d44;color:#fff">
-  <th style="padding:9px 12px;text-align:left">Player</th>
-  <th style="padding:9px 12px;text-align:left">Team</th>
-  <th style="padding:9px 12px;text-align:center">Bet Direction</th>
-  <th style="padding:9px 12px;text-align:center">Line</th>
-  <th style="padding:9px 12px;text-align:center">Actual Yds</th>
-  <th style="padding:9px 12px;text-align:center">Over Odds</th>
-  <th style="padding:9px 12px;text-align:center">Mkt P(U)</th>
-  <th style="padding:9px 12px;text-align:center">Model P(U)</th>
-  <th style="padding:9px 12px;text-align:center">Edge</th>
-  <th style="padding:9px 12px;text-align:center">Outcome</th>
-  <th style="padding:9px 12px;text-align:right">P&amp;L</th>
-</tr></thead>
-<tbody>{rows_html}</tbody>
-</table>"""
+    if had_games and today_settled is not None and len(today_settled):
+        settle_section = _summary_box(f"Yesterday ({gameday})", today_summary)
     elif not had_games:
-        today_section = f'<p style="color:#6b7280;font-size:13px">No NFL games on {gameday}.</p>'
+        settle_section = f'<p style="color:#6b7280;font-size:13px">No NFL games on {gameday}.</p>'
     else:
-        today_section = f'<p style="color:#6b7280;font-size:13px">No qualifying bets placed on {gameday}.</p>'
+        settle_section = f'<p style="color:#6b7280;font-size:13px">No qualifying bets placed on {gameday}.</p>'
 
     return f"""<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>NFL Rec Yards Settlement — {gameday}</title></head>
+<head><meta charset="utf-8"><title>NFL Rec Yards Ops — {gameday}</title></head>
 <body style="margin:0;padding:16px;background:#f4f4f5;font-family:{_SANS};font-size:13px;color:#1a1a1a">
 <div style="max-width:700px;margin:0 auto;background:#fff;padding:24px;border-radius:8px;border:1px solid #e2e2e4">
-  <h2 style="font-size:18px;margin:0 0 4px">NFL Receiving Yards Settlement</h2>
-  <p style="color:#6b7280;font-size:12px;margin:0 0 20px">Generated {datetime.now(ET).strftime('%Y-%m-%d %H:%M ET')}</p>
-  {today_section}
+  <h2 style="font-size:18px;margin:0 0 4px">NFL Rec Yards — Ops Health Check</h2>
+  <p style="color:#6b7280;font-size:12px;margin:0 0 20px">Generated {datetime.now(ET).strftime('%Y-%m-%d %H:%M ET')} &nbsp;|&nbsp; Settle + spine rebuild</p>
+  <h3 style="font-size:14px;font-weight:600;margin:0 0 8px">Settlement — {gameday}</h3>
+  {settle_section}
+  {unmatched_html}
   <h3 style="font-size:14px;font-weight:600;margin:20px 0 8px">All-Time</h3>
-  {_summary_box("All-Time Results (OVER player_reception_yds)", all_time_summary)}
+  {_summary_box("All-Time Results (OVER receiving yards)", all_time_summary)}
+  <p style="font-size:11px;color:#9ca3af;margin-top:16px">Full per-bet results in the 9:00 AM email.</p>
 </div>
 </body>
 </html>"""
@@ -399,13 +384,13 @@ def main():
         "n_bets": 0, "n_win": 0, "n_loss": 0, "pnl": 0.0,
     }
     if had_games and ts["n_bets"] > 0:
-        subject = (f"NFL Rec Yards Settled — {gameday} — "
+        subject = (f"NFL Rec Yards Ops — {gameday} — "
                    f"{ts['n_win']}W {ts['n_loss']}L ({ts['pnl']:+.2f}u)")
     else:
-        subject = (f"NFL Rec Yards — {gameday} — No games settled "
+        subject = (f"NFL Rec Yards Ops — {gameday} — No games settled "
                    f"(all-time: {at['n_bets']} bets, {at['pnl']:+.2f}u)")
 
-    html_body = build_settlement_html(gameday, today_settled, at, had_games)
+    html_body = build_ops_health_email(gameday, today_settled, at, had_games)
     text_body = (
         f"NFL Rec Yards Settlement — {gameday}\n\n"
         f"Yesterday : {ts['n_win']}W {ts['n_loss']}L  P&L={ts['pnl']:+.3f}u\n"

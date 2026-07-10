@@ -2,14 +2,13 @@
 NFL Rec Yards Lambda orchestrator.
 
 Modes (set via EventBridge payload {"mode": "..."}):
-  spine_update  — Re-fetch current season from nfl_data_py, upload spine to S3  (Tue 9am ET)
-  spine_verify  — Rebuild spine locally, compare vs S3 spine, do NOT upload     (Wed 9am ET)
-  pipeline      — Fetch live props, score, upload recommendations, notify        (Thu/Sun/Mon 11am ET)
-  settle        — Settle yesterday's bets, update running parquet, send email    (Daily 10am ET)
+  settle_and_rebuild — Settle yesterday + rebuild spine + send ops email  (8:30am ET daily)
+  pipeline           — Fetch live props, score, send plays email           (9:00am ET daily)
+  spine_update       — Full spine rebuild from scratch (pre-season / weekly)
 
 Env vars:
   ODDS_API_KEY           (required for pipeline mode)
-  SNS_TOPIC_ARN          (required for notifications)
+  SNS_TOPIC_ARN          (optional — SNS notifications on failure)
   SETTLEMENT_SES_SOURCE  (verified SES sender for HTML emails)
   SETTLEMENT_SES_TO      (comma-separated recipients)
   NFL_SEASON             (optional; defaults to computed season from today's date)
@@ -29,7 +28,7 @@ import boto3
 
 ET = ZoneInfo("America/New_York")
 
-VALID_MODES = {"spine_update", "spine_verify", "pipeline", "settle"}
+VALID_MODES = {"settle_and_rebuild", "pipeline", "spine_update", "settle"}
 
 
 def _repo_root() -> Path:
@@ -95,7 +94,32 @@ def lambda_handler(event, context):
     step_results: list[dict] = []
 
     try:
-        if mode == "spine_update":
+        if mode == "settle_and_rebuild":
+            # Step 1: Settle yesterday's bets + send ops email (settle_rec_yards handles email itself)
+            _run_capture(
+                [sys.executable, str(scripts_dir / "settle_rec_yards.py")],
+                cwd=root,
+            )
+            step_results.append({"step": "settle", "status": "ok"})
+
+            # Step 2: Rebuild spine with latest box scores
+            out = _run_capture(
+                [sys.executable, str(scripts_dir / "update_spine.py"),
+                 "--season", str(nfl_season)],
+                cwd=root,
+            )
+            step_results.append({"step": "spine_rebuild", "status": "ok"})
+
+        elif mode == "pipeline":
+            gameday = (event or {}).get("gameday", today_et)
+            _run_capture(
+                [sys.executable, str(scripts_dir / "run_pipeline.py"),
+                 "--gameday", gameday],
+                cwd=root,
+            )
+            step_results.append({"step": "pipeline", "status": "ok"})
+
+        elif mode == "spine_update":
             out = _run_capture(
                 [sys.executable, str(scripts_dir / "update_spine.py"),
                  "--season", str(nfl_season)],
@@ -108,29 +132,9 @@ def lambda_handler(event, context):
                 message=f"Spine update complete for season {nfl_season}.\n\n{out[-3000:]}",
             )
 
-        elif mode == "spine_verify":
-            out = _run_capture(
-                [sys.executable, str(scripts_dir / "update_spine.py"),
-                 "--season", str(nfl_season), "--verify"],
-                cwd=root,
-            )
-            step_results.append({"step": "spine_verify", "status": "ok"})
-            _publish_sns(
-                topic_arn,
-                subject=f"NFL rec yards spine verified — {today_et}",
-                message=f"Spine verify complete for season {nfl_season}.\n\n{out[-3000:]}",
-            )
-
-        elif mode == "pipeline":
-            out = _run_capture(
-                [sys.executable, str(scripts_dir / "run_pipeline.py"),
-                 "--gameday", today_et],
-                cwd=root,
-            )
-            step_results.append({"step": "pipeline", "status": "ok"})
-
         elif mode == "settle":
-            out = _run_capture(
+            # Legacy: settle only (no spine rebuild)
+            _run_capture(
                 [sys.executable, str(scripts_dir / "settle_rec_yards.py")],
                 cwd=root,
             )

@@ -3,17 +3,15 @@
 # Deploy NFL Rec Yards Daily Lambda via container image (ECR)
 #
 # EventBridge schedule (all rules start DISABLED — enable before week 1):
-#   Tue  9am ET  → spine_update   (rebuild + upload spine from nfl_data_py)
-#   Wed  9am ET  → spine_verify   (re-pull + compare vs S3 spine)
-#   Thu 11am ET  → pipeline       (Thursday Night Football props)
-#   Sun 11am ET  → pipeline       (Sunday games, incl. London window)
-#   Mon 11am ET  → pipeline       (Monday Night Football props)
-#   Daily 10am ET → settle        (settle prior-day games; no-op if no games)
+#   Daily 8:30am ET → settle_and_rebuild  (settle yesterday + rebuild spine + ops email)
+#   Daily 9:00am ET → pipeline            (score today + send plays/results/all-time email)
+#   Weekly Sunday   → spine_update        (full spine rebuild; pre-season use)
 #
-# Settle timing:
-#   Fri 10am → settles Thursday Night Football
-#   Mon 10am → settles Sunday games
-#   Tue 10am → settles Monday Night Football
+# Daily flow on a game day (e.g. Monday):
+#   8:30am: settle Sunday's games → rebuild spine with Sunday box scores → ops email
+#   9:00am: score Monday's props  → send email (today's plays + Sunday results + all-time)
+#
+# No-op on non-game days: pipeline finds no props and exits cleanly (no email sent).
 #
 # Pre-season checklist (run before enabling rules on 2026-09-09):
 #   1. Verify SES identity: aws ses get-identity-verification-attributes --identities <source>
@@ -42,19 +40,13 @@ ECR_REPO_NAME="nfl-rec-yards-daily"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 DOCKER_PLATFORM="${DOCKER_PLATFORM:-linux/amd64}"
 
-RULE_SPINE_UPDATE="nfl-rec-yards-spine-update-tue-9am-et"
-RULE_SPINE_VERIFY="nfl-rec-yards-spine-verify-wed-9am-et"
-RULE_PIPELINE_THU="nfl-rec-yards-pipeline-thu-11am-et"
-RULE_PIPELINE_SUN="nfl-rec-yards-pipeline-sun-11am-et"
-RULE_PIPELINE_MON="nfl-rec-yards-pipeline-mon-11am-et"
-RULE_SETTLE_DAILY="nfl-rec-yards-settle-daily-10am-et"
+RULE_SETTLE_REBUILD="nfl-rec-yards-settle-rebuild-daily-830am-et"
+RULE_PIPELINE="nfl-rec-yards-pipeline-daily-9am-et"
+RULE_SPINE="nfl-rec-yards-spine-weekly-sunday"
 
-CRON_TUE_9AM="cron(0 14 ? * TUE *)"
-CRON_WED_9AM="cron(0 14 ? * WED *)"
-CRON_THU_11AM="cron(0 16 ? * THU *)"
-CRON_SUN_11AM="cron(0 16 ? * SUN *)"
-CRON_MON_11AM="cron(0 16 ? * MON *)"
-CRON_DAILY_10AM="cron(0 15 * * ? *)"
+CRON_DAILY_830AM="cron(30 13 * * ? *)"   # 8:30am ET (13:30 UTC)
+CRON_DAILY_9AM="cron(0 14 * * ? *)"      # 9:00am ET (14:00 UTC)
+CRON_WEEKLY_SUN="cron(0 14 ? * SUN *)"   # Sunday 9am ET
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -199,28 +191,19 @@ LAMBDA_ARN=$(aws lambda get-function \
   --output text)
 
 declare -A RULE_CRONS
-RULE_CRONS["$RULE_SPINE_UPDATE"]="$CRON_TUE_9AM"
-RULE_CRONS["$RULE_SPINE_VERIFY"]="$CRON_WED_9AM"
-RULE_CRONS["$RULE_PIPELINE_THU"]="$CRON_THU_11AM"
-RULE_CRONS["$RULE_PIPELINE_SUN"]="$CRON_SUN_11AM"
-RULE_CRONS["$RULE_PIPELINE_MON"]="$CRON_MON_11AM"
-RULE_CRONS["$RULE_SETTLE_DAILY"]="$CRON_DAILY_10AM"
+RULE_CRONS["$RULE_SETTLE_REBUILD"]="$CRON_DAILY_830AM"
+RULE_CRONS["$RULE_PIPELINE"]="$CRON_DAILY_9AM"
+RULE_CRONS["$RULE_SPINE"]="$CRON_WEEKLY_SUN"
 
 declare -A RULE_MODES
-RULE_MODES["$RULE_SPINE_UPDATE"]="spine_update"
-RULE_MODES["$RULE_SPINE_VERIFY"]="spine_verify"
-RULE_MODES["$RULE_PIPELINE_THU"]="pipeline"
-RULE_MODES["$RULE_PIPELINE_SUN"]="pipeline"
-RULE_MODES["$RULE_PIPELINE_MON"]="pipeline"
-RULE_MODES["$RULE_SETTLE_DAILY"]="settle"
+RULE_MODES["$RULE_SETTLE_REBUILD"]="settle_and_rebuild"
+RULE_MODES["$RULE_PIPELINE"]="pipeline"
+RULE_MODES["$RULE_SPINE"]="spine_update"
 
 for RULE_NAME in \
-  "$RULE_SPINE_UPDATE" \
-  "$RULE_SPINE_VERIFY" \
-  "$RULE_PIPELINE_THU" \
-  "$RULE_PIPELINE_SUN" \
-  "$RULE_PIPELINE_MON" \
-  "$RULE_SETTLE_DAILY"; do
+  "$RULE_SETTLE_REBUILD" \
+  "$RULE_PIPELINE" \
+  "$RULE_SPINE"; do
 
   CRON="${RULE_CRONS[$RULE_NAME]}"
   MODE="${RULE_MODES[$RULE_NAME]}"
@@ -286,24 +269,18 @@ echo "Lambda  : $LAMBDA_NAME"
 echo "Image   : $IMAGE_URI"
 echo ""
 echo "EventBridge rules (all DISABLED — enable before week 1 on 2026-09-09):"
-echo "  $RULE_SPINE_UPDATE  →  $CRON_TUE_9AM"
-echo "  $RULE_SPINE_VERIFY  →  $CRON_WED_9AM"
-echo "  $RULE_PIPELINE_THU  →  $CRON_THU_11AM"
-echo "  $RULE_PIPELINE_SUN  →  $CRON_SUN_11AM"
-echo "  $RULE_PIPELINE_MON  →  $CRON_MON_11AM"
-echo "  $RULE_SETTLE_DAILY  →  $CRON_DAILY_10AM"
+echo "  $RULE_SETTLE_REBUILD  →  $CRON_DAILY_830AM  (settle + spine rebuild daily)"
+echo "  $RULE_PIPELINE        →  $CRON_DAILY_9AM    (scoring email daily)"
+echo "  $RULE_SPINE           →  $CRON_WEEKLY_SUN   (full spine rebuild weekly)"
 echo ""
 echo "Pre-season checklist (before 2026-09-09):"
 echo "  1. Verify SES identity in AWS console"
 echo "  2. Upload initial 2026 spine:"
 echo "       python src/nfl_rec_yards_modeling/scripts/update_spine.py --season 2026"
 echo "  3. Enable EventBridge rules:"
-echo "       aws events enable-rule --name $RULE_SPINE_UPDATE --region $REGION"
-echo "       aws events enable-rule --name $RULE_SPINE_VERIFY --region $REGION"
-echo "       aws events enable-rule --name $RULE_PIPELINE_THU --region $REGION"
-echo "       aws events enable-rule --name $RULE_PIPELINE_SUN --region $REGION"
-echo "       aws events enable-rule --name $RULE_PIPELINE_MON --region $REGION"
-echo "       aws events enable-rule --name $RULE_SETTLE_DAILY  --region $REGION"
-echo "  4. Test pipeline:  aws lambda invoke --payload '{\"mode\":\"pipeline\"}' ..."
-echo "  5. Test settle:    aws lambda invoke --payload '{\"mode\":\"settle\"}' ..."
+echo "       aws events enable-rule --name $RULE_SETTLE_REBUILD --region $REGION"
+echo "       aws events enable-rule --name $RULE_PIPELINE        --region $REGION"
+echo "       aws events enable-rule --name $RULE_SPINE           --region $REGION"
+echo "  4. Test pipeline:          aws lambda invoke --function-name $LAMBDA_NAME --region $REGION --payload '{\"mode\":\"pipeline\"}' /tmp/out.json && cat /tmp/out.json"
+echo "  5. Test settle_and_rebuild: aws lambda invoke --function-name $LAMBDA_NAME --region $REGION --payload '{\"mode\":\"settle_and_rebuild\"}' /tmp/out.json && cat /tmp/out.json"
 echo ""
