@@ -613,16 +613,16 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
             )
 
     return f"""
-<h2 style='color:#2c3e50;margin-bottom:4px'>MLB Pitcher Outs UNDER — {gameday}</h2>
+<h2 style='color:#2c3e50;margin-bottom:4px'>MLB Pitcher Outs — {gameday}</h2>
 <p style='margin-top:4px'>
-  <span style='color:#276221;font-weight:bold'>{n_play_pit}p / {n_play}b plays (≥{edge_play*100:.0f}pp)</span>
+  <span style='color:#276221;font-weight:bold'>{n_play} bets across {n_play_pit} pitchers (edge ≥{edge_play*100:.0f}%)</span>
   &nbsp;·&nbsp;
-  <span style='color:#b8860b;font-weight:bold'>{n_show_pit}p / {n_show}b shows ({edge_show*100:.0f}–{edge_play*100:.0f}pp)</span>
-  &nbsp;·&nbsp; UNDER · minus odds · line ≤17.5
+  <span style='color:#b8860b;font-weight:bold'>{n_show} on watch list ({edge_show*100:.0f}–{edge_play*100:.0f}%)</span>
+  &nbsp;·&nbsp; UNDER · favorites only · outs ≤17.5
 </p>
 <p style='font-size:11px;color:#888;margin-top:2px'>
-  <span class='lp'></span>Green = PLAY (bet) &nbsp;&nbsp;
-  <span class='ls'></span>Yellow = SHOW (paper only) &nbsp;&nbsp;
+  <span class='lp'></span>Green = bet &nbsp;&nbsp;
+  <span class='ls'></span>Yellow = watch list &nbsp;&nbsp;
   Grey = no edge (context only)
 </p>
 {cards_html}
