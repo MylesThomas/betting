@@ -1,0 +1,85 @@
+strategy_summary: |
+  Best combo across both approaches has max_drawdown > units_won
+  or <50 unique player-games OOS. No active betting. edge_threshold_show=0.10 populates email for monitoring only.
+  Rebuild target: 2027 with full Odds API pitcher_walks coverage (43% 2025, 65% 2026).
+
+mlb_pitcher_walks_model:
+  model_type: ols_bootstrap    # same pattern as strikeouts / pitcher_outs
+  target: walks                # direct column in pitcher gamelogs — no derivation needed
+
+  features:
+    numeric:
+      # Selected in Step 3c sweep — best OOS RMSE with interpretable features
+      - walks_roll_career   # coef=+0.102 (scaled): career walk rate baseline
+      - walks_roll_season   # coef=-0.019 (scaled): in-season adjustment; slight negative due to collinearity with consensus_line
+      - consensus_line      # coef=+0.321 (scaled): strongest predictor; books already incorporate pitcher tier + matchup
+    categorical: []
+    # Excluded features (Step 3a/3b/3c reasons):
+    #   walks_roll_c5: redundant with career + season after consensus_line included
+    #   is_home / games_into_season: improved RMSE only without consensus_line; marginal when included
+    #   opp_walks_against_season: OOS AUC 0.471 (LR), near-random
+    #   team_moneyline_odds / team_run_line_point: OOS AUC < 0.481, excluded
+    #   price bucket features: label-encoded strings in OLS assume arbitrary ordering — noise
+
+  model:
+    oos_rmse:  1.2456     # primary OOS fold: train 2025 → test 2026
+    oos_r2:    0.0891
+    bootstrap_p_over_auc: 0.5309  # AUC of bootstrap P(over) probability output on 2026 test set — NOT a classifier metric
+    intercept: 1.7740
+    coef:
+      walks_roll_career: 0.1024
+      walks_roll_season: -0.0189
+      consensus_line:    0.3211
+    residual_std: 1.2283
+    n_train_final: 3517   # 2025+2026 combined
+    note: "2025 OOF fold skipped — 2024 has only ~2 usable rows after dropna on walks_roll_season"
+
+  training:
+    seasons: [2024, 2025, 2026]
+    effective_training_start: 2025   # 2024 has <1% Odds API coverage for pitcher_walks
+    out_of_sample_folds:
+      - test_season: 2026
+        train_seasons: [2025]        # primary OOS fold — n_train=1913, n_test=1604
+
+  inference:
+    shrinkage: 0.75            # pull predictions toward market (critical — model miscalibrated at extremes)
+    n_bootstrap: 10000
+    rng_seed: 42
+    direction: both            # no directional edge found; show both in email for monitoring
+    edge_threshold_bet:  0.15  # conservative betting threshold (very few bets expected)
+    edge_threshold_show: 0.10  # show in email for tracking at 10pp
+    min_books: 2
+    line_min: 0.5
+    line_max: 5.5
+    note: "Monitor-only — see strategy_summary. Rebuild when 2026 full-season + 2027 data available."
+
+  s3:
+    bucket: the-odds-api-mt
+    prefix: mlb/pitcher_walks_model
+    spine_key:     mlb/pitcher_walks_model/spine/mlb_pitcher_walks_spine.parquet
+    model_key:     mlb/pitcher_walks_model/model/mlb_pitcher_walks_model.joblib
+    residuals_key: mlb/pitcher_walks_model/model/mlb_pitcher_walks_residuals.npy
+    settled_key:   mlb/pitcher_walks_model/settled/settled_bets.parquet
+    market_raw:    mlb/pitcher_walks_model/market_raw/
+
+  market:
+    sport:   baseball_mlb
+    markets: pitcher_walks
+    regions: us,us2
+    odds_format: american      # request American odds directly (unlike historical pitcher_outs which returned decimal)
+
+  game_logs:
+    bucket: the-odds-api-mt
+    prefix: mlb/strikeouts_model/pitcher_gamelogs   # reuse existing gamelogs — walks column already present
+    seasons: [2024, 2025, 2026]
+
+backtest:
+  groupby: ["player_key", "game_date", "bookmaker", "line"]
+  edge_col: "book_edge"
+  novig_col: "novig_prob_over"
+
+grid_search:
+  edge_threshold: [0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20]
+  direction: ["over", "under", "both"]
+  odds_bucket: ["all", "plus_odds", "minus_odds"]
+  shrinkage: [0, 0.25, 0.50, 0.75]
