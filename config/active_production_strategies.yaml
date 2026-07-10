@@ -14,7 +14,7 @@ pipelines:
 
   - name: mlb_total_bases
     status: active
-    strategy: "UNDER 1.5, all odds, edge ≥5pp (raw)"
+    strategy: "UNDER 1.5, all odds, edge ≥5pp (raw) — 10,270 bets · +524.7u · +5.11% ROI OOS"
     config: src/mlb_total_bases_modeling/config.yaml
     lambda: mlb-total-bases-daily
 
@@ -26,7 +26,7 @@ pipelines:
 
   - name: mlb_pitcher_outs
     status: active
-    strategy: "UNDER, minus odds, edge ≥5pp (raw implied), line ≤17.5, shrinkage=0.25 — OOS 689 bets, +95.3u, +13.83% ROI"
+    strategy: "UNDER, minus odds, edge ≥5pp (raw), line ≤17.5, shrinkage=0.25 — 689 bets · +95.3u · +13.83% ROI OOS"
     config: src/mlb_pitcher_outs_modeling/config/config.yaml
     lambda: mlb-pitcher-outs-daily
 
@@ -40,21 +40,21 @@ pipelines:
 
   - name: nba_rebounds
     status: inactive_offseason
-    strategy: "UNDER only, edge >5pp, all lines, OLS + XGB ensemble"
+    strategy: "UNDER only, edge ≥5pp (raw), all lines, OLS + XGB ensemble — 27,311 bets · +986.7u · +3.61% ROI OOS (OLS)"
     config: src/nba_rebounds_modeling/config/model_config.yaml
     lambda: nba-rebounds-daily
     goes_live: "2026-10-20"
 
   - name: nba_assists
     status: inactive_offseason
-    strategy: "OVER only, edge ≥15pp"
+    strategy: "OVER only, edge ≥15pp (raw) — 1,188 bets · +28.97u · +2.44% ROI OOS"
     config: src/nba_assists_modeling/config/model_config.yaml
     lambda: nba-assists-daily
     goes_live: "2026-10-20"
 
   - name: nba_points
     status: inactive_offseason
-    strategy: "UNDER, favs (minus odds), edge ≥5pp"
+    strategy: "UNDER, favs (minus odds), edge ≥5pp (raw) — 1,396 bets · +149.6u · +10.71% ROI OOS"
     config: src/nba_points_modeling/config/model_config.yaml
     lambda: nba-points-daily
     goes_live: "2026-10-20"
@@ -63,14 +63,14 @@ pipelines:
 
   - name: nfl_sacks
     status: inactive_offseason
-    strategy: "UNDER 0.5, edge ≥3pp (raw)"
+    strategy: "UNDER 0.5, edge ≥3pp (raw) — 213 bets · +29.73u · +14.0% ROI OOS"
     config: src/nfl_sacks_modeling/config.yaml
     lambda: nfl-sacks-daily
     goes_live: "2026-09-09"
 
   - name: nfl_rec_yards
     status: inactive_offseason
-    strategy: "OVER all odds, edge ≥3pp, min_books=1"
+    strategy: "OVER all odds, edge ≥3pp (raw), min_books=1 — 4,978 bets · +344.4u · +6.92% ROI OOS"
     config: src/nfl_rec_yards_modeling/config/model_config.yaml
     lambda: nfl-rec-yards-daily
     goes_live: "2026-09-09"

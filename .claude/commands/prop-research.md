@@ -11,7 +11,14 @@ Guided end-to-end research workflow for building a new prop market betting pipel
 The deliverable is a **daily email** — one row per qualifying (player, game, book, line) — organized by game start time, that looks like this (MLB pitcher strikeouts example):
 
 ```
-Player | Team | Opp | Dir | Line | Proj Ks | Book | Over | Under | Mkt O% | Mkt U% | Mdl O% | Mdl U% | OVER Edge | UNDER Edge | k_roll_career | k_roll_c5 | opp_K_rate | Status
+Player / Game:     Player | Team | Opp | Time (ET) | Bet | Line
+Book:              Book
+American Odds:     Over | Under
+Implied:           Raw Over | Raw Under | Raw Total
+No-Vig:            Fair Over | Fair Under | Fair Total | Vig
+Model Prediction:  Pred Over | Pred Under
+Edge:              Over Edge | Under Edge
+Model Inputs:      k_roll_career | k_roll_c5 | opp_K_rate | Status
 ```
 
 Grouped by game with a header row per game (e.g. "1:01 PM ET · Pittsburgh Pirates @ Washington Nationals · 1 PLAY"), sorted by game start time ascending. Games with no qualifying plays still appear with their players listed — so you can see every player the model evaluated, not just the ones that qualified.
@@ -247,6 +254,9 @@ Work through the three sub-steps in order. Accuracy metrics only at this stage �
     odds_bucket:          ["all", "plus_odds", "minus_odds"]
     clf_threshold:        [0.45, 0.50, 0.55, 0.60]   # classification models only; null for regression
     shrinkage:            [0, 0.25, 0.50, 0.75]       # pulls predictions toward the mean; 0 = no shrinkage
+    prediction_method:    ["model", "consensus_line"]  # "model" = trained ML yhat; "consensus_line" = avg line
+                                                       # across all books at player-game level (book-invariant)
+                                                       # used as yhat directly, no ML involved
     # Add market-specific dimensions here as needed, e.g.:
     # line_bucket: ["low", "high"]
   ```
@@ -301,8 +311,25 @@ Each market is different — a method that works well for strikeouts may not wor
 - Use the trained model's OOF predictions as the input to the pred→probability conversion above. Try at least 2 methods, pick the best by Brier score + calibration, record the chosen method in config.yaml.
 - **Clip all `p_model` values to [0.01, 0.99] before any downstream use.** After clipping, log the count and rate of rows hitting each boundary (e.g. "12 rows clipped to 0.01, 0.3% of total"). Ideally zero. If non-zero, look at the distribution of those rows — which players, which line ranges, which weeks — to understand what segment is clipping. You don't need to inspect every row; you need to understand the pattern. This is a model quality signal worth discussing before proceeding.
 - Calibration check: bucket P(over) into deciles and compare predicted rate to actual over rate. Is the model well-calibrated?
-- Compute market implied probability: `p_market = 1 / decimal_odds`, then adjust for vig (use the standard no-vig formula across all available books for that player-game).
-- Compute edge: `edge = p_model - p_market`.
+- Compute market implied probability: `p_market = 1 / decimal_odds` — this is the **raw implied probability** (vig-inclusive). Also compute novig (de-vigged) probabilities via proportional de-vig for display in the email (Fair Over/Under columns), but do not use novig for edge.
+- Compute edge: `edge = p_model − raw_implied_prob` — **always use the raw implied probability for edge, not novig.** The raw implied probability is the break-even probability at the actual price you're betting into: `edge > 0` means the bet is +EV at the real offered price. Novig understates the hurdle — a bet with positive edge vs novig can still be -EV at the real vig-inclusive price if the model's advantage is smaller than the vig on that side. Novig probabilities are still computed and displayed in the email (Fair Over/Under/Total, Vig columns) for transparency and calibration context, but they play no role in the edge calculation or strategy filters.
+
+**Required Python assert — edge is computed against raw implied probability.** Immediately after computing the edge column, add this check in the scoring script:
+```python
+# Verify edge = p_model − raw_implied_prob (NOT novig_prob)
+sample = df.sample(min(200, len(df)), random_state=42)
+edge_expected_over  = sample["p_model_over"]  - sample["raw_implied_prob_over"]
+edge_expected_under = sample["p_model_under"] - sample["raw_implied_prob_under"]
+assert (sample["edge_over"]  - edge_expected_over ).abs().max() < 1e-6, (
+    "edge_over is NOT p_model_over − raw_implied_prob_over. "
+    "Check the edge calculation — novig_prob must not be used here."
+)
+assert (sample["edge_under"] - edge_expected_under).abs().max() < 1e-6, (
+    "edge_under is NOT p_model_under − raw_implied_prob_under. "
+    "Check the edge calculation — novig_prob must not be used here."
+)
+```
+This assert must live in the scoring script itself, not just as a post-hoc check. It gates the entire grid search — if it fails, all downstream strategy results are in novig space and are not valid.
 - For variable-line markets (e.g. tackles): note that different books offering different lines for the same player-game are genuinely different bets with different P(over). Treat them as separate rows.
 - **Model purity check — same line, different books → identical p_model.** For a given player-game, every book row at the same line must produce the exact same `p_model`. The projected stat is a property of the player and the matchup, not of the book offering it. If `p_model` varies across books at the same line, a per-book feature (e.g. `novig_prob_over`) is inside the model — this is a hard bug, not a soft flag. Stop and fix the feature set before proceeding.
 - **Line monotonicity check — different lines → p_model varies correctly.** For any player-game that appears at more than one line value, sort by line ascending and verify that `p_model_under` is monotonically non-decreasing. Higher line → easier to go under → p(under) must be higher. A player-game where p(under 65.5) < p(under 55.5) means the line feature is pointing the wrong direction or a correlated feature is overriding it. Flag every inversion: show the player, game date, the two lines, and the two `p_model_under` values. Write the full list to the HTML log. If inversions are rare (< 2% of multi-line player-games), note and move on. If common, investigate the line feature's coefficient before proceeding.
@@ -335,7 +362,7 @@ Find strategies that are profitable on truly held-out data. This is the primary 
 > **What "grid search" means here:** this is a sweep over **betting strategy parameters** — edge threshold, bet direction, odds bucket, line bucket, etc. It is NOT model hyperparameter tuning (that's Step 3). The question being answered is: given the trained model's OOF predictions, which filter settings produce profitable betting results?
 
 ### Grain
-**The grid search runs at `(player, game_date, bookmaker, line)` grain — the same grain as the spine.** Every row in the grid search represents a real, actionable bet at a specific book at a specific price. Edge is computed as `p_model - novig_prob_over` using that book's own novig — never a consensus average. This is what makes the threshold numbers you select here directly usable in the live pipeline without translation.
+**The grid search runs at `(player, game_date, bookmaker, line)` grain — the same grain as the spine.** Every row represents a real, actionable bet at a specific book at a specific price. Edge is `p_model − raw_implied_prob` using that book's own raw odds — never a consensus average, never novig. This makes the threshold numbers directly interpretable: `edge_threshold = 0.05` means "only bet when the model's probability is at least 5pp above the break-even probability at the real offered price." The Step 4 edge assert must pass before the grid search runs — results computed in novig space are not valid.
 
 If you run the grid search at consensus grain and then deploy per-book, the thresholds are not valid — you would be applying a filter calibrated on fictional average bets to real per-book bets.
 
@@ -354,11 +381,13 @@ Both are grid search dimensions for classification problems. For regression prob
   - Odds bucket: [All, +odds only (dogs), -odds only (favs)] — default assumption is "All" wins. Only prefer a sub-bucket strategy if it clearly outperforms All on both units_won and the drawdown check. The more dimensions you carve on, the higher the overfitting risk — a sub-bucket that wins in-sample may just be noise.
   - Classification threshold (classification problems only): [0.45, 0.50, 0.55, 0.60]
   - Shrinkage: [0, 0.25, 0.50, 0.75] — shrinkage pulls each player's projected stat toward the population mean, reducing overconfidence on players with thin history. Apply before converting yhat to P(over/under). Always sweep all 4 values — 0 means no shrinkage (raw model output), 0.75 means heavy pull toward the mean.
+  - Prediction method: ["model", "consensus_line"] — `model` uses the trained ML model's OOF yhat. `consensus_line` skips the model entirely and uses the average line across all books for that player-game (computed at spine build time, book-invariant) as the yhat directly. Both then go through the same P(over/under) conversion and per-book edge computation. This is the non-ML baseline. If `consensus_line` strategies outperform `model` strategies, it means the edge is coming from individual books posting lines that deviate from the consensus — not from the ML model knowing something the market doesn't. The market consensus is generally correct; what `consensus_line` exploits is specific books being off on a given player-game. That's still a real, actionable edge — it's line-shopping at scale — but it's a different kind of signal than what the ML model is trying to find. Understanding which is driving the profit shapes how you think about the pipeline and which component is actually doing the work. Note: shrinkage has no meaning when `prediction_method = consensus_line` — skip shrinkage sweep for that method (or fix shrinkage = 0).
   - Additional market-specific dimensions added to config as needed (e.g., line bucket for tackles: low lines vs high lines)
 - For each combo: compute the output table below.
 - Flag strategies with <50 bets as not statistically meaningful.
 - **Flag any strategy where `max_drawdown > units_won` in red.** A strategy that drew down more than it ever returned is one most bettors would abandon before recovery. Flag it clearly — it's a signal worth noting, not a definitive answer.
 - Save full grid search results to S3 and `~/Downloads/tmp/` as a CSV for local review.
+- **Also write all OOS result rows (combos with ≥1 bet) into `config.yaml` under `grid_search.out_of_sample_results`**, one entry per combo, sorted by units_won descending. This makes the config the single source of truth for both the sweep parameters and the results — no need to re-open a CSV to remember what was tried. Format to match the MLB total bases / sacks pattern: one YAML list entry per combo with fields `edge`, `odds_bucket`, `direction`, `lines`, `n`, `win_pct`, `units`, `roi`, `mdd` (plus any market-specific dimensions). Also write a `strategy_summary` string at the top of the `grid_search:` block summarising the chosen production strategy in one line, e.g. `"Unders on lines ≤ 17.5, shrinkage 0.25, edge ≥ 10% — OOS 446 bets, +74.2u, +16.63% ROI (YYYY-MM-DD)"`.
 
 **Output table columns:** `edge_threshold`, `direction`, `odds_bucket`, `clf_threshold` (null if regression), `shrinkage`, `n_bets`, `pct_of_universe` (n_bets / total scored player-game-book-line rows — shows how selective the strategy is), `win_rate`, `push_rate`, `units_won`, `roi`, `avg_odds` (mean decimal odds of bets placed), `max_drawdown` (largest peak-to-trough loss in units across the chronological bet sequence). Sort descending by units_won, tiebreaker is descending n_bets (more sample size is better).
 
@@ -387,6 +416,7 @@ Understand the model's ceiling — what it could exploit if historical condition
 - This will show inflated ROI/Units won vs OOS — that's expected.
 - Key question: does the best OOS strategy from Step 5 also show positive in-sample ROI? If a strategy is positive OOS but flat/negative in-sample, that's a red flag.
 - Compare in-sample vs out-of-sample ROI ratio. >5x gap suggests the model is overfit.
+- **Write all IS result rows (combos with ≥1 bet) into `config.yaml` under `grid_search.in_sample_results`**, same format as the OOS rows written in Step 5.
 
 ### Tests after Step 6
 ```sql
@@ -431,23 +461,31 @@ Build a styled HTML mock of the picks email using real historical data from a pa
   - At least 2 games and multiple players per game, so the game-grouped layout is fully visible
 - Using the OOF scored output for that day, produce the full player row set:
   - One row per `(player, game_date, bookmaker, line)` — same grain as the pipeline
-  - All required picks columns in order: Player | Team | Opponent | Game Time (ET) | Bet Direction | Line | Proj Stat | Book | Over Odds | Under Odds | Mkt O% | Mkt U% | Mdl O% | Mdl U% | OVER Edge | UNDER Edge | [rolling feature cols] | Status
+  - All required picks columns, grouped into the sections below: Player | Team | Opp | Time (ET) | Line | Book | Over | Under | Raw Over | Raw Under | Raw Total | Fair Over | Fair Under | Fair Total | Vig | [Prediction (yhat)] | [Delta] | Pred Over | Pred Under | Over Edge | Under Edge | [model input feature cols] | Status
   - `Status` = "PLAY" if the row meets the production edge threshold; blank otherwise
 - Build a complete styled HTML file at `knowledge-base/raw/YYYYMMDD-mock-email-{market-name}.html` (e.g. `knowledge-base/raw/20260701-mock-email-nfl-wr-rec-yards.html`).
 
-**Required layout:**
+The mock must show all three sections that the live email will contain — use real OOF data for all three:
+
+**Section 1 — Today's plays (required):**
 - **Header summary** — first visible element: one line, e.g. "3 plays today across 2 games"
 - **Game sections** — one section per game, sorted by `game_time_et` ascending. Each section has:
   - A header row: `"7:05 PM ET — NYY @ BOS (3 players scored, 1 play)"`
-  - A `<table>` with all scored players for that game — qualifying and non-qualifying alike. Qualifying rows are highlighted; non-qualifying rows use default background.
+  - A `<table>` with all scored players for that game — qualifying and non-qualifying alike. Qualifying rows highlighted, non-qualifying rows default background.
   - **Grouped column headers (two-row `<thead>`)** — because the email has many columns, group them into labeled sections using `colspan` on the top header row, with individual column names underneath. Groups should follow the natural structure of the data, for example:
 
-    | ← Player → | ← Market (per book) → | ← Model OLS → | ← Model XGB → | ← Edge OLS → | ← Edge XGB → | Best | ← Model Inputs → | Result |
-    |---|---|---|---|---|---|---|---|---|
-    | Player \| Team \| Opp \| Dir \| Line \| Book \| Over \| Under \| Mkt O% \| Mkt U% | Proj \| Mdl O% \| Mdl U% | Proj \| Mdl O% \| Mdl U% | Ov Ed \| Un Ed | Ov Ed \| Un Ed | Best Ed | feature cols… | W/L |
+    | ← Player / Game → | ← Book → | ← American Odds → | ← Implied → | ← No-Vig → | ← Model Prediction → | ← Edge → | ← Model Inputs → |
+    |---|---|---|---|---|---|---|---|
+    | Player \| Team \| Opp \| Time (ET) \| Line | Book | Over \| Under | Raw Over \| Raw Under \| Raw Total | Fair Over \| Fair Under \| Fair Total \| Vig | [Prediction (yhat)] \| [Delta] \| Pred Over \| Pred Under | Over Edge \| Under Edge | feature cols… \| Status |
 
-    Adapt the group names to match the market (e.g. "Model OLS" / "Model XGB" if two models are used, or just "Model" if one). The key requirement is that every column belongs to a visible group — no ungrouped orphan columns.
-- **Model inputs table** — one table below all game sections, columns: `Feature` | `Shown as` | `What it measures` | `Role`. One row per model feature with the actual column names and descriptions for this market.
+    The key requirement is that every column belongs to a visible group — no ungrouped orphan columns. If two models are trained (e.g. OLS + XGB), split "Model Prediction" and "Edge" into two groups each (e.g. "← Model OLS →" / "← Model XGB →" and "← Edge OLS →" / "← Edge XGB →") — the column names above assume a single model; adapt as needed.
+- **Model inputs table** — one table below the game sections, columns: `Feature` | `Shown as` | `What it measures` | `Role`. One row per model feature with the actual column names and descriptions for this market.
+
+**Section 2 — Yesterday's results (required):** Pick any game day immediately before the chosen "today" that has settled OOF bets. One row per bet: Player | Team | Opponent | Bet Direction | Line | Book | Under Odds | Edge | Actual | Outcome | P&L. Below the per-bet table, a "by game" summary (Game | Bets | W | L | Net).
+
+**Section 3 — All-time results (required):** Summary stat cards (All-Time P&L, Record, Win %, ROI) populated from the OOF backtest results. Season-by-season breakdown table. Footer line: flat-bet assumption, strategy parameters, OOS baseline.
+
+All three sections are required in the mock — the live pipeline produces all three, so the visual spec must show all three.
 
 **Styling (inline CSS only — no external stylesheets):**
 - Font: `system-ui, Arial`, 14px
@@ -473,6 +511,7 @@ If this assert fails, fix the scoring script so it carries all model input colum
 
 ### Tests after Step 7
 ```sql
+-- Section 1 — Today's plays:
 -- 1. Row count in the HTML game tables matches the scored output row count for that day
 --    (count <tr> elements in game tables vs SELECT COUNT(*) from scored output for the date)
 -- 2. All PLAY rows have edge >= production edge threshold
@@ -480,12 +519,23 @@ If this assert fails, fix the scoring script so it carries all model input colum
 --    as column headers in every game table — grep the rendered HTML for each feature name
 -- 4. All required picks columns are present in every game table (check the header <tr>)
 -- 5. Game sections ordered by game_time_et ascending
+
+-- Section 2 — Yesterday's results:
+-- 6. All settled bets for the "yesterday" game day appear (count matches OOF data for that date)
+-- 7. "By game" summary net P&L equals sum of individual bet P&L values for that day
+
+-- Section 3 — All-time results:
+-- 8. Summary cards (P&L, Record, Win %, ROI) match the OOF backtest aggregate numbers
+-- 9. Season-by-season table rows sum to the all-time totals
 ```
 After the SQL checks, open the file in a browser (`open knowledge-base/raw/YYYYMMDD-mock-email-{market-name}.html`) and visually confirm:
+- All three sections are present in order: today's plays → yesterday's results → all-time results
 - Game grouping is correct, sorted by time
 - PLAY rows are visibly highlighted and distinguishable from non-play rows
 - Model inputs table is present and readable
 - Columns are in the correct order
+- Yesterday's per-bet table and by-game summary both render correctly
+- All-time stat cards and season table look clean
 
 **Do not proceed to Step 8 until the layout is approved.** Show the path to the HTML file in the conversation and ask the user to open it and confirm the layout. Step 8 builds the live pipeline; the E2E test in Step 8 is "does the real email match this mock?"
 
@@ -496,40 +546,118 @@ After the SQL checks, open the file in a browser (`open knowledge-base/raw/YYYYM
 ### Goal
 Build a daily pipeline that runs live during the season. The trained model from Step 3 is fixed — no retraining during the season.
 
-### Daily pipeline (in order):
-1. **Settle** — compare yesterday's bets to actual outcomes. Update P&L tracking in the settled results store.
-2. **Rebuild spine** — append yesterday's box score data to the rolling feature set (parquet on S3 or local).
-3. **Find today's games** — fetch today's schedule and available prop lines from the Odds API.
-4. **Score** — run today's player-games through the trained model. Compute `p_model`, `p_market`, and `edge` for each player-game-book row.
-5. **Pre-send validation** — before sending any email, print a summary of the scored output and eyeball it. There are no hard cut-offs; the question is: **does this look like a model making modest adjustments to the market, or a model ignoring the market entirely?**
+### Daily cadence
+
+Every day during the season, **two emails** are sent:
+
+| Time (ET) | Rule | What runs | Email |
+|---|---|---|---|
+| **8:30 AM** | Rule 1 | Settle yesterday's bets + rebuild spine/features | **Email 1** — spine/features build confirmation |
+| **9:00 AM** | Rule 2 | Score today's games | **Email 2** — plays + yesterday's results + all-time results |
+
+**Email 1 (8:30 AM)** is the ops health check. It tells you the pipeline is working and surfaces anything that needs fixing before bets go out. **Email 2 (9:00 AM)** is the daily plays email. Do not send Email 2 if the spine's `last_updated` timestamp is not from today — it means rule 1 failed and features are stale.
+
+**Email 2 always sends — even on days with no qualifying plays.** "0 plays today" is a valid and expected outcome. The email still shows yesterday's results and all-time record; the plays section simply says "No plays today." Do not skip the send on low-edge days.
+
+**Timing is sport-dependent — discuss while building.** 8:30 AM / 9:00 AM is the default starting point and works well for MLB and NFL. Adjust as needed for other sports or unusual schedules. The rule of thumb: **rebuild the spine every day regardless of whether there are games**, because compute is cheap and a stale spine is harder to debug than an unnecessary rebuild.
+
+### Daily schedule
+
+Two EventBridge rules, both DISABLED by default. Enable before season start.
+
+**8:30 AM ET — Settle + Rebuild** (rule 1):
+1. **Settle** — compare yesterday's bets to actual outcomes. Update P&L in the settled results store.
+2. **Rebuild spine** — append yesterday's box score data to the rolling feature set (parquet on S3). Settle must complete before rebuild so the newly appended rows don't get re-settled.
+3. **Send Email 1 — spine/features build confirmation.** This email confirms the 8:30 job ran cleanly and surfaces anything that needs attention before the 9:00 AM scoring run. Contents:
+   - **Settle summary:** bets settled, W/L/Push counts, net P&L for yesterday.
+   - **Spine rebuild summary:** rows added, new players added, `last_updated` timestamp.
+   - **Warnings (if any):** unmatched players (Odds API name vs available MLB API names side-by-side so a `NAME_MAP` fix can be applied immediately), stale data flags, any settlement anomalies.
+   - If no warnings, a single "All clear — spine updated, N rows added" line is sufficient.
+
+**9:00 AM ET — Score + Email** (rule 2):
+4. **Find today's games** — fetch today's schedule and available prop lines from the Odds API.
+5. **Score** — run today's player-games through the trained model. Compute `p_model`, `p_market`, and `edge` for each player-game-book row. Log a warning if the spine's `last_updated` timestamp is not from today — it means the 8:30 job failed and scoring is running off stale features. Do not send Email 2 if this check fails.
+6. **Pre-send validation** — before sending any email, run the following checks in order. Halt and do not send if any fail.
+
+   **Required assert — edge is computed against raw implied probability.** Run this before any other validation. If it fails, the qualifying bets are wrong and the email must not go out:
+   ```python
+   sample = scored_df.sample(min(200, len(scored_df)), random_state=42)
+   edge_expected_over  = sample["p_model_over"]  - sample["raw_implied_prob_over"]
+   edge_expected_under = sample["p_model_under"] - sample["raw_implied_prob_under"]
+   assert (sample["edge_over"]  - edge_expected_over ).abs().max() < 1e-6, (
+       "edge_over is NOT p_model_over − raw_implied_prob_over. "
+       "Novig must not be used for edge. Fix before sending."
+   )
+   assert (sample["edge_under"] - edge_expected_under).abs().max() < 1e-6, (
+       "edge_under is NOT p_model_under − raw_implied_prob_under. "
+       "Novig must not be used for edge. Fix before sending."
+   )
+   ```
+
+   Then eyeball the output. There are no hard cut-offs; the question is: **does this look like a model making modest adjustments to the market, or a model ignoring the market entirely?**
    - **Clip all `p_model` values to [0.01, 0.99].** Then log every row that hit the clip boundary (pre-clip value, player name, line, feature values). Ideally zero rows hit the boundary. Any that do should be inspected before the email goes out — they mean the model saw a feature combination so far outside its training range that it returned a near-certain prediction, which is almost never trustworthy. If they hit the boundary because of a feature pipeline issue (e.g. a player with no L8 history returning 0), exclude those rows from the qualifying bets rather than sending them. Note: if you saw zero clips in Step 4 OOF data but clips are appearing here on live data, that is a feature drift issue — the scoring pipeline is feeding the model values it never saw during training.
    - Print: n_total_scored, n_qualifying_bets, n_clipped (pre-clip), and for qualifying bets: mean/min/max of `p_model`, `p_market`, and `edge`.
    - The market is your anchor. A well-functioning model should produce `p_model` values that are in the same neighbourhood as `p_market` — shifted by the signal, not divorced from it. If the market says 60% chance of under and the model says 3%, that is a bug, not alpha. A model that prices every player at 3% P(under) has lost contact with reality.
    - Obvious red flags: `p_model` clustered near 0 or 1 across the board; edges uniformly 30pp+; n_qualifying_bets that exceeds a plausible fraction of total players scored; `p_model` distribution that looks nothing like `p_market` distribution. None of these require a formula — they are visible on inspection.
    - If anything looks wrong, halt. Do not send. Log the summary stats and investigate the scoring script before proceeding.
-6. **Email** — send recommendations to `mylescgthomas@gmail.com` with: player name, prop line, book, p_model, p_market, edge, recommended direction (Over/Under), whether it meets the production edge threshold, and **all model input feature values** used to generate that prediction (e.g. `rolling_5_rec_yards: 72.4`, `snap_pct_rolling_3: 0.81`, `opponent_rank: 28`). Include every feature the model was trained on — name and value, side by side.
+7. **Send Email 2** — one combined email to `mylescgthomas@gmail.com`, three sections in this order:
 
-   **Required columns — picks (live) email (in this order):** Player | Team | Opponent | Game Time (ET) | **Bet Direction** | Line | Proj Stat | Book | Over Odds | Under Odds | Mkt O% | Mkt U% | Mdl O% | Mdl U% | OVER Edge | UNDER Edge | [rolling feature cols] | Status
+   **Section 1 — Today's plays.** The main section. Layout and columns match the Step 7 mock exactly.
 
-   - `Mkt O%` / `Mkt U%` — market implied P(over) and P(under) shown separately (not a single `Mkt%`). Same for model: `Mdl O%` / `Mdl U%`. Showing all four makes it immediately readable: you can see the full picture (e.g. Mkt O% 50.5% / Mkt U% 49.5% vs Mdl O% 56.6% / Mdl U% 43.4%) without having to infer the complement.
-   - `Proj Stat` — the model's raw projected value (e.g. Proj Ks = 5.86). This is the number the model actually produced before converting to a probability distribution.
-   - Rolling feature columns — include the key rolling features used in the model (e.g. `k_roll_career`, `k_roll_c5`, `opp_K_rate`) as explicit columns so you can see what the model saw, right next to its prediction.
+   - **Header summary (top):** one line — e.g. "3 plays today across 2 games". First thing visible.
+   - **Game-by-game sections:** sort all scored players by `game_time_et`, then `home_team`, then `away_team`, then `player_name`. Group by game with a header row per game — e.g. "7:05 PM ET — NYY @ BOS (3 players scored, 1 play)". Show **all scored players** in each game, not just qualifying bets. Highlight qualifying bet rows so plays stand out from non-plays. The point is to see every player the model evaluated in context. **The matchup (`home_team`, `away_team`) must be part of the sort key** — without it, multiple games starting at the same time (e.g. a 7:05 PM ET slate) will interleave rows from different matchups under the wrong game header.
+   - **Required columns — grouped by section (match the Step 7 mock layout exactly):**
+     - **Player / Game:** Player | Team | Opp | Time (ET) | Line
+     - **Book:** Book — use the full sportsbook name, never a nickname (e.g. "DraftKings" not "DK", "FanDuel" not "FD"). Map raw Odds API keys to display names in every pipeline using a lookup dict — never pass the raw key through to the email:
+       ```python
+       _BOOK_DISPLAY_NAMES = {
+           "betonlineag":    "BetOnline",
+           "fanduel":        "FanDuel",
+           "draftkings":     "DraftKings",
+           "betmgm":         "BetMGM",
+           "caesars":        "Caesars",
+           "betrivers":      "BetRivers",
+           "pointsbetus":    "PointsBet",
+           "unibet_us":      "Unibet",
+           "mybookieag":     "MyBookie",
+           "bovada":         "Bovada",
+           "pinnacle":       "Pinnacle",
+           "bet365":         "Bet365",
+           "williamhill_us": "William Hill",
+           "lowvig":         "LowVig",
+           "ballybet":       "Bally Bet",
+           "espnbet":        "ESPN Bet",
+           "fliff":          "Fliff",
+           "betanysports":   "BetAnySports",
+           "fanatics":       "Fanatics",
+           "hardrock":       "Hard Rock Bet",
+       }
+       ```
+       If a book key appears that isn't in the dict, log a warning and fall back to the raw key rather than silently displaying it — that way missing entries get caught and added.
+     - **American Odds:** Over | Under — American odds as posted by that book.
+     - **Implied:** Raw Over | Raw Under | Raw Total — raw implied probabilities (1 / decimal_odds); Raw Total > 100% due to vig, e.g. ~106%.
+     - **No-Vig:** Fair Over | Fair Under | Fair Total | Vig — proportionally de-vigged probabilities; Fair Total = 100% by construction; Vig = Raw Total − 100% in pp, e.g. +6.3pp. These are the benchmark for edge — edge is always computed against Fair Over / Fair Under, not the raw implied probs.
+     - **Model Prediction:** [Prediction (yhat)] | [Delta] | Pred Over | Pred Under
+       - `Prediction (yhat)` — the model's raw output before probability conversion (e.g. 6.2 projected Ks). Player-game invariant: same value regardless of line or book. Include for regression models (OLS / XGBoost regressor) where yhat is a numeric stat — the chain `yhat → Pred Over` is what you want to sanity-check. Skip for pure classifiers (logistic / XGBoost classifier) where yhat is already a probability and equals Pred Over directly.
+       - `Delta` — `yhat − line`. Positive = model leans OVER, negative = model leans UNDER, in the stat's own units (e.g. +0.7 Ks, −2.3 rush attempts). Player-game-line invariant. Only include alongside Prediction (yhat) — skip for classifiers.
+       - `Pred Over` / `Pred Under` — model P(over) and P(under) at that line. Player-game-line invariant: same across all books at the same line, varies across lines.
+     - **Edge:** Over Edge | Under Edge — p_model minus that book's own Fair Over / Fair Under; edge for UNDER strategies displays as a positive number.
+     - **Model Inputs:** [all features from `config.yaml` `numeric_features` + `categorical_features`, in order] | Status — features the model saw; lets you sanity-check projections inline. **If the model's Pred Over is 85% for a player the market has at 30%, something is wrong — seeing the inputs alongside the prediction is how you catch it.** `Status` encodes both whether the row qualifies and the bet direction: `PLAY - OVER`, `PLAY - UNDER`, or blank for non-qualifying rows. No separate Bet column needed.
+   - **Grouped column headers (two-row `<thead>` with `colspan`)** — see Step 7 requirement.
+   - **Model inputs table (below the game sections):** one row per feature with columns: `Feature` | `Shown as` | `What it measures` | `Role`.
 
-   **Required columns — settlement email (in this order):** Player | Team | Opponent | **Bet Direction** | Line | Actual | Outcome | P&L
+   **Section 2 — Yesterday's results.** One row per settled bet. Columns: Player | Team | Opponent | Bet Direction | Line | Book | Under Odds | Edge | Actual | Outcome | P&L. Below the per-bet table, a "by game" summary table (one row per game: Game | Bets | W | L | Net). `Bet Direction` always populated explicitly.
 
-   `Bet Direction` must always be present in both emails — even when the strategy bets only one direction (e.g. all UNDERs), include the column and populate every row with the explicit value ("OVER" or "UNDER"). Never leave it implicit. Game Time (ET) is picks-only — it is not required in settlement.
+   **Section 3 — All-time results.** Summary stat cards (All-Time P&L, Record, Win %, ROI) followed by a season-by-season breakdown table (Season | Bets | Record | Win % | Units | ROI). Footer line: flat-bet assumption, strategy parameters, OOS baseline from research.
 
-   **Picks email layout:**
-   - **Header summary (top of email):** one line — e.g. "3 plays today across 2 games". This is the first thing visible.
-   - **Game-by-game sections below:** sort all scored players by `game_time_et`, then `home_team`, then `player_name`. Group rows by game with a visual header row between games — e.g. "7:05 PM ET — NYY vs BOS (3 players scored, 1 play)". Include **all scored players** in each game section, not just qualifying bets. Highlight qualifying bet rows (e.g. bold or colored background) so plays stand out from non-plays. The point is to see every player the model evaluated in context — which ones qualified and which didn't — so you can learn the model's behavior game by game.
-   - **Model inputs table (below the player rows):** a separate table with one row per feature showing: `Feature` (column name), `Shown as` (display label if different), `What it measures` (plain English description), `Role` (e.g. Primary signal / Baseline / Recent form / Matchup / Context). This replaces the inline `x1: value` format — it's much easier to read and explains the model to anyone looking at the email cold.
-
-   The model inputs table is not just a null-check — it is how you understand what the model is actually doing. The most important sanity check is: **does the model's projected stat make sense given the raw inputs it saw?** If the model projects 7 Ks for a pitcher whose career rolling average is 4.2, something is wrong — the model is extrapolating badly, not finding signal. Seeing the feature table alongside the projection is how you catch it, investigate the cause, and decide whether to trust those bets.
+   One SES call. The settled results for Section 2 come from the same store updated in step 1 above.
 
 ### Architecture (mirror the sacks/tackles Lambda pattern):
 - Container-based Lambda (ECR)
 - **When writing the Dockerfile, pin `scikit-learn` to the exact version recorded in Step 3c.** A mismatch between the version used to pickle the model and the version in the container will cause `InconsistentVersionWarning` at best and a hard `AttributeError` at worst.
-- EventBridge rules for each pipeline step (all DISABLED by default — enable before season start: 2026-09-09)
+- **Two EventBridge rules** (both DISABLED by default — enable before season start: 2026-09-09):
+  - Rule 1: `cron(30 13 * * ? *)` → 8:30 AM ET — triggers settle + rebuild
+  - Rule 2: `cron(0 14 * * ? *)` → 9:00 AM ET — triggers score + email
 - Spine and model artifacts stored in S3
 - Settled results stored in DuckDB or S3 parquet
 
@@ -586,6 +714,7 @@ aws events list-rules --name-prefix <rule-prefix>
 - **Trace the spot-check player at every step.** At the end of each step's work (before tests), show all relevant columns for the spot-check player chosen in Step 0 — their raw data, rolling features, p_model, p_market, edge, and results as applicable. Include this as a dedicated subsection in the HTML log for that step. If the spot-check player's numbers look wrong, treat it as a test failure and investigate before proceeding.
 - **Log and surface anything fishy.** Throughout each step, keep a running list of anything unexpected, suspicious, or worth a second opinion — unexpected null patterns, distributions that don't make intuitive sense, coverage gaps, model coefficients pointing the wrong direction, ROI numbers that seem too good, etc. Do not interrupt mid-step to ask about them. At the end of each step, after tests pass, present all flagged items as a numbered list and ask the user about them before proceeding to the next step.
 - **No jargon. Always show the value.** Never use shorthand like "high-line" or "large edge" without stating the actual threshold alongside it. Write for someone who hasn't been in the session: "line ≥ 6.5" not "high-line", "edge ≥ 3pp" not "meaningful edge". This applies to code comments, HTML output, emails, and conversation.
+- **Use readable names in code and data — shorten only for display.** DataFrame column names, variable names, and SQL aliases should be fully descriptive (e.g. `rolling_rebound_mean_60`, `novig_prob_over`, `under_edge_ols`) — not abbreviated to cryptic shorthand (e.g. `rb60`, `nvp`, `ue_ols`). Abbreviations are acceptable only in the HTML display layer (column headers, email labels) where space is genuinely constrained — and only after the full name is established in the underlying data. Never choose a short name in code because it's faster to type.
 - **Edge for UNDER strategies displays as positive.** When displaying edge in tables, emails, or HTML, show it as a positive number (e.g. +13.0pp) — it represents how much the model favors the UNDER over the market, which is always in our favor when we bet it.
 - **Update the HTML log before asking to proceed.** Never summarize findings in conversation and then ask to move on. Write it to the HTML first, then ask.
 - **Be decisive on strategy selection.** Present the recommendation fully and completely the first time — parameters, stats, rationale. Don't make the user ask twice for the same information.

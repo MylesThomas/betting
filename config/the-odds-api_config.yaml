@@ -175,6 +175,47 @@ sports:
     - totals_h2
     - alternate_totals_h2
     - alternate_team_totals_h2
+  mlb:
+    api_key: baseball_mlb
+    name: MLB
+    icon: "⚾"
+    shared_data:
+      game_lines:
+        # Historical h2h + run-line odds, fetched once and shared across all MLB pipelines.
+        # Fetch script: src/mlb_strikeouts_modeling/scripts/20260709_fetch_game_lines.py
+        # Cost: 20 credits/event. Snapshot = commence_time - 1hr (pre-game lines).
+        s3_path: s3://the-odds-api-mt/mlb/game_lines/mlb_game_lines.parquet
+        markets: [h2h, spreads]
+        join_key: [game_date, home_team, away_team]
+        columns:
+          - event_id
+          - game_date
+          - home_team
+          - away_team
+          - team_ml_prob    # novig win prob for home team row; swap per player's team
+          - opp_ml_prob
+          - team_rl_prob    # novig prob of covering -1.5 run line
+          - opp_rl_prob
+          - n_books_h2h
+          - n_books_rl
+    discovered_markets:
+    - h2h
+    - spreads
+    - totals
+    - pitcher_strikeouts
+    - pitcher_strikeouts_alternate
+    - batter_total_bases
+    - batter_total_bases_alternate
+    - pitcher_outs
+    - pitcher_outs_alternate
+    - batter_hits
+    - batter_home_runs
+    - batter_rbis
+    - batter_runs_scored
+    - batter_strikeouts
+    - pitcher_walks
+    - pitcher_earned_runs
+    - pitcher_hits_allowed
 possible_markets:
   featured:
   - h2h
