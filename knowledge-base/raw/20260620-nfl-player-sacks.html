@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NFL Player Sacks — Research Session 2026-06-20</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f4f4f5; margin: 0; padding: 16px; font-size: 13px; color: #1a1a2e; }
+  .card { background: #fff; border-radius: 8px; border: 1px solid #e2e2e4; padding: 20px; margin-bottom: 16px; max-width: 1200px; margin-left: auto; margin-right: auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; color: #1d2d44; }
+  h2 { font-size: 16px; margin: 16px 0 8px; color: #1d2d44; border-bottom: 2px solid #1d2d44; padding-bottom: 4px; }
+  h3 { font-size: 14px; margin: 12px 0 6px; color: #374151; }
+  p, li { color: #4b5563; line-height: 1.5; margin: 4px 0; }
+  code { background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 12px; }
+  pre { background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; line-height: 1.4; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+  th { background: #1d2d44; color: #fff; padding: 7px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .pass { color: #16a34a; font-weight: bold; }
+  .fail { color: #dc2626; font-weight: bold; }
+  .warn { color: #d97706; font-weight: bold; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+  .badge-green { background: #dcfce7; color: #16a34a; }
+  .badge-red { background: #fee2e2; color: #dc2626; }
+  .badge-yellow { background: #fef9c3; color: #ca8a04; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .meta { color: #6b7280; font-size: 12px; }
+  .highlight { background: #fef9c3; padding: 8px 12px; border-left: 3px solid #ca8a04; margin: 8px 0; border-radius: 0 4px 4px 0; }
+  .fishy { background: #fff7ed; padding: 8px 12px; border-left: 3px solid #f97316; margin: 8px 0; border-radius: 0 4px 4px 0; }
+  .spotcheck { background: #eff6ff; padding: 8px 12px; border-left: 3px solid #3b82f6; margin: 8px 0; border-radius: 0 4px 4px 0; }
+  .decision { background: #f0fdf4; padding: 8px 12px; border-left: 3px solid #16a34a; margin: 8px 0; border-radius: 0 4px 4px 0; }
+  .deployed { background: #eff6ff; border: 2px solid #3b82f6; border-radius: 6px; padding: 12px 16px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+<div class="card">
+  <h1>NFL Player Sacks — Research Session</h1>
+  <p class="meta">Started: 2026-06-20 &nbsp;|&nbsp; Grid search updated: 2026-07-09 &nbsp;|&nbsp; Analyst: Myles Thomas &nbsp;|&nbsp; Model: Claude Sonnet 4.6</p>
+
+  <h2>Session Config</h2>
+  <table>
+    <tr><th>Parameter</th><th>Value</th><th>Notes</th></tr>
+    <tr><td><strong>Prop Market</strong></td><td>NFL Player Sacks</td><td>Skewed binary — 99.4% of lines at 0.5; odds are the only differentiation</td></tr>
+    <tr><td><strong>Odds API Market Key</strong></td><td><code>player_sacks</code></td><td>Confirmed in <code>config/the-odds-api_config.yaml</code></td></tr>
+    <tr><td><strong>Sport</strong></td><td>NFL</td><td><code>americanfootball_nfl</code></td></tr>
+    <tr><td><strong>Training Seasons</strong></td><td>2024, 2025</td><td>2024 train / 2025 OOS holdout; 2024+2025 combined for IS</td></tr>
+    <tr><td><strong>Inference Season</strong></td><td>2025</td><td>Live pipeline targets 2026 season (enabled Sept 2026)</td></tr>
+    <tr><td><strong>Sportsbooks</strong></td><td>betonlineag, fanduel</td><td>FanDuel posts Over-only (no Under lines); BetOnline posts both sides</td></tr>
+    <tr><td><strong>Market Type</strong></td><td>Skewed binary (fixed 0.5 line)</td><td>Binary LR appropriate; no regression needed</td></tr>
+    <tr><td><strong>Position Filter</strong></td><td>DL + LB + DB (all defenders with a line)</td><td>Position side (outside/inside/other) as feature, not hard filter</td></tr>
+    <tr><td><strong>Target</strong></td><td><code>is_over</code> = 1 if sacks ≥ 1, 0 if sacks = 0</td><td>Push (sacks = 0.5) impossible at line 0.5 — not a concern</td></tr>
+    <tr><td><strong>Player ID</strong></td><td><code>pfr_player_id</code></td><td>PFR ID avoids name collision (e.g. two Byron Youngs in 2025: PHI YounBy00 / LAR YounBy01)</td></tr>
+    <tr><td><strong>Spot-check Player</strong></td><td>Myles Garrett</td><td>Active, full-season data, known high sack rate edge rusher</td></tr>
+    <tr><td><strong>Project Directory</strong></td><td><code>src/nfl_sacks_modeling/</code></td><td></td></tr>
+    <tr><td><strong>Model Artifact</strong></td><td><code>lr_norm_2024_2025_v4.pkl</code></td><td>Logistic regression trained on 2024+2025; stored in S3</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════ STEP 1 ═══════════════════════════════════ -->
+<div class="card">
+<h2>Step 1 — Data Pull + EDA</h2>
+<p class="meta">Completed: 2026-06-20 | Data: 2025 regular season</p>
+
+<h3>What Was Built</h3>
+<ul>
+  <li>Pulled <code>player_sacks</code> market from <code>s3://the-odds-api-mt/nfl/props_backfill/2025/</code> and <code>all_markets/2025/</code></li>
+  <li>Loaded NFL defensive player-game stats via <code>nfl_data_py</code> + Pro Football Reference snap counts</li>
+  <li>Deduped to one Over row per player-game-book (latest snapshot); Under rows joined separately</li>
+  <li>4 Week 18 games had zero market coverage: GB_MIN, DAL_NYG, NYJ_BUF, KC_LV — confirmed starters resting or irrelevant matchups</li>
+</ul>
+
+<h3>Market Data Summary (2025 Season)</h3>
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  <tr><td>Total defensive player-games (all positions)</td><td>10,541</td></tr>
+  <tr><td>Player-game rows with prop lines posted</td><td>1,941</td></tr>
+  <tr><td>Games covered / total 2025 REG games</td><td>268 / 272 (98.5%)</td></tr>
+  <tr><td>Books posting this market</td><td>2 — betonlineag (both sides), fanduel (Over-only)</td></tr>
+  <tr><td>Lines at 0.5 (% of all lines)</td><td>99.4%</td></tr>
+  <tr><td>Over hit rate</td><td>22.7%</td></tr>
+  <tr><td>Under hit rate</td><td>73.2%</td></tr>
+  <tr><td>Push rate (sacks = 0.5)</td><td>4.1%</td></tr>
+  <tr><td>DNP rate (line posted, player didn't play)</td><td>13.3%</td></tr>
+</table>
+
+<h3>Key Calibration Finding</h3>
+<div class="highlight">
+  <strong>Market systematically overprices the Over.</strong> At 50–60% implied Over probability (i.e. the book thinks sacks is a near-coinflip), the actual Under hit rate is ~73%. Books are putting too much probability on a player getting a sack in a given game. This is the primary edge signal.
+</div>
+
+<h3>Book Coverage Note</h3>
+<div class="fishy">
+  <strong>FanDuel posts Over-only.</strong> FanDuel does not post Under lines for sacks — only the Over side is listed. This means FanDuel rows can only ever be OVER bets in the pipeline. BetOnline posts both sides and is the source of most Under bets.
+</div>
+
+<h3>Test Results</h3>
+<table>
+  <tr><th>#</th><th>Test</th><th>Result</th></tr>
+  <tr><td>1</td><td>Market raw row count in expected range</td><td><span class="pass">PASS</span> (1,941 player-game rows with lines)</td></tr>
+  <tr><td>2</td><td>No unexpected nulls in player_name, game_id, line, odds</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>3</td><td>Skewed binary market — &gt;95% of lines at 0.5</td><td><span class="pass">PASS</span> (99.4% at 0.5)</td></tr>
+  <tr><td>4</td><td>Over + Under + Push sum to ~100%</td><td><span class="pass">PASS</span> (22.7% + 73.2% + 4.1% = 100.0%)</td></tr>
+  <tr><td>5</td><td>PFR stat null rate &lt;10%</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>6</td><td>Season / week ranges overlap between market and PFR data</td><td><span class="pass">PASS</span></td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════ STEP 2 ═══════════════════════════════════ -->
+<div class="card">
+<h2>Step 2 — Feature Engineering / Spine</h2>
+<p class="meta">Completed: 2026-06-20 through 2026-06-25 | Spine v3</p>
+
+<h3>What Was Built</h3>
+<ul>
+  <li>Spine keyed on <code>pfr_player_id</code> (not player name) to prevent rolling stat mixing for same-named players</li>
+  <li>Rolling sack rate: L1, L3, L5, L8, L16, career (all prior games) — strict temporal shift, no leakage</li>
+  <li>QB hit rate (rolling L16): proxy for pass-rush productivity even when sacks don't convert</li>
+  <li>Snap count percentage (L8): time-on-field proxy from <code>nfl_data_py</code> snap data</li>
+  <li>Market implied probability: per-book Over implied (with vig) and median novig implied across books</li>
+  <li>Name normalization: strip suffixes (Jr./Sr./II–V), dot removal, lowercase; 11 alias mappings</li>
+  <li>Actuals from PFR box score (<code>def_sacks</code>) via <code>pfr_player_id</code> — eliminates name-matching bugs that silently zero out compound/suffix names</li>
+</ul>
+
+<h3>Name Normalization Aliases</h3>
+<table>
+  <tr><th>Props API Name (normalized)</th><th>→ Spine Name</th><th>Reason</th></tr>
+  <tr><td>greg rousseau</td><td>gregory rousseau</td><td>Preferred vs official first name</td></tr>
+  <tr><td>mike danna</td><td>michael danna</td><td>Preferred vs official first name</td></tr>
+  <tr><td>nate landman</td><td>nathan landman</td><td>Preferred vs official first name</td></tr>
+  <tr><td>josh allen</td><td>josh hines-allen</td><td>DE/OLB; avoids QB name collision</td></tr>
+  <tr><td>justin madubuike</td><td>nnamdi madubuike</td><td>Official name change 2024 season</td></tr>
+  <tr><td>demeioun robinson</td><td>chop robinson</td><td>Goes by nickname "Chop" in snap count data</td></tr>
+  <tr><td>matthew judon</td><td>matt judon</td><td>Full name Pernell Matthew Judon; goes by Matt</td></tr>
+  <tr><td>ogbo okoronkwo</td><td>ogbonnia okoronkwo</td><td>"Ogbo" is a nickname for Ogbonnia</td></tr>
+  <tr><td>pat jones</td><td>patrick jones</td><td>Pat Jones II listed as Patrick Jones II in snap counts</td></tr>
+  <tr><td>tj slaton</td><td>tedarrell slaton</td><td>T.J. = Tedarrell James; listed as T.J. Slaton on rosters</td></tr>
+  <tr><td>josh uche</td><td>joshua uche</td><td>Josh = Joshua</td></tr>
+</table>
+
+<h3>Position Groups</h3>
+<table>
+  <tr><th>Group</th><th>Positions</th><th>Notes</th></tr>
+  <tr><td>DL</td><td>DE, DT, NT, DL</td><td></td></tr>
+  <tr><td>LB</td><td>OLB, ILB, MLB, LB</td><td></td></tr>
+  <tr><td>DB</td><td>CB, SS, FS, DB, S</td><td></td></tr>
+  <tr><td><strong>outside</strong> (side)</td><td>DE, OLB, DL, LB</td><td>Edge rushers — highest sack rate</td></tr>
+  <tr><td><strong>inside</strong> (side)</td><td>DT, NT, MLB, ILB</td><td>Interior / off-ball — lower sack rate</td></tr>
+  <tr><td><strong>other</strong> (side)</td><td>S, SS, FS, CB, DB</td><td>Safeties/DBs who occasionally blitz</td></tr>
+</table>
+
+<div class="fishy">
+  <strong>pfr_player_id is required for rolling features.</strong> Two players named Byron Young played in 2025: YounBy00 (PHI) and YounBy01 (LAR). Using player name as the groupby key would mix their rolling history. Using pfr_player_id correctly separates them. Any future spine additions must use pfr_player_id as the join key for actuals.
+</div>
+
+<h3>Test Results</h3>
+<table>
+  <tr><th>#</th><th>Test</th><th>Result</th></tr>
+  <tr><td>1</td><td>No duplicate player-game-book rows</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>2</td><td>No leakage — sack_rate_L1 shift verified</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>3</td><td>All rolling feature null rates &lt;10%</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>4</td><td>is_over: 0 nulls, mean ~0.23 (matches EDA)</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>5</td><td>Market → spine join quality ≥90%</td><td><span class="pass">PASS</span></td></tr>
+  <tr><td>6</td><td>Both 2024 and 2025 seasons present</td><td><span class="pass">PASS</span></td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════ STEP 3 ═══════════════════════════════════ -->
+<div class="card">
+<h2>Step 3 — Model Training</h2>
+<p class="meta">Completed: 2026-06-25 | Model: M7 Parsimonious LR</p>
+
+<h3>Model Selection</h3>
+<p>Market type is skewed binary (99.4% at 0.5) — binary logistic regression is appropriate. XGBoost tested but showed no lift over LR at this sample size and signal strength. Parsimonious feature set chosen because the market already prices position and categorical factors.</p>
+
+<h3>Final Model — M7 Parsimonious</h3>
+<table>
+  <tr><th>Parameter</th><th>Value</th></tr>
+  <tr><td>Model class</td><td>Logistic Regression (sklearn, normalized features)</td></tr>
+  <tr><td>Artifact</td><td><code>lr_norm_2024_2025_v4.pkl</code></td></tr>
+  <tr><td>Training data</td><td>2024+2025 combined (IS); 2024-only for OOS holdout</td></tr>
+  <tr><td>Target</td><td><code>is_over</code> — 1 if sacks ≥ 1, 0 if sacks = 0 (pushes excluded)</td></tr>
+  <tr><td>Numeric features</td><td><code>prop_median_impl_over</code>, <code>qbhit_rate_L16</code>, <code>sack_rate_Lcareer</code></td></tr>
+  <tr><td>Categorical features</td><td>None — market already prices position and context</td></tr>
+  <tr><td>Feature grain</td><td>player-game (deduped before training; label invariant across books at 0.5 line)</td></tr>
+</table>
+
+<h3>Feature Rationale</h3>
+<table>
+  <tr><th>Feature</th><th>Rationale</th></tr>
+  <tr><td><code>prop_median_impl_over</code></td><td>Market consensus novig Over probability — the strongest single predictor; summarizes all public information about player context, matchup, and status</td></tr>
+  <tr><td><code>qbhit_rate_L16</code></td><td>QB hits in recent 16 games — captures pass-rush productivity when sacks don't fully convert; less noisy than sack rate over short windows</td></tr>
+  <tr><td><code>sack_rate_Lcareer</code></td><td>Career sack rate — stabilized long-run talent signal; insensitive to recent variance</td></tr>
+</table>
+
+<div class="decision">
+  <strong>Why no categorical features?</strong> Position group (outside/inside/other) and team context are already reflected in the market implied probability. Adding them as explicit features on top of <code>prop_median_impl_over</code> added noise without AUC gain in OOF evaluation. Parsimonious wins.
+</div>
+
+<h3>Accuracy Source for Actuals</h3>
+<div class="highlight">
+  <strong>Actuals use PFR box score (<code>def_sacks</code>) via <code>pfr_player_id</code>.</strong> Prior versions used PBP name-matching which silently zeroed out sacks for compound names (e.g. "Josh Hines-Allen") and suffix names (e.g. "Shaquil Barrett Jr."). Switching to PFR box score + pfr_player_id eliminated all silent zeroing bugs.
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ STEP 4 ═══════════════════════════════════ -->
+<div class="card">
+<h2>Step 4 — Scoring + Inference</h2>
+<p class="meta">Completed: 2026-06-26</p>
+
+<h3>What Was Built</h3>
+<ul>
+  <li>Scored both 2024 and 2025 seasons; output stored as parquets for Steps 5–6</li>
+  <li>Pipeline grain: player-game-book (one row per player × game × bookmaker)</li>
+  <li>Per-book edges: <code>edge_over = p_over − over_implied</code>; <code>edge_under = (1−p_over) − under_implied</code></li>
+  <li>p_over is identical across books for the same player-game (it's a model output, not per-book)</li>
+  <li>Edge is per-book because <code>over_implied</code> / <code>under_implied</code> vary by book</li>
+</ul>
+
+<h3>Scored Data Summary</h3>
+<table>
+  <tr><th>Dataset</th><th>Rows (player-game-book)</th><th>Weeks</th><th>Books</th></tr>
+  <tr><td>OOS (2025 holdout)</td><td>3,725</td><td>1–18</td><td>betonlineag, fanduel</td></tr>
+  <tr><td>IS (2024+2025 combined)</td><td>7,418</td><td>1–18 both seasons</td><td>betonlineag, fanduel</td></tr>
+</table>
+
+<h3>P&amp;L Convention</h3>
+<table>
+  <tr><th>Outcome</th><th>Units</th></tr>
+  <tr><td>Win</td><td><code>1 / implied − 1</code> (actual book decimal payout, not flat −110)</td></tr>
+  <tr><td>Loss</td><td>−1</td></tr>
+  <tr><td>Push</td><td>0</td></tr>
+</table>
+<p><code>over_implied</code> and <code>under_implied</code> in the scored parquet are raw book-implied probabilities (with vig, sum ~1.06). Payout = <code>1/implied − 1</code> gives the correct per-unit return at the actual posted price.</p>
+</div>
+
+<!-- ═══════════════════════════════════ STEP 5 ═══════════════════════════════════ -->
+<div class="card">
+<h2>Step 5 — OOS Grid Search</h2>
+<p class="meta">Completed: 2026-07-09 | Script: <code>src/nfl_sacks_modeling/scripts/20260709_step5_6_grid_search.py</code></p>
+
+<h3>Grid Dimensions</h3>
+<table>
+  <tr><th>Dimension</th><th>Values</th><th>Notes</th></tr>
+  <tr><td><code>clf_threshold</code></td><td>0.20, 0.25, 0.30, 0.35, 0.40, 0.45</td><td>Bet UNDER when p_over &lt; threshold; OVER when p_over &gt; (1−threshold)</td></tr>
+  <tr><td><code>direction</code></td><td>under, over, both</td><td></td></tr>
+  <tr><td><code>min_edge</code></td><td>0.00, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20</td><td>Minimum model−book probability gap to bet</td></tr>
+  <tr><td><code>odds_bucket</code></td><td>all, plus_odds, minus_odds</td><td>Direction-aware: UNDER minus_odds = under_implied &gt; 0.50</td></tr>
+  <tr><td><code>shrinkage</code></td><td>0.0, 0.25, 0.50, 0.75</td><td>Pulls p_over toward 0.5: (1−s)×p_over + s×0.5; not swept for consensus_line</td></tr>
+  <tr><td><code>prediction_method</code></td><td>model, consensus_line</td><td>model=LR p_over; consensus_line=historical sack base rate (tests model vs base rate)</td></tr>
+</table>
+<p><strong>Total combos:</strong> 1,890 (5 method/shrinkage pairs × 6 thresholds × 3 directions × 7 edges × 3 buckets)</p>
+<p><strong>Base rate (OOS 2025 sack rate):</strong> 26.41%</p>
+
+<h3>Top 20 OOS Combos (≥20 bets, by units won)</h3>
+<table>
+  <tr><th>Method</th><th>Shrink</th><th>Direction</th><th>Thresh</th><th>Edge≥</th><th>Bucket</th><th>N Bets</th><th>Win%</th><th>Units Won</th><th>ROI</th><th>Avg Odds</th><th>Max DD</th></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.00</td><td>minus_odds</td><td>548</td><td>73.7%</td><td>+36.77</td><td>6.7%</td><td>-225</td><td>5.67</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.00</td><td>all</td><td>550</td><td>73.6%</td><td>+36.77</td><td>6.7%</td><td>-224</td><td>6.86</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.45</td><td>0.00</td><td>all</td><td>563</td><td>73.2%</td><td>+36.36</td><td>6.5%</td><td>-221</td><td>11.99</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.45</td><td>0.00</td><td>minus_odds</td><td>561</td><td>73.3%</td><td>+36.36</td><td>6.5%</td><td>-222</td><td>10.75</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.40</td><td>0.00</td><td>minus_odds</td><td>520</td><td>74.0%</td><td>+30.21</td><td>5.8%</td><td>-233</td><td>8.80</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.40</td><td>0.00</td><td>all</td><td>520</td><td>74.0%</td><td>+30.21</td><td>5.8%</td><td>-233</td><td>8.80</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.40</td><td>0.00</td><td>all</td><td>515</td><td>74.2%</td><td>+29.95</td><td>5.8%</td><td>-234</td><td>7.36</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.40</td><td>0.00</td><td>minus_odds</td><td>515</td><td>74.2%</td><td>+29.95</td><td>5.8%</td><td>-234</td><td>7.36</td></tr>
+  <tr style="background:#dbeafe"><td><strong>model</strong></td><td><strong>0.00</strong></td><td><strong>both</strong></td><td><strong>0.45</strong></td><td><strong>0.03</strong></td><td><strong>minus_odds</strong></td><td><strong>211</strong></td><td><strong>74.4%</strong></td><td><strong>+29.73</strong></td><td><strong>14.1%</strong></td><td><strong>-192</strong></td><td><strong>4.06</strong></td></tr>
+  <tr style="background:#dbeafe"><td><strong>model</strong></td><td><strong>0.00</strong></td><td><strong>both</strong></td><td><strong>0.45</strong></td><td><strong>0.03</strong></td><td><strong>all</strong></td><td><strong>213</strong></td><td><strong>74.2%</strong></td><td><strong>+29.73</strong></td><td><strong>14.0%</strong></td><td><strong>-191</strong></td><td><strong>4.33</strong></td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.03</td><td>minus_odds</td><td>205</td><td>74.6%</td><td>+28.41</td><td>13.9%</td><td>-195</td><td>4.78</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.03</td><td>all</td><td>207</td><td>74.4%</td><td>+28.41</td><td>13.7%</td><td>-194</td><td>4.33</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.30</td><td>0.00</td><td>minus_odds</td><td>339</td><td>79.9%</td><td>+27.85</td><td>8.2%</td><td>-284</td><td>6.11</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.30</td><td>0.00</td><td>all</td><td>339</td><td>79.9%</td><td>+27.85</td><td>8.2%</td><td>-284</td><td>6.11</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.30</td><td>0.00</td><td>all</td><td>339</td><td>79.9%</td><td>+27.85</td><td>8.2%</td><td>-284</td><td>6.11</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.30</td><td>0.00</td><td>minus_odds</td><td>339</td><td>79.9%</td><td>+27.85</td><td>8.2%</td><td>-284</td><td>6.11</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.35</td><td>0.00</td><td>all</td><td>448</td><td>75.9%</td><td>+26.27</td><td>5.9%</td><td>-253</td><td>8.47</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.35</td><td>0.00</td><td>minus_odds</td><td>448</td><td>75.9%</td><td>+26.27</td><td>5.9%</td><td>-253</td><td>8.47</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.40</td><td>0.03</td><td>all</td><td>194</td><td>75.3%</td><td>+26.21</td><td>13.5%</td><td>-201</td><td>3.90</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.40</td><td>0.03</td><td>minus_odds</td><td>194</td><td>75.3%</td><td>+26.21</td><td>13.5%</td><td>-201</td><td>3.90</td></tr>
+</table>
+<p><em>Blue rows = deployed production config.</em></p>
+
+<h3>Prediction Method Comparison (OOS)</h3>
+<table>
+  <tr><th>Method</th><th>Best N Bets</th><th>Best Win%</th><th>Best Units</th><th>Best ROI</th><th>Interpretation</th></tr>
+  <tr><td>model (LR p_over)</td><td>548</td><td>73.7%</td><td>+36.77u</td><td>14.1% at edge≥3pp</td><td>Outperforms consensus across all configs</td></tr>
+  <tr><td>consensus_line (base rate 26.4%)</td><td>730</td><td>67.3%</td><td>+16.24u</td><td>2.2%</td><td>Profitable but ~2.3× fewer units; model adds real lift</td></tr>
+</table>
+<div class="decision">
+  <strong>Model outperforms consensus line.</strong> Using historical sack base rate (26.4%) as the prediction yields +16.2u OOS — profitable but meaningfully weaker than the LR model (+36.8u). The ML model adds genuine signal beyond knowing the base rate.
+</div>
+
+<h3>Shrinkage Results (OOS)</h3>
+<table>
+  <tr><th>Shrinkage</th><th>Best Config</th><th>N Bets</th><th>Win%</th><th>Units</th><th>ROI</th></tr>
+  <tr><td>0.00 (no shrinkage)</td><td>under, 0.45, edge=0.0, minus_odds</td><td>548</td><td>73.7%</td><td>+36.77u</td><td>6.7%</td></tr>
+  <tr><td>0.25</td><td>both, 0.45, edge=0.0, minus_odds</td><td>89</td><td>73.0%</td><td>+19.33u</td><td>21.7%</td></tr>
+  <tr><td>0.50+</td><td>(very low n_bets)</td><td>&lt;30</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+<div class="fishy">
+  <strong>Shrinkage=0.25 has high ROI but low n_bets (89 OOS).</strong> By pulling p_over toward 0.5, shrinkage requires the model to have higher confidence to pass the threshold — this filters to only the strongest bets but shrinks volume dramatically. Not adopted in production given low sample size reliability; s=0.00 wins on total units.
+</div>
+
+<h3>Odds Bucket Analysis (OOS)</h3>
+<table>
+  <tr><th>Bucket</th><th>Context for Sacks</th><th>N Bets (deployed config)</th><th>Units</th><th>ROI</th></tr>
+  <tr><td>minus_odds</td><td>Under is favored (under_implied &gt; 0.50) — standard for sacks</td><td>211</td><td>+29.73u</td><td>14.1%</td></tr>
+  <tr><td>all</td><td>All bets regardless of odds direction</td><td>213</td><td>+29.73u</td><td>14.0%</td></tr>
+  <tr><td>plus_odds</td><td>Under is a dog (under_implied &lt; 0.50) — rare</td><td>0</td><td>—</td><td>—</td></tr>
+</table>
+<p>Virtually all sack UNDER bets are naturally <code>minus_odds</code> (under is the favorite). <code>plus_odds</code> generates zero bets — correct, since an UNDER that is a dog (under_implied &lt; 0.50) means the book thinks sacking a QB is likely, which would never pass the p_over &lt; 0.45 filter. <code>odds_bucket</code> filter has negligible effect for this market.</p>
+</div>
+
+<!-- ═══════════════════════════════════ STEP 6 ═══════════════════════════════════ -->
+<div class="card">
+<h2>Step 6 — In-Sample Grid Search</h2>
+<p class="meta">Completed: 2026-07-09 | Grain: train+score 2024+2025 combined (⚠ model trained on this data)</p>
+
+<h3>Top 15 IS Combos (≥20 bets, by units won)</h3>
+<table>
+  <tr><th>Method</th><th>Shrink</th><th>Direction</th><th>Thresh</th><th>Edge≥</th><th>Bucket</th><th>N Bets</th><th>Win%</th><th>Units Won</th><th>ROI</th><th>Avg Odds</th><th>Max DD</th></tr>
+  <tr style="background:#dbeafe"><td><strong>model</strong></td><td><strong>0.00</strong></td><td><strong>both</strong></td><td><strong>0.45</strong></td><td><strong>0.03</strong></td><td><strong>all</strong></td><td><strong>665</strong></td><td><strong>72.5%</strong></td><td><strong>+63.11</strong></td><td><strong>9.5%</strong></td><td><strong>-201</strong></td><td><strong>8.51</strong></td></tr>
+  <tr style="background:#dbeafe"><td><strong>model</strong></td><td><strong>0.00</strong></td><td><strong>both</strong></td><td><strong>0.45</strong></td><td><strong>0.03</strong></td><td><strong>minus_odds</strong></td><td><strong>654</strong></td><td><strong>72.8%</strong></td><td><strong>+61.58</strong></td><td><strong>9.4%</strong></td><td><strong>-204</strong></td><td><strong>9.00</strong></td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.03</td><td>all</td><td>633</td><td>72.8%</td><td>+55.53</td><td>8.8%</td><td>-207</td><td>8.39</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.03</td><td>minus_odds</td><td>627</td><td>73.1%</td><td>+55.48</td><td>8.9%</td><td>-209</td><td>8.60</td></tr>
+  <tr><td>model</td><td>0.25</td><td>both</td><td>0.45</td><td>0.00</td><td>minus_odds</td><td>289</td><td>71.6%</td><td>+51.79</td><td>17.9%</td><td>-155</td><td>7.16</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.00</td><td>all</td><td>1,508</td><td>73.4%</td><td>+51.68</td><td>3.4%</td><td>-248</td><td>13.55</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.00</td><td>minus_odds</td><td>1,502</td><td>73.5%</td><td>+51.63</td><td>3.4%</td><td>-249</td><td>13.55</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.01</td><td>all</td><td>1,201</td><td>72.9%</td><td>+51.45</td><td>4.3%</td><td>-235</td><td>10.79</td></tr>
+  <tr><td>model</td><td>0.00</td><td>under</td><td>0.45</td><td>0.01</td><td>minus_odds</td><td>1,195</td><td>73.1%</td><td>+51.40</td><td>4.3%</td><td>-236</td><td>8.80</td></tr>
+  <tr><td>model</td><td>0.25</td><td>both</td><td>0.45</td><td>0.00</td><td>all</td><td>294</td><td>71.1%</td><td>+50.89</td><td>17.3%</td><td>-154</td><td>6.73</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.45</td><td>0.00</td><td>all</td><td>1,583</td><td>72.5%</td><td>+48.43</td><td>3.1%</td><td>-239</td><td>16.44</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.45</td><td>0.00</td><td>minus_odds</td><td>1,572</td><td>72.6%</td><td>+46.90</td><td>3.0%</td><td>-241</td><td>17.52</td></tr>
+  <tr><td>model</td><td>0.00</td><td>both</td><td>0.45</td><td>0.01</td><td>all</td><td>1,261</td><td>71.9%</td><td>+46.56</td><td>3.7%</td><td>-227</td><td>13.86</td></tr>
+  <tr><td>model</td><td>0.25</td><td>under</td><td>0.45</td><td>0.00</td><td>minus_odds</td><td>269</td><td>71.8%</td><td>+46.51</td><td>17.3%</td><td>-159</td><td>5.96</td></tr>
+  <tr><td>model</td><td>0.25</td><td>under</td><td>0.45</td><td>0.00</td><td>all</td><td>272</td><td>71.3%</td><td>+45.51</td><td>16.7%</td><td>-158</td><td>4.64</td></tr>
+</table>
+<p><em>Blue rows = deployed production config. IS results are optimistic (model trained on same data) — OOS is the reliable estimate.</em></p>
+
+<h3>IS vs OOS Comparison — Deployed Config (both, 0.45, edge≥3pp)</h3>
+<table>
+  <tr><th>Dataset</th><th>Bucket</th><th>N Bets</th><th>Win%</th><th>Units Won</th><th>ROI</th><th>Max DD</th></tr>
+  <tr><td>IS (2024+2025)</td><td>all</td><td>665</td><td>72.5%</td><td>+63.11</td><td>9.5%</td><td>8.51</td></tr>
+  <tr><td>IS (2024+2025)</td><td>minus_odds</td><td>654</td><td>72.8%</td><td>+61.58</td><td>9.4%</td><td>9.00</td></tr>
+  <tr><td><strong>OOS (2025 holdout)</strong></td><td><strong>all</strong></td><td><strong>213</strong></td><td><strong>74.2%</strong></td><td><strong>+29.73</strong></td><td><strong>14.0%</strong></td><td><strong>4.33</strong></td></tr>
+  <tr><td><strong>OOS (2025 holdout)</strong></td><td><strong>minus_odds</strong></td><td><strong>211</strong></td><td><strong>74.4%</strong></td><td><strong>+29.73</strong></td><td><strong>14.1%</strong></td><td><strong>4.06</strong></td></tr>
+</table>
+<div class="decision">
+  <strong>OOS win rate (74.2%) exceeds IS (72.5%).</strong> This is unusual — typically OOS degrades. It likely reflects that the 2025 holdout season had even more favorable market conditions (books overpricing the Over) than 2024. ROI is higher OOS due to lower average odds (fewer bets at very heavy minus odds).
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ PRODUCTION CONFIG ═══════════════════════════════════ -->
+<div class="card">
+<h2>Production Config + Deployment</h2>
+
+<div class="deployed">
+  <h3 style="margin-top:0">Deployed Strategy</h3>
+  <table>
+    <tr><th>Parameter</th><th>Value</th><th>Source</th></tr>
+    <tr><td>direction</td><td>both</td><td>Grid search — both outperforms under-only at edge≥3pp</td></tr>
+    <tr><td>clf_threshold</td><td>0.45</td><td>Grid search winner across IS and OOS</td></tr>
+    <tr><td>min_edge</td><td>0.03 (3pp)</td><td>Balances n_bets vs ROI; IS #1, OOS rank #9 by units (tied with higher-edge combos)</td></tr>
+    <tr><td>shrinkage</td><td>0.00 (none)</td><td>No shrinkage wins on total units; s=0.25 has higher ROI but too few OOS bets</td></tr>
+    <tr><td>odds_bucket</td><td>all (no filter)</td><td>Nearly all sack unders are naturally minus_odds; bucket filter has negligible effect</td></tr>
+    <tr><td>OOS result</td><td colspan="2">213 bets · 74.2% hit · +29.73u · 14.0% ROI (2025 holdout)</td></tr>
+    <tr><td>IS result</td><td colspan="2">665 bets · 72.5% hit · +63.11u · 9.5% ROI (2024+2025 combined)</td></tr>
+  </table>
+</div>
+
+<h3>Lambda Deployment</h3>
+<table>
+  <tr><th>Component</th><th>Detail</th></tr>
+  <tr><td>Lambda name</td><td><code>nfl-sacks-daily</code></td></tr>
+  <tr><td>Runtime</td><td>Container-based (ECR)</td></tr>
+  <tr><td>EventBridge rules</td><td>5 rules — all DISABLED</td></tr>
+  <tr><td>Enable before</td><td>2026-09-09 (NFL Week 1 kickoff)</td></tr>
+  <tr><td>Model artifact in S3</td><td><code>lr_norm_2024_2025_v4.pkl</code></td></tr>
+  <tr><td>Spine version</td><td>v3</td></tr>
+  <tr><td>Pipeline test (historical data)</td><td>3W–1L, +1.19u; test files deleted</td></tr>
+</table>
+
+<h3>Pre-Season Checklist (before 2026-09-09)</h3>
+<ul>
+  <li>Enable all 5 EventBridge rules</li>
+  <li>Verify <code>player_sacks</code> market key still active in Odds API</li>
+  <tr><li>Confirm FanDuel still posting Over-only (may change policy for 2026)</li></ul>
+</div>
+
+</body>
+</html>

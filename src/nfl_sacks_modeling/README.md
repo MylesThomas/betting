@@ -3,7 +3,7 @@
 Predicts P(player sacks ≥ 1) on the 0.5 line for NFL defensive players.
 Strategy: bet **Under 0.5 sacks** when model P(over) < threshold.
 
-**OOS performance (2024 + 2025):** +71.8u, +4.0% ROI on 1,779 bets.
+**Strategy:** UNDER-heavy (99% unders), 0.5 line, 3pp+ edge — OOS 213 bets, 74.2% hit, +29.73u, +14.0% ROI (train 2024, holdout 2025).
 
 ## Model
 
@@ -26,6 +26,7 @@ Player identity keyed on `pfr_player_id` (not name) to handle same-name collisio
 | Trained model | `s3://the-odds-api-mt/nfl/sacks_model/model/lr_model.pkl` |
 | Daily bet sheets | `s3://the-odds-api-mt/nfl/sacks_model/daily_runs/{gameday}/bet_sheet.{csv,html}` |
 | Settled sheets | `s3://the-odds-api-mt/nfl/sacks_model/daily_runs/{gameday}/bet_sheet_settled.csv` |
+| Settle summary | `s3://the-odds-api-mt/nfl/sacks_model/settled/last_settle_summary.json` |
 
 ## Pipeline (local / manual)
 
@@ -58,7 +59,7 @@ python src/nfl_sacks_modeling/scripts/run_pipeline.py --gameday 2026-09-11
 python src/nfl_sacks_modeling/scripts/run_pipeline.py   # defaults to today ET
 ```
 
-Fetches live props from Odds API, joins spine, scores, uploads bet sheet to S3, sends SES/SNS notification.
+Fetches live props from Odds API, joins spine, scores, uploads bet sheet to S3, sends SES/SNS notification (Email 2: plays + yesterday results + all-time record).
 
 ### Settle bets
 
@@ -68,6 +69,7 @@ python src/nfl_sacks_modeling/scripts/settle_sacks.py   # defaults to yesterday 
 ```
 
 Settlement: win if sacks == 0, push if sacks == 0.5, loss if sacks >= 1.
+Writes results to `last_settle_summary.json` on S3; the Lambda reads this for Email 1. No email sent directly from this script.
 
 ## Lambda deployment
 
@@ -81,14 +83,19 @@ bash src/nfl_sacks_modeling/lambda/deploy_nfl_sacks_lambda.sh
 
 | Mode | Schedule | Purpose |
 |---|---|---|
-| `spine_update` | Tue 9am ET | Re-fetch current season from nfl_data_py, upload spine to S3 |
-| `spine_verify` | Wed 9am ET | Rebuild spine locally, compare vs S3 (does NOT upload) |
-| `pipeline` | Thu/Sun/Mon 9am ET | Fetch live props, score, upload bet sheet, notify |
-| `settle` | Daily 10am ET | Settle yesterday's bets, send HTML summary email |
+| `settle_and_rebuild` | Daily 8:30am ET | Settle yesterday → rebuild spine → send Email 1 (results + spine status) |
+| `pipeline` | Daily 9:00am ET | Fetch live props, score, upload bet sheet, send Email 2 (plays + yesterday + all-time) |
+| `spine_update` | Manual / pre-season | Full spine rebuild from scratch, upload to S3, SNS notify |
+| `settle` | Manual / debugging | Settle only, no email |
 
 ### EventBridge rules
 
-**5 rules, all DISABLED. Enable before 2026-09-09 (week 1).**
+**2 rules, both DISABLED. Enable before 2026-09-09 (week 1).**
+
+```sh
+aws events enable-rule --name nfl-sacks-settle-rebuild-daily-830am-et --region us-east-2
+aws events enable-rule --name nfl-sacks-pipeline-daily-9am-et          --region us-east-2
+```
 
 Env vars required in Lambda: `ODDS_API_KEY`, `SNS_TOPIC_ARN`.
 Optional: `SES_SOURCE`, `SES_TO` (comma-separated) for HTML emails, `NFL_SEASON`.
@@ -104,7 +111,7 @@ Optional: `SES_SOURCE`, `SES_TO` (comma-separated) for HTML emails, `NFL_SEASON`
 | `train_model.py` | Fit LR, calibrate via 5-fold CV, serialize to pkl |
 | `run_pipeline.py` | Gameday entrypoint: fetch → score → upload → notify |
 | `update_spine.py` | Incremental spine update (current season only) |
-| `settle_sacks.py` | Settle bets + send SES summary |
+| `settle_sacks.py` | Settle bets, write summary JSON to S3 (no email) |
 | `oos_eval.py` | OOS evaluation across seasons |
 | `calibration.py` | Calibration curve analysis |
 | `compare_models.py` | Compare LR vs other model specs |

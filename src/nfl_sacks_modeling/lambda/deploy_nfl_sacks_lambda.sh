@@ -3,19 +3,19 @@
 # Deploy NFL Sacks Daily Lambda via container image (ECR)
 #
 # EventBridge schedule (all rules start DISABLED — enable before week 1):
-#   Tue 9am ET  → spine_update   (rebuild + upload spine from nfl_data_py)
-#   Wed 9am ET  → spine_verify   (re-pull + compare vs S3 spine)
-#   Thu 9am ET  → pipeline       (Thursday Night Football)
-#   Sun 9am ET  → pipeline       (Sunday games)
-#   Mon 9am ET  → pipeline       (Monday Night Football)
+#   Daily 8:30am ET → settle_and_rebuild  (settle yesterday + rebuild spine + Email 1)
+#   Daily 9:00am ET → pipeline            (score today + Email 2: plays + results + all-time)
 #
-# Cron expressions use 14:00 UTC (= 9am EST, = 10am EDT during summer).
-# NFL regular season runs Sep–Jan, predominantly EST. The +1hr during EDT
-# (Sep–Oct) means props are fetched by 10am local — still early enough.
+# Cron UTC notes (NFL season Sep–Jan):
+#   EDT (Sep–Oct, UTC-4): 12:30 UTC = 8:30am ET | 13:00 UTC = 9:00am ET
+#   EST (Nov–Jan, UTC-5): 12:30 UTC = 7:30am ET | 13:00 UTC = 8:00am ET
+#   → 30-min gap preserved in both zones; spine+settle finish before pipeline fires.
 #
 # Usage:
 #   export ODDS_API_KEY="<key>"
 #   export SNS_TOPIC_ARN="arn:aws:sns:us-east-2:<acct>:betting-arb-alerts"
+#   export SES_SOURCE="you@example.com"
+#   export SES_TO="you@example.com"
 #   cd ~/dev/betting && bash src/nfl_sacks_modeling/lambda/deploy_nfl_sacks_lambda.sh
 #
 # Optional — override current NFL season (default: computed from today):
@@ -33,24 +33,12 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 DOCKER_PLATFORM="${DOCKER_PLATFORM:-linux/amd64}"
 
 # Rule names
-RULE_SPINE_UPDATE="nfl-sacks-spine-update-tue-9am-et"
-RULE_SPINE_VERIFY="nfl-sacks-spine-verify-wed-9am-et"
-RULE_PIPELINE_THU="nfl-sacks-pipeline-thu-9am-et"
-RULE_PIPELINE_SUN="nfl-sacks-pipeline-sun-9am-et"
-RULE_PIPELINE_MON="nfl-sacks-pipeline-mon-9am-et"
-RULE_SETTLE_DAILY="nfl-sacks-settle-daily-10am-et"
+RULE_SETTLE="nfl-sacks-settle-rebuild-daily-830am-et"
+RULE_PIPELINE="nfl-sacks-pipeline-daily-9am-et"
 
-# Pipeline at 8am ET = 12:00 UTC (covers London games which kick off ~9:30am ET)
-# During EDT (Sep-Nov): 12:00 UTC = 8am ET  ← London window
-# During EST (Dec-Jan): 12:00 UTC = 7am ET  ← fine, domestic kickoffs not until 1pm ET
-# Spine/verify at 9am ET = 14:00 UTC (no game-time constraint, keeps Tue settle gap clean)
-# Settle at 10am ET = 15:00 UTC (always after spine_update finishes on Tue)
-CRON_TUE="cron(0 14 ? * TUE *)"         # 9am ET  — spine_update
-CRON_WED="cron(0 14 ? * WED *)"         # 9am ET  — spine_verify
-CRON_THU="cron(0 12 ? * THU *)"         # 8am ET  — pipeline (TNF)
-CRON_SUN="cron(0 12 ? * SUN *)"         # 8am ET  — pipeline (covers London + domestic)
-CRON_MON="cron(0 12 ? * MON *)"         # 8am ET  — pipeline (MNF)
-CRON_DAILY_10AM="cron(0 15 * * ? *)"    # 10am ET — settle (every day)
+# Cron expressions
+CRON_830AM="cron(30 12 * * ? *)"   # 8:30am ET (12:30 UTC; EDT=8:30am / EST=7:30am)
+CRON_9AM="cron(0 13 * * ? *)"      # 9:00am ET (13:00 UTC; EDT=9:00am / EST=8:00am)
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -81,10 +69,10 @@ fi
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 echo "✅ AWS configured (Account: $AWS_ACCOUNT_ID)"
 
-[ -z "$ODDS_API_KEY" ]  && echo -e "${YELLOW}⚠️  ODDS_API_KEY not set${NC}"
-[ -z "$SNS_TOPIC_ARN" ] && echo -e "${YELLOW}⚠️  SNS_TOPIC_ARN not set${NC}"
-[ -z "${SES_SOURCE:-}" ] && echo -e "${YELLOW}⚠️  SES_SOURCE not set (HTML emails disabled)${NC}"
-[ -z "${SES_TO:-}" ]     && echo -e "${YELLOW}⚠️  SES_TO not set (HTML emails disabled)${NC}"
+[ -z "$ODDS_API_KEY" ]       && echo -e "${YELLOW}⚠️  ODDS_API_KEY not set${NC}"
+[ -z "$SNS_TOPIC_ARN" ]      && echo -e "${YELLOW}⚠️  SNS_TOPIC_ARN not set${NC}"
+[ -z "${SES_SOURCE:-}" ]     && echo -e "${YELLOW}⚠️  SES_SOURCE not set (HTML emails disabled)${NC}"
+[ -z "${SES_TO:-}" ]         && echo -e "${YELLOW}⚠️  SES_TO not set (HTML emails disabled)${NC}"
 
 if ! aws iam get-role --role-name "$IAM_ROLE_NAME" &>/dev/null; then
   echo -e "${RED}❌ IAM role '$IAM_ROLE_NAME' not found${NC}"; exit 1
@@ -135,7 +123,6 @@ echo "Step 3: Deploy Lambda"
 echo "================================================================================"
 echo ""
 
-# Compute current NFL season if not overridden
 if [ -z "${NFL_SEASON:-}" ]; then
   CURRENT_MONTH=$(date +%-m)
   CURRENT_YEAR=$(date +%Y)
@@ -196,26 +183,26 @@ LAMBDA_ARN=$(aws lambda get-function \
   --query 'Configuration.FunctionArn' \
   --output text)
 
-declare -A RULES
-RULES["$RULE_SPINE_UPDATE"]="$CRON_TUE|spine_update|Tue 9am ET spine update"
-RULES["$RULE_SPINE_VERIFY"]="$CRON_WED|spine_verify|Wed 9am ET spine verify"
-RULES["$RULE_PIPELINE_THU"]="$CRON_THU|pipeline|Thu 8am ET (TNF) pipeline"
-RULES["$RULE_PIPELINE_SUN"]="$CRON_SUN|pipeline|Sun 8am ET pipeline (incl. London)"
-RULES["$RULE_PIPELINE_MON"]="$CRON_MON|pipeline|Mon 8am ET (MNF) pipeline"
-RULES["$RULE_SETTLE_DAILY"]="$CRON_DAILY_10AM|settle|Daily 10am ET settlement email"
+declare -A RULE_MODES
+RULE_MODES["$RULE_SETTLE"]="settle_and_rebuild"
+RULE_MODES["$RULE_PIPELINE"]="pipeline"
 
-for RULE_NAME in "${!RULES[@]}"; do
-  IFS='|' read -r CRON MODE DESC <<< "${RULES[$RULE_NAME]}"
+declare -A RULE_CRONS
+RULE_CRONS["$RULE_SETTLE"]="$CRON_830AM"
+RULE_CRONS["$RULE_PIPELINE"]="$CRON_9AM"
+
+for RULE_NAME in "$RULE_SETTLE" "$RULE_PIPELINE"; do
+  MODE="${RULE_MODES[$RULE_NAME]}"
+  CRON="${RULE_CRONS[$RULE_NAME]}"
 
   aws events put-rule \
     --name "$RULE_NAME" \
     --schedule-expression "$CRON" \
     --state DISABLED \
-    --description "NFL sacks: $DESC" \
+    --description "NFL sacks: $RULE_NAME" \
     --region "$REGION" \
     --output table
 
-  # Remove + re-add permission (idempotent)
   STMT_ID="EventBridgeInvoke${RULE_NAME//[-]/_}"
   aws lambda remove-permission \
     --function-name "$LAMBDA_NAME" \
@@ -269,18 +256,16 @@ echo "Lambda  : $LAMBDA_NAME"
 echo "Image   : $IMAGE_URI"
 echo ""
 echo "EventBridge rules (all DISABLED — enable before week 1 on 2026-09-09):"
-echo "  $RULE_SPINE_UPDATE  →  $CRON_TUE"
-echo "  $RULE_SPINE_VERIFY  →  $CRON_WED"
-echo "  $RULE_PIPELINE_THU  →  $CRON_THU"
-echo "  $RULE_PIPELINE_SUN  →  $CRON_SUN"
-echo "  $RULE_PIPELINE_MON  →  $CRON_MON"
-echo "  $RULE_SETTLE_DAILY  →  $CRON_DAILY_10AM"
+echo "  $RULE_SETTLE   →  $CRON_830AM  (daily 8:30am ET)"
+echo "  $RULE_PIPELINE →  $CRON_9AM    (daily 9:00am ET)"
 echo ""
 echo "Pre-season checklist:"
 echo "  1. Verify SES identity in AWS console (SES_SOURCE must be a verified address)"
 echo "  2. Run fit_model.py to upload trained LR to S3"
 echo "  3. Run update_spine.py --season 2026 to upload initial spine to S3"
-echo "  4. Enable EventBridge rules in AWS console (or via aws events enable-rule)"
-echo "  5. Test pipeline:  aws lambda invoke --payload '{\"mode\":\"pipeline\"}' ..."
-echo "  6. Test settle:    aws lambda invoke --payload '{\"mode\":\"settle\"}' ..."
+echo "  4. Enable EventBridge rules:"
+echo "       aws events enable-rule --name $RULE_SETTLE   --region $REGION"
+echo "       aws events enable-rule --name $RULE_PIPELINE --region $REGION"
+echo "  5. Test settle_and_rebuild: aws lambda invoke --payload '{\"mode\":\"settle_and_rebuild\"}' ..."
+echo "  6. Test pipeline:           aws lambda invoke --payload '{\"mode\":\"pipeline\"}' ..."
 echo ""

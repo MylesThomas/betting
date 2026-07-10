@@ -1,5 +1,5 @@
 """
-Settle NFL sacks bets for a given gameday and send summary email.
+Settle NFL sacks bets for a given gameday.
 
 Settlement logic (Under 0.5 sacks):
   Win  : player sacks == 0    → +units_to_win at recorded under odds
@@ -11,9 +11,11 @@ Reads:
 
 Writes:
   s3://the-odds-api-mt/nfl/sacks_model/daily_runs/{gameday}/bet_sheet_settled.csv
+  s3://the-odds-api-mt/nfl/sacks_model/settled/last_settle_summary.json
 
-Sends SES HTML email (if SES_SOURCE + SES_TO set):
-  Yesterday W-L-P + P&L + all-time summary
+No email sent here — the lambda reads last_settle_summary.json and sends Email 1
+(settle + spine status) at 8:30am ET. run_pipeline.py sends Email 2 (plays +
+yesterday results + all-time) at 9am ET.
 
 Run:
   python src/nfl_sacks_modeling/scripts/settle_sacks.py --gameday 2026-09-11
@@ -22,6 +24,7 @@ Run:
 
 import argparse
 import html as html_module
+import json
 import os
 import sys
 import warnings
@@ -38,11 +41,12 @@ import pandas as pd
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-S3_BUCKET     = "the-odds-api-mt"
-S3_PREFIX     = "nfl/sacks_model"
-SES_SOURCE    = os.environ.get("SES_SOURCE", "").strip()
-SES_TO_RAW    = os.environ.get("SES_TO", "").strip()
-SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN", "").strip()
+S3_BUCKET          = "the-odds-api-mt"
+S3_PREFIX          = "nfl/sacks_model"
+SETTLE_SUMMARY_KEY = "nfl/sacks_model/settled/last_settle_summary.json"
+SES_SOURCE         = os.environ.get("SES_SOURCE", "").strip()
+SES_TO_RAW         = os.environ.get("SES_TO", "").strip()
+SNS_TOPIC_ARN      = os.environ.get("SNS_TOPIC_ARN", "").strip()
 
 ET = ZoneInfo("America/New_York")
 
@@ -95,6 +99,26 @@ def save_s3_csv(key: str, df: pd.DataFrame) -> None:
     boto3.client("s3").put_object(
         Bucket=S3_BUCKET, Key=key, Body=df.to_csv(index=False).encode()
     )
+
+
+def save_settle_summary(gameday: str, yesterday: dict, all_time: dict) -> None:
+    payload = {
+        "gameday":          gameday,
+        "yesterday_wins":   yesterday["n_win"],
+        "yesterday_losses": yesterday["n_loss"],
+        "yesterday_pushes": yesterday["n_push"],
+        "yesterday_pnl":    round(yesterday["pnl"], 3),
+        "all_time_bets":    all_time["n_bets"],
+        "all_time_wins":    all_time["n_win"],
+        "all_time_losses":  all_time["n_loss"],
+        "all_time_pushes":  all_time["n_push"],
+        "all_time_pnl":     round(all_time["pnl"], 3),
+    }
+    boto3.client("s3").put_object(
+        Bucket=S3_BUCKET, Key=SETTLE_SUMMARY_KEY,
+        Body=json.dumps(payload).encode(), ContentType="application/json",
+    )
+    print(f"  Summary JSON saved → s3://{S3_BUCKET}/{SETTLE_SUMMARY_KEY}")
 
 
 def list_settled_keys() -> list[str]:
@@ -178,13 +202,12 @@ def get_sack_results_for_date(gameday: str, season: int) -> pd.DataFrame:
 
 def settle_bets(bets: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
     """
-    Match bet sheet rows against actual sack results and compute P&L.
+    Match bet sheet rows (per-book grain) against actual sack results and compute P&L.
     Only rows where bet==True are settled; the rest are carried through as-is.
     """
     bets = bets.copy()
     bets["pbp_name"] = bets["player"].apply(full_to_pbp)
 
-    # Merge on (pbp_name, team = defteam)
     merged = bets.merge(
         actuals.rename(columns={"sacks": "actual_sacks"}),
         left_on=["pbp_name", "team"],
@@ -196,16 +219,14 @@ def settle_bets(bets: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
     def settle_row(r):
         if not r.get("bet", False):
             return pd.Series({"outcome": "no_bet", "pnl": 0.0})
-        actual   = r["actual_sacks"]
-        bet_side = r.get("bet_side", "Under 0.5 sacks")
-        is_over  = str(bet_side).startswith("Over")
-        price    = r.get("prop_median_price_over" if is_over else "prop_median_price_under", float("nan"))
+        actual    = r["actual_sacks"]
+        direction = r.get("bet_direction", "")
+        is_over   = direction == "OVER"
+        # Use the specific book's price for P&L
+        price = r.get("over_price" if is_over else "under_price", float("nan"))
         if actual == 0.5:
             return pd.Series({"outcome": "push", "pnl": 0.0})
-        elif is_over:
-            won = actual >= 1.0
-        else:
-            won = actual == 0.0
+        won = (actual >= 1.0) if is_over else (actual == 0.0)
         return pd.Series({"outcome": "win" if won else "loss",
                           "pnl":     units_to_win(price) if won else -1.0})
 
@@ -282,12 +303,13 @@ def _summary_box(label: str, s: dict) -> str:
 </div>"""
 
 
-def build_settlement_html(
+def build_settlement_sections_html(
     gameday: str,
     settled_yesterday: pd.DataFrame | None,
     all_time: pd.DataFrame,
     had_games: bool,
 ) -> str:
+    """Returns an HTML fragment (no document wrapper) — yesterday's results + all-time record."""
     yesterday_summary = compute_summary(settled_yesterday) if settled_yesterday is not None and len(settled_yesterday) else {"n_bets": 0, "n_win": 0, "n_loss": 0, "n_push": 0, "pnl": 0.0, "roi": float("nan")}
     all_time_summary  = compute_summary(all_time) if not all_time.empty else {"n_bets": 0, "n_win": 0, "n_loss": 0, "n_push": 0, "pnl": 0.0, "roi": float("nan")}
 
@@ -297,19 +319,19 @@ def build_settlement_html(
         bets = bets.sort_values("outcome")
         rows_html = ""
         for _, r in bets.iterrows():
-            actual = r.get("actual_sacks", float("nan"))
-            actual_s = f"{actual:.1f}" if not pd.isna(actual) else "—"
-            mkt = r.get("prop_median_impl_over", float("nan"))
-            mkt_s = f"{mkt:.1%}" if not pd.isna(mkt) else "—"
-            odds = r.get("prop_median_price_under", float("nan"))
-            odds_s = f"{int(odds):+d}" if not pd.isna(odds) else "—"
+            actual    = r.get("actual_sacks", float("nan"))
+            actual_s  = f"{actual:.1f}" if not pd.isna(actual) else "—"
+            direction = r.get("bet_direction", "—")
+            line      = r.get("line", 0.5)
+            line_s    = f"{line:.1f}" if not pd.isna(line) else "0.5"
             rows_html += f"""
 <tr style="border-bottom:1px solid #f3f4f6">
   <td style="padding:8px 12px">{html_module.escape(str(r['player']))}</td>
-  <td style="padding:8px 12px">{html_module.escape(str(r.get('team','')))} vs {html_module.escape(str(r.get('opponent','')))}</td>
+  <td style="padding:8px 12px">{html_module.escape(str(r.get('team','')))}</td>
+  <td style="padding:8px 12px">{html_module.escape(str(r.get('opponent','')))}</td>
+  <td style="padding:8px 12px;font-weight:600">{html_module.escape(str(direction))}</td>
+  <td style="padding:8px 12px;text-align:center">{line_s}</td>
   <td style="padding:8px 12px;text-align:center">{actual_s}</td>
-  <td style="padding:8px 12px;text-align:center">{html_module.escape(mkt_s)}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{odds_s}</td>
   <td style="padding:8px 12px;text-align:center">{_outcome_badge(r['outcome'])}</td>
   {_pnl_cell(r['pnl'])}
 </tr>"""
@@ -320,10 +342,11 @@ def build_settlement_html(
 <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">
 <thead><tr style="background:#1d2d44;color:#fff">
   <th style="padding:9px 12px;text-align:left">Player</th>
-  <th style="padding:9px 12px;text-align:left">Matchup</th>
-  <th style="padding:9px 12px;text-align:center">Actual Sacks</th>
-  <th style="padding:9px 12px;text-align:center">Mkt P(Over)</th>
-  <th style="padding:9px 12px;text-align:center">Under Odds</th>
+  <th style="padding:9px 12px;text-align:left">Team</th>
+  <th style="padding:9px 12px;text-align:left">Opponent</th>
+  <th style="padding:9px 12px;text-align:center">Bet Direction</th>
+  <th style="padding:9px 12px;text-align:center">Line</th>
+  <th style="padding:9px 12px;text-align:center">Actual</th>
   <th style="padding:9px 12px;text-align:center">Outcome</th>
   <th style="padding:9px 12px;text-align:right">P&L</th>
 </tr></thead>
@@ -334,18 +357,31 @@ def build_settlement_html(
     else:
         yesterday_section = f'<p style="color:#6b7280;font-size:13px;margin-bottom:20px">No qualifying bets were placed on {gameday}.</p>'
 
+    return f"""
+<hr style="margin:32px 0;border:none;border-top:2px solid #e5e7eb">
+<h2 style="font-size:16px;font-weight:700;margin:0 0 4px;color:#111827">Yesterday's Results ({gameday})</h2>
+{yesterday_section}
+<h2 style="font-size:16px;font-weight:700;margin:24px 0 8px;color:#111827">All-Time Record</h2>
+{_summary_box("All-Time Results (Under 0.5 sacks)", all_time_summary)}
+"""
+
+
+def build_settlement_html(
+    gameday: str,
+    settled_yesterday: pd.DataFrame | None,
+    all_time: pd.DataFrame,
+    had_games: bool,
+) -> str:
+    """Standalone settlement email (kept for direct use / debugging)."""
+    sections = build_settlement_sections_html(gameday, settled_yesterday, all_time, had_games)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>NFL Sacks Settled — {gameday}</title></head>
 <body style="margin:0;padding:16px;background:#f4f4f5;font-family:{_SANS};font-size:13px;color:#1a1a1a">
-<div style="max-width:700px;margin:0 auto;background:#fff;padding:24px;border-radius:8px;border:1px solid #e2e2e4">
+<div style="max-width:900px;margin:0 auto;background:#fff;padding:24px;border-radius:8px;border:1px solid #e2e2e4">
   <h2 style="font-size:18px;margin:0 0 4px">NFL Sacks Settlement</h2>
   <p style="color:#6b7280;font-size:12px;margin:0 0 20px">Generated {datetime.now(ET).strftime('%Y-%m-%d %H:%M ET')}</p>
-
-  {yesterday_section}
-
-  <h3 style="font-size:14px;font-weight:600;margin:20px 0 8px;color:#111827">All-Time</h3>
-  {_summary_box("All-Time Results (Under 0.5 sacks)", all_time_summary)}
+  {sections}
 </div>
 </body>
 </html>"""
@@ -354,71 +390,105 @@ def build_settlement_html(
 # ── Plays HTML email ────────────────────────────────────────────────────────────
 
 def build_plays_html(df: pd.DataFrame, gameday: str) -> str:
-    bets = df[df["bet"]].copy().sort_values("p_over") if "bet" in df.columns else pd.DataFrame()
+    """Kept for compatibility; run_pipeline.py now passes html_body directly."""
+    if "bet" not in df.columns or df.empty:
+        return f"""<!DOCTYPE html><html><body>
+        <p>NFL Sacks — {gameday} — no scored data.</p></body></html>"""
 
-    def fmt_odds(p):
-        return f"{int(p):+d}" if not pd.isna(p) else "—"
+    n_plays  = int(df["bet"].sum())
+    n_players = df["player"].nunique() if "player" in df.columns else 0
 
-    def edge_color(edge: float) -> str:
-        if pd.isna(edge): return "#6b7280"
-        if edge >= 0.10:  return "#065f46"
-        if edge >= 0.05:  return "#1d6fa4"
-        return "#6b7280"
+    df = df.copy()
+    df["_sort_dt"] = pd.to_datetime(
+        df.get("commence_time_utc", pd.Series(dtype=str)),
+        format="%Y-%m-%dT%H:%M:%SZ", utc=True, errors="coerce"
+    )
+    df["_sort_edge"] = df[["over_edge", "under_edge"]].abs().max(axis=1).fillna(-1) if "over_edge" in df.columns else -1
+    df = df.sort_values(["_sort_dt", "_sort_edge", "player", "bookmaker"],
+                        ascending=[True, False, True, True], na_position="last").reset_index(drop=True)
+
+    def _p(v):    return f"{v:.1%}" if pd.notna(v) else "—"
+    def _odds(v): return f"{int(v):+d}" if pd.notna(v) else "—"
+    def _edge(v): return f"+{v*100:.1f}pp" if pd.notna(v) and v >= 0 else (f"{v*100:.1f}pp" if pd.notna(v) else "—")
 
     rows_html = ""
-    for _, r in bets.iterrows():
-        p_over   = r.get("p_over", float("nan"))
-        bet_side = r.get("bet_side", "Under 0.5 sacks")
-        is_over  = str(bet_side).startswith("Over")
-        mkt      = r.get("prop_median_impl_over", float("nan"))
-        edge     = (p_over - mkt) if is_over else (mkt - p_over)  # noqa: SIM210
-        edge     = edge if not pd.isna(mkt) else float("nan")
-        ec       = edge_color(edge)
-        odds_col = "prop_median_price_over" if is_over else "prop_median_price_under"
+    for i, (_, r) in enumerate(df.iterrows()):
+        is_under = r.get("bet_direction") == "UNDER"
+        is_over  = r.get("bet_direction") == "OVER"
+        is_play  = bool(r.get("bet", False))
+        bg = ("background:#fce8e6" if is_play and is_under else
+              "background:#e6f4ea" if is_play and is_over  else
+              "background:#f9f9f9" if i % 2 == 0 else "background:#ffffff")
+        status      = f"PLAY - {r.get('bet_direction', '')}" if is_play else ""
+        status_style = ("color:#c0392b;font-weight:bold" if is_play and is_under else
+                        "color:#27ae60;font-weight:bold" if is_play and is_over  else
+                        "color:#9ca3af")
+        mdl_u = 1 - r["p_over"] if pd.notna(r.get("p_over")) else float("nan")
         rows_html += f"""
-<tr style="border-bottom:1px solid #f3f4f6">
-  <td style="padding:8px 12px;font-weight:600">{html_module.escape(str(r['player']))}</td>
-  <td style="padding:8px 12px">{html_module.escape(str(r.get('team','')))} vs {html_module.escape(str(r.get('opponent','')))}</td>
-  <td style="padding:8px 12px;color:#6b7280">{html_module.escape(str(r.get('pos_group','')))} / {html_module.escape(str(r.get('pos_side','')))}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{f'{p_over:.1%}' if not pd.isna(p_over) else '—'}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{f'{mkt:.1%}' if not pd.isna(mkt) else '—'}</td>
-  <td style="padding:8px 12px;text-align:center;font-weight:600;color:{ec}">{f'+{edge:.1%}' if not pd.isna(edge) else '—'}</td>
-  <td style="padding:8px 12px;text-align:center;font-family:{_MONO}">{fmt_odds(r.get(odds_col, float('nan')))}</td>
-  <td style="padding:8px 12px;text-align:center;font-weight:600;color:#1d2d44">{html_module.escape(str(bet_side))}</td>
+<tr style="{bg}">
+  <td style="padding:7px 10px">{html_module.escape(str(r.get('player','')))}</td>
+  <td style="padding:7px 10px">{html_module.escape(str(r.get('team','')))}</td>
+  <td style="padding:7px 10px">{html_module.escape(str(r.get('opponent','')))}</td>
+  <td style="padding:7px 10px">{html_module.escape(str(r.get('game_time_et','TBD')))}</td>
+  <td style="padding:7px 10px;font-weight:600">{html_module.escape(str(r.get('bet_direction','') or '—'))}</td>
+  <td style="padding:7px 10px">{r.get('line', 0.5):.1f}</td>
+  <td style="padding:7px 10px">{_p(r.get('p_over'))}</td>
+  <td style="padding:7px 10px">{html_module.escape(str(r.get('bookmaker','')))}</td>
+  <td style="padding:7px 10px">{_odds(r.get('over_price'))}</td>
+  <td style="padding:7px 10px">{_odds(r.get('under_price'))}</td>
+  <td style="padding:7px 10px">{_p(r.get('novig_over'))}</td>
+  <td style="padding:7px 10px">{_p(r.get('novig_under'))}</td>
+  <td style="padding:7px 10px">{_p(r.get('p_over'))}</td>
+  <td style="padding:7px 10px">{_p(mdl_u)}</td>
+  <td style="padding:7px 10px">{_edge(r.get('over_edge'))}</td>
+  <td style="padding:7px 10px">{_edge(r.get('under_edge'))}</td>
+  <td style="padding:7px 10px">{f"{r['sack_rate_Lcareer']:.3f}" if pd.notna(r.get("sack_rate_Lcareer")) else "—"}</td>
+  <td style="padding:7px 10px">{f"{r['qbhit_rate_L16']:.3f}" if pd.notna(r.get("qbhit_rate_L16")) else "—"}</td>
+  <td style="padding:7px 10px">{_p(r.get('prop_median_impl_over'))}</td>
+  <td style="padding:7px 10px;{status_style}">{status}</td>
 </tr>"""
-
-    no_bets_msg = "" if len(bets) else '<p style="color:#6b7280">No qualifying bets today.</p>'
-
-    table = "" if not len(bets) else f"""
-<table style="width:100%;border-collapse:collapse;font-size:13px">
-<thead><tr style="background:#1d2d44;color:#fff">
-  <th style="padding:9px 12px;text-align:left">Player</th>
-  <th style="padding:9px 12px;text-align:left">Matchup</th>
-  <th style="padding:9px 12px;text-align:left">Pos</th>
-  <th style="padding:9px 12px;text-align:center">Model P(Over)</th>
-  <th style="padding:9px 12px;text-align:center">Mkt P(Over)</th>
-  <th style="padding:9px 12px;text-align:center">Edge</th>
-  <th style="padding:9px 12px;text-align:center">Odds</th>
-  <th style="padding:9px 12px;text-align:center">Bet</th>
-</tr></thead>
-<tbody>{rows_html}</tbody>
-</table>"""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>NFL Sacks — {gameday}</title></head>
 <body style="margin:0;padding:16px;background:#f4f4f5;font-family:{_SANS};font-size:13px;color:#1a1a1a">
-<div style="max-width:700px;margin:0 auto;background:#fff;padding:24px;border-radius:8px;border:1px solid #e2e2e4">
+<div style="background:#fff;padding:24px;border-radius:8px;border:1px solid #e2e2e4">
   <h2 style="font-size:18px;margin:0 0 4px">NFL Sacks — {gameday}</h2>
+  <p style="font-size:15px;font-weight:600;margin:0 0 4px">
+    {n_plays} play{"s" if n_plays != 1 else ""} today across {df["event_id"].nunique() if "event_id" in df.columns else "?"} games
+  </p>
   <p style="color:#6b7280;font-size:12px;margin:0 0 20px">
-    Generated {datetime.now(ET).strftime('%Y-%m-%d %H:%M ET')} &nbsp;|&nbsp;
-    {len(df)} players with props &nbsp;|&nbsp; {len(bets)} qualifying bet{'s' if len(bets) != 1 else ''}
+    Generated {datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")} &nbsp;|&nbsp;
+    {n_players} players scored &nbsp;|&nbsp; {len(df)} player-book rows
   </p>
-  {no_bets_msg}{table}
-  <p style="color:#9ca3af;font-size:11px;margin-top:20px">
-    Strategy: direction=both · thresh=0.45 · edge≥0.03 &nbsp;|&nbsp;
-    OOS 2025: 222 bets · 73.9% hit · +0.1348 EV/unit · +29.92u
-  </p>
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+  <thead>
+  <tr style="background:#2c3e50;color:white">
+    <th colspan="6" style="padding:5px 10px;text-align:center;border-right:1px solid #3d5166">Player / Game</th>
+    <th colspan="1" style="padding:5px 10px;text-align:center;border-right:1px solid #3d5166">Model</th>
+    <th colspan="5" style="padding:5px 10px;text-align:center;border-right:1px solid #3d5166">Market (per book)</th>
+    <th colspan="2" style="padding:5px 10px;text-align:center;border-right:1px solid #3d5166">Model Probs</th>
+    <th colspan="2" style="padding:5px 10px;text-align:center;border-right:1px solid #3d5166">Edge</th>
+    <th colspan="3" style="padding:5px 10px;text-align:center;border-right:1px solid #3d5166">Model Inputs</th>
+    <th colspan="1" style="padding:5px 10px"></th>
+  </tr>
+  <tr style="background:#3d5166;color:white">
+    <th style="padding:5px 8px;text-align:left">Player</th><th style="padding:5px 8px">Team</th>
+    <th style="padding:5px 8px">Opp</th><th style="padding:5px 8px">Time</th>
+    <th style="padding:5px 8px">Dir</th><th style="padding:5px 8px;border-right:1px solid #4a637a">Line</th>
+    <th style="padding:5px 8px;border-right:1px solid #4a637a">Proj O%</th>
+    <th style="padding:5px 8px">Book</th><th style="padding:5px 8px">Over</th>
+    <th style="padding:5px 8px">Under</th><th style="padding:5px 8px">Market O%</th>
+    <th style="padding:5px 8px;border-right:1px solid #4a637a">Market U%</th>
+    <th style="padding:5px 8px">Model O%</th><th style="padding:5px 8px;border-right:1px solid #4a637a">Model U%</th>
+    <th style="padding:5px 8px">OV Edge</th><th style="padding:5px 8px;border-right:1px solid #4a637a">UN Edge</th>
+    <th style="padding:5px 8px">Sack Rt</th><th style="padding:5px 8px">QB Hit</th>
+    <th style="padding:5px 8px;border-right:1px solid #4a637a">Consens</th>
+    <th style="padding:5px 8px">Status</th>
+  </tr>
+  </thead>
+  <tbody>{rows_html}</tbody>
+  </table>
 </div>
 </body>
 </html>"""
@@ -500,29 +570,15 @@ def main():
     # ── 4. All-time ────────────────────────────────────────────────────────────
     print("  Loading all-time settled results...")
     all_time = load_all_time_settled()
-    if not all_time.empty:
-        at = compute_summary(all_time)
-        print(f"  All-time: {at['n_win']}W {at['n_loss']}L {at['n_push']}P  "
-              f"P&L={at['pnl']:+.3f}u  ROI={at['roi']:+.1%}  ({at['n_bets']} bets)")
+    at = compute_summary(all_time) if not all_time.empty else \
+         {"n_bets": 0, "n_win": 0, "n_loss": 0, "n_push": 0, "pnl": 0.0, "roi": float("nan")}
+    print(f"  All-time: {at['n_win']}W {at['n_loss']}L {at['n_push']}P  "
+          f"P&L={at['pnl']:+.3f}u  ROI={at['roi']:+.1%}  ({at['n_bets']} bets)")
 
-    # ── 5. Email ───────────────────────────────────────────────────────────────
-    ys   = compute_summary(settled_yesterday) if settled_yesterday is not None else {"n_win": 0, "n_loss": 0, "n_push": 0, "pnl": 0.0, "roi": float("nan"), "n_bets": 0}
-    at   = compute_summary(all_time) if not all_time.empty else {"n_win": 0, "n_loss": 0, "n_push": 0, "pnl": 0.0, "roi": float("nan"), "n_bets": 0}
-
-    if had_games and ys["n_bets"] > 0:
-        pnl_s = f"{ys['pnl']:+.2f}u"
-        subject = f"NFL Sacks Settled — {gameday} — {ys['n_win']}W {ys['n_loss']}L {ys['n_push']}P ({pnl_s})"
-    else:
-        subject = f"NFL Sacks — {gameday} — No games yesterday (all-time: {at['n_bets']} bets, {at['pnl']:+.2f}u)"
-
-    html_body = build_settlement_html(gameday, settled_yesterday, all_time, had_games)
-    text_body = (
-        f"NFL Sacks Settlement — {gameday}\n\n"
-        f"Yesterday: {ys['n_win']}W {ys['n_loss']}L {ys['n_push']}P  P&L={ys['pnl']:+.3f}u\n"
-        f"All-time : {at['n_win']}W {at['n_loss']}L {at['n_push']}P  P&L={at['pnl']:+.3f}u  ROI={at['roi']:+.1%}  ({at['n_bets']} bets)\n"
-    )
-
-    send_email(subject, html_body, text_body)
+    # ── 5. Write summary JSON for lambda Email 1 ───────────────────────────────
+    ys = compute_summary(settled_yesterday) if settled_yesterday is not None else \
+         {"n_bets": 0, "n_win": 0, "n_loss": 0, "n_push": 0, "pnl": 0.0, "roi": float("nan")}
+    save_settle_summary(gameday, ys, at)
 
     print(f"\n{'='*55}")
     print(f"  Settlement complete — {gameday}")

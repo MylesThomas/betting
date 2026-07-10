@@ -22,6 +22,7 @@ Run:
 """
 
 import argparse
+import html as html_module
 import os
 import re
 import sys
@@ -530,6 +531,71 @@ def aggregate_props(raw_rows: list[dict]) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
+def expand_to_per_book(raw_rows: list[dict]) -> pd.DataFrame:
+    """One row per (event_id, player_name, bookmaker) at the 0.5 line."""
+    if not raw_rows:
+        return pd.DataFrame()
+    df = pd.DataFrame(raw_rows)
+    df["point"] = pd.to_numeric(df["point"], errors="coerce")
+    df = df[df["point"] == 0.5].copy()
+    df["implied_prob"] = df["price"].apply(implied_prob)
+
+    results = []
+    for (event_id, player_name, bookmaker), g in df.groupby(["event_id", "outcome_desc", "bookmaker"]):
+        over_rows  = g[g["outcome_name"] == "Over"]
+        under_rows = g[g["outcome_name"] == "Under"]
+        over_price  = float(over_rows["price"].iloc[0])  if not over_rows.empty  else float("nan")
+        under_price = float(under_rows["price"].iloc[0]) if not under_rows.empty else float("nan")
+        raw_impl_over  = implied_prob(over_price)
+        raw_impl_under = implied_prob(under_price)
+        total = raw_impl_over + raw_impl_under
+        if not (pd.isna(raw_impl_over) or pd.isna(raw_impl_under)) and total > 0:
+            novig_over  = raw_impl_over  / total
+            novig_under = raw_impl_under / total
+        else:
+            novig_over = novig_under = float("nan")
+        results.append({
+            "event_id":       event_id,
+            "player_name":    player_name,
+            "bookmaker":      bookmaker,
+            "line":           0.5,
+            "over_price":     over_price,
+            "under_price":    under_price,
+            "raw_impl_over":  raw_impl_over,
+            "raw_impl_under": raw_impl_under,
+            "novig_over":     novig_over,
+            "novig_under":    novig_under,
+        })
+    return pd.DataFrame(results)
+
+
+def _load_settled_for_combined_email(gameday: str) -> tuple[pd.DataFrame | None, pd.DataFrame, bool]:
+    """
+    Load yesterday's settled CSV + all-time settled results for inclusion in the plays email.
+    Returns (settled_yesterday, all_time, had_games).
+    """
+    SCRIPTS_DIR = Path(__file__).resolve().parent
+    sys.path.insert(0, str(SCRIPTS_DIR))
+    try:
+        from settle_sacks import load_s3_csv as _load_csv, load_all_time_settled, s3_key_settled
+    except ImportError:
+        return None, pd.DataFrame(), False
+
+    prev_day = (datetime.strptime(gameday, "%Y-%m-%d") - __import__("datetime").timedelta(days=1)).strftime("%Y-%m-%d")
+    settled_yesterday = _load_csv(s3_key_settled(prev_day))
+    all_time          = load_all_time_settled()
+    had_games         = settled_yesterday is not None and len(settled_yesterday) > 0
+    return settled_yesterday, all_time, had_games
+
+
+def _utc_to_game_time_et(utc_str: str) -> str:
+    try:
+        dt = datetime.strptime(str(utc_str), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
+        return dt.astimezone(ET).strftime("%-I:%M %p ET")
+    except Exception:
+        return "TBD"
+
+
 # ── Feature matrix ──────────────────────────────────────────────────────────────
 
 def build_feature_matrix(
@@ -636,80 +702,201 @@ def score(df: pd.DataFrame, artifact: dict, cfg: dict) -> pd.DataFrame:
 
 # ── Output ──────────────────────────────────────────────────────────────────────
 
-def build_bet_sheet_html(df: pd.DataFrame, gameday: str, n_events: int) -> str:
-    bets = df[df["bet"]].copy()
-    bets = bets.sort_values("p_over")
+_BOOK_DISPLAY_NAMES = {
+    "betonlineag":    "BetOnline",
+    "fanduel":        "FanDuel",
+    "draftkings":     "DraftKings",
+    "betmgm":         "BetMGM",
+    "caesars":        "Caesars",
+    "betrivers":      "BetRivers",
+    "pointsbetus":    "PointsBet",
+    "unibet_us":      "Unibet",
+    "mybookieag":     "MyBookie",
+    "bovada":         "Bovada",
+    "pinnacle":       "Pinnacle",
+    "bet365":         "Bet365",
+    "williamhill_us": "William Hill",
+    "lowvig":         "LowVig",
+    "ballybet":       "Bally Bet",
+    "espnbet":        "ESPN Bet",
+    "fliff":          "Fliff",
+    "betanysports":   "BetAnySports",
+    "fanatics":       "Fanatics",
+    "hardrock":       "Hard Rock Bet",
+}
 
-    def fmt_odds(p):
-        if pd.isna(p):
-            return "N/A"
-        return f"+{int(p)}" if p > 0 else str(int(p))
 
-    rows_html = ""
-    for _, r in bets.iterrows():
-        p_over    = r["p_over"]
-        bet_side  = r.get("bet_side", "Under 0.5 sacks")
-        is_over   = str(bet_side).startswith("Over")
-        mkt_impl  = r.get("prop_median_impl_over", float("nan"))
-        edge      = (p_over - mkt_impl) if is_over else (mkt_impl - p_over)
-        odds_col  = "prop_median_price_over" if is_over else "prop_median_price_under"
-        odds      = fmt_odds(r.get(odds_col, float("nan")))
-        prob_pct  = f"{p_over:.1%}"
-        mkt_pct   = f"{mkt_impl:.1%}" if not pd.isna(mkt_impl) else "N/A"
-        edge_str  = f"+{edge:.1%}" if not pd.isna(edge) else "N/A"
-        rows_html += f"""
-        <tr>
-          <td>{r['player']}</td>
-          <td>{r['team']} vs {r['opponent']}</td>
-          <td>{r['pos_group']}/{r['pos_side']}</td>
-          <td style="color:#1d6fa4;font-weight:600">{prob_pct}</td>
-          <td>{mkt_pct}</td>
-          <td style="color:#2a7d2e;font-weight:600">{edge_str}</td>
-          <td>{odds}</td>
-          <td style="font-weight:600">{bet_side}</td>
-        </tr>"""
+def _book_name(slug: str) -> str:
+    return _BOOK_DISPLAY_NAMES.get(str(slug).lower(), str(slug))
 
-    no_bets_msg = "" if len(bets) > 0 else '<p style="color:#888">No qualifying bets today.</p>'
+
+def build_bet_sheet_html(df: pd.DataFrame, gameday: str) -> str:
+    n_plays = int(df["bet"].sum())
+    n_games = df["event_id"].nunique()
+
+    df = df.copy()
+    df["_sort_dt"] = pd.to_datetime(
+        df["commence_time_utc"], format="%Y-%m-%dT%H:%M:%SZ", utc=True, errors="coerce"
+    )
+    df = df.sort_values(["_sort_dt", "home_team", "player", "bookmaker"]).reset_index(drop=True)
+
+    def _p(v):   return f"{v:.1%}" if pd.notna(v) else "—"
+    def _odds(v): return f"{int(v):+d}" if pd.notna(v) else "—"
+    def _edge(v): return f"+{v*100:.1f}pp" if pd.notna(v) and v >= 0 else (f"{v*100:.1f}pp" if pd.notna(v) else "—")
+    def _rate(v): return f"{v:.3f}" if pd.notna(v) else "—"
+    def _esc(v):  return html_module.escape(str(v)) if pd.notna(v) else "—"
+
+    game_sections_html = ""
+    row_idx = 0
+    for event_id, game_df in df.groupby("event_id", sort=False):
+        game_df = game_df.copy()
+        game_df["_sort_edge"] = game_df[["over_edge", "under_edge"]].abs().max(axis=1).fillna(-1)
+        game_df = game_df.sort_values(["_sort_edge", "player", "bookmaker"], ascending=[False, True, True])
+        n_players_game = game_df["player"].nunique()
+        n_plays_game   = int(game_df["bet"].sum())
+
+        home_abbr  = TEAM_NAME_MAP.get(game_df["home_team"].iloc[0], game_df["home_team"].iloc[0])
+        away_abbr  = TEAM_NAME_MAP.get(game_df["away_team"].iloc[0], game_df["away_team"].iloc[0])
+        game_time  = game_df["game_time_et"].iloc[0]
+        plays_str  = f"{n_plays_game} play{'s' if n_plays_game != 1 else ''}" if n_plays_game else "no plays"
+        game_label = f"{game_time} — {away_abbr} @ {home_abbr} ({n_players_game} players scored, {plays_str})"
+
+        rows_html = ""
+        for _, r in game_df.iterrows():
+            is_under = r["bet_direction"] == "UNDER"
+            is_over  = r["bet_direction"] == "OVER"
+            is_play  = bool(r["bet"])
+
+            if is_play and is_under:
+                bg = "background:#fce8e6"
+            elif is_play and is_over:
+                bg = "background:#e6f4ea"
+            elif row_idx % 2 == 0:
+                bg = "background:#f9f9f9"
+            else:
+                bg = "background:#ffffff"
+            row_idx += 1
+
+            status       = f"PLAY - {r['bet_direction']}" if is_play else ""
+            status_style = (
+                "font-weight:bold;color:#c0392b" if is_play and is_under else
+                "font-weight:bold;color:#27ae60" if is_play and is_over  else
+                "color:#9ca3af"
+            )
+            mdl_u = 1 - r["p_over"] if pd.notna(r["p_over"]) else float("nan")
+
+            rows_html += f"""<tr style="{bg}">
+  <td style="padding:7px 10px">{_esc(r['player'])}</td>
+  <td style="padding:7px 10px">{_esc(r['team'])}</td>
+  <td style="padding:7px 10px">{_esc(r['opponent'])}</td>
+  <td style="padding:7px 10px">{_esc(r['game_time_et'])}</td>
+  <td style="padding:7px 10px">{r['line']:.1f}</td>
+  <td style="padding:7px 10px">{_esc(_book_name(r['bookmaker']))}</td>
+  <td style="padding:7px 10px">{_odds(r['over_price'])}</td>
+  <td style="padding:7px 10px">{_odds(r['under_price'])}</td>
+  <td style="padding:7px 10px">{_p(r.get('raw_impl_over'))}</td>
+  <td style="padding:7px 10px">{_p(r.get('raw_impl_under'))}</td>
+  <td style="padding:7px 10px">{_p(r.get('raw_impl_over', float('nan')) + r.get('raw_impl_under', float('nan')))}</td>
+  <td style="padding:7px 10px">{_p(r['novig_over'])}</td>
+  <td style="padding:7px 10px">{_p(r['novig_under'])}</td>
+  <td style="padding:7px 10px">{_p(r.get('novig_over', float('nan')) + r.get('novig_under', float('nan')))}</td>
+  <td style="padding:7px 10px">{_edge((r.get('raw_impl_over', float('nan')) + r.get('raw_impl_under', float('nan'))) - (r.get('novig_over', float('nan')) + r.get('novig_under', float('nan'))))}</td>
+  <td style="padding:7px 10px">—</td>
+  <td style="padding:7px 10px">—</td>
+  <td style="padding:7px 10px">{_p(r['p_over'])}</td>
+  <td style="padding:7px 10px">{_p(mdl_u)}</td>
+  <td style="padding:7px 10px">{_edge(r['over_edge'])}</td>
+  <td style="padding:7px 10px">{_edge(r['under_edge'])}</td>
+  <td style="padding:7px 10px">{_rate(r.get('sack_rate_Lcareer'))}</td>
+  <td style="padding:7px 10px">{_rate(r.get('qbhit_rate_L16'))}</td>
+  <td style="padding:7px 10px">{_p(r.get('prop_median_impl_over'))}</td>
+  <td style="padding:7px 10px;font-weight:bold;{status_style}">{status}</td>
+</tr>"""
+
+        game_sections_html += f"""<tr style="background:#1a1a2e;color:white;font-weight:bold">
+  <td colspan="25" style="padding:8px 12px">{html_module.escape(game_label)}</td>
+</tr>
+{rows_html}"""
+
+    model_inputs_rows = [
+        ("prop_median_impl_over", "Consensus",    "Consensus no-vig P(over 0.5 sacks) across all books", "Primary signal"),
+        ("qbhit_rate_L16",        "QB Hit/G",     "Player QB hit rate over last 16 games",               "Secondary signal"),
+        ("sack_rate_Lcareer",     "Sack/G",       "Player career sack rate per game",                    "Baseline"),
+    ]
+    mi_rows_html = "".join(
+        f'<tr style="background:{"#f9f9f9" if i%2 else "#ffffff"}">'
+        f'<td style="padding:7px 12px;font-family:monospace">{feat}</td>'
+        f'<td style="padding:7px 12px">{shown}</td>'
+        f'<td style="padding:7px 12px">{desc}</td>'
+        f'<td style="padding:7px 12px;color:#666">{role}</td></tr>'
+        for i, (feat, shown, desc, role) in enumerate(model_inputs_rows)
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<title>NFL Sacks Bet Sheet — {gameday}</title>
-<style>
-body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: #f5f5f5; color: #1a1a1a; }}
-h1 {{ font-size: 20px; margin-bottom: 4px; }}
-.meta {{ color: #666; font-size: 13px; margin-bottom: 20px; }}
-table {{ border-collapse: collapse; width: 100%; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }}
-th {{ background: #1d2d44; color: #fff; padding: 10px 12px; text-align: left; font-size: 13px; }}
-td {{ padding: 9px 12px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }}
-tr:hover td {{ background: #f9f9f9; }}
-.summary {{ margin-top: 20px; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); font-size: 13px; }}
-</style>
-</head>
-<body>
-<h1>NFL Sacks Bet Sheet — {gameday}</h1>
-<div class="meta">
-  Generated: {datetime.now(ET).strftime('%Y-%m-%d %H:%M ET')} &nbsp;|&nbsp;
-  Games checked: {n_events} &nbsp;|&nbsp;
-  Players with props: {len(df)} &nbsp;|&nbsp;
-  Qualifying bets: {len(bets)}
-</div>
-{no_bets_msg}
-{"" if len(bets) == 0 else f"""
-<table>
-<thead><tr>
-  <th>Player</th><th>Matchup</th><th>Pos</th>
-  <th>Model P(Over)</th><th>Market P(Over)</th><th>Edge</th>
-  <th>Odds</th><th>Bet</th>
+<head><meta charset="utf-8"><title>NFL Sacks — {gameday}</title></head>
+<body style="font-family:system-ui,Arial,sans-serif;font-size:14px;margin:20px;background:#f5f5f5;color:#1a1a1a">
+<h2 style="margin-bottom:4px">NFL Sacks — {gameday}</h2>
+<p style="font-size:15px;font-weight:600;margin:0 0 4px">
+  {n_plays} play{"s" if n_plays != 1 else ""} today across {n_games} game{"s" if n_games != 1 else ""}
+</p>
+<p style="color:#888;font-size:12px;margin:0 0 16px">Generated {datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")}</p>
+
+<table style="border-collapse:collapse;font-size:13px;width:100%;background:#fff">
+<thead>
+<tr style="background:#2c3e50;color:white">
+  <th colspan="5" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">Player / Game</th>
+  <th colspan="1" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">Book</th>
+  <th colspan="2" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">American Odds</th>
+  <th colspan="3" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">Implied</th>
+  <th colspan="4" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">No-Vig</th>
+  <th colspan="4" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">Model Prediction</th>
+  <th colspan="2" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">Edge</th>
+  <th colspan="4" style="padding:6px 12px;text-align:center;border-right:1px solid #3d5166">Model Inputs</th>
+</tr>
+<tr style="background:#3d5166;color:white">
+  <th style="padding:6px 10px;text-align:left">Player</th>
+  <th style="padding:6px 10px">Team</th>
+  <th style="padding:6px 10px">Opp</th>
+  <th style="padding:6px 10px">Time (ET)</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Line</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Book</th>
+  <th style="padding:6px 10px">Over</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Under</th>
+  <th style="padding:6px 10px">Raw Over</th>
+  <th style="padding:6px 10px">Raw Under</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Raw Total</th>
+  <th style="padding:6px 10px">Fair Over</th>
+  <th style="padding:6px 10px">Fair Under</th>
+  <th style="padding:6px 10px">Fair Total</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Vig</th>
+  <th style="padding:6px 10px">Prediction (yhat)</th>
+  <th style="padding:6px 10px">Delta</th>
+  <th style="padding:6px 10px">Pred Over</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Pred Under</th>
+  <th style="padding:6px 10px">Over Edge</th>
+  <th style="padding:6px 10px;border-right:1px solid #4a637a">Under Edge</th>
+  <th style="padding:6px 10px">Sacks Per Game</th>
+  <th style="padding:6px 10px">QB Hits Per Game</th>
+  <th style="padding:6px 10px">Consensus Per Game</th>
+  <th style="padding:6px 10px">Status</th>
+</tr>
+</thead>
+<tbody>
+{game_sections_html}
+</tbody>
+</table>
+
+<h3 style="margin-top:28px;font-size:14px">Model Inputs</h3>
+<table style="border-collapse:collapse;font-size:13px;margin-top:8px">
+<thead><tr style="background:#2c3e50;color:white">
+  <th style="padding:8px 12px;text-align:left">Feature</th>
+  <th style="padding:8px 12px;text-align:left">Shown as</th>
+  <th style="padding:8px 12px;text-align:left">What it measures</th>
+  <th style="padding:8px 12px;text-align:left">Role</th>
 </tr></thead>
-<tbody>{rows_html}</tbody>
-</table>"""}
-<div class="summary">
-  <strong>Strategy:</strong> direction=both · thresh=0.45 · edge≥0.03<br>
-  <strong>Out-of-sample performance (2025):</strong> 222 bets · 73.9% hit · +0.1348 EV/unit · +29.92u<br>
-  <strong>Model:</strong> lr_norm_2024_2025_v4.pkl — Logistic Regression trained on 2024+2025
-</div>
+<tbody>{mi_rows_html}</tbody>
+</table>
 </body>
 </html>"""
 
@@ -725,35 +912,48 @@ def upload_to_s3(gameday: str, df: pd.DataFrame, html: str) -> tuple[str, str]:
     return f"s3://{S3_BUCKET}/{csv_key}", f"s3://{S3_BUCKET}/{html_key}"
 
 
-def send_plays_notification(gameday: str, scored: pd.DataFrame, csv_uri: str, html_uri: str) -> None:
-    SCRIPTS_DIR = Path(__file__).resolve().parent
-    sys.path.insert(0, str(SCRIPTS_DIR))
-    from settle_sacks import build_plays_html
+def send_plays_notification(
+    gameday: str,
+    scored_per_book: pd.DataFrame,
+    csv_uri: str,
+    html_uri: str,
+    html_body: str,
+) -> None:
+    n_bets    = int(scored_per_book["bet"].sum())
+    n_players = scored_per_book["player"].nunique()
+    bets      = scored_per_book[scored_per_book["bet"]].copy()
 
-    n_bets    = int(scored["bet"].sum())
-    n_players = len(scored)
-    bets      = scored[scored["bet"]].sort_values("p_over")
+    # Load yesterday's settled results and append to the email
+    try:
+        SCRIPTS_DIR = Path(__file__).resolve().parent
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from settle_sacks import build_settlement_sections_html
+        settled_yesterday, all_time, had_games = _load_settled_for_combined_email(gameday)
+        prev_day = (datetime.strptime(gameday, "%Y-%m-%d") - __import__("datetime").timedelta(days=1)).strftime("%Y-%m-%d")
+        settlement_html = build_settlement_sections_html(prev_day, settled_yesterday, all_time, had_games)
+        html_body = html_body.replace("</body>", f"{settlement_html}</body>")
+        print(f"  Settlement sections appended (prev day={prev_day}, had_games={had_games})")
+    except Exception as e:
+        print(f"  WARNING: could not append settlement to email: {e}")
 
     subject = (
         f"NFL Sacks — {gameday} — {n_bets} bet{'s' if n_bets != 1 else ''}"
         if n_bets else f"NFL Sacks — {gameday} — No qualifying bets"
     )
 
-    html_body = build_plays_html(scored, gameday)
-
-    lines = [f"NFL Sacks — {gameday}", f"Players with props: {n_players}", f"Qualifying bets: {n_bets}", ""]
+    lines = [f"NFL Sacks — {gameday}", f"Players scored: {n_players}", f"Qualifying bets: {n_bets}", ""]
     for _, r in bets.iterrows():
-        p_over   = r.get("p_over", float("nan"))
-        bet_side = r.get("bet_side", "Under 0.5 sacks")
-        is_over  = str(bet_side).startswith("Over")
-        mkt      = r.get("prop_median_impl_over", float("nan"))
-        edge     = (p_over - mkt) if is_over else (mkt - p_over)
-        edge_s   = f"+{edge:.1%}" if not pd.isna(edge) else "N/A"
-        odds_col = "prop_median_price_over" if is_over else "prop_median_price_under"
-        odds     = r.get(odds_col, float("nan"))
-        odds_s   = f"{int(odds):+d}" if not pd.isna(odds) else "N/A"
-        lines.append(f"  {r['player']:<28} {r['team']:>3} vs {r['opponent']:<3}  "
-                     f"model={p_over:.1%}  edge={edge_s}  odds={odds_s}  [{bet_side}]")
+        direction = r.get("bet_direction", "")
+        is_under  = direction == "UNDER"
+        edge      = r["under_edge"] if is_under else r["over_edge"]
+        price     = r["under_price"] if is_under else r["over_price"]
+        edge_s    = f"+{edge:.1%}" if pd.notna(edge) else "N/A"
+        odds_s    = f"{int(price):+d}" if pd.notna(price) else "N/A"
+        lines.append(
+            f"  {r['player']:<28} {r['team']:>3} vs {r['opponent']:<3}  "
+            f"p_over={r['p_over']:.1%}  edge={edge_s}  odds={odds_s}  "
+            f"[{direction} {r['line']:.1f}]  [{r['bookmaker']}]"
+        )
     lines += ["", f"CSV : {csv_uri}", f"HTML: {html_uri}"]
     text_body = "\n".join(lines)
 
@@ -856,8 +1056,10 @@ def main():
 
     # ── 3. Aggregate props ────────────────────────────────────────────────────
     print("\nAggregating props...")
-    prop_df = aggregate_props(all_prop_rows)
+    prop_df     = aggregate_props(all_prop_rows)
+    per_book_df = expand_to_per_book(all_prop_rows)
     print(f"  {len(prop_df)} player-event prop rows  ({prop_df['player_name'].nunique()} unique players)")
+    print(f"  {len(per_book_df)} player-book rows  ({per_book_df['bookmaker'].nunique() if not per_book_df.empty else 0} books)")
 
     # ── 4. Spine + rolling features ───────────────────────────────────────────
     print("\nLoading spine and computing rolling features...")
@@ -888,22 +1090,109 @@ def main():
 
     # ── 6. Score ──────────────────────────────────────────────────────────────
     print("\nLoading model and scoring...")
-    artifact  = load_model_s3(cfg)
-    scored    = score(feature_df, artifact, cfg)
-    n_bets    = int(scored["bet"].sum())
+    artifact = load_model_s3(cfg)
+    scored   = score(feature_df, artifact, cfg)
+
+    # Expand to per-book grain and compute per-book edges/bets
+    scored_pb = scored.drop(columns=["bet", "bet_side"], errors="ignore").merge(
+        per_book_df,
+        left_on=["event_id", "player"],
+        right_on=["event_id", "player_name"],
+        how="left",
+    ).drop(columns=["player_name"], errors="ignore")
+
+    # Clip p_over to [0.01, 0.99]; log any rows hitting the boundary
+    p_raw = scored_pb["p_over"].copy()
+    scored_pb["p_over"] = scored_pb["p_over"].clip(0.01, 0.99)
+    clipped_low  = (p_raw < 0.01).sum()
+    clipped_high = (p_raw > 0.99).sum()
+    if clipped_low or clipped_high:
+        print(f"  WARNING: p_over clipped — {clipped_low} rows to 0.01, {clipped_high} rows to 0.99")
+        mask = (p_raw < 0.01) | (p_raw > 0.99)
+        for _, r in scored_pb[mask].iterrows():
+            print(f"    {r['player']}  raw={p_raw.loc[r.name]:.4f}  book={r.get('bookmaker','?')}")
+
+    # Assert: p_over must be identical across all book rows for the same player-game
+    # (p_over is a property of the player+matchup, not the book)
+    yhat_check = scored_pb.groupby(["event_id", "player"])["p_over"].nunique()
+    assert (yhat_check == 1).all(), (
+        f"p_over is not book-invariant — {(yhat_check > 1).sum()} player-game groups "
+        f"have varying predictions across books. A per-book feature is inside the model. "
+        f"Check model inputs: any column that varies across books for the same player-game "
+        f"(e.g. novig_over) must be removed from the feature set."
+    )
+    print(f"  yhat book-invariance check: PASS ({len(yhat_check)} player-game groups, all identical across books)")
+
+    # Line monotonicity: sacks is a fixed 0.5 market — only one line per player-game,
+    # so the cross-line monotonicity check is not applicable here. Logged for audit trail.
+    print("  Line monotonicity check: N/A (sacks fixed at line=0.5, single line per player-game)")
+
+    scored_pb["over_edge"]  = scored_pb["p_over"] - scored_pb["raw_impl_over"]
+    scored_pb["under_edge"] = (1 - scored_pb["p_over"]) - scored_pb["raw_impl_under"]
+    scored_pb["game_time_et"] = scored_pb["commence_time_utc"].apply(_utc_to_game_time_et)
+
     inf       = cfg["inference"]
-    print(f"  Scored {len(scored)} players  →  {n_bets} bets "
-          f"(direction={inf['direction']} thresh={inf['threshold']} edge≥{inf['min_edge']})")
+    threshold = inf["threshold"]
+    min_edge  = inf["min_edge"]
+    direction = inf["direction"]
+
+    bet_under = (
+        (direction in ("under", "both"))
+        & scored_pb["p_over"].notna()
+        & scored_pb["under_edge"].notna()
+        & (scored_pb["p_over"] < threshold)
+        & (scored_pb["under_edge"] >= min_edge)
+    )
+    bet_over = (
+        (direction in ("over", "both"))
+        & scored_pb["p_over"].notna()
+        & scored_pb["over_edge"].notna()
+        & (scored_pb["p_over"] > (1 - threshold))
+        & (scored_pb["over_edge"] >= min_edge)
+    )
+    scored_pb["bet"]           = bet_under | bet_over
+    scored_pb["bet_direction"] = ""
+    scored_pb.loc[bet_under, "bet_direction"] = "UNDER"
+    scored_pb.loc[bet_over,  "bet_direction"] = "OVER"
+
+    n_bets    = int(scored_pb["bet"].sum())
+    n_players = scored_pb["player"].nunique()
+    print(f"  Scored {n_players} players ({len(scored_pb)} player-book rows)  →  {n_bets} qualifying bets")
+    print(f"  (direction={direction}  thresh={threshold}  edge≥{min_edge})")
+
+    # Pre-send validation
+    print("\nPre-send validation:")
+    print(f"  n_total_rows (player-book): {len(scored_pb)}")
+    print(f"  n_unique_players:           {n_players}")
+    print(f"  n_qualifying_bets:          {n_bets}")
+    print(f"  p_over clips:               {int(clipped_low)} at 0.01,  {int(clipped_high)} at 0.99")
+    if len(scored_pb) > 0:
+        p = scored_pb["p_over"].dropna()
+        print(f"  p_over distribution:        mean={p.mean():.3f}  min={p.min():.3f}  max={p.max():.3f}")
+        bets_df = scored_pb[scored_pb["bet"]]
+        if len(bets_df):
+            novig_vals = bets_df.apply(
+                lambda r: r["novig_under"] if r["bet_direction"] == "UNDER" else r["novig_over"], axis=1
+            )
+            edge_vals = bets_df.apply(
+                lambda r: r["under_edge"] if r["bet_direction"] == "UNDER" else r["over_edge"], axis=1
+            )
+            print(f"  qualifying p_over:          mean={bets_df['p_over'].mean():.3f}  "
+                  f"min={bets_df['p_over'].min():.3f}  max={bets_df['p_over'].max():.3f}")
+            print(f"  qualifying novig:           mean={novig_vals.mean():.3f}  "
+                  f"min={novig_vals.min():.3f}  max={novig_vals.max():.3f}")
+            print(f"  qualifying edge:            mean={edge_vals.mean():.3f}  "
+                  f"min={edge_vals.min():.3f}  max={edge_vals.max():.3f}")
 
     # ── 7. Output ──────────────────────────────────────────────────────────────
     print("\nGenerating bet sheet and uploading...")
-    html = build_bet_sheet_html(scored, gameday, len(events))
-    csv_uri, html_uri = upload_to_s3(gameday, scored, html)
+    html = build_bet_sheet_html(scored_pb, gameday)
+    csv_uri, html_uri = upload_to_s3(gameday, scored_pb, html)
     print(f"  CSV : {csv_uri}")
     print(f"  HTML: {html_uri}")
 
     # ── 8. Notify ──────────────────────────────────────────────────────────────
-    send_plays_notification(gameday, scored, csv_uri, html_uri)
+    send_plays_notification(gameday, scored_pb, csv_uri, html_uri, html)
 
     print(f"\n{'='*60}")
     print(f"  Done. {n_bets} qualifying bets on {gameday}.")
