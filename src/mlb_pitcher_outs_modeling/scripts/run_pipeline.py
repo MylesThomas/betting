@@ -569,7 +569,7 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
         if not badges: badges.append("<span style='color:#888'>no plays</span>")
 
         rows_html += (
-            f"<tr style='background:#edf1f5'><td colspan='18' style='padding:7px 10px;"
+            f"<tr style='background:#edf1f5'><td colspan='19' style='padding:7px 10px;"
             f"font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;"
             f"border-bottom:1px solid #bdc3c7'>"
             f"{he(g['game_time_et'])} ET &nbsp;·&nbsp; {he(g['away_team'])} @ {he(g['home_team'])}"
@@ -586,7 +586,6 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
                 else "<span style='color:#aaa'>—</span>"
             )
             edge_color = "#276221" if tier == "play" else ("#b8860b" if tier == "show" else "#aaa")
-            dog_html = "<span style='color:#276221'>✓</span>" if r["dog"] else "<span style='color:#aaa'>×</span>"
             team = r["home_team"] if r.get("is_home", 0) else r["away_team"]
 
             rows_html += (
@@ -598,16 +597,17 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
                 f"<td style='text-align:center'>{fmt(r['line'], '.1f')}</td>"
                 f"<td style='text-align:center'>{he(display_book(r['bookmaker']))}</td>"
                 f"<td style='text-align:center;color:#555'>{r['mkt_over_am']}</td>"
-                f"<td style='text-align:center;font-weight:bold;color:#1d4ed8'>{to_american(r['under_price'])}</td>"
-                f"<td style='text-align:center'>{dog_html}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:#1d4ed8;border-right:2px solid #1e2a35'>{to_american(r['under_price'])}</td>"
+                f"<td style='text-align:center'>{fmt(r['novig_prob_over'], '.1%')}</td>"
                 f"<td style='text-align:center'>{fmt(r['novig_prob_under'], '.1%')}</td>"
+                f"<td style='text-align:center'>{fmt(r['p_over'], '.1%')}</td>"
                 f"<td style='text-align:center'>{fmt(r['p_under'], '.1%')}</td>"
-                f"<td style='text-align:center;font-weight:bold;color:{edge_color}'>{fmt(r['edge_under'], '+.1%')}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:{edge_color};border-right:2px solid #1e2a35'>{fmt(r['edge_under'], '+.1%')}</td>"
                 f"<td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>{fmt(r['y_hat'], '.1f')}</td>"
                 f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['outs_roll_career'], '.1f')}</td>"
                 f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['outs_roll_c5'], '.1f')}</td>"
                 f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['k_roll_career'], '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['opp_k_against_season'], '.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#555;border-right:2px solid #1e2a35'>{fmt(r['opp_k_against_season'], '.2f')}</td>"
                 f"<td style='text-align:center'>{status_html}</td>"
                 f"</tr>\n"
             )
@@ -630,8 +630,8 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
   <summary>▸ Strategy: Pitcher Outs UNDER &nbsp;<span style='font-weight:normal;color:#666'>({len(df)} rows evaluated · {n_play} plays)</span></summary>
   <table>
     <tr>
-      <th colspan='9' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Game Info &amp; Market (per book)</th>
-      <th colspan='3' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Model</th>
+      <th colspan='8' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Game Info &amp; Market (per book)</th>
+      <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Model</th>
       <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Features</th>
       <th style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase'>Status</th>
     </tr>
@@ -640,9 +640,9 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
       <th style='text-align:center'>Team</th><th style='text-align:center'>Opp</th>
       <th style='text-align:center'>Dir</th><th style='text-align:center'>Line</th>
       <th style='text-align:center'>Book</th><th style='text-align:center'>Over<br>Odds</th>
-      <th style='text-align:center'>Under<br>Odds</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Dog?</th>
-      <th style='text-align:center'>Market<br>Under%</th><th style='text-align:center'>Model<br>Under%</th>
+      <th style='text-align:center;border-right:2px solid #1e2a35'>Under<br>Odds</th>
+      <th style='text-align:center'>Mkt<br>Over%</th><th style='text-align:center'>Mkt<br>Under%</th>
+      <th style='text-align:center'>Mdl<br>Over%</th><th style='text-align:center'>Mdl<br>Under%</th>
       <th style='text-align:center;border-right:2px solid #1e2a35'>Edge</th>
       <th style='text-align:center'>Proj<br>Outs</th><th style='text-align:center'>Career<br>Outs</th>
       <th style='text-align:center'>c5<br>Outs</th><th style='text-align:center'>Career<br>Ks</th>
