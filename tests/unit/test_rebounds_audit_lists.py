@@ -44,15 +44,13 @@ def test_rolling_tails_match_scalars(universe_builder):
             "OREB": [1.0] * 15,
             "DREB": [1.0] * 15,
             "REB": reb,
+            "FGA": np.full(15, 12.0),
+            "FG3A": fg3,
+            "FTA": np.ones(15),
             "team_normalized": ["Boston Celtics"] * 15,
         }
     )
-    shot_profile_df = logs[["season", "date", "player_normalized"]].assign(
-        FGA=np.full(15, 12.0),
-        FG3A=fg3,
-        FTA=np.ones(15),
-    )
-    out = universe_builder.build_rolling_features(logs, shot_profile_df)
+    out = universe_builder.build_rolling_features(logs)
     last = out.iloc[-1]
     tail60 = last["input_reb_tail_60"]
     tail20 = last["input_fg3a_tail_20"]
