@@ -2,7 +2,7 @@
 name = "betting"
 version = "0.1.0"
 description = "NBA/NFL betting analysis and automation"
-requires-python = ">=3.13"
+requires-python = ">=3.13, <3.14"
 dependencies = [
     # Data Processing
     "pandas>=2.1.4",
