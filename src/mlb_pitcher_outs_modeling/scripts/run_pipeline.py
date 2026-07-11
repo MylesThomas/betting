@@ -529,17 +529,15 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
     df["tier"] = "none"
     df.loc[df["edge_under"] >= edge_show, "tier"] = "show"
     df.loc[df["edge_under"] >= edge_play, "tier"] = "play"
-    df["dog"] = df["under_price"] > 2.0
 
     n_play     = int((df["tier"] == "play").sum())
     n_show     = int((df["tier"] == "show").sum())
     n_play_pit = df[df["tier"] == "play"]["player_key"].nunique()
     n_show_pit = df[df["tier"] == "show"]["player_key"].nunique()
 
-    df["_tsort"]     = df["game_time_et"].map(_time_sort_key)
+    df["_tsort"] = df["game_time_et"].map(_time_sort_key)
     df = df.sort_values(["_tsort", "home_team", "edge_under"], ascending=[True, True, False])
 
-    # Season stat cards
     if season_stats:
         u, w, l = season_stats.get("units", 0.0), season_stats.get("wins", 0), season_stats.get("losses", 0)
         cards_html = _cards_row(
@@ -556,20 +554,29 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
             _card("ROI (plays)", "—"),
         )
 
-    # Game rows
-    games = df[["_tsort", "game_time_et", "home_team", "away_team"]].drop_duplicates(["home_team", "away_team"]).sort_values("_tsort")
+    _GH = "background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase"
+    _BR = "border-right:2px solid #374f5e"
+    _br = "border-right:2px solid #1e2a35"
+
+    def _ec(edge_val: float) -> str:
+        if edge_val >= edge_play:  return "#276221"
+        if edge_val >= edge_show:  return "#b8860b"
+        if edge_val < 0:           return "#c0392b"
+        return "#555"
+
+    games = df[["_tsort","game_time_et","home_team","away_team"]].drop_duplicates(["home_team","away_team"]).sort_values("_tsort")
     rows_html = ""
     for _, g in games.iterrows():
-        gdf = df[(df["home_team"] == g["home_team"]) & (df["away_team"] == g["away_team"])]
-        n_gplay = int((gdf["tier"] == "play").sum())
-        n_gshow = int((gdf["tier"] == "show").sum())
+        gdf = df[(df["home_team"]==g["home_team"]) & (df["away_team"]==g["away_team"])]
+        n_gplay = int((gdf["tier"]=="play").sum())
+        n_gshow = int((gdf["tier"]=="show").sum())
         badges = []
         if n_gplay: badges.append(f"<span style='color:#276221'>{n_gplay} bet{'s' if n_gplay!=1 else ''}</span>")
-        if n_gshow: badges.append(f"<span style='color:#b8860b'>{n_gshow} show</span>")
+        if n_gshow: badges.append(f"<span style='color:#b8860b'>{n_gshow} watch</span>")
         if not badges: badges.append("<span style='color:#888'>no plays</span>")
 
         rows_html += (
-            f"<tr style='background:#edf1f5'><td colspan='19' style='padding:7px 10px;"
+            f"<tr style='background:#edf1f5'><td colspan='26' style='padding:7px 10px;"
             f"font-weight:600;font-size:12px;color:#2c3e50;border-top:2px solid #bdc3c7;"
             f"border-bottom:1px solid #bdc3c7'>"
             f"{he(g['game_time_et'])} ET &nbsp;·&nbsp; {he(g['away_team'])} @ {he(g['home_team'])}"
@@ -578,36 +585,59 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
         )
 
         for _, r in gdf.iterrows():
-            tier = r["tier"]
-            bg = "background:#eaf6ea" if tier == "play" else ("background:#fffde7" if tier == "show" else "")
+            tier  = r["tier"]
+            bg    = "background:#eaf6ea" if tier=="play" else ("background:#fffde7" if tier=="show" else "")
             status_html = (
-                "<span style='color:#276221;font-weight:bold'>PLAY ✓</span>" if tier == "play"
-                else "<span style='color:#b8860b;font-weight:bold'>SHOW</span>" if tier == "show"
+                "<span style='color:#276221;font-weight:bold'>PLAY ✓</span>" if tier=="play"
+                else "<span style='color:#b8860b;font-weight:bold'>WATCH</span>" if tier=="show"
                 else "<span style='color:#aaa'>—</span>"
             )
-            edge_color = "#276221" if tier == "play" else ("#b8860b" if tier == "show" else "#aaa")
-            team = r["home_team"] if r.get("is_home", 0) else r["away_team"]
+
+            raw_o   = 1.0 / float(r["over_price"])  if float(r["over_price"])  > 0 else 0.0
+            raw_u   = 1.0 / float(r["under_price"]) if float(r["under_price"]) > 0 else 0.0
+            raw_tot = raw_o + raw_u
+            vig_val = raw_tot - 1.0
+            delta   = float(r["y_hat"]) - float(r["line"])
+            eu      = float(r["edge_under"])
+            eo      = float(r["edge_over"])
+            d_color = "#276221" if delta >= 0 else "#c0392b"
 
             rows_html += (
                 f"<tr style='{bg}'>"
+                # Player / Game
                 f"<td>{he(r['player_name'])}</td>"
-                f"<td style='text-align:center;color:#555'>{team_abbr(team)}</td>"
-                f"<td style='text-align:center;color:#555'>{team_abbr(r['away_team'] if team == r['home_team'] else r['home_team'])}</td>"
-                f"<td style='text-align:center;font-weight:bold'>UNDER</td>"
-                f"<td style='text-align:center'>{fmt(r['line'], '.1f')}</td>"
+                f"<td style='text-align:center;color:#555'>{team_abbr(r['home_team'])}</td>"
+                f"<td style='text-align:center;color:#555'>{team_abbr(r['away_team'])}</td>"
+                f"<td style='text-align:center;color:#555'>{he(r['game_time_et'])}</td>"
+                f"<td style='text-align:center;{_br}'>{fmt(r['line'], '.1f')}</td>"
+                # Book
                 f"<td style='text-align:center'>{he(display_book(r['bookmaker']))}</td>"
-                f"<td style='text-align:center;color:#555'>{r['mkt_over_am']}</td>"
-                f"<td style='text-align:center;font-weight:bold;color:#1d4ed8;border-right:2px solid #1e2a35'>{to_american(r['under_price'])}</td>"
+                # American Odds
+                f"<td style='text-align:center;color:#555'>{to_american(r['over_price'])}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:#1d4ed8;{_br}'>{to_american(r['under_price'])}</td>"
+                # Implied
+                f"<td style='text-align:center'>{fmt(raw_o, '.1%')}</td>"
+                f"<td style='text-align:center'>{fmt(raw_u, '.1%')}</td>"
+                f"<td style='text-align:center;{_br}'>{fmt(raw_tot, '.1%')}</td>"
+                # No-Vig
                 f"<td style='text-align:center'>{fmt(r['novig_prob_over'], '.1%')}</td>"
                 f"<td style='text-align:center'>{fmt(r['novig_prob_under'], '.1%')}</td>"
+                f"<td style='text-align:center'>100.0%</td>"
+                f"<td style='text-align:center;{_br}'>{fmt(vig_val, '.1%')}</td>"
+                # Model Prediction
+                f"<td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>{fmt(r['y_hat'], '.2f')}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:{d_color}'>{fmt(delta, '+.2f')}</td>"
                 f"<td style='text-align:center'>{fmt(r['p_over'], '.1%')}</td>"
-                f"<td style='text-align:center'>{fmt(r['p_under'], '.1%')}</td>"
-                f"<td style='text-align:center;font-weight:bold;color:{edge_color};border-right:2px solid #1e2a35'>{fmt(r['edge_under'], '+.1%')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#1565c0;font-weight:bold'>{fmt(r['y_hat'], '.1f')}</td>"
+                f"<td style='text-align:center;{_br}'>{fmt(r['p_under'], '.1%')}</td>"
+                # Edge
+                f"<td style='text-align:center;color:{_ec(eo)}'>{fmt(eo, '+.1%')}</td>"
+                f"<td style='text-align:center;font-weight:bold;color:{_ec(eu)};{_br}'>{fmt(eu, '+.1%')}</td>"
+                # Model Inputs
                 f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['outs_roll_career'], '.1f')}</td>"
                 f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['outs_roll_c5'], '.1f')}</td>"
                 f"<td style='text-align:center;font-size:11px;color:#555'>{fmt(r['k_roll_career'], '.1f')}</td>"
-                f"<td style='text-align:center;font-size:11px;color:#555;border-right:2px solid #1e2a35'>{fmt(r['opp_k_against_season'], '.2f')}</td>"
+                f"<td style='text-align:center;font-size:11px;color:#555;{_br}'>{fmt(r['opp_k_against_season'], '.2f')}</td>"
+                # Status
                 f"<td style='text-align:center'>{status_html}</td>"
                 f"</tr>\n"
             )
@@ -630,23 +660,42 @@ def _build_section1(scored: pd.DataFrame, gameday: str, edge_play: float, edge_s
   <summary>▸ Strategy: Pitcher Outs UNDER &nbsp;<span style='font-weight:normal;color:#666'>({len(df)} rows evaluated · {n_play} plays)</span></summary>
   <table>
     <tr>
-      <th colspan='8' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Game Info &amp; Market (per book)</th>
-      <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Model</th>
-      <th colspan='5' style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-right:2px solid #374f5e'>Features</th>
-      <th style='background:#1e2a35;color:#aab8c2;padding:5px 8px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase'>Status</th>
+      <th colspan='5' style='{_GH};{_BR}'>Player / Game</th>
+      <th colspan='1' style='{_GH}'>Book</th>
+      <th colspan='2' style='{_GH};{_BR}'>American Odds</th>
+      <th colspan='3' style='{_GH};{_BR}'>Implied</th>
+      <th colspan='4' style='{_GH};{_BR}'>No-Vig</th>
+      <th colspan='4' style='{_GH};{_BR}'>Model Prediction</th>
+      <th colspan='2' style='{_GH};{_BR}'>Edge</th>
+      <th colspan='4' style='{_GH};{_BR}'>Model Inputs</th>
+      <th colspan='1' style='{_GH}'>Status</th>
     </tr>
     <tr>
       <th>Pitcher</th>
-      <th style='text-align:center'>Team</th><th style='text-align:center'>Opp</th>
-      <th style='text-align:center'>Dir</th><th style='text-align:center'>Line</th>
-      <th style='text-align:center'>Book</th><th style='text-align:center'>Over<br>Odds</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Under<br>Odds</th>
-      <th style='text-align:center'>Mkt<br>Over%</th><th style='text-align:center'>Mkt<br>Under%</th>
-      <th style='text-align:center'>Mdl<br>Over%</th><th style='text-align:center'>Mdl<br>Under%</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Edge</th>
-      <th style='text-align:center'>Proj<br>Outs</th><th style='text-align:center'>Career<br>Outs</th>
-      <th style='text-align:center'>c5<br>Outs</th><th style='text-align:center'>Career<br>Ks</th>
-      <th style='text-align:center;border-right:2px solid #1e2a35'>Opp<br>K/G</th>
+      <th style='text-align:center'>Home</th>
+      <th style='text-align:center'>Away</th>
+      <th style='text-align:center'>Time (ET)</th>
+      <th style='text-align:center;{_br}'>Line</th>
+      <th style='text-align:center'>Book</th>
+      <th style='text-align:center'>Over</th>
+      <th style='text-align:center;{_br}'>Under</th>
+      <th style='text-align:center'>Raw<br>Over%</th>
+      <th style='text-align:center'>Raw<br>Under%</th>
+      <th style='text-align:center;{_br}'>Raw<br>Total</th>
+      <th style='text-align:center'>Fair<br>Over%</th>
+      <th style='text-align:center'>Fair<br>Under%</th>
+      <th style='text-align:center'>Fair<br>Total</th>
+      <th style='text-align:center;{_br}'>Vig</th>
+      <th style='text-align:center'>Proj<br>Outs</th>
+      <th style='text-align:center'>Delta</th>
+      <th style='text-align:center'>Pred<br>Over%</th>
+      <th style='text-align:center;{_br}'>Pred<br>Under%</th>
+      <th style='text-align:center'>Over<br>Edge</th>
+      <th style='text-align:center;{_br}'>Under<br>Edge</th>
+      <th style='text-align:center'>Career<br>Outs</th>
+      <th style='text-align:center'>c5<br>Outs</th>
+      <th style='text-align:center'>Career<br>Ks</th>
+      <th style='text-align:center;{_br}'>Opp<br>K/G</th>
       <th style='text-align:center'>Status</th>
     </tr>
     {rows_html}
