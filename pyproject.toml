@@ -60,6 +60,9 @@ target-version = ["py313"]
 profile = "black"
 line_length = 88
 
+[tool.uv]
+override-dependencies = ["pandas>=2.1.4"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
