@@ -17,6 +17,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from io import BytesIO
 from pathlib import Path
 
@@ -222,8 +223,17 @@ def main() -> dict:
         home_team    = ev.get("home_team", "")
         away_team    = ev.get("away_team", "")
         commence_time = ev.get("commence_time", "")
-        game_date    = commence_time[:10]
-        season       = int(commence_time[:4]) if commence_time else datetime.now(timezone.utc).year
+        # game_date = ET calendar date of game start (Odds API commence_time is UTC;
+        # west coast evening games cross midnight UTC so [:10] would give wrong date)
+        _et = ZoneInfo("America/New_York")
+        game_date = (
+            datetime.fromisoformat(commence_time.rstrip("Z"))
+            .replace(tzinfo=timezone.utc)
+            .astimezone(_et)
+            .strftime("%Y-%m-%d")
+            if commence_time else datetime.now(_et).strftime("%Y-%m-%d")
+        )
+        season       = int(game_date[:4])
 
         odds_rows, credits_after = _fetch_event_odds(event_id, api_key)
         print(
