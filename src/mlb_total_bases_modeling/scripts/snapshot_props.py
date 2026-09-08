@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from io import BytesIO
@@ -194,6 +195,14 @@ def _build_last_odds_json(row: pd.Series) -> str | None:
     })
 
 
+_ET = ZoneInfo("America/New_York")
+
+
+def _log(msg: str) -> None:
+    ts = datetime.now(timezone.utc).astimezone(_ET).strftime("%I:%M:%S %p ET")
+    print(f"[{ts}] {msg}")
+
+
 def main() -> dict:
     """
     Fetch live prop snapshots and write to S3.
@@ -201,30 +210,30 @@ def main() -> dict:
     Returns:
         {"rows_written": int, "credits_used": int, "credits_after": int}
     """
+    t0 = time.monotonic()
     api_key = _api_key()
     s3 = boto3.client("s3")
 
     # Step 1: record credits_before + get today's events
     events, credits_before = _get_events(api_key)
-    print(f"Events fetched: {len(events)}, credits_before={credits_before:,}")
+    _log(f"Events fetched: {len(events)}, credits_before={credits_before:,}")
 
     if not events:
-        print("No events returned from Odds API.")
+        _log("No events returned from Odds API.")
         return {"rows_written": 0, "credits_used": 0, "credits_after": credits_before}
 
     snapshot_ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     snapshot_ts_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    _et = ZoneInfo("America/New_York")
-    snapshot_ts_et  = datetime.now(timezone.utc).astimezone(_et).strftime("%Y-%m-%d %I:%M %p ET")
+    snapshot_ts_et  = datetime.now(timezone.utc).astimezone(_ET).strftime("%Y-%m-%d %I:%M %p ET")
 
     # Step 2: fetch odds per event
     all_rows: list[dict] = []
     credits_after = credits_before  # will be updated on each call
 
     for ev in events:
-        event_id     = ev["id"]
-        home_team    = ev.get("home_team", "")
-        away_team    = ev.get("away_team", "")
+        event_id      = ev["id"]
+        home_team     = ev.get("home_team", "")
+        away_team     = ev.get("away_team", "")
         commence_time = ev.get("commence_time", "")
         # game_date = ET calendar date of game start (Odds API commence_time is UTC;
         # west coast evening games cross midnight UTC so [:10] would give wrong date)
@@ -232,19 +241,19 @@ def main() -> dict:
             _ct_et = (
                 datetime.fromisoformat(commence_time.rstrip("Z"))
                 .replace(tzinfo=timezone.utc)
-                .astimezone(_et)
+                .astimezone(_ET)
             )
             game_date_et     = _ct_et.strftime("%Y-%m-%d")
             game_date_utc    = commence_time[:10]
             commence_time_et = _ct_et.strftime("%Y-%m-%d %I:%M %p ET")
         else:
-            game_date_et     = datetime.now(_et).strftime("%Y-%m-%d")
+            game_date_et     = datetime.now(_ET).strftime("%Y-%m-%d")
             game_date_utc    = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             commence_time_et = ""
         season = int(game_date_et[:4])
 
         odds_rows, credits_after = _fetch_event_odds(event_id, api_key)
-        print(
+        _log(
             f"  {game_date_et}  {away_team[:15]:15} @ {home_team[:15]:15}  "
             f"{len(odds_rows):4} rows  credits={credits_after:,}"
         )
@@ -270,7 +279,7 @@ def main() -> dict:
             })
 
     if not all_rows:
-        print("No prop rows fetched.")
+        _log("No prop rows fetched.")
         return {
             "rows_written": 0,
             "credits_used": credits_before - credits_after,
@@ -280,18 +289,33 @@ def main() -> dict:
     df = pd.DataFrame(all_rows)
 
     # Step 3: first-seen detection per game_date_et
+    t3 = time.monotonic()
+    _log(f"Step 3: first-seen detection ({len(df):,} rows across {df['game_date_et'].nunique()} game date(s))...")
     for game_date_et, grp_idx in df.groupby("game_date_et").groups.items():
         grp    = df.loc[grp_idx]
         season = int(grp["season"].iloc[0])
 
         existing = _load_existing_snapshots(s3, season, game_date_et)
+        _log(f"  {game_date_et}: {len(existing):,} existing rows loaded")
 
         if existing.empty:
             already_seen: set[tuple] = set()
+            prior_lookup: dict[tuple, pd.Series] = {}
         else:
             already_seen = set(
                 zip(existing["player_name"], existing["event_id"])
             )
+            # Pre-compute most-recent prior row per (player, event, book, market)
+            # so the inner loop does O(1) dict lookups instead of O(m) mask scans.
+            _key_cols = ["player_name", "event_id", "bookmaker", "market_key"]
+            _most_recent = (
+                existing.sort_values("snapshot_ts_utc", ascending=False)
+                .drop_duplicates(subset=_key_cols, keep="first")
+            )
+            prior_lookup = {
+                (r["player_name"], r["event_id"], r["bookmaker"], r["market_key"]): r
+                for _, r in _most_recent.iterrows()
+            }
 
         for idx in grp_idx:
             player_name = df.at[idx, "player_name"]
@@ -303,23 +327,13 @@ def main() -> dict:
                 df.at[idx, "last_odds_player_game"]         = None
             else:
                 df.at[idx, "binary_player_game_first_seen"] = False
-                # Look up most recent prior row for this player × event × bookmaker × market_key
                 bookmaker  = df.at[idx, "bookmaker"]
                 market_key = df.at[idx, "market_key"]
-                if not existing.empty:
-                    mask = (
-                        (existing["player_name"] == player_name)
-                        & (existing["event_id"]   == event_id)
-                        & (existing["bookmaker"]  == bookmaker)
-                        & (existing["market_key"] == market_key)
-                    )
-                    prior = existing.loc[mask]
-                    if not prior.empty:
-                        # Most recent by snapshot_ts_utc
-                        prior_sorted = prior.sort_values("snapshot_ts_utc", ascending=False)
-                        df.at[idx, "last_odds_player_game"] = _build_last_odds_json(
-                            prior_sorted.iloc[0]
-                        )
+                prior_row  = prior_lookup.get((player_name, event_id, bookmaker, market_key))
+                if prior_row is not None:
+                    df.at[idx, "last_odds_player_game"] = _build_last_odds_json(prior_row)
+
+    _log(f"Step 3 done in {time.monotonic()-t3:.1f}s")
 
     # Step 4: enforce dtypes
     df["binary_player_game_first_seen"] = df["binary_player_game_first_seen"].astype(bool)
@@ -327,6 +341,8 @@ def main() -> dict:
     df["credits_after"] = credits_after  # update with final value from last API call
 
     # Step 5: write one parquet per game_date_et
+    t5 = time.monotonic()
+    _log("Step 5: writing parquets to S3...")
     total_rows = 0
     for game_date_et, grp_idx in df.groupby("game_date_et").groups.items():
         grp    = df.loc[grp_idx].copy()
@@ -336,11 +352,14 @@ def main() -> dict:
         buf = BytesIO()
         grp.to_parquet(buf, index=False)
         s3.put_object(Bucket=S3_BUCKET, Key=s3_key, Body=buf.getvalue())
-        print(f"  Written → s3://{S3_BUCKET}/{s3_key}  ({len(grp):,} rows)")
+        _log(f"  Written → s3://{S3_BUCKET}/{s3_key}  ({len(grp):,} rows)")
         total_rows += len(grp)
 
     credits_used = credits_before - credits_after
-    print(f"Done. rows_written={total_rows:,}  credits_used={credits_used}  credits_after={credits_after:,}")
+    _log(
+        f"Done. rows_written={total_rows:,}  credits_used={credits_used}  "
+        f"credits_after={credits_after:,}  runtime={time.monotonic()-t0:.1f}s"
+    )
     return {
         "rows_written":  total_rows,
         "credits_used":  credits_used,
