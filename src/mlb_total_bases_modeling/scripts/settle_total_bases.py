@@ -43,7 +43,18 @@ import pybaseball as pb
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+import yaml
+
+from src.mlb_total_bases_modeling.scripts.compute_clv import compute_clv
+from src.mlb_total_bases_modeling.scripts.compute_tightening import compute_tightening
+
 pb.cache.enable()
+
+_CONFIG_PATH = REPO_ROOT / "src/mlb_total_bases_modeling/config.yaml"
+with open(_CONFIG_PATH) as _f:
+    _CFG = yaml.safe_load(_f)
+_STRATEGY_MARKETS: list[str] = _CFG["strategy"]["markets"]
+_STRATEGY_LINES: list[float] = [float(x) for x in _CFG["strategy"]["lines"]]
 
 S3_BUCKET     = "the-odds-api-mt"
 DAILY_PREFIX  = "mlb/total_bases_model/daily_runs"
@@ -221,9 +232,66 @@ def settle_bets(bets: pd.DataFrame, actuals: pd.DataFrame) -> pd.DataFrame:
 
 # ── Email ─────────────────────────────────────────────────────────────────────
 
-def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday: str) -> str:
+def _clv_color(cents) -> str:
+    if cents is None or (isinstance(cents, float) and pd.isna(cents)):
+        return "#888"
+    return "#276221" if float(cents) >= 0 else "#c0392b"
+
+
+def _fmt_clv(cents) -> str:
+    if cents is None or (isinstance(cents, float) and pd.isna(cents)):
+        return "—"
+    return f"{int(cents):+d}¢"
+
+
+def build_html_email(
+    settled_today: pd.DataFrame,
+    history: pd.DataFrame,
+    gameday: str,
+    clv_df: pd.DataFrame | None = None,
+    tightening_df: pd.DataFrame | None = None,
+) -> str:
     he = html_module.escape
+    if clv_df is None:
+        clv_df = pd.DataFrame()
+    if tightening_df is None:
+        tightening_df = pd.DataFrame()
+
     settled  = settled_today[settled_today["outcome"] != "no_data"].copy()
+
+    # Join CLV into settled: player_name + bookmaker, prefer batter_total_bases market_key
+    if not clv_df.empty and "player_name" in clv_df.columns and "bookmaker" in clv_df.columns:
+        clv_for_join = (
+            clv_df
+            .sort_values(
+                "market_key",
+                key=lambda s: s.map(lambda v: 0 if v == "batter_total_bases" else 1),
+            )
+            .drop_duplicates(subset=["player_name", "bookmaker"], keep="first")
+            [["player_name", "bookmaker",
+              "clv_first_seen_cents", "clv_9am_cents",
+              "clv_line_shift", "clv_tier",
+              "consensus_clv_first_seen", "consensus_clv_9am"]]
+        )
+        settled = settled.merge(clv_for_join, on=["player_name", "bookmaker"], how="left")
+        # Fall back to consensus CLV for rows that didn't match on bookmaker
+        if "consensus_clv_first_seen" in clv_df.columns:
+            consensus_by_player = (
+                clv_df
+                .drop_duplicates(subset=["player_name", "market_key"])
+                .groupby("player_name")[["consensus_clv_first_seen", "consensus_clv_9am"]]
+                .first()
+                .reset_index()
+                .rename(columns={
+                    "consensus_clv_first_seen": "_cons_fs",
+                    "consensus_clv_9am":        "_cons_9am",
+                })
+            )
+            settled = settled.merge(consensus_by_player, on="player_name", how="left")
+            no_clv = settled["clv_first_seen_cents"].isna()
+            settled.loc[no_clv, "clv_first_seen_cents"] = settled.loc[no_clv, "_cons_fs"]
+            settled.loc[no_clv, "clv_9am_cents"]        = settled.loc[no_clv, "_cons_9am"]
+            settled.drop(columns=["_cons_fs", "_cons_9am"], inplace=True, errors="ignore")
     no_data  = (settled_today["outcome"] == "no_data").sum()
     # Headline stats are plays-only; tracks are paper and shown separately below
     plays    = settled[settled["tier"] == "play"] if "tier" in settled.columns else settled
@@ -277,6 +345,25 @@ def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday
             return "<span style='color:#b8860b;font-weight:bold'>track</span>"
         return "<span style='color:#888'>—</span>"
 
+    HAS_CLV = "clv_first_seen_cents" in settled.columns
+
+    def clv_tds(r):
+        if not HAS_CLV:
+            return ""
+        fs    = r.get("clv_first_seen_cents")
+        nine  = r.get("clv_9am_cents")
+        tier  = str(r.get("clv_tier", ""))
+        tier_colors = {
+            "ok": "#888", "mild": "#b8860b", "moderate": "#e67e22",
+            "strong": "#e74c3c", "severe": "#8e44ad",
+        }
+        tc = tier_colors.get(tier, "#888")
+        return (
+            f"<td style='text-align:center;color:{_clv_color(fs)};font-weight:bold'>{_fmt_clv(fs)}</td>"
+            f"<td style='text-align:center;color:{_clv_color(nine)};font-weight:bold'>{_fmt_clv(nine)}</td>"
+            f"<td style='text-align:center;color:{tc};font-size:11px'>{he(tier) if tier else '—'}</td>"
+        )
+
     def bet_row(r):
         book = he(str(r.get("bookmaker", "—"))) if HAS_BOOK else "—"
         bg = tier_bg(r)
@@ -292,10 +379,12 @@ def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday
             f"<td style='text-align:center'>{dec_to_american(r.get('dec_odds_under'))}</td>"
             f"{outcome_td(r['outcome'])}"
             f"<td style='text-align:center;font-weight:bold'>{fmt_pnl(r['pnl'])}</td>"
+            f"{clv_tds(r)}"
             f"</tr>\n"
         )
 
-    COL_HEADERS = "<tr><th>Player</th><th>Tier</th><th>Book</th><th>Actual Total Bases</th><th>Line</th><th>Market Under%</th><th>Edge</th><th>Under Odds</th><th>Outcome</th><th>P&amp;L</th></tr>"
+    _clv_hdrs = "<th title='CLV: first-seen price vs close'>CLV-FS¢</th><th title='CLV: 9am ET price vs close'>CLV-9am¢</th><th>CLV Tier</th>" if HAS_CLV else ""
+    COL_HEADERS = f"<tr><th>Player</th><th>Tier</th><th>Book</th><th>Actual Total Bases</th><th>Line</th><th>Market Under%</th><th>Edge</th><th>Under Odds</th><th>Outcome</th><th>P&amp;L</th>{_clv_hdrs}</tr>"
 
     # ── Part 1: All bets sorted by P&L ────────────────────────────────────────
     part1_rows = "".join(bet_row(r) for _, r in settled.sort_values("pnl", ascending=False).iterrows())
@@ -412,13 +501,61 @@ def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday
         if tier_parts:
             today_tier_html = " &nbsp;·&nbsp; ".join(tier_parts)
 
+    # ── CLV summary for footer ────────────────────────────────────────────────
+    clv_footer_html = ""
+    if HAS_CLV and not settled.empty:
+        plays_only = settled[settled.get("tier", pd.Series(["play"] * len(settled), index=settled.index)) == "play"] if "tier" in settled.columns else settled
+        clv_vals = plays_only["clv_first_seen_cents"].dropna()
+        if not clv_vals.empty:
+            avg_clv   = clv_vals.mean()
+            pct_beat  = (clv_vals > 0).mean()
+            clv_color = "#276221" if avg_clv >= 0 else "#c0392b"
+            clv_footer_html = (
+                f" &nbsp;·&nbsp; <strong>CLV (first-seen):</strong> avg "
+                f"<span style='color:{clv_color}'>{avg_clv:+.1f}¢</span>, "
+                f"{pct_beat:.0%} beat close"
+            )
+
+    # ── Tightening watch section ──────────────────────────────────────────────
+    tightening_html = ""
+    if not tightening_df.empty:
+        flagged_tig = tightening_df[tightening_df["tightening_flag"].isin(["mild", "moderate", "strong", "severe"])]
+        if not flagged_tig.empty:
+            tig_rows = ""
+            flag_colors = {
+                "mild": "#b8860b", "moderate": "#e67e22",
+                "strong": "#e74c3c", "severe": "#8e44ad",
+            }
+            for _, r in flagged_tig.iterrows():
+                fc = flag_colors.get(str(r["tightening_flag"]), "#888")
+                avg_odds_s   = f"{float(r['avg_under_odds_season']):+.0f}¢" if pd.notna(r.get("avg_under_odds_season")) else "—"
+                today_odds_s = f"{float(r['today_avg_under_odds']):+.0f}" if pd.notna(r.get("today_avg_under_odds")) else "—"
+                n_games_s    = str(int(r["n_games_season"])) if pd.notna(r.get("n_games_season")) else "—"
+                tig_rows += (
+                    f"<tr>"
+                    f"<td>{he(str(r['player_name']))}</td>"
+                    f"<td style='text-align:center'>{n_games_s}</td>"
+                    f"<td style='text-align:center'>{avg_odds_s}</td>"
+                    f"<td style='text-align:center'>{today_odds_s}</td>"
+                    f"<td style='text-align:center;color:{_clv_color(r.get('odds_drift_cents'))};font-weight:bold'>{_fmt_clv(r.get('odds_drift_cents'))}</td>"
+                    f"<td style='text-align:center;color:{fc};font-weight:bold'>{he(str(r['tightening_flag']))}</td>"
+                    f"</tr>\n"
+                )
+            tightening_html = f"""
+<p style='font-weight:600;font-size:13px;color:#555;margin:24px 0 6px'>&#x26A0;&#xFE0F; Tightening Watch — {len(flagged_tig)} player{'s' if len(flagged_tig) != 1 else ''}</p>
+<p style='font-size:11px;color:#888;margin:0 0 6px'>Players whose under odds have drifted adversely vs season-to-date baseline</p>
+<table style='width:auto'>
+  <tr><th>Player</th><th>Games (Season)</th><th>Season Avg Odds</th><th>Today Avg Odds</th><th>Drift</th><th>Flag</th></tr>
+  {tig_rows}
+</table>"""
+
     no_data_str = f" / {no_data} no data" if no_data else ""
     tier_line = f"<p style='font-size:12px;color:#555;margin-top:4px'>{today_tier_html}</p>" if today_tier_html else ""
 
     return f"""<!DOCTYPE html>
 <html><head><meta charset='utf-8'>
 <style>
-  body {{font-family:{_SANS};color:#222;max-width:900px;margin:auto;padding:20px}}
+  body {{font-family:{_SANS};color:#222;max-width:1100px;margin:auto;padding:20px}}
   h2 {{color:#2c3e50}}
   table {{border-collapse:collapse;width:100%;margin-top:8px}}
   th {{background:#2c3e50;color:#fff;padding:7px 10px;text-align:left;font-size:12px;white-space:nowrap}}
@@ -441,7 +578,9 @@ def build_html_email(settled_today: pd.DataFrame, history: pd.DataFrame, gameday
 
 {part3_html}
 
-<div class='footer'>{summary_html}</div>
+{tightening_html}
+
+<div class='footer'>{summary_html}{clv_footer_html}</div>
 </body></html>"""
 
 
@@ -485,6 +624,14 @@ def main():
         msg = f"No bet sheet found for {gameday}"
         print(msg)
         publish_sns(f"MLB TB settlement — no bets {gameday}", msg)
+        if args.output:
+            import json as _json
+            Path(args.output).write_text(_json.dumps({
+                "html_body": "", "subject": "",
+                "yesterday_wins": 0, "yesterday_losses": 0, "yesterday_units": 0.0,
+                "season_wins": 0, "season_losses": 0, "season_units": 0.0,
+                "n_play_bets": 0, "n_play_players": 0,
+            }))
         return
 
     bets["name_norm"] = bets["player_name"].map(normalize_name)
@@ -498,6 +645,14 @@ def main():
     if actuals.empty:
         print("  No Statcast data — skipping settlement (will retry tomorrow)")
         publish_sns(f"MLB TB settlement — no Statcast data {gameday}", "Statcast data not yet available.")
+        if args.output:
+            import json as _json
+            Path(args.output).write_text(_json.dumps({
+                "html_body": "", "subject": "",
+                "yesterday_wins": 0, "yesterday_losses": 0, "yesterday_units": 0.0,
+                "season_wins": 0, "season_losses": 0, "season_units": 0.0,
+                "n_play_bets": 0, "n_play_players": 0,
+            }))
         return
 
     # Settle
@@ -521,12 +676,14 @@ def main():
         (settled.get("tier", pd.Series(["play"] * len(settled), index=settled.index)) == "play")
     ].copy()
     settled_rows["won"] = (settled_rows["outcome"] == "win").astype(int)
+    settled_rows["binary_no_real_money"] = 1
 
     keep_cols = [c for c in ["game_date", "player_name", "name_norm", "line", "bet_direction",
                               "bookmaker", "home_team", "away_team", "game_time_et",
                               "n_books", "novig_prob_over", "novig_prob_under",
                               "p_model", "p_market", "edge_under", "dec_odds_under",
-                              "tier", "actual_tb", "outcome", "won", "pnl"] if c in settled_rows.columns]
+                              "tier", "actual_tb", "outcome", "won", "pnl",
+                              "binary_no_real_money"] if c in settled_rows.columns]
     if "bet_direction" not in settled_rows.columns:
         settled_rows["bet_direction"] = "under"
     if not history.empty:
@@ -541,11 +698,31 @@ def main():
     save_settled_history(updated)
     print(f"  Updated history: {len(updated)} total rows")
 
+    # Compute CLV and tightening (degrade silently if no snapshot data yet)
+    season = int(gameday[:4])
+    clv_df = pd.DataFrame()
+    tightening_df = pd.DataFrame()
+    try:
+        clv_df = compute_clv(gameday, season, markets=_STRATEGY_MARKETS, lines=_STRATEGY_LINES)
+        print(f"  CLV rows computed: {len(clv_df)}")
+    except Exception as e:
+        print(f"  CLV skipped: {e}")
+    try:
+        # Exclude no_data players — tightening only meaningful for players who actually batted
+        player_names = (
+            settled[settled["outcome"] != "no_data"]["player_name"]
+            .dropna().unique().tolist()
+        )
+        tightening_df = compute_tightening(gameday, season, players=player_names, markets=_STRATEGY_MARKETS, lines=_STRATEGY_LINES)
+        print(f"  Tightening rows computed: {len(tightening_df)}")
+    except Exception as e:
+        print(f"  Tightening skipped: {e}")
+
     # Email — subject line reflects plays only
     n_play_unique = len(settled_rows["player_name"].unique()) if not settled_rows.empty else 0
     n_play_bets   = len(settled_rows)
     subject = f"MLB Total Bases — {n_play_unique} players ({n_play_bets} play bets) {wins}W/{losses}L {units:+.2f}u — {gameday}"
-    html_body = build_html_email(settled, updated, gameday)
+    html_body = build_html_email(settled, updated, gameday, clv_df=clv_df, tightening_df=tightening_df)
 
     # Current-season all-time stats (plays only, for combined-email subject line)
     year = datetime.now(ET).year

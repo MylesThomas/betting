@@ -29,11 +29,16 @@ model:
     production_lines: [0.5, 1.5]   # lines with calibration models in bundle
     # Params (IS):  line=0.5: a=+1.188 b=-1.255 | line=1.5: a=+1.224 b=-2.391
 
+    evaluation:
+      max_calibration_error: 0.03  # |actual_rate - p_model_under| ≤ 3pp = ✓; > 3pp = ✗
+      min_bin_n: 100               # bins below this n get ~ (thin — no judgment)
+
   s3_key: "mlb/total_bases_model/model/mlb_tb_regression_v2.joblib"
   spine_key: "mlb/total_bases_model/spine/mlb_total_bases_spine.parquet"
 
 strategy:
   side: UNDER
+  markets: [batter_total_bases]
   lines: [1.5]            # line=0.5 shows no edge in out-of-sample grid search
   min_bet_edge: 0.05      # green rows in email — actually bet these (raw edge)
   min_track_edge: 0.03    # yellow rows in email — paper track only (raw edge)

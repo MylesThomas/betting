@@ -36,7 +36,7 @@ import re
 import sys
 import time
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -68,6 +68,13 @@ SPINE_KEY     = "mlb/total_bases_model/spine/mlb_total_bases_spine.parquet"
 MODEL_KEY     = "mlb/total_bases_model/model/mlb_tb_regression_v2.joblib"
 DAILY_PREFIX  = "mlb/total_bases_model/daily_runs"
 SETTLED_KEY   = "mlb/total_bases_model/settled/mlb_tb_settled_bets.parquet"
+TIERS_KEY     = "mlb/total_bases_model/tiers/mlb_tb_player_tiers.parquet"
+
+BOL_BOOK      = "betonlineag"
+BOL_MIN_EDGE  = 0.07   # OOS +13.5% ROI vs +5.5% at 5pp (208 bets, 2026)
+BOL_LINE      = 1.5
+BOL_EVEN_LO   = 0.524  # raw_prob_under range where BetOnline is sharp (OOS −39%)
+BOL_EVEN_HI   = 0.545
 
 SES_SOURCE    = os.environ.get("SES_SOURCE", "").strip()
 SES_TO_RAW    = os.environ.get("SES_TO", "mylescgthomas@gmail.com").strip()
@@ -267,7 +274,9 @@ def build_market_consensus(rows: list[dict], event_id: str, home_team: str, away
 
     # Per-book df (one row per player-line-book, used for per-book edge expansion)
     per_book = df[["name_norm", "player_name", "line", "bookmaker",
-                   "over_price", "under_price", "novig_over", "novig_under"]].copy()
+                   "over_price", "under_price", "raw_prob_under",
+                   "novig_over", "novig_under"]].copy()
+    per_book["event_id"]    = event_id
     per_book["home_team"]   = home_team
     per_book["away_team"]   = away_team
     per_book["game_time_et"] = gtime
@@ -446,7 +455,7 @@ def _time_sort_key(t: str) -> int:
         return 9999
 
 
-def _season_cards_html(season_stats: dict | None) -> str:
+def _season_cards_html(season_stats: dict | None, yesterday_stats: dict | None = None) -> str:
     def card(label: str, value: str, green: bool = False) -> str:
         color = "#276221" if green else "#222"
         return (
@@ -458,32 +467,137 @@ def _season_cards_html(season_stats: dict | None) -> str:
             f"</div>"
         )
 
-    if not season_stats:
-        pnl_str    = "—"
-        record_str = "—"
-        win_str    = "—"
-        roi_str    = "—"
-        is_pos     = False
-    else:
-        u    = season_stats.get("units", 0.0)
-        w    = season_stats.get("wins", 0)
-        l    = season_stats.get("losses", 0)
-        roi  = season_stats.get("roi", 0.0)
-        pnl_str    = f"{u:+.2f}u"
-        record_str = f"{w}W – {l}L"
-        win_str    = f"{w/(w+l)*100:.1f}%" if (w + l) > 0 else "—"
-        roi_str    = f"{roi*100:+.1f}%"
-        is_pos     = u >= 0
+    def stats_row(stats: dict | None, label_prefix: str) -> str:
+        if not stats:
+            pnl_str    = "—"
+            record_str = "—"
+            win_str    = "—"
+            roi_str    = "—"
+            is_pos     = False
+        else:
+            u   = stats.get("units", 0.0)
+            w   = stats.get("wins", 0)
+            l   = stats.get("losses", 0)
+            roi = stats.get("roi", 0.0)
+            pnl_str    = f"{u:+.2f}u"
+            record_str = f"{w}W – {l}L"
+            win_str    = f"{w/(w+l)*100:.1f}%" if (w + l) > 0 else "—"
+            roi_str    = f"{roi*100:+.1f}%"
+            is_pos     = u >= 0
+        return (
+            f"<div style='display:flex;gap:12px;margin:8px 0;flex-wrap:wrap'>"
+            f"{card(f'{label_prefix} PNL', pnl_str, green=is_pos)}"
+            f"{card(f'{label_prefix} Record', record_str)}"
+            f"{card(f'{label_prefix} Win %', win_str, green=stats is not None and (stats.get('wins',0)/(stats.get('wins',0)+stats.get('losses',1)))>0.5)}"
+            f"{card(f'{label_prefix} ROI', roi_str, green=stats is not None and stats.get('roi',0)>=0)}"
+            f"</div>"
+        )
 
     year = datetime.now(ET).year
+    html = f"<div style='margin:16px 0 20px'>"
+    html += stats_row(yesterday_stats, "Yesterday")
+    html += stats_row(season_stats, f"{year} Season")
+    html += "</div>"
+    return html
+
+
+def _build_betonline_section(tiered_books: pd.DataFrame, tier_map: dict) -> str:
+    """Dedicated BetOnline section: line=1.5, edge≥7pp. ⚠ flags even-money odds."""
+    he = html_module.escape
+    if tiered_books.empty:
+        bol = pd.DataFrame()
+    else:
+        bol = tiered_books[
+            (tiered_books["bookmaker"] == BOL_BOOK) &
+            (tiered_books["line"] == BOL_LINE) &
+            (tiered_books["edge_under"] >= BOL_MIN_EDGE)
+        ].copy()
+        if not bol.empty:
+            bol["_tsort"] = bol["game_time_et"].map(_time_sort_key)
+            bol = bol.sort_values(["_tsort", "edge_under"], ascending=[True, False])
+
+    n = len(bol)
+    label = f"{n} bet{'s' if n != 1 else ''}"
+    color = "#1565c0" if n > 0 else "#888"
+
+    if bol.empty:
+        body = "<p style='color:#888;padding:8px 0;font-size:12px'>No BetOnline plays today at edge≥7pp, line=1.5.</p>"
+    else:
+        rows = ""
+        for _, r in bol.iterrows():
+            pm      = float(r.get("p_model", np.nan))
+            ru      = float(r.get("raw_prob_under", np.nan))
+            edge_u  = float(r.get("edge_under", np.nan))
+            is_even = BOL_EVEN_LO <= ru < BOL_EVEN_HI
+            warn    = (
+                " <span style='color:#e65100;font-size:11px' "
+                "title='Even-money zone: BetOnline historically sharp here (OOS −39%)'>⚠</span>"
+                if is_even else ""
+            )
+            star = (
+                "<span style='color:#f59e0b;margin-right:3px'>★</span>"
+                if tier_map.get(str(r.get("name_norm", ""))) == "superstar" else ""
+            )
+            try:
+                delta = format(float(r.get("y_hat", np.nan)) - BOL_LINE, "+.2f")
+            except Exception:
+                delta = "—"
+            bg = "background:#e3f2fd" if not is_even else "background:#fff8e1"
+            rows += (
+                f"<tr style='{bg}'>"
+                f"<td style='padding:5px 8px'>{star}{he(str(r.get('player_name','')))}{warn}</td>"
+                f"<td style='text-align:center;padding:5px 8px;color:#555'>{he(str(r.get('team','—')))}</td>"
+                f"<td style='text-align:center;padding:5px 8px;color:#555'>{he(str(r.get('opponent','—')))}</td>"
+                f"<td style='text-align:center;padding:5px 8px;color:#555'>{he(str(r.get('game_time_et','—')))}</td>"
+                f"<td style='text-align:center;padding:5px 8px;font-weight:bold;color:#1d4ed8'>{to_american(r.get('under_price'))}</td>"
+                f"<td style='text-align:center;padding:5px 8px'>{ru:.1%}</td>"
+                f"<td style='text-align:center;padding:5px 8px;color:#1565c0;font-weight:bold'>{1-pm:.1%}</td>"
+                f"<td style='text-align:center;padding:5px 8px;font-weight:bold;color:#276221'>{edge_u:+.1%}</td>"
+                f"<td style='text-align:center;padding:5px 8px;font-size:11px;color:#555'>{delta}</td>"
+                f"</tr>\n"
+            )
+        body = (
+            f"<table style='border-collapse:collapse;width:100%;margin-top:6px'>"
+            f"<tr style='background:#1565c0;color:#fff'>"
+            f"<th style='padding:6px 8px;text-align:left'>Player</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Team</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Opp</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Time (ET)</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Under Odds</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Mkt Under%</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Model Under%</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Edge</th>"
+            f"<th style='padding:6px 8px;text-align:center'>Δ vs Line</th>"
+            f"</tr>"
+            f"{rows}</table>"
+            f"<p style='font-size:10px;color:#888;margin-top:4px'>"
+            f"Blue rows = bet · Yellow rows = ⚠ even-money zone (BetOnline OOS −39% ROI, caution) · "
+            f"Backtest: IS +9.15% ROI (n=1,657) · OOS +13.50% ROI (n=208)"
+            f"</p>"
+        )
+
     return (
-        f"<div style='display:flex;gap:12px;margin:16px 0 20px;flex-wrap:wrap'>"
-        f"{card(f'{year} PNL (plays)', pnl_str, green=is_pos)}"
-        f"{card('Record (plays)', record_str)}"
-        f"{card('Win %', win_str, green=season_stats is not None and (season_stats.get('wins',0)/(season_stats.get('wins',0)+season_stats.get('losses',1)))>0.5)}"
-        f"{card('ROI (plays)', roi_str, green=season_stats is not None and season_stats.get('roi',0)>=0)}"
-        f"</div>"
+        f"<details open>"
+        f"<summary style='font-weight:600;font-size:14px;cursor:pointer;padding:10px 0;"
+        f"color:#1565c0;user-select:none'>"
+        f"▸ BetOnline &nbsp;"
+        f"<span style='font-weight:normal;color:{color}'>"
+        f"({label} · UNDER 1.5 · edge≥7pp)</span>"
+        f"</summary>"
+        f"{body}"
+        f"</details>\n"
     )
+
+
+def _player_cell(player_name: str, name_norm: str, tier_map: dict,
+                 extra_style: str = "") -> str:
+    star = (
+        "<span style='color:#f59e0b;margin-right:3px' title='Superstar'>★</span>"
+        if tier_map.get(str(name_norm)) == "superstar" else ""
+    )
+    he = html_module.escape
+    s = f"style='{extra_style}'" if extra_style else ""
+    return f"<td {s}>{star}{he(str(player_name))}</td>"
 
 
 def build_html_email(
@@ -494,8 +608,11 @@ def build_html_email(
     min_bet_edge: float,
     min_track_edge: float,
     season_stats: dict | None = None,
+    yesterday_stats: dict | None = None,
+    tier_map: dict | None = None,
 ) -> str:
     he = html_module.escape
+    tier_map = tier_map or {}
 
     play_books  = tiered_books[tiered_books["tier"] == "play"]  if not tiered_books.empty else pd.DataFrame()
     track_books = tiered_books[tiered_books["tier"] == "track"] if not tiered_books.empty else pd.DataFrame()
@@ -540,8 +657,8 @@ def build_html_email(
         tiered_bet["_tsort"]      = tiered_bet["game_time_et"].map(_time_sort_key)
         tiered_bet["_tier_order"] = tiered_bet["tier"].map({"play": 0, "track": 1})
         tiered_bet = tiered_bet.sort_values(
-            ["_tsort", "home_team", "_tier_order", "name_norm", "edge_under"],
-            ascending=[True, True, True, True, False],
+            ["_tsort", "home_team", "_tier_order", "edge_under", "name_norm"],
+            ascending=[True, True, True, False, True],
         )
 
     non_qual["_tsort"] = non_qual["game_time_et"].map(_time_sort_key)
@@ -611,8 +728,8 @@ def build_html_email(
             try:
                 pred_o  = pm
                 pred_u  = 1.0 - pm
-                edge_o  = pred_o - fo if fo is not None else None
-                edge_u  = pred_u - fu if fu is not None else None
+                edge_o  = pred_o - ro if ro is not None else None
+                edge_u  = pred_u - ru if ru is not None else None
             except Exception:
                 pred_o = pred_u = edge_o = edge_u = None
             try:
@@ -623,8 +740,8 @@ def build_html_email(
             rows_bet += (
                 f"<tr style='{bg}'>"
                 # Player / Game (5)
-                f"<td>{he(str(r.get('player_name','')))}</td>"
-                f"<td style='text-align:center'>{he(str(r.get('team','—')))}</td>"
+                + _player_cell(r.get("player_name",""), r.get("name_norm",""), tier_map)
+                + f"<td style='text-align:center'>{he(str(r.get('team','—')))}</td>"
                 f"<td style='text-align:center'>{he(str(r.get('opponent','—')))}</td>"
                 f"<td style='text-align:center'>{he(str(r.get('game_time_et','—')))}</td>"
                 f"<td style='text-align:center;{_CB}'>{fmt(r.get('line'),'.1f')}</td>"
@@ -687,8 +804,8 @@ def build_html_email(
             try:
                 pred_o  = pm
                 pred_u  = 1.0 - pm
-                edge_o  = pred_o - nq_fo if nq_fo is not None else None
-                edge_u  = pred_u - nq_fu if nq_fu is not None else None
+                edge_o  = pred_o - nq_ro if nq_ro is not None else None
+                edge_u  = pred_u - nq_ru if nq_ru is not None else None
             except Exception:
                 pred_o = pred_u = edge_o = edge_u = None
             try:
@@ -701,8 +818,8 @@ def build_html_email(
             rows_bet += (
                 f"<tr>"
                 # Player / Game (5)
-                f"<td style='color:#888'>{he(str(r.get('player_name','')))}</td>"
-                f"<td style='text-align:center;color:#aaa'>{he(str(r.get('team','—')))}</td>"
+                + _player_cell(r.get("player_name",""), r.get("name_norm",""), tier_map, "color:#888")
+                + f"<td style='text-align:center;color:#aaa'>{he(str(r.get('team','—')))}</td>"
                 f"<td style='text-align:center;color:#aaa'>{he(str(r.get('opponent','—')))}</td>"
                 f"<td style='text-align:center;color:#aaa'>{he(str(r.get('game_time_et','—')))}</td>"
                 f"<td style='text-align:center;color:#aaa;{_CB}'>{fmt(r.get('line'),'.1f')}</td>"
@@ -751,8 +868,8 @@ def build_html_email(
     for _, r in all_s.iterrows():
         rows_all += (
             f"<tr>"
-            f"<td>{he(str(r['player_name']))}</td>"
-            f"<td style='text-align:center;color:#555'>{he(str(r.get('team','—')))}</td>"
+            + _player_cell(r["player_name"], r.get("name_norm",""), tier_map)
+            + f"<td style='text-align:center;color:#555'>{he(str(r.get('team','—')))}</td>"
             f"<td style='text-align:center;color:#555'>{he(str(r.get('opponent','—')))}</td>"
             f"<td style='text-align:center;color:#555'>{he(str(r.get('game_time_et','—')))}</td>"
             f"<td style='text-align:center'>{fmt(r['line'], '.1f')}</td>"
@@ -762,6 +879,8 @@ def build_html_email(
             f"<td style='text-align:center'>{fmt(r['edge_under'], '+.1%')}</td>"
             f"</tr>\n"
         )
+
+    betonline_section = _build_betonline_section(tiered_books, tier_map)
 
     lines_str   = "+".join(str(l) for l in sorted(bet_lines))
     _pb  = "book"   if n_play_bets    == 1 else "books"
@@ -796,10 +915,11 @@ def build_html_email(
 <p style='font-size:11px;color:#888;margin-top:2px'>
   <span class='legend-play'></span>Green = PLAY (bet) &nbsp;&nbsp;
   <span class='legend-track'></span>Yellow = TRACK (paper only) &nbsp;&nbsp;
-  Grey = no edge (context only)
+  Grey = no edge (context only) &nbsp;&nbsp;
+  <span style='color:#f59e0b'>★</span> = Superstar (+10.9% OOS ROI)
 </p>
 
-{_season_cards_html(season_stats)}
+{_season_cards_html(season_stats, yesterday_stats)}
 
 <details open>
   <summary>▸ Strategy: UNDER {lines_str} &nbsp;<span style='font-weight:normal;color:#666'>({n_s1_rows} players scored · {n_play_bets} bets)</span></summary>
@@ -851,6 +971,8 @@ def build_html_email(
     {rows_bet}
   </table>
 </details>
+
+{betonline_section}
 
 <details>
   <summary>▸ All live props &nbsp;<span style='font-weight:normal;color:#666'>({len(all_scored)} total across all lines)</span></summary>
@@ -979,6 +1101,20 @@ def main():
 
     consensus_df = pd.concat(all_rows, ignore_index=True)
     consensus_df = consensus_df[(consensus_df["novig_prob_over"] >= novig_min)].copy()
+
+    # Recompute min_line/max_line globally across ALL events so every row for a given
+    # player sees the same feature value regardless of which event it came from.
+    # (Per-event computation inside build_market_consensus is wrong when a player
+    # appears in multiple events, e.g. doubleheaders or duplicate Odds API event IDs.)
+    if not consensus_df.empty:
+        line_range_global = (
+            consensus_df.groupby("name_norm")["line"]
+            .agg(min_line="min", max_line="max")
+            .reset_index()
+        )
+        consensus_df = consensus_df.drop(columns=["min_line", "max_line"], errors="ignore")
+        consensus_df = consensus_df.merge(line_range_global, on="name_norm", how="left")
+
     book_rows_df = pd.concat(all_book_rows, ignore_index=True) if all_book_rows else pd.DataFrame()
     print(f"\nTotal scored props (after novig filter): {len(consensus_df)}")
 
@@ -991,6 +1127,17 @@ def main():
         return
 
     print(f"Scored: {len(scored)} player-lines")
+
+    # y_hat must be identical across all books for the same (player, line) — it is a
+    # property of the player+matchup, not the book. If this fires, a per-book feature
+    # has entered the model inputs and all downstream probabilities and edges are wrong.
+    yhat_check = scored.groupby(["name_norm", "line"])["y_hat"].nunique()
+    if (yhat_check > 1).any():
+        bad = yhat_check[yhat_check > 1].reset_index()[["name_norm", "line"]].values.tolist()
+        raise RuntimeError(
+            f"y_hat is not book-invariant for {len(bad)} (player, line) groups: {bad[:5]}. "
+            f"A per-book feature has entered the model inputs — do not send email."
+        )
 
     # Expand to per-book, tag tier=play|track
     per_book_scored = expand_to_books(scored, book_rows_df)
@@ -1022,29 +1169,60 @@ def main():
 
     if not tiered_books.empty:
         bets_key = f"{DAILY_PREFIX}/{gameday}/recommendations.csv"
-        s3_put_csv(bets_key, tiered_books)
-        print(f"  Recs   → s3://{S3_BUCKET}/{bets_key}  ({n_play_bets} plays + {n_track_bets} tracks)")
+        already_exists = False
+        try:
+            _s3().head_object(Bucket=S3_BUCKET, Key=bets_key)
+            already_exists = True
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] != "404":
+                raise
+        if already_exists:
+            print(f"  Recs   → skipped (already exists for {gameday}, preserving first write)")
+        else:
+            s3_put_csv(bets_key, tiered_books)
+            print(f"  Recs   → s3://{S3_BUCKET}/{bets_key}  ({n_play_bets} plays + {n_track_bets} tracks)")
 
-    # Load settled history for season P&L cards (best-effort — never blocks pipeline)
-    season_stats = None
+    # Load player tiers (best-effort — never blocks pipeline)
+    tier_map: dict[str, str] = {}
+    try:
+        tiers_df = s3_get_parquet(TIERS_KEY)
+        tier_map = dict(zip(tiers_df["name_norm"], tiers_df["recognition_tier"].astype(str)))
+        n_ss = sum(1 for v in tier_map.values() if v == "superstar")
+        print(f"  Tiers loaded: {len(tier_map):,} players ({n_ss} superstars)")
+    except Exception as e:
+        print(f"  Tiers unavailable: {e}")
+
+    # Load settled history for season + yesterday P&L cards (best-effort — never blocks pipeline)
+    season_stats    = None
+    yesterday_stats = None
     try:
         body = _s3().get_object(Bucket=S3_BUCKET, Key=SETTLED_KEY)["Body"].read()
         hist = pd.read_parquet(BytesIO(body))
         if not hist.empty and "tier" in hist.columns and "pnl" in hist.columns:
-            year = datetime.now(ET).year
-            plays = hist[
-                (hist["tier"] == "play") &
-                (hist["game_date"].astype(str).str[:4] == str(year)) &
-                (hist["pnl"].notna())
-            ]
-            if not plays.empty:
+            year      = datetime.now(ET).year
+            yesterday = (datetime.now(ET).date() - timedelta(days=1)).strftime("%Y-%m-%d")
+            all_plays = hist[(hist["tier"] == "play") & hist["pnl"].notna()]
+
+            season_plays = all_plays[all_plays["game_date"].astype(str).str[:4] == str(year)]
+            if not season_plays.empty:
                 season_stats = {
-                    "units":  float(plays["pnl"].sum()),
-                    "wins":   int((plays["pnl"] > 0).sum()),
-                    "losses": int((plays["pnl"] < 0).sum()),
-                    "roi":    float(plays["pnl"].mean()),
+                    "units":  float(season_plays["pnl"].sum()),
+                    "wins":   int((season_plays["pnl"] > 0).sum()),
+                    "losses": int((season_plays["pnl"] < 0).sum()),
+                    "roi":    float(season_plays["pnl"].mean()),
                 }
-                print(f"  Season stats (plays): {season_stats}")
+
+            yest_plays = all_plays[all_plays["game_date"].astype(str).str[:10] == yesterday]
+            if not yest_plays.empty:
+                yesterday_stats = {
+                    "units":  float(yest_plays["pnl"].sum()),
+                    "wins":   int((yest_plays["pnl"] > 0).sum()),
+                    "losses": int((yest_plays["pnl"] < 0).sum()),
+                    "roi":    float(yest_plays["pnl"].mean()),
+                }
+
+            print(f"  Season stats:    {season_stats}")
+            print(f"  Yesterday stats: {yesterday_stats}")
     except Exception as e:
         print(f"  Season stats unavailable: {e}")
 
@@ -1054,7 +1232,7 @@ def main():
         f"MLB Total Bases — {n_play_bets} play{'s' if n_play_bets != 1 else ''} · "
         f"{n_track_bets} track{'s' if n_track_bets != 1 else ''} — {gameday}"
     )
-    html_body = build_html_email(tiered_books, scored, gameday, BET_LINES, MIN_BET_EDGE, MIN_TRACK_EDGE, season_stats)
+    html_body = build_html_email(tiered_books, scored, gameday, BET_LINES, MIN_BET_EDGE, MIN_TRACK_EDGE, season_stats, yesterday_stats, tier_map)
 
     if args.output:
         import json as _json

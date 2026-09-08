@@ -122,7 +122,7 @@ def lambda_handler(event, context):
 
     try:
         if mode == "spine_update":
-            _run_capture(
+            spine_out = _run_capture(
                 [sys.executable, str(scripts_dir / "update_spine.py")],
                 cwd=root,
             )
@@ -178,7 +178,7 @@ def lambda_handler(event, context):
             s_loss     = settle_data.get("season_losses", 0)
             s_units    = settle_data.get("season_units",  0.0)
 
-            yesterday_str = f"{yest_wins}W/{yest_loss}L {yest_units:+.2f}u"
+            yesterday_str = "no bets" if (yest_wins == 0 and yest_loss == 0) else f"{yest_wins}W/{yest_loss}L {yest_units:+.2f}u"
             season_str    = f"{s_wins}W/{s_loss}L {s_units:+.2f}u"
             play_word     = "play" if n_plays == 1 else "plays"
             subject = (
