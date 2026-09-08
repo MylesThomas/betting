@@ -40,6 +40,11 @@ def _repo_root() -> Path:
         current = current.parent
 
 
+_ROOT = _repo_root()
+sys.path.insert(0, str(_ROOT / "src"))
+from spine_email_utils import build_spine_update_html, build_spine_update_subject  # noqa: E402
+
+
 def _resolve_mode(event: dict | None) -> str:
     if not event or "mode" not in event:
         raise ValueError("Event must include 'mode' key")
@@ -71,6 +76,24 @@ def _publish_sns(topic_arn: str, subject: str, message: str) -> None:
     if not topic_arn:
         return
     boto3.client("sns").publish(TopicArn=topic_arn, Subject=subject[:100], Message=message)
+
+
+def _send_ses(subject: str, html_body: str) -> None:
+    ses_source = os.environ.get("SES_SOURCE", "").strip()
+    ses_to_raw = os.environ.get("SES_TO", "mylescgthomas@gmail.com").strip()
+    if not ses_source or not ses_to_raw:
+        print("  SES not configured — skipping email")
+        return
+    to_list = [e.strip() for e in ses_to_raw.split(",") if e.strip()]
+    boto3.client("ses", region_name="us-east-2").send_email(
+        Source=ses_source,
+        Destination={"ToAddresses": to_list},
+        Message={
+            "Subject": {"Data": subject, "Charset": "UTF-8"},
+            "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+        },
+    )
+    print(f"  Email sent: {subject[:80]}")
 
 
 def lambda_handler(event, context):

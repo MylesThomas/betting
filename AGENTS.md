@@ -182,3 +182,17 @@ prob = american_to_probability(-110)  # → 0.5238
 **Remember:** Repository knowledge is the only knowledge. If it's not documented here, it doesn't exist for you. When in doubt, read the docs, don't guess.
 
 **Philosophy:** We optimize for agent legibility and fast iteration with strong guardrails. Corrections are cheap, waiting is expensive.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for this repo. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

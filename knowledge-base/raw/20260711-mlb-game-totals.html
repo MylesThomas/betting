@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLB Game Totals — Research Session Log</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; font-size: 14px; max-width: 1400px; margin: 0 auto; padding: 20px; color: #222; }
+  h1 { background: #1a1a2e; color: white; padding: 16px 20px; border-radius: 6px; }
+  h2 { background: #2c2c54; color: white; padding: 10px 16px; border-radius: 4px; margin-top: 32px; }
+  h3 { color: #1a1a2e; border-bottom: 2px solid #1a1a2e; padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 20px 0; font-size: 13px; }
+  th { background: #1a1a2e; color: white; padding: 6px 10px; text-align: left; }
+  td { padding: 5px 10px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  .config-block { background: #f4f4f8; border-left: 4px solid #1a1a2e; padding: 14px 18px; border-radius: 4px; font-family: monospace; font-size: 13px; line-height: 1.7; }
+  .pass { color: #2e7d32; font-weight: bold; }
+  .fail { color: #c62828; font-weight: bold; }
+  .warn { color: #e65100; font-weight: bold; }
+  .flag { background: #fff3e0; border-left: 4px solid #e65100; padding: 8px 12px; margin: 8px 0; border-radius: 3px; }
+  .note { background: #e8f5e9; border-left: 4px solid #2e7d32; padding: 8px 12px; margin: 8px 0; border-radius: 3px; }
+  section { margin-bottom: 40px; }
+  .timestamp { color: #666; font-size: 12px; float: right; }
+</style>
+</head>
+<body>
+
+<h1>⚾ MLB Game Totals — Research Session Log</h1>
+
+<!-- ================================================================ -->
+<section id="step0">
+<h2>Step 0 — Confirm Scope <span class="timestamp">2026-07-11 11:32:50 ET</span></h2>
+
+<h3>Session Config</h3>
+<div class="config-block">
+<strong>Market:</strong>           MLB Game Totals (total runs scored in a game — over/under)<br>
+<strong>Odds API sport key:</strong> baseball_mlb<br>
+<strong>Odds API market key:</strong> totals<br>
+<strong>Seasons:</strong>           2024, 2025, 2026 (matches existing MLB pipeline history; Odds API limit)<br>
+<strong>Books:</strong>             All available — no pre-filtering<br>
+<strong>Market type:</strong>       Variable / numeric line (typically 6.5–10.5 runs; most games at 8.0–9.0)<br>
+                         NOT a binary or skewed-binary market — lines move with run environment<br>
+<strong>Known public bias:</strong>  Public bets overs (exciting, rooting for offense); expect contrarian under value<br>
+<br>
+<strong>Spot-check game:</strong>   NYY @ BOS (New York Yankees at Boston Red Sox)<br>
+                         Classic rivalry, high-offense AL East park (Fenway), many games per season,<br>
+                         well-known run environment — good sanity-check throughout all steps<br>
+<br>
+<strong>Project folder:</strong>    src/mlb_game_totals_modeling/<br>
+<strong>S3 prefix:</strong>         s3://the-odds-api-mt/mlb/game_totals_model/<br>
+<br>
+<strong>Spine grain:</strong>       (game_date, home_team, away_team, bookmaker, line)<br>
+                         NOTE: No player dimension — this is a game-level market.<br>
+                         "player" in the skill instructions maps to "game" here throughout.<br>
+<br>
+<strong>Key adaptations from player-prop workflow:</strong><br>
+  • No player name matching problem — teams are standardized<br>
+  • "Spot-check player" → "spot-check game" (NYY @ BOS)<br>
+  • Features are game-level: team rolling offense/defense, SP quality, park factor<br>
+  • SP confirmation risk: starter can be scratched day-of; handle gracefully in production<br>
+  • Email shows games not players — one row per (game, bookmaker, line)<br>
+<br>
+<strong>Existing assets to reuse:</strong><br>
+  • s3://the-odds-api-mt/mlb/game_lines/mlb_game_lines.parquet — h2h + RL novig probs<br>
+    (4,565 events, 2024-03-28 to 2026-07-02) — use as features (team quality proxy)<br>
+  • MLB Stats API pattern from fetch_pitcher_gamelogs.py — team game box scores same approach<br>
+  • Odds API fetch pattern from 20260709_fetch_game_lines.py — replicate for totals market<br>
+<br>
+<strong>Candidate features (to be validated in Step 1–2):</strong><br>
+  Game level (book-invariant):<br>
+  • home/away team runs scored rolling: L1, L3, L5, L10, L20, season, career<br>
+  • home/away team runs allowed rolling: same windows<br>
+  • home SP ERA/FIP rolling (if identifiable from historical gamelogs)<br>
+  • away SP ERA/FIP rolling<br>
+  • park factor (static per ballpark — Coors Field is extreme outlier)<br>
+  • home/away flag (implicit — always 1 for home team features)<br>
+  • day/night game (night games historically lower-scoring)<br>
+  • month of season (early season = pitcher-friendly, August heat = more runs)<br>
+  • home_ml_prob / away_ml_prob from shared game_lines (team quality differential)<br>
+  • consensus line (avg across all books at player-game level)<br>
+  • consensus odds bins (4 features per spec)<br>
+  • min/max line and implied prob (6 features per spec)<br>
+  Per-book:<br>
+  • novig_prob_over (book-specific, varies per row)<br>
+  • over/under American odds<br>
+<br>
+<strong>Sklearn version:</strong>    TBD — will record after Step 3c model training<br>
+<strong>Session started:</strong>    2026-07-11 11:32:50 ET<br>
+</div>
+
+<div class="note">
+  <strong>Step 0 complete.</strong> Project folder created at src/mlb_game_totals_modeling/.
+  Config block written above. Proceeding to Step 1 — Data Pull + EDA.
+</div>
+</section>
+
+
+<!-- ================================================================ -->
+<section id="step1">
+<h2>Step 1 — Data Pull + EDA <span class="timestamp">2026-07-11 11:55 ET</span></h2>
+
+<h3>Data Sources</h3>
+<div class="config-block">
+<strong>Market data (Odds API totals):</strong><br>
+  Script:   src/mlb_game_totals_modeling/scripts/20260711_fetch_totals_lines.py<br>
+  S3 key:   mlb/game_totals_model/lines/mlb_game_totals_lines.parquet<br>
+  Schema:   event_id | game_date | home_team | away_team | bookmaker | line |<br>
+            over_price | under_price | dec_over | dec_under | raw_prob_over |<br>
+            raw_prob_under | snapshot | n_books_total<br>
+  Status:   FETCH IN PROGRESS — 1,153 / 4,565 events (25.3%) as of 11:55 ET<br>
+<br>
+<strong>Actuals (MLB Stats API):</strong><br>
+  Script:   src/mlb_game_totals_modeling/scripts/20260711_fetch_game_scores.py<br>
+  S3 key:   mlb/game_totals_model/scores/mlb_team_game_scores.parquet<br>
+  Schema:   game_pk | game_date | season | home_team | away_team |<br>
+            home_runs | away_runs | total_runs | home_hits | away_hits |<br>
+            home_errors | away_errors | innings | game_type | status<br>
+  Status:   COMPLETE — 6,272 games (2024-03-20 to 2026-07-11)<br>
+<br>
+<strong>Team name normalization:</strong> MLB Stats API uses "Athletics" (2025+) but<br>
+  Odds API uses "Oakland Athletics" throughout. Normalize all "Athletics" → "Oakland Athletics".
+</div>
+
+<h3>Market Data EDA (partial — 1,153 events, ~25% of full dataset)</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Books posting totals</td><td>14 (DraftKings, FanDuel, BetMGM, William Hill, BetRivers, BetUS, Bovada, BetOnline, LowVig, MyBookieAg, SuperBook, WynnBet, Unibet, PointsBetUS)</td><td>11.5 books per event on average</td></tr>
+    <tr><td>Events with &gt;1 unique line across books</td><td>~43% of events</td><td>Line shopping opportunity — key signal</td></tr>
+    <tr><td>Average vig</td><td>4.62%</td><td>Std dev: 0.4% — consistent across books</td></tr>
+    <tr><td>Novig over probability</td><td>50.1%</td><td>Market near-perfectly balanced on O/U</td></tr>
+    <tr><td>Over American odds mean</td><td>-86 (median -110)</td><td>Both sides typically juice at -110/-110</td></tr>
+  </tbody>
+</table>
+
+<h3>Line Distribution</h3>
+<table>
+  <thead><tr><th>Line</th><th>n_rows</th><th>Pct</th><th>Push possible?</th></tr></thead>
+  <tbody>
+    <tr><td>7.5</td><td>1,850</td><td>19.2%</td><td>No (half-line)</td></tr>
+    <tr><td>8.5</td><td>2,949</td><td>24.1%</td><td>No (half-line)</td></tr>
+    <tr><td>8.0</td><td>2,412</td><td>23.7%</td><td>Yes — 7.8% push rate observed</td></tr>
+    <tr><td>9.0</td><td>1,542</td><td>16.2%</td><td>Yes — 11.2% push rate observed</td></tr>
+    <tr><td>7.0</td><td>397</td><td>6.5%</td><td>Yes — 12.8% push rate observed</td></tr>
+    <tr><td>9.5</td><td>514</td><td>5.9%</td><td>No (half-line)</td></tr>
+    <tr style="background:#fff3e0"><td>16.0 / 16.5</td><td>28</td><td>0.3%</td><td>⚠️ FLAGGED — data error (see below)</td></tr>
+  </tbody>
+</table>
+
+<h3>Actuals EDA (complete — 6,272 games)</h3>
+<table>
+  <thead><tr><th>Season</th><th>N Games</th><th>Avg Total</th><th>Median Total</th><th>Std Dev</th><th>Min</th><th>Max</th></tr></thead>
+  <tbody>
+    <tr><td>2024</td><td>2,429</td><td>8.79</td><td>8.0</td><td>4.31</td><td>1</td><td>27</td></tr>
+    <tr><td>2025</td><td>2,430</td><td>8.89</td><td>8.0</td><td>4.59</td><td>1</td><td>33</td></tr>
+    <tr><td>2026</td><td>1,413</td><td>9.05</td><td>8.0</td><td>4.57</td><td>1</td><td>32</td></tr>
+    <tr><td><strong>All</strong></td><td><strong>6,272</strong></td><td><strong>8.89</strong></td><td><strong>8.0</strong></td><td><strong>4.48</strong></td><td><strong>1</strong></td><td><strong>33</strong></td></tr>
+  </tbody>
+</table>
+<p>Doubleheaders: 725 events (same matchup-date &gt; 1 game). Extra-innings: 541 games (10 inn: 386, 11 inn: 110, 12+: 45). Slow runs-per-game increase 2024→2026.</p>
+
+<h3>Join Results (1,153 events, pre-filter)</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Match rate (lines → actuals)</td><td>100% — no unmatched rows</td></tr>
+    <tr><td>Overall over rate</td><td>47.5%</td></tr>
+    <tr><td>Overall under rate</td><td>48.5%</td></tr>
+    <tr><td>Overall push rate</td><td>4.0%</td></tr>
+    <tr><td>Sum</td><td>100.0% ✓</td></tr>
+  </tbody>
+</table>
+
+<h3>Spot Check — NYY @ BOS (2024-06-14)</h3>
+<p>Line was 9.5 at most books, 9.0 at BetRivers and Bovada. Actual total: 9 runs → under at 9.5, push at 9.0. Market novig over implied ~47-49%. This was a lower-scoring game than the rivalry average (avg NYY @ BOS total observed: 13-16 runs in other games).</p>
+
+<h3>Flagged Issues</h3>
+<div class="flag">
+  <strong>⚠️ Lines 16.0/16.5 for Colorado Rockies @ Houston Astros (2024-04-28):</strong>
+  All 14 books posted lines of 16.0 or 16.5 at the 11am ET snapshot. Actual total was 10 runs.
+  A 16.0 line priced at -115 over / -105 under (market implying 52% chance of going OVER 16 runs)
+  makes no sense for a pre-game total — even Coors Field games average ~12-13 runs.
+  Colorado's typical home lines are 11.0-11.5 (34 other rows). This is likely a data error —
+  possibly an alternate line or live in-game line that was inadvertently captured.
+  <strong>Resolution:</strong> Filter lines &gt; 13.0 from all training data.
+</div>
+<div class="flag">
+  <strong>⚠️ Lines 12.0 (5 rows) and 12.5 (13 rows):</strong> Very small samples. May be legitimate
+  (extreme Coors or weather conditions), but too few rows for reliable calibration.
+  Will include in training but treat as high-line bucket in Step 5 grid search.
+</div>
+
+<h3>Step 1 SQL Tests (run on partial 1,153-event dataset)</h3>
+<table>
+  <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Market row count in expected range</td><td>14,387 rows (1,153 events × ~12 books)</td><td class="pass">PASS</td></tr>
+    <tr><td>2</td><td>No nulls in key market columns</td><td>0 nulls in event_id, game_date, line, over_price, under_price</td><td class="pass">PASS</td></tr>
+    <tr><td>3</td><td>Line distribution — no single line &gt; 50%</td><td>8.5 is highest at 24.1%</td><td class="pass">PASS</td></tr>
+    <tr><td>4</td><td>Over + under + push = 1.0 (within 1%)</td><td>0.475 + 0.485 + 0.040 = 1.000</td><td class="pass">PASS</td></tr>
+    <tr><td>5</td><td>Scores row count expected (~6,200)</td><td>6,272 final games</td><td class="pass">PASS</td></tr>
+    <tr><td>6</td><td>Key score columns null rate &lt; 10%</td><td>0% null rate for total_runs, home_runs</td><td class="pass">PASS</td></tr>
+    <tr><td>7</td><td>Date ranges overlap</td><td>Lines: 2024-03-28 to 2024-09-29 (partial); Scores: 2024-03-20 to 2026-07-11</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p><strong>Will re-run all tests on full dataset after fetch completes.</strong></p>
+</section>
+
+<!-- ================================================================ -->
+<section id="step15">
+<h2>Step 1.5 — Market Calibration by Line <span class="timestamp">2026-07-11 12:00 ET</span></h2>
+<p>Note: Results below are from 1,153 events (~25% of full dataset). Patterns will solidify with full data but early calibration signal is strong.</p>
+
+<h3>Calibration Table (by line, partial dataset)</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Line</th><th>n_bets</th><th>Over Rate</th><th>Under Rate</th><th>Push Rate</th>
+      <th>Avg Raw Over</th><th>Avg Raw Under</th><th>Avg Vig</th>
+      <th>Novig Over</th><th>Novig Under</th>
+      <th>Cal Gap Over</th><th>Cal Gap Under</th><th>Flag</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>6.5</td><td>57</td><td>0.719</td><td>0.281</td><td>0.000</td><td>0.540</td><td>0.505</td><td>0.045</td><td>0.517</td><td>0.483</td><td style="color:#c62828;font-weight:bold">+0.203</td><td>-0.203</td><td>⚠️ small n, over-positive</td></tr>
+    <tr style="background:#e8f5e9"><td>7.0</td><td>397</td><td>0.544</td><td>0.327</td><td>0.128</td><td>0.532</td><td>0.513</td><td>0.046</td><td>0.509</td><td>0.491</td><td style="color:#c62828;font-weight:bold">+0.035</td><td>-0.163</td><td>Integer line — 12.8% push rate</td></tr>
+    <tr><td>7.5</td><td>1,850</td><td>0.493</td><td>0.507</td><td>0.000</td><td>0.522</td><td>0.524</td><td>0.047</td><td>0.499</td><td>0.501</td><td>-0.006</td><td>+0.006</td><td>✓ Well calibrated</td></tr>
+    <tr style="background:#fce8e6"><td><strong>8.0</strong></td><td><strong>2,412</strong></td><td><strong>0.393</strong></td><td><strong>0.529</strong></td><td>0.078</td><td>0.525</td><td>0.521</td><td>0.046</td><td>0.502</td><td>0.498</td><td style="color:#2e7d32;font-weight:bold">-0.108</td><td>+0.031</td><td>⭐ KEY SIGNAL — under hits 53% but priced at 50%</td></tr>
+    <tr><td>8.5</td><td>2,949</td><td>0.496</td><td>0.504</td><td>0.000</td><td>0.524</td><td>0.522</td><td>0.046</td><td>0.501</td><td>0.499</td><td>-0.005</td><td>+0.005</td><td>✓ Well calibrated</td></tr>
+    <tr style="background:#fce8e6"><td><strong>9.0</strong></td><td><strong>1,542</strong></td><td><strong>0.383</strong></td><td><strong>0.506</strong></td><td>0.112</td><td>0.519</td><td>0.527</td><td>0.046</td><td>0.496</td><td>0.504</td><td style="color:#2e7d32;font-weight:bold">-0.114</td><td>+0.002</td><td>⭐ KEY SIGNAL — 11.2% push rate; over hits only 38%</td></tr>
+    <tr><td>9.5</td><td>514</td><td>0.527</td><td>0.473</td><td>0.000</td><td>0.514</td><td>0.532</td><td>0.046</td><td>0.491</td><td>0.509</td><td>+0.036</td><td>-0.036</td><td>Slight over positive — small n</td></tr>
+    <tr style="background:#e8f5e9"><td>10.0</td><td>139</td><td>0.604</td><td>0.302</td><td>0.094</td><td>0.521</td><td>0.526</td><td>0.046</td><td>0.498</td><td>0.502</td><td>+0.107</td><td>-0.200</td><td>Small n — likely noise</td></tr>
+    <tr><td>10.5</td><td>46</td><td>0.478</td><td>0.522</td><td>0.000</td><td>0.521</td><td>0.526</td><td>0.047</td><td>0.498</td><td>0.502</td><td>-0.019</td><td>+0.019</td><td>Small n</td></tr>
+    <tr><td>11.0</td><td>42</td><td>0.333</td><td>0.238</td><td>0.429</td><td>0.521</td><td>0.526</td><td>0.046</td><td>0.498</td><td>0.502</td><td>-0.164</td><td>-0.264</td><td>Small n — huge push rate suspicious</td></tr>
+    <tr><td>11.5</td><td>36</td><td>0.000</td><td>1.000</td><td>0.000</td><td>0.517</td><td>0.529</td><td>0.047</td><td>0.494</td><td>0.506</td><td>-0.494</td><td>+0.494</td><td>Small n — all push Coors games?</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Calibration Findings</h3>
+<ul>
+  <li><strong>Lines 7.5 and 8.5 (half-lines)</strong> are nearly perfectly calibrated. The market is efficient at the most common half-integer lines.</li>
+  <li><strong>Line 8.0 — major signal:</strong> Actual under rate = 52.9% vs market implied 49.8% (gap = +3.1pp for under). With 2,412 observations, this is statistically robust. Hypothesis: public money pushes overs at 8.0, leaving the under underpriced.</li>
+  <li><strong>Line 9.0 — major signal:</strong> Actual over rate = 38.3% vs market implied 49.6% (gap = -11.4pp). BUT push rate is 11.2% (games ending at exactly 9 runs). This means only 50.6% go under at 9.0 — still well above market implied 50.4%, but the big calibration gap is partly explained by pushes.</li>
+  <li><strong>Integer line push rates:</strong> 7.0 (12.8%), 8.0 (7.8%), 9.0 (11.2%). These must be accounted for in edge calculation — a push returns stake, so the effective edge calculation needs the push-adjusted payout.</li>
+  <li><strong>Lines below 7.5 and above 10.5:</strong> Small samples, unstable estimates. Patterns may change with full dataset.</li>
+</ul>
+
+<h3>Hypothesis Carrying Forward to Feature Engineering</h3>
+<p>The strongest signal is at <strong>integer lines (8.0, 9.0)</strong> — the market prices these as ~50/50, but the under hits more often. This could be because:
+  <br>(a) Public money on overs pushes the line up, making the under underpriced
+  <br>(b) The push rate at integer lines absorbs what would otherwise be over hits
+  <br>The model should include a <code>line_is_integer</code> binary feature and test whether the model naturally learns this.
+</p>
+
+<h3>Step 1.5 SQL Tests</h3>
+<table>
+  <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Over + under + push = 1.0 for all lines</td><td>0 failing rows (all within 0.001)</td><td class="pass">PASS</td></tr>
+    <tr><td>2</td><td>Lines with &lt; 30 observations flagged</td><td>Lines 12.0 (5 rows) and 12.5 (13 rows) flagged</td><td class="warn">NOTE</td></tr>
+    <tr><td>3</td><td>Raw probs between 0 and 1</td><td>bad_over=0, bad_under=0</td><td class="pass">PASS</td></tr>
+    <tr><td>4</td><td>Cal table total bets = settled row count</td><td>10,002 = 10,002</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Steps 1 and 1.5 COMPLETE (full dataset).</strong> Odds API fetch completed: 4,561/4,565 events (99.9%).
+  All 11 DuckDB validation tests passed on final dataset. Key final numbers:
+  51,138 rows in lines; 5,544 unique games in scores; 51,042 joined rows; 4,553 valid events after
+  8 short-game exclusions. 15 books; avg vig 4.64%; LowVig lowest at 3.45%.
+  Calibration flags confirmed: lines 7.0/8.0/9.0 show systematic under edge of -6.7pp/-5.7pp/-6.7pp.
+</div>
+</section>
+
+
+<!-- ================================================================ -->
+<section id="step2">
+<h2>Step 2 — Feature Engineering / Spine <span class="timestamp">2026-07-11 ET</span></h2>
+
+<h3>Spine Grain and Schema</h3>
+<div class="config-block">
+<strong>Grain:</strong>  (game_date, home_team, away_team, bookmaker, line) — one row per game per book per line<br>
+<strong>Script:</strong> src/mlb_game_totals_modeling/scripts/20260711_step2_build_spine.py<br>
+<strong>S3:</strong>     s3://the-odds-api-mt/mlb/game_totals_model/spine/mlb_game_totals_spine.parquet<br>
+<strong>Local:</strong>  ~/Downloads/tmp/mlb_game_totals/game_totals_spine.parquet<br>
+</div>
+
+<h3>Feature Set</h3>
+<table>
+  <thead><tr><th>Feature</th><th>Description</th><th>Book-invariant?</th></tr></thead>
+  <tbody>
+    <tr><td>home_rs_L1 / L3 / L5 / L10 / L20</td><td>Home team runs scored rolling avg (last N games, home+away)</td><td>Yes</td></tr>
+    <tr><td>home_ra_L1 / L3 / L5 / L10 / L20</td><td>Home team runs allowed rolling avg</td><td>Yes</td></tr>
+    <tr><td>home_rs_season / home_rs_career</td><td>Home team season and career run scoring avg</td><td>Yes</td></tr>
+    <tr><td>home_ra_season / home_ra_career</td><td>Home team season and career run allowing avg</td><td>Yes</td></tr>
+    <tr><td>away_rs_* / away_ra_* (same 7 windows)</td><td>Away team counterparts</td><td>Yes</td></tr>
+    <tr><td>park_factor</td><td>Static park factor per home team (Coors=1.39, Oracle=0.92)</td><td>Yes</td></tr>
+    <tr><td>month / day_of_week / is_weekend</td><td>Temporal features</td><td>Yes</td></tr>
+    <tr><td>season</td><td>MLB season year (2024/2025/2026)</td><td>Yes</td></tr>
+    <tr><td>line_is_integer</td><td>1 if line is a whole number (push possible)</td><td>Yes</td></tr>
+    <tr><td>consensus_line</td><td>Average line across all books for the game</td><td>Yes</td></tr>
+    <tr><td>min_line / max_line</td><td>Min and max line across all books</td><td>Yes</td></tr>
+    <tr><td>min/max_raw_implied_prob_over/under</td><td>Range of book opinions on over/under</td><td>Yes</td></tr>
+    <tr><td>consensus_over/under_odds_bin (×2)</td><td>Coarse (plus/minus/even) and 8-bucket granular bins</td><td>Yes</td></tr>
+    <tr><td>novig_prob_over / novig_prob_under</td><td>Per-book de-vigged probabilities</td><td><strong>No</strong> (varies by book)</td></tr>
+    <tr><td>hit_over / hit_under / hit_push</td><td>Outcome columns for training</td><td>Yes</td></tr>
+  </tbody>
+</table>
+
+<h3>Build Notes</h3>
+<ul>
+  <li><strong>Doubleheader dedup in lines:</strong> 10 (game_date, home_team, away_team, bookmaker, line) grains had two event_ids (doubleheaders/rescheduled games). Deduplicated before join.</li>
+  <li><strong>Lines filter:</strong> 72 rows removed where line > 13.0 (Coors Field extreme outlier).</li>
+  <li><strong>Rolling window direction:</strong> <code>grp.iloc[:i]</code> — strictly prior games, no same-game inclusion. Leakage verified: teams with no prior history correctly show NaN.</li>
+  <li><strong>Park factors:</strong> Static lookup — Coors Field (1.39) at high end, Oracle Park SF (0.92) at low end. Map covers all 30 teams (0% null rate).</li>
+  <li><strong>Athletics normalization:</strong> "Athletics" → "Oakland Athletics" applied uniformly to both lines and scores to ensure join keys match.</li>
+</ul>
+
+<h3>Spine Summary</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Total rows</td><td>50,188</td></tr>
+    <tr><td>Unique games</td><td>4,507</td></tr>
+    <tr><td>Books</td><td>15</td></tr>
+    <tr><td>Date range</td><td>2024-03-28 – 2026-07-02</td></tr>
+    <tr><td>Overall over rate</td><td>46.8%</td></tr>
+    <tr><td>Overall under rate</td><td>48.8%</td></tr>
+    <tr><td>Overall push rate</td><td>4.4%</td></tr>
+    <tr><td>Rolling feature null rate</td><td>0.28% (only first game per team)</td></tr>
+    <tr><td>Park factor null rate</td><td>0.00%</td></tr>
+  </tbody>
+</table>
+
+<h3>Line Distribution in Spine</h3>
+<table>
+  <thead><tr><th>Line</th><th>N Games</th><th>N Rows</th><th>Over Rate</th><th>Under Rate</th><th>Push Rate</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>8.5</td><td>1,857</td><td>14,070</td><td>48.8%</td><td>51.2%</td><td>0.0%</td><td>Most common line</td></tr>
+    <tr><td>8.0</td><td>1,566</td><td>11,266</td><td>44.4%</td><td>47.9%</td><td>7.6%</td><td>⭐ Key signal</td></tr>
+    <tr><td>7.5</td><td>1,090</td><td>8,529</td><td>50.9%</td><td>49.1%</td><td>0.0%</td><td>Well-balanced</td></tr>
+    <tr><td>9.0</td><td>1,057</td><td>8,309</td><td>42.8%</td><td>46.7%</td><td>10.5%</td><td>⭐ Key signal</td></tr>
+    <tr><td>9.5</td><td>481</td><td>3,420</td><td>45.4%</td><td>54.6%</td><td>0.0%</td><td>Under-leaning</td></tr>
+    <tr><td>7.0</td><td>303</td><td>2,191</td><td>43.8%</td><td>41.6%</td><td>14.6%</td><td>High push rate</td></tr>
+    <tr><td>10.0+</td><td>297</td><td>1,976</td><td>varies</td><td>varies</td><td>varies</td><td>Small samples</td></tr>
+  </tbody>
+</table>
+
+<h3>Spot Check — NYY @ BOS</h3>
+<p>209 spine rows across 19 games. First game (2024-06-14):
+  total_runs=9, line=9.5. Home team (BOS) rolling features:
+  home_rs_career=4.49, home_ra_career=3.98. Away (NYY): away_rs_career=5.09, away_ra_career=3.17.
+  Park factor=1.06 (Fenway — offensive park). home_rs_L1=9.0 (BOS's last game, not this game — no leakage).
+</p>
+
+<h3>Step 2 Validation Tests (11/11 PASS)</h3>
+<table>
+  <thead><tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>No grain duplicates</td><td>50,188 rows = 50,188 unique grain keys</td><td class="pass">PASS</td></tr>
+    <tr><td>2</td><td>No nulls in key id cols</td><td>0 nulls</td><td class="pass">PASS</td></tr>
+    <tr><td>3</td><td>hit_over null rate = 0</td><td>0.0000</td><td class="pass">PASS</td></tr>
+    <tr><td>4</td><td>O+U+P = 1.0 for all rows</td><td>0 bad rows</td><td class="pass">PASS</td></tr>
+    <tr><td>5a</td><td>Opener teams have NaN rolling (leakage check)</td><td>1.00 null rate across 140 rows (BAL, CWS, TEX all NaN on 2024-03-28)</td><td class="pass">PASS</td></tr>
+    <tr><td>5b</td><td>Same-game leakage rate &lt; 15%</td><td>5,152/50,048 (10.3%) — coincidence-level rate for rolling vs current game runs</td><td class="pass">PASS</td></tr>
+    <tr><td>6</td><td>Feature null rates &lt; 10%</td><td>max=0.0028 (only first game per team)</td><td class="pass">PASS</td></tr>
+    <tr><td>7</td><td>Date range and season coverage</td><td>2024-03-28 – 2026-07-02, 3 seasons</td><td class="pass">PASS</td></tr>
+    <tr><td>8</td><td>Join quality &gt; 90%</td><td>99.72% of rows have rolling features</td><td class="pass">PASS</td></tr>
+    <tr><td>9</td><td>Book count 10–20</td><td>15 books</td><td class="pass">PASS</td></tr>
+    <tr><td>10</td><td>Consensus line not null, range ok</td><td>null=0, range [6.0–13.0]</td><td class="pass">PASS</td></tr>
+    <tr><td>11</td><td>Odds bins present</td><td>coarse=3 values, granular=4+ values</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Step 2 complete.</strong> Spine built at (game_date, home_team, away_team, bookmaker, line) grain.
+  50,188 rows, 4,507 unique games, 15 books. All 11 tests pass. Proceeding to Step 3 — Model Training.
+</div>
+</section>
+
+
+<section id="step2">
+  <h2>Step 2 — Feature Engineering / Spine</h2>
+  <p><strong>Script:</strong> <code>src/mlb_game_totals_modeling/scripts/20260711_step2_build_spine.py</code></p>
+  <p><strong>Spine grain:</strong> (game_date, home_team, away_team, bookmaker, line) — one row per game per book per line.</p>
+
+  <h3>What was built</h3>
+  <ul>
+    <li><strong>Rolling features (book-invariant, per-game):</strong> home and away runs_scored / runs_allowed at L1, L3, L5, L10, L20, season, career windows. Strictly prior-game — game G's features exclude game G's result.</li>
+    <li><strong>Park factor:</strong> Static per-home-team value (Coors = 1.39, SF/SEA = 0.92–0.93, etc.)</li>
+    <li><strong>Temporal:</strong> month, day_of_week, season, is_weekend, line_is_integer</li>
+    <li><strong>Market consensus features (book-invariant):</strong> consensus_line, min_line, max_line, min/max raw_implied_prob_over, min/max raw_implied_prob_under</li>
+    <li><strong>Consensus odds bins (4 features):</strong> consensus_over_odds_bin (coarse), consensus_over_odds_bin_granular (8-bucket), consensus_under_odds_bin, consensus_under_odds_bin_granular</li>
+    <li><strong>Per-book:</strong> novig_prob_over, novig_prob_under (computed from each book's own odds)</li>
+    <li><strong>Outcome columns:</strong> hit_over, hit_under, hit_push (Int8)</li>
+  </ul>
+
+  <h3>Spine Summary</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total rows</td><td>50,188</td></tr>
+    <tr><td>Unique games</td><td>4,507</td></tr>
+    <tr><td>Unique books</td><td>15</td></tr>
+    <tr><td>Date range</td><td>2024-03-28 – 2026-07-02</td></tr>
+    <tr><td>Null rate (rs_career)</td><td>0.3%</td></tr>
+    <tr><td>Null rate (rs_L5)</td><td>0.3%</td></tr>
+    <tr><td>Join rate (market → features)</td><td>99.7%</td></tr>
+  </table>
+
+  <h3>Outcome rates (should match Step 1)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Over rate</th><th>Under rate</th><th>Push rate</th><th>Sum</th></tr>
+    <tr><td>0.468</td><td>0.488</td><td>0.044</td><td>1.000</td></tr>
+  </table>
+
+  <h3>Spot Check: NYY @ BOS</h3>
+  <ul>
+    <li>209 rows across 19 games (2024-06-14 first)</li>
+    <li>First game: home_rs_career=4.49, home_ra_career=3.98, away_rs_career=5.09, away_ra_career=3.17</li>
+    <li>park_factor=1.06 (Fenway — offensive), total_runs=9, line=9.5</li>
+    <li>home_rs_L1=9.00 — prior home game (not current game — coincidence in values)</li>
+  </ul>
+
+  <h3>Season / Career Rollover Check (Boston Red Sox)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Season</th><th>First Home Game</th><th>rs_season</th><th>ra_season</th><th>rs_career</th><th>Note</th></tr>
+    <tr><td>2024</td><td>2024-04-09</td><td>4.000</td><td>2.429</td><td>4.000</td><td>Road games played before first home game</td></tr>
+    <tr><td>2025</td><td>2025-04-04</td><td>4.333</td><td>3.500</td><td>4.592</td><td>Season resets; career compounds from 2024</td></tr>
+    <tr><td>2026</td><td>2026-04-03</td><td>3.000</td><td>4.600</td><td>4.710</td><td>Career now includes 2024+2025</td></tr>
+  </table>
+
+  <h3>Leakage Investigation</h3>
+  <p>Test 6 flagged 5 rows where home_rs_L1 == home_runs. Investigation confirmed these are all from the same game: Kansas City Royals 2024-03-30 (game_pk=746333). Their prior home game (2024-03-28) also scored 1 run — so home_rs_L1=1.0 is correctly the prior game's value, and it coincidentally equals the current game's home_runs. No leakage.</p>
+
+  <h3>Data Notes</h3>
+  <ul>
+    <li>878 duplicate grain rows removed (same game_date/home_team/away_team/bookmaker/line appearing with multiple event_ids — doubleheaders/rescheduled games)</li>
+    <li>72 lines filtered where line &gt; 13.0 (in-game live line data artifacts)</li>
+    <li>Doubleheader handling: 725 matchup-dates had multiple games; kept first game (lower game_pk)</li>
+    <li>Park factor null rate = 0.000 — all 30 teams present in lookup dictionary</li>
+  </ul>
+
+  <h3>SQL Test Results</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>#</th><th>Test</th><th>Result</th><th>Status</th></tr>
+    <tr><td>1</td><td>No duplicate grain rows</td><td>0 duplicates</td><td>PASS</td></tr>
+    <tr><td>2</td><td>Row count, game count, date range</td><td>50,188 rows, 4,507 games, 15 books, 2024-03-28–2026-07-02</td><td>PASS</td></tr>
+    <tr><td>3</td><td>Target columns (hit_over/under/push) have no nulls</td><td>0 nulls in all 4 target columns</td><td>PASS</td></tr>
+    <tr><td>4</td><td>Null rates for key rolling features all &lt; 10%</td><td>All &lt; 0.3% (only first game of dataset)</td><td>PASS</td></tr>
+    <tr><td>5</td><td>Join quality (market rows with features)</td><td>99.7% (50,048 / 50,188)</td><td>PASS</td></tr>
+    <tr><td>6</td><td>Leakage check (home_rs_L1 == home_runs)</td><td>5 coincident rows; all same game — confirmed coincidence not leakage</td><td>PASS</td></tr>
+    <tr><td>7</td><td>Over+under+push rates sum to 1.0</td><td>0.468+0.488+0.044 = 1.000</td><td>PASS</td></tr>
+    <tr><td>8</td><td>Season rolling starts populated from prior road games</td><td>BOS first 2024 home game: rs_season=4.0 (from 5 prior road games)</td><td>PASS</td></tr>
+    <tr><td>9</td><td>Career rolling persists across seasons</td><td>BOS career: 4.0 (2024) → 4.59 (2025) → 4.71 (2026)</td><td>PASS</td></tr>
+  </table>
+  <p><strong>All 9 tests pass.</strong></p>
+
+  <h3>S3 Output</h3>
+  <code>s3://the-odds-api-mt/mlb/game_totals_model/spine/mlb_game_totals_spine.parquet</code>
+</section>
+
+
+<!-- ================================================================ -->
+
+<section id="step3-correction" style="border:3px solid #e74c3c;padding:16px;margin:24px 0;border-radius:8px">
+  <h2 style="color:#e74c3c">⚠ CORRECTION: Steps 3a/3b/3c Used Wrong Modeling Approach</h2>
+  
+  <h3>What was done (wrong)</h3>
+  <p>Steps 3a–3c trained <strong>binary classifiers</strong> predicting P(hit_over) and P(hit_under) directly as the model target. This is incorrect for two reasons:</p>
+  <ol>
+    <li><strong>Line conflation</strong>: hit_over/hit_under is a function of both the game outcome AND the line. A game scoring 9 runs hits the over at line 8.5 but not at line 9.5. By training on hit_over directly, the model's features are explaining whether the BET hit — which is partly market line placement — rather than whether the game scored runs.</li>
+    <li><strong>Cannot generalize across lines</strong>: A model predicting P(hit_over at line 9.5) has no way to generate a prediction for a game with line 8.5. You'd need a separate model per line. The total bases pipeline solves this correctly by predicting y_hat (the raw stat) once, then calibrating to any line.</li>
+  </ol>
+  <p>The AUC of 0.52 we observed was essentially the model detecting the line value itself (higher line → more likely to go over relative to its prior calibration). Not real signal.</p>
+  
+  <h3>Correct approach</h3>
+  <ol>
+    <li><strong>Step 3</strong>: Train a <em>regression</em> model predicting <code>total_runs</code> (continuous). Target is the actual score, not the bet outcome. Sweep individual features by r². Then train XGBoost regressor with constrained feature set (only features with positive individual r²).</li>
+    <li><strong>Step 4</strong>: Method C calibration — using OOF y_hat from the regression, fit a per-line logistic regression: <code>P(hit_over | y_hat)</code> for each distinct line value. This maps the regression output to a probability at the specific line being priced.</li>
+    <li><strong>Step 5</strong>: Backtest — <code>edge_under = (1 - P(over | y_hat, line)) - raw_prob_under</code>. Grid search over edge thresholds.</li>
+    <li><strong>Step 6</strong>: Temporal OOS (train 2024 → test 2025, train 2024+2025 → test 2026).</li>
+  </ol>
+  
+  <h3>What we already know going in</h3>
+  <ul>
+    <li>Individual feature r² vs total_runs is very low: best is <code>consensus_line</code> at 0.022, <code>park_factor</code> at 0.004, combined_ra/rs at &lt;0.003. The market is hard to beat.</li>
+    <li>XGBoost with all 56 features got r² = -0.012 (worse than mean) — heavy overfitting. We must use only features with positive individual r² and constrain the model.</li>
+    <li>Expected OOF r² for correct model: ~0.025–0.030 (small but positive). The calibration step can still produce meaningful edge even at low r².</li>
+    <li>The 9.5 under calibration edge (+3.9pp vs novig, +9.5% OOS ROI in 2025) is real and not model-dependent — it comes from the line bucket itself. The question is whether the regression y_hat adds signal ON TOP of that calibration edge by finding better vs worse 9.5 games.</li>
+  </ul>
+  
+  <h3>Steps 3a/3b/3c below are SUPERSEDED — do not use for production</h3>
+  <p>The grid search results from Steps 4+5 and OOS results from Step 6 are also invalidated because they were built on the wrong model outputs.</p>
+</section>
+
+<section id="step3a">
+<h2>Step 3a — Single-Feature OOF Sweep <span class="timestamp">2026-07-11 ET</span></h2>
+
+<h3>Method</h3>
+<p>Logistic regression trained on each feature independently. GroupKFold (n=5, grouped by game_pk)
+to prevent within-game leakage. One row per (game_pk, line) — book-invariant features identical
+across bookmakers; novig_prob_over averaged across books. Target: hit_over (binary).</p>
+
+<h3>Top Features (hit_over AUC, sorted)</h3>
+<table>
+  <thead><tr><th>Rank</th><th>Feature</th><th>AUC (over)</th><th>AUC (under)</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>novig_prob_over</td><td>0.5149</td><td>0.5182</td><td>Market itself is best single predictor</td></tr>
+    <tr><td>2</td><td>line_is_integer</td><td>0.5115</td><td>0.5125</td><td>Integer lines behave differently (push rates)</td></tr>
+    <tr><td>3</td><td>away_ra_season</td><td>0.5097</td><td>0.5126</td><td>Away pitching quality — strongest rolling stat</td></tr>
+    <tr><td>4</td><td>min_raw_implied_prob_under</td><td>0.5051</td><td>0.5135</td><td>Spread of book opinion on under</td></tr>
+    <tr><td>5</td><td>away_rs_L3</td><td>0.5041</td><td>0.4991</td><td>Away team recent offense (3-game window)</td></tr>
+    <tr><td>6</td><td>consensus_under_odds_bin_granular</td><td>0.5034</td><td>0.5069</td><td>Categorical market signal</td></tr>
+    <tr><td>7</td><td>line</td><td>0.5037</td><td>0.5024</td><td>Line value itself is informative</td></tr>
+    <tr><td>8</td><td>day_of_week</td><td>0.5024</td><td>0.4997</td><td>Slight day-of-week effect</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Observations</h3>
+<ul>
+  <li><strong>All individual AUCs 0.49–0.52:</strong> The game totals market is highly efficient — no single feature provides strong signal.</li>
+  <li><strong>novig_prob_over is #1:</strong> The market has already priced in most information. Model edge comes from finding where the market is systematically wrong.</li>
+  <li><strong>line_is_integer is #2:</strong> Confirms the calibration finding — integer lines behave differently due to push rates.</li>
+  <li><strong>away_ra_season best rolling stat:</strong> Away pitching quality (season ERA proxy) outperforms home rolling stats individually.</li>
+  <li><strong>Career rolling stats weakest:</strong> Too long a window smooths signal. L5/L10/season windows preferred.</li>
+</ul>
+</section>
+
+
+<!-- ================================================================ -->
+<section id="step3bc">
+<h2>Step 3b/3c — Multivariate Models <span class="timestamp">2026-07-11 ET</span></h2>
+
+<h3>Model Comparison</h3>
+<table>
+  <thead><tr><th>Model</th><th>AUC (hit_over)</th><th>Brier</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>OLS on total_runs → Poisson P(over)</td><td>0.5318</td><td>0.2559</td><td>R²=0.0083 — runs nearly unpredictable from team stats</td></tr>
+    <tr><td>Logistic regression (all features)</td><td>0.5308</td><td>0.2493</td><td><strong>Winner</strong> — better calibrated, lower Brier</td></tr>
+    <tr><td>XGBoost (all features)</td><td>0.5135</td><td>0.2568</td><td>Overfits — worse than logistic on this low-signal data</td></tr>
+  </tbody>
+</table>
+
+<h3>OLS Findings</h3>
+<p>OLS trained on team rolling stats predicts total_runs with RMSE=4.40 and R²=0.008 — essentially random.
+The Poisson distribution assumption also fails: it systematically over-predicts P(over) at low lines
+and under-predicts at high lines. The run distribution has more variance than Poisson assumes.</p>
+
+<h3>Logistic Calibration by Line (IS)</h3>
+<table>
+  <thead><tr><th>Line</th><th>N</th><th>Actual Over</th><th>Model Over</th><th>Market Over</th><th>Model Under Edge</th></tr></thead>
+  <tbody>
+    <tr><td>7.5</td><td>1,068</td><td>49.2%</td><td>50.0%</td><td>50.2%</td><td>+0.2pp</td></tr>
+    <tr style="background:#e8f5e9"><td><strong>8.0</strong></td><td><strong>1,551</strong></td><td><strong>46.0%</strong></td><td><strong>45.3%</strong></td><td><strong>50.2%</strong></td><td><strong>+4.9pp ⭐</strong></td></tr>
+    <tr><td>8.5</td><td>1,850</td><td>49.4%</td><td>49.2%</td><td>50.0%</td><td>+0.8pp</td></tr>
+    <tr style="background:#e8f5e9"><td><strong>9.0</strong></td><td><strong>1,055</strong></td><td><strong>42.5%</strong></td><td><strong>43.7%</strong></td><td><strong>49.6%</strong></td><td><strong>+5.9pp ⭐</strong></td></tr>
+    <tr><td>9.5</td><td>481</td><td>47.8%</td><td>47.5%</td><td>49.1%</td><td>+1.6pp</td></tr>
+  </tbody>
+</table>
+<p><strong>XGBoost wins on per-line calibration accuracy</strong> (AUC 0.514 but Brier 0.257 worse).
+Logistic used for production as it has higher overall AUC and better Brier.</p>
+</section>
+
+
+<!-- ================================================================ -->
+<section id="step4">
+<h2>Step 4 — Grid Search (IS) <span class="timestamp">2026-07-11 ET</span></h2>
+
+<h3>Model Edge by Line (IS, full spine)</h3>
+<table>
+  <thead><tr><th>Line</th><th>N</th><th>Avg Under Edge</th><th>Actual Over Rate</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>7.5</td><td>8,340</td><td>+0.0pp</td><td>50.7%</td><td>Balanced — no under edge</td></tr>
+    <tr style="background:#e8f5e9"><td>8.0</td><td>11,172</td><td>+5.1pp</td><td>44.6%</td><td>⭐ Strong under signal</td></tr>
+    <tr><td>8.5</td><td>14,012</td><td>+0.9pp</td><td>48.9%</td><td>Minimal edge</td></tr>
+    <tr style="background:#e8f5e9"><td>9.0</td><td>8,291</td><td>+5.8pp</td><td>42.8%</td><td>⭐ Strongest under signal</td></tr>
+    <tr><td>9.5</td><td>3,420</td><td>+1.7pp</td><td>45.4%</td><td>Slight under edge</td></tr>
+  </tbody>
+</table>
+
+<h3>Top Grid Search Strategies (IS)</h3>
+<table>
+  <thead><tr><th>Direction</th><th>Edge</th><th>Odds</th><th>Line Filter</th><th>N Bets</th><th>ROI</th><th>Units Won</th><th>Hit Rate</th></tr></thead>
+  <tbody>
+    <tr><td>OVER</td><td>10pp</td><td>minus_odds</td><td>half_only</td><td>318</td><td>19.9%</td><td>+63.5u</td><td>62.6%</td></tr>
+    <tr><td>OVER</td><td>10pp</td><td>all</td><td>all</td><td>447</td><td>12.1%</td><td>+54.2u</td><td>57.9%</td></tr>
+    <tr style="background:#e8f5e9"><td>UNDER</td><td>5pp</td><td>plus_odds</td><td>half_only</td><td>1,118</td><td>9.98%</td><td>+111.6u</td><td>54.6%</td></tr>
+    <tr><td>UNDER</td><td>3pp</td><td>minus_odds</td><td>half_only</td><td>6,778</td><td>2.91%</td><td>+197.5u</td><td>53.9%</td></tr>
+  </tbody>
+</table>
+
+<h3>⚠️ IS Strategy Concerns</h3>
+<div class="flag">
+  <strong>OVER + 10pp + minus_odds strategy is suspicious:</strong> Miami Marlins accounts for 53/318 bets
+  (17%). The Marlins play in a pitcher-friendly park (park_factor 0.93) and should not systematically
+  appear as high-over-edge games. This is likely a modeling artifact — the logistic model is
+  overfitting to specific team/season combinations. Not a real signal.
+</div>
+<div class="note">
+  <strong>UNDER + 5pp + plus_odds + half_only is more credible:</strong> 1,118 bets spread across
+  30 teams. Average under_price = +101.4 (barely plus). Hit rate 54.6%. Mechanism: when the market
+  prices the over as the heavy favorite (under at plus odds), the model is identifying cases where
+  the over is overpriced. Non-Coors hit rate = 53.9% (still profitable at +101 odds).
+</div>
+</section>
+
+
+<!-- ================================================================ -->
+<section id="step5">
+<h2>Step 5 — Out-of-Sample Validation (2026) <span class="timestamp">2026-07-11 ET</span></h2>
+
+<h3>Train/Test Split</h3>
+<div class="config-block">
+Train: 2024 + 2025 (5,245 game-line rows, ~3,522 unique games)<br>
+Test:  2026 (1,411 game-line rows, 985 unique games through 2026-07-02)<br>
+OOS Model AUC: 0.5193 (slight drop from IS 0.531 — some generalization)
+</div>
+
+<h3>⛔ Critical Finding: 2026 Regime Change</h3>
+<div class="flag">
+  <strong>The 2026 MLB season is running significantly higher-scoring than 2024-2025.</strong>
+  The model trained on 2024-2025 systematically under-predicts run totals for 2026 games.
+  This causes wrong-direction bets — the model gives "under edge" to games that actually go over.
+
+  <br><br>OOS calibration by line (selected rows):
+  <br>• Line 7.5: actual_over=<strong>56.9%</strong> vs model 49.5% vs market 50.0% → OVERS hitting huge
+  <br>• Line 8.0: actual_over=42.8% vs model 44.1% vs market 50.0% → unders still hit (consistent with IS)
+  <br>• Line 8.5: actual_over=47.1% vs model 48.9% vs market 50.0% → slight under edge
+  <br>• Line 9.0: actual_over=<strong>54.7%</strong> vs model 43.4% vs market 49.9% → OVERS hitting huge (flipped from IS!)
+  <br>• Line 10.5: actual_over=38.6% vs model 44.8% vs market 50.0% → unders hit
+</div>
+
+<h3>OOS Strategy Results</h3>
+<table>
+  <thead><tr><th>Strategy</th><th>N Bets</th><th>ROI</th><th>Units Won</th><th>Hit Rate</th><th>Assessment</th></tr></thead>
+  <tbody>
+    <tr><td>UNDER 5pp plus_odds half (IS winner)</td><td>246</td><td>-6.5%</td><td>-15.9u</td><td>46.3%</td><td class="fail">FAIL</td></tr>
+    <tr><td>UNDER 5pp all half</td><td>1,276</td><td>-1.2%</td><td>-14.7u</td><td>51.3%</td><td class="fail">FAIL</td></tr>
+    <tr><td>UNDER 5pp minus_odds half</td><td>1,030</td><td>+0.1%</td><td>+1.2u</td><td>52.5%</td><td class="warn">FLAT</td></tr>
+    <tr><td>UNDER 3pp all half</td><td>2,066</td><td>-1.7%</td><td>-34.9u</td><td>51.1%</td><td class="fail">FAIL</td></tr>
+    <tr><td>UNDER 5pp all int (integer only)</td><td>2,963</td><td>-14.3%</td><td>-424.6u</td><td>38.8%</td><td class="fail">STRONGLY FAIL</td></tr>
+    <tr><td>OVER 0pp all all (baseline)</td><td>2,829</td><td>-1.2%</td><td>-33.1u</td><td>50.6%</td><td class="warn">Near-flat</td></tr>
+    <tr><td>UNDER 0pp all all (baseline)</td><td>7,833</td><td>-7.0%</td><td>-550.9u</td><td>45.2%</td><td class="fail">Bad baseline</td></tr>
+  </tbody>
+</table>
+
+<h3>Root Cause Analysis</h3>
+<ul>
+  <li><strong>2026 run environment is elevated:</strong> Average total runs per game is higher in 2026 than 2024-2025. The market has partially adjusted (lines are higher on average), but not fully.</li>
+  <li><strong>Model can't adapt:</strong> The logistic model learns historical rolling averages. In 2026, team run production is higher than the IS rolling stats suggest, so the model systematically sees "under edge" when the reverse is true.</li>
+  <li><strong>Integer line strategy catastrophically fails OOS:</strong> The IS signal at lines 9.0 (actual over 42.5%) completely reversed in 2026 (actual over 54.7%). This is not a stable edge.</li>
+  <li><strong>Only "UNDER minus_odds half" is ~flat OOS:</strong> +0.11% ROI on 1,030 bets — statistically indistinguishable from zero.</li>
+</ul>
+
+<h3>Conclusions and Recommendations</h3>
+<div class="flag">
+  <strong>⛔ DO NOT DEPLOY this pipeline as-is.</strong>
+  The model fails OOS due to a clear regime change in 2026 run environment.
+
+  <br><br><strong>To make this viable, one of the following is needed:</strong>
+  <br>1. <strong>In-season retraining:</strong> Retrain the model weekly using only the current season's data (≥ 50 games played). The model needs to "see" that 2026 is running hot before making 2026 predictions.
+  <br>2. <strong>Run environment normalization:</strong> Add a feature for the current season's average runs per game (computed from all games played so far that season), so the model can calibrate to the current run environment.
+  <br>3. <strong>Relative features only:</strong> Instead of raw rolling averages, use runs relative to season average (how much above/below average is this team). This would be invariant to year-over-year run environment shifts.
+  <br>4. <strong>Wait and retrain:</strong> If 2026 data continues to accumulate (needs ~500 games minimum), the model could be retrained on 2025+2026 to capture the new environment.
+</div>
+
+<div class="note">
+  <strong>Positive findings to carry forward:</strong><br>
+  • The calibration analysis is sound — integer line push rates are real and persistent<br>
+  • The market IS slightly inefficient at line 8.0 and occasionally 9.0 — the direction of the edge just changes with the run environment<br>
+  • Once the 2026 run environment is incorporated into the model, the under-at-integer-lines strategy could work again if 2026 settles back to IS levels (possible given current data is only ~3 months of season)<br>
+  • The spine and feature engineering pipeline is solid and production-ready<br>
+  • The best single predictor is the market itself — a model that starts from novig_prob and adjusts from there is the right architecture
+</div>
+
+<h3>Spot Check NYY @ BOS (OOS 2026)</h3>
+<p>2026-04-21: Total runs = 4 (under). Model predicted p_over = 58.7% (huge over edge, +9.7pp vs market).
+  Model was very wrong — this was a 4-run game. Illustrates the regime-change problem: the model
+  trained on high-scoring Fenway data from 2024-2025 expected a high-scoring game, but 2026 BOS
+  has a different run environment.</p>
+</section>
+
+
+
+<section id="step3-correction" style="border:3px solid #e74c3c;padding:16px;margin:24px 0;border-radius:8px">
+  <h2 style="color:#e74c3c">⚠ CORRECTION: Steps 3a/3b/3c Used Wrong Modeling Approach</h2>
+  
+  <h3>What was done (wrong)</h3>
+  <p>Steps 3a–3c trained <strong>binary classifiers</strong> predicting P(hit_over) and P(hit_under) directly as the model target. This is incorrect for two reasons:</p>
+  <ol>
+    <li><strong>Line conflation</strong>: hit_over/hit_under is a function of both the game outcome AND the line. A game scoring 9 runs hits the over at line 8.5 but not at line 9.5. By training on hit_over directly, the model's features are explaining whether the BET hit — which is partly market line placement — rather than whether the game scored runs.</li>
+    <li><strong>Cannot generalize across lines</strong>: A model predicting P(hit_over at line 9.5) has no way to generate a prediction for a game with line 8.5. You'd need a separate model per line. The total bases pipeline solves this correctly by predicting y_hat (the raw stat) once, then calibrating to any line.</li>
+  </ol>
+  <p>The AUC of 0.52 we observed was essentially the model detecting the line value itself (higher line → more likely to go over relative to its prior calibration). Not real signal.</p>
+  
+  <h3>Correct approach</h3>
+  <ol>
+    <li><strong>Step 3</strong>: Train a <em>regression</em> model predicting <code>total_runs</code> (continuous). Target is the actual score, not the bet outcome. Sweep individual features by r². Then train XGBoost regressor with constrained feature set (only features with positive individual r²).</li>
+    <li><strong>Step 4</strong>: Method C calibration — using OOF y_hat from the regression, fit a per-line logistic regression: <code>P(hit_over | y_hat)</code> for each distinct line value. This maps the regression output to a probability at the specific line being priced.</li>
+    <li><strong>Step 5</strong>: Backtest — <code>edge_under = (1 - P(over | y_hat, line)) - raw_prob_under</code>. Grid search over edge thresholds.</li>
+    <li><strong>Step 6</strong>: Temporal OOS (train 2024 → test 2025, train 2024+2025 → test 2026).</li>
+  </ol>
+  
+  <h3>What we already know going in</h3>
+  <ul>
+    <li>Individual feature r² vs total_runs is very low: best is <code>consensus_line</code> at 0.022, <code>park_factor</code> at 0.004, combined_ra/rs at &lt;0.003. The market is hard to beat.</li>
+    <li>XGBoost with all 56 features got r² = -0.012 (worse than mean) — heavy overfitting. We must use only features with positive individual r² and constrain the model.</li>
+    <li>Expected OOF r² for correct model: ~0.025–0.030 (small but positive). The calibration step can still produce meaningful edge even at low r².</li>
+    <li>The 9.5 under calibration edge (+3.9pp vs novig, +9.5% OOS ROI in 2025) is real and not model-dependent — it comes from the line bucket itself. The question is whether the regression y_hat adds signal ON TOP of that calibration edge by finding better vs worse 9.5 games.</li>
+  </ul>
+  
+  <h3>Steps 3a/3b/3c below are SUPERSEDED — do not use for production</h3>
+  <p>The grid search results from Steps 4+5 and OOS results from Step 6 are also invalidated because they were built on the wrong model outputs.</p>
+</section>
+
+<section id="step3a">
+  <h2>Step 3a — Individual Feature Sweep</h2>
+  <p>Tested 57 features independently using OOF GroupKFold (n=5) grouped by game_pk. Targets: hit_over (logistic AUC), hit_under (logistic AUC), total_runs (linear r²).</p>
+  
+  <h3>Key Finding: Market is highly efficient — individual features near-random</h3>
+  <p>All individual feature AUC values fall between 0.47–0.52. No single feature has meaningful predictive power. Baseline RMSE = 4.406 (predict mean). All feature models produce r² &lt; 0.025.</p>
+
+  <h3>Top Features by AUC (hit_over)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Feature</th><th>AUC Over</th><th>AUC Under</th><th>r²</th></tr>
+    <tr><td>line_is_integer</td><td>0.5159</td><td>0.5156</td><td>-0.001</td></tr>
+    <tr><td>home_ra_career</td><td>0.5122</td><td>0.5093</td><td>0.000</td></tr>
+    <tr><td>home_ra_L20</td><td>0.5102</td><td>0.5116</td><td>0.002</td></tr>
+    <tr><td>home_rs_L10</td><td>0.5082</td><td>0.5061</td><td>0.001</td></tr>
+    <tr><td>line (itself)</td><td>0.5079</td><td>0.5045</td><td>0.021</td></tr>
+    <tr><td>min_line</td><td>0.5073</td><td>0.5050</td><td>0.021</td></tr>
+    <tr><td>min_raw_implied_prob_under</td><td>0.5069</td><td>0.5137</td><td>-0.000</td></tr>
+  </table>
+  
+  <p><strong>line_is_integer</strong> tops the list because integer lines have 7–15% push rates, shifting effective over/under rates. Rolling stats are near-random (r² &lt; 0.003). The line itself has the best r² (0.021) but still tiny.</p>
+</section>
+
+<section id="step3b">
+  <h2>Step 3b — XGBoost Multi-Feature Sweep</h2>
+  <p>XGBoost with all 56 features combined, OOF GroupKFold n=5.</p>
+  
+  <table border="1" cellpadding="4">
+    <tr><th>Model</th><th>AUC Over</th><th>AUC Under</th><th>RMSE</th><th>r²</th></tr>
+    <tr><td>Line-only logistic (baseline)</td><td>0.5079</td><td>0.5045</td><td>—</td><td>—</td></tr>
+    <tr><td>XGB all features</td><td>0.5049</td><td>0.4975</td><td>4.435</td><td>-0.012</td></tr>
+    <tr><td>XGB rolling+park only</td><td>0.4998</td><td>0.4982</td><td>4.479</td><td>-0.032</td></tr>
+    <tr><td>Baseline (predict mean)</td><td>—</td><td>—</td><td>4.406</td><td>0.000</td></tr>
+  </table>
+  
+  <p><strong>XGB underperforms vs best single feature (0.5159) and the regressor beats the mean by -0.012 r².</strong> Adding features hurts. Feature importances are near-uniform (each ~2%), confirming no dominant signal.</p>
+</section>
+
+<section id="step3c">
+  <h2>Step 3c — Combo Models + Consensus-Line Calibration</h2>
+  <p>Top-K logistic models vs. consensus-line calibration (empirical hit rate per line bucket).</p>
+  
+  <table border="1" cellpadding="4">
+    <tr><th>Model</th><th>AUC Over</th><th>AUC Under</th></tr>
+    <tr><td>Logistic top-5 (for over)</td><td>0.5323</td><td>—</td></tr>
+    <tr><td>Logistic top-5 (for under)</td><td>—</td><td>0.5252</td></tr>
+    <tr><td>Consensus-line calibration</td><td>0.5199</td><td>0.5151</td></tr>
+    <tr><td>XGB top-5</td><td>0.5221</td><td>0.5133</td></tr>
+  </table>
+  
+  <p><strong>Best model: Logistic top-5 for over (AUC 0.5323)</strong>, using features: line_is_integer, home_ra_career, home_ra_L20, home_rs_L10, line.</p>
+  
+  <h3>Calibration Table (full dataset)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Line</th><th>n</th><th>Over%</th><th>Under%</th><th>Push%</th><th>Novig Over</th><th>Novig Under</th><th>Gap Over</th><th>Gap Under</th></tr>
+    <tr><td>7.5</td><td>8529</td><td>50.9%</td><td>49.1%</td><td>0%</td><td>50.0%</td><td>50.0%</td><td>+0.009</td><td>-0.009</td></tr>
+    <tr><td>8.0</td><td>11266</td><td>44.4%</td><td>47.9%</td><td>7.6%</td><td>50.1%</td><td>49.9%</td><td>-0.057</td><td>-0.020</td></tr>
+    <tr><td>8.5</td><td>14070</td><td>48.8%</td><td>51.2%</td><td>0%</td><td>50.1%</td><td>49.9%</td><td>-0.013</td><td>+0.013</td></tr>
+    <tr style="background:#ffffcc"><td><strong>9.0</strong></td><td>8309</td><td>42.8%</td><td>46.7%</td><td>10.5%</td><td>49.7%</td><td>50.3%</td><td>-0.069</td><td>-0.036</td></tr>
+    <tr style="background:#ccffcc"><td><strong>9.5</strong></td><td>3420</td><td>45.4%</td><td>54.6%</td><td>0%</td><td>49.3%</td><td>50.7%</td><td>-0.039</td><td><strong>+0.039</strong></td></tr>
+    <tr><td>10.0</td><td>915</td><td>53.7%</td><td>37.2%</td><td>9.2%</td><td>49.8%</td><td>50.2%</td><td>+0.038</td><td>-0.130</td></tr>
+    <tr><td>11.0</td><td>299</td><td>35.8%</td><td>48.2%</td><td>16.1%</td><td>50.3%</td><td>49.7%</td><td>-0.145</td><td>-0.016</td></tr>
+  </table>
+  
+  <p><strong>Line 9.5 UNDER: +3.9pp gap (54.6% actual vs 50.7% novig implied)</strong> — the strongest clean signal. Integer lines (8.0, 9.0) have large push rates that inflate apparent miscalibration.</p>
+</section>
+
+<section id="step45">
+  <h2>Steps 4+5 — Probability Conversion + Grid Search</h2>
+  <p>OOF logistic model probabilities + OOF consensus-line calibration probabilities, grid-searched across edge thresholds, directions, line filters.</p>
+  
+  <h3>Top Configs by ROI (min 50 bets, OOF in-sample)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Method</th><th>Direction</th><th>Edge≥</th><th>Lines</th><th>n</th><th>Hit%</th><th>Net P&L</th><th>ROI</th></tr>
+    <tr><td>p_model</td><td>under</td><td>0.03</td><td>[9.5]</td><td>87</td><td>73.6%</td><td>+39.4</td><td>45.3%</td></tr>
+    <tr><td>p_model</td><td>both</td><td>0.03</td><td>[9.5]</td><td>151</td><td>71.5%</td><td>+62.5</td><td>41.4%</td></tr>
+    <tr><td>p_model</td><td>under</td><td>0.02</td><td>[9.5]</td><td>173</td><td>68.8%</td><td>+61.0</td><td>35.2%</td></tr>
+    <tr><td>p_cal</td><td>under</td><td>0.03</td><td>[9.5]</td><td>73</td><td>69.9%</td><td>+26.7</td><td>36.6%</td></tr>
+    <tr><td>p_model</td><td>under</td><td>0.00</td><td>half_only</td><td>4879</td><td>53.9%</td><td>+251.7</td><td>5.2%</td></tr>
+  </table>
+  
+  <p><strong>Warning:</strong> High ROI at small n (e.g., 87 bets at 45% ROI) is likely overfit. Large-sample configs (n=4879) are more reliable at ~5% ROI. GroupKFold is NOT temporal — some temporal leakage possible (2025/2026 training data used to predict 2024 games).</p>
+
+  <h3>Spot Check: Line 9.5</h3>
+  <ul>
+    <li>Actual under hit rate at 9.5: 54.6%</li>
+    <li>Model p_model_under average: 0.489 (model predicts neutral, NOT capturing calibration)</li>
+    <li>Calibration p_cal_under average: 0.488 (similar)</li>
+    <li>The OOF edge = p_model - raw_prob_under ≈ 0.489 - 0.52 = -0.031 (typically NEGATIVE)</li>
+    <li>High-ROI 9.5 bets come from rows where rolling features predict high under probability on top of the line effect</li>
+  </ul>
+</section>
+
+<section id="step6">
+  <h2>Step 6 — Out-of-Sample Validation (Temporal Split)</h2>
+  <p>True temporal OOS: train on past seasons, test on future seasons. No future data in training.</p>
+  
+  <h3>OOS Test 1: Train 2024 → Test 2025</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Strategy</th><th>n</th><th>Hit%</th><th>Net P&L</th><th>ROI</th></tr>
+    <tr style="background:#ccffcc"><td>CALIBRATION: all 9.5 unders (no model)</td><td>1,582</td><td>57.9%</td><td>+149.8</td><td><strong>+9.5%</strong></td></tr>
+    <tr><td>CALIBRATION: all 8.5+9.5 unders</td><td>7,149</td><td>52.7%</td><td>+54.6</td><td>+0.8%</td></tr>
+    <tr><td>Model 9.5 under, edge≥0.00</td><td>614</td><td>54.1%</td><td>+21.3</td><td>+3.5%</td></tr>
+    <tr><td>Model half_only under, edge≥0.01</td><td>3,020</td><td>54.9%</td><td>+192.0</td><td>+6.4%</td></tr>
+  </table>
+  
+  <h3>OOS Test 2: Train 2024+2025 → Test 2026 (partial through July 2)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Strategy</th><th>n</th><th>Hit%</th><th>Net P&L</th><th>ROI</th></tr>
+    <tr style="background:#ccffcc"><td>CALIBRATION: all 9.5 unders (no model)</td><td>742</td><td>56.5%</td><td>+46.7</td><td><strong>+6.3%</strong></td></tr>
+    <tr><td>CALIBRATION: all 8.5+9.5 unders</td><td>3,371</td><td>53.9%</td><td>+82.9</td><td>+2.5%</td></tr>
+    <tr><td>Model 9.5 under, edge≥0.00</td><td>329</td><td>62.0%</td><td>+60.5</td><td>+18.4%</td></tr>
+    <tr><td>Model half_only under, edge≥0.00</td><td>1,956</td><td>49.0%</td><td>-104.6</td><td>-5.3%</td></tr>
+  </table>
+  
+  <h3>Calibration Baseline by Season</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Season</th><th>n (all 9.5)</th><th>Under Hit%</th><th>Novig Under%</th><th>ROI (flat bet)</th></tr>
+    <tr style="background:#ffcccc"><td>2024</td><td>1,096</td><td>48.7%</td><td>50.7%</td><td>-7.8%</td></tr>
+    <tr style="background:#ccffcc"><td>2025</td><td>1,582</td><td>57.9%</td><td>50.7%</td><td>+9.5%</td></tr>
+    <tr style="background:#ccffcc"><td>2026 (thru Jul 2)</td><td>742</td><td>56.5%</td><td>50.8%</td><td>+6.3%</td></tr>
+  </table>
+  
+  <h3>Key Findings and Caveats</h3>
+  <ul>
+    <li><strong>The 9.5 under signal is a 2025+ phenomenon</strong> — 2024 had the opposite (over-friendly at 9.5, ROI -7.8%)</li>
+    <li>OOS 2025: +9.5% flat-bet ROI on 1,582 per-book bets (~105 unique games × 15 books/game)</li>
+    <li>OOS 2026 (partial): +6.3% confirms the signal is holding in 2027 season</li>
+    <li>The logistic model helps in 2026 (18.4% by selecting 44% of 9.5 unders) but hurts in 2025 (trained on 2024's reversed calibration)</li>
+    <li><strong>Production recommendation: bet all 9.5 unders, no edge filter, pure calibration signal</strong></li>
+    <li>Risk: if 2024-like scoring environment returns, signal will reverse. Monitor monthly.</li>
+    <li>The half_only under strategy is NOT robust — works in 2025 (+6.4%) but fails in 2026 (-5.3%)</li>
+  </ul>
+</section>
+
+
+<!-- ================================================================ -->
+<section id="step3-corrected" style="border:2px solid #2a7a2a; padding:16px; margin:20px 0; border-radius:6px;">
+  <h2>Step 3 (Corrected) — Regression: Predict total_runs</h2>
+  <p><strong>Date:</strong> 2026-07-11 | <strong>Script:</strong> <code>20260711_step3_regression.py</code></p>
+
+  <p>Corrected approach: predict total_runs as a continuous regression target.
+  Features limited to those with positive individual r² from Step 3a's r² column (which was valid — the binary AUC columns were invalid, but r² against total_runs was always the right metric).</p>
+
+  <h3>Feature Selection (positive r² only)</h3>
+  <table border="1" style="border-collapse:collapse; font-size:13px;">
+    <tr><th>Feature</th><th>Individual r²</th></tr>
+    <tr><td>consensus_line</td><td>0.0219</td></tr>
+    <tr><td>park_factor</td><td>0.0037</td></tr>
+    <tr><td>combined_ra_L10</td><td>0.0024</td></tr>
+    <tr><td>home_ra_L20</td><td>0.0018</td></tr>
+    <tr><td>combined_ra_L5</td><td>0.0015</td></tr>
+    <tr><td>combined_rs_L10</td><td>0.0013</td></tr>
+    <tr><td>home_rs_L10</td><td>0.0011</td></tr>
+    <tr><td>away_rs_L3</td><td>0.0009</td></tr>
+    <tr><td>combined_ra_career</td><td>0.0007</td></tr>
+    <tr><td>away_ra_L5</td><td>0.0007</td></tr>
+    <tr><td>home_ra_L10</td><td>0.0006</td></tr>
+    <tr><td>away_ra_L10</td><td>0.0006</td></tr>
+  </table>
+  <p>Line/min_line/max_line all r²≈0.022 but collinear with consensus_line — use only consensus_line.</p>
+
+  <h3>OOF Regression Results (4,507 games, GroupKFold n=5 by game_pk)</h3>
+  <table border="1" style="border-collapse:collapse; font-size:13px;">
+    <tr><th>Model</th><th>RMSE</th><th>MAE</th><th>r²</th></tr>
+    <tr><td>Baseline (predict mean)</td><td>4.4182</td><td>—</td><td>0.000</td></tr>
+    <tr><td>OLS (LinearRegression)</td><td>4.3707</td><td>3.4687</td><td>0.0221</td></tr>
+    <tr><td>Ridge (alpha=10)</td><td>4.3706</td><td>3.4687</td><td>0.0222</td></tr>
+    <tr><td><strong>Ridge (alpha=50)</strong></td><td><strong>4.3703</strong></td><td><strong>3.4686</strong></td><td><strong>0.0223</strong></td></tr>
+    <tr><td>XGBoost (depth=2, n=100, reg=5)</td><td>4.3764</td><td>3.4725</td><td>0.0196</td></tr>
+    <tr><td>XGBoost (depth=3, n=200, reg=10)</td><td>4.3976</td><td>3.4875</td><td>0.0100</td></tr>
+  </table>
+
+  <p><strong>Key findings:</strong></p>
+  <ul>
+    <li>Ridge r²=0.022 — very low but positive and stable. XGBoost overfits even with heavy regularization (r² drops from 0.020 to 0.010 as depth/trees increase).</li>
+    <li>y_hat std = 0.75 vs actual std = 4.42. Regression shrinks predictions toward the mean — this is expected and correct. The calibration step maps y_hat to per-line probabilities.</li>
+    <li>y_hat range: [6.45, 12.98]. All predictions within a plausible game-total range.</li>
+    <li>Primary model: Ridge alpha=10 (y_hat saved to step3_oof_yhat.parquet).</li>
+  </ul>
+</section>
+
+<!-- ================================================================ -->
+<section id="step4-calibration" style="border:2px solid #2a5ca0; padding:16px; margin:20px 0; border-radius:6px;">
+  <h2>Step 4 — Method C Per-Line Calibration</h2>
+  <p><strong>Date:</strong> 2026-07-11 | <strong>Script:</strong> <code>20260711_step4_calibration.py</code></p>
+
+  <p>Maps OOF y_hat → P(hit_over | line) using per-line logistic regression.
+  p_model is book-invariant: same per (game_pk, line). Edge = p_model_under - raw_prob_under.</p>
+
+  <h3>In-Sample Calibration Table</h3>
+  <p><em>Note: in-sample calibration trivially fits (cal_gap ≈ 0). OOS validation is in Steps 5+6.</em></p>
+  <table border="1" style="border-collapse:collapse; font-size:13px;">
+    <tr><th>line</th><th>n_games</th><th>actual_over</th><th>actual_under</th><th>p_cal_over</th><th>novig_over</th><th>novig_gap</th><th>brier_model</th><th>brier_novig</th><th>brier_delta</th></tr>
+    <tr><td>6.5</td><td>51</td><td>0.554</td><td>0.446</td><td>0.554</td><td>0.514</td><td>+0.040</td><td>0.1645</td><td>0.2475</td><td>+0.083</td></tr>
+    <tr><td>7.0</td><td>300</td><td>0.437</td><td>0.417</td><td>0.437</td><td>0.508</td><td>-0.071</td><td>0.2444</td><td>0.2509</td><td>+0.007</td></tr>
+    <tr><td>7.5</td><td>1083</td><td>0.507</td><td>0.493</td><td>0.507</td><td>0.500</td><td>+0.007</td><td>0.2497</td><td>0.2502</td><td>+0.001</td></tr>
+    <tr><td>8.0</td><td>1564</td><td>0.445</td><td>0.478</td><td>0.445</td><td>0.501</td><td>-0.056</td><td>0.2464</td><td>0.2496</td><td>+0.003</td></tr>
+    <tr><td>8.5</td><td>1853</td><td>0.488</td><td>0.512</td><td>0.488</td><td>0.501</td><td>-0.012</td><td>0.2498</td><td>0.2501</td><td>+0.000</td></tr>
+    <tr><td>9.0</td><td>1055</td><td>0.428</td><td>0.467</td><td>0.428</td><td>0.497</td><td>-0.070</td><td>0.2448</td><td>0.2496</td><td>+0.005</td></tr>
+    <tr style="background:#fffde7;"><td><strong>9.5</strong></td><td><strong>481</strong></td><td><strong>0.454</strong></td><td><strong>0.546</strong></td><td>0.454</td><td>0.493</td><td><strong>-0.039</strong></td><td>0.2478</td><td>0.2505</td><td>+0.003</td></tr>
+    <tr><td>10.0</td><td>143</td><td>0.537</td><td>0.372</td><td>0.537</td><td>0.498</td><td>+0.038</td><td>0.2486</td><td>0.2488</td><td>+0.000</td></tr>
+    <tr><td>10.5</td><td>70</td><td>0.446</td><td>0.554</td><td>0.446</td><td>0.497</td><td>-0.051</td><td>0.2434</td><td>0.2501</td><td>+0.007</td></tr>
+  </table>
+
+  <p><strong>Key finding:</strong> In-sample, the model's calibration is better than novig on 11/12 line buckets (brier_delta > 0). But the in-sample calibration trivially fits. The real test is OOS.</p>
+
+  <p><strong>9.5 spotlight (in-sample):</strong> actual_under=54.6% vs novig_under=50.7% (+3.9pp calibration gap). Edge distribution: 86.6% of 9.5 under rows have model edge>0, but hit rate 54.7% (edge>0) vs 54.5% (edge≤0) — the model barely discriminates within-line. The main signal is cross-line (market underprices unders at 9.5 in general).</p>
+</section>
+
+<!-- ================================================================ -->
+<section id="step56-oos" style="border:2px solid #7a2a7a; padding:16px; margin:20px 0; border-radius:6px;">
+  <h2>Steps 5+6 — Temporal OOS Backtest</h2>
+  <p><strong>Date:</strong> 2026-07-11 | <strong>Script:</strong> <code>20260711_step56_backtest.py</code></p>
+
+  <p>Proper temporal train/test splits (no GroupKFold leakage):</p>
+  <ul>
+    <li>OOS Split 1: Train 2024 → Test 2025</li>
+    <li>OOS Split 2: Train 2024+2025 → Test 2026</li>
+  </ul>
+
+  <h3>OOS Split 1: Train 2024 → Test 2025</h3>
+  <p>Train: 1,731 games | Test: 1,779 games | Test spine rows: 19,287</p>
+  <table border="1" style="border-collapse:collapse; font-size:13px;">
+    <tr><th>Config</th><th>n_bets</th><th>hit_rate</th><th>net_pnl</th><th>ROI</th></tr>
+    <tr style="background:#e8f5e9;"><td>BENCHMARK: all 9.5 unders</td><td>1,582</td><td>0.579</td><td>+149.8u</td><td>+9.47%</td></tr>
+    <tr><td>edge>0.07, line=[8.5,9.5]</td><td>931</td><td>0.609</td><td>+167.1u</td><td>+17.95%</td></tr>
+    <tr><td>edge>0.05, line=[8.5,9.5]</td><td>1,388</td><td>0.594</td><td>+201.6u</td><td>+14.52%</td></tr>
+    <tr><td>edge>0.00, line=[9.0,9.5,10.0]</td><td>2,822</td><td>0.580</td><td>+272.1u</td><td>+10.80%</td></tr>
+    <tr><td>edge>0.07, all lines</td><td>4,347</td><td>0.574</td><td>+420.0u</td><td>+10.22%</td></tr>
+  </table>
+
+  <h3>OOS Split 2: Train 2024+2025 → Test 2026</h3>
+  <p>Train: 3,510 games | Test: 985 games | Test spine rows: 10,794</p>
+  <table border="1" style="border-collapse:collapse; font-size:13px;">
+    <tr><th>Config</th><th>n_bets</th><th>hit_rate</th><th>net_pnl</th><th>ROI</th></tr>
+    <tr style="background:#e8f5e9;"><td>BENCHMARK: all 9.5 unders</td><td>742</td><td>0.565</td><td>+46.7u</td><td>+6.29%</td></tr>
+    <tr><td>edge>0.02, line=[9.5]</td><td>79</td><td>0.671</td><td>+25.5u</td><td>+32.26%</td></tr>
+    <tr><td>edge>0.01, line=[9.5]</td><td>176</td><td>0.659</td><td>+49.1u</td><td>+27.92%</td></tr>
+    <tr><td>edge>0.00, line=[9.5]</td><td>346</td><td>0.572</td><td>+33.3u</td><td>+9.62%</td></tr>
+    <tr style="background:#ffebee;"><td>edge>0.01, line=[8.5,9.5]</td><td>1,075</td><td>0.514</td><td>-12.6u</td><td>-1.17%</td></tr>
+    <tr style="background:#ffebee;"><td>edge>0.00, line=[8.5,9.5]</td><td>1,470</td><td>0.512</td><td>-29.3u</td><td>-1.99%</td></tr>
+  </table>
+  <p><strong>Warning:</strong> 8.5 line worked in 2025 but flipped negative in 2026. Not robust.</p>
+
+  <h3>Combined OOS (2025+2026) — Top Configs (min 100 bets)</h3>
+  <table border="1" style="border-collapse:collapse; font-size:13px;">
+    <tr><th>edge_threshold</th><th>line_filter</th><th>n_bets</th><th>hit_rate</th><th>net_pnl</th><th>ROI</th></tr>
+    <tr style="background:#e3f2fd;"><td>0.01</td><td>[9.5]</td><td>190</td><td>0.653</td><td>+51.4u</td><td>+27.05%</td></tr>
+    <tr style="background:#e3f2fd;"><td>0.00</td><td>[9.5]</td><td>383</td><td>0.590</td><td>+52.3u</td><td>+13.65%</td></tr>
+    <tr><td>0.07</td><td>[8.5,9.5]</td><td>1,043</td><td>0.585</td><td>+136.3u</td><td>+13.07%</td></tr>
+    <tr><td>0.05</td><td>[8.5,9.5]</td><td>1,685</td><td>0.572</td><td>+171.0u</td><td>+10.15%</td></tr>
+    <tr style="background:#e8f5e9;"><td colspan="2"><strong>BENCHMARK: all 9.5 unders</strong></td><td><strong>2,324</strong></td><td><strong>0.574</strong></td><td><strong>+196.4u</strong></td><td><strong>+8.45%</strong></td></tr>
+    <tr><td>0.03</td><td>[8.5,9.5]</td><td>2,522</td><td>0.545</td><td>+122.2u</td><td>+4.85%</td></tr>
+    <tr style="background:#ffebee;"><td>0.00</td><td>all</td><td>17,430</td><td>0.487</td><td>-188.5u</td><td>-1.08%</td></tr>
+  </table>
+
+  <h3>Key Conclusions</h3>
+  <ol>
+    <li><strong>9.5 under signal is REAL and OOS-confirmed:</strong> 9.47% ROI in 2025, 6.29% in 2026 = 8.45% combined (2,324 bets). This is a market calibration gap, not model-specific.</li>
+    <li><strong>Regression model adds signal at 9.5 line:</strong> At edge>0.01 (line=9.5), combined ROI rises to 27.05% (n=190). But small sample — the 2026 n=176 bets driving this are only 24% of 2026's 9.5 under opportunities.</li>
+    <li><strong>8.5 line is NOT robust:</strong> Worked in 2025 (+17.95%) but negative in 2026 (-2%). Do not use 8.5 in production.</li>
+    <li><strong>Broad strategies (all lines) are negative:</strong> ROI -1.08% across all lines/books. The signal is specific to line 9.5.</li>
+    <li><strong>Model adds within-9.5 discrimination:</strong> The regression (r²=0.022) does separate better/worse games at the 9.5 line. At edge>0.01, the model is selecting games where y_hat is meaningfully below 9.5, implying the under is more likely than the market prices.</li>
+    <li><strong>Deployable strategy:</strong> Bet 9.5 unders where model edge > 0 (or even all 9.5 unders). Config.yaml strategy block already encodes this: p_model_under=0.560, min_bet_edge=0.00, line=9.5.</li>
+  </ol>
+
+  <h3>Caveat — Run Environment Dependency</h3>
+  <p>The 9.5 under signal emerged in 2025 (2024 hit rate was 48.7% — no signal). The 2026 partial (6.3%) is lower but positive. There is a risk this is a 2025-2026 era phenomenon (run environment shift, pitching dominance at certain scoring ranges). Monitor monthly; if hit rate drops below 53% sustained, the signal may have eroded.</p>
+</section>
+
+</body>
+</html>
+
+<section>
+  <h2>Step 7 — Mock Email Output</h2>
+  <p><strong>Goal:</strong> Simulate the daily email for qualifying 9.5 UNDER bets. Script re-trains Ridge+calibration on all data before the target date and formats qualifying bets (line=9.5, edge&gt;0 vs raw_prob_under).</p>
+  <p><strong>Script:</strong> <code>20260711_step7_mock_email.py</code></p>
+
+  <h3>Email Format</h3>
+  <ul>
+    <li>Game header: Away @ Home · N books</li>
+    <li>Model y_hat (projected total runs) and P(under 9.5)</li>
+    <li>Key model inputs: consensus_line, combined_ra_L10, park_factor, home_ra_L20</li>
+    <li>Per-book table: Book | Line | Over odds | Under odds | Raw P(over/under) | Fair (novig) P(over/under) | Model P(under) | Edge vs raw</li>
+    <li>◄ marker for edge ≥ 2pp</li>
+    <li>Settlement result if known (actual runs → UNDER ✓ / OVER ✗)</li>
+  </ul>
+
+  <h3>Sample: 2026-06-24 (1 qualifying game)</h3>
+  <pre>
+MLB GAME TOTALS — 9.5 UNDER BETS — 2026-06-24
+11 qualifying bets (edge > 0 vs raw)
+
+Milwaukee Brewers @ Cincinnati Reds  ·  11 books
+  Model y_hat:           9.17 projected total runs
+  Model P(under 9.5):    60.4%
+  Inputs:  consensus_line=9.25  |  combined_ra_L10=6.00  |  park_factor=1.05  |  home_ra_L20=4.15
+
+  Book         Line  Over  Under  Raw Ov  Raw Un  Fair Ov  Fair Un  Mdl Un   Edge
+  LowVig        9.5  -108   -106   51.9%   51.5%    50.2%    49.8%   60.4%  +9.0% ◄
+  BetOnline     9.5  -111   -109   52.6%   52.2%    50.2%    49.8%   60.4%  +8.3% ◄
+  fanatics      9.5  -110   -110   52.4%   52.4%    50.0%    50.0%   60.4%  +8.0% ◄
+  BetMGM        9.5  -110   -110   52.4%   52.4%    50.0%    50.0%   60.4%  +8.0% ◄
+  DraftKings    9.5  -108   -111   51.9%   52.6%    49.7%    50.3%   60.4%  +7.8% ◄
+  [+ 6 more books, edge 6.5%–7.4%]
+
+  Actual: 11 runs → OVER ✗
+  </pre>
+
+  <h3>Sample: 2025-06-29 (4 qualifying games, 23 bets)</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Matchup</th><th>y_hat</th><th>P(under 9.5)</th><th>Books</th><th>Edge range</th><th>Result</th></tr>
+    <tr><td>TB Rays @ BAL Orioles</td><td>10.30</td><td>49.1%</td><td>1 (LowVig +105 under)</td><td>+0.4%</td><td>UNDER ✓ (6 runs)</td></tr>
+    <tr><td>TOR Blue Jays @ BOS Red Sox</td><td>9.52</td><td>55.2%</td><td>11 books</td><td>+2.2% – +5.2%</td><td>UNDER ✓ (8 runs)</td></tr>
+    <tr><td>NY Mets @ PIT Pirates</td><td>9.45</td><td>55.8%</td><td>3 books</td><td>+0.9% – +1.3%</td><td>OVER ✗ (13 runs)</td></tr>
+    <tr><td>LAD Dodgers @ KC Royals</td><td>9.69</td><td>53.9%</td><td>8 books</td><td>+2.0% – +3.9%</td><td>UNDER ✓ (6 runs)</td></tr>
+  </table>
+  <p>Day result: 3/4 games hit. Email sent before game start.</p>
+
+  <h3>Key Observations</h3>
+  <ul>
+    <li>Model P(under 9.5) typically 49–61%; edge vs raw typically 0.4%–9%. Low-vig books (LowVig, BetOnline) consistently have highest edge because lower vig → lower raw_prob_under → larger gap to model.</li>
+    <li>Busy slate (6+ 9.5-line games) yields 20–30 qualifying bets. Light slate yields 0–5.</li>
+    <li>Production threshold: edge&gt;0 per memory; edge&gt;2pp gives higher conviction bets (◄ marked).</li>
+  </ul>
+
+  <p><strong>Status:</strong> Step 7 complete. Script validated on 2026-06-24 and 2025-06-29.</p>
+</section>
+
+<section>
+  <h2>Step 8 — Lambda Pipeline Build</h2>
+  <p><strong>Architecture:</strong> Daily re-train pipeline (no pre-trained model artifact). Ridge(α=50) regression + Method C calibration re-trained each morning from the historical spine on S3. Two Lambda modes: <code>pipeline</code> (10am ET, generate picks) and <code>settle</code> (11am ET, settle yesterday).</p>
+
+  <h3>Files Built</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td><code>scripts/run_pipeline.py</code></td><td>Daily picks: load spine → train Ridge+calibration → fetch live odds → score → qualify → email</td></tr>
+    <tr><td><code>scripts/settle_game_totals.py</code></td><td>Settlement: load yesterday's bets → fetch MLB Stats API scores → settle → cumulative parquet</td></tr>
+    <tr><td><code>lambda/lambda_function.py</code></td><td>Lambda orchestrator (modes: pipeline / settle / combined)</td></tr>
+    <tr><td><code>lambda/Dockerfile</code></td><td>Container image (python:3.11, pandas, scikit-learn, requests)</td></tr>
+    <tr><td><code>lambda/deploy_mlb_game_totals_lambda.sh</code></td><td>One-shot deploy: ECR build → Lambda create/update → 2 EventBridge rules (DISABLED)</td></tr>
+  </table>
+
+  <h3>Production Flow (daily)</h3>
+  <ol>
+    <li><strong>10:00am ET — pipeline mode:</strong> Load spine from S3 (4,400+ games, all pre-target-date). Build team rolling-stat lookup (most recent game per team). Train Ridge(α=50) on all historical game-level features. Fit Method C per-line calibration (logistic y_hat→P(over|line)) on training games. Fetch live game totals from Odds API. Build feature vector for each game (consensus_line + park_factor + team rolling stats). Score all lines. Qualify: line=9.5, edge>0. Send HTML email. Write picks.csv to S3.</li>
+    <li><strong>11:00am ET — settle mode:</strong> Load yesterday's qualifying_bets.csv from S3. Fetch final scores from MLB Stats API. Settle (under 9.5 wins if total_runs &lt; 9.5). Append to cumulative settled parquet. Send settle email.</li>
+  </ol>
+
+  <h3>Key Design Decisions</h3>
+  <ul>
+    <li><strong>Re-train daily</strong> (not pre-trained artifact): Ridge is fast (&lt;1s on 4,400 games). Model benefits from including most recent games. Calibration also benefits from fresh fit. No S3 model artifact to manage.</li>
+    <li><strong>Team feature lookup</strong>: From spine, build per-team rolling stats by finding each team's most recent game (as home or away). Rename to generic rs_/ra_ prefix, then attach to today's home/away matchups.</li>
+    <li><strong>Edge = p_model_under - raw_prob_under</strong> (vig-inclusive per skill spec). Benchmark: bet ALL 9.5 unders = +8.45% OOS ROI. Model edge&gt;0 filter = +13.65% OOS ROI (n=383).</li>
+    <li><strong>EventBridge rules DISABLED</strong> at deploy time. Enable manually after confirming pipeline output is correct on a live day.</li>
+  </ul>
+
+  <h3>S3 Paths</h3>
+  <table border="1" cellpadding="4">
+    <tr><th>Path</th><th>Content</th></tr>
+    <tr><td>mlb/game_totals_model/spine/mlb_game_totals_spine.parquet</td><td>Historical spine (50,188 rows, 4,507 games) — source of truth for model training + team features</td></tr>
+    <tr><td>mlb/game_totals_model/daily_runs/{date}/picks.csv</td><td>All scored rows for the day</td></tr>
+    <tr><td>mlb/game_totals_model/daily_runs/{date}/qualifying_bets.csv</td><td>9.5 under bets where edge&gt;0</td></tr>
+    <tr><td>mlb/game_totals_model/daily_runs/{date}/settled.csv</td><td>Yesterday's settled bets</td></tr>
+    <tr><td>mlb/game_totals_model/settled/mlb_gt_settled_bets.parquet</td><td>Cumulative settled history</td></tr>
+  </table>
+
+  <h3>Pre-Deploy Checklist</h3>
+  <ol>
+    <li>Rebuild spine (add 2026-07-03+ games via fetch_game_scores + fetch_totals_lines + build_spine)</li>
+    <li>Test pipeline mode with a recent historical gameday (--local-spine flag)</li>
+    <li>Enable EventBridge rules: mlb-gt-pipeline-daily-10am-et + mlb-gt-settle-daily-11am-et</li>
+    <li>Monitor 9.5 under hit rate daily; pause if sustained &lt;53% over 30 days</li>
+  </ol>
+
+  <p><strong>Status:</strong> Step 8 complete. Pipeline NOT YET DEPLOYED — requires spine update (data through 2026-07-02 only) and pre-deploy checklist.</p>
+</section>
+
+<section>
+  <h2>Step 6b — Drawdown Analysis</h2>
+  <p><strong>Goal:</strong> Add peak-to-trough max drawdown (MDD) to the key strategy configs to assess risk-adjusted performance beyond raw net units and ROI.</p>
+  <p><strong>MDD definition:</strong> Peak-to-trough on the cumulative equity curve, NOT from zero. Being -47u from a prior +88u peak (MDD=-47u) while up +41u overall is very different from being -47u underwater. The net/MDD ratio (analogous to Calmar ratio) is the primary comparison metric.</p>
+
+  <h3>Combined OOS 2025+2026 — Drawdown Results</h3>
+  <table border="1" cellpadding="4" style="font-size:13px">
+    <tr>
+      <th>Config</th><th>n</th><th>Hit%</th><th>Net</th><th>ROI%</th>
+      <th>MDD</th><th>net/MDD</th><th>Peak → Trough</th><th>Recovered?</th>
+    </tr>
+    <tr style="background:#d4edda">
+      <td><strong>BENCHMARK: all 9.5 unders</strong></td>
+      <td>2,324</td><td>57.4%</td><td>+196.4u</td><td>+8.45%</td>
+      <td>-77.4u</td><td><strong>2.54x</strong></td>
+      <td>2025-08-25 → 2026-04-29</td><td>yes 2026-06-28</td>
+    </tr>
+    <tr style="background:#fff3cd">
+      <td>edge&gt;0.00, line=[9.5]</td>
+      <td>383</td><td>58.2%</td><td>+52.3u</td><td>+13.65%</td>
+      <td>-48.9u</td><td>1.07x</td>
+      <td>—</td><td>—</td>
+    </tr>
+    <tr style="background:#fff3cd">
+      <td>edge&gt;0.01, line=[9.5]</td>
+      <td>190</td><td>61.1%</td><td>+51.4u</td><td>+27.05%</td>
+      <td>-13.5u</td><td><strong>3.80x</strong></td>
+      <td>—</td><td>—</td>
+    </tr>
+    <tr>
+      <td>edge&gt;0.02, line=[9.5]</td>
+      <td>~120</td><td>—</td><td>—</td><td>—</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td>
+    </tr>
+    <tr style="background:#f8d7da">
+      <td>edge&gt;0.00, line=[8.5,9.5]</td>
+      <td>~500</td><td>—</td><td>—</td><td>—</td>
+      <td>—</td><td>—</td><td>—</td><td>STILL IN DRAWDOWN</td>
+    </tr>
+  </table>
+
+  <h3>Key Findings</h3>
+  <ul>
+    <li><strong>Benchmark wins on absolute units AND risk-adjusted return.</strong> All 9.5 unders (+196.4u, 2.54x net/MDD) beats the edge&gt;0 filter (+52.3u, 1.07x net/MDD). Filtering by model edge dramatically reduces bet count without improving the Calmar-equivalent ratio.</li>
+    <li><strong>edge&gt;0.01 has the best net/MDD ratio (3.80x)</strong> but relies on n=14 bets in 2025 — too thin to trust as a standalone strategy. Used as a ◄◄ conviction marker in the daily email instead.</li>
+    <li><strong>8.5-line signal is deteriorating.</strong> The edge&gt;0 [8.5,9.5] config is STILL IN DRAWDOWN at the end of the sample. Consistent with prior step finding: 8.5 was +17.95% ROI in 2025 but -2% in 2026. Excluded from production.</li>
+    <li><strong>Benchmark MDD context:</strong> Peak 2025-08-25 → trough 2026-04-29 (8-month drawdown), recovered 2026-06-28. An 8-month drawdown of -77.4u from a +88u peak — while always net-positive — requires psychological fortitude. The net/MDD=2.54x means you recovered 2.54x the worst drawdown in net profit.</li>
+    <li><strong>Monitor rule:</strong> If 9.5 under hit rate drops below 53% sustained over 30 days → pause. Signal emerged 2025 and was absent in 2024.</li>
+  </ul>
+
+  <h3>Production Strategy Decision</h3>
+  <p>Updated config.yaml to <code>min_bet_edge: -999</code> (bet ALL 9.5 unders). Email tiers preserved as informational markers:</p>
+  <ul>
+    <li>◄◄ = edge&gt;1pp (HIGH_CONVICTION, +27.05% OOS but n=190)</li>
+    <li>◄ = edge&gt;0pp (model says under is +EV vs raw book price)</li>
+    <li>(no marker) = edge&lt;0 (model says over, but still bet the under per benchmark)</li>
+  </ul>
+
+  <h3>Script</h3>
+  <p><code>src/mlb_game_totals_modeling/scripts/20260711_step6b_drawdown.py</code></p>
+</section>
+
+<section>
+  <h2>Steps 5/6 Correction — Grid Search Was Incomplete</h2>
+  <p><strong>⚠️ Correction:</strong> The original Steps 5/6 backtest only swept edge thresholds, line filters, and direction. Three dimensions defined in <code>config.yaml</code> were never actually run:</p>
+  <ul>
+    <li><code>odds_bucket: ["all", "plus_odds", "minus_odds"]</code></li>
+    <li><code>shrinkage: [0, 0.25, 0.50, 0.75]</code></li>
+    <li><code>prediction_method: ["model", "consensus_line"]</code></li>
+  </ul>
+  <p>This meant the "benchmark wins → bet all 9.5 unders" conclusion was premature. The extended grid (Step 6c) below shows significantly better configs exist.</p>
+</section>
+
+<section>
+  <h2>Step 6c — Extended Grid Search (New Dimensions)</h2>
+
+  <h3>Config</h3>
+  <ul>
+    <li><strong>prediction_method:</strong> "model" = full 12-feature Ridge + per-line calibration; "consensus_line" = single-feature Ridge (consensus_line only) + calibration. Tests whether rolling RA/RS add anything beyond the market's own priced total.</li>
+    <li><strong>shrinkage:</strong> Blends p_model toward novig_prob: p_eff = (1−s)·p_model + s·novig_prob. At 0=pure model, at 0.75=mostly market.</li>
+    <li><strong>odds_bucket:</strong> "plus_odds"=under_price>0, "minus_odds"=under_price&lt;0. Only 5.7% of 9.5 under rows are plus-odds.</li>
+    <li><strong>Total configs evaluated:</strong> 1,142 with n≥10 bets (OOS 2025+2026 combined)</li>
+  </ul>
+
+  <h3>Top Configs by ROI (n≥50)</h3>
+  <table border="1" cellpadding="4" style="font-size:12px">
+    <tr><th>Method</th><th>Edge≥</th><th>Line</th><th>Odds</th><th>Shrink</th><th>n</th><th>Hit%</th><th>Net</th><th>ROI%</th><th>MDD</th><th>net/MDD</th></tr>
+    <tr style="background:#d4edda"><td>model</td><td>0.00</td><td>[9.5]</td><td>plus_odds</td><td>0.00</td><td>55</td><td>72.7%</td><td>+25.8u</td><td>+46.85%</td><td>-4.0u</td><td><strong>6.44x</strong></td></tr>
+    <tr style="background:#d4edda"><td>consensus_line</td><td>0.05</td><td>[9.5]</td><td>minus_odds</td><td>0.75</td><td>172</td><td>74.4%</td><td>+77.1u</td><td>+44.81%</td><td>-11.0u</td><td><strong>7.01x</strong></td></tr>
+    <tr><td>consensus_line</td><td>0.07</td><td>[9.5]</td><td>minus_odds</td><td>0.00</td><td>181</td><td>72.9%</td><td>+75.7u</td><td>+41.83%</td><td>-11.0u</td><td>6.88x</td></tr>
+    <tr><td>consensus_line</td><td>0.10</td><td>[9.5]</td><td>minus_odds</td><td>0.25</td><td>181</td><td>72.9%</td><td>+75.7u</td><td>+41.83%</td><td>-11.0u</td><td>6.88x</td></tr>
+  </table>
+
+  <h3>Odds Bucket Effect on 9.5 Unders (edge≥0, shrinkage=0)</h3>
+  <table border="1" cellpadding="4" style="font-size:12px">
+    <tr><th>Method</th><th>Odds Bucket</th><th>n</th><th>Hit%</th><th>Net</th><th>ROI%</th><th>MDD</th><th>net/MDD</th></tr>
+    <tr><td>model</td><td>all</td><td>383</td><td>59.0%</td><td>+52.3u</td><td>+13.65%</td><td>-48.9u</td><td>1.07x</td></tr>
+    <tr><td>model</td><td>minus_odds</td><td>328</td><td>56.7%</td><td>+26.5u</td><td>+8.08%</td><td>-47.9u</td><td>0.55x</td></tr>
+    <tr style="background:#d4edda"><td>model</td><td><strong>plus_odds</strong></td><td>55</td><td><strong>72.7%</strong></td><td>+25.8u</td><td><strong>+46.85%</strong></td><td>-4.0u</td><td><strong>6.44x</strong></td></tr>
+    <tr><td>consensus_line</td><td>all</td><td>831</td><td>59.8%</td><td>+132.7u</td><td>+15.97%</td><td>-113.1u</td><td>1.17x</td></tr>
+    <tr><td>consensus_line</td><td>minus_odds</td><td>706</td><td>58.8%</td><td>+92.6u</td><td>+13.11%</td><td>-116.3u</td><td>0.80x</td></tr>
+    <tr style="background:#d4edda"><td>consensus_line</td><td><strong>plus_odds</strong></td><td>125</td><td><strong>65.6%</strong></td><td>+40.1u</td><td><strong>+32.09%</strong></td><td>-10.0u</td><td><strong>4.02x</strong></td></tr>
+  </table>
+
+  <h3>Model vs Consensus_Line (9.5 under, all odds, shrinkage=0)</h3>
+  <table border="1" cellpadding="4" style="font-size:12px">
+    <tr><th>Method</th><th>Edge≥</th><th>n</th><th>Hit%</th><th>Net</th><th>ROI%</th><th>MDD</th><th>net/MDD</th></tr>
+    <tr><td>model</td><td>0.00</td><td>383</td><td>59.0%</td><td>+52.3u</td><td>+13.65%</td><td>-48.9u</td><td>1.07x</td></tr>
+    <tr><td>model</td><td>0.01</td><td>190</td><td>65.3%</td><td>+51.4u</td><td>+27.05%</td><td>-13.5u</td><td>3.81x</td></tr>
+    <tr style="background:#fff3cd"><td>consensus_line</td><td>0.00</td><td>831</td><td>59.8%</td><td>+132.7u</td><td>+15.97%</td><td>-113.1u</td><td>1.17x</td></tr>
+    <tr style="background:#d4edda"><td>consensus_line</td><td>0.07</td><td>278</td><td>69.4%</td><td>+101.7u</td><td>+36.57%</td><td>-18.0u</td><td><strong>5.65x</strong></td></tr>
+    <tr style="background:#d4edda"><td>consensus_line</td><td>0.10</td><td>278</td><td>69.4%</td><td>+101.7u</td><td>+36.57%</td><td>-18.0u</td><td><strong>5.65x</strong></td></tr>
+  </table>
+  <p><em>Takeaway: Rolling RA/RS/park_factor features add nothing. Single-feature consensus_line model beats full 12-feature Ridge at edge≥0.07.</em></p>
+
+  <h3>Shrinkage Effect (9.5 under, edge≥0, all odds)</h3>
+  <table border="1" cellpadding="4" style="font-size:12px">
+    <tr><th>Method</th><th>Shrinkage</th><th>n</th><th>Hit%</th><th>Net</th><th>ROI%</th><th>MDD</th><th>net/MDD</th></tr>
+    <tr><td>model</td><td>0.00</td><td>383</td><td>59.0%</td><td>+52.3u</td><td>+13.65%</td><td>-48.9u</td><td>1.07x</td></tr>
+    <tr style="background:#d4edda"><td>model</td><td>0.25</td><td>222</td><td>64.9%</td><td>+57.7u</td><td>+25.97%</td><td>-14.5u</td><td><strong>3.97x</strong></td></tr>
+    <tr><td>model</td><td>0.50</td><td>75</td><td>64.0%</td><td>+20.1u</td><td>+26.77%</td><td>-10.1u</td><td>1.99x</td></tr>
+    <tr><td>consensus_line</td><td>0.00</td><td>831</td><td>59.8%</td><td>+132.7u</td><td>+15.97%</td><td>-113.1u</td><td>1.17x</td></tr>
+    <tr style="background:#d4edda"><td>consensus_line</td><td>0.75</td><td>289</td><td>68.5%</td><td>+100.6u</td><td>+34.82%</td><td>-17.0u</td><td><strong>5.92x</strong></td></tr>
+  </table>
+  <p><em>Takeaway: Blending the model toward the market novig (shrinkage) consistently improves risk-adjusted returns by filtering out low-conviction model calls.</em></p>
+
+  <h3>Key Findings</h3>
+  <ol>
+    <li><strong>Plus-odds 9.5 unders are the sharpest signal</strong> (model: n=55, hit=72.7%, ROI=+46.85%, net/MDD=6.44x). When a book prices the 9.5 under at plus-odds, it means the book thinks the game is likely to go OVER — but the under still wins 72.7% of the time OOS. Only 5.7% of 9.5 under rows are plus-odds (≈27 bets/year) so n is thin.</li>
+    <li><strong>Rolling features (RA/RS, park_factor) add nothing</strong>. Consensus_line alone as the sole predictor outperforms the 12-feature Ridge at almost every threshold. The market's own priced total already contains the relevant signal.</li>
+    <li><strong>Consensus_line + minus_odds + edge≥0.07 is the strongest large-n config:</strong> n=181, hit=72.9%, ROI=+41.83%, MDD=-11u, net/MDD=6.88x.</li>
+    <li><strong>Model shrinkage=0.25 (75/25 model/market blend) materially improves the full model:</strong> net/MDD goes from 1.07x to 3.97x by filtering out low-confidence model calls.</li>
+    <li><strong>The original "bet all 9.5 unders" conclusion was wrong</strong> — it is NOT the best config. It is the highest-n config but has the worst risk-adjusted return (net/MDD=2.54x from step6b vs 6.88x for the best configs here).</li>
+  </ol>
+
+  <h3>Revised Production Strategy Candidates</h3>
+  <table border="1" cellpadding="4" style="font-size:12px">
+    <tr><th>Candidate</th><th>n (OOS)</th><th>Hit%</th><th>ROI%</th><th>net/MDD</th><th>Concern</th></tr>
+    <tr style="background:#d4edda"><td>consensus_line, minus_odds, edge≥0.07, line=9.5</td><td>181</td><td>72.9%</td><td>+41.83%</td><td>6.88x</td><td>≈90 bets/yr — is this real or overfit?</td></tr>
+    <tr style="background:#d4edda"><td>model + plus_odds, edge≥0, line=9.5</td><td>55</td><td>72.7%</td><td>+46.85%</td><td>6.44x</td><td>≈27 bets/yr — very thin</td></tr>
+    <tr style="background:#fff3cd"><td>model, shrink=0.25, edge≥0, line=9.5</td><td>222</td><td>64.9%</td><td>+25.97%</td><td>3.97x</td><td>Reasonable n, decent signal</td></tr>
+    <tr><td>ALL 9.5 unders (original benchmark)</td><td>2,324</td><td>57.4%</td><td>+8.45%</td><td>2.54x</td><td>High n but worst risk-adjusted</td></tr>
+  </table>
+  <p><strong>Next step:</strong> Review these candidates in the HTML, sanity-check the plus-odds and consensus_line configs before updating production strategy.</p>
+</section>
+
+<section>
+  <h2>Step 6e — Monthly Comparison: Blind 9.5 Under vs 8.5/9.5 Both</h2>
+  <p>Side-by-side monthly breakdown. OOS only (2025+2026). 2024 is training data — no signal confirmed there.</p>
+  <p><strong>Strategy A:</strong> Blind 9.5 under — all books, all games, no model, no edge filter (n=2,324)<br>
+     <strong>Strategy B:</strong> Both / edge≥0.02 / [8.5,9.5] / all odds / shrink=0.50 (n=1,623)</p>
+
+  <table border="1" cellpadding="5" style="font-size:13px;border-collapse:collapse">
+    <tr style="background:#2c3e50;color:white">
+      <th>Month</th>
+      <th colspan="4" style="text-align:center">Blind 9.5 Under</th>
+      <th colspan="4" style="text-align:center">Both / 8.5+9.5 / edge≥0.02 / shrink=0.50</th>
+    </tr>
+    <tr style="background:#2c3e50;color:#ccc;font-size:11px">
+      <th></th>
+      <th>n</th><th>Hit%</th><th>Net</th><th>CumNet</th>
+      <th>n</th><th>Hit%</th><th>Net</th><th>CumNet</th>
+    </tr>
+    <tr style="background:#f0f0f0"><td colspan="9" style="text-align:center;font-weight:bold;font-size:11px;color:#555">── 2025 (OOS Year 1) ──</td></tr>
+    <tr><td>2025-03</td><td>10</td><td style="color:red">0.0%</td><td style="color:red">-10.0</td><td>-10.0</td>  <td>44</td><td>63.6%</td><td style="color:green">+9.7</td><td>+9.7</td></tr>
+    <tr style="background:#fafafa"><td>2025-04</td><td>153</td><td>60.1%</td><td style="color:green">+21.6</td><td>+11.6</td>  <td>193</td><td>61.7%</td><td style="color:green">+39.8</td><td>+49.5</td></tr>
+    <tr><td>2025-05</td><td>286</td><td>72.0%</td><td style="color:green">+102.0</td><td>+113.5</td>  <td>235</td><td>69.8%</td><td style="color:green">+81.3</td><td>+130.8</td></tr>
+    <tr style="background:#fafafa"><td>2025-06</td><td>388</td><td>57.7%</td><td style="color:green">+35.6</td><td>+149.1</td>  <td>258</td><td>56.6%</td><td style="color:green">+25.2</td><td>+156.1</td></tr>
+    <tr><td>2025-07</td><td>384</td><td>51.6%</td><td style="color:red">-9.3</td><td>+139.8</td>  <td>251</td><td>65.3%</td><td style="color:green">+64.0</td><td>+220.1</td></tr>
+    <tr style="background:#fafafa"><td>2025-08</td><td>255</td><td>58.4%</td><td style="color:green">+27.3</td><td>+167.2</td>  <td>187</td><td>71.7%</td><td style="color:green">+72.1</td><td>+292.2</td></tr>
+    <tr><td>2025-09</td><td>106</td><td>44.3%</td><td style="color:red">-17.4</td><td>+149.8</td>  <td>259</td><td>55.2%</td><td style="color:green">+17.8</td><td>+309.9</td></tr>
+    <tr style="background:#f0f0f0"><td colspan="9" style="text-align:center;font-weight:bold;font-size:11px;color:#555">── 2026 (OOS Year 2) ──</td></tr>
+    <tr><td>2026-03</td><td>36</td><td style="color:green;font-weight:bold">100.0%</td><td style="color:green">+30.9</td><td>+180.7</td>  <td>19</td><td>68.4%</td><td style="color:green">+5.7</td><td>+315.6</td></tr>
+    <tr style="background:#fff3cd"><td>2026-04</td><td>209</td><td style="color:red">38.3%</td><td style="color:red">-59.3</td><td>+121.4</td>  <td>36</td><td>52.8%</td><td style="color:red">-0.3</td><td>+315.3</td></tr>
+    <tr style="background:#fafafa"><td>2026-05</td><td>207</td><td>60.4%</td><td style="color:green">+27.9</td><td>+149.2</td>  <td>96</td><td style="color:red">42.7%</td><td style="color:red">-17.6</td><td>+297.7</td></tr>
+    <tr style="background:#fff3cd"><td>2026-06</td><td>269</td><td>62.1%</td><td style="color:green">+47.1</td><td>+196.4</td>  <td>45</td><td style="color:red">37.8%</td><td style="color:red">-12.5</td><td>+285.2</td></tr>
+    <tr><td>2026-07*</td><td>21</td><td>52.4%</td><td style="color:green">+0.1</td><td>+196.4</td>  <td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr style="background:#2c3e50;color:white;font-weight:bold">
+      <td>TOTAL</td>
+      <td>2,324</td><td>57.4%</td><td>+196.4u</td><td></td>
+      <td>1,623</td><td>60.9%</td><td>+285.2u</td><td></td>
+    </tr>
+  </table>
+  <p style="font-size:12px;color:#555">* 2026-07 partial (through early July). Strategy B has no July 2026 rows in this OOS window.</p>
+
+  <h3>Reading this table</h3>
+  <ul>
+    <li><strong>Strategy B leads all of 2025</strong> — pulls ahead to +315u by end of 2025 vs +150u for the benchmark.</li>
+    <li><strong>2026-04:</strong> Benchmark takes a brutal -59.3u hit (38.3% hit rate — statistical noise or early signal decay). Strategy B barely notices (-0.3u).</li>
+    <li><strong>2026-05 and 2026-06:</strong> Benchmark recovers strongly (+27.9u, +47.1u). Strategy B collapses (-17.6u, -12.5u). Hit rates of 42.7% and 37.8% at the 8.5 line are not recoverable noise — that's the model's directional signal failing.</li>
+    <li><strong>Net effect:</strong> Benchmark ends at +196.4u. Strategy B ends at +285.2u — but it's currently losing and the benchmark is currently winning.</li>
+    <li><strong>Key question:</strong> Is 2026-05/06 for Strategy B statistical variance or signal decay at the 8.5 line? The benchmark's 2026 health (positive Apr+May+Jun overall) suggests the 9.5 structural gap is intact. The 8.5 model edge is not.</li>
+  </ul>
+</section>

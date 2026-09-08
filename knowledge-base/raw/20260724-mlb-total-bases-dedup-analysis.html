@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLB Total Bases — Dedup Analysis</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1117; color: #e2e8f0; padding: 32px 24px; }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+  .subtitle { font-size: 0.85rem; color: #64748b; margin-bottom: 32px; }
+
+  h2 { font-size: 1rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin: 32px 0 12px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px; }
+  .kpi { background: #1e2130; border: 1px solid #2d3348; border-radius: 10px; padding: 16px 20px; }
+  .kpi-label { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.55rem; font-weight: 700; color: #f8fafc; line-height: 1; }
+  .kpi-sub { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { background: #1a1f2e; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.7rem; padding: 8px 12px; text-align: right; border-bottom: 1px solid #2d3348; }
+  th:first-child { text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #1a1f2e; text-align: right; }
+  td:first-child { text-align: left; color: #94a3b8; }
+  tr:hover td { background: #1e2130; }
+  tr:last-child td { border-bottom: none; }
+
+  .pos { color: #34d399; }
+  .neg { color: #f87171; }
+  .neutral { color: #94a3b8; }
+  .highlight { background: #1e2130; }
+  .highlight td { background: #252b3b !important; }
+
+  .divider { border: none; border-top: 1px solid #2d3348; margin: 8px 0; }
+
+  .table-wrap { background: #161b27; border: 1px solid #2d3348; border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+
+  .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .badge { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+  .badge-green { background: #064e3b; color: #34d399; }
+  .badge-red { background: #450a0a; color: #f87171; }
+
+  .callout { background: #1a2235; border-left: 3px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 14px 18px; margin-bottom: 16px; font-size: 0.84rem; line-height: 1.6; color: #cbd5e1; }
+  .callout strong { color: #f8fafc; }
+
+  .section-note { font-size: 0.75rem; color: #475569; margin-bottom: 12px; }
+
+  .col-group-header { background: #111827; }
+  .col-raw { color: #94a3b8; }
+  .col-ded { color: #60a5fa; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>MLB Total Bases — Dedup Analysis</h1>
+  <div class="subtitle">Run 2026-07-24 &nbsp;·&nbsp; Strategy: UNDER 1.5 &nbsp;·&nbsp; IS = 2024–2025 &nbsp;·&nbsp; OOS = 2026</div>
+
+  <!-- KPIs -->
+  <h2>Data Overview</h2>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Raw rows (all books)</div>
+      <div class="kpi-value">712,727</div>
+      <div class="kpi-sub">~7.8 books per player/game/line</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Deduped rows (best book)</div>
+      <div class="kpi-value">137,503</div>
+      <div class="kpi-sub">19.3% of raw — one book per slot</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">OOS raw bets (edge≥5, dogs, 1.5)</div>
+      <div class="kpi-value">443</div>
+      <div class="kpi-sub">+7.48% ROI, +33.2u</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">OOS deduped bets (same params)</div>
+      <div class="kpi-value">120</div>
+      <div class="kpi-sub">+14.83% ROI, +17.8u</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:16px;">
+    <strong>Bottom line:</strong> Deduping to best-book nearly doubles OOS ROI (7.5% → 14.8%) at the canonical strategy, but cuts bet volume by 73%. The raw strategy's apparent variance is mostly repeated exposure to the same player outcome across books — not independent edge. The live Lambda is currently placing per-book bets, which inflates apparent position size.
+  </div>
+
+  <!-- Side-by-side comparison -->
+  <h2>Raw vs. Deduped — dogs (+odds), 1.5 line only</h2>
+  <p class="section-note">Dedup = best under_price per (player, game, line). Both directions tested across all edge thresholds.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr class="col-group-header">
+          <th rowspan="2" style="text-align:left; vertical-align:bottom;">Edge</th>
+          <th colspan="3" style="text-align:center; color:#94a3b8; padding-bottom:4px;">IS (2024–25) — Raw</th>
+          <th colspan="3" style="text-align:center; color:#60a5fa; padding-bottom:4px;">IS (2024–25) — Deduped</th>
+          <th colspan="3" style="text-align:center; color:#94a3b8; padding-bottom:4px;">OOS (2026) — Raw</th>
+          <th colspan="3" style="text-align:center; color:#60a5fa; padding-bottom:4px;">OOS (2026) — Deduped</th>
+        </tr>
+        <tr class="col-group-header">
+          <th class="col-raw">n</th><th class="col-raw">units</th><th class="col-raw">ROI</th>
+          <th class="col-ded">n</th><th class="col-ded">units</th><th class="col-ded">ROI</th>
+          <th class="col-raw">n</th><th class="col-raw">units</th><th class="col-raw">ROI</th>
+          <th class="col-ded">n</th><th class="col-ded">units</th><th class="col-ded">ROI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>≥0%</td>
+          <td class="neutral">3,138</td><td class="pos">+153.2</td><td class="pos">+4.9%</td>
+          <td class="neutral">725</td><td class="pos">+65.4</td><td class="pos">+9.0%</td>
+          <td class="neutral">749</td><td class="pos">+77.5</td><td class="pos">+10.4%</td>
+          <td class="neutral">186</td><td class="pos">+29.6</td><td class="pos">+15.9%</td>
+        </tr>
+        <tr>
+          <td>≥1%</td>
+          <td class="neutral">3,001</td><td class="pos">+148.7</td><td class="pos">+5.0%</td>
+          <td class="neutral">700</td><td class="pos">+69.5</td><td class="pos">+9.9%</td>
+          <td class="neutral">707</td><td class="pos">+84.3</td><td class="pos">+11.9%</td>
+          <td class="neutral">173</td><td class="pos">+29.8</td><td class="pos">+17.2%</td>
+        </tr>
+        <tr>
+          <td>≥3%</td>
+          <td class="neutral">2,624</td><td class="pos">+185.5</td><td class="pos">+7.1%</td>
+          <td class="neutral">625</td><td class="pos">+63.4</td><td class="pos">+10.1%</td>
+          <td class="neutral">561</td><td class="pos">+55.9</td><td class="pos">+10.0%</td>
+          <td class="neutral">143</td><td class="pos">+17.0</td><td class="pos">+11.9%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>≥5% ★</strong></td>
+          <td class="neutral">2,228</td><td class="pos">+157.7</td><td class="pos">+7.1%</td>
+          <td class="neutral">553</td><td class="pos">+46.2</td><td class="pos">+8.4%</td>
+          <td class="neutral">443</td><td class="pos">+33.2</td><td class="pos">+7.5%</td>
+          <td class="neutral">120</td><td class="pos">+17.8</td><td class="pos">+14.8%</td>
+        </tr>
+        <tr>
+          <td>≥7%</td>
+          <td class="neutral">1,854</td><td class="pos">+130.6</td><td class="pos">+7.0%</td>
+          <td class="neutral">481</td><td class="pos">+47.0</td><td class="pos">+9.8%</td>
+          <td class="neutral">367</td><td class="neg">−0.1</td><td class="neg">−0.0%</td>
+          <td class="neutral">97</td><td class="pos">+11.4</td><td class="pos">+11.8%</td>
+        </tr>
+        <tr>
+          <td>≥10%</td>
+          <td class="neutral">1,452</td><td class="pos">+74.0</td><td class="pos">+5.1%</td>
+          <td class="neutral">391</td><td class="pos">+54.8</td><td class="pos">+14.0%</td>
+          <td class="neutral">285</td><td class="neg">−5.6</td><td class="neg">−2.0%</td>
+          <td class="neutral">73</td><td class="pos">+3.9</td><td class="pos">+5.3%</td>
+        </tr>
+        <tr>
+          <td>≥15%</td>
+          <td class="neutral">897</td><td class="pos">+3.5</td><td class="pos">+0.4%</td>
+          <td class="neutral">250</td><td class="pos">+24.1</td><td class="pos">+9.6%</td>
+          <td class="neutral">153</td><td class="pos">+3.2</td><td class="pos">+2.1%</td>
+          <td class="neutral">45</td><td class="pos">+4.7</td><td class="pos">+10.4%</td>
+        </tr>
+        <tr>
+          <td>≥20%</td>
+          <td class="neutral">401</td><td class="pos">+2.9</td><td class="pos">+0.7%</td>
+          <td class="neutral">119</td><td class="pos">+4.5</td><td class="pos">+3.8%</td>
+          <td class="neutral">37</td><td class="pos">+3.0</td><td class="pos">+8.0%</td>
+          <td class="neutral">14</td><td class="pos">+1.9</td><td class="pos">+13.2%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Concentration split -->
+  <h2>Book-Count Concentration Split</h2>
+  <p class="section-note">Canonical strategy only (edge≥5pp, dogs, 1.5 line). Raw data — all books per qualifying slot. Do more books offering a line signal better or worse edge?</p>
+
+  <div class="split-grid">
+    <div>
+      <div style="font-size:0.8rem; color:#60a5fa; font-weight:600; margin-bottom:8px;">IS — 2024–2025</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left;">Bucket</th>
+              <th>n</th>
+              <th>Win%</th>
+              <th>Units</th>
+              <th>ROI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 book</td>
+              <td class="neutral">13</td>
+              <td class="pos">61.5%</td>
+              <td class="pos">+5.1</td>
+              <td class="pos">+39.5%</td>
+            </tr>
+            <tr>
+              <td>2–4 books</td>
+              <td class="neutral">354</td>
+              <td class="neg">37.3%</td>
+              <td class="neg">−63.3</td>
+              <td class="neg">−17.9%</td>
+            </tr>
+            <tr>
+              <td>5+ books</td>
+              <td class="neutral">1,861</td>
+              <td class="pos">51.4%</td>
+              <td class="pos">+215.9</td>
+              <td class="pos">+11.6%</td>
+            </tr>
+            <tr style="border-top: 1px solid #2d3348;">
+              <td><strong>All</strong></td>
+              <td class="neutral">2,228</td>
+              <td class="neutral">49.2%</td>
+              <td class="pos">+157.7</td>
+              <td class="pos">+7.1%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:0.8rem; color:#60a5fa; font-weight:600; margin-bottom:8px;">OOS — 2026</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left;">Bucket</th>
+              <th>n</th>
+              <th>Win%</th>
+              <th>Units</th>
+              <th>ROI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 book</td>
+              <td class="neutral">10</td>
+              <td class="pos">80.0%</td>
+              <td class="pos">+9.3</td>
+              <td class="pos">+92.8%</td>
+            </tr>
+            <tr>
+              <td>2–4 books</td>
+              <td class="neutral">54</td>
+              <td class="neutral">48.1%</td>
+              <td class="pos">+4.3</td>
+              <td class="pos">+7.9%</td>
+            </tr>
+            <tr>
+              <td>5+ books</td>
+              <td class="neutral">379</td>
+              <td class="neutral">48.0%</td>
+              <td class="pos">+19.6</td>
+              <td class="pos">+5.2%</td>
+            </tr>
+            <tr style="border-top: 1px solid #2d3348;">
+              <td><strong>All</strong></td>
+              <td class="neutral">443</td>
+              <td class="neutral">48.8%</td>
+              <td class="pos">+33.2</td>
+              <td class="pos">+7.5%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Findings -->
+  <h2>Key Findings</h2>
+
+  <div class="callout">
+    <strong>1. Deduping consistently improves ROI</strong><br>
+    At every edge threshold in both IS and OOS, the deduped version has higher ROI than raw. The raw strategy isn't finding more independent edges — it's just betting the same outcome 7–8 times through different books. True edge per opportunity is better than the raw results suggest.
+  </div>
+
+  <div class="callout">
+    <strong>2. The 2–4 book bucket is a red flag (IS)</strong><br>
+    In IS, bets where 2–4 books offer the line have <span class="neg">37.3% win rate and −17.9% ROI</span> at the canonical strategy — far below the break-even implied by the odds. The 5+ book bucket drives all the returns (51.4% win rate, +11.6% ROI). OOS sample is too small to confirm (54 bets), but the IS signal warrants filtering to 5+ books only before relying on the 2–4 bucket.
+  </div>
+
+  <div class="callout">
+    <strong>3. Live Lambda implication</strong><br>
+    The Lambda is currently placing per-book bets. On a typical 8-book qualifying slot, that's 8 correlated bets vs. 1 if deduped. A bad player day hits you 8× harder than the backtest ROI implies. Consider switching to best-book-only bets in the Lambda — this halves apparent position volatility and aligns live sizing with the deduped backtest.
+  </div>
+
+  <div class="callout">
+    <strong>4. Canonical strategy (edge≥5, dogs, 1.5) still holds OOS</strong><br>
+    Deduped OOS: <span class="pos">+14.8% ROI (n=120)</span>. Raw OOS: <span class="pos">+7.5% (n=443)</span>. Both are positive and consistent with IS. The edge appears real; the raw n overstates independence.
+  </div>
+
+  <div style="margin-top:32px; font-size:0.72rem; color:#334155; text-align:center;">
+    Generated 2026-07-24 &nbsp;·&nbsp; mlb_tb_v2 model &nbsp;·&nbsp; A2_stats_plus_lines
+  </div>
+
+</div>
+</body>
+</html>

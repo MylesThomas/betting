@@ -103,7 +103,9 @@ _MONO = "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
 _SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif"
 
 NAME_MAP = {
-    "louie varland": "louis varland",
+    "louie varland":      "louis varland",
+    "erick james fedde":  "erick fedde",    # MLB probables API returns full legal name
+    "zach thornton":      "zac thornton",
 }
 
 BOOK_ABBREV = {
@@ -228,8 +230,13 @@ def fetch_probable_starters(gameday: str) -> dict[str, dict]:
         print(f"  MLB API schedule failed: {e}")
         return {}
 
+    dates = r.json().get("dates", [])
+    if not dates:
+        print(f"  No games scheduled on {gameday} (MLB API returned empty dates)")
+        return {}
+
     result = {}
-    for game in r.json().get("dates", [{}])[0].get("games", []):
+    for game in dates[0].get("games", []):
         home = game.get("teams", {}).get("home", {})
         away = game.get("teams", {}).get("away", {})
         home_name = home.get("team", {}).get("name", "")
@@ -587,7 +594,7 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int,
                settled_all: pd.DataFrame | None = None) -> str:
     he       = html_module.escape
     now_str  = datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")
-    n_primary = int(bets["is_primary"].sum())
+    n_primary = int(bets["is_primary"].sum()) if not bets.empty else 0
     n_total   = int(len(bets))
 
     def fmt(v, fstr=""):
@@ -598,35 +605,37 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int,
 
     # Derive home/away for each row so we can group by game
     bets = bets.copy()
-    bets["_home"] = bets.apply(
-        lambda r: r.get("team_raw", "") if r.get("is_home") else r.get("opp_raw", ""), axis=1
-    )
-    bets["_away"] = bets.apply(
-        lambda r: r.get("opp_raw", "") if r.get("is_home") else r.get("team_raw", ""), axis=1
-    )
     NCOLS = 25  # Player Team Opp Time(ET) Line | Book | Over Under | RawO RawU RawT | FairO FairU FairT Vig | Pred Delta PredO PredU | OvrEdge UndEdge | k_career k_c5 opp_k Status
-
-    bets["max_abs_edge"] = bets["max_abs_edge"] if "max_abs_edge" in bets.columns else (
-        bets[["edge_over", "edge_under"]].abs().max(axis=1)
-    )
-    # Sort: game start time first, then matchup (keeps same-time games together),
-    # then within each game: primary first, then by max abs edge desc.
-    _SORT_COLS = ["commence_time", "_home", "_away", "is_primary", "max_abs_edge"]
-    _SORT_ASC  = [True, True, True, False, False]
-    bets = bets.sort_values(_SORT_COLS, ascending=_SORT_ASC)
-
-    # Collapse no-edge rows to one per (player_key, line) — keeps the book with highest abs edge.
-    # PLAY/WATCH rows stay per-book so you can see which book to bet on.
-    no_edge_mask = bets["side"].isna()
-    bets = pd.concat([
-        bets[~no_edge_mask],
-        bets[no_edge_mask].drop_duplicates(subset=["player_key", "line"], keep="first"),
-    ]).sort_values(
-        _SORT_COLS, ascending=_SORT_ASC
-    )
 
     rows_html = ""
     seen_games: set = set()
+
+    if not bets.empty:
+        bets["_home"] = bets.apply(
+            lambda r: r.get("team_raw", "") if r.get("is_home") else r.get("opp_raw", ""), axis=1
+        )
+        bets["_away"] = bets.apply(
+            lambda r: r.get("opp_raw", "") if r.get("is_home") else r.get("team_raw", ""), axis=1
+        )
+
+        bets["max_abs_edge"] = bets["max_abs_edge"] if "max_abs_edge" in bets.columns else (
+            bets[["edge_over", "edge_under"]].abs().max(axis=1)
+        )
+        # Sort: game start time first, then matchup (keeps same-time games together),
+        # then within each game: primary first, then by max abs edge desc.
+        _SORT_COLS = ["commence_time", "_home", "_away", "is_primary", "max_abs_edge"]
+        _SORT_ASC  = [True, True, True, False, False]
+        bets = bets.sort_values(_SORT_COLS, ascending=_SORT_ASC)
+
+        # Collapse no-edge rows to one per (player_key, line) — keeps the book with highest abs edge.
+        # PLAY/WATCH rows stay per-book so you can see which book to bet on.
+        no_edge_mask = bets["side"].isna()
+        bets = pd.concat([
+            bets[~no_edge_mask],
+            bets[no_edge_mask].drop_duplicates(subset=["player_key", "line"], keep="first"),
+        ]).sort_values(
+            _SORT_COLS, ascending=_SORT_ASC
+        )
 
     for _, r in bets.iterrows():
         home = str(r.get("_home", ""))
@@ -845,7 +854,7 @@ def build_html(bets: pd.DataFrame, gameday: str, n_scored: int,
 </details>
 
 <div class='footer'>
-  Out-of-sample (v5, 2025–2026): 7,104 bets &nbsp;·&nbsp; 59.36% WR &nbsp;·&nbsp; +528.97u &nbsp;·&nbsp; +7.45% ROI &nbsp;|&nbsp; In-sample/out-of-sample ratio: 0.99x (no overfitting)
+  Out-of-sample (v6, 2025–2026): 911 bets &nbsp;·&nbsp; 54.01% WR &nbsp;·&nbsp; +95.08u &nbsp;·&nbsp; +10.44% ROI &nbsp;|&nbsp; In-sample/out-of-sample ratio: 0.64x (OOS &gt; IS — genuine edge)
 </div>
 
 {build_section2_html(settled_yesterday if settled_yesterday is not None else pd.DataFrame(),
@@ -886,57 +895,81 @@ recommendations. Add a <code>NAME_MAP</code> entry in <code>run_pipeline.py</cod
 </body></html>"""
 
 
+def _split_plays_watches_pipeline(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if "is_primary" not in df.columns:
+        return df, pd.DataFrame(columns=df.columns)
+    plays   = df[df["is_primary"].astype(bool)].copy()
+    watches = df[~df["is_primary"].astype(bool)].copy()
+    return plays, watches
+
+
 def build_section2_html(settled_yesterday: pd.DataFrame, yesterday: str) -> str:
     he = html_module.escape
     if settled_yesterday.empty:
         return f"<details open><summary>▸ Yesterday's results &nbsp;<span style='font-weight:normal;color:#666'>({yesterday})</span></summary><p style='padding:8px;color:#888'>No settled bets for {yesterday}.</p></details>\n"
 
     df = settled_yesterday[settled_yesterday["outcome"].isin(["WIN", "LOSS", "PUSH", "DNP"])].copy()
-    wins   = int((df["outcome"] == "WIN").sum())
-    losses = int((df["outcome"] == "LOSS").sum())
-    pushes = int((df["outcome"] == "PUSH").sum())
-    dnps   = int((df["outcome"] == "DNP").sum())
-    day_pnl = float(df["pnl"].sum())
-    pnl_color = "#276221" if day_pnl >= 0 else "#c0392b"
-    record = f"{wins}W–{losses}L{f'–{pushes}P' if pushes else ''}{f'–{dnps}DNP' if dnps else ''}"
+    plays, watches = _split_plays_watches_pipeline(df)
 
     def _oc_color(oc: str) -> str:
         return {"WIN": "#276221", "LOSS": "#c0392b", "PUSH": "#b45309", "DNP": "#888"}.get(oc, "#222")
 
-    rows = ""
-    for _, r in df.sort_values(["outcome", "player_key"]).iterrows():
-        side     = str(r.get("side", "")).upper()
-        side_c   = "#276221" if side == "OVER" else "#1d4ed8"
-        oc       = str(r.get("outcome", "—"))
-        raw_odds = r.get("odds") if side == "OVER" else r.get("odds_u")
-        odds_str = f"{int(float(raw_odds)):+d}" if pd.notna(raw_odds) else "—"
-        actual_k = "—" if pd.isna(r.get("actual_k")) else int(r["actual_k"])
-        pnl_val  = float(r.get("pnl") or 0)
-        edge_val = float(r.get("edge") or 0)
-        pnl_c    = "#276221" if pnl_val > 0 else "#c0392b" if pnl_val < 0 else "#888"
-        book     = he(str(r.get("book_abbrev") or r.get("bookmaker") or "—"))
-        rows += (
-            f"<tr>"
-            f"<td style='padding:5px 8px;font-weight:600'>{he(str(r.get('player_key', '—')))}</td>"
-            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{side_c}'>{side}</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{r.get('line', '—')}</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{book}</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{odds_str}</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{edge_val*100:+.1f}pp</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{actual_k}</td>"
-            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{_oc_color(oc)}'>{oc}</td>"
-            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{pnl_c}'>{pnl_val:+.2f}u</td>"
-            f"</tr>\n"
+    def _rows(subset: pd.DataFrame) -> str:
+        html = ""
+        for _, r in subset.sort_values(["outcome", "player_key"]).iterrows():
+            side     = str(r.get("side", "")).upper()
+            side_c   = "#276221" if side == "OVER" else "#1d4ed8"
+            oc       = str(r.get("outcome", "—"))
+            raw_odds = r.get("odds") if side == "OVER" else r.get("odds_u")
+            odds_str = f"{int(float(raw_odds)):+d}" if pd.notna(raw_odds) else "—"
+            actual_k = "—" if pd.isna(r.get("actual_k")) else int(r["actual_k"])
+            pnl_val  = float(r.get("pnl") or 0)
+            edge_val = float(r.get("edge") or 0)
+            pnl_c    = "#276221" if pnl_val > 0 else "#c0392b" if pnl_val < 0 else "#888"
+            book     = he(str(r.get("book_abbrev") or r.get("bookmaker") or "—"))
+            html += (
+                f"<tr>"
+                f"<td style='padding:5px 8px;font-weight:600'>{he(str(r.get('player_key', '—')))}</td>"
+                f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{side_c}'>{side}</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{r.get('line', '—')}</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{book}</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{odds_str}</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{edge_val*100:+.1f}pp</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{actual_k}</td>"
+                f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{_oc_color(oc)}'>{oc}</td>"
+                f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{pnl_c}'>{pnl_val:+.2f}u</td>"
+                f"</tr>\n"
+            )
+        return html
+
+    _THEAD = "<tr><th>Player</th><th>Side</th><th>Line</th><th>Book</th><th>Odds</th><th>Edge</th><th>Actual K</th><th>Outcome</th><th>P&amp;L</th></tr>"
+
+    # Summary line uses plays only
+    p_wins   = int((plays["outcome"] == "WIN").sum())   if not plays.empty else 0
+    p_losses = int((plays["outcome"] == "LOSS").sum())  if not plays.empty else 0
+    p_pushes = int((plays["outcome"] == "PUSH").sum())  if not plays.empty else 0
+    p_dnps   = int((plays["outcome"] == "DNP").sum())   if not plays.empty else 0
+    p_pnl    = float(plays["pnl"].sum())                if not plays.empty else 0.0
+    pnl_color = "#276221" if p_pnl >= 0 else "#c0392b"
+    record    = f"{p_wins}W–{p_losses}L{f'–{p_pushes}P' if p_pushes else ''}{f'–{p_dnps}DNP' if p_dnps else ''}"
+
+    plays_table   = f"<table style='margin-top:6px'>{_THEAD}{_rows(plays)}</table>" if not plays.empty else "<p style='color:#888;padding:4px 8px'>No plays.</p>"
+    watches_block = ""
+    if not watches.empty:
+        w_wins   = int((watches["outcome"] == "WIN").sum())
+        w_losses = int((watches["outcome"] == "LOSS").sum())
+        w_pnl    = float(watches["pnl"].sum())
+        w_pnl_c  = "#276221" if w_pnl >= 0 else "#c0392b"
+        watches_block = (
+            f"<div style='margin-top:12px;color:#888;font-size:12px;font-weight:600'>Watch (2–3pp) &nbsp;·&nbsp; "
+            f"{w_wins}W–{w_losses}L &nbsp;·&nbsp; <span style='color:{w_pnl_c}'>{w_pnl:+.2f}u</span></div>"
+            f"<table style='margin-top:4px;font-size:12px;color:#666'>{_THEAD}{_rows(watches)}</table>"
         )
 
     return f"""<details open>
-  <summary>▸ Yesterday's results &nbsp;<span style='font-weight:normal;color:#666'>({yesterday} &nbsp;·&nbsp; {record} &nbsp;·&nbsp; <span style='color:{pnl_color};font-weight:bold'>{day_pnl:+.2f}u</span>)</span></summary>
-  <table style='margin-top:6px'>
-    <tr>
-      <th>Player</th><th>Side</th><th>Line</th><th>Book</th><th>Odds</th><th>Edge</th><th>Actual K</th><th>Outcome</th><th>P&amp;L</th>
-    </tr>
-    {rows}
-  </table>
+  <summary>▸ Yesterday's results &nbsp;<span style='font-weight:normal;color:#666'>({yesterday} &nbsp;·&nbsp; {record} &nbsp;·&nbsp; <span style='color:{pnl_color};font-weight:bold'>{p_pnl:+.2f}u</span>)</span></summary>
+  {plays_table}
+  {watches_block}
 </details>
 """
 
@@ -949,13 +982,7 @@ def build_section3_html(settled_all: pd.DataFrame) -> str:
     if settled.empty:
         return ""
 
-    total_bets = len(settled)
-    wins       = int((settled["outcome"] == "WIN").sum())
-    losses     = int((settled["outcome"] == "LOSS").sum())
-    total_pnl  = float(settled["pnl"].dropna().sum())
-    roi        = total_pnl / total_bets * 100 if total_bets else 0.0
-    wr         = wins / total_bets * 100 if total_bets else 0.0
-    pnl_color  = "#276221" if total_pnl >= 0 else "#c0392b"
+    plays, watches = _split_plays_watches_pipeline(settled)
 
     def _card(label: str, value: str, color: str = "#2c3e50") -> str:
         return (
@@ -966,40 +993,59 @@ def build_section3_html(settled_all: pd.DataFrame) -> str:
             f"</div>"
         )
 
-    settled["_season"] = pd.to_datetime(settled["game_date"]).dt.year
-    season_rows = ""
-    for season, grp in settled.groupby("_season"):
-        s_bets   = len(grp)
-        s_wins   = int((grp["outcome"] == "WIN").sum())
-        s_losses = int((grp["outcome"] == "LOSS").sum())
-        s_pnl    = float(grp["pnl"].dropna().sum())
-        s_roi    = s_pnl / s_bets * 100 if s_bets else 0.0
-        s_wr     = s_wins / s_bets * 100 if s_bets else 0.0
-        s_c      = "#276221" if s_pnl >= 0 else "#c0392b"
-        season_rows += (
-            f"<tr>"
-            f"<td style='padding:5px 8px'>{season}</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{s_bets}</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{s_wins}W–{s_losses}L</td>"
-            f"<td style='padding:5px 8px;text-align:center'>{s_wr:.1f}%</td>"
-            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{s_c}'>{s_pnl:+.2f}u</td>"
-            f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{s_c}'>{s_roi:+.1f}%</td>"
-            f"</tr>\n"
+    def _season_table(subset: pd.DataFrame) -> str:
+        if subset.empty:
+            return ""
+        subset = subset.copy()
+        subset["_season"] = pd.to_datetime(subset["game_date"]).dt.year
+        rows = ""
+        for season, grp in subset.groupby("_season"):
+            s_bets   = len(grp)
+            s_wins   = int((grp["outcome"] == "WIN").sum())
+            s_losses = int((grp["outcome"] == "LOSS").sum())
+            s_pnl    = float(grp["pnl"].dropna().sum())
+            s_roi    = s_pnl / s_bets * 100 if s_bets else 0.0
+            s_wr     = s_wins / s_bets * 100 if s_bets else 0.0
+            s_c      = "#276221" if s_pnl >= 0 else "#c0392b"
+            rows += (
+                f"<tr>"
+                f"<td style='padding:5px 8px'>{season}</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{s_bets}</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{s_wins}W–{s_losses}L</td>"
+                f"<td style='padding:5px 8px;text-align:center'>{s_wr:.1f}%</td>"
+                f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{s_c}'>{s_pnl:+.2f}u</td>"
+                f"<td style='padding:5px 8px;text-align:center;font-weight:bold;color:{s_c}'>{s_roi:+.1f}%</td>"
+                f"</tr>\n"
+            )
+        return f"<table style='width:auto'><tr><th>Season</th><th>Bets</th><th>Record</th><th>Win %</th><th>Units</th><th>ROI</th></tr>{rows}</table>"
+
+    def _summary_cards(subset: pd.DataFrame, label: str) -> str:
+        if subset.empty:
+            return ""
+        n    = len(subset)
+        wins = int((subset["outcome"] == "WIN").sum())
+        losses = int((subset["outcome"] == "LOSS").sum())
+        pnl  = float(subset["pnl"].dropna().sum())
+        wr   = wins / n * 100 if n else 0.0
+        roi  = pnl / n * 100 if n else 0.0
+        pc   = "#276221" if pnl >= 0 else "#c0392b"
+        return (
+            f"<div style='margin-top:8px;font-size:12px;font-weight:600;color:#555'>{label}</div>"
+            f"<div style='margin:6px 0 12px'>"
+            + _card("All-time P&L", f"{pnl:+.2f}u", pc)
+            + _card("Record", f"{wins}W–{losses}L")
+            + _card("Win %", f"{wr:.1f}%")
+            + _card("ROI", f"{roi:+.1f}%", pc)
+            + _card("Bets", str(n))
+            + "</div>"
         )
 
     return f"""<details>
   <summary>▸ All-time results</summary>
-  <div style='margin:8px 0 16px'>
-    {_card("All-time P&L", f"{total_pnl:+.2f}u", pnl_color)}
-    {_card("Record", f"{wins}W–{losses}L")}
-    {_card("Win %", f"{wr:.1f}%")}
-    {_card("ROI", f"{roi:+.1f}%", pnl_color)}
-    {_card("Bets", str(total_bets))}
-  </div>
-  <table style='width:auto'>
-    <tr><th>Season</th><th>Bets</th><th>Record</th><th>Win %</th><th>Units</th><th>ROI</th></tr>
-    {season_rows}
-  </table>
+  {_summary_cards(plays, "Plays (≥3pp)")}
+  {_season_table(plays)}
+  {_summary_cards(watches, "Watch (2–3pp)")}
+  {_season_table(watches)}
   <p style='font-size:11px;color:#555;margin-top:8px'>
     Flat-bet 1u &nbsp;·&nbsp; UNDER or OVER ≥{EDGE_THRESHOLD_UNDER*100:.0f}pp &nbsp;·&nbsp;
     OOS baseline (v5, 2025–2026): +528.97u · +7.45% ROI
@@ -1069,59 +1115,60 @@ def main():
     # 4. Fetch events + props from Odds API
     print("Fetching events...", flush=True)
     events = fetch_events(gameday)
+
+    bets      = pd.DataFrame()
+    unmatched = []
+    n_scored  = 0
+    no_games_reason: str | None = None
+
     if not events:
-        msg = f"No MLB events found for {gameday}"
-        print(msg)
-        send_email(f"MLB Strikeouts — {gameday} — No games", f"<p>{msg}</p>")
-        return
+        no_games_reason = f"No MLB events found for {gameday}"
+        print(no_games_reason)
+    else:
+        print("Fetching props...", flush=True)
+        props = fetch_props(events, gameday)
+        print(f"  Raw prop rows: {len(props):,}")
 
-    print("Fetching props...", flush=True)
-    props = fetch_props(events, gameday)
-    print(f"  Raw prop rows: {len(props):,}")
+        if props.empty:
+            no_games_reason = f"No {MARKET} props found for {gameday}"
+            print(no_games_reason)
+        else:
+            # 5. Assemble features + score
+            print("Scoring bets...", flush=True)
+            bets, unmatched = assemble_bet_rows(props, player_latest, probables, opp_rate, gameday, model, residuals)
+            n_scored = bets["player_key"].nunique() if not bets.empty else 0
 
-    if props.empty:
-        msg = f"No {MARKET} props found for {gameday}"
-        print(msg)
-        send_email(f"MLB Strikeouts — {gameday} — No props", f"<p>{msg}</p>")
-        return
+            if unmatched:
+                warn_subject = f"⚠ MLB Pitcher Strikeouts {gameday} — {len(unmatched)} unmatched player(s)"
+                warn_html    = build_warning_html(unmatched, probables, gameday)
+                send_email(warn_subject, warn_html)
+            print(f"  Pitchers scored: {n_scored}")
 
-    # 5. Assemble features + score
-    print("Scoring bets...", flush=True)
-    bets, unmatched = assemble_bet_rows(props, player_latest, probables, opp_rate, gameday, model, residuals)
-    n_scored = bets["player_key"].nunique() if not bets.empty else 0
+            if bets.empty:
+                no_games_reason = f"No pitchers could be scored for {gameday} (missing spine/props data)"
+                print(no_games_reason)
 
-    if unmatched:
-        warn_subject  = f"⚠ MLB Strikeouts {gameday} — {len(unmatched)} unmatched player(s)"
-        warn_html     = build_warning_html(unmatched, probables, gameday)
-        send_email(warn_subject, warn_html)
-    print(f"  Pitchers scored: {n_scored}")
+    n_primary = int(bets["is_primary"].sum()) if not bets.empty else 0
+    n_watch   = int((bets["side"].notna() & ~bets["is_primary"]).sum()) if not bets.empty else 0
+    if not bets.empty:
+        print(f"  Pitchers in email: {len(bets)} ({n_primary} plays · {n_watch} watch · {len(bets)-n_primary-n_watch} no edge)")
+        print(f"  Primary bets   (UNDER≥{EDGE_THRESHOLD_UNDER:.0%} or OVER≥{EDGE_THRESHOLD_OVER:.0%}): {n_primary}")
 
-    if bets.empty:
-        msg = f"No pitchers could be scored for {gameday} (missing spine/props data)"
-        print(msg)
-        send_email(f"MLB Strikeouts — {gameday} — No pitchers scored", f"<p>{msg}</p>")
-        return
-
-    n_primary = int(bets["is_primary"].sum())
-    n_watch   = int((bets["side"].notna() & ~bets["is_primary"]).sum())
-    print(f"  Pitchers in email: {len(bets)} ({n_primary} plays · {n_watch} watch · {len(bets)-n_primary-n_watch} no edge)")
-    print(f"  Primary bets   (UNDER≥{EDGE_THRESHOLD_UNDER:.0%} or OVER≥{EDGE_THRESHOLD_OVER:.0%}): {n_primary}")
-
-    # 6. Save to S3
-    save_cols = [
-        "player", "player_key", "player_id", "game_date",
-        "line", "consensus_line", "bookmaker", "book_abbrev", "side",
-        "odds", "odds_u", "raw_p_over", "raw_p_under", "novig_over", "novig_under",
-        "n_books_total",
-        "k_roll_s5", "k_roll_c5", "k_roll_career", "opp_k_against_season",
-        "is_home", "novig_prob_over",
-        "yhat", "p_model_over", "p_model_under",
-        "p_market_over", "p_market_under",
-        "edge_over", "edge_under", "edge", "is_primary",
-    ]
-    rec_key = f"{DAILY_PREFIX}/{gameday}/recommendations.csv"
-    s3_put_csv(rec_key, bets[[c for c in save_cols if c in bets.columns]])
-    print(f"  Saved → s3://{S3_BUCKET}/{rec_key}")
+        # 6. Save to S3
+        save_cols = [
+            "player", "player_key", "player_id", "game_date",
+            "line", "consensus_line", "bookmaker", "book_abbrev", "side",
+            "odds", "odds_u", "raw_p_over", "raw_p_under", "novig_over", "novig_under",
+            "n_books_total",
+            "k_roll_s5", "k_roll_c5", "k_roll_career", "opp_k_against_season",
+            "is_home", "novig_prob_over",
+            "yhat", "p_model_over", "p_model_under",
+            "p_market_over", "p_market_under",
+            "edge_over", "edge_under", "edge", "is_primary",
+        ]
+        rec_key = f"{DAILY_PREFIX}/{gameday}/recommendations.csv"
+        s3_put_csv(rec_key, bets[[c for c in save_cols if c in bets.columns]])
+        print(f"  Saved → s3://{S3_BUCKET}/{rec_key}")
 
     # 7. Load settled history for sections 2 & 3
     yesterday = (pd.Timestamp(gameday) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1135,7 +1182,9 @@ def main():
     print(f"  All-time bets: {len(settled_all)} · Yesterday ({yesterday}): {len(settled_yesterday)}")
 
     # 8. Email + SNS
-    subject   = f"MLB Strikeouts {gameday} — {n_primary} plays · {n_watch} watch · {n_scored} w/ posted lines"
+    subject   = f"MLB Pitcher Strikeouts {gameday} — {n_primary} plays · {n_watch} watch · {n_scored} w/ posted lines"
+    if no_games_reason:
+        subject = f"MLB Pitcher Strikeouts {gameday} — No plays ({no_games_reason})"
     html_body = build_html(bets, gameday, n_scored, settled_yesterday, settled_all)
     send_email(subject, html_body)
 

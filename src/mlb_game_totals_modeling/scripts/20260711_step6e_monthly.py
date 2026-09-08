@@ -1,0 +1,120 @@
+"""Monthly breakdown: blind 9.5 under vs 8.5/9.5 both (edge>=0.02, shrink=0.50)."""
+from __future__ import annotations
+import sys, warnings
+from pathlib import Path
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.preprocessing import StandardScaler
+
+warnings.filterwarnings("ignore")
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+SPINE_PATH = Path.home() / "Downloads/tmp/mlb_game_totals/game_totals_spine.parquet"
+FEATURE_COLS = [
+    "consensus_line","park_factor","combined_ra_L10","home_ra_L20",
+    "combined_ra_L5","combined_rs_L10","home_rs_L10","away_rs_L3",
+    "combined_ra_career","away_ra_L5","home_ra_L10","away_ra_L10",
+]
+
+def load_spine():
+    df = pd.read_parquet(SPINE_PATH)
+    df["game_date"] = pd.to_datetime(df["game_date"])
+    df["combined_ra_L5"]     = df["home_ra_L5"]     + df["away_ra_L5"]
+    df["combined_ra_L10"]    = df["home_ra_L10"]    + df["away_ra_L10"]
+    df["combined_ra_career"] = df["home_ra_career"] + df["away_ra_career"]
+    df["combined_rs_L10"]    = df["home_rs_L10"]    + df["away_rs_L10"]
+    return df[df["line"] <= 13.0]
+
+def fit_pipeline(train_df, test_df, spine_train):
+    games_tr = train_df[list(dict.fromkeys(["game_pk","game_date","season","total_runs"]+FEATURE_COLS))].drop_duplicates("game_pk").dropna(subset=["total_runs"]+FEATURE_COLS)
+    games_te = test_df[list(dict.fromkeys(["game_pk","game_date","season","total_runs"]+FEATURE_COLS))].drop_duplicates("game_pk").dropna(subset=["total_runs"]+FEATURE_COLS)
+    sc = StandardScaler()
+    X_tr = sc.fit_transform(games_tr[FEATURE_COLS].values.astype(float))
+    X_te = sc.transform(games_te[FEATURE_COLS].values.astype(float))
+    mdl = Ridge(alpha=50); mdl.fit(X_tr, games_tr["total_runs"].values.astype(float))
+    y_tr = mdl.predict(X_tr); y_te = mdl.predict(X_te)
+    games_tr = games_tr.copy(); games_tr["y_hat"] = y_tr
+    hit_map = spine_train.drop_duplicates("game_pk").set_index("game_pk")["hit_over"]
+    games_tr["hit_over"] = games_tr["game_pk"].map(hit_map)
+    games_tr["line_bucket"] = games_tr["consensus_line"].round(1)
+    g = games_tr.dropna(subset=["y_hat","hit_over"])
+    sc_g = StandardScaler(); clf_g = LogisticRegression(max_iter=500,C=0.5)
+    clf_g.fit(sc_g.fit_transform(g[["y_hat"]].values.astype(float)), g["hit_over"].values.astype(int))
+    calib = {None:(sc_g,clf_g)}
+    for lv in sorted(g["line_bucket"].unique()):
+        sub = g[g["line_bucket"]==lv]
+        if len(sub)<30: continue
+        s2=StandardScaler(); c2=LogisticRegression(max_iter=500,C=0.5)
+        c2.fit(s2.fit_transform(sub[["y_hat"]].values.astype(float)), sub["hit_over"].values.astype(int))
+        calib[lv]=(s2,c2)
+    ymap = dict(zip(games_te["game_pk"], y_te))
+    ts = test_df.copy(); ts["y_hat_test"] = ts["game_pk"].map(ymap)
+    ts = ts.dropna(subset=["y_hat_test"])
+    po = []
+    for _,row in ts.iterrows():
+        bkt=round(float(row["line"]),1); s2,c2=calib.get(bkt,calib[None])
+        po.append(float(c2.predict_proba(s2.transform(np.array([[row["y_hat_test"]]])))[0,1]))
+    ts["p_model_over"]=po; ts["p_model_under"]=1-ts["p_model_over"]
+    return ts
+
+def pnl(price, hit):
+    p=float(price); return (p/100 if p>0 else 100/abs(p)) if int(hit)==1 else -1.0
+
+def monthly_table(bets, label):
+    bets = bets.copy()
+    bets["pnl"] = bets.apply(lambda r: pnl(r["price"], r["hit"]), axis=1)
+    bets["month"] = bets["game_date"].dt.to_period("M").astype(str)
+    rows = []
+    cumnet = 0.0
+    for mo, grp in bets.groupby("month"):
+        net = float(grp["pnl"].sum())
+        cumnet += net
+        rows.append(dict(month=mo, n=len(grp), hit=round(grp["hit"].mean(),3),
+                         net=round(net,1), cumnet=round(cumnet,1)))
+    print(f"\n{'='*60}")
+    print(f"  {label}")
+    print(f"{'='*60}")
+    print(f"  {'Month':<10} {'n':>5} {'Hit%':>6} {'Net':>8} {'CumNet':>9}")
+    print(f"  {'-'*10} {'-'*5} {'-'*6} {'-'*8} {'-'*9}")
+    for r in rows:
+        print(f"  {r['month']:<10} {r['n']:>5} {r['hit']:>6.1%} {r['net']:>+8.1f} {r['cumnet']:>+9.1f}")
+    total_n   = len(bets)
+    total_net = float(bets["pnl"].sum())
+    total_hr  = float(bets["hit"].mean())
+    print(f"  {'TOTAL':<10} {total_n:>5} {total_hr:>6.1%} {total_net:>+8.1f}")
+
+def main():
+    spine = load_spine()
+    all_scored = []
+    for train_seasons, test_season in [([2024],2025),([2024,2025],2026)]:
+        tr = spine[spine["season"].isin(train_seasons)]
+        te = spine[spine["season"]==test_season]
+        scored = fit_pipeline(tr, te, tr)
+        scored["test_season"] = test_season
+        all_scored.append(scored)
+    ts = pd.concat(all_scored, ignore_index=True)
+
+    # ── Strategy 1: blind 9.5 unders ──────────────────────────────────────────
+    bm = ts[ts["line"]==9.5].copy()
+    bm["hit"]   = bm["hit_under"]
+    bm["price"] = bm["under_price"]
+    bm = bm.dropna(subset=["hit","price"]).sort_values("game_date")
+    monthly_table(bm, "BLIND 9.5 UNDER (all books, edge-agnostic)")
+
+    # ── Strategy 2: both, edge>=0.02, [8.5,9.5], all, shrink=0.50 ────────────
+    sub = ts[ts["line"].isin([8.5,9.5])].copy()
+    shrink = 0.50
+    p_u = (1-shrink)*sub["p_model_under"] + shrink*sub["novig_prob_under"]
+    p_o = (1-shrink)*sub["p_model_over"]  + shrink*sub["novig_prob_over"]
+    sub["edge_u"] = p_u - sub["raw_prob_under"]
+    sub["edge_o"] = p_o - sub["raw_prob_over"]
+    sub["edge_eff"] = sub[["edge_u","edge_o"]].max(axis=1)
+    sub["bet_under"] = sub["edge_u"] >= sub["edge_o"]
+    sub["hit"]   = sub.apply(lambda r: r["hit_under"]   if r["bet_under"] else r["hit_over"],  axis=1)
+    sub["price"] = sub.apply(lambda r: r["under_price"] if r["bet_under"] else r["over_price"], axis=1)
+    sub = sub[sub["edge_eff"]>=0.02].dropna(subset=["hit","price"]).sort_values("game_date")
+    monthly_table(sub, "BOTH / edge>=0.02 / [8.5,9.5] / all / shrink=0.50")
+
+if __name__ == "__main__":
+    main()

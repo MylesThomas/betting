@@ -1,0 +1,1031 @@
+pipeline:
+  market_key: batter_home_runs
+  sport: baseball_mlb
+  s3_bucket: the-odds-api-mt
+  s3_prefix: mlb/batter_home_runs_model
+  seasons:
+  - 2024
+  - 2025
+  - 2026
+  target_col: hr_over_0_5
+  line_col: line
+model:
+  numeric_features:
+  - hr_roll_L5
+  - hr_roll_L10
+  - hr_roll_L20
+  - hr_roll_career
+  - ab_roll_career
+  - opp_hr_rate_career
+  - min_raw_implied_prob_under
+  - max_raw_implied_prob_under
+  - is_home
+  categorical_features: []
+  sklearn_version: 1.6.1
+backtest:
+  groupby:
+  - player_key
+  - game_date
+  - bookmaker
+  - line
+  edge_col: book_edge
+  novig_col: novig_prob_over
+grid_search:
+  edge_threshold:
+  - 0
+  - 0.01
+  - 0.02
+  - 0.03
+  - 0.05
+  - 0.07
+  - 0.1
+  - 0.15
+  - 0.2
+  direction:
+  - over
+  - under
+  - both
+  odds_bucket:
+  - all
+  - plus_odds
+  - minus_odds
+  shrinkage:
+  - 0
+  - 0.25
+  - 0.5
+  - 0.75
+  prediction_method:
+  - model
+  - consensus_line
+  clf_threshold:
+  - 0.45
+  - 0.5
+  - 0.55
+  - 0.6
+  strategy_summary: BOTH edge≥7% odds=plus_odds shrink=0.25 — OOS 17 bets, +39.9u,
+    234.7% ROI (2026-08-02)
+  out_of_sample_results:
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 17
+    pct_of_universe: 0.0
+    win_rate: 0.5294
+    units_won: 39.9
+    roi: 2.3471
+    avg_odds: .nan
+    max_drawdown: 7.0
+    calmar: 5.7
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 17
+    pct_of_universe: 0.0
+    win_rate: 0.5294
+    units_won: 39.9
+    roi: 2.3471
+    avg_odds: 6.076
+    max_drawdown: 7.0
+    calmar: 5.7
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 17
+    pct_of_universe: 0.0
+    win_rate: 0.5294
+    units_won: 39.9
+    roi: 2.3471
+    avg_odds: 6.076
+    max_drawdown: 7.0
+    calmar: 5.7
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: .nan
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: 3.029
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: .nan
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: 3.029
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 29
+    pct_of_universe: 0.0001
+    win_rate: 0.5517
+    units_won: 37.2
+    roi: 1.2828
+    avg_odds: .nan
+    max_drawdown: 12.0
+    calmar: 3.1
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 64
+    pct_of_universe: 0.0001
+    win_rate: 0.7031
+    units_won: 19.68
+    roi: 0.3075
+    avg_odds: .nan
+    max_drawdown: 8.0
+    calmar: 2.46
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 47
+    pct_of_universe: 0.0001
+    win_rate: 0.2128
+    units_won: 14.2
+    roi: 0.3021
+    avg_odds: .nan
+    max_drawdown: 30.0
+    calmar: 0.473
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 47
+    pct_of_universe: 0.0001
+    win_rate: 0.2128
+    units_won: 14.2
+    roi: 0.3021
+    avg_odds: 9.361
+    max_drawdown: 30.0
+    calmar: 0.473
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 47
+    pct_of_universe: 0.0001
+    win_rate: 0.2128
+    units_won: 14.2
+    roi: 0.3021
+    avg_odds: 9.361
+    max_drawdown: 30.0
+    calmar: 0.473
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: .nan
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: .nan
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: 3.833
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: 3.833
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 816
+    pct_of_universe: 0.0018
+    win_rate: 0.7512
+    units_won: 11.41
+    roi: 0.014
+    avg_odds: .nan
+    max_drawdown: 29.65
+    calmar: 0.385
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 816
+    pct_of_universe: 0.0018
+    win_rate: 0.7512
+    units_won: 11.41
+    roi: 0.014
+    avg_odds: 1.355
+    max_drawdown: 29.65
+    calmar: 0.385
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 816
+    pct_of_universe: 0.0018
+    win_rate: 0.7512
+    units_won: 11.41
+    roi: 0.014
+    avg_odds: 1.355
+    max_drawdown: 29.65
+    calmar: 0.385
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 96
+    pct_of_universe: 0.0002
+    win_rate: 0.4792
+    units_won: 10.79
+    roi: 0.1124
+    avg_odds: .nan
+    max_drawdown: 39.51
+    calmar: 0.273
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.02
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 1156
+    pct_of_universe: 0.0026
+    win_rate: 0.8114
+    units_won: 10.39
+    roi: 0.009
+    avg_odds: .nan
+    max_drawdown: 18.71
+    calmar: 0.555
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.02
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 1156
+    pct_of_universe: 0.0026
+    win_rate: 0.8114
+    units_won: 10.39
+    roi: 0.009
+    avg_odds: 1.246
+    max_drawdown: 18.71
+    calmar: 0.555
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.02
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 1156
+    pct_of_universe: 0.0026
+    win_rate: 0.8114
+    units_won: 10.39
+    roi: 0.009
+    avg_odds: 1.246
+    max_drawdown: 18.71
+    calmar: 0.555
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: 1.629
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: 1.629
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: .nan
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: .nan
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 5666
+    pct_of_universe: 0.0127
+    win_rate: 0.7416
+    units_won: 1.22
+    roi: 0.0002
+    avg_odds: .nan
+    max_drawdown: 101.36
+    calmar: 0.012
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 5666
+    pct_of_universe: 0.0127
+    win_rate: 0.7416
+    units_won: 1.22
+    roi: 0.0002
+    avg_odds: 1.352
+    max_drawdown: 101.36
+    calmar: 0.012
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 5666
+    pct_of_universe: 0.0127
+    win_rate: 0.7416
+    units_won: 1.22
+    roi: 0.0002
+    avg_odds: 1.352
+    max_drawdown: 101.36
+    calmar: 0.012
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  in_sample_results:
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 17
+    pct_of_universe: 0.0
+    win_rate: 0.5294
+    units_won: 39.9
+    roi: 2.3471
+    avg_odds: .nan
+    max_drawdown: 7.0
+    calmar: 5.7
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 17
+    pct_of_universe: 0.0
+    win_rate: 0.5294
+    units_won: 39.9
+    roi: 2.3471
+    avg_odds: 6.076
+    max_drawdown: 7.0
+    calmar: 5.7
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 17
+    pct_of_universe: 0.0
+    win_rate: 0.5294
+    units_won: 39.9
+    roi: 2.3471
+    avg_odds: 6.076
+    max_drawdown: 7.0
+    calmar: 5.7
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: .nan
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: 3.029
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: .nan
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.1
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 173
+    pct_of_universe: 0.0004
+    win_rate: 0.3815
+    units_won: 37.4
+    roi: 0.2162
+    avg_odds: 3.029
+    max_drawdown: 25.43
+    calmar: 1.471
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 29
+    pct_of_universe: 0.0001
+    win_rate: 0.5517
+    units_won: 37.2
+    roi: 1.2828
+    avg_odds: .nan
+    max_drawdown: 12.0
+    calmar: 3.1
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 64
+    pct_of_universe: 0.0001
+    win_rate: 0.7031
+    units_won: 19.68
+    roi: 0.3075
+    avg_odds: .nan
+    max_drawdown: 8.0
+    calmar: 2.46
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 47
+    pct_of_universe: 0.0001
+    win_rate: 0.2128
+    units_won: 14.2
+    roi: 0.3021
+    avg_odds: .nan
+    max_drawdown: 30.0
+    calmar: 0.473
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 47
+    pct_of_universe: 0.0001
+    win_rate: 0.2128
+    units_won: 14.2
+    roi: 0.3021
+    avg_odds: 9.361
+    max_drawdown: 30.0
+    calmar: 0.473
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 47
+    pct_of_universe: 0.0001
+    win_rate: 0.2128
+    units_won: 14.2
+    roi: 0.3021
+    avg_odds: 9.361
+    max_drawdown: 30.0
+    calmar: 0.473
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: .nan
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: .nan
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: over
+    odds_bucket: plus_odds
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: 3.833
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: over
+    odds_bucket: all
+    shrinkage: 0.0
+    prediction_method: model
+    n_bets: 20
+    pct_of_universe: 0.0
+    win_rate: 0.35
+    units_won: 13.4
+    roi: 0.67
+    avg_odds: 3.833
+    max_drawdown: 7.0
+    calmar: 1.914
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 816
+    pct_of_universe: 0.0018
+    win_rate: 0.7512
+    units_won: 11.41
+    roi: 0.014
+    avg_odds: .nan
+    max_drawdown: 29.65
+    calmar: 0.385
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 816
+    pct_of_universe: 0.0018
+    win_rate: 0.7512
+    units_won: 11.41
+    roi: 0.014
+    avg_odds: 1.355
+    max_drawdown: 29.65
+    calmar: 0.385
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.5
+    prediction_method: model
+    n_bets: 816
+    pct_of_universe: 0.0018
+    win_rate: 0.7512
+    units_won: 11.41
+    roi: 0.014
+    avg_odds: 1.355
+    max_drawdown: 29.65
+    calmar: 0.385
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.05
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 96
+    pct_of_universe: 0.0002
+    win_rate: 0.4792
+    units_won: 10.79
+    roi: 0.1124
+    avg_odds: .nan
+    max_drawdown: 39.51
+    calmar: 0.273
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.02
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 1156
+    pct_of_universe: 0.0026
+    win_rate: 0.8114
+    units_won: 10.39
+    roi: 0.009
+    avg_odds: .nan
+    max_drawdown: 18.71
+    calmar: 0.555
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.02
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 1156
+    pct_of_universe: 0.0026
+    win_rate: 0.8114
+    units_won: 10.39
+    roi: 0.009
+    avg_odds: 1.246
+    max_drawdown: 18.71
+    calmar: 0.555
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.02
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.25
+    prediction_method: model
+    n_bets: 1156
+    pct_of_universe: 0.0026
+    win_rate: 0.8114
+    units_won: 10.39
+    roi: 0.009
+    avg_odds: 1.246
+    max_drawdown: 18.71
+    calmar: 0.555
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: 1.629
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: 1.629
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: .nan
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.15
+    direction: both
+    odds_bucket: all
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 21
+    pct_of_universe: 0.0
+    win_rate: 0.6667
+    units_won: 1.81
+    roi: 0.0862
+    avg_odds: .nan
+    max_drawdown: 3.33
+    calmar: 0.544
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: both
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 5666
+    pct_of_universe: 0.0127
+    win_rate: 0.7416
+    units_won: 1.22
+    roi: 0.0002
+    avg_odds: .nan
+    max_drawdown: 101.36
+    calmar: 0.012
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: under
+    odds_bucket: all
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 5666
+    pct_of_universe: 0.0127
+    win_rate: 0.7416
+    units_won: 1.22
+    roi: 0.0002
+    avg_odds: 1.352
+    max_drawdown: 101.36
+    calmar: 0.012
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+  - edge_threshold: 0.07
+    direction: under
+    odds_bucket: minus_odds
+    shrinkage: 0.75
+    prediction_method: model
+    n_bets: 5666
+    pct_of_universe: 0.0127
+    win_rate: 0.7416
+    units_won: 1.22
+    roi: 0.0002
+    avg_odds: 1.352
+    max_drawdown: 101.36
+    calmar: 0.012
+    drawdown_peak_date: None
+    drawdown_trough_date: None
+    drawdown_recovery_date: still in drawdown
+settle:
+  s3_results_key: mlb/batter_home_runs_model/settled/settled_bets.parquet
+  actuals_key: mlb/total_bases_model/actuals/mlb_batting_statcast.parquet

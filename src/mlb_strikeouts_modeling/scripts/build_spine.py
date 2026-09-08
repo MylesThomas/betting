@@ -41,6 +41,7 @@ MARKET_BUCKET  = "the-odds-api-mt"
 MARKET_PREFIX  = "mlb/strikeouts_model/market_raw"
 SPINE_BUCKET   = "the-odds-api-mt"
 SPINE_KEY      = "mlb/strikeouts_model/spine/mlb_strikeouts_spine.parquet"
+UMP_KEY        = "mlb/strikeouts_model/ump_features.parquet"
 LOCAL_OUT      = Path.home() / "Downloads/tmp/mlb_strikeouts_spine.parquet"
 
 SEASONS        = [2024, 2025, 2026]
@@ -82,6 +83,12 @@ def load_gamelogs() -> pd.DataFrame:
         df = pd.read_parquet(BytesIO(body))
         frames.append(df)
     return pd.concat(frames, ignore_index=True)
+
+
+def load_ump_features() -> pd.DataFrame:
+    s3   = boto3.client("s3")
+    body = s3.get_object(Bucket=SPINE_BUCKET, Key=UMP_KEY)["Body"].read()
+    return pd.read_parquet(BytesIO(body))
 
 
 def load_market() -> pd.DataFrame:
@@ -237,7 +244,17 @@ def build_opponent_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build_spine(df_logs: pd.DataFrame, mkt_consensus: pd.DataFrame) -> pd.DataFrame:
+UMP_COLS = [
+    "ump_k_avg_career", "ump_k_avg_c10", "ump_k_avg_c20", "ump_k_avg_season",
+    "ump_k_delta", "ump_k_delta_c10", "ump_k_delta_c20", "ump_k_delta_season",
+]
+
+
+def build_spine(
+    df_logs: pd.DataFrame,
+    mkt_consensus: pd.DataFrame,
+    df_ump: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     df = build_rolling_features(df_logs)
     df = build_opponent_features(df)
 
@@ -256,6 +273,13 @@ def build_spine(df_logs: pd.DataFrame, mkt_consensus: pd.DataFrame) -> pd.DataFr
         df["min_line"]         = np.nan
         df["max_line"]         = np.nan
         df["n_books"]          = np.nan
+
+    if df_ump is not None and not df_ump.empty:
+        ump_join = df_ump[["game_pk"] + UMP_COLS].copy()
+        df = df.merge(ump_join, on="game_pk", how="left")
+    else:
+        for col in UMP_COLS:
+            df[col] = np.nan
 
     return df
 
@@ -277,12 +301,18 @@ def main():
     mkt_consensus = build_market_consensus(df_mkt)
     print(f"  {len(mkt_consensus):,} player-game market rows")
 
+    print("Loading ump features...")
+    df_ump = load_ump_features()
+    print(f"  {len(df_ump):,} game-level ump rows")
+
     print("Building spine...")
-    spine = build_spine(df_logs, mkt_consensus)
+    spine = build_spine(df_logs, mkt_consensus, df_ump)
     print(f"  {len(spine):,} rows, {spine.columns.tolist()}")
 
     # Quick quality checks
     mkt_join_rate = spine["consensus_line"].notna().mean()
+    ump_join_rate = spine["ump_k_avg_career"].notna().mean()
+    print(f"Ump join rate: {ump_join_rate:.1%}")
     print(f"\nJoin rate (has market data): {mkt_join_rate:.1%}")
 
     if args.verify:

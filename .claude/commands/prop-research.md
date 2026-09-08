@@ -11,12 +11,12 @@ Guided end-to-end research workflow for building a new prop market betting pipel
 The deliverable is a **daily email** — one row per qualifying (player, game, book, line) — organized by game start time, that looks like this (MLB pitcher strikeouts example):
 
 ```
-Player / Game:     Player | Team | Opp | Time (ET) | Bet | Line
+Player / Game:     Player | Team | Opp | Time (ET) | Line
 Book:              Book
 American Odds:     Over | Under
 Implied:           Raw Over | Raw Under | Raw Total
 No-Vig:            Fair Over | Fair Under | Fair Total | Vig
-Model Prediction:  Pred Over | Pred Under
+Model Prediction:  [Prediction (yhat)] | [Delta] | Pred Over | Pred Under
 Edge:              Over Edge | Under Edge
 Model Inputs:      k_roll_career | k_roll_c5 | opp_K_rate | Status
 ```
@@ -29,7 +29,7 @@ Grouped by game with a header row per game (e.g. "1:01 PM ET · Pittsburgh Pirat
 
 2. **Projected stat → probability** — the model's predicted value (e.g. "Proj Ks = 7.09") is converted to P(over the line) and P(under the line) using a probability distribution. At line 5.5, a projection of 7.09 Ks produces a high P(over). At line 6.5, the same projection produces a lower P(over). This is how `Model%` gets computed — and why **p_model must be identical across all books at the same line** (it's a property of the player and matchup, not the book).
 
-3. **Edge is computed per book** — `Mkt%` is that specific book's no-vig implied probability. `OVER Edge = Model% - Mkt%` using the book's own price. This is why the spine and backtest must stay at `(player, game_date, bookmaker, line)` grain — the edge number is only meaningful if it's computed against the actual price you'd bet into.
+3. **Edge is computed per book** — `edge = p_model − raw_implied_prob` using that book's own raw (vig-inclusive) odds. Edge > 0 means the bet is +EV at the real offered price. This is why the spine and backtest must stay at `(player, game_date, bookmaker, line)` grain — the edge number is only meaningful if it's computed against the actual price you'd bet into.
 
 4. **Rolling feature columns** (e.g. `k_roll_s5`, `k_roll_c5`, `opp_K_rate`) appear in the email so you can see exactly what the model saw — and sanity-check whether the projection makes sense given the player's recent history.
 
@@ -45,7 +45,7 @@ Every step of this skill exists to build and validate one piece of that pipeline
 - When a bug or data issue requires revisiting an earlier step, explicitly say which step you are returning to and why, re-do the work, and re-run that step's tests before continuing forward.
 - Keep the user informed at each moment: which step, what you're doing, and what the test results are.
 
-The sacks and tackles pipelines (`src/nfl_sacks_daily/`, `src/nfl_tackles_daily/`) are the canonical reference implementations. Mirror their structure when building the production pipeline in Step 8.
+The sacks and tackles pipelines (`src/nfl_sacks_daily/`, `src/nfl_tackles_daily/`) are the canonical reference implementations. Mirror their structure when building the production pipeline in Step 9.
 
 ---
 
@@ -79,7 +79,13 @@ Before starting, confirm:
 Write these down as a config block at the start of the session and reference them throughout.
 - for a new project, everything will be contained in ~/dev/betting/src/{name of new project}
 
-**Pick a spot-check player.** Choose one representative player who is active, well-known, and has a full season of data (e.g. Myles Garrett for sacks, A.J. Brown for receiving yards). This player will be traced through every step of the pipeline — their raw data, rolling features, model predictions, edge, and settlement results will be shown explicitly in both the conversation and the HTML log at each step. This serves as a human-readable sanity check at every stage. Record the chosen player in the config block.
+**Pick 3 spot-check players.** Choose one player from each of the three tiers below. All three will be traced through every step of the pipeline — their raw data, rolling features, model predictions, edge, and settlement results shown explicitly in both the conversation and the HTML log. Three tiers gives you a complete picture: the star is the easy sanity check, the backup stress-tests low-line / sparse-data behavior, and the rookie stress-tests career-rolling features and starter-flag logic near their null boundary.
+
+- **Star** — elite starter, well-known, full season of data (e.g. Myles Garrett for sacks, A.J. Brown for receiving yards, Josh Allen for passing yards). This is the "everything should look right" baseline.
+- **Backup / journeyman** — a QB or player who gets spot starts, low lines, and sparse data. Tests whether the model handles backup-regime games correctly (e.g. Bailey Zappe, Joe Flacco, Gardner Minshew).
+- **Rookie** — first or second-year player with minimal career history, possibly a mid-season takeover. Tests career rolling features near null and starter-flag ramp-up logic (e.g. Cam Ward, Drake Maye, Bryce Young).
+
+Record all three players in the config block.
 
 **Create the session log file** at `~/dev/betting/knowledge-base/raw/YYYYMMDD-{market-name}.html` (e.g. `20260701-nfl-wr-rec-yards.html`). Scaffold it as a styled HTML document with a header section containing the config block above. **Write this file now, before any other work in Step 0.** After each step completes and tests pass, append a new `<section>` to the file covering: what was done, key findings, fishy items flagged, and test results. Tables should be rendered as HTML `<table>` elements. This file is the running session log — treat it like the docx files used in prior research sessions.
 
@@ -385,11 +391,11 @@ Both are grid search dimensions for classification problems. For regression prob
   - Additional market-specific dimensions added to config as needed (e.g., line bucket for tackles: low lines vs high lines)
 - For each combo: compute the output table below.
 - Flag strategies with <50 bets as not statistically meaningful.
-- **Flag any strategy where `max_drawdown > units_won` in red.** A strategy that drew down more than it ever returned is one most bettors would abandon before recovery. Flag it clearly — it's a signal worth noting, not a definitive answer.
+- **Flag any strategy where `max_drawdown > units_won` in red.** A strategy that drew down more than it ever returned is one most bettors would abandon before recovery. Flag it clearly — it's a signal worth noting, not a definitive answer. Note: `max_drawdown` is peak-to-trough — the largest drop from any prior cumulative high to a subsequent low. It is NOT the worst loss from zero. A strategy can have a large drawdown while never going underwater in absolute terms (e.g. peak at +88u, trough at +41u = 47u drawdown, but always profitable). The calmar ratio (`units_won / max_drawdown`) captures this relationship: calmar > 1 means total profit exceeded the worst drawdown; calmar < 1 means you went deeper in the hole than you ever fully recovered.
 - Save full grid search results to S3 and `~/Downloads/tmp/` as a CSV for local review.
 - **Also write all OOS result rows (combos with ≥1 bet) into `config.yaml` under `grid_search.out_of_sample_results`**, one entry per combo, sorted by units_won descending. This makes the config the single source of truth for both the sweep parameters and the results — no need to re-open a CSV to remember what was tried. Format to match the MLB total bases / sacks pattern: one YAML list entry per combo with fields `edge`, `odds_bucket`, `direction`, `lines`, `n`, `win_pct`, `units`, `roi`, `mdd` (plus any market-specific dimensions). Also write a `strategy_summary` string at the top of the `grid_search:` block summarising the chosen production strategy in one line, e.g. `"Unders on lines ≤ 17.5, shrinkage 0.25, edge ≥ 10% — OOS 446 bets, +74.2u, +16.63% ROI (YYYY-MM-DD)"`.
 
-**Output table columns:** `edge_threshold`, `direction`, `odds_bucket`, `clf_threshold` (null if regression), `shrinkage`, `n_bets`, `pct_of_universe` (n_bets / total scored player-game-book-line rows — shows how selective the strategy is), `win_rate`, `push_rate`, `units_won`, `roi`, `avg_odds` (mean decimal odds of bets placed), `max_drawdown` (largest peak-to-trough loss in units across the chronological bet sequence). Sort descending by units_won, tiebreaker is descending n_bets (more sample size is better).
+**Output table columns:** `edge_threshold`, `direction`, `odds_bucket`, `clf_threshold` (null if regression), `shrinkage`, `n_bets`, `pct_of_universe` (n_bets / total scored player-game-book-line rows — shows how selective the strategy is), `win_rate`, `push_rate`, `units_won`, `roi`, `avg_odds` (mean decimal odds of bets placed), `max_drawdown` (peak-to-trough loss in units — NOT loss from zero; see note above), `calmar` (`units_won / max_drawdown` — ratio of total profit to worst drawdown; sort by this as a tiebreaker after units_won), `drawdown_peak_date` (date the cumulative P&L hit its high before the max drawdown began), `drawdown_trough_date` (date the cumulative P&L hit its low during the max drawdown), `drawdown_recovery_date` (date cumulative P&L recovered past the prior peak — null if still in drawdown at end of sample; a null here is a red flag). Sort descending by `units_won`, tiebreaker descending `calmar`.
 
 ### Tests after Step 5
 ```sql
@@ -449,10 +455,93 @@ After all 4 tables are written for all candidates, present a summary in the HTML
 
 ---
 
-## Step 7 — Mock HTML Email
+## Step 7 — Predictor × Split Search
 
 ### Goal
-Build a styled HTML mock of the picks email using real historical data from a past game day. This is the visual spec the production pipeline in Step 8 must match. Agree on the layout, columns, and styling before writing any Lambda code — the E2E test in Step 8 passes when the real email matches this mock.
+Before shipping, exhaust the feature combination space to check whether v1 missed a materially better model. Run every plausible feature combo against every plausible data split, rank by financial performance, and surface findings for human review. This step can trigger a revision loop back to Step 3c — or confirm that v1 is the right call.
+
+### Feature pool
+Start from the features that cleared signal threshold in Step 3a/3b (individual AUC > 0.52 for binary markets, or r² > a floor for continuous). Build every combo within this pruned set: all combos of size 1 through N, where N is the pool size. Do not include features that showed no individual signal — they can only add noise.
+
+Write the pruned feature pool into the HTML log before running anything, with each feature's individual AUC/RMSE from Step 3a/3b alongside it.
+
+### Split types — run both
+
+**Temporal splits (real signal):** rolling windows stepped by month or quarter. Train on the first W months of the dataset, test on the next Q months, then slide forward by one step. Generate every non-overlapping window the data supports — typically 10–20 splits from a 3-season dataset. These preserve temporal ordering and are the primary signal.
+
+**Random splits (stability signal):** randomly shuffle and partition the spine into train/test with a fixed set of seeds (20 seeds). Ignores game-date ordering — use for variance estimation only, not as a real out-of-sample signal. Label these clearly in all output tables as `random_split` so they are never conflated with temporal results.
+
+### Work
+For each `(feature_combo, split)` pair:
+1. Train the same model type as Step 3c on the training partition.
+2. Get held-out predictions on the test partition.
+3. Convert to `p_model` using the same method selected in Step 4.
+4. Compute per-book edge: `p_model − raw_implied_prob` (raw prob, not novig — same as Step 4 assert).
+5. Run the same grid search as Step 5 over strategy params loaded from `config.yaml`. Record the best-performing strategy (by units won) for this combo × split.
+
+Save the full results table to S3 and `~/Downloads/tmp/` as CSV before writing to HTML.
+
+### Output table
+One row per `(feature_combo, split_type, split_id)`. **Sort descending by `units_won`**, tiebreaker descending `calmar`. Columns:
+
+| column | description |
+|---|---|
+| `feature_combo` | comma-separated list of features in this combo |
+| `n_features` | size of the combo |
+| `split_type` | `temporal` or `random_split` |
+| `split_id` | e.g. `2023Q1-2023Q3` for temporal, `seed_07` for random |
+| `n_bets` | number of qualifying bets at the best strategy for this combo × split |
+| `win_rate` | fraction of qualifying bets won |
+| `units_won` | net units at flat betting |
+| `roi` | `units_won / n_bets` |
+| `calmar` | `units_won / max_drawdown` |
+| `max_drawdown` | peak-to-trough loss in units |
+| `vs_v1_delta_units` | `units_won` minus v1 `units_won` on the same split |
+| `vs_v1_delta_roi` | `roi` minus v1 ROI on the same split |
+| `flagged` | `YES` if beats v1 by >10 units OR >3pp ROI on this split; else blank |
+
+Write this table to the HTML log. Highlight `flagged = YES` rows in a distinct colour (e.g. `background: #fff3cd`).
+
+### Feature frequency analysis
+After the full table is written, compute a feature frequency comparison:
+
+- Take the top 20% of rows by `units_won` (good combos) and the bottom 20% by `units_won` (bad combos).
+- For each feature in the pool, count how many good combos include it and how many bad combos include it.
+- Report as a table: `feature | pct_in_good | pct_in_bad | delta`. Sort descending by `delta` (features most overrepresented in good combos at the top; most overrepresented in bad combos at the bottom).
+- A feature with `delta > 0.30` is load-bearing — present in good combos far more than bad ones. A feature with `delta < -0.30` is drag — present in bad combos far more than good ones. Flag both thresholds explicitly.
+
+Write this table to the HTML log immediately after the main results table.
+
+### Human gate — required before proceeding to Step 8
+Present findings in the HTML and in conversation:
+- Flagged rows (combos that beat v1 by >10u or >3pp ROI on at least one split)
+- The feature frequency table with load-bearing and drag features called out
+- Whether any combo consistently outperforms v1 **across multiple split types** (that is the high-confidence signal — one split is noise, five is a pattern)
+- Your recommendation: proceed with v1, revise feature set, revise strategy params, or both
+
+Ask the user to decide. Three outcomes:
+1. **Proceed** — nothing beats v1 convincingly across splits. Continue to Step 8.
+2. **Feature set revision** — a better combo is found. Return to Step 3c, retrain with the new feature set, redo Steps 4, 5, and 6, then re-run Step 7 once before proceeding to Step 8.
+3. **Strategy revision** — v1 feature set is right, but a different edge threshold / direction / odds bucket looks stronger across splits. Update `config.yaml` and re-run Step 6 only, then proceed to Step 8.
+
+Do not proceed to Step 8 until the user explicitly confirms which outcome to take.
+
+### Tests after Step 7
+```sql
+-- 1. Every (feature_combo, split_type, split_id) tuple appears exactly once in the results table
+-- 2. No combo × split has ROI > 40% with n_bets > 100 — flag as likely leakage (same threshold as Step 5)
+-- 3. For temporal splits: test partition dates are strictly after training partition dates for every split_id
+-- 4. For random splits: every row in the spine appears in exactly one of train or test for each seed
+-- 5. v1 combo appears in the results table for each split — verify its vs_v1_delta values are 0
+-- 6. Feature frequency table: pct_in_good and pct_in_bad columns are both bounded [0, 1]
+```
+
+---
+
+## Step 8 — Mock HTML Email
+
+### Goal
+Build a styled HTML mock of the picks email using real historical data from a past game day. This is the visual spec the production pipeline in Step 9 must match. Agree on the layout, columns, and styling before writing any Lambda code — the E2E test in Step 9 passes when the real email matches this mock.
 
 ### Work
 - Choose a past game day from the scored OOF output (Step 4) that has:
@@ -483,9 +572,11 @@ The mock must show all three sections that the live email will contain — use r
 
 **Section 2 — Yesterday's results (required):** Pick any game day immediately before the chosen "today" that has settled OOF bets. One row per bet: Player | Team | Opponent | Bet Direction | Line | Book | Under Odds | Edge | Actual | Outcome | P&L. Below the per-bet table, a "by game" summary (Game | Bets | W | L | Net).
 
-**Section 3 — All-time results (required):** Summary stat cards (All-Time P&L, Record, Win %, ROI) populated from the OOF backtest results. Season-by-season breakdown table. Footer line: flat-bet assumption, strategy parameters, OOS baseline.
+**Section 3 — All-time production results (required):** Summary stat cards (All-Time P&L, Record, Win %, ROI) populated from **production bets only** — real settled bets since the pipeline went live. Season-by-season breakdown table. In the mock, this section will show zeros or minimal data since no production bets exist yet — that is correct and expected.
 
-All three sections are required in the mock — the live pipeline produces all three, so the visual spec must show all three.
+**Section 4 — Backtest results (required):** Read-only historical reference. Populated from the OOF grid search results stored in `config.yaml` (`grid_search.out_of_sample_results`). Never updates during the season — frozen at research time. Contents: strategy parameters (edge threshold, direction, odds bucket, shrinkage), OOS summary stats (n_bets, win rate, units, ROI, calmar, max drawdown, drawdown dates), and season-by-season OOS breakdown. Label it clearly as "Historical Backtest — Research Phase (OOS)" so it's never confused with live results. This section exists so you can always compare live performance against what the backtest predicted.
+
+All four sections are required in the mock — the live pipeline produces all four, so the visual spec must show all four.
 
 **Styling (inline CSS only — no external stylesheets):**
 - Font: `system-ui, Arial`, 14px
@@ -524,9 +615,14 @@ If this assert fails, fix the scoring script so it carries all model input colum
 -- 6. All settled bets for the "yesterday" game day appear (count matches OOF data for that date)
 -- 7. "By game" summary net P&L equals sum of individual bet P&L values for that day
 
--- Section 3 — All-time results:
--- 8. Summary cards (P&L, Record, Win %, ROI) match the OOF backtest aggregate numbers
--- 9. Season-by-season table rows sum to the all-time totals
+-- Section 3 — All-time production results:
+-- 8. Summary cards show production bets only (not backtest) — in the mock, zeros are correct
+-- 9. Season-by-season table rows sum to the all-time production totals
+
+-- Section 4 — Backtest results:
+-- 10. Strategy parameters match config.yaml grid_search production strategy
+-- 11. OOS summary stats (n_bets, units, ROI, calmar) match config.yaml out_of_sample_results
+-- 12. Section is labelled clearly as "Historical Backtest — Research Phase (OOS)"
 ```
 After the SQL checks, open the file in a browser (`open knowledge-base/raw/YYYYMMDD-mock-email-{market-name}.html`) and visually confirm:
 - All three sections are present in order: today's plays → yesterday's results → all-time results
@@ -537,11 +633,11 @@ After the SQL checks, open the file in a browser (`open knowledge-base/raw/YYYYM
 - Yesterday's per-bet table and by-game summary both render correctly
 - All-time stat cards and season table look clean
 
-**Do not proceed to Step 8 until the layout is approved.** Show the path to the HTML file in the conversation and ask the user to open it and confirm the layout. Step 8 builds the live pipeline; the E2E test in Step 8 is "does the real email match this mock?"
+**Do not proceed to Step 9 until the layout is approved.** Show the path to the HTML file in the conversation and ask the user to open it and confirm the layout. Step 9 builds the live pipeline; the E2E test in Step 9 is "does the real email match this mock?"
 
 ---
 
-## Step 8 — E2E Production Pipeline
+## Step 9 — E2E Production Pipeline
 
 ### Goal
 Build a daily pipeline that runs live during the season. The trained model from Step 3 is fixed — no retraining during the season.
@@ -578,6 +674,17 @@ Two EventBridge rules, both DISABLED by default. Enable before season start.
 4. **Find today's games** — fetch today's schedule and available prop lines from the Odds API.
 5. **Score** — run today's player-games through the trained model. Compute `p_model`, `p_market`, and `edge` for each player-game-book row. Log a warning if the spine's `last_updated` timestamp is not from today — it means the 8:30 job failed and scoring is running off stale features. Do not send Email 2 if this check fails.
 6. **Pre-send validation** — before sending any email, run the following checks in order. Halt and do not send if any fail.
+
+   **Required assert — yhat is book-invariant.** Run this immediately after `score_slate()` returns, before expanding to per-book rows or qualifying any bets. The same assert lives in the research training script (Step 3) — this is its production counterpart. The research assert only runs during the build phase; this one runs every day in production. If a per-book feature (e.g. `novig_prob_over`, `raw_prob_under`, `bookmaker`) ever drifts into the model inputs via a pipeline change, the research asserts won't catch it; only this daily production check will. **This assert must live in `run_pipeline.py` itself, not just in research scripts.**
+   ```python
+   yhat_check = scored_df.groupby(["player_key", "game_date", "line"])["yhat"].nunique()
+   if (yhat_check > 1).any():
+       bad = yhat_check[yhat_check > 1].reset_index()[["player_key", "game_date", "line"]].values.tolist()
+       raise RuntimeError(
+           f"y_hat is not book-invariant for {len(bad)} (player, game, line) groups: {bad[:5]}. "
+           f"A per-book feature has entered the model inputs — do not send email."
+       )
+   ```
 
    **Required assert — edge is computed against raw implied probability.** Run this before any other validation. If it fails, the qualifying bets are wrong and the email must not go out:
    ```python
@@ -648,9 +755,11 @@ Two EventBridge rules, both DISABLED by default. Enable before season start.
 
    **Section 2 — Yesterday's results.** One row per settled bet. Columns: Player | Team | Opponent | Bet Direction | Line | Book | Under Odds | Edge | Actual | Outcome | P&L. Below the per-bet table, a "by game" summary table (one row per game: Game | Bets | W | L | Net). `Bet Direction` always populated explicitly.
 
-   **Section 3 — All-time results.** Summary stat cards (All-Time P&L, Record, Win %, ROI) followed by a season-by-season breakdown table (Season | Bets | Record | Win % | Units | ROI). Footer line: flat-bet assumption, strategy parameters, OOS baseline from research.
+   **Section 3 — All-time production results.** Production bets only — real settled bets since the pipeline went live. Summary stat cards (All-Time P&L, Record, Win %, ROI) followed by a season-by-season breakdown table (Season | Bets | Record | Win % | Units | ROI). Shows zeros on day 1 — that is correct. Never mix backtest results into this section.
 
-   One SES call. The settled results for Section 2 come from the same store updated in step 1 above.
+   **Section 4 — Backtest results.** Read-only, never updated during the season. Sourced directly from `config.yaml` `grid_search.out_of_sample_results`. Contents: strategy parameters (edge threshold, direction, odds bucket, shrinkage, prediction method), OOS summary stats (n_bets, win rate, units, ROI, calmar, max drawdown, drawdown peak/trough/recovery dates), season-by-season OOS breakdown. Label clearly as "Historical Backtest — Research Phase (OOS)" so it cannot be confused with Section 3. Purpose: lets you compare live performance against backtest expectation every single day.
+
+   One SES call. The settled results for Section 2 and 3 come from the same store updated in step 1 above. Section 4 is read from `config.yaml` — no DB query needed.
 
 ### Architecture (mirror the sacks/tackles Lambda pattern):
 - Container-based Lambda (ECR)
@@ -711,7 +820,7 @@ aws events list-rules --name-prefix <rule-prefix>
 - **Accuracy metrics in Steps 3–4, financial metrics in Steps 5–6.** Do not evaluate ROI / Units won or lost before Step 5.
 - **Bet size is not modeled here.** Flat betting (1 unit per bet) is assumed throughout.
 - **Append to the HTML log after every step — this is mandatory, not optional.** See the "HTML Log — NON-NEGOTIABLE REQUIREMENT" section above. Each step gets its own `<section>` with: what was built, key findings, all output tables as HTML `<table>` elements, test results (pass/fail with counts), and flagged items. Every section header must include a timestamp in Eastern time to the minute/second (e.g. `2026-07-01 14:32:05 ET`) — get this via `TZ=America/New_York date '+%Y-%m-%d %H:%M:%S ET'` in the terminal. Everything goes in the one file — grid search results, spot-check traces, calibration output, sweep tables, all of it. This is the persistent record — if context compacts mid-session, the log is how the work gets reconstructed.
-- **Trace the spot-check player at every step.** At the end of each step's work (before tests), show all relevant columns for the spot-check player chosen in Step 0 — their raw data, rolling features, p_model, p_market, edge, and results as applicable. Include this as a dedicated subsection in the HTML log for that step. If the spot-check player's numbers look wrong, treat it as a test failure and investigate before proceeding.
+- **Trace all 3 spot-check players at every step.** At the end of each step's work (before tests), show all relevant columns for each of the three spot-check players chosen in Step 0 — their raw data, rolling features, p_model, p_market, edge, and results as applicable. Include this as a dedicated subsection in the HTML log for that step, with one sub-table per player. If any spot-check player's numbers look wrong, treat it as a test failure and investigate before proceeding. The star player is the baseline; the backup and rookie are the stress tests — pay extra attention to their career rolling features and starter-flag values.
 - **Log and surface anything fishy.** Throughout each step, keep a running list of anything unexpected, suspicious, or worth a second opinion — unexpected null patterns, distributions that don't make intuitive sense, coverage gaps, model coefficients pointing the wrong direction, ROI numbers that seem too good, etc. Do not interrupt mid-step to ask about them. At the end of each step, after tests pass, present all flagged items as a numbered list and ask the user about them before proceeding to the next step.
 - **No jargon. Always show the value.** Never use shorthand like "high-line" or "large edge" without stating the actual threshold alongside it. Write for someone who hasn't been in the session: "line ≥ 6.5" not "high-line", "edge ≥ 3pp" not "meaningful edge". This applies to code comments, HTML output, emails, and conversation.
 - **Use readable names in code and data — shorten only for display.** DataFrame column names, variable names, and SQL aliases should be fully descriptive (e.g. `rolling_rebound_mean_60`, `novig_prob_over`, `under_edge_ols`) — not abbreviated to cryptic shorthand (e.g. `rb60`, `nvp`, `ue_ols`). Abbreviations are acceptable only in the HTML display layer (column headers, email labels) where space is genuinely constrained — and only after the full name is established in the underlying data. Never choose a short name in code because it's faster to type.

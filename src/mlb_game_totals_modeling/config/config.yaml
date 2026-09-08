@@ -1,0 +1,73 @@
+# MLB Game Totals — pipeline config
+# Market: Total runs scored in a game (over/under)
+# Odds API: baseball_mlb / totals
+# Spine grain: (game_date, home_team, away_team, bookmaker, line)
+
+sport: baseball_mlb
+market_key: totals
+seasons: [2024, 2025, 2026]
+s3_bucket: the-odds-api-mt
+s3_prefix: mlb/game_totals_model
+
+data:
+  totals_lines_key: mlb/game_totals_model/lines/mlb_game_totals_lines.parquet
+  game_scores_key:  mlb/game_totals_model/scores/mlb_team_game_scores.parquet
+  spine_key:        mlb/game_totals_model/spine/mlb_game_totals_spine.parquet
+  shared_game_lines_key: mlb/game_lines/mlb_game_lines.parquet
+
+# ── Strategies (Step 6 — 2026-07-11) ─────────────────────────────────────────
+# Strategy A (benchmark): Bet ALL 9.5 unders (no edge filter)
+#   OOS: +196.4u, +8.45% ROI, MDD=-77.4u, net/MDD=2.54x (n=2,324)
+#   Signal: books price 9.5 under at -113 (53.1% implied), actual hit rate 57.4% (+4.3pp gap)
+#   Monitor: pause if 9.5-under hit rate <53% for 30 consecutive days.
+#
+# Strategy B (model_both): Ridge model picks over or under at [8.5,9.5], edge≥2pp, shrink=0.50
+#   OOS: +285.2u (n=1,623) — 98.9% bets at 8.5 line; 2025=+309.9u, 2026=-24.7u (on probation)
+#   Email tags: "both" = B+A agree on 9.5 under; "model" = B only; "benchmark" = A only
+#
+# Benchmark MDD context: peak 2025-08-25 → trough 2026-04-29, recovered 2026-06-28 (8 months)
+# Signal emerged 2025; absent in 2024 (48.7% hit rate).
+strategies:
+  - name: benchmark
+    description: ALL 9.5 unders — structural calibration gap, edge-agnostic
+    line: 9.5
+    direction: under
+    min_bet_edge: -999
+    shrinkage: 0.0
+
+  - name: model_both
+    description: Ridge model picks over/under at [8.5,9.5] with edge>=2pp and shrinkage=0.50
+    lines: [8.5, 9.5]
+    direction: both
+    min_bet_edge: 0.02
+    shrinkage: 0.50
+
+max_line: 13.0
+team_normalize:
+  Athletics: "Oakland Athletics"
+regression_features:
+    - consensus_line
+    - park_factor
+    - combined_ra_L10
+    - home_ra_L20
+    - combined_ra_L5
+    - combined_rs_L10
+    - home_rs_L10
+    - away_rs_L3
+    - combined_ra_career
+    - away_ra_L5
+    - home_ra_L10
+    - away_ra_L10
+
+backtest:
+  groupby: ["game_date", "home_team", "away_team", "bookmaker", "line"]
+  edge_col: "book_edge"
+  novig_col: "novig_prob_over"
+
+grid_search:
+  edge_threshold:    [0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20]
+  direction:         ["over", "under", "both"]
+  odds_bucket:       ["all", "plus_odds", "minus_odds"]
+  shrinkage:         [0, 0.25, 0.50, 0.75]
+  prediction_method: ["model", "consensus_line"]
+  # line_bucket will be added after Step 1.5 calibration analysis

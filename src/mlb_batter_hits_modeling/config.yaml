@@ -1,0 +1,87 @@
+## MLB Batter Hits — Pipeline Config
+## Research session: 2026-07-27  |  Strategy revised: 2026-07-28
+## Strategy: 0.5 UNDER · plus_odds_only (price > 2.0) · edge >= 2pp (play) / 1pp (watch)
+## OOS (OOF): 2,263 bets, 55.5% hit, +497u, +22.0% ROI, net/MDD=17.05x
+
+market:
+  sport:       baseball_mlb
+  market_key:  batter_hits
+  alt_market_key: batter_hits_alternate
+  regions:     us,us2
+  odds_format: decimal   # Odds API prices in decimal — no conversion needed
+
+data:
+  s3_bucket:     the-odds-api-mt
+  actuals_key:   mlb/total_bases_model/actuals/mlb_batting_statcast.parquet  # reuse — has hits column
+  market_prefix: mlb/batter_hits_model/market_raw
+  spine_key:     mlb/batter_hits_model/spine/mlb_batter_hits_spine.parquet
+  ols_model_key: mlb/batter_hits_model/model/mlb_batter_hits_ols.joblib
+  logit_model_key: mlb/batter_hits_model/model/mlb_batter_hits_logit.joblib
+  daily_prefix:  mlb/batter_hits_model/daily_runs
+  settled_key:   mlb/batter_hits_model/settled/mlb_batter_hits_settled_bets.parquet
+
+seasons:
+  - 2024
+  - 2025
+  - 2026
+
+season_dates:
+  2024: ["2024-03-20", "2024-10-01"]
+  2025: ["2025-03-18", "2025-10-01"]
+  2026: ["2026-03-25", "2026-10-01"]
+
+model:
+  type: ols_logistic_two_stage
+  ols_features:
+    - min_raw_implied_prob_under
+    - max_raw_implied_prob_over
+    - hits_roll_career
+    - max_line
+    - ab_roll_career
+    - hits_roll_L20
+    - hits_roll_season
+    - consensus_line
+    - hits_roll_L10
+    - ba_roll_career
+  logit_features:
+    - yhat_ols
+    - offered_line
+
+strategy:
+  direction:      under
+  line:           0.5
+  plus_odds_only: true   # only bet when under_price > 2.0 (+odds) — all profit comes from this bucket
+  edge_min:       0.02   # 2pp play threshold  — OOF: 2,263 bets, +22.0% ROI, net/MDD=17.05x
+  edge_show:      0.01   # 1pp watch threshold — show in email, do not bet
+  min_books:      1
+
+backtest:
+  n_bets:     2263
+  hit_rate:   0.555
+  net_units:  497.48
+  roi_pct:    21.98
+  max_dd:     29.18
+  net_mdd:    17.05
+  period:     "2024-03-21 to 2026-07-26 (OOF · plus_odds_only · edge>=2pp)"
+  in_sample:
+    n_bets:    10326
+    hit_rate:  0.514
+    net_units: 1548.30
+    roi_pct:   14.99
+    period:    "2024-2026 (IS · plus_odds_only · edge>=2pp)"
+  out_of_sample_by_season:
+    - season: 2024
+      n_bets: 33
+      hit_rate: 0.758
+      net_units: 21.44
+      roi_pct: 64.97
+    - season: 2025
+      n_bets: 2133
+      hit_rate: 0.548
+      net_units: 432.67
+      roi_pct: 20.28
+    - season: 2026
+      n_bets: 97
+      hit_rate: 0.649
+      net_units: 43.37
+      roi_pct: 44.71

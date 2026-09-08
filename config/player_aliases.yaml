@@ -1,0 +1,26 @@
+# Player name aliases — cross-sport
+#
+# Resolves mismatches between how a player is named in the Odds API
+# vs the canonical stat source (Statcast for MLB, nba_api for NBA, etc.)
+#
+# Format:
+#   - odds_api:  name as it appears in Odds API props data
+#     canonical: name used by the stat source / spine
+#     sport:     mlb | nba | nfl
+#     note:      reason for the mismatch
+
+aliases:
+
+  # ── MLB ──────────────────────────────────────────────────────────────────────
+
+  - odds_api:  "Francisco Alvarez"
+    canonical: "Eddy Alvarez"
+    sport:     mlb
+    note:      "some books use legal first name; Statcast/pybaseball uses nickname"
+
+  # ── NFL ──────────────────────────────────────────────────────────────────────
+
+  - odds_api:  "Cameron Ward"
+    canonical: "Cam Ward"
+    sport:     nfl
+    note:      "BetOnline uses full legal name; nflverse/nfl_data_py uses nickname"

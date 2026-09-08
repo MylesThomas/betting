@@ -1,0 +1,216 @@
+{
+  "scrape_date": "2026-08-25",
+  "total_submissions": 193,
+  "median_tc_all_roles": 319464,
+  "num_job_families": 34,
+  "highest_role": "Software Engineering Manager",
+  "highest_tc": 1436844,
+  "lowest_role": "Information Technologist (IT)",
+  "lowest_tc": 35010.4066,
+  "job_families": [
+    {
+      "job_family": "Software Engineer",
+      "slug": "software-engineer",
+      "submission_count": 178,
+      "avg_tc": 439882
+    },
+    {
+      "job_family": "Product Manager",
+      "slug": "product-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Data Scientist",
+      "slug": "data-scientist",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Software Engineering Manager",
+      "slug": "software-engineering-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Technical Program Manager",
+      "slug": "technical-program-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Product Designer",
+      "slug": "product-designer",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Marketing",
+      "slug": "marketing",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Recruiter",
+      "slug": "recruiter",
+      "submission_count": 3,
+      "avg_tc": 160000
+    },
+    {
+      "job_family": "Sales",
+      "slug": "sales",
+      "submission_count": 5,
+      "avg_tc": 165000
+    },
+    {
+      "job_family": "Accountant",
+      "slug": "accountant",
+      "submission_count": 3,
+      "avg_tc": 600000
+    },
+    {
+      "job_family": "Mechanical Engineer",
+      "slug": "mechanical-engineer",
+      "submission_count": 4,
+      "avg_tc": 180000
+    },
+    {
+      "job_family": "Hardware Engineer",
+      "slug": "hardware-engineer",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Program Manager",
+      "slug": "program-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Project Manager",
+      "slug": "project-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Administrative Assistant",
+      "slug": "administrative-assistant",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Business Operations Manager",
+      "slug": "bizops-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Business Analyst",
+      "slug": "business-analyst",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Business Development",
+      "slug": "business-development",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Customer Service Operations",
+      "slug": "customer-service-ops",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Data Analyst",
+      "slug": "data-analyst",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Data Science Manager",
+      "slug": "data-science-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Financial Analyst",
+      "slug": "financial-analyst",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Human Resources",
+      "slug": "human-resources",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Information Technologist (IT)",
+      "slug": "information-technologist",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Legal",
+      "slug": "legal",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Management Consultant",
+      "slug": "management-consultant",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Marketing Operations",
+      "slug": "marketing-operations",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Optical Engineer",
+      "slug": "optical-engineer",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Partner Manager",
+      "slug": "partner-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "People Operations",
+      "slug": "people-ops",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Product Design Manager",
+      "slug": "product-design-manager",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Revenue Operations",
+      "slug": "revops",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Cybersecurity Analyst",
+      "slug": "security-analyst",
+      "submission_count": 0,
+      "avg_tc": null
+    },
+    {
+      "job_family": "Trust and Safety",
+      "slug": "trust-and-safety",
+      "submission_count": 0,
+      "avg_tc": null
+    }
+  ]
+}

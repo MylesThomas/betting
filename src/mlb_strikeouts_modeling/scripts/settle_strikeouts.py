@@ -209,8 +209,10 @@ def fetch_all_starters(gameday: str) -> dict[str, dict]:
 
 def settle(recs: pd.DataFrame, actuals: dict[str, dict]) -> pd.DataFrame:
     df = recs.copy()
-    df["side"] = df["side"].str.lower()
-    # Only settle rows with an actual recommendation — drop no-edge rows (side=NaN)
+    # Drop no-edge rows (side=NaN). Use astype(str) before .str.lower() so an
+    # all-NaN float64 column (empty after dropna) doesn't raise AttributeError.
+    df = df.dropna(subset=["side"]).copy()
+    df["side"] = df["side"].astype(str).str.lower()
     df = df[df["side"].isin(["over", "under"])].copy()
     df["actual_k"] = df["player_key"].map(
         {k: v.get("strikeouts") for k, v in actuals.items()}
@@ -251,19 +253,32 @@ def settle(recs: pd.DataFrame, actuals: dict[str, dict]) -> pd.DataFrame:
 
 # ── HTML email ────────────────────────────────────────────────────────────────
 
+def _split_plays_watches(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Split settled df into plays (is_primary=True) and watches (is_primary=False)."""
+    if "is_primary" not in df.columns:
+        return df, pd.DataFrame(columns=df.columns)
+    plays   = df[df["is_primary"].astype(bool)].copy()
+    watches = df[~df["is_primary"].astype(bool)].copy()
+    return plays, watches
+
+
+def _stats_row(settled: pd.DataFrame) -> tuple[int, int, int, float, float, float]:
+    """Return (total_bets, wins, losses, pnl, wr, roi) for a WIN/LOSS subset."""
+    s = settled[settled["outcome"].isin(["WIN", "LOSS"])]
+    n    = len(s)
+    wins = int((s["outcome"] == "WIN").sum())
+    losses = int((s["outcome"] == "LOSS").sum())
+    pnl  = float(s["pnl"].dropna().sum())
+    wr   = wins / n * 100 if n else 0.0
+    roi  = pnl / n * 100 if n else 0.0
+    return n, wins, losses, pnl, wr, roi
+
+
 def _build_alltime_block(df: pd.DataFrame | None) -> str:
     if df is None or df.empty:
         return ""
-    settled = df[df["outcome"].isin(["WIN", "LOSS"])].copy()
-    if settled.empty:
-        return ""
-    total_bets = len(settled)
-    wins       = (settled["outcome"] == "WIN").sum()
-    losses     = (settled["outcome"] == "LOSS").sum()
-    total_pnl  = settled["pnl"].dropna().sum()
-    roi        = total_pnl / total_bets * 100 if total_bets > 0 else 0.0
-    wr         = wins / total_bets * 100 if total_bets > 0 else 0.0
-    pnl_color  = "#4ade80" if total_pnl >= 0 else "#f87171"
+    plays, watches = _split_plays_watches(df)
+
     def _bubble(label: str, value: str, val_color: str = "#e2e8f0") -> str:
         return (
             f"<td style='padding-right:16px;vertical-align:top'>"
@@ -272,91 +287,115 @@ def _build_alltime_block(df: pd.DataFrame | None) -> str:
             f"<div style='font-size:18px;font-weight:700;color:{val_color}'>{value}</div>"
             f"</div></td>"
         )
-    return (
-        f"<div style='margin-top:24px'>"
-        f"<div style='font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:8px'>All-time</div>"
-        f"<table cellpadding='0' cellspacing='0' border='0'><tr>"
-        + _bubble("Total PnL", f"{total_pnl:+.2f}u", pnl_color)
-        + _bubble("Record",    f"{wins}W–{losses}L")
-        + _bubble("Win rate",  f"{wr:.1f}%")
-        + _bubble("ROI",       f"{roi:+.1f}%")
-        + _bubble("Bets",      str(total_bets))
-        + "</tr></table></div>"
-    )
+
+    def _section(label: str, subset: pd.DataFrame, large: bool) -> str:
+        if subset.empty:
+            return ""
+        n, wins, losses, pnl, wr, roi = _stats_row(subset)
+        if n == 0:
+            return ""
+        pnl_color = "#4ade80" if pnl >= 0 else "#f87171"
+        size = "18px" if large else "14px"
+        return (
+            f"<div style='margin-top:{'24' if large else '16'}px'>"
+            f"<div style='font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:8px'>{label}</div>"
+            f"<table cellpadding='0' cellspacing='0' border='0'><tr>"
+            + _bubble("Total PnL", f"{pnl:+.2f}u", pnl_color)
+            + _bubble("Record",    f"{wins}W–{losses}L")
+            + _bubble("Win rate",  f"{wr:.1f}%")
+            + _bubble("ROI",       f"{roi:+.1f}%")
+            + _bubble("Bets",      str(n))
+            + "</tr></table></div>"
+        )
+
+    return _section("All-time — Plays (≥3pp)", plays, large=True) + _section("All-time — Watch (2–3pp)", watches, large=False)
 
 
 def build_settlement_html(df: pd.DataFrame, gameday: str, all_time: pd.DataFrame | None = None) -> str:
-    now_str    = datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")
-    total_pnl  = df["pnl"].sum()
-    total_bets = len(df)
-    wins   = (df["outcome"] == "WIN").sum()
-    losses = (df["outcome"] == "LOSS").sum()
-    pushes = (df["outcome"] == "PUSH").sum()
-    dnps   = (df["outcome"] == "DNP").sum()
-    roi    = total_pnl / total_bets * 100 if total_bets > 0 else 0.0
+    now_str = datetime.now(ET).strftime("%Y-%m-%d %H:%M ET")
+    plays, watches = _split_plays_watches(df)
 
     def color(oc: str) -> str:
         return {"WIN": "#4ade80", "LOSS": "#f87171", "PUSH": "#fbbf24", "DNP": "#9ca3af"}.get(oc, "#e2e8f0")
 
-    rows_html = ""
-    for _, row in df.sort_values("outcome").iterrows():
-        oc      = row["outcome"]
-        side    = str(row.get("side", "")).upper()
-        side_c  = "#4ade80" if side == "OVER" else "#f87171"
-        raw_odds = row.get("odds") if side == "OVER" else row.get("odds_u")
-        odds_disp = f"{int(float(raw_odds)):+d}" if pd.notna(raw_odds) else "—"
-        rows_html += f"""
-        <tr>
-          <td style="padding:6px 10px;font-weight:600;">{html_module.escape(str(row.get('player','—')))}</td>
-          <td style="padding:6px 10px;text-align:center;font-weight:bold;color:{side_c};">{side}</td>
-          <td style="padding:6px 10px;text-align:center;">{row.get('line','—')}</td>
-          <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">{odds_disp}</td>
-          <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">{"—" if pd.isna(row.get('actual_k')) else int(row['actual_k'])}</td>
-          <td style="padding:6px 10px;text-align:center;font-family:{_MONO};">+{row.get('edge',0)*100:.1f}pp</td>
-          <td style="padding:6px 10px;text-align:center;font-weight:bold;color:{color(oc)};">{oc}</td>
-          <td style="padding:6px 10px;text-align:center;font-family:{_MONO};color:{'#4ade80' if row['pnl']>0 else '#f87171' if row['pnl']<0 else '#9ca3af'};">{row['pnl']:+.2f}u</td>
-        </tr>"""
+    def _rows(subset: pd.DataFrame) -> str:
+        html = ""
+        for _, row in subset.sort_values("outcome").iterrows():
+            oc       = row["outcome"]
+            side     = str(row.get("side", "")).upper()
+            side_c   = "#4ade80" if side == "OVER" else "#f87171"
+            raw_odds = row.get("odds") if side == "OVER" else row.get("odds_u")
+            odds_disp = f"{int(float(raw_odds)):+d}" if pd.notna(raw_odds) else "—"
+            pnl_val  = float(row.get("pnl") or 0)
+            html += (
+                f"<tr>"
+                f"<td style='padding:6px 10px;font-weight:600'>{html_module.escape(str(row.get('player','—')))}</td>"
+                f"<td style='padding:6px 10px;text-align:center;font-weight:bold;color:{side_c}'>{side}</td>"
+                f"<td style='padding:6px 10px;text-align:center'>{row.get('line','—')}</td>"
+                f"<td style='padding:6px 10px;text-align:center;font-family:{_MONO}'>{odds_disp}</td>"
+                f"<td style='padding:6px 10px;text-align:center;font-family:{_MONO}'>{'—' if pd.isna(row.get('actual_k')) else int(row['actual_k'])}</td>"
+                f"<td style='padding:6px 10px;text-align:center;font-family:{_MONO}'>+{row.get('edge',0)*100:.1f}pp</td>"
+                f"<td style='padding:6px 10px;text-align:center;font-weight:bold;color:{color(oc)}'>{oc}</td>"
+                f"<td style='padding:6px 10px;text-align:center;font-family:{_MONO};color:{'#4ade80' if pnl_val>0 else '#f87171' if pnl_val<0 else '#9ca3af'}'>{pnl_val:+.2f}u</td>"
+                f"</tr>"
+            )
+        return html
 
-    pnl_color = "#4ade80" if total_pnl >= 0 else "#f87171"
+    _TH = "padding:8px 10px;text-align:center;color:#93c5fd"
+    _TABLE_HEADER = (
+        f"<tr style='background:#1e3a5f'>"
+        f"<th style='{_TH};text-align:left'>Player</th>"
+        f"<th style='{_TH}'>Side</th><th style='{_TH}'>Line</th>"
+        f"<th style='{_TH}'>Odds</th><th style='{_TH}'>Actual K</th>"
+        f"<th style='{_TH}'>Edge</th><th style='{_TH}'>Outcome</th><th style='{_TH}'>PnL</th>"
+        f"</tr>"
+    )
+
+    def _summary_bubbles(subset: pd.DataFrame) -> str:
+        n, wins, losses, pnl, wr, roi = _stats_row(subset)
+        pushes = int((subset["outcome"] == "PUSH").sum())
+        dnps   = int((subset["outcome"] == "DNP").sum())
+        pnl_color = "#4ade80" if pnl >= 0 else "#f87171"
+        record = f"{wins}W–{losses}L{f'–{pushes}P' if pushes else ''}{f'–{dnps}DNP' if dnps else ''}"
+        def _b(label, value, color="#e2e8f0", size="22px"):
+            return (
+                f"<div style='background:#1a1f2e;border:1px solid #2d3748;border-radius:8px;"
+                f"padding:14px 20px;min-width:120px'>"
+                f"<div style='font-size:11px;color:#6b7280;text-transform:uppercase'>{label}</div>"
+                f"<div style='font-size:{size};font-weight:700;color:{color}'>{value}</div>"
+                f"</div>"
+            )
+        return (
+            f"<div style='display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap'>"
+            + _b("Total PnL", f"{pnl:+.2f}u", pnl_color)
+            + _b("Record", record, size="18px")
+            + _b("ROI", f"{roi:+.1f}%", size="18px")
+            + _b("Bets", str(n), size="18px")
+            + "</div>"
+        )
+
+    plays_section = ""
+    if not plays.empty:
+        plays_section = (
+            f"<h3 style='color:#93c5fd;margin:0 0 8px'>Plays (≥3pp)</h3>"
+            + _summary_bubbles(plays)
+            + f"<table style='border-collapse:collapse;width:100%;font-size:13px'>{_TABLE_HEADER}{_rows(plays)}</table>"
+        )
+
+    watches_section = ""
+    if not watches.empty:
+        watches_section = (
+            f"<h3 style='color:#6b7280;margin:24px 0 8px'>Watch (2–3pp)</h3>"
+            + f"<table style='border-collapse:collapse;width:100%;font-size:13px'>{_TABLE_HEADER}{_rows(watches)}</table>"
+        )
+
     return f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8"/></head>
 <body style="font-family:{_SANS};background:#0f1117;color:#e2e8f0;margin:0;padding:24px;">
 <h2 style="color:#93c5fd;margin-bottom:4px;">MLB Strikeouts Settlement — {gameday}</h2>
 <p style="color:#6b7280;font-size:13px;margin-top:0;">{now_str}</p>
-
-<div style="display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap;">
-  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:8px;padding:14px 20px;min-width:120px;">
-    <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Total PnL</div>
-    <div style="font-size:22px;font-weight:700;color:{pnl_color};">{total_pnl:+.2f}u</div>
-  </div>
-  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:8px;padding:14px 20px;min-width:120px;">
-    <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Record</div>
-    <div style="font-size:18px;font-weight:700;">{wins}W–{losses}L{f'–{pushes}P' if pushes else ''}{f'–{dnps}DNP' if dnps else ''}</div>
-  </div>
-  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:8px;padding:14px 20px;min-width:120px;">
-    <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">ROI</div>
-    <div style="font-size:18px;font-weight:700;">{roi:+.1f}%</div>
-  </div>
-  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:8px;padding:14px 20px;min-width:120px;">
-    <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Bets</div>
-    <div style="font-size:18px;font-weight:700;">{total_bets}</div>
-  </div>
-</div>
-
-<table style="border-collapse:collapse;width:100%;font-size:13px;">
-  <tr style="background:#1e3a5f;">
-    <th style="padding:8px 10px;text-align:left;color:#93c5fd;">Player</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">Side</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">Line</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">Odds</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">Actual K</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">Edge</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">Outcome</th>
-    <th style="padding:8px 10px;text-align:center;color:#93c5fd;">PnL</th>
-  </tr>
-  {rows_html}
-</table>
-
+{plays_section}
+{watches_section}
 {_build_alltime_block(all_time)}
 </body></html>"""
 

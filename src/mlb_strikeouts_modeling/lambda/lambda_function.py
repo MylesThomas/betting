@@ -156,7 +156,7 @@ def _build_email1_html(summary: dict | None, spine_out: str, today_et: str) -> s
   pre {{white-space:pre-wrap;word-break:break-word}}
 </style>
 </head><body>
-<h2>MLB Strikeouts — Daily Update — {today_et}</h2>
+<h2>MLB Pitcher Strikeouts — Daily Update — {today_et}</h2>
 <p style='color:#666;font-size:13px;margin-top:0'>{now_str} &nbsp;·&nbsp; settle + spine rebuild complete</p>
 
 {settle_html}
@@ -203,7 +203,7 @@ def lambda_handler(event, context):
             pnl_str   = f"{summary['pnl']:+.2f}u" if summary else "?"
             record_str = f"{summary.get('wins',0)}W/{summary.get('losses',0)}L" if summary else "?"
             _send_email(
-                f"MLB Strikeouts — {today_et} — Spine updated · {record_str} yesterday · {pnl_str}",
+                f"MLB Pitcher Strikeouts — {today_et} — Spine updated · {record_str} yesterday · {pnl_str}",
                 email1,
             )
 
@@ -222,7 +222,7 @@ def lambda_handler(event, context):
             )
             step_results.append({"step": "spine_update", "status": "ok"})
             _publish_sns(topic_arn,
-                subject=f"MLB strikeouts spine updated — {today_et}",
+                subject=f"MLB Pitcher Strikeouts spine updated — {today_et}",
                 message=f"Spine rebuild complete.\n\n{out[-3000:]}")
 
         elif mode == "settle":
@@ -248,7 +248,7 @@ def lambda_handler(event, context):
         err_msg = str(exc)
         print(f"ERROR: {err_msg}")
         _publish_sns(topic_arn,
-            subject=f"MLB strikeouts Lambda FAILED — {mode} — {today_et}",
+            subject=f"MLB Pitcher Strikeouts Lambda FAILED — {mode} — {today_et}",
             message=f"Mode: {mode}\nDate: {today_et}\n\nError:\n{err_msg}")
         return {
             "statusCode": 500,

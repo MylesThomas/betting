@@ -11,6 +11,7 @@
 | [[the-odds-api]] | V4 endpoint reference: quota costs, featured vs non-featured markets, rate limits, error codes |
 | [[nfl-2026-season-context]] | 2026 NFL betting context: coaching turnover, SoS, DCOE, unit rankings, efficiency, win total history, injury notes |
 | [[nfl-rest-edge]] | Rest edge betting system: historical ROI stats, 2026 net rest rankings by team, Bills/Chargers/Eagles flags |
+| [[mlb-total-bases-dedup]] | Dedup analysis: best-book per slot doubles OOS ROI (7.5%→14.8%); 2–4 books bucket is IS money loser; live Lambda over-bets by ~8× |
 | [[nfl-team-ari-2026]] | Arizona Cardinals 2026: 4.5-win under lean, Mike LaFleur HC, Trey McBride TE, hardest SoS |
 | [[nfl-team-atl-2026]] | Atlanta Falcons 2026: 7.5 wins, Bijan Robinson, Kevin Stefanski HC, Penix ACL recovery, #31 Front 7 |
 | [[nfl-team-bal-2026]] | Baltimore Ravens 2026: 11.5 wins, Lamar Jackson health variable, Jesse Minter HC, designed runs win model |

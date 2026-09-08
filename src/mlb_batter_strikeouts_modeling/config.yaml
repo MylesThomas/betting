@@ -1,0 +1,117 @@
+strategy_summary: "consensus_line, no_fliff, both, all odds, 1.5_only, edge≥5pp — OOF 2,580 bets, +140.41u, +5.44% ROI, calmar=3.02, dd=28 days (2026-07-11)"
+
+# NOT an ML model — this is a market price filter.
+# consensus_yhat = avg offered_line per player-game across all books (always ≈1.5 for line=1.5).
+# logistic(consensus_yhat, offered_line) → p_under ≈ 65% constant.
+# edge = p_under − raw_implied_prob_under (vig-inclusive). Bet when edge ≥ 5pp.
+# No spine, no Ridge model, no rolling features needed.
+calibration:
+  sklearn_version: "1.6.1"
+  s3_key: "mlb/batter_strikeouts_model/artifacts/calib_logistic_consensus.pkl"
+
+strategy:
+  prediction_method: consensus_line   # no Ridge model needed — avg offered_line per player-game
+  side: both                          # always resolves to UNDER in practice (p_under≈65% at line 1.5)
+  lines: [1.5]
+  min_bet_edge: 0.05
+  min_track_edge: 0.03
+  book_filter: no_fliff               # exclude fliff — confirmed drag at all thresholds
+  min_books: 1
+
+backtest:
+  groupby: ["player_key", "game_date", "bookmaker", "offered_line"]
+  edge_col: "edge_under"
+  payout_col: "under_price"
+
+grid_search:
+  # All sweep dimensions — script loads from here, nothing hardcoded
+  edge_threshold:      [0.00, 0.03, 0.05, 0.07, 0.10, 0.15, 0.20]
+  direction:           ["under", "over", "both"]
+  odds_bucket:         ["all", "plus_odds", "minus_odds"]
+  shrinkage:           [0, 0.25, 0.50, 0.75]
+  prediction_method:   ["model", "consensus_line"]
+  line_filter:         ["all", "0.5_only", "1.5_only"]
+  book_filter:         ["all", "no_fliff", "fliff_only"]
+  # consensus_line: shrinkage has no meaning — fixed at 0 for that method
+
+  # OOS results written here after Step 5 grid run
+  out_of_sample_results:
+    # ── PRODUCTION CONFIG (chosen 2026-07-11) ──────────────────────────────
+    - prediction_method: consensus_line
+      book_filter: no_fliff
+      direction: both
+      odds_bucket: all
+      line_filter: 1.5_only
+      edge_threshold: 0.05
+      n_bets: 2580
+      units_won: 140.41
+      roi: 5.442
+      win_rate: 0.5829
+      max_drawdown: 46.54
+      calmar: 3.02
+      dd_start_date: "2024-07-12"
+      dd_end_date: "2024-08-09"
+      dd_calendar_days: 28
+      notes: "PRODUCTION. consensus_line, no_fliff, 1.5_only, edge≥5pp. Calmar 3.02, 28-day max drawdown. Q2-heavy but Q3 positive (+0.9%). Structural: books misprice 1.5 OVER for low-K batters."
+    # ── Reference: model config (runner-up, not deployed) ──────────────────
+    - prediction_method: model
+      book_filter: no_fliff
+      direction: under
+      odds_bucket: all
+      line_filter: all
+      edge_threshold: 0.10
+      n_bets: 1333
+      units_won: 88.06
+      roi: 6.606
+      win_rate: 0.4629
+      max_drawdown: 46.89
+      calmar: 1.88
+      dd_start_date: "2024-06-26"
+      dd_end_date: "2024-07-06"
+      dd_calendar_days: 10
+      notes: "Runner-up. ML model, no_fliff, all lines, edge≥10pp. 10-day drawdown recovers fast. Q3 -0.8% due to minus_odds drag. Not deployed."
+
+  # IS results written here after Step 6 grid run
+  in_sample_results:
+    # Production config IS
+    - prediction_method: model
+      shrinkage: 0        # all shrinkage values identical in IS (logistic absorbs global shift)
+      direction: under
+      odds_bucket: all
+      line_filter: all
+      edge_threshold: 0.10
+      n_bets: 1671
+      units_won: 113.66
+      roi: 6.802
+      win_rate: 0.4662
+      max_drawdown: 62.18
+      is_oof_roi_gap: 1.208   # +1.21pp — acceptable, not severely overfit
+      notes: "IS production config. Gap vs OOF = +1.21pp ROI."
+    # Plus_odds IS
+    - prediction_method: model
+      shrinkage: 0
+      direction: under
+      odds_bucket: plus_odds
+      line_filter: all
+      edge_threshold: 0.10
+      n_bets: 1203
+      units_won: 104.86
+      roi: 8.717
+      win_rate: 0.4181
+      max_drawdown: 62.58
+      is_oof_roi_gap: 1.817
+      notes: "Plus-odds IS. Gap +1.82pp vs OOF."
+    # Minus_odds IS — confirms thin signal
+    - prediction_method: model
+      shrinkage: 0
+      direction: under
+      odds_bucket: minus_odds
+      line_filter: all
+      edge_threshold: 0.10
+      n_bets: 424
+      units_won: 4.80
+      roi: 1.132
+      win_rate: 0.5943
+      max_drawdown: 23.19
+      is_oof_roi_gap: -0.410   # IS LOWER than OOF — signal is thin/noise, not overfit
+      notes: "Minus_odds IS worse than OOF. Low drawdown is chalk variance, not separate alpha."

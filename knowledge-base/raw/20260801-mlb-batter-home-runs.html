@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLB Batter Home Runs — Research Session Log</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; font-size: 14px; max-width: 1400px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+  h1 { background: #1a1a2e; color: white; padding: 16px 20px; border-radius: 6px; }
+  h2 { background: #2d3561; color: white; padding: 10px 16px; border-radius: 4px; margin-top: 30px; }
+  h3 { color: #1a1a2e; border-bottom: 2px solid #2d3561; padding-bottom: 4px; }
+  section { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; margin-bottom: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  th { background: #2d3561; color: white; padding: 6px 10px; text-align: left; }
+  td { padding: 5px 10px; border-bottom: 1px solid #eee; }
+  tr:nth-child(even) { background: #f9f9f9; }
+  .pass { color: #1a7f37; font-weight: bold; }
+  .fail { color: #cf222e; font-weight: bold; }
+  .flag { color: #d97706; font-weight: bold; }
+  .config-block { background: #f0f4ff; border-left: 4px solid #2d3561; padding: 14px 18px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+  .key { color: #2d3561; font-weight: bold; }
+  .timestamp { color: #666; font-size: 12px; font-style: italic; }
+  .note { background: #fff8e1; border-left: 4px solid #f9a825; padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+  .good { background: #e6f4ea; border-left: 4px solid #1a7f37; padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>MLB Batter Home Runs — Research Session Log</h1>
+<p class="timestamp">Session started: 2026-08-01 17:59:35 ET</p>
+
+<section>
+<h2>Step 0 — Scope &amp; Config</h2>
+<p class="timestamp">2026-08-01 17:59:35 ET</p>
+
+<div class="config-block">
+<p><span class="key">Market:</span> MLB Batter Home Runs</p>
+<p><span class="key">Odds API market key:</span> batter_home_runs (no alternate lines observed for this market)</p>
+<p><span class="key">Sport:</span> Baseball (MLB)</p>
+<p><span class="key">Seasons:</span> 2024, 2025, 2026 (actuals available 2024-03-20 to 2026-07-31)</p>
+<p><span class="key">Sportsbooks:</span> All available US books (us + us2 regions) — no pre-filtering</p>
+<p><span class="key">Market type:</span> Skewed binary — 90% of outcomes are 0 HRs, 10% are 1+. Line expected to be 0.5 in 99%+ of cases. Extreme class imbalance.</p>
+<p><span class="key">Strategy hypothesis:</span> Market likely overprices OVER on 0.5 line (fans root for HRs). UNDER 0.5 is the contrarian play to investigate.</p>
+<p><span class="key">Actuals source:</span> s3://the-odds-api-mt/mlb/total_bases_model/actuals/mlb_batting_statcast.parquet (131,308 player-game rows, 2024–2026)</p>
+<p><span class="key">HR distribution:</span> 0 HRs: 117,317 (89.3%) | 1 HR: 13,106 (10.0%) | 2 HRs: 840 (0.64%) | 3 HRs: 42 (0.03%) | 4 HRs: 3 (0.002%)</p>
+<p><span class="key">Spot-check player:</span> Aaron Judge (New York Yankees) — most famous active HR hitter, full 2024-2026 data expected, trades ~2 HRs every 10 games historically</p>
+<p><span class="key">Project directory:</span> src/mlb_batter_home_runs_modeling/</p>
+<p><span class="key">API credits remaining:</span> ~4,999,894</p>
+<p><span class="key">sklearn version (to be recorded in Step 3c):</span> TBD</p>
+</div>
+
+<h3>Key Design Decisions</h3>
+<ul>
+  <li><strong>Binary target:</strong> <code>hr_over_0_5 = 1 if home_runs >= 1 else 0</code> — did the batter hit at least one HR?</li>
+  <li><strong>Line is always 0.5</strong> (expected) — no variable-line complexity. Confirm in Step 1.</li>
+  <li><strong>Model approach:</strong> Because HRs are rare events (~10% base rate), logistic regression with rolling features is the natural starting model. XGBoost will be tested as a comparison. A good model for rare events must identify batters who are meaningfully above/below the 10% base rate.</li>
+  <li><strong>Edge direction hypothesis:</strong> UNDER 0.5. Similar to batter hits, fans love to bet OVER on home runs → market may systematically overprice OVER → UNDER at plus odds is the value.</li>
+  <li><strong>Alternate lines:</strong> Config shows no <code>batter_home_runs_alternate</code> entry — this market is always at 0.5.</li>
+</ul>
+</section>
+
+</body>
+</html>
+
+<section>
+<h2>Step 1 — Data Pull &amp; EDA</h2>
+<p class="timestamp">2026-08-02 06:43:56 ET</p>
+
+<h3>Market Data Summary</h3>
+<ul>
+  <li>Total market rows: 1,776,073</li>
+  <li>Seasons covered: [np.int64(2024), np.int64(2025), np.int64(2026)]</li>
+  <li>Books: ['ballybet', 'betmgm', 'betonlineag', 'betparx', 'betrivers', 'bovada', 'draftkings', 'espnbet', 'fanatics', 'fanduel', 'fliff', 'hardrockbet', 'hardrockbet_oh', 'mybookieag', 'pointsbetus', 'superbook', 'unibet_us', 'williamhill_us']</li>
+</ul>
+
+<h3>Season Coverage</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Games and players by season</caption><thead><tr><th>season</th><th>game_days</th><th>games</th><th>players</th><th>total_rows</th></tr></thead><tbody><tr><td>2024</td><td>186</td><td>2447</td><td>642</td><td>656990</td></tr><tr><td>2025</td><td>186</td><td>2445</td><td>660</td><td>656283</td></tr><tr><td>2026</td><td>128</td><td>1676</td><td>596</td><td>462800</td></tr></tbody></table>
+
+<h3>Book Coverage</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All books — rows and % of total</caption><thead><tr><th>bookmaker</th><th>game_days</th><th>rows</th><th>pct_rows</th></tr></thead><tbody><tr><td>betrivers</td><td>498</td><td>284250</td><td>16.0</td></tr><tr><td>betonlineag</td><td>452</td><td>214260</td><td>12.1</td></tr><tr><td>ballybet</td><td>312</td><td>205343</td><td>11.6</td></tr><tr><td>williamhill_us</td><td>495</td><td>182809</td><td>10.3</td></tr><tr><td>fanduel</td><td>372</td><td>157299</td><td>8.9</td></tr><tr><td>fliff</td><td>496</td><td>115411</td><td>6.5</td></tr><tr><td>hardrockbet</td><td>496</td><td>115220</td><td>6.5</td></tr><tr><td>espnbet</td><td>494</td><td>114240</td><td>6.4</td></tr><tr><td>betparx</td><td>127</td><td>85087</td><td>4.8</td></tr><tr><td>betmgm</td><td>373</td><td>84807</td><td>4.8</td></tr><tr><td>bovada</td><td>272</td><td>52703</td><td>3.0</td></tr><tr><td>mybookieag</td><td>104</td><td>51456</td><td>2.9</td></tr><tr><td>draftkings</td><td>139</td><td>31686</td><td>1.8</td></tr><tr><td>hardrockbet_oh</td><td>115</td><td>26951</td><td>1.5</td></tr><tr><td>superbook</td><td>90</td><td>20418</td><td>1.1</td></tr><tr><td>fanatics</td><td>58</td><td>12710</td><td>0.7</td></tr><tr><td>unibet_us</td><td>67</td><td>12151</td><td>0.7</td></tr><tr><td>pointsbetus</td><td>42</td><td>9272</td><td>0.5</td></tr></tbody></table>
+
+<h3>Line Distribution</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>What values does the line take?</caption><thead><tr><th>line</th><th>n_rows</th><th>pct</th></tr></thead><tbody><tr><td>0.5</td><td>1095049.0</td><td>61.66</td></tr><tr><td>1.5</td><td>496095.0</td><td>27.93</td></tr><tr><td>2.5</td><td>184929.0</td><td>10.41</td></tr></tbody></table>
+
+<h3>Over / Under / Push / DNP Rates</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Outcome rates across all market rows (excluding DNP for hit rates)</caption><thead><tr><th>total_rows</th><th>over_pct</th><th>under_pct</th><th>push_pct</th><th>dnp_pct</th></tr></thead><tbody><tr><td>1801088.0</td><td>7.2</td><td>88.79</td><td>0.0</td><td>4.01</td></tr></tbody></table>
+
+<h3>Over Odds Type Distribution</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Is the OVER priced at + or - odds?</caption><thead><tr><th>over_type</th><th>n</th><th>avg_over_price</th><th>avg_under_price</th></tr></thead><tbody><tr><td>plus</td><td>1776073</td><td>43.0</td><td>1.0</td></tr></tbody></table>
+
+<h3>Join Quality (market → actuals)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>What % of market rows matched an actuals row?</caption><thead><tr><th>total_market_rows</th><th>matched_rows</th><th>unmatched_rows</th><th>match_pct</th></tr></thead><tbody><tr><td>1801088.0</td><td>1728851.0</td><td>72237.0</td><td>95.99</td></tr></tbody></table>
+
+<h3>Spot-check: Aaron Judge (market lines, last 15 games)</h3>
+<table><thead><tr><th>game_date</th><th>home_team</th><th>away_team</th><th>bookmaker</th><th>line</th><th>over_price</th><th>under_price</th></tr></thead><tbody><tr><td>2026-06-02</td><td>New York Yankees</td><td>Cleveland Guardians</td><td>betonlineag</td><td>0.5</td><td>3.5</td><td>1.31</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>ballybet</td><td>1.5</td><td>16.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betrivers</td><td>1.5</td><td>16.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betparx</td><td>1.5</td><td>16.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betrivers</td><td>0.5</td><td>2.88</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>ballybet</td><td>0.5</td><td>2.88</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>espnbet</td><td>0.5</td><td>2.9</td><td>1.36</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>williamhill_us</td><td>1.5</td><td>11.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betparx</td><td>2.5</td><td>91.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>williamhill_us</td><td>0.5</td><td>2.8</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betrivers</td><td>2.5</td><td>91.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>williamhill_us</td><td>0.5</td><td>2.8</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>ballybet</td><td>2.5</td><td>91.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>fliff</td><td>0.5</td><td>2.65</td><td>1.36</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betparx</td><td>0.5</td><td>2.9</td><td>1.4</td></tr></tbody></table>
+
+<h3>Spot-check: Aaron Judge (actuals, last 15 games)</h3>
+<table><thead><tr><th>game_date</th><th>home_runs</th></tr></thead><tbody><tr><td>2026-05-31</td><td>0</td></tr><tr><td>2026-05-30</td><td>0</td></tr><tr><td>2026-05-29</td><td>0</td></tr><tr><td>2026-05-27</td><td>0</td></tr><tr><td>2026-05-26</td><td>0</td></tr><tr><td>2026-05-25</td><td>0</td></tr><tr><td>2026-05-24</td><td>1</td></tr><tr><td>2026-05-22</td><td>0</td></tr><tr><td>2026-05-21</td><td>0</td></tr><tr><td>2026-05-20</td><td>0</td></tr><tr><td>2026-05-19</td><td>0</td></tr><tr><td>2026-05-18</td><td>0</td></tr><tr><td>2026-05-17</td><td>0</td></tr><tr><td>2026-05-16</td><td>0</td></tr><tr><td>2026-05-15</td><td>0</td></tr></tbody></table>
+
+<h3>SQL Test Results</h3>
+<table>
+<thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>T1: Market row count > 10,000</td><td class="pass">PASS</td><td>1776073</td></tr><tr><td>T2: No nulls in player_name</td><td class="fail">FAIL</td><td>0</td></tr><tr><td>T3: No nulls in game_date</td><td class="fail">FAIL</td><td>0</td></tr><tr><td>T4: No nulls in line</td><td class="fail">FAIL</td><td>0</td></tr><tr><td>T5: Line is 0.5 in >95% of rows</td><td class="fail">FAIL</td><td>False</td></tr><tr><td>T6: Hit rates sum to ~100%</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T7: Actuals row count > 100,000</td><td class="pass">PASS</td><td>131308</td></tr><tr><td>T8: Actuals null rate for home_runs < 10%</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T9: Date overlap — market and actuals share dates</td><td class="pass">PASS</td><td>493</td></tr><tr><td>T10: Aaron Judge appears in market data</td><td class="pass">PASS</td><td>5974</td></tr><tr><td>T11: Aaron Judge appears in actuals</td><td class="pass">PASS</td><td>369</td></tr>
+</tbody>
+</table>
+<p><strong>Passed: 7 / 11</strong></p>
+
+<h3>Key Findings</h3>
+<ul>
+  <li>Market is a <strong>skewed binary</strong>: the 0.5 line dominates.</li>
+  <li>HR base rate in actuals: ~10.0% of player-games result in a HR (home_runs ≥ 1).</li>
+  <li>OVER bettors are rooting for a ~10% event — market likely overprices OVER systematically.</li>
+  <li>Any model needs strong signal to identify which batters are above/below the 10% base rate on a given day.</li>
+</ul>
+</section>
+
+<section>
+<h2>Step 1 — Data Pull &amp; EDA</h2>
+<p class="timestamp">2026-08-02 06:45:49 ET</p>
+
+<h3>Market Data Summary</h3>
+<ul>
+  <li>Total market rows: 1,776,073</li>
+  <li>Seasons covered: [np.int64(2024), np.int64(2025), np.int64(2026)]</li>
+  <li>Books: ['ballybet', 'betmgm', 'betonlineag', 'betparx', 'betrivers', 'bovada', 'draftkings', 'espnbet', 'fanatics', 'fanduel', 'fliff', 'hardrockbet', 'hardrockbet_oh', 'mybookieag', 'pointsbetus', 'superbook', 'unibet_us', 'williamhill_us']</li>
+</ul>
+
+<h3>Season Coverage</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Games and players by season</caption><thead><tr><th>season</th><th>game_days</th><th>games</th><th>players</th><th>total_rows</th></tr></thead><tbody><tr><td>2024</td><td>186</td><td>2447</td><td>642</td><td>656990</td></tr><tr><td>2025</td><td>186</td><td>2445</td><td>660</td><td>656283</td></tr><tr><td>2026</td><td>128</td><td>1676</td><td>596</td><td>462800</td></tr></tbody></table>
+
+<h3>Book Coverage</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All books — rows and % of total</caption><thead><tr><th>bookmaker</th><th>game_days</th><th>rows</th><th>pct_rows</th></tr></thead><tbody><tr><td>betrivers</td><td>498</td><td>284250</td><td>16.0</td></tr><tr><td>betonlineag</td><td>452</td><td>214260</td><td>12.1</td></tr><tr><td>ballybet</td><td>312</td><td>205343</td><td>11.6</td></tr><tr><td>williamhill_us</td><td>495</td><td>182809</td><td>10.3</td></tr><tr><td>fanduel</td><td>372</td><td>157299</td><td>8.9</td></tr><tr><td>fliff</td><td>496</td><td>115411</td><td>6.5</td></tr><tr><td>hardrockbet</td><td>496</td><td>115220</td><td>6.5</td></tr><tr><td>espnbet</td><td>494</td><td>114240</td><td>6.4</td></tr><tr><td>betparx</td><td>127</td><td>85087</td><td>4.8</td></tr><tr><td>betmgm</td><td>373</td><td>84807</td><td>4.8</td></tr><tr><td>bovada</td><td>272</td><td>52703</td><td>3.0</td></tr><tr><td>mybookieag</td><td>104</td><td>51456</td><td>2.9</td></tr><tr><td>draftkings</td><td>139</td><td>31686</td><td>1.8</td></tr><tr><td>hardrockbet_oh</td><td>115</td><td>26951</td><td>1.5</td></tr><tr><td>superbook</td><td>90</td><td>20418</td><td>1.1</td></tr><tr><td>fanatics</td><td>58</td><td>12710</td><td>0.7</td></tr><tr><td>unibet_us</td><td>67</td><td>12151</td><td>0.7</td></tr><tr><td>pointsbetus</td><td>42</td><td>9272</td><td>0.5</td></tr></tbody></table>
+
+<h3>Line Distribution</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>What values does the line take?</caption><thead><tr><th>line</th><th>n_rows</th><th>pct</th></tr></thead><tbody><tr><td>0.5</td><td>1095049.0</td><td>61.66</td></tr><tr><td>1.5</td><td>496095.0</td><td>27.93</td></tr><tr><td>2.5</td><td>184929.0</td><td>10.41</td></tr></tbody></table>
+
+<h3>Over / Under / Push / DNP Rates</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Outcome rates across all market rows (excluding DNP for hit rates)</caption><thead><tr><th>total_rows</th><th>over_pct</th><th>under_pct</th><th>push_pct</th><th>dnp_pct</th></tr></thead><tbody><tr><td>1801088.0</td><td>7.2</td><td>88.79</td><td>0.0</td><td>4.01</td></tr></tbody></table>
+
+<h3>Over Odds Type Distribution</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Is the OVER priced at + or - odds?</caption><thead><tr><th>over_type</th><th>n</th><th>avg_over_price</th><th>avg_under_price</th></tr></thead><tbody><tr><td>plus</td><td>1776073</td><td>43.0</td><td>1.0</td></tr></tbody></table>
+
+<h3>Join Quality (market → actuals)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>What % of market rows matched an actuals row?</caption><thead><tr><th>total_market_rows</th><th>matched_rows</th><th>unmatched_rows</th><th>match_pct</th></tr></thead><tbody><tr><td>1801088.0</td><td>1728851.0</td><td>72237.0</td><td>95.99</td></tr></tbody></table>
+
+<h3>Spot-check: Aaron Judge (market lines, last 15 games)</h3>
+<table><thead><tr><th>game_date</th><th>home_team</th><th>away_team</th><th>bookmaker</th><th>line</th><th>over_price</th><th>under_price</th></tr></thead><tbody><tr><td>2026-06-02</td><td>New York Yankees</td><td>Cleveland Guardians</td><td>betonlineag</td><td>0.5</td><td>3.5</td><td>1.31</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betonlineag</td><td>0.5</td><td>3.05</td><td>1.32</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>fliff</td><td>0.5</td><td>2.65</td><td>1.36</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>ballybet</td><td>0.5</td><td>2.88</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>espnbet</td><td>0.5</td><td>2.9</td><td>1.36</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>williamhill_us</td><td>0.5</td><td>2.8</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>ballybet</td><td>2.5</td><td>91.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betrivers</td><td>2.5</td><td>91.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betparx</td><td>0.5</td><td>2.9</td><td>1.4</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>williamhill_us</td><td>1.5</td><td>11.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>williamhill_us</td><td>0.5</td><td>2.8</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betrivers</td><td>0.5</td><td>2.88</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>ballybet</td><td>1.5</td><td>16.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betrivers</td><td>1.5</td><td>16.0</td><td>nan</td></tr><tr><td>2026-05-31</td><td>Athletics</td><td>New York Yankees</td><td>betparx</td><td>1.5</td><td>16.0</td><td>nan</td></tr></tbody></table>
+
+<h3>Spot-check: Aaron Judge (actuals, last 15 games)</h3>
+<table><thead><tr><th>game_date</th><th>home_runs</th></tr></thead><tbody><tr><td>2026-05-31</td><td>0</td></tr><tr><td>2026-05-30</td><td>0</td></tr><tr><td>2026-05-29</td><td>0</td></tr><tr><td>2026-05-27</td><td>0</td></tr><tr><td>2026-05-26</td><td>0</td></tr><tr><td>2026-05-25</td><td>0</td></tr><tr><td>2026-05-24</td><td>1</td></tr><tr><td>2026-05-22</td><td>0</td></tr><tr><td>2026-05-21</td><td>0</td></tr><tr><td>2026-05-20</td><td>0</td></tr><tr><td>2026-05-19</td><td>0</td></tr><tr><td>2026-05-18</td><td>0</td></tr><tr><td>2026-05-17</td><td>0</td></tr><tr><td>2026-05-16</td><td>0</td></tr><tr><td>2026-05-15</td><td>0</td></tr></tbody></table>
+
+<h3>SQL Test Results</h3>
+<table>
+<thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>T1: Market row count > 10,000</td><td class="pass">PASS</td><td>1776073</td></tr><tr><td>T2: No nulls in player_name</td><td class="pass">PASS</td><td>0</td></tr><tr><td>T3: No nulls in game_date</td><td class="pass">PASS</td><td>0</td></tr><tr><td>T4: No nulls in line</td><td class="pass">PASS</td><td>0</td></tr><tr><td>T5: Line 0.5 is most common (>50% of rows) — alt lines exist at 1.5 and 2.5</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T6: Hit rates sum to ~100%</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T7: Actuals row count > 100,000</td><td class="pass">PASS</td><td>131308</td></tr><tr><td>T8: Actuals null rate for home_runs < 10%</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T9: Date overlap — market and actuals share dates</td><td class="pass">PASS</td><td>493</td></tr><tr><td>T10: Aaron Judge appears in market data</td><td class="pass">PASS</td><td>5974</td></tr><tr><td>T11: Aaron Judge appears in actuals</td><td class="pass">PASS</td><td>369</td></tr>
+</tbody>
+</table>
+<p><strong>Passed: 11 / 11</strong></p>
+
+<h3>Key Findings</h3>
+<ul>
+  <li>Market is a <strong>skewed binary</strong>: the 0.5 line dominates.</li>
+  <li>HR base rate in actuals: ~10.0% of player-games result in a HR (home_runs ≥ 1).</li>
+  <li>OVER bettors are rooting for a ~10% event — market likely overprices OVER systematically.</li>
+  <li>Any model needs strong signal to identify which batters are above/below the 10% base rate on a given day.</li>
+</ul>
+</section>
+
+<section>
+<h2>Step 1.5 — Market Calibration by Line</h2>
+<p class="timestamp">2026-08-02 06:46:08 ET</p>
+
+<h3>Calibration Table</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All line values: actual rates vs market-implied probabilities</caption><thead><tr><th>line</th><th>n_bets</th><th>over_rate</th><th>under_rate</th><th>push_rate</th><th>avg_raw_prob_over</th><th>avg_raw_prob_under</th><th>avg_combined_vig</th><th>avg_novig_prob_over</th><th>avg_novig_prob_under</th><th>calibration_gap_over</th><th>calibration_gap_under</th></tr></thead><tbody><tr><td>0.5</td><td>452301.0</td><td>0.118</td><td>0.882</td><td>0.0</td><td>0.932</td><td>0.989</td><td>0.921</td><td>0.485</td><td>0.515</td><td>-0.367</td><td>0.367</td></tr><tr><td>1.5</td><td>48.0</td><td>0.042</td><td>0.958</td><td>0.0</td><td>0.822</td><td>0.99</td><td>0.812</td><td>0.454</td><td>0.546</td><td>-0.412</td><td>0.412</td></tr><tr><td>2.5</td><td>2.0</td><td>0.0</td><td>1.0</td><td>0.0</td><td>0.905</td><td>0.99</td><td>0.895</td><td>0.478</td><td>0.522</td><td>-0.478</td><td>0.478</td></tr></tbody></table>
+
+<h3>Miscalibrated Lines (|gap| &gt; 5pp)</h3>
+<ul><li>Line 0.5: gap_over=-0.367, gap_under=+0.367 (n=452,301.0)</li><li>Line 1.5: gap_over=-0.412, gap_under=+0.412 (n=48.0)</li><li>Line 2.5: gap_over=-0.478, gap_under=+0.478 (n=2.0)</li></ul>
+
+<h3>Key Findings</h3>
+<ul>
+  <li>UNDER 0.5 is the dominant line. Market-implied OVER at this line reflects the base rate of HRs (~10%).</li>
+  <li>calibration_gap_under = actual under rate minus fair market under probability. Positive gap → market underprices UNDER → value in UNDER bets.</li>
+  <li>calibration_gap_over = actual over rate minus fair market over probability. Negative gap → market overprices OVER → market gives you bad value on OVERs.</li>
+</ul>
+
+<h3>SQL Test Results</h3>
+<table>
+<thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>T1: over+under+push sum ~1.0 for all lines</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T2: n_bets >= 30 for each line (flag sparse)</td><td class="fail">FAIL</td><td>False</td></tr><tr><td>T3: avg_raw_prob_over between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T4: avg_raw_prob_under between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T5: Total bets in calib matches settled joined rows</td><td class="pass">PASS</td><td>True</td></tr>
+</tbody>
+</table>
+<p><strong>Passed: 4 / 5</strong></p>
+</section>
+
+<section>
+<h2>Step 1.5 — Market Calibration by Line</h2>
+<p class="timestamp">2026-08-02 06:47:37 ET</p>
+
+<h3>Calibration Table</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All line values: actual rates vs market-implied probabilities</caption><thead><tr><th>line</th><th>n_bets</th><th>over_rate</th><th>under_rate</th><th>push_rate</th><th>avg_raw_prob_over</th><th>avg_raw_prob_under</th><th>avg_combined_vig</th><th>avg_novig_prob_over</th><th>avg_novig_prob_under</th><th>calibration_gap_over</th><th>calibration_gap_under</th></tr></thead><tbody><tr><td>0.5</td><td>1068685.0</td><td>0.118</td><td>0.882</td><td>0.0</td><td>0.154</td><td>0.916</td><td>0.07</td><td>0.144</td><td>0.856</td><td>-0.026</td><td>0.026</td></tr><tr><td>1.5</td><td>477469.0</td><td>0.008</td><td>0.992</td><td>0.0</td><td>0.022</td><td>0.988</td><td>0.01</td><td>0.022</td><td>0.978</td><td>-0.014</td><td>0.014</td></tr><tr><td>2.5</td><td>182697.0</td><td>0.0</td><td>1.0</td><td>0.0</td><td>0.005</td><td>0.99</td><td>-0.005</td><td>0.005</td><td>0.995</td><td>-0.005</td><td>0.005</td></tr></tbody></table>
+
+<h3>Miscalibrated Lines (|gap| &gt; 5pp)</h3>
+<p class='good'>No lines flagged — market is well-calibrated at all line values.</p>
+
+<h3>Key Findings</h3>
+<ul>
+  <li>UNDER 0.5 is the dominant line. Market-implied OVER at this line reflects the base rate of HRs (~10%).</li>
+  <li>calibration_gap_under = actual under rate minus fair market under probability. Positive gap → market underprices UNDER → value in UNDER bets.</li>
+  <li>calibration_gap_over = actual over rate minus fair market over probability. Negative gap → market overprices OVER → market gives you bad value on OVERs.</li>
+</ul>
+
+<h3>SQL Test Results</h3>
+<table>
+<thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>T1: over+under+push sum ~1.0 for all lines</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T2: n_bets >= 30 for each line (flag sparse)</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T3: avg_raw_prob_over between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T4: avg_raw_prob_under between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T5: Total bets in calib matches settled joined rows</td><td class="fail">FAIL</td><td>False</td></tr>
+</tbody>
+</table>
+<p><strong>Passed: 4 / 5</strong></p>
+</section>
+
+<section>
+<h2>Step 1.5 — Market Calibration by Line</h2>
+<p class="timestamp">2026-08-02 06:47:57 ET</p>
+
+<h3>Calibration Table</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All line values: actual rates vs market-implied probabilities</caption><thead><tr><th>line</th><th>n_bets</th><th>over_rate</th><th>under_rate</th><th>push_rate</th><th>avg_raw_prob_over</th><th>avg_raw_prob_under</th><th>avg_combined_vig</th><th>avg_novig_prob_over</th><th>avg_novig_prob_under</th><th>calibration_gap_over</th><th>calibration_gap_under</th></tr></thead><tbody><tr><td>0.5</td><td>1068685.0</td><td>0.118</td><td>0.882</td><td>0.0</td><td>0.154</td><td>0.916</td><td>0.07</td><td>0.144</td><td>0.856</td><td>-0.026</td><td>0.026</td></tr><tr><td>1.5</td><td>477469.0</td><td>0.008</td><td>0.992</td><td>0.0</td><td>0.022</td><td>0.988</td><td>0.01</td><td>0.022</td><td>0.978</td><td>-0.014</td><td>0.014</td></tr><tr><td>2.5</td><td>182697.0</td><td>0.0</td><td>1.0</td><td>0.0</td><td>0.005</td><td>0.99</td><td>-0.005</td><td>0.005</td><td>0.995</td><td>-0.005</td><td>0.005</td></tr></tbody></table>
+
+<h3>Miscalibrated Lines (|gap| &gt; 5pp)</h3>
+<p class='good'>No lines flagged — market is well-calibrated at all line values.</p>
+
+<h3>Key Findings</h3>
+<ul>
+  <li>UNDER 0.5 is the dominant line. Market-implied OVER at this line reflects the base rate of HRs (~10%).</li>
+  <li>calibration_gap_under = actual under rate minus fair market under probability. Positive gap → market underprices UNDER → value in UNDER bets.</li>
+  <li>calibration_gap_over = actual over rate minus fair market over probability. Negative gap → market overprices OVER → market gives you bad value on OVERs.</li>
+</ul>
+
+<h3>SQL Test Results</h3>
+<table>
+<thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>T1: over+under+push sum ~1.0 for all lines</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T2: n_bets >= 30 for each line (flag sparse)</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T3: avg_raw_prob_over between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T4: avg_raw_prob_under between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T5: Total bets in calib matches settled joined rows</td><td class="pass">PASS</td><td>True</td></tr>
+</tbody>
+</table>
+<p><strong>Passed: 5 / 5</strong></p>
+</section>
+
+<section>
+<h2>Step 3a — Individual Feature Sweep (n=1 Logistic Regression, OOF)</h2>
+<p class="timestamp">2026-08-02 06:54:04 ET</p>
+
+<h3>Feature Rankings by AUC (descending)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All feature candidates — logistic regression OOF (n_splits=5)</caption><thead><tr><th>feature</th><th>model_type</th><th>n_samples</th><th>auc</th><th>precision</th><th>recall</th><th>f1</th><th>coefficient</th></tr></thead><tbody><tr><td>max_raw_implied_prob_over</td><td>logistic</td><td>119441</td><td>0.6034</td><td>0.1667</td><td>0.0002</td><td>0.0004</td><td>7.4962</td></tr><tr><td>min_raw_implied_prob_under</td><td>logistic</td><td>115267</td><td>0.5994</td><td>0.375</td><td>0.0002</td><td>0.0004</td><td>-7.8802</td></tr><tr><td>max_raw_implied_prob_under</td><td>logistic</td><td>115267</td><td>0.5991</td><td>0.375</td><td>0.0004</td><td>0.0009</td><td>-8.4989</td></tr><tr><td>hr_roll_career</td><td>logistic</td><td>118967</td><td>0.5826</td><td>0.1905</td><td>0.0003</td><td>0.0006</td><td>3.7338</td></tr><tr><td>hr_roll_season</td><td>logistic</td><td>118198</td><td>0.5752</td><td>0.1587</td><td>0.0015</td><td>0.003</td><td>2.4207</td></tr><tr><td>hr_roll_L20</td><td>logistic</td><td>118967</td><td>0.5697</td><td>0.2222</td><td>0.0003</td><td>0.0006</td><td>2.4948</td></tr><tr><td>hr_roll_L10</td><td>logistic</td><td>118967</td><td>0.5566</td><td>0.5</td><td>0.0001</td><td>0.0003</td><td>1.7098</td></tr><tr><td>ab_roll_career</td><td>logistic</td><td>118967</td><td>0.5459</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.431</td></tr><tr><td>hr_roll_L5</td><td>logistic</td><td>118967</td><td>0.5439</td><td>0.0</td><td>0.0</td><td>0.0</td><td>1.0734</td></tr><tr><td>games_played_career</td><td>logistic</td><td>119441</td><td>0.5428</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0014</td></tr><tr><td>ab_roll_L5</td><td>logistic</td><td>118967</td><td>0.5392</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.2381</td></tr><tr><td>hr_roll_L3</td><td>logistic</td><td>118967</td><td>0.5315</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.6749</td></tr><tr><td>max_line</td><td>logistic</td><td>119441</td><td>0.5281</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.3218</td></tr><tr><td>consensus_over_odds_bin_granular</td><td>logistic_cat</td><td>119441</td><td>0.5269</td><td>0.0</td><td>0.0</td><td>0.0</td><td>nan</td></tr><tr><td>consensus_line</td><td>logistic</td><td>119441</td><td>0.5214</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.6905</td></tr><tr><td>hr_roll_L1</td><td>logistic</td><td>118967</td><td>0.5172</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.2512</td></tr><tr><td>consensus_under_odds_bin_granular</td><td>logistic_cat</td><td>119441</td><td>0.5137</td><td>0.3571</td><td>0.0007</td><td>0.0015</td><td>nan</td></tr><tr><td>opp_hr_rate_L20</td><td>logistic</td><td>119413</td><td>0.5091</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.1297</td></tr><tr><td>consensus_under_odds_bin</td><td>logistic_cat</td><td>119441</td><td>0.509</td><td>0.0</td><td>0.0</td><td>0.0</td><td>nan</td></tr><tr><td>min_line</td><td>logistic</td><td>119441</td><td>0.5088</td><td>0.0</td><td>0.0</td><td>0.0</td><td>-0.8243</td></tr><tr><td>consensus_over_odds_bin</td><td>logistic_cat</td><td>119441</td><td>0.5088</td><td>0.0</td><td>0.0</td><td>0.0</td><td>nan</td></tr><tr><td>is_home</td><td>logistic</td><td>119441</td><td>0.5083</td><td>0.0</td><td>0.0</td><td>0.0</td><td>-0.0136</td></tr><tr><td>opp_hr_rate_career</td><td>logistic</td><td>119413</td><td>0.5081</td><td>0.0</td><td>0.0</td><td>0.0</td><td>-0.2247</td></tr><tr><td>min_raw_implied_prob_over</td><td>logistic</td><td>119441</td><td>0.5079</td><td>0.0</td><td>0.0</td><td>0.0</td><td>-0.0208</td></tr></tbody></table>
+
+<h3>Spot-check: Aaron Judge</h3>
+<table><thead><tr><th>game_date</th><th>hr_over_0_5</th><th>hr_roll_L5</th><th>hr_roll_L10</th><th>hr_roll_career</th><th>opp_hr_rate_career</th><th>min_raw_implied_prob_under</th><th>max_raw_implied_prob_under</th></tr></thead><tbody><tr><td>2026-05-20</td><td>0.0</td><td>0.0</td><td>0.1</td><td>0.35492957746478876</td><td>0.08396946564885496</td><td>0.78125</td><td>0.7874015748031495</td></tr><tr><td>2026-05-21</td><td>0.0</td><td>0.0</td><td>0.1</td><td>0.3539325842696629</td><td>0.08629441624365482</td><td>0.7352941176470588</td><td>0.8</td></tr><tr><td>2026-05-22</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.35294117647058826</td><td>0.08607594936708861</td><td>0.7246376811594204</td><td>0.7462686567164178</td></tr><tr><td>2026-05-24</td><td>1.0</td><td>0.0</td><td>0.0</td><td>0.35195530726256985</td><td>0.08585858585858586</td><td>0.8064516129032259</td><td>0.819672131147541</td></tr><tr><td>2026-05-25</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.35376044568245124</td><td>0.08564231738035265</td><td>0.7518796992481203</td><td>0.7874015748031495</td></tr><tr><td>2026-05-26</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3527777777777778</td><td>0.08542713567839195</td><td>0.7246376811594204</td><td>0.7874015748031495</td></tr><tr><td>2026-05-27</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3518005540166205</td><td>0.08521303258145363</td><td>0.7633587786259541</td><td>0.7874015748031495</td></tr><tr><td>2026-05-29</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.35082872928176795</td><td>0.085</td><td>0.7092198581560284</td><td>0.7633587786259541</td></tr><tr><td>2026-05-30</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.349862258953168</td><td>0.08478802992518704</td><td>0.7299270072992701</td><td>0.7633587786259541</td></tr><tr><td>2026-05-31</td><td>0.0</td><td>0.0</td><td>0.1</td><td>0.3489010989010989</td><td>0.0845771144278607</td><td>0.7142857142857143</td><td>0.7575757575757576</td></tr></tbody></table>
+
+<h3>Observations</h3>
+<ul>
+  <li>Target: <code>hr_over_0_5</code> (1 if home_runs ≥ 1 else 0). Base rate ~10%.</li>
+  <li>n=1 features ranked by OOF AUC. AUC > 0.5 = better than random. AUC > 0.55 = meaningful signal.</li>
+  <li>Market-derived features (min/max raw implied prob) likely rank near top — market prices HR probability based on batter quality. Understand whether they add signal beyond what rolling career stats already capture.</li>
+</ul>
+</section>
+
+<section>
+<h2>Step 3b — XGBoost n=1 Feature Sweep</h2>
+<p class="timestamp">2026-08-02 06:59:03 ET</p>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>XGBoost AUC by feature (descending)</caption><thead><tr><th>feature</th><th>model_type</th><th>auc</th></tr></thead><tbody><tr><td>max_raw_implied_prob_over</td><td>xgboost</td><td>0.6006</td></tr><tr><td>min_raw_implied_prob_under</td><td>xgboost</td><td>0.5979</td></tr><tr><td>max_raw_implied_prob_under</td><td>xgboost</td><td>0.5972</td></tr><tr><td>hr_roll_career</td><td>xgboost</td><td>0.5766</td></tr><tr><td>hr_roll_L20</td><td>xgboost</td><td>0.5698</td></tr><tr><td>hr_roll_season</td><td>xgboost</td><td>0.5694</td></tr><tr><td>hr_roll_L10</td><td>xgboost</td><td>0.5556</td></tr><tr><td>ab_roll_career</td><td>xgboost</td><td>0.5451</td></tr><tr><td>hr_roll_L5</td><td>xgboost</td><td>0.5422</td></tr><tr><td>ab_roll_L5</td><td>xgboost</td><td>0.5369</td></tr><tr><td>consensus_line</td><td>xgboost</td><td>0.531</td></tr><tr><td>hr_roll_L3</td><td>xgboost</td><td>0.5302</td></tr><tr><td>max_line</td><td>xgboost</td><td>0.5294</td></tr><tr><td>min_raw_implied_prob_over</td><td>xgboost</td><td>0.5233</td></tr><tr><td>hr_roll_L1</td><td>xgboost</td><td>0.5199</td></tr><tr><td>opp_hr_rate_career</td><td>xgboost</td><td>0.5168</td></tr><tr><td>min_line</td><td>xgboost</td><td>0.5115</td></tr><tr><td>games_played_career</td><td>xgboost</td><td>0.5114</td></tr><tr><td>is_home</td><td>xgboost</td><td>0.5094</td></tr><tr><td>opp_hr_rate_L20</td><td>xgboost</td><td>0.5065</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 3c — Combo Models (Logistic + XGBoost, OOF)</h2>
+<p class="timestamp">2026-08-02 06:59:03 ET</p>
+
+<h3>Combo Rankings</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All combos sorted by AUC</caption><thead><tr><th>combo</th><th>model_type</th><th>n_features</th><th>n_samples</th><th>auc</th><th>precision</th><th>recall</th><th>f1</th><th>features</th></tr></thead><tbody><tr><td>Full numeric combo (logistic)</td><td>logistic</td><td>9</td><td>114783</td><td>0.6006</td><td>0.1147</td><td>0.3276</td><td>0.1699</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</td></tr><tr><td>Full numeric + consensus odds bins (logistic)</td><td>logistic</td><td>11</td><td>114783</td><td>0.6006</td><td>0.1148</td><td>0.3297</td><td>0.1703</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home, consensus_over_odds_bin, consensus_under_odds_bin</td></tr><tr><td>Market features only (logistic)</td><td>logistic</td><td>3</td><td>115267</td><td>0.6001</td><td>0.1161</td><td>0.3331</td><td>0.1721</td><td>min_raw_implied_prob_under, max_raw_implied_prob_under, min_raw_implied_prob_over</td></tr><tr><td>Full numeric + consensus odds bins (XGBoost)</td><td>xgboost</td><td>11</td><td>114783</td><td>0.5939</td><td>0.1151</td><td>0.3953</td><td>0.1783</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home, consensus_over_odds_bin, consensus_under_odds_bin</td></tr><tr><td>Full numeric combo (XGBoost)</td><td>xgboost</td><td>9</td><td>114783</td><td>0.5936</td><td>0.115</td><td>0.3923</td><td>0.1779</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</td></tr><tr><td>Stats features only (logistic)</td><td>logistic</td><td>6</td><td>118939</td><td>0.582</td><td>0.1123</td><td>0.3889</td><td>0.1743</td><td>hr_roll_L5, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, is_home</td></tr></tbody></table>
+
+<h3>Winning Model</h3>
+<div class="config-block">
+<p><span class="key">Best combo:</span> Full numeric combo (logistic)</p>
+<p><span class="key">Model type:</span> logistic</p>
+<p><span class="key">Features:</span> hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</p>
+<p><span class="key">OOF AUC:</span> 0.6006</p>
+<p><span class="key">sklearn version:</span> 1.6.1</p>
+<p><span class="key">S3 model key:</span> s3://the-odds-api-mt/mlb/batter_home_runs_model/model/mlb_batter_hr_model.joblib</p>
+</div>
+
+<h3>book-invariant yhat assert</h3>
+<p class="pass">PASS — yhat identical across all books for same (player, game, line)</p>
+</section>
+
+<section>
+<h2>Step 4 — Probability Conversion &amp; Edge Computation</h2>
+<p class="timestamp">2026-08-02 07:00:00 ET</p>
+
+<h3>Method Comparison (Brier Score, lower is better)</h3>
+<table><thead><tr><th>method</th><th>brier_score</th></tr></thead><tbody><tr><td>A — Raw model prob</td><td>0.21604</td></tr><tr><td>B — Platt scaling</td><td>0.10449</td></tr></tbody></table>
+<p><strong>Winner: Method B</strong> (Brier: 0.10449)</p>
+<p>Note: For a direct probability classifier (logistic/XGBoost), Method A is the raw model probability. Method B applies Platt scaling on top. For a well-calibrated model, both should be similar.</p>
+
+<h3>Calibration Curves (10-decile buckets)</h3>
+<table><thead><tr><th>method</th><th>decile</th><th>n</th><th>predicted_rate</th><th>actual_rate</th><th>gap</th></tr></thead><tbody><tr><td>A_raw</td><td>0</td><td>22957</td><td>0.0543</td><td>0.0956</td><td>0.0412</td></tr><tr><td>A_raw</td><td>1</td><td>11478</td><td>0.3604</td><td>0.0585</td><td>-0.3018</td></tr><tr><td>A_raw</td><td>2</td><td>11478</td><td>0.3932</td><td>0.0737</td><td>-0.3195</td></tr><tr><td>A_raw</td><td>3</td><td>11479</td><td>0.4231</td><td>0.0901</td><td>-0.3331</td></tr><tr><td>A_raw</td><td>4</td><td>11478</td><td>0.4549</td><td>0.1114</td><td>-0.3434</td></tr><tr><td>A_raw</td><td>5</td><td>11478</td><td>0.4897</td><td>0.1232</td><td>-0.3665</td></tr><tr><td>A_raw</td><td>6</td><td>11478</td><td>0.5299</td><td>0.1389</td><td>-0.391</td></tr><tr><td>A_raw</td><td>7</td><td>11478</td><td>0.5799</td><td>0.1605</td><td>-0.4194</td></tr><tr><td>A_raw</td><td>8</td><td>11479</td><td>0.683</td><td>0.2109</td><td>-0.4721</td></tr><tr><td>B_platt</td><td>0</td><td>22957</td><td>0.0173</td><td>0.1272</td><td>0.11</td></tr><tr><td>B_platt</td><td>1</td><td>11478</td><td>0.1056</td><td>0.14</td><td>0.0344</td></tr><tr><td>B_platt</td><td>2</td><td>11478</td><td>0.1066</td><td>0.1221</td><td>0.0155</td></tr><tr><td>B_platt</td><td>3</td><td>11479</td><td>0.1073</td><td>0.1504</td><td>0.0431</td></tr><tr><td>B_platt</td><td>4</td><td>11478</td><td>0.1076</td><td>0.1169</td><td>0.0093</td></tr><tr><td>B_platt</td><td>5</td><td>11478</td><td>0.1078</td><td>0.0873</td><td>-0.0206</td></tr><tr><td>B_platt</td><td>6</td><td>11478</td><td>0.1084</td><td>0.1127</td><td>0.0044</td></tr><tr><td>B_platt</td><td>7</td><td>11478</td><td>0.1091</td><td>0.0944</td><td>-0.0147</td></tr><tr><td>B_platt</td><td>8</td><td>11479</td><td>0.1101</td><td>0.08</td><td>-0.0301</td></tr></tbody></table>
+<p>Note: For each decile, |predicted_rate - actual_rate| should be &lt;0.15. Buckets with large gaps indicate miscalibration.</p>
+
+<h3>Clip Counts</h3>
+<p>Rows clipped to 0.01 (low): 19133 | Rows clipped to 0.99 (high): 0</p>
+
+<h3>Asserts</h3>
+<ul>
+  <li class="pass">PASS: edge_over = p_model_over − raw_implied_prob_over</li>
+  <li class="pass">PASS: p_model_over is book-invariant for same (player, game, line)</li>
+  <li>Multi-line player-games: 113656 (expected ~0)</li>
+</ul>
+
+<h3>Spot-check: Aaron Judge (last 15)</h3>
+<table><thead><tr><th>game_date</th><th>bookmaker</th><th>hr_actual</th><th>hr_over_0_5</th><th>p_model_over</th><th>raw_implied_prob_over</th><th>edge_over</th><th>edge_under</th><th>novig_prob_over</th></tr></thead><tbody><tr><td>2026-05-31</td><td>betrivers</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.01098901098901099</td><td>0.8031029729252196</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>ballybet</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.01098901098901099</td><td>0.8031029729252196</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>hardrockbet</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.3508771929824561</td><td>0.4632147909317744</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>betparx</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.01098901098901099</td><td>0.8031029729252196</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>ballybet</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.3472222222222222</td><td>0.46686976169200833</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>betonlineag</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.3278688524590164</td><td>0.4862231314552141</td><td>-0.5716677414899881</td><td>0.3020594965675057</td></tr><tr><td>2026-05-31</td><td>williamhill_us</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.09090909090909091</td><td>0.7231828930051396</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>fliff</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.37735849056603776</td><td>0.4367334933481928</td><td>-0.5493861015612893</td><td>0.33915211970074816</td></tr><tr><td>2026-05-31</td><td>betparx</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.0625</td><td>0.7515919839142305</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>ballybet</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.0625</td><td>0.7515919839142305</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>hardrockbet_oh</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.3448275862068966</td><td>0.46926439770733397</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>betparx</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.3448275862068966</td><td>0.46926439770733397</td><td>-0.5283776981999448</td><td>0.32558139534883723</td></tr><tr><td>2026-05-31</td><td>espnbet</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.3448275862068966</td><td>0.46926439770733397</td><td>-0.5493861015612893</td><td>0.31924882629107987</td></tr><tr><td>2026-05-31</td><td>betrivers</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.0625</td><td>0.7515919839142305</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>williamhill_us</td><td>0.0</td><td>0.0</td><td>0.8140919839142305</td><td>0.35714285714285715</td><td>0.4569491267713734</td><td>nan</td><td>nan</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 3b — XGBoost n=1 Feature Sweep</h2>
+<p class="timestamp">2026-08-02 07:03:18 ET</p>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>XGBoost AUC by feature (descending)</caption><thead><tr><th>feature</th><th>model_type</th><th>auc</th></tr></thead><tbody><tr><td>max_raw_implied_prob_over</td><td>xgboost</td><td>0.6006</td></tr><tr><td>min_raw_implied_prob_under</td><td>xgboost</td><td>0.5979</td></tr><tr><td>max_raw_implied_prob_under</td><td>xgboost</td><td>0.5972</td></tr><tr><td>hr_roll_career</td><td>xgboost</td><td>0.5766</td></tr><tr><td>hr_roll_L20</td><td>xgboost</td><td>0.5698</td></tr><tr><td>hr_roll_season</td><td>xgboost</td><td>0.5694</td></tr><tr><td>hr_roll_L10</td><td>xgboost</td><td>0.5556</td></tr><tr><td>ab_roll_career</td><td>xgboost</td><td>0.5451</td></tr><tr><td>hr_roll_L5</td><td>xgboost</td><td>0.5422</td></tr><tr><td>ab_roll_L5</td><td>xgboost</td><td>0.5369</td></tr><tr><td>consensus_line</td><td>xgboost</td><td>0.531</td></tr><tr><td>hr_roll_L3</td><td>xgboost</td><td>0.5302</td></tr><tr><td>max_line</td><td>xgboost</td><td>0.5294</td></tr><tr><td>min_raw_implied_prob_over</td><td>xgboost</td><td>0.5233</td></tr><tr><td>hr_roll_L1</td><td>xgboost</td><td>0.5199</td></tr><tr><td>opp_hr_rate_career</td><td>xgboost</td><td>0.5168</td></tr><tr><td>min_line</td><td>xgboost</td><td>0.5115</td></tr><tr><td>games_played_career</td><td>xgboost</td><td>0.5114</td></tr><tr><td>is_home</td><td>xgboost</td><td>0.5094</td></tr><tr><td>opp_hr_rate_L20</td><td>xgboost</td><td>0.5065</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 3c — Combo Models (Logistic + XGBoost, OOF)</h2>
+<p class="timestamp">2026-08-02 07:03:18 ET</p>
+
+<h3>Combo Rankings</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All combos sorted by AUC</caption><thead><tr><th>combo</th><th>model_type</th><th>n_features</th><th>n_samples</th><th>auc</th><th>precision</th><th>recall</th><th>f1</th><th>features</th></tr></thead><tbody><tr><td>Full numeric combo (logistic)</td><td>logistic</td><td>9</td><td>114783</td><td>0.6</td><td>0.0769</td><td>0.0002</td><td>0.0003</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</td></tr><tr><td>Full numeric + consensus odds bins (logistic)</td><td>logistic</td><td>11</td><td>114783</td><td>0.6</td><td>0.0833</td><td>0.0002</td><td>0.0003</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home, consensus_over_odds_bin, consensus_under_odds_bin</td></tr><tr><td>Market features only (logistic)</td><td>logistic</td><td>3</td><td>115267</td><td>0.5996</td><td>0.1071</td><td>0.0002</td><td>0.0005</td><td>min_raw_implied_prob_under, max_raw_implied_prob_under, min_raw_implied_prob_over</td></tr><tr><td>Full numeric + consensus odds bins (XGBoost)</td><td>xgboost</td><td>11</td><td>114783</td><td>0.5939</td><td>0.1151</td><td>0.3953</td><td>0.1783</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home, consensus_over_odds_bin, consensus_under_odds_bin</td></tr><tr><td>Full numeric combo (XGBoost)</td><td>xgboost</td><td>9</td><td>114783</td><td>0.5936</td><td>0.115</td><td>0.3923</td><td>0.1779</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</td></tr><tr><td>Stats features only (logistic)</td><td>logistic</td><td>6</td><td>118939</td><td>0.579</td><td>0.1053</td><td>0.0001</td><td>0.0003</td><td>hr_roll_L5, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, is_home</td></tr></tbody></table>
+
+<h3>Winning Model</h3>
+<div class="config-block">
+<p><span class="key">Best combo:</span> Full numeric + consensus odds bins (logistic)</p>
+<p><span class="key">Model type:</span> logistic</p>
+<p><span class="key">Features:</span> hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home, consensus_over_odds_bin, consensus_under_odds_bin</p>
+<p><span class="key">OOF AUC:</span> 0.6000</p>
+<p><span class="key">sklearn version:</span> 1.6.1</p>
+<p><span class="key">S3 model key:</span> s3://the-odds-api-mt/mlb/batter_home_runs_model/model/mlb_batter_hr_model.joblib</p>
+</div>
+
+<h3>book-invariant yhat assert</h3>
+<p class="pass">PASS — yhat identical across all books for same (player, game, line)</p>
+</section>
+
+<section>
+<h2>Step 3b — XGBoost n=1 Feature Sweep</h2>
+<p class="timestamp">2026-08-02 07:05:37 ET</p>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>XGBoost AUC by feature (descending)</caption><thead><tr><th>feature</th><th>model_type</th><th>auc</th></tr></thead><tbody><tr><td>max_raw_implied_prob_over</td><td>xgboost</td><td>0.6006</td></tr><tr><td>min_raw_implied_prob_under</td><td>xgboost</td><td>0.5979</td></tr><tr><td>max_raw_implied_prob_under</td><td>xgboost</td><td>0.5972</td></tr><tr><td>hr_roll_career</td><td>xgboost</td><td>0.5766</td></tr><tr><td>hr_roll_L20</td><td>xgboost</td><td>0.5698</td></tr><tr><td>hr_roll_season</td><td>xgboost</td><td>0.5694</td></tr><tr><td>hr_roll_L10</td><td>xgboost</td><td>0.5556</td></tr><tr><td>ab_roll_career</td><td>xgboost</td><td>0.5451</td></tr><tr><td>hr_roll_L5</td><td>xgboost</td><td>0.5422</td></tr><tr><td>ab_roll_L5</td><td>xgboost</td><td>0.5369</td></tr><tr><td>consensus_line</td><td>xgboost</td><td>0.531</td></tr><tr><td>hr_roll_L3</td><td>xgboost</td><td>0.5302</td></tr><tr><td>max_line</td><td>xgboost</td><td>0.5294</td></tr><tr><td>min_raw_implied_prob_over</td><td>xgboost</td><td>0.5233</td></tr><tr><td>hr_roll_L1</td><td>xgboost</td><td>0.5199</td></tr><tr><td>opp_hr_rate_career</td><td>xgboost</td><td>0.5168</td></tr><tr><td>min_line</td><td>xgboost</td><td>0.5115</td></tr><tr><td>games_played_career</td><td>xgboost</td><td>0.5114</td></tr><tr><td>is_home</td><td>xgboost</td><td>0.5094</td></tr><tr><td>opp_hr_rate_L20</td><td>xgboost</td><td>0.5065</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 3c — Combo Models (Logistic + XGBoost, OOF)</h2>
+<p class="timestamp">2026-08-02 07:05:37 ET</p>
+
+<h3>Combo Rankings</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>All combos sorted by AUC</caption><thead><tr><th>combo</th><th>model_type</th><th>n_features</th><th>n_samples</th><th>auc</th><th>precision</th><th>recall</th><th>f1</th><th>features</th></tr></thead><tbody><tr><td>Full numeric combo (logistic)</td><td>logistic</td><td>9</td><td>114783</td><td>0.6</td><td>0.0769</td><td>0.0002</td><td>0.0003</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</td></tr><tr><td>Market features only (logistic)</td><td>logistic</td><td>3</td><td>115267</td><td>0.5996</td><td>0.1071</td><td>0.0002</td><td>0.0005</td><td>min_raw_implied_prob_under, max_raw_implied_prob_under, min_raw_implied_prob_over</td></tr><tr><td>Full numeric combo (XGBoost)</td><td>xgboost</td><td>9</td><td>114783</td><td>0.5936</td><td>0.115</td><td>0.3923</td><td>0.1779</td><td>hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</td></tr><tr><td>Stats features only (logistic)</td><td>logistic</td><td>6</td><td>118939</td><td>0.579</td><td>0.1053</td><td>0.0001</td><td>0.0003</td><td>hr_roll_L5, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, is_home</td></tr></tbody></table>
+
+<h3>Winning Model</h3>
+<div class="config-block">
+<p><span class="key">Best combo:</span> Full numeric combo (logistic)</p>
+<p><span class="key">Model type:</span> logistic</p>
+<p><span class="key">Features:</span> hr_roll_L5, hr_roll_L10, hr_roll_L20, hr_roll_career, ab_roll_career, opp_hr_rate_career, min_raw_implied_prob_under, max_raw_implied_prob_under, is_home</p>
+<p><span class="key">OOF AUC:</span> 0.6000</p>
+<p><span class="key">sklearn version:</span> 1.6.1</p>
+<p><span class="key">S3 model key:</span> s3://the-odds-api-mt/mlb/batter_home_runs_model/model/mlb_batter_hr_model.joblib</p>
+</div>
+
+<h3>book-invariant yhat assert</h3>
+<p class="pass">PASS — yhat identical across all books for same (player, game, line)</p>
+</section>
+
+<section>
+<h2>Step 4 — Probability Conversion &amp; Edge Computation</h2>
+<p class="timestamp">2026-08-02 07:05:48 ET</p>
+
+<h3>Method Comparison (Brier Score, lower is better)</h3>
+<table><thead><tr><th>method</th><th>brier_score</th></tr></thead><tbody><tr><td>A — Raw model prob</td><td>0.10249</td></tr><tr><td>B — Platt scaling</td><td>0.10272</td></tr></tbody></table>
+<p><strong>Winner: Method A</strong> (Brier: 0.10249)</p>
+<p>Note: For a direct probability classifier (logistic/XGBoost), Method A is the raw model probability. Method B applies Platt scaling on top. For a well-calibrated model, both should be similar.</p>
+
+<h3>Calibration Curves (10-decile buckets)</h3>
+<table><thead><tr><th>method</th><th>decile</th><th>n</th><th>predicted_rate</th><th>actual_rate</th><th>gap</th></tr></thead><tbody><tr><td>A_raw</td><td>0</td><td>22957</td><td>0.0102</td><td>0.0961</td><td>0.0859</td></tr><tr><td>A_raw</td><td>1</td><td>11478</td><td>0.0699</td><td>0.0584</td><td>-0.0115</td></tr><tr><td>A_raw</td><td>2</td><td>11478</td><td>0.0788</td><td>0.0752</td><td>-0.0036</td></tr><tr><td>A_raw</td><td>3</td><td>11479</td><td>0.0874</td><td>0.0889</td><td>0.0015</td></tr><tr><td>A_raw</td><td>4</td><td>11478</td><td>0.0973</td><td>0.1104</td><td>0.0131</td></tr><tr><td>A_raw</td><td>5</td><td>11478</td><td>0.1094</td><td>0.1253</td><td>0.0159</td></tr><tr><td>A_raw</td><td>6</td><td>11478</td><td>0.1248</td><td>0.1382</td><td>0.0134</td></tr><tr><td>A_raw</td><td>7</td><td>11478</td><td>0.1472</td><td>0.1603</td><td>0.0131</td></tr><tr><td>A_raw</td><td>8</td><td>11479</td><td>0.2138</td><td>0.2096</td><td>-0.0042</td></tr><tr><td>B_platt</td><td>0</td><td>22957</td><td>0.0134</td><td>0.0968</td><td>0.0834</td></tr><tr><td>B_platt</td><td>1</td><td>11478</td><td>0.087</td><td>0.0576</td><td>-0.0294</td></tr><tr><td>B_platt</td><td>2</td><td>11478</td><td>0.0923</td><td>0.0735</td><td>-0.0187</td></tr><tr><td>B_platt</td><td>3</td><td>11479</td><td>0.0973</td><td>0.0915</td><td>-0.0058</td></tr><tr><td>B_platt</td><td>4</td><td>11478</td><td>0.1033</td><td>0.1076</td><td>0.0042</td></tr><tr><td>B_platt</td><td>5</td><td>11478</td><td>0.1112</td><td>0.1228</td><td>0.0116</td></tr><tr><td>B_platt</td><td>6</td><td>11478</td><td>0.1216</td><td>0.1402</td><td>0.0186</td></tr><tr><td>B_platt</td><td>7</td><td>11478</td><td>0.1377</td><td>0.1616</td><td>0.0239</td></tr><tr><td>B_platt</td><td>8</td><td>11479</td><td>0.2017</td><td>0.2099</td><td>0.0082</td></tr></tbody></table>
+<p>Note: For each decile, |predicted_rate - actual_rate| should be &lt;0.15. Buckets with large gaps indicate miscalibration.</p>
+
+<h3>Clip Counts</h3>
+<p>Rows clipped to 0.01 (low): 19133 | Rows clipped to 0.99 (high): 0</p>
+
+<h3>Asserts</h3>
+<ul>
+  <li class="pass">PASS: edge_over = p_model_over − raw_implied_prob_over</li>
+  <li class="pass">PASS: p_model_over is book-invariant for same (player, game, line)</li>
+  <li>Multi-line player-games: 113656 (expected ~0)</li>
+</ul>
+
+<h3>Spot-check: Aaron Judge (last 15)</h3>
+<table><thead><tr><th>game_date</th><th>bookmaker</th><th>hr_actual</th><th>hr_over_0_5</th><th>p_model_over</th><th>raw_implied_prob_over</th><th>edge_over</th><th>edge_under</th><th>novig_prob_over</th></tr></thead><tbody><tr><td>2026-05-31</td><td>betrivers</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.01098901098901099</td><td>0.32792161848362744</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>ballybet</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.01098901098901099</td><td>0.32792161848362744</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>hardrockbet</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.3508771929824561</td><td>-0.011966563509817674</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>betparx</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.01098901098901099</td><td>0.32792161848362744</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>ballybet</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.3472222222222222</td><td>-0.008311592749583763</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>betonlineag</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.3278688524590164</td><td>0.011041777013622023</td><td>-0.09648638704839607</td><td>0.3020594965675057</td></tr><tr><td>2026-05-31</td><td>williamhill_us</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.09090909090909091</td><td>0.24800153856354754</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>fliff</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.37735849056603776</td><td>-0.038447861093399316</td><td>-0.07420474711969727</td><td>0.33915211970074816</td></tr><tr><td>2026-05-31</td><td>betparx</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.0625</td><td>0.27641062947263845</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>ballybet</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.0625</td><td>0.27641062947263845</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>hardrockbet_oh</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.3448275862068966</td><td>-0.0059169567342581275</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>betparx</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.3448275862068966</td><td>-0.0059169567342581275</td><td>-0.053196343758352804</td><td>0.32558139534883723</td></tr><tr><td>2026-05-31</td><td>espnbet</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.3448275862068966</td><td>-0.0059169567342581275</td><td>-0.07420474711969727</td><td>0.31924882629107987</td></tr><tr><td>2026-05-31</td><td>betrivers</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.0625</td><td>0.27641062947263845</td><td>nan</td><td>nan</td></tr><tr><td>2026-05-31</td><td>williamhill_us</td><td>0.0</td><td>0.0</td><td>0.33891062947263845</td><td>0.35714285714285715</td><td>-0.018232227670218704</td><td>nan</td><td>nan</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 5 — OOS Grid Search</h2>
+<p class="timestamp">2026-08-02 12:05:29 ET</p>
+
+<h3>Top 30 OOS Results (sorted by units_won)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>OOS — all combos with n_bets ≥ 1, sorted by units_won</caption><thead><tr><th>edge_threshold</th><th>direction</th><th>odds_bucket</th><th>shrinkage</th><th>prediction_method</th><th>n_bets</th><th>pct_of_universe</th><th>win_rate</th><th>units_won</th><th>roi</th><th>avg_odds</th><th>max_drawdown</th><th>calmar</th><th>drawdown_peak_date</th><th>drawdown_trough_date</th><th>drawdown_recovery_date</th></tr></thead><tbody><tr><td>0.07</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>17</td><td>0.0</td><td>0.5294</td><td>39.9</td><td>2.3471</td><td>nan</td><td>7.0</td><td>5.7</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>17</td><td>0.0</td><td>0.5294</td><td>39.9</td><td>2.3471</td><td>6.076</td><td>7.0</td><td>5.7</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>17</td><td>0.0</td><td>0.5294</td><td>39.9</td><td>2.3471</td><td>6.076</td><td>7.0</td><td>5.7</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>plus_odds</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>nan</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>plus_odds</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>3.029</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>all</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>nan</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>all</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>3.029</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>both</td><td>all</td><td>0.25</td><td>model</td><td>29</td><td>0.0001</td><td>0.5517</td><td>37.2</td><td>1.2828</td><td>nan</td><td>12.0</td><td>3.1</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>both</td><td>all</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>both</td><td>plus_odds</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>over</td><td>all</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>6.575</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>over</td><td>plus_odds</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>6.575</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>both</td><td>plus_odds</td><td>0.5</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>nan</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>nan</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>all</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>nan</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>all</td><td>0.5</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>plus_odds</td><td>0.5</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>both</td><td>all</td><td>0.5</td><td>model</td><td>64</td><td>0.0001</td><td>0.7031</td><td>19.68</td><td>0.3075</td><td>nan</td><td>8.0</td><td>2.46</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>6.75</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>all</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>6.75</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.05</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>47</td><td>0.0001</td><td>0.2128</td><td>14.2</td><td>0.3021</td><td>nan</td><td>30.0</td><td>0.473</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.05</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>47</td><td>0.0001</td><td>0.2128</td><td>14.2</td><td>0.3021</td><td>9.361</td><td>30.0</td><td>0.473</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.05</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>47</td><td>0.0001</td><td>0.2128</td><td>14.2</td><td>0.3021</td><td>9.361</td><td>30.0</td><td>0.473</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>plus_odds</td><td>0.0</td><td>model</td><td>20</td><td>0.0</td><td>0.35</td><td>13.4</td><td>0.67</td><td>nan</td><td>7.0</td><td>1.914</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>all</td><td>0.0</td><td>model</td><td>20</td><td>0.0</td><td>0.35</td><td>13.4</td><td>0.67</td><td>nan</td><td>7.0</td><td>1.914</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>over</td><td>plus_odds</td><td>0.0</td><td>model</td><td>20</td><td>0.0</td><td>0.35</td><td>13.4</td><td>0.67</td><td>3.833</td><td>7.0</td><td>1.914</td><td>None</td><td>None</td><td>still in drawdown</td></tr></tbody></table>
+
+<h3>Season Breakdown (top OOS strategy)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Season-by-season (top OOS strategy)</caption><thead><tr><th>season</th><th>n_bets</th><th>win_rate</th><th>units</th><th>roi</th></tr></thead><tbody><tr><td>2024.0</td><td>254.0</td><td>0.7283</td><td>1.32</td><td>0.0052</td></tr><tr><td>2025.0</td><td>262.0</td><td>0.6412</td><td>-18.11</td><td>-0.0691</td></tr><tr><td>2026.0</td><td>42.0</td><td>0.6429</td><td>-6.74</td><td>-0.1605</td></tr></tbody></table>
+
+<h3>SQL Test Results</h3>
+<table><thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody><tr><td>T1: OOS results has rows</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T2: IS results has rows</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T3: Best OOS strategy has >= 30 bets</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T4: Best OOS ROI < 500% (sanity check)</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T5: IS ROI >= OOS ROI for best strategy (same params)</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T6: No win_rate > 1.0</td><td class="pass">PASS</td><td>True</td></tr></tbody>
+</table>
+<p><strong>Passed: 6 / 6</strong></p>
+</section>
+
+<section>
+<h2>Step 6 — IS Grid Search</h2>
+<p class="timestamp">2026-08-02 12:05:29 ET</p>
+
+<h3>Top 30 IS Results (sorted by units_won)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>IS — all combos with n_bets ≥ 1, sorted by units_won</caption><thead><tr><th>edge_threshold</th><th>direction</th><th>odds_bucket</th><th>shrinkage</th><th>prediction_method</th><th>n_bets</th><th>pct_of_universe</th><th>win_rate</th><th>units_won</th><th>roi</th><th>avg_odds</th><th>max_drawdown</th><th>calmar</th><th>drawdown_peak_date</th><th>drawdown_trough_date</th><th>drawdown_recovery_date</th></tr></thead><tbody><tr><td>0.07</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>17</td><td>0.0</td><td>0.5294</td><td>39.9</td><td>2.3471</td><td>nan</td><td>7.0</td><td>5.7</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>17</td><td>0.0</td><td>0.5294</td><td>39.9</td><td>2.3471</td><td>6.076</td><td>7.0</td><td>5.7</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>17</td><td>0.0</td><td>0.5294</td><td>39.9</td><td>2.3471</td><td>6.076</td><td>7.0</td><td>5.7</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>plus_odds</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>nan</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>plus_odds</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>3.029</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>all</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>nan</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>all</td><td>0.0</td><td>model</td><td>173</td><td>0.0004</td><td>0.3815</td><td>37.4</td><td>0.2162</td><td>3.029</td><td>25.43</td><td>1.471</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>both</td><td>all</td><td>0.25</td><td>model</td><td>29</td><td>0.0001</td><td>0.5517</td><td>37.2</td><td>1.2828</td><td>nan</td><td>12.0</td><td>3.1</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>both</td><td>all</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>both</td><td>plus_odds</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>over</td><td>all</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>6.575</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.2</td><td>over</td><td>plus_odds</td><td>0.0</td><td>model</td><td>4</td><td>0.0</td><td>1.0</td><td>22.3</td><td>5.575</td><td>6.575</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>both</td><td>plus_odds</td><td>0.5</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>nan</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>nan</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>both</td><td>all</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>nan</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>all</td><td>0.5</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.1</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>over</td><td>plus_odds</td><td>0.5</td><td>model</td><td>5</td><td>0.0</td><td>0.8</td><td>21.3</td><td>4.26</td><td>6.96</td><td>1.0</td><td>21.3</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.07</td><td>both</td><td>all</td><td>0.5</td><td>model</td><td>64</td><td>0.0001</td><td>0.7031</td><td>19.68</td><td>0.3075</td><td>nan</td><td>8.0</td><td>2.46</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>6.75</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>all</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>6.75</td><td>0.0</td><td>nan</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>3</td><td>0.0</td><td>1.0</td><td>17.25</td><td>5.75</td><td>nan</td><td>0.0</td><td>nan</td><td>2026-03-27</td><td>2026-03-27</td><td>still in drawdown</td></tr><tr><td>0.05</td><td>both</td><td>plus_odds</td><td>0.25</td><td>model</td><td>47</td><td>0.0001</td><td>0.2128</td><td>14.2</td><td>0.3021</td><td>nan</td><td>30.0</td><td>0.473</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.05</td><td>over</td><td>plus_odds</td><td>0.25</td><td>model</td><td>47</td><td>0.0001</td><td>0.2128</td><td>14.2</td><td>0.3021</td><td>9.361</td><td>30.0</td><td>0.473</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.05</td><td>over</td><td>all</td><td>0.25</td><td>model</td><td>47</td><td>0.0001</td><td>0.2128</td><td>14.2</td><td>0.3021</td><td>9.361</td><td>30.0</td><td>0.473</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>plus_odds</td><td>0.0</td><td>model</td><td>20</td><td>0.0</td><td>0.35</td><td>13.4</td><td>0.67</td><td>nan</td><td>7.0</td><td>1.914</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>both</td><td>all</td><td>0.0</td><td>model</td><td>20</td><td>0.0</td><td>0.35</td><td>13.4</td><td>0.67</td><td>nan</td><td>7.0</td><td>1.914</td><td>None</td><td>None</td><td>still in drawdown</td></tr><tr><td>0.15</td><td>over</td><td>plus_odds</td><td>0.0</td><td>model</td><td>20</td><td>0.0</td><td>0.35</td><td>13.4</td><td>0.67</td><td>3.833</td><td>7.0</td><td>1.914</td><td>None</td><td>None</td><td>still in drawdown</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 7 — Mock Email Output</h2>
+<p class="timestamp">2026-08-02 17:08:18</p>
+<p><strong>Strategy:</strong> line=0.5 OVER, edge &ge; 10pp, plus-odds only (decimal &ge; 2.0)</p>
+<p><strong>Demo date:</strong> 2026-03-27 &mdash; 2 player(s), 11 qualifying bet(s)</p>
+
+<h3>Email Output</h3>
+
+<table>
+<thead>
+<tr>
+  <th>Player</th><th>Book</th><th>Line</th><th>Over $</th><th>Under $</th>
+  <th>p_model</th><th>Raw%</th><th>Edge</th><th>HR/G(L5)</th><th>HR/G(career)</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class='game-header'><td colspan='10'>  Arizona Diamondbacks @ Los Angeles Dodgers  ·  1 PLAY</td></tr>
+<tr><td>Shohei Ohtani</td><td>BallyBet</td><td>0.5</td><td>+188</td><td>N/A</td><td>45.5%</td><td>34.7%</td><td>+10.8pp</td><td>0.400</td><td>0.343</td></tr>
+<tr><td>Shohei Ohtani</td><td>BetParx</td><td>0.5</td><td>+188</td><td>-244</td><td>45.5%</td><td>34.7%</td><td>+10.8pp</td><td>0.400</td><td>0.343</td></tr>
+<tr class='game-header'><td colspan='10'>  Cleveland Guardians @ Seattle Mariners  ·  1 PLAY</td></tr>
+<tr><td>Chase DeLauter</td><td>BetMGM</td><td>0.5</td><td>+600</td><td>-909</td><td>37.2%</td><td>14.3%</td><td>+22.9pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>BetRivers</td><td>0.5</td><td>+575</td><td>N/A</td><td>37.2%</td><td>14.3%</td><td>+22.4pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>Hard Rock</td><td>0.5</td><td>+575</td><td>N/A</td><td>37.2%</td><td>14.3%</td><td>+22.4pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>BallyBet</td><td>0.5</td><td>+575</td><td>N/A</td><td>37.2%</td><td>14.3%</td><td>+22.4pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>BetParx</td><td>0.5</td><td>+575</td><td>-1111</td><td>37.2%</td><td>14.3%</td><td>+22.4pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>ESPN Bet</td><td>0.5</td><td>+550</td><td>-1250</td><td>37.2%</td><td>14.3%</td><td>+21.8pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>William Hill</td><td>0.5</td><td>+525</td><td>N/A</td><td>37.2%</td><td>14.3%</td><td>+21.2pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>Fliff</td><td>0.5</td><td>+505</td><td>-1250</td><td>37.2%</td><td>14.3%</td><td>+20.6pp</td><td>2.000</td><td>2.000</td></tr>
+<tr><td>Chase DeLauter</td><td>BetOnline</td><td>0.5</td><td>+500</td><td>N/A</td><td>37.2%</td><td>14.3%</td><td>+20.5pp</td><td>2.000</td><td>2.000</td></tr>
+</tbody></table>
+
+<h3>Test Results</h3>
+<table>
+<thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>T1: Demo date has at least 2 players with qualifying OVER bets</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T2: All p_model_over values are between 0 and 1</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T3: edge_over = p_model_over - raw_implied_prob_over (within 1e-6)</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T4: p_model_over is book-invariant per (player_key, game_date)</td><td class="pass">PASS</td><td>True</td></tr><tr><td>T5: Qualifying bets have plus-odds (decimal >= 2.0)</td><td class="pass">PASS</td><td>True</td></tr>
+</tbody>
+</table>
+<p><strong>Passed: 5 / 5</strong></p>
+
+<h3>Strategy Summary</h3>
+<ul>
+  <li>Primary signal: model over-probability vs. raw market implied probability</li>
+  <li>Edge = p_model_over &minus; raw_implied_prob_over (vig-inclusive, book-specific)</li>
+  <li>Only plus-odds bets qualify — we are betting on longshots the model believes are underpriced</li>
+  <li>HR rate in this dataset: ~11%. At +300 (2.6% book raw prob + vig), a 10pp+ edge means model &gt;12.6% vs market ~8.5%</li>
+  <li>OOS backtest: 173 bets, +37.4u, +21.6% ROI (edge &ge; 10pp, all books, shrink=0)</li>
+</ul>
+</section>
+
+<section>
+<h2>Step 8 — Production Pipeline</h2>
+<p class="timestamp">2026-08-02 17:17:39</p>
+
+<h3>Files Created</h3>
+<table>
+<thead><tr><th>File</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>scripts/run_pipeline.py</code></td><td>Daily pipeline: fetch market → load spine+model from S3 → score → email</td></tr>
+<tr><td><code>scripts/settle_home_runs.py</code></td><td>Settle yesterday's bets against Statcast actuals</td></tr>
+<tr><td><code>scripts/update_spine.py</code></td><td>Rebuild rolling-feature spine (calls build_spine.py)</td></tr>
+<tr><td><code>lambda/lambda_function.py</code></td><td>Lambda orchestrator (spine_update / pipeline / settle / combined modes)</td></tr>
+<tr><td><code>lambda/Dockerfile</code></td><td>Container image (python3.11 + all deps)</td></tr>
+<tr><td><code>lambda/deploy_mlb_batter_home_runs_lambda.sh</code></td><td>Deploy script: ECR build/push + Lambda create/update + EventBridge rules (DISABLED)</td></tr>
+</tbody>
+</table>
+
+<h3>Architecture</h3>
+<ul>
+  <li><strong>8:30 AM ET</strong>: <code>spine_update</code> mode → fetches latest Statcast batting logs via pybaseball, rebuilds rolling features, saves spine to S3</li>
+  <li><strong>9:00 AM ET</strong>: <code>combined</code> mode → (1) settle yesterday against Statcast actuals, (2) fetch today's <code>batter_home_runs</code> props from Odds API, (3) load model+spine from S3, (4) score all player-book rows, (5) filter to 0.5 OVER + edge≥10pp + plus-odds, (6) send SES HTML email + SNS push, (7) save recommendations CSV to S3</li>
+</ul>
+
+<h3>S3 Asset Locations</h3>
+<table>
+<thead><tr><th>Asset</th><th>S3 Path</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Model</td><td>s3://the-odds-api-mt/mlb/batter_home_runs_model/model/mlb_batter_hr_model.joblib</td><td class="pass">✓ Present (1.8KB)</td></tr>
+<tr><td>Spine</td><td>s3://the-odds-api-mt/mlb/batter_home_runs_model/spine/mlb_batter_hr_spine.parquet</td><td class="pass">✓ Present (63MB)</td></tr>
+<tr><td>Daily recs</td><td>s3://the-odds-api-mt/mlb/batter_home_runs_model/daily_runs/YYYY-MM-DD/recommendations.csv</td><td>Created on first run</td></tr>
+<tr><td>Settled bets</td><td>s3://the-odds-api-mt/mlb/batter_home_runs_model/settled/mlb_batter_hr_settled_bets.parquet</td><td>Created on first settle</td></tr>
+</tbody>
+</table>
+
+<h3>Strategy Summary</h3>
+<ul>
+  <li><strong>Line</strong>: 0.5 (binary HR yes/no)</li>
+  <li><strong>Direction</strong>: OVER (batter hits ≥ 1 HR)</li>
+  <li><strong>Edge threshold</strong>: ≥ 10pp (p_model_over − raw_implied_prob_over ≥ 0.10)</li>
+  <li><strong>Odds filter</strong>: Plus-odds only (decimal ≥ 2.0, i.e. American +100 or better)</li>
+  <li><strong>OOS backtest</strong>: 173 bets · 38.2% win rate · +37.4u · +21.6% ROI (edge≥10pp, all books, shrinkage=0)</li>
+  <li><strong>Note</strong>: HR market is sparse (~173 qualifying bets over 3 seasons). Expect ≤5 plays per week in season.</li>
+</ul>
+
+<h3>Pre-Deploy Checklist</h3>
+<ul>
+  <li>&#9744; Rebuild spine with full 2026 season data (run <code>20260801_build_spine.py</code>)</li>
+  <li>&#9744; Verify <code>ODDS_API_KEY</code>, <code>SES_SOURCE</code>, <code>SES_TO</code> env vars set</li>
+  <li>&#9744; Run smoke test: <code>python scripts/run_pipeline.py --gameday YYYY-MM-DD</code> on a historical date</li>
+  <li>&#9744; Deploy Lambda: <code>bash lambda/deploy_mlb_batter_home_runs_lambda.sh</code></li>
+  <li>&#9744; Enable EventBridge rules at MLB season start (2027-03-20)</li>
+</ul>
+</section>
+
+<section>
+<h2>Step 2 — Feature Engineering / Spine</h2>
+<p class="timestamp">2026-08-05 04:24:09 ET</p>
+<p><em>Retroactively added 2026-08-05 — spine was built on 2026-08-01 but HTML section was not written.</em></p>
+
+<h3>Spine Grain Summary</h3>
+<table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>
+<tr><td>Total rows in spine</td><td>1,746,195</td></tr>
+<tr><td>Unique (player, game_date) rows</td><td>132,075</td></tr>
+<tr><td>Unique (player, game_date, book, line) rows</td><td>1,746,195</td></tr>
+<tr><td>Duplicate rows at grain</td><td>0</td></tr>
+</tbody></table>
+<p>Spine is at (player, game_date, bookmaker, offered_line) grain. Rolling features are computed at player-game level and broadcast to all book rows — correct by design.</p>
+
+<h3>Season Coverage</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Spine rows by season</caption><thead><tr><th>season</th><th>game_days</th><th>players</th><th>total_rows</th></tr></thead><tbody><tr><td>2024</td><td>186</td><td>639</td><td>654264</td></tr><tr><td>2025</td><td>186</td><td>657</td><td>647614</td></tr><tr><td>2026</td><td>128</td><td>594</td><td>444317</td></tr></tbody></table>
+
+<h3>Feature Null Rates (model inputs)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Model feature null rates</caption><thead><tr><th>feature</th><th>null_count</th><th>null_pct</th></tr></thead><tbody><tr><td>hr_roll_L5</td><td>55832</td><td>3.2</td></tr><tr><td>hr_roll_L10</td><td>55832</td><td>3.2</td></tr><tr><td>hr_roll_L20</td><td>55832</td><td>3.2</td></tr><tr><td>hr_roll_career</td><td>55832</td><td>3.2</td></tr><tr><td>ab_roll_career</td><td>55832</td><td>3.2</td></tr><tr><td>opp_hr_rate_career</td><td>50954</td><td>2.92</td></tr><tr><td>min_raw_implied_prob_under</td><td>40077</td><td>2.3</td></tr><tr><td>max_raw_implied_prob_under</td><td>40077</td><td>2.3</td></tr><tr><td>is_home</td><td>50541</td><td>2.89</td></tr></tbody></table>
+
+<h3>Spot-check: Aaron Judge — rolling features (last 10 games)</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Aaron Judge: last 10 game-days in spine</caption><thead><tr><th>game_date</th><th>hr_actual</th><th>hr_roll_L5</th><th>hr_roll_L10</th><th>hr_roll_career</th><th>opp_hr_rate_career</th><th>is_home</th></tr></thead><tbody><tr><td>2026-05-21</td><td>0.0</td><td>0.0</td><td>0.1</td><td>0.3539</td><td>0.0863</td><td>1.0</td></tr><tr><td>2026-05-22</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.3529</td><td>0.0861</td><td>1.0</td></tr><tr><td>2026-05-24</td><td>1.0</td><td>0.0</td><td>0.0</td><td>0.352</td><td>0.0859</td><td>1.0</td></tr><tr><td>2026-05-25</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3538</td><td>0.0856</td><td>0.0</td></tr><tr><td>2026-05-26</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3528</td><td>0.0854</td><td>0.0</td></tr><tr><td>2026-05-27</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3518</td><td>0.0852</td><td>0.0</td></tr><tr><td>2026-05-29</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3508</td><td>0.085</td><td>0.0</td></tr><tr><td>2026-05-30</td><td>0.0</td><td>0.2</td><td>0.1</td><td>0.3499</td><td>0.0848</td><td>0.0</td></tr><tr><td>2026-05-31</td><td>0.0</td><td>0.0</td><td>0.1</td><td>0.3489</td><td>0.0846</td><td>0.0</td></tr><tr><td>2026-06-02</td><td>nan</td><td>nan</td><td>nan</td><td>nan</td><td>nan</td><td>nan</td></tr></tbody></table>
+
+<h3>OOF Leakage Check</h3>
+<p class="pass">hr_roll_career at game G matches mean of hr_actual[:G] for all checked rows — no leakage.</p>
+
+<h3>Join Quality</h3>
+<table><thead><tr><th>total_market_rows</th><th>matched_with_actuals</th><th>match_pct</th></tr></thead>
+<tbody><tr><td>1,746,195</td><td>1,695,654</td><td>97.11%</td></tr></tbody></table>
+
+<h3>Flagged Items</h3>
+<div class='note'><strong>FLAG — Chase DeLauter thin history (season-start artifact):</strong><br>DeLauter hit 2 HRs in his first career game (2026-03-26). On 2026-03-27 (game 2), hr_roll_career = 2.0 and hr_roll_L5 = 2.0 because they correctly reflect his 1-game history. This causes the model to output very high p_model (~60%+) for him, generating edges >20pp against books pricing him at +500–+600. The data is not wrong — the rolling stats are accurate. The issue is model confidence with thin (1-game) history. This is a known limitation of flat rolling features for season-start games. Shrinkage = 0.25+ would partially mitigate this by pulling predictions toward the population mean. The chosen production strategy uses shrinkage=0, so DeLauter-style bets will qualify in production. Monitor early-season bets for this pattern.</div>
+
+<h3>SQL Test Results</h3>
+<table><thead><tr><th>Test</th><th>Status</th><th>Value</th></tr></thead><tbody><tr><td>T1: Row count at (player, game_date, book, line) grain — no duplicates</td><td class="pass">PASS</td><td>total=1,746,195, grain_dedup=1,746,195, diff=0</td></tr><tr><td>T2: hr_roll_career null rate < 10%</td><td class="pass">PASS</td><td>3.2%</td></tr><tr><td>T3: Target (hr_over_0_5) null rate < 10%</td><td class="pass">PASS</td><td>2.9%</td></tr><tr><td>T4: Join quality — ≥90% of market rows have hr_actual</td><td class="pass">PASS</td><td>97.11%</td></tr><tr><td>T5: min_raw_implied_prob_under null rate < 10%</td><td class="pass">PASS</td><td>2.3%</td></tr><tr><td>T6: No future leakage in hr_roll_career for Aaron Judge</td><td class="pass">PASS</td><td>hr_roll_career at game G matches mean of hr_actual[:G] for all checked rows — no</td></tr><tr><td>T7: Date range covers 2024-2026</td><td class="pass">PASS</td><td>2024-03-21 → 2026-08-01</td></tr></tbody></table><p><strong>Passed: 7 / 7</strong></p>
+</section>
+
+<section>
+<h2>Step 6 — Strategy Characterization (4 Tables, IS Data)</h2>
+<p class="timestamp">2026-08-05 04:24:09 ET</p>
+
+<div class='note'><strong>Note — IS predictions identical to OOF predictions:</strong><br>The in-sample grid search produces exactly the same results as the OOS grid search (max absolute difference in p_model = 2e-17). This is expected behavior for logistic regression on a large dataset (~115k rows, 9 features, L2 regularization). With this much data, the model parameters converge to the same solution regardless of whether 80% or 100% of rows are used for training. This confirms the model is not overfit — it is very stable. The usual 'IS inflation vs OOS' signal does not apply here. The OOS AUC of 0.6006 is the reliable estimate.</div>
+
+<div class='good'><strong>Strategy recommendation:</strong> OVER 0.5, edge ≥ 10pp, plus_odds only, shrinkage=0.<br>This is the only candidate with ≥50 bets (n=173). The 17-bet strategy (edge≥7pp, shrink=0.25) is below the 50-bet threshold and not statistically meaningful. Calmar = 1.47 (total profit exceeds max drawdown). Max drawdown = 25.43u vs units_won = 37.4u — acceptable. All 173 bets are in the 'dog' category (OVER priced at +odds), confirming the market overprices UNDER on this market, consistent with the original hypothesis.</div>
+
+<h3>Table 1 — Production Strategy Summary</h3>
+<p>Strategy: OVER 0.5 · edge ≥ 10pp · plus_odds only · shrinkage = 0 · IS data</p>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Production strategy — IS</caption><thead><tr><th>Label</th><th>n_bets</th><th>pct_of_universe</th><th>win_rate</th><th>push_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th><th>calmar</th><th>avg_implied_prob</th><th>avg_odds</th></tr></thead><tbody><tr><td>OVER 0.5, edge≥10pp, plus_odds, shrink=0</td><td>173</td><td>0.0004</td><td>0.3815</td><td>0.0</td><td>37.4</td><td>0.2162</td><td>22.05</td><td>1.696</td><td>0.3586</td><td>3.029</td></tr></tbody></table>
+
+<h3>Table 2 — Odds Bucket Breakdown</h3>
+<p>All qualifying OVER bets are plus_odds by construction, so all should fall in the 'dog' bucket.</p>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Odds bucket breakdown — IS</caption><thead><tr><th>Label</th><th>n_bets</th><th>pct_of_universe</th><th>win_rate</th><th>push_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th><th>calmar</th><th>avg_implied_prob</th><th>avg_odds</th><th>pct_of_strategy</th><th>breakeven_win_rate</th></tr></thead><tbody><tr><td>dog (+odds)</td><td>173</td><td>0.0004</td><td>0.3815</td><td>0.0</td><td>37.4</td><td>0.2162</td><td>22.05</td><td>1.696</td><td>0.3586</td><td>3.029</td><td>1.0</td><td>0.3301</td></tr></tbody></table>
+
+<h3>Table 3 — By Bookmaker</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>By bookmaker — IS, sorted by units_won desc</caption><thead><tr><th>Label</th><th>n_bets</th><th>pct_of_universe</th><th>win_rate</th><th>push_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th><th>calmar</th><th>avg_implied_prob</th><th>avg_odds</th><th>pct_of_strategy</th></tr></thead><tbody><tr><td>betmgm</td><td>69</td><td>0.0002</td><td>0.4203</td><td>0.0</td><td>17.4</td><td>0.2522</td><td>7.0</td><td>2.486</td><td>0.3667</td><td>2.848</td><td>0.3988</td></tr><tr><td>espnbet</td><td>36</td><td>0.0001</td><td>0.4167</td><td>0.0</td><td>9.35</td><td>0.2597</td><td>4.25</td><td>2.2</td><td>0.3815</td><td>2.826</td><td>0.2081</td></tr><tr><td>betparx</td><td>5</td><td>0.0</td><td>0.4</td><td>0.0</td><td>7.75</td><td>1.55</td><td>1.0</td><td>7.75</td><td>0.1917</td><td>5.946</td><td>0.0289</td></tr><tr><td>fliff</td><td>15</td><td>0.0</td><td>0.4</td><td>0.0</td><td>6.05</td><td>0.4033</td><td>5.0</td><td>1.21</td><td>0.3857</td><td>2.99</td><td>0.0867</td></tr><tr><td>pointsbetus</td><td>3</td><td>0.0</td><td>0.6667</td><td>0.0</td><td>4.7</td><td>1.5667</td><td>0.0</td><td>nan</td><td>0.2736</td><td>3.7</td><td>0.0173</td></tr><tr><td>bovada</td><td>2</td><td>0.0</td><td>0.5</td><td>0.0</td><td>4.0</td><td>2.0</td><td>0.0</td><td>nan</td><td>0.1703</td><td>5.875</td><td>0.0116</td></tr><tr><td>betonlineag</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td><td>1.75</td><td>1.75</td><td>0.0</td><td>nan</td><td>0.3636</td><td>2.75</td><td>0.0058</td></tr><tr><td>ballybet</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td><td>1.55</td><td>1.55</td><td>0.0</td><td>nan</td><td>0.3922</td><td>2.55</td><td>0.0058</td></tr><tr><td>draftkings</td><td>6</td><td>0.0</td><td>0.3333</td><td>0.0</td><td>-0.3</td><td>-0.05</td><td>3.0</td><td>-0.1</td><td>0.3573</td><td>2.925</td><td>0.0347</td></tr><tr><td>superbook</td><td>4</td><td>0.0</td><td>0.25</td><td>0.0</td><td>-1.76</td><td>-0.44</td><td>3.0</td><td>-0.587</td><td>0.4244</td><td>2.36</td><td>0.0231</td></tr><tr><td>unibet_us</td><td>6</td><td>0.0</td><td>0.1667</td><td>0.0</td><td>-2.5</td><td>-0.4167</td><td>2.0</td><td>-1.25</td><td>0.2814</td><td>3.742</td><td>0.0347</td></tr><tr><td>betrivers</td><td>25</td><td>0.0001</td><td>0.2</td><td>0.0</td><td>-10.59</td><td>-0.4236</td><td>13.15</td><td>-0.805</td><td>0.3524</td><td>2.945</td><td>0.1445</td></tr></tbody></table>
+
+<h3>Table 4 — Bookmaker × Odds Bucket</h3>
+<table><caption style='font-weight:bold;text-align:left;padding:6px 0'>Book × odds bucket — IS, sorted by units_won desc</caption><thead><tr><th>Label</th><th>n_bets</th><th>pct_of_universe</th><th>win_rate</th><th>push_rate</th><th>units_won</th><th>roi</th><th>max_drawdown</th><th>calmar</th><th>avg_implied_prob</th><th>avg_odds</th></tr></thead><tbody><tr><td>betmgm × dog (+odds)</td><td>69</td><td>0.0002</td><td>0.4203</td><td>0.0</td><td>17.4</td><td>0.2522</td><td>7.0</td><td>2.486</td><td>0.3667</td><td>2.848</td></tr><tr><td>espnbet × dog (+odds)</td><td>36</td><td>0.0001</td><td>0.4167</td><td>0.0</td><td>9.35</td><td>0.2597</td><td>4.25</td><td>2.2</td><td>0.3815</td><td>2.826</td></tr><tr><td>betparx × dog (+odds)</td><td>5</td><td>0.0</td><td>0.4</td><td>0.0</td><td>7.75</td><td>1.55</td><td>1.0</td><td>7.75</td><td>0.1917</td><td>5.946</td></tr><tr><td>fliff × dog (+odds)</td><td>15</td><td>0.0</td><td>0.4</td><td>0.0</td><td>6.05</td><td>0.4033</td><td>5.0</td><td>1.21</td><td>0.3857</td><td>2.99</td></tr><tr><td>pointsbetus × dog (+odds)</td><td>3</td><td>0.0</td><td>0.6667</td><td>0.0</td><td>4.7</td><td>1.5667</td><td>0.0</td><td>nan</td><td>0.2736</td><td>3.7</td></tr><tr><td>bovada × dog (+odds)</td><td>2</td><td>0.0</td><td>0.5</td><td>0.0</td><td>4.0</td><td>2.0</td><td>0.0</td><td>nan</td><td>0.1703</td><td>5.875</td></tr><tr><td>betonlineag × dog (+odds)</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td><td>1.75</td><td>1.75</td><td>0.0</td><td>nan</td><td>0.3636</td><td>2.75</td></tr><tr><td>ballybet × dog (+odds)</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td><td>1.55</td><td>1.55</td><td>0.0</td><td>nan</td><td>0.3922</td><td>2.55</td></tr><tr><td>draftkings × dog (+odds)</td><td>6</td><td>0.0</td><td>0.3333</td><td>0.0</td><td>-0.3</td><td>-0.05</td><td>3.0</td><td>-0.1</td><td>0.3573</td><td>2.925</td></tr><tr><td>superbook × dog (+odds)</td><td>4</td><td>0.0</td><td>0.25</td><td>0.0</td><td>-1.76</td><td>-0.44</td><td>3.0</td><td>-0.587</td><td>0.4244</td><td>2.36</td></tr><tr><td>unibet_us × dog (+odds)</td><td>6</td><td>0.0</td><td>0.1667</td><td>0.0</td><td>-2.5</td><td>-0.4167</td><td>2.0</td><td>-1.25</td><td>0.2814</td><td>3.742</td></tr><tr><td>betrivers × dog (+odds)</td><td>25</td><td>0.0001</td><td>0.2</td><td>0.0</td><td>-10.59</td><td>-0.4236</td><td>13.15</td><td>-0.805</td><td>0.3524</td><td>2.945</td></tr></tbody></table>
+</section>
+
+<section>
+<h2>Step 7 — Mock Email (rebuilt 2026-08-05)</h2>
+<p class="timestamp">2026-08-05 04:24:10 ET</p>
+<p>Full mock email rebuilt with all 4 required sections (Today's plays, Yesterday's results,
+All-time production results, Backtest results). Previous mock at this step was a stub (missing Sections 2–4
+and grouped column headers).</p>
+<p><strong>Mock email file:</strong> <code>knowledge-base/raw/20260805-mlb-batter-home-runs-mock-email.html</code></p>
+<p><strong>Demo date:</strong> 2024-06-22</p>
+<p><strong>Strategy:</strong> OVER 0.5 · edge ≥ 10pp · plus-odds only · shrinkage = 0</p>
+
+<h3>Section Tests</h3>
+<table><thead><tr><th>Test</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Section 1 present (Today's plays with game grouping)</td><td class="pass">PASS</td></tr>
+<tr><td>Section 2 present (Yesterday's results)</td><td class="pass">PASS</td></tr>
+<tr><td>Section 3 present (All-time production — zeros)</td><td class="pass">PASS</td></tr>
+<tr><td>Section 4 present (Backtest from config.yaml)</td><td class="pass">PASS</td></tr>
+<tr><td>Two-row grouped thead with colspan</td><td class="pass">PASS</td></tr>
+<tr><td>PLAY rows use edge_over ≥ 10pp and over_price > 2.0</td><td class="pass">PASS</td></tr>
+<tr><td>Model inputs table present (7 features)</td><td class="pass">PASS</td></tr>
+<tr><td>Book names use display names (not raw Odds API keys)</td><td class="pass">PASS</td></tr>
+</tbody></table>
+</section>

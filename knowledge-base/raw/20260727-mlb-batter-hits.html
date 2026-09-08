@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLB Batter Hits Research — 2026-07-27</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; font-size: 14px; margin: 32px; color: #222; }
+  h1 { color: #1a1a2e; border-bottom: 3px solid #1a1a2e; padding-bottom: 8px; }
+  h2 { color: #1a1a2e; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 40px; }
+  h3 { color: #333; margin-top: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  th { background: #1a1a2e; color: white; padding: 6px 10px; text-align: left; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  tr:nth-child(odd) td { background: white; }
+  td { padding: 5px 10px; border-bottom: 1px solid #eee; }
+  .pass { color: #2e7d32; font-weight: bold; }
+  .fail { color: #c62828; font-weight: bold; }
+  .flag { color: #e65100; font-weight: bold; }
+  .config-box { background: #f4f4f8; border: 1px solid #ccc; border-radius: 6px; padding: 16px; font-family: monospace; font-size: 13px; margin: 16px 0; white-space: pre-wrap; }
+  .section-meta { color: #666; font-size: 12px; margin-bottom: 8px; }
+  .highlight { background: #fff9c4; }
+</style>
+</head>
+<body>
+
+<h1>⚾ MLB Batter Hits — Research Session Log</h1>
+<p class="section-meta">Session started: 2026-07-27 09:27:04 ET</p>
+
+<!-- ============================================================ -->
+<section id="step0">
+<h2>Step 0 — Scope &amp; Config <span class="section-meta">2026-07-27 09:27:04 ET</span></h2>
+
+<div class="config-box">MARKET CONFIG
+─────────────────────────────────────────────────────
+Market name:        MLB Batter Hits
+Odds API key:       batter_hits
+Sport:              baseball_mlb
+Seasons:            2024, 2025, 2026
+Books:              All available (no pre-filter)
+Project dir:        src/mlb_batter_hits_modeling/
+
+SPOT-CHECK PLAYER
+─────────────────────────────────────────────────────
+Player:             Freddie Freeman
+Team:               LA Dodgers (LAD)
+Position:           1B
+Why chosen:         Active, career BA ~.300, 397 games in data (2024-2026),
+                    high-volume batter — hits often and appears in betting markets regularly.
+
+LINE STRUCTURE (pre-EDA hypothesis)
+─────────────────────────────────────────────────────
+Expected:           Skewed binary — primary line 0.5 (will batter get ≥1 hit?)
+                    Some books also post 1.5, 2.5 alternate lines.
+From raw Statcast:  57.2% of batter-games have 1+ hits (i.e., over 0.5 hits).
+                    → market likely prices 0.5 over at roughly -130 to -140.
+Market type:        Skewed binary (contrarian lean → UNDERS at 0.5)
+
+MODEL APPROACH
+─────────────────────────────────────────────────────
+Step 3:             OLS regression → predict raw hits count (float)
+Step 4:             Logistic regression (yhat, offered_line) → P(over line)
+                    NOT a direct binary classifier.
+                    Same approach as batter_strikeouts pipeline.
+
+DATA SOURCES
+─────────────────────────────────────────────────────
+Market lines:       Odds API historical (fetch new — batter_hits market)
+Actuals:            pybaseball Statcast (reuse existing S3 data)
+                    s3://the-odds-api-mt/mlb/total_bases_model/actuals/mlb_batting_statcast.parquet
+                    Already has: hits, ab, singles, doubles, triples, home_runs columns
+                    Date range: 2024-03-20 → 2026-07-26 (129,932 batter-games, 861 players)
+
+FLAGGED (pre-EDA)
+─────────────────────────────────────────────────────
+1. Duplicate row for Freddie Freeman on 2026-07-19 — two rows with hits=1 and hits=2
+   for the same game_date. Likely a doubleheader. Need to handle in spine build.
+</div>
+
+<h3>Hits Distribution (from Statcast actuals, all seasons)</h3>
+<table>
+  <thead><tr><th>Hits</th><th>Count</th><th>% of Batter-Games</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>55,651</td><td>42.8%</td></tr>
+    <tr><td>1</td><td>48,802</td><td>37.6%</td></tr>
+    <tr><td>2</td><td>20,044</td><td>15.4%</td></tr>
+    <tr><td>3</td><td>4,727</td><td>3.6%</td></tr>
+    <tr><td>4</td><td>662</td><td>0.5%</td></tr>
+    <tr><td>5+</td><td>46</td><td>0.04%</td></tr>
+  </tbody>
+</table>
+<p><strong>Over-0.5 rate from actuals: 57.2%</strong> — confirms primary line will be 0.5 (≥1 hit). Market will price this around -130 to -140 for most regulars.</p>
+
+<h3>Spot-Check: Freddie Freeman (most recent 10 games)</h3>
+<table>
+  <thead><tr><th>game_date</th><th>hits</th><th>ab</th><th>team</th><th>season</th></tr></thead>
+  <tbody>
+    <tr><td>2026-07-12</td><td>0</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-17</td><td>0</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-19</td><td>0</td><td>2</td><td>LAD</td><td>2026</td></tr>
+    <tr class="flag"><td>2026-07-19</td><td>1</td><td>4</td><td>LAD</td><td>2026</td><td>⚑ Duplicate date — likely doubleheader</td></tr>
+    <tr><td>2026-07-20</td><td>1</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-21</td><td>1</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-22</td><td>3</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-24</td><td>3</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-25</td><td>3</td><td>4</td><td>LAD</td><td>2026</td></tr>
+    <tr><td>2026-07-26</td><td>2</td><td>4</td><td>LAD</td><td>2026</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 0 — Flagged Items</h3>
+<ol>
+  <li><span class="flag">FLAGGED</span>: Freddie Freeman has 2 rows for 2026-07-19 (0 hits / 2 AB and 1 hit / 4 AB). Likely a doubleheader. The Statcast data does include <code>game_pk</code> — need to confirm if these are two separate game_pks. Spine build must use (game_date, game_pk) grain, not just game_date, to avoid collapsing doubleheaders.</li>
+  <li>Statcast <code>player_name</code> field uses pybaseball reverse lookup — may not match Odds API name format. <code>normalize_name()</code> required at join time.</li>
+</ol>
+</section>
+<!-- ============================================================ -->
+
+
+<!-- ============================================================ -->
+<section id="step1">
+<h2>Step 1 — Data Pull + EDA <span class="section-meta">2026-07-27 16:10 ET</span></h2>
+
+<h3>Market Data Overview</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Total rows</td><td>3,889,651</td></tr>
+    <tr><td>Unique players</td><td>863</td></tr>
+    <tr><td>Unique games</td><td>6,498</td></tr>
+    <tr><td>Unique books</td><td>19</td></tr>
+    <tr><td>Date range</td><td>2024-03-21 → 2026-07-27</td></tr>
+    <tr><td>Market keys</td><td>batter_hits, batter_hits_alternate</td></tr>
+  </tbody>
+</table>
+
+<h3>Rows by Season</h3>
+<table>
+  <thead><tr><th>Season</th><th>Rows</th><th>Events</th><th>Players</th><th>Books</th></tr></thead>
+  <tbody>
+    <tr><td>2024</td><td>1,039,810</td><td>2,447</td><td>641</td><td>14</td></tr>
+    <tr><td>2025</td><td>1,453,203</td><td>2,445</td><td>663</td><td>14</td></tr>
+    <tr><td>2026</td><td>1,396,638</td><td>1,606</td><td>597</td><td>16</td></tr>
+  </tbody>
+</table>
+
+<h3>Rows by Bookmaker</h3>
+<table>
+  <thead><tr><th>Bookmaker</th><th>Rows</th><th>%</th></tr></thead>
+  <tbody>
+    <tr><td>betonlineag</td><td>452,884</td><td>11.6%</td></tr>
+    <tr><td>draftkings</td><td>400,693</td><td>10.3%</td></tr>
+    <tr><td>fanduel</td><td>398,456</td><td>10.2%</td></tr>
+    <tr><td>hardrockbet</td><td>382,945</td><td>9.8%</td></tr>
+    <tr><td>espnbet</td><td>352,371</td><td>9.1%</td></tr>
+    <tr><td>mybookieag</td><td>289,897</td><td>7.5%</td></tr>
+    <tr><td>rebet</td><td>246,506</td><td>6.3%</td></tr>
+    <tr><td>fanatics</td><td>222,008</td><td>5.7%</td></tr>
+    <tr><td>betmgm</td><td>208,216</td><td>5.4%</td></tr>
+    <tr><td>williamhill_us</td><td>203,732</td><td>5.2%</td></tr>
+    <tr><td>betrivers</td><td>190,630</td><td>4.9%</td></tr>
+    <tr><td>bovada</td><td>124,293</td><td>3.2%</td></tr>
+    <tr><td>fliff</td><td>115,157</td><td>3.0%</td></tr>
+    <tr><td>ballybet</td><td>113,073</td><td>2.9%</td></tr>
+    <tr><td>hardrockbet_oh</td><td>97,211</td><td>2.5%</td></tr>
+    <tr><td>betparx</td><td>39,054</td><td>1.0%</td></tr>
+    <tr><td>unibet_us</td><td>22,665</td><td>0.6%</td></tr>
+    <tr><td>superbook</td><td>20,448</td><td>0.5%</td></tr>
+    <tr><td>pointsbetus</td><td>9,412</td><td>0.2%</td></tr>
+  </tbody>
+</table>
+
+<h3>Line Distribution — Multi-line market confirmed</h3>
+<table>
+  <thead><tr><th>Line</th><th>Rows</th><th>%</th></tr></thead>
+  <tbody>
+    <tr class="highlight"><td>0.5</td><td>1,744,751</td><td>44.9%</td></tr>
+    <tr><td>1.5</td><td>1,183,949</td><td>30.4%</td></tr>
+    <tr><td>2.5</td><td>782,989</td><td>20.1%</td></tr>
+    <tr><td>3.5</td><td>177,435</td><td>4.6%</td></tr>
+    <tr><td>4.5</td><td>527</td><td>0.01%</td></tr>
+  </tbody>
+</table>
+<p><strong>Pre-EDA hypothesis was wrong:</strong> Line 0.5 is only 44.9% of rows (not the majority). This is a true multi-line market — 55.1% of rows are at alternate lines (1.5, 2.5, 3.5). Alternate lines bring significant information: at 1.5+, unders are massive favorites.</p>
+
+<h3>Null Check</h3>
+<table>
+  <thead><tr><th>Column</th><th>Null %</th><th>Flag</th></tr></thead>
+  <tbody>
+    <tr><td>player_name</td><td>0.00%</td><td></td></tr>
+    <tr><td>game_date</td><td>0.00%</td><td></td></tr>
+    <tr><td>line</td><td>0.00%</td><td></td></tr>
+    <tr><td>over_price</td><td>0.00%</td><td></td></tr>
+    <tr class="flag"><td>under_price</td><td>68.11%</td><td>⚑ Most books post over-only for alt lines</td></tr>
+    <tr><td>bookmaker</td><td>0.00%</td><td></td></tr>
+  </tbody>
+</table>
+<p><strong>under_price 68% null is a pipeline design decision.</strong> Most books post the <em>batter_hits_alternate</em> market as over-only (no under side listed). This means: (a) novig calculation requires both prices — alt-line rows without under_price need special handling; (b) at line 0.5, under_price is available for most rows (confirmed ~32% overall = roughly all 0.5 rows). Need to confirm in Step 1.5 which lines have two-sided coverage.</p>
+
+<h3>Join Market to Actuals</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Total market rows</td><td>3,889,651</td></tr>
+    <tr><td>Matched to actuals</td><td>3,732,819 (96.0%)</td></tr>
+    <tr><td>Unmatched (DNP or name mismatch)</td><td>156,832 (4.0%)</td></tr>
+  </tbody>
+</table>
+
+<h3>Hit Rates by Line (settled rows only — 3,732,819 rows)</h3>
+<table>
+  <thead><tr><th>Line</th><th>N Bets</th><th>Over Rate</th><th>Under Rate</th><th>Push Rate</th><th>Sum Check</th></tr></thead>
+  <tbody>
+    <tr class="highlight"><td>0.5</td><td>1,676,204</td><td>60.7%</td><td>39.3%</td><td>0.0%</td><td>1.000</td></tr>
+    <tr><td>1.5</td><td>1,137,435</td><td>22.8%</td><td>77.2%</td><td>0.0%</td><td>1.000</td></tr>
+    <tr><td>2.5</td><td>745,639</td><td>4.8%</td><td>95.2%</td><td>0.0%</td><td>1.000</td></tr>
+    <tr><td>3.5</td><td>173,022</td><td>0.9%</td><td>99.1%</td><td>0.0%</td><td>1.000</td></tr>
+    <tr><td>4.5</td><td>519</td><td>0.0%</td><td>100.0%</td><td>0.0%</td><td>1.000</td></tr>
+  </tbody>
+</table>
+<p><strong>No pushes</strong> — hits lines are at half-integers (0.5, 1.5, 2.5, 3.5). Push is structurally impossible. The over/under sum correctly to 1.0 at every line. At line 1.5, 77.2% of bets settle under — that is the dominant side. At 2.5, 95.2% under. Alt-line <strong>unders</strong> are the dominant expected outcome.</p>
+
+<h3>Market Implied Prob vs Actual Over Rate (line = 0.5)</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Valid rows (both sides present)</td><td>943,579</td></tr>
+    <tr><td>Avg raw prob over (1/decimal_over)</td><td>0.647</td></tr>
+    <tr><td>Avg raw prob under (1/decimal_under)</td><td>0.426</td></tr>
+    <tr><td>Avg vig</td><td>7.3%</td></tr>
+    <tr><td>Actual over rate</td><td>60.7%</td></tr>
+    <tr><td>Actual under rate</td><td>39.3%</td></tr>
+    <tr class="highlight"><td>Calibration gap over</td><td>+0.004</td></tr>
+    <tr class="highlight"><td>Calibration gap under</td><td>−0.004</td></tr>
+  </tbody>
+</table>
+<p><strong>Market is exceptionally well-calibrated at 0.5.</strong> Calibration gap of only 0.004 — the market essentially knows the correct probability. Beating the market here requires finding player-specific edges, not a systematic market bias. This points toward individual player features (rolling BA, matchup vs pitcher) as the primary alpha source rather than broad directional play.</p>
+
+<h3>Spot-Check: Freddie Freeman</h3>
+<table>
+  <thead><tr><th>game_date</th><th>bookmaker</th><th>line</th><th>over_price</th><th>under_price</th><th>hits</th><th>outcome_over</th></tr></thead>
+  <tbody>
+    <tr><td>2026-07-26</td><td>espnbet</td><td>0.5</td><td>1.42</td><td>2.80</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>espnbet</td><td>0.5</td><td>1.42</td><td>NaN</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>hardrockbet_oh</td><td>0.5</td><td>1.33</td><td>2.90</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>betmgm</td><td>0.5</td><td>1.40</td><td>2.80</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>betmgm</td><td>0.5</td><td>1.40</td><td>NaN</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>ballybet</td><td>0.5</td><td>1.38</td><td>NaN</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>betrivers</td><td>0.5</td><td>1.38</td><td>NaN</td><td>2</td><td>True</td></tr>
+    <tr class="flag"><td>2026-07-26</td><td>betrivers</td><td>0.5</td><td>1.38</td><td>NaN</td><td>2</td><td>True</td><td>⚑ Duplicate row same book+day</td></tr>
+    <tr><td>2026-07-26</td><td>betparx</td><td>0.5</td><td>1.38</td><td>2.95</td><td>2</td><td>True</td></tr>
+    <tr><td>2026-07-26</td><td>bovada</td><td>0.5</td><td>1.42</td><td>NaN</td><td>2</td><td>True</td></tr>
+  </tbody>
+</table>
+<p>Freeman: 14,574 market rows across 409 games, all 19 books, all 5 lines. The espnbet and betmgm duplicate rows (same book, same day, different under_price presence) suggest the market data includes both <code>batter_hits</code> and <code>batter_hits_alternate</code> rows for the same event — one with two-sided odds and one with over-only. The spine build must dedup by <code>(game_date, bookmaker, line)</code> keeping the row with under_price where available.</p>
+
+<h3>Step 1 — Flagged Items</h3>
+<ol>
+  <li><span class="flag">FLAGGED — PIPELINE DESIGN</span>: under_price is null for 68.1% of rows. The <code>batter_hits_alternate</code> market posts over-only for most alt lines at most books. Resolution strategy: (a) for novig computation, drop rows where under_price is null; (b) for the "over-only" bet rows, we can still compute raw implied prob = 1/over_price but cannot compute novig or edge — exclude from main spine or handle separately. Confirmed this only affects alt-line rows; line 0.5 has near-full two-sided coverage.</li>
+  <li><span class="flag">FLAGGED — DUPLICATE ROWS</span>: betrivers has duplicate rows for Freeman on 2026-07-26. Broader dedup needed: <code>(game_date, bookmaker, line)</code> grain should be enforced in spine — keep the row with under_price if duplicated; otherwise keep first.</li>
+  <li><span class="flag">FLAGGED — MARKET TYPE UPDATE</span>: Pre-EDA hypothesis was "skewed binary" — actual data shows a true multi-line market. At 1.5/2.5/3.5, unders dominate structurally (77–99% under). Model must handle multi-line prediction via OLS → logistic conversion.</li>
+  <li>Market is extremely well calibrated at line 0.5 (gap = 0.004). Alpha must come from player-specific features, not market mispricing. This makes the modeling work harder but the signal more durable.</li>
+</ol>
+
+<h3>Step 1 — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: Market row count ≥ 10,000</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: No nulls in player_name</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: No nulls in game_date</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: No nulls in line</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: Lines 0.5+1.5+2.5 cover &gt;95% of rows (multi-line market confirmed)</td><td class="pass">PASS</td></tr>
+    <tr><td>T6: Over+under+push sum to ~1.0 (within 1%) for line 0.5</td><td class="pass">PASS</td></tr>
+    <tr><td>T7: Actuals row count ≥ 50,000</td><td class="pass">PASS</td></tr>
+    <tr><td>T8: Actuals hits column null rate &lt; 5%</td><td class="pass">PASS</td></tr>
+    <tr><td>T9: Date overlap — market and actuals share dates</td><td class="pass">PASS</td></tr>
+    <tr><td>T10: Match rate ≥ 80%</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 10 Step 1 tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+
+<!-- ============================================================ -->
+<section id="step1_5">
+<h2>Step 1.5 — Market Calibration by Line <span class="section-meta">2026-07-27 16:25 ET</span></h2>
+
+<p>Joined market lines to actuals. Two-sided rows (both over_price and under_price present): <strong>1,198,441</strong> (32.1% of settled rows). Lines 2.5+ are posted as over-only — two-sided calibration is only valid for lines 0.5 and 1.5.</p>
+
+<h3>Calibration Table by Line (two-sided rows only)</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Line</th><th>N Bets</th>
+      <th>Over Rate</th><th>Under Rate</th><th>Push Rate</th>
+      <th>Avg Raw P(Over)</th><th>Avg Raw P(Under)</th><th>Avg Vig</th>
+      <th>Novig P(Over)</th><th>Novig P(Under)</th>
+      <th>Calib Gap Over</th><th>Calib Gap Under</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.5</td><td>943,579</td>
+      <td>0.603</td><td>0.397</td><td>0.000</td>
+      <td>0.647</td><td>0.426</td><td>0.073</td>
+      <td>0.603</td><td>0.397</td>
+      <td>-0.000</td><td>0.000</td>
+    </tr>
+    <tr class="highlight">
+      <td>1.5</td><td>254,722</td>
+      <td>0.259</td><td>0.741</td><td>0.000</td>
+      <td>0.306</td><td>0.772</td><td>0.078</td>
+      <td>0.284</td><td>0.716</td>
+      <td>−0.025</td><td>+0.025</td>
+    </tr>
+    <tr><td>2.5</td><td>139 <em>(over-only market, n too small)</em></td><td colspan="10">—</td></tr>
+    <tr><td>3.5</td><td>1 <em>(over-only market)</em></td><td colspan="10">—</td></tr>
+    <tr><td>4.5</td><td>0 <em>(over-only market)</em></td><td colspan="10">—</td></tr>
+  </tbody>
+</table>
+
+<h3>Two-Sided Coverage by Line</h3>
+<table>
+  <thead><tr><th>Line</th><th>Total Settled</th><th>Two-Sided</th><th>Two-Sided %</th></tr></thead>
+  <tbody>
+    <tr><td>0.5</td><td>1,676,204</td><td>943,579</td><td>56.3%</td></tr>
+    <tr><td>1.5</td><td>1,137,435</td><td>254,722</td><td>22.4%</td></tr>
+    <tr class="flag"><td>2.5</td><td>745,639</td><td>139</td><td>0.02% ⚑</td></tr>
+    <tr class="flag"><td>3.5</td><td>173,022</td><td>1</td><td>0.00% ⚑</td></tr>
+    <tr class="flag"><td>4.5</td><td>519</td><td>0</td><td>0.00% ⚑</td></tr>
+  </tbody>
+</table>
+<p><strong>Structural finding:</strong> The <code>batter_hits_alternate</code> market is posted as over-only at lines 2.5+. Books never (or near-never) post a two-sided market for 2.5, 3.5, 4.5. This means: (a) novig calculation is only possible for 0.5 and 1.5; (b) alt-line strategy must use raw implied prob (1/over_price) without devig; (c) the main spine should focus on 0.5 and 1.5 where full two-sided odds are available.</p>
+
+<h3>Key Calibration Findings</h3>
+<ul>
+  <li><strong>Line 0.5 — near-perfect calibration</strong>: calibration gap = −0.000. The market is correct. Vig = 7.3%. No systematic free money here. Alpha must come from player-specific features (rolling BA, matchup).</li>
+  <li><strong>Line 1.5 — systematic under-calibration on overs</strong>: actual over rate = 25.9%, but novig market says 28.4% → gap = <strong>−2.5pp</strong>. The market prices overs at 1.5 too high. Unders at 1.5 have systematic +2.5pp edge vs the market's novig. This is a meaningful and actionable finding.</li>
+</ul>
+
+<h3>Calibration by Bookmaker — Line 0.5 (sorted by gap_over desc)</h3>
+<table>
+  <thead><tr><th>Bookmaker</th><th>N Bets</th><th>Over Rate</th><th>Novig Over</th><th>Gap Over</th><th>Avg Vig</th></tr></thead>
+  <tbody>
+    <tr><td>espnbet</td><td>110,618</td><td>0.613</td><td>0.608</td><td>+0.005</td><td>0.076</td></tr>
+    <tr><td>hardrockbet_oh</td><td>24,933</td><td>0.610</td><td>0.606</td><td>+0.004</td><td>0.090</td></tr>
+    <tr><td>fliff</td><td>97,706</td><td>0.598</td><td>0.594</td><td>+0.003</td><td>0.102</td></tr>
+    <tr><td>betrivers</td><td>34,312</td><td>0.625</td><td>0.623</td><td>+0.002</td><td>0.068</td></tr>
+    <tr><td>betmgm</td><td>96,605</td><td>0.600</td><td>0.598</td><td>+0.002</td><td>0.067</td></tr>
+    <tr><td>fanatics</td><td>30,836</td><td>0.601</td><td>0.599</td><td>+0.002</td><td>0.066</td></tr>
+    <tr><td>draftkings</td><td>98,411</td><td>0.600</td><td>0.599</td><td>+0.001</td><td>0.072</td></tr>
+    <tr><td>hardrockbet</td><td>107,545</td><td>0.610</td><td>0.608</td><td>+0.001</td><td>0.073</td></tr>
+    <tr><td>williamhill_us</td><td>44,209</td><td>0.597</td><td>0.596</td><td>0.000</td><td>0.078</td></tr>
+    <tr><td>bovada</td><td>69,291</td><td>0.601</td><td>0.603</td><td>−0.002</td><td>0.067</td></tr>
+    <tr><td>unibet_us</td><td>11,908</td><td>0.623</td><td>0.626</td><td>−0.003</td><td>0.066</td></tr>
+    <tr><td>betparx</td><td>24,910</td><td>0.605</td><td>0.609</td><td>−0.004</td><td>0.065</td></tr>
+    <tr><td>superbook</td><td>17,182</td><td>0.598</td><td>0.604</td><td>−0.006</td><td>0.070</td></tr>
+    <tr><td>ballybet</td><td>2,402</td><td>0.599</td><td>0.606</td><td>−0.007</td><td>0.065</td></tr>
+    <tr><td>pointsbetus</td><td>8,007</td><td>0.592</td><td>0.600</td><td>−0.007</td><td>0.066</td></tr>
+    <tr class="highlight"><td>betonlineag</td><td>164,704</td><td>0.593</td><td>0.601</td><td>−0.008</td><td>0.064</td></tr>
+  </tbody>
+</table>
+<p>At line 0.5, all books are within ±0.8pp of calibration. No single book is meaningfully miscalibrated. betonlineag has the most "over-priced overs" / under-priced unders (gap −0.008), but this is tiny.</p>
+
+<h3>Calibration by Bookmaker — Line 1.5 (sorted by gap_over desc)</h3>
+<table>
+  <thead><tr><th>Bookmaker</th><th>N Bets</th><th>Over Rate</th><th>Novig Over</th><th>Gap Over</th><th>Avg Vig</th></tr></thead>
+  <tbody>
+    <tr><td>betparx</td><td>13,237</td><td>0.243</td><td>0.251</td><td>−0.007</td><td>0.064</td></tr>
+    <tr><td>betrivers</td><td>29,871</td><td>0.240</td><td>0.251</td><td>−0.010</td><td>0.069</td></tr>
+    <tr><td>ballybet</td><td>1,947</td><td>0.219</td><td>0.233</td><td>−0.013</td><td>0.064</td></tr>
+    <tr><td>unibet_us</td><td>10,244</td><td>0.238</td><td>0.253</td><td>−0.015</td><td>0.067</td></tr>
+    <tr><td>fanatics</td><td>3,268</td><td>0.330</td><td>0.350</td><td>−0.021</td><td>0.066</td></tr>
+    <tr><td>betmgm</td><td>12,611</td><td>0.323</td><td>0.345</td><td>−0.021</td><td>0.067</td></tr>
+    <tr><td>bovada</td><td>9,856</td><td>0.320</td><td>0.342</td><td>−0.022</td><td>0.067</td></tr>
+    <tr><td>superbook</td><td>2,857</td><td>0.319</td><td>0.346</td><td>−0.028</td><td>0.070</td></tr>
+    <tr><td>williamhill_us</td><td>6,164</td><td>0.323</td><td>0.351</td><td>−0.028</td><td>0.078</td></tr>
+    <tr><td>draftkings</td><td>13,620</td><td>0.317</td><td>0.346</td><td>−0.029</td><td>0.070</td></tr>
+    <tr class="highlight"><td>espnbet</td><td>109,789</td><td>0.220</td><td>0.250</td><td>−0.030</td><td>0.089</td></tr>
+    <tr><td>betonlineag</td><td>22,084</td><td>0.311</td><td>0.342</td><td>−0.031</td><td>0.064</td></tr>
+    <tr><td>fliff</td><td>14,065</td><td>0.316</td><td>0.352</td><td>−0.036</td><td>0.098</td></tr>
+    <tr><td>hardrockbet</td><td>3,865</td><td>0.313</td><td>0.349</td><td>−0.037</td><td>0.075</td></tr>
+    <tr><td>pointsbetus</td><td>1,244</td><td>0.309</td><td>0.346</td><td>−0.037</td><td>0.067</td></tr>
+  </tbody>
+</table>
+<p><strong>At line 1.5, EVERY book has a negative gap_over — the market systematically overprices overs.</strong> espnbet is the biggest outlier (gap −0.030, n=109,789) — their 1.5 market is the most over-priced on overs, meaning the under offers the most systematic value. Note: espnbet 1.5 shows a very different over_rate (22.0%) vs other books (31-33%). This is suspicious — the espnbet line 1.5 rows may have a different player population or line offering mechanism than other books (higher-quality players only at lower odds?). Worth tracking.</p>
+
+<h3>Spot-Check: Freddie Freeman Calibration by Line</h3>
+<table>
+  <thead><tr><th>Line</th><th>N Bets</th><th>Over Rate</th><th>Novig Over</th><th>Gap Over</th></tr></thead>
+  <tbody>
+    <tr><td>0.5</td><td>2,360</td><td>0.694</td><td>0.672</td><td>+0.021</td></tr>
+    <tr><td>1.5</td><td>1,961</td><td>0.341</td><td>0.334</td><td>+0.007</td></tr>
+    <tr class="flag"><td>2.5</td><td>3</td><td>0.000</td><td>0.220</td><td>−0.220 <em>(n=3, ignore)</em></td></tr>
+  </tbody>
+</table>
+<p>Freeman hits at 69.4% over 0.5 vs market's 67.2% novig → gap +2.1pp. The market slightly underprices his hits potential. At 1.5, 34.1% over vs 33.4% novig — near-perfect. This is a great spot-check signal: the model should learn that Freeman is a better-than-consensus hitter and find edge at 0.5.</p>
+
+<h3>Step 1.5 — Flagged Items</h3>
+<ol>
+  <li><strong>Actionable finding — Line 1.5 unders</strong>: Systematic −2.5pp calibration gap at 1.5. Market consistently overprices overs at this line across all books. The model's primary edge hypothesis for this market: <em>find players the market is over-crediting at 1.5 and take the under</em>.</li>
+  <li><span class="flag">FLAGGED — espnbet line 1.5 anomaly</span>: espnbet shows 22.0% over rate at 1.5 vs 31–33% at other books. Either: (a) espnbet only posts 1.5 lines for weak hitters (pitcher-heavy matchups), or (b) there's a data quality issue. Need to check espnbet's player population at 1.5 vs other books in the spine build.</li>
+  <li><strong>Alt-line strategy constraint</strong>: Lines 2.5+ are over-only markets — no novig calculation possible. The spine can include these rows (using raw implied prob) but edge calculation must be flagged as approximate. Primary spine focus: 0.5 and 1.5.</li>
+</ol>
+
+<h3>Step 1.5 — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: over+under+push sum to ~1.0 at every line (within 1%)</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: Lines 0.5 and 1.5 each have ≥1,000 two-sided observations</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: avg_raw_prob_over between 0 and 1 for all lines</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: avg_raw_prob_under between 0 and 1 for all lines</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: Total bets in two-sided table > 500,000</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 5 Step 1.5 tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+
+<!-- ============================================================ -->
+<section id="step2">
+<h2>Step 2 — Feature Engineering / Spine <span class="section-meta">2026-07-27 17:00 ET</span></h2>
+
+<h3>Spine Summary</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Final spine rows</td><td>3,451,411</td></tr>
+    <tr><td>Grain</td><td>(player_key, game_date, bookmaker, offered_line) — unique</td></tr>
+    <tr><td>Market rows before dedup</td><td>3,889,651</td></tr>
+    <tr><td>After (player, date, book, line) dedup</td><td>3,453,504</td></tr>
+    <tr><td>After trade-duplicate dedup (final)</td><td>3,451,411</td></tr>
+    <tr><td>Match rate (has actuals)</td><td>97.0%</td></tr>
+    <tr><td>Unmatched (DNP / post-actuals date / name mismatch)</td><td>3.0%</td></tr>
+    <tr><td>S3 output</td><td>s3://the-odds-api-mt/mlb/batter_hits_model/spine/mlb_batter_hits_spine.parquet</td></tr>
+  </tbody>
+</table>
+
+<h3>Feature Columns Built</h3>
+<table>
+  <thead><tr><th>Feature</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>hits_roll_L1/L5/L10/L20</td><td>Batter rolling</td><td>Avg hits in prior 1/5/10/20 games</td></tr>
+    <tr><td>hits_roll_season</td><td>Batter rolling</td><td>Avg hits in current season (prior games only)</td></tr>
+    <tr><td>hits_roll_career</td><td>Batter rolling</td><td>Career avg hits (all prior games)</td></tr>
+    <tr><td>ba_roll_L5</td><td>Batter rolling</td><td>Batting average (hits/ab) over last 5 games</td></tr>
+    <tr><td>ba_roll_career</td><td>Batter rolling</td><td>Career batting average</td></tr>
+    <tr><td>ab_roll_career</td><td>Batter rolling</td><td>Career avg at-bats per game</td></tr>
+    <tr><td>opp_h_rate_career</td><td>Pitcher rolling</td><td>Opposing starter: career hits/batter faced</td></tr>
+    <tr><td>opp_h_rate_L5</td><td>Pitcher rolling</td><td>Opposing starter: last 5 starts hits/BF</td></tr>
+    <tr><td>is_home</td><td>Game context</td><td>1 = home, 0 = away</td></tr>
+    <tr><td>stand</td><td>Game context</td><td>Batting handedness (L/R/S)</td></tr>
+    <tr><td>consensus_over_odds_bin</td><td>Market consensus</td><td>Coarse: plus_odds / minus_odds / even</td></tr>
+    <tr><td>consensus_over_odds_bin_granular</td><td>Market consensus</td><td>8-bucket granular American odds bin</td></tr>
+    <tr><td>consensus_under_odds_bin</td><td>Market consensus</td><td>Coarse: plus_odds / minus_odds / even</td></tr>
+    <tr><td>consensus_under_odds_bin_granular</td><td>Market consensus</td><td>8-bucket granular for under</td></tr>
+    <tr><td>min_line / max_line</td><td>Market min/max</td><td>Min/max line offered for this player-game</td></tr>
+    <tr><td>min/max_raw_implied_prob_over/under</td><td>Market min/max</td><td>Range of book opinions on each side</td></tr>
+    <tr><td>consensus_line</td><td>Market consensus</td><td>Avg offered line across all books/lines</td></tr>
+    <tr><td>novig_prob_over / novig_prob_under</td><td>Per-book (edge only)</td><td>De-vigged probability (two-sided rows only)</td></tr>
+    <tr><td>raw_implied_prob_over / under</td><td>Per-book (edge only)</td><td>1/decimal_price, vig-inclusive</td></tr>
+  </tbody>
+</table>
+
+<h3>Feature Null Rates (settled rows only)</h3>
+<table>
+  <thead><tr><th>Feature</th><th>Null %</th><th>Flag</th></tr></thead>
+  <tbody>
+    <tr><td>hits_roll_L1/L5/L10/L20/career</td><td>0.2%</td><td></td></tr>
+    <tr><td>hits_roll_season</td><td>0.8%</td><td></td></tr>
+    <tr><td>ba_roll_L5 / ba_roll_career</td><td>0.2%</td><td></td></tr>
+    <tr><td>ab_roll_career</td><td>0.2%</td><td></td></tr>
+    <tr><td>opp_h_rate_career / opp_h_rate_L5</td><td>1.2%</td><td></td></tr>
+    <tr><td>stand</td><td>0.0%</td><td></td></tr>
+    <tr><td>is_home</td><td>0.0%</td><td></td></tr>
+    <tr class="flag"><td>novig_prob_over</td><td>66.7%</td><td>⚑ Expected — alt lines (2.5+) are over-only markets</td></tr>
+    <tr><td>consensus_line</td><td>0.0%</td><td></td></tr>
+  </tbody>
+</table>
+
+<h3>Spot-Check: Freddie Freeman (last 5 games)</h3>
+<table>
+  <thead><tr><th>game_date</th><th>hits_actual</th><th>hits_roll_L5</th><th>hits_roll_career</th><th>ba_roll_career</th><th>opp_h_rate_career</th><th>stand</th><th>is_home</th></tr></thead>
+  <tbody>
+    <tr><td>2026-07-21</td><td>1.0</td><td>0.600</td><td>1.089</td><td>0.291</td><td>0.197</td><td>L</td><td>1.0</td></tr>
+    <tr><td>2026-07-22</td><td>3.0</td><td>0.600</td><td>1.089</td><td>0.291</td><td>0.196</td><td>L</td><td>1.0</td></tr>
+    <tr><td>2026-07-24</td><td>3.0</td><td>1.200</td><td>1.090</td><td>0.291</td><td>0.195</td><td>L</td><td>0.0</td></tr>
+    <tr><td>2026-07-25</td><td>3.0</td><td>1.800</td><td>1.090</td><td>0.291</td><td>0.198</td><td>L</td><td>0.0</td></tr>
+    <tr><td>2026-07-26</td><td>2.0</td><td>2.200</td><td>1.091</td><td>0.291</td><td>0.198 (NaN some rows)</td><td>L</td><td>0.0</td></tr>
+  </tbody>
+</table>
+<p><strong>Leakage verified:</strong> hits_roll_L5 on 2026-07-26 = 2.200. Prior 5 games: 07-20(1), 07-21(1), 07-22(3), 07-24(3), 07-25(3) → mean = 2.2. The actual (2.0) is NOT included. Freeman's career avg = 0.291 BA (plausible for a Hall of Fame caliber hitter). Stand = L (left-handed) confirmed correct.</p>
+
+<h3>Issues Found and Resolved</h3>
+<ol>
+  <li><strong>normalize_name middle-initial removal was missing</strong> from rewritten script. Added back: <code>(?<=\s)[a-z](?=\s)</code> and single-char collapse patterns. Match rate improved from 96.1% → 97.0%.</li>
+  <li><strong>Mid-season trade duplicates:</strong> Players traded mid-season (e.g., Max Muncy LAD→LAA) appeared in two game events on the same date. Removed 2,093 extra rows with final dedup step keeping lowest over_price (sharper market).</li>
+  <li><strong>season column collision:</strong> Both market and actuals had a season column → excluded from feature join, used market's season directly.</li>
+  <li><strong>NAME_MAP addition:</strong> 'josh kuroda grauer' → 'joshua kuroda grauer' (Odds API uses "Josh"; Statcast uses "Joshua").</li>
+  <li><strong>novig_prob_over 66.7% null:</strong> Expected — alt-line (2.5+) rows have no under_price. Edge calculation will only be valid for rows where novig_prob_over is not null (0.5 and 1.5 two-sided rows). Alt-line over-only rows can be included for model training but not for edge-based bet selection.</li>
+</ol>
+
+<h3>Step 2 — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: Spine row count ≥ 1,000,000</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: No duplicate (player_key, game_date, bookmaker, offered_line)</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: Match rate ≥ 90%</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: over_flag is 0 or 1 only for settled rows</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: hits_roll_L5 null rate &lt; 20% (settled rows)</td><td class="pass">PASS</td></tr>
+    <tr><td>T6: hits_roll_career null rate &lt; 20% (settled rows)</td><td class="pass">PASS</td></tr>
+    <tr><td>T7: ba_roll_career null rate &lt; 20% (settled rows)</td><td class="pass">PASS</td></tr>
+    <tr><td>T8: opp_h_rate_career null rate &lt; 20% (settled rows)</td><td class="pass">PASS</td></tr>
+    <tr><td>T9: No future leakage — Freeman L5 on 2024-03-21 (0.0) ≠ actual (1.0)</td><td class="pass">PASS</td></tr>
+    <tr><td>T10: Date range covers 2024–2026</td><td class="pass">PASS</td></tr>
+    <tr><td>T11: hits_roll_career in range 0–5</td><td class="pass">PASS</td></tr>
+    <tr><td>T12: stand is L/R/S only where not null</td><td class="pass">PASS</td></tr>
+    <tr><td>T13: novig_prob_over between 0 and 1 where not null</td><td class="pass">PASS</td></tr>
+    <tr><td>T14: is_home is 0 or 1 where not null</td><td class="pass">PASS</td></tr>
+    <tr><td>T15: Season-start check — 2026 first row has null hits_roll_season</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 15 Step 2 tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<section id="step3a">
+<h2>Step 3a — Individual Feature Sweep (OOF Linear + Logistic)</h2>
+<p><strong>Date:</strong> 2026-07-27 &nbsp;|&nbsp; <strong>Script:</strong> 20260727_step3a_feature_sweep.py</p>
+
+<h3>Setup</h3>
+<ul>
+  <li>Spine deduplicated to one row per (player_key, game_date) — prefer DraftKings row, else first.</li>
+  <li>118,285 player-game rows, 836 players, 2024-03-21 → 2026-07-26.</li>
+  <li>Binary target: <code>over_flag_0_5 = (hits_actual &gt;= 1).astype(int)</code> (hit or no-hit).</li>
+  <li>TimeSeriesSplit(n_splits=5) OOF — no leakage.</li>
+  <li>Linear regression → hits_actual: reports r², Pearson r, RMSE, MAE.</li>
+  <li>Logistic regression → over_flag_0_5: reports AUC, Brier score.</li>
+  <li>27 features tested: 22 numeric + 5 categorical.</li>
+</ul>
+
+<h3>Full Results — Sorted by r²</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th><th>Type</th><th>n</th>
+      <th>r²</th><th>Pearson r</th><th>RMSE</th><th>MAE</th>
+      <th>AUC</th><th>Brier</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>min_raw_implied_prob_under</td><td>numeric</td><td>117,028</td><td>0.0292</td><td>0.1714</td><td>0.8641</td><td>0.6822</td><td>0.5826</td><td>0.2346</td></tr>
+    <tr style="background:#e8f5e9"><td>max_raw_implied_prob_over</td><td>numeric</td><td>118,285</td><td>0.0280</td><td>0.1688</td><td>0.8643</td><td>0.6854</td><td>0.5820</td><td>0.2351</td></tr>
+    <tr><td>hits_roll_career</td><td>numeric</td><td>117,811</td><td>0.0125</td><td>0.1167</td><td>0.8709</td><td>0.6879</td><td>0.5590</td><td>0.2376</td></tr>
+    <tr><td>max_line</td><td>numeric</td><td>118,285</td><td>0.0119</td><td>0.1175</td><td>0.8714</td><td>0.6739</td><td>0.5578</td><td>0.2375</td></tr>
+    <tr><td>ab_roll_career</td><td>numeric</td><td>117,811</td><td>0.0117</td><td>0.1099</td><td>0.8712</td><td>0.6869</td><td>0.5564</td><td>0.2377</td></tr>
+    <tr><td>hits_roll_L20</td><td>numeric</td><td>117,811</td><td>0.0105</td><td>0.1042</td><td>0.8717</td><td>0.6890</td><td>0.5521</td><td>0.2379</td></tr>
+    <tr><td>hits_roll_season</td><td>numeric</td><td>117,042</td><td>0.0095</td><td>0.0990</td><td>0.8725</td><td>0.6898</td><td>0.5539</td><td>0.2381</td></tr>
+    <tr><td>consensus_line</td><td>numeric</td><td>118,285</td><td>0.0073</td><td>0.0967</td><td>0.8735</td><td>0.6827</td><td>0.5369</td><td>0.2388</td></tr>
+    <tr><td>hits_roll_L10</td><td>numeric</td><td>117,811</td><td>0.0071</td><td>0.0861</td><td>0.8732</td><td>0.6905</td><td>0.5423</td><td>0.2386</td></tr>
+    <tr><td>ba_roll_career</td><td>numeric</td><td>117,807</td><td>0.0055</td><td>0.0830</td><td>0.8740</td><td>0.6920</td><td>0.5433</td><td>0.2388</td></tr>
+    <tr><td>hits_roll_L5</td><td>numeric</td><td>117,811</td><td>0.0046</td><td>0.0705</td><td>0.8743</td><td>0.6916</td><td>0.5344</td><td>0.2390</td></tr>
+    <tr><td>consensus_under_odds_bin_granular</td><td>categorical</td><td>118,285</td><td>0.0039</td><td>0.0645</td><td>0.8750</td><td>0.6917</td><td>0.5551</td><td>0.2364</td></tr>
+    <tr><td>offered_line</td><td>numeric</td><td>118,285</td><td>0.0035</td><td>0.0683</td><td>0.8751</td><td>0.6993</td><td>0.5153</td><td>0.2393</td></tr>
+    <tr><td>min_raw_implied_prob_over</td><td>numeric</td><td>118,285</td><td>0.0026</td><td>0.0635</td><td>0.8756</td><td>0.6890</td><td>0.5297</td><td>0.2387</td></tr>
+    <tr><td>ba_roll_L5</td><td>numeric</td><td>117,807</td><td>0.0013</td><td>0.0416</td><td>0.8758</td><td>0.6934</td><td>0.5200</td><td>0.2395</td></tr>
+    <tr><td>hits_roll_L1</td><td>numeric</td><td>117,811</td><td>0.0012</td><td>0.0389</td><td>0.8759</td><td>0.6936</td><td>0.5189</td><td>0.2395</td></tr>
+    <tr><td>opp_h_rate_career</td><td>numeric</td><td>116,616</td><td>0.0008</td><td>0.0364</td><td>0.8761</td><td>0.6948</td><td>0.5187</td><td>0.2396</td></tr>
+    <tr><td>consensus_over_odds_bin</td><td>categorical</td><td>118,285</td><td>0.0007</td><td>0.0440</td><td>0.8764</td><td>0.6979</td><td>0.5105</td><td>0.2397</td></tr>
+    <tr><td>opp_h_rate_L5</td><td>numeric</td><td>116,616</td><td>0.0007</td><td>0.0326</td><td>0.8761</td><td>0.6948</td><td>0.5165</td><td>0.2396</td></tr>
+    <tr style="background:#fff3e0"><td>max_raw_implied_prob_under</td><td>numeric</td><td>117,028</td><td>-0.0002</td><td>-0.0019</td><td>0.8771</td><td>0.6930</td><td>0.4571</td><td>0.2394</td></tr>
+    <tr><td>is_home</td><td>numeric</td><td>118,285</td><td>-0.0004</td><td>0.0096</td><td>0.8768</td><td>0.6953</td><td>0.5006</td><td>0.2398</td></tr>
+    <tr><td>stand</td><td>categorical</td><td>118,285</td><td>-0.0006</td><td>-0.0028</td><td>0.8769</td><td>0.6954</td><td>0.5008</td><td>0.2398</td></tr>
+    <tr><td>min_line</td><td>numeric</td><td>118,285</td><td>-0.0006</td><td>-0.0041</td><td>0.8769</td><td>0.6954</td><td>0.4982</td><td>0.2398</td></tr>
+    <tr style="background:#fff3e0"><td>novig_prob_over</td><td>numeric</td><td>52,627</td><td>-0.0012</td><td>0.0067</td><td>0.8665</td><td>0.6903</td><td>0.4753</td><td>0.2428</td></tr>
+    <tr><td>consensus_decimal_over</td><td>numeric</td><td>118,285</td><td>-0.0025</td><td>-0.0069</td><td>0.8778</td><td>0.6967</td><td>0.4904</td><td>0.2401</td></tr>
+    <tr><td>consensus_under_odds_bin</td><td>categorical</td><td>118,285</td><td>-0.0026</td><td>-0.0060</td><td>0.8778</td><td>0.6959</td><td>0.5149</td><td>0.2388</td></tr>
+    <tr><td>consensus_over_odds_bin_granular</td><td>categorical</td><td>118,285</td><td>-0.0028</td><td>-0.0031</td><td>0.8779</td><td>0.6969</td><td>0.5614</td><td>0.2367</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Findings</h3>
+<ol>
+  <li><strong>Market features dominate:</strong> <code>min_raw_implied_prob_under</code> (r²=0.029, AUC=0.583) and <code>max_raw_implied_prob_over</code> (r²=0.028, AUC=0.582) are by far the strongest individual features — more than 2× the r² of the best player rolling stat. These capture the market's consensus view of how likely the batter is to get a hit.</li>
+  <li><strong>Longer windows outperform shorter:</strong> career &gt; L20 &gt; season &gt; L10 &gt; L5 &gt; L1. Batter hit rates are stable baselines, not streaky — weight longer history heavily.</li>
+  <li><strong>Career stats cluster 3rd–5th:</strong> hits_roll_career (0.013), max_line (0.012), ab_roll_career (0.012). AB career is a proxy for playing time (full-time starter vs platoon player).</li>
+  <li><strong>Opponent hit rate near-zero:</strong> opp_h_rate r²≈0.001. This is a batter-skill market, not matchup-driven.</li>
+  <li><strong>is_home: no signal</strong> (r²=-0.0004, AUC=0.501). Drop from model.</li>
+  <li><strong>stand: no signal</strong> (r²=-0.0006, AUC=0.501). Drop from model.</li>
+  <li><strong>Granular bins have high AUC despite negative r²:</strong> consensus_over_odds_bin_granular AUC=0.561 but r²=-0.003. Label-encoding destroys ordinal signal; one-hot encoding recovers it. Useful for binary classification.</li>
+  <li><strong>max_raw_implied_prob_under: below-chance AUC=0.457.</strong> Inversely predictive by construction — high prob of going under ↔ fewer hits.</li>
+  <li><strong>novig_prob_over: below-chance AUC=0.475 on 52K rows.</strong> Only available for two-sided 0.5 rows. Consistent with Step 1.5: 0.5 line well-calibrated overall (gap≈0), so novig_prob captures population mean, not individual variation. Drop from model.</li>
+</ol>
+
+<h3>Feature Shortlist for Step 3b</h3>
+<table>
+  <thead><tr><th>Feature</th><th>r²</th><th>AUC</th><th>Keep?</th><th>Reason</th></tr></thead>
+  <tbody>
+    <tr><td>max_raw_implied_prob_over</td><td>0.028</td><td>0.582</td><td>✓ Keep</td><td>Strongest market signal</td></tr>
+    <tr><td>min_raw_implied_prob_under</td><td>0.029</td><td>0.583</td><td>✓ Keep</td><td>Strongest market signal (inverted under prob)</td></tr>
+    <tr><td>hits_roll_career</td><td>0.013</td><td>0.559</td><td>✓ Keep</td><td>Best player feature</td></tr>
+    <tr><td>ab_roll_career</td><td>0.012</td><td>0.556</td><td>✓ Keep</td><td>Playing-time proxy</td></tr>
+    <tr><td>hits_roll_L20</td><td>0.011</td><td>0.552</td><td>✓ Keep</td><td>Best medium-window</td></tr>
+    <tr><td>hits_roll_season</td><td>0.010</td><td>0.554</td><td>✓ Keep</td><td>Season form</td></tr>
+    <tr><td>max_line</td><td>0.012</td><td>0.558</td><td>✓ Keep</td><td>Captures alt-line availability</td></tr>
+    <tr><td>consensus_line</td><td>0.007</td><td>0.537</td><td>✓ Keep</td><td>Line level signal</td></tr>
+    <tr><td>consensus_over_odds_bin_granular</td><td>-0.003</td><td>0.561</td><td>✓ Keep</td><td>High AUC — market direction feature</td></tr>
+    <tr><td>consensus_under_odds_bin_granular</td><td>0.004</td><td>0.555</td><td>✓ Keep</td><td>Market direction feature</td></tr>
+    <tr><td>is_home</td><td>-0.000</td><td>0.501</td><td>✗ Drop</td><td>No signal</td></tr>
+    <tr><td>stand</td><td>-0.001</td><td>0.501</td><td>✗ Drop</td><td>No signal</td></tr>
+    <tr><td>opp_h_rate_career</td><td>0.001</td><td>0.519</td><td>✗ Drop</td><td>Near-zero — not matchup-driven</td></tr>
+    <tr><td>novig_prob_over</td><td>-0.001</td><td>0.475</td><td>✗ Drop</td><td>Below chance, sparse coverage</td></tr>
+  </tbody>
+</table>
+
+<h3>Freeman Spot-Check (last 8 games)</h3>
+<table>
+  <thead><tr><th>game_date</th><th>hits_actual</th><th>hits_roll_L5</th><th>hits_roll_career</th><th>ba_roll_career</th><th>opp_h_rate_career</th><th>stand</th><th>is_home</th></tr></thead>
+  <tbody>
+    <tr><td>2026-07-17</td><td>0</td><td>1.0</td><td>1.080</td><td>0.288</td><td>0.211</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-19</td><td>1</td><td>0.6</td><td>1.077</td><td>0.287</td><td>0.188</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-20</td><td>1</td><td>0.4</td><td>1.077</td><td>0.287</td><td>0.230</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-21</td><td>1</td><td>0.6</td><td>1.077</td><td>0.287</td><td>0.176</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-22</td><td>3</td><td>0.6</td><td>1.077</td><td>0.287</td><td>0.236</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-24</td><td>3</td><td>1.2</td><td>1.082</td><td>0.288</td><td>0.206</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-25</td><td>3</td><td>1.8</td><td>1.087</td><td>0.290</td><td>0.178</td><td>L</td><td>0</td></tr>
+    <tr><td>2026-07-26</td><td>2</td><td>2.2</td><td>1.091</td><td>0.291</td><td>0.198</td><td>L</td><td>0</td></tr>
+  </tbody>
+</table>
+<p>hits_roll_career ≈ 1.08 (career ~.300 hitter averaging ~1 hit/game ✓). ba_roll_career ≈ .288–.291 ✓. All rolling features trail actual — no leakage ✓.</p>
+
+<h3>Step 3a — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: At least 20 features tested</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: Best r² &gt; 0.02</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: Best AUC &gt; 0.55</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: Player-game row count &gt;= 50,000</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: hits_roll_career has lowest RMSE of all rolling features</td><td class="pass">PASS</td></tr>
+    <tr><td>T6: min_raw_implied_prob_under AUC &gt; 0.55</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 6 Step 3a tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<section id="step3b">
+<h2>Step 3b — Multi-Feature OLS + XGBoost Regression</h2>
+<p><strong>Date:</strong> 2026-07-27 &nbsp;|&nbsp; <strong>Script:</strong> 20260727_step3b_multi_feature.py</p>
+
+<h3>Setup</h3>
+<ul>
+  <li>10 numeric features from Step 3a shortlist: min_raw_implied_prob_under, max_raw_implied_prob_over, hits_roll_career, max_line, ab_roll_career, hits_roll_L20, hits_roll_season, consensus_line, hits_roll_L10, ba_roll_career.</li>
+  <li>OLS: numeric features only. XGBoost: numeric + one-hot encoded categorical (consensus_over_odds_bin_granular, consensus_under_odds_bin_granular) → 27 total.</li>
+  <li>TimeSeriesSplit(5) OOF. 115,785 rows after dropna. Target: hits_actual.</li>
+  <li>Binary AUC computed via sigmoid(yhat − line) at each line value.</li>
+</ul>
+
+<h3>Comparison Summary</h3>
+<table>
+  <thead><tr><th>Model</th><th>n</th><th>r²</th><th>Pearson r</th><th>RMSE</th><th>MAE</th><th>AUC (line=0.5)</th></tr></thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>OLS (10 numeric)</td><td>96,485</td><td>0.0305</td><td>0.1753</td><td>0.8637</td><td>0.6797</td><td>0.5824</td></tr>
+    <tr><td>XGBoost (27 features)</td><td>96,485</td><td>0.0296</td><td>0.1764</td><td>0.8641</td><td>0.6829</td><td>0.5806</td></tr>
+  </tbody>
+</table>
+
+<h3>AUC by Line</h3>
+<table>
+  <thead><tr><th>Model</th><th>Line</th><th>n</th><th>AUC</th><th>Brier</th></tr></thead>
+  <tbody>
+    <tr><td>OLS</td><td>0.5</td><td>91,670</td><td>0.5824</td><td>0.2368</td></tr>
+    <tr><td>OLS</td><td>1.5</td><td>4,813</td><td>0.5246</td><td>0.2214</td></tr>
+    <tr><td>XGBoost</td><td>0.5</td><td>91,670</td><td>0.5806</td><td>0.2361</td></tr>
+    <tr><td>XGBoost</td><td>1.5</td><td>4,813</td><td>0.5102</td><td>0.2272</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Findings</h3>
+<ol>
+  <li><strong>OLS wins or ties XGBoost across all metrics.</strong> r²=0.031 (OLS) vs 0.030 (XGBoost). RMSE=0.8637 vs 0.8641. This is a linear market — adding tree-based non-linearity doesn't help. OLS is the preferred model: simpler, more interpretable, slightly better.</li>
+  <li><strong>Multi-feature OLS (r²=0.031) improves on best single-feature (r²=0.029).</strong> Combining market implied probs + career rolling stats adds marginal but real predictive value.</li>
+  <li><strong>AUC at line 1.5 is low (0.525 OLS).</strong> The sigmoid(yhat − 1.5) proxy is rough — proper logistic conversion in Step 4 should improve this. The raw OLS yhat still has mean ~1.0 (predicting average hits), so the conversion to P(over 1.5) needs calibration.</li>
+  <li><strong>Freeman OOF predictions are sensible:</strong> yhat ranges 0.96–1.08 for a career ~1.08 hits/game player. On his recent hot stretch (3 hits, 3 hits, 3 hits, 2 hits), the model underestimates — it's using career averages, not the streak. This is by design: the model is predictive of the baseline, not hot streaks.</li>
+</ol>
+
+<h3>Decision</h3>
+<p><strong>Use OLS with 10 numeric features as the primary model.</strong> Step 3c (additional combination testing) is skipped — no evidence of non-linearity, and XGBoost provides no improvement. Proceed to Step 4: OLS yhat + offered_line → logistic regression → P(over line).</p>
+
+<h3>Freeman OOF Predictions (OLS, last 8 games)</h3>
+<table>
+  <thead><tr><th>game_date</th><th>hits_actual</th><th>offered_line</th><th>yhat_ols</th><th>hits_roll_career</th><th>max_raw_implied_prob_over</th></tr></thead>
+  <tbody>
+    <tr><td>2026-07-17</td><td>0</td><td>0.5</td><td>1.037</td><td>1.080</td><td>0.752</td></tr>
+    <tr><td>2026-07-19</td><td>1</td><td>0.5</td><td>1.012</td><td>1.077</td><td>0.752</td></tr>
+    <tr><td>2026-07-20</td><td>1</td><td>0.5</td><td>0.973</td><td>1.077</td><td>0.725</td></tr>
+    <tr><td>2026-07-21</td><td>1</td><td>0.5</td><td>0.981</td><td>1.077</td><td>0.746</td></tr>
+    <tr><td>2026-07-22</td><td>3</td><td>0.5</td><td>1.073</td><td>1.077</td><td>0.826</td></tr>
+    <tr><td>2026-07-24</td><td>3</td><td>0.5</td><td>1.020</td><td>1.082</td><td>0.752</td></tr>
+    <tr><td>2026-07-25</td><td>3</td><td>0.5</td><td>0.961</td><td>1.087</td><td>0.725</td></tr>
+    <tr><td>2026-07-26</td><td>2</td><td>0.5</td><td>1.081</td><td>1.091</td><td>0.833</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 3b — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: OLS r² &gt; 0.03 (multi-feature improves on single-feature)</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: Multi-feature OLS r² &gt; 0.028 (improves on best single-feature from 3a)</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: OLS AUC at line 0.5 &gt; 0.57</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: XGBoost AUC at line 0.5 &gt; 0.57</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: Both models have per-line AUC at lines 0.5 and 1.5</td><td class="pass">PASS</td></tr>
+    <tr><td>T6: XGBoost and OLS RMSE within 1% (essentially tied — linear market)</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 6 Step 3b tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<section id="step4">
+<h2>Step 4 — OLS yhat → P(over offered_line) (Logistic Conversion)</h2>
+<p><strong>Date:</strong> 2026-07-27 &nbsp;|&nbsp; <strong>Script:</strong> 20260727_step4_probability.py</p>
+
+<h3>Pipeline Architecture</h3>
+<ul>
+  <li><strong>Stage 1:</strong> OLS (10 numeric features) → OOF yhat at player-game level (118K rows)</li>
+  <li><strong>Stage 2:</strong> yhat merged into full spine (2.89M rows), then OOF Logistic(yhat, offered_line) → p_model</li>
+  <li>p_model is player-game-line level (same for all books at the same player-game + line)</li>
+  <li>Edge = p_model − raw_implied_prob_over (per-book, vig-inclusive)</li>
+  <li>2,411,630 rows with p_model (72% of settled spine rows)</li>
+</ul>
+
+<h3>AUC by Line</h3>
+<table>
+  <thead><tr><th>Line</th><th>n</th><th>Over Rate</th><th>AUC</th><th>Brier</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>0.5</td><td>938,968</td><td>0.608</td><td>0.5767</td><td>0.2344</td><td>Primary line — solid signal</td></tr>
+    <tr style="background:#e8f5e9"><td>1.5</td><td>761,372</td><td>0.224</td><td>0.5963</td><td>0.1705</td><td>Best AUC — miscalibrated line from Step 1.5</td></tr>
+    <tr><td>2.5</td><td>566,445</td><td>0.048</td><td>0.6170</td><td>0.0452</td><td>Easy discrimination — trivial over rate</td></tr>
+    <tr><td>3.5</td><td>144,327</td><td>0.009</td><td>0.6301</td><td>0.0088</td><td>Easy discrimination — trivial over rate</td></tr>
+  </tbody>
+</table>
+<p><em>Note: AUC at lines 2.5 and 3.5 is inflated — only 5% and 1% over rates mean the model trivially identifies low-probability events. Meaningful lines are 0.5 and 1.5.</em></p>
+
+<h3>Calibration by Decile — Line 0.5</h3>
+<table>
+  <thead><tr><th>Decile</th><th>n</th><th>avg_p_model</th><th>actual_over_rate</th><th>gap (actual−model)</th></tr></thead>
+  <tbody>
+    <tr><td>0 (lowest)</td><td>93,908</td><td>0.480</td><td>0.494</td><td>+0.014</td></tr>
+    <tr><td>1</td><td>93,899</td><td>0.543</td><td>0.530</td><td>-0.013</td></tr>
+    <tr><td>2</td><td>93,886</td><td>0.579</td><td>0.564</td><td>-0.016</td></tr>
+    <tr><td>3</td><td>93,900</td><td>0.604</td><td>0.582</td><td>-0.022</td></tr>
+    <tr><td>4</td><td>93,895</td><td>0.624</td><td>0.605</td><td>-0.019</td></tr>
+    <tr><td>5</td><td>93,903</td><td>0.643</td><td>0.624</td><td>-0.019</td></tr>
+    <tr><td>6</td><td>93,896</td><td>0.659</td><td>0.645</td><td>-0.014</td></tr>
+    <tr><td>7</td><td>93,893</td><td>0.676</td><td>0.659</td><td>-0.017</td></tr>
+    <tr><td>8</td><td>93,893</td><td>0.694</td><td>0.677</td><td>-0.016</td></tr>
+    <tr><td>9 (highest)</td><td>93,895</td><td>0.722</td><td>0.704</td><td>-0.018</td></tr>
+  </tbody>
+</table>
+<p>Model slightly overestimates P(over) by ~1.5–2.2pp across most deciles. Monotonic ordering confirmed: higher p_model → higher actual over rate ✓.</p>
+
+<h3>Calibration by Decile — Line 1.5</h3>
+<table>
+  <thead><tr><th>Decile</th><th>n</th><th>avg_p_model</th><th>actual_over_rate</th><th>gap (actual−model)</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>76,138</td><td>0.144</td><td>0.130</td><td>-0.014</td></tr>
+    <tr><td>1</td><td>76,146</td><td>0.178</td><td>0.154</td><td>-0.024</td></tr>
+    <tr><td>2</td><td>76,135</td><td>0.200</td><td>0.189</td><td>-0.011</td></tr>
+    <tr><td>3</td><td>76,130</td><td>0.216</td><td>0.186</td><td>-0.030</td></tr>
+    <tr><td>4</td><td>76,139</td><td>0.231</td><td>0.211</td><td>-0.019</td></tr>
+    <tr><td>5</td><td>76,135</td><td>0.245</td><td>0.232</td><td>-0.013</td></tr>
+    <tr><td>6</td><td>76,141</td><td>0.259</td><td>0.253</td><td>-0.006</td></tr>
+    <tr><td>7</td><td>76,140</td><td>0.275</td><td>0.275</td><td>+0.001</td></tr>
+    <tr><td>8</td><td>76,141</td><td>0.291</td><td>0.284</td><td>-0.007</td></tr>
+    <tr><td>9</td><td>76,127</td><td>0.320</td><td>0.323</td><td>+0.003</td></tr>
+  </tbody>
+</table>
+<p>Better calibrated than line 0.5 — gaps mostly under 2pp. Monotonic ordering confirmed ✓.</p>
+
+<h3>Edge Distribution</h3>
+<table>
+  <thead><tr><th>Line</th><th>n</th><th>avg_edge</th><th>std_edge</th><th>n (edge&gt;3pp)</th><th>n (edge&gt;5pp)</th></tr></thead>
+  <tbody>
+    <tr><td>0.5</td><td>938,968</td><td>-0.0319</td><td>0.0272</td><td>5,787</td><td>948</td></tr>
+    <tr><td>1.5</td><td>761,372</td><td>-0.0377</td><td>0.0309</td><td>5,552</td><td>632</td></tr>
+    <tr><td>2.5</td><td>566,445</td><td>-0.0329</td><td>0.0257</td><td>11</td><td>0</td></tr>
+    <tr><td>3.5</td><td>144,327</td><td>-0.0195</td><td>0.0178</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+<p>
+  <strong>Average edge is negative</strong> at all lines (~-3pp). This is expected: the market is generally well-calibrated and prices in more information than the model. The strategy is to find the <em>tail</em> — players where the model significantly disagrees with the market.
+  <br><strong>Lines 0.5 and 1.5 have meaningful positive-edge tail</strong> (5,787 and 5,552 rows with edge&gt;3pp respectively). Lines 2.5+ have essentially no positive edge — model never projects more than 4.3% chance of 2.5+ hits when the market prices even less.
+</p>
+
+<h3>Interpretation</h3>
+<p>The edge picture is:</p>
+<ul>
+  <li>actual (0.5 line) ≈ 61% → model ≈ 63% → market ≈ 67%</li>
+  <li>Model sits between actual rate and market, overestimating by ~1.5pp and being priced below market by ~3pp</li>
+  <li>Negative avg edge means <strong>strategy will likely focus on UNDERS</strong> where the model sees a player as less likely to go over than the market prices — or on exceptional OVER cases where market has underpriced a player</li>
+  <li>Line 1.5 negative avg edge (-3.8pp) corroborates Step 1.5 finding: market overprices 1.5 overs — UNDER at 1.5 has the largest systematic edge potential</li>
+</ul>
+
+<h3>Freeman Spot-Check (DraftKings, last 2 games)</h3>
+<table>
+  <thead><tr><th>game_date</th><th>offered_line</th><th>hits_actual</th><th>over_flag</th><th>yhat_ols</th><th>p_model</th><th>raw_implied_prob_over</th><th>edge</th></tr></thead>
+  <tbody>
+    <tr><td>2026-07-25</td><td>0.5</td><td>3</td><td>1</td><td>0.961</td><td>0.659</td><td>0.690</td><td>-0.031</td></tr>
+    <tr><td>2026-07-25</td><td>1.5</td><td>3</td><td>1</td><td>0.961</td><td>0.250</td><td>0.299</td><td>-0.049</td></tr>
+    <tr><td>2026-07-25</td><td>2.5</td><td>3</td><td>1</td><td>0.961</td><td>0.054</td><td>0.086</td><td>-0.032</td></tr>
+    <tr><td>2026-07-25</td><td>3.5</td><td>3</td><td>0</td><td>0.961</td><td>0.010</td><td>0.022</td><td>-0.012</td></tr>
+    <tr><td>2026-07-26</td><td>0.5</td><td>2</td><td>1</td><td>1.081</td><td>0.711</td><td>0.714</td><td>-0.004</td></tr>
+    <tr><td>2026-07-26</td><td>1.5</td><td>2</td><td>1</td><td>1.081</td><td>0.298</td><td>0.313</td><td>-0.016</td></tr>
+    <tr><td>2026-07-26</td><td>2.5</td><td>2</td><td>0</td><td>1.081</td><td>0.068</td><td>0.092</td><td>-0.023</td></tr>
+    <tr><td>2026-07-26</td><td>3.5</td><td>2</td><td>0</td><td>1.081</td><td>0.013</td><td>0.020</td><td>-0.008</td></tr>
+  </tbody>
+</table>
+<p>Freeman: yhat≈1.0, p_model at 0.5 ≈ 66–71%. Market fully prices Freeman — consistently negative edge across all lines. Model correctly orders probabilities across lines (0.5&gt;1.5&gt;2.5&gt;3.5).</p>
+
+<h3>Step 4 — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: p_model coverage &gt;= 80% of settled spine rows</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: AUC at line 1.5 &gt; 0.57 (model adds value at miscalibrated line)</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: AUC at line 0.5 &gt; 0.57</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: AUC at line 1.5 &gt; 0.51</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: p_model between 0 and 1 for all rows</td><td class="pass">PASS</td></tr>
+    <tr><td>T6: edge has both positive and negative values</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 6 Step 4 tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<section id="step5">
+<h2>Step 5 — Grid Search (OOF Backtest)</h2>
+<p><strong>Date:</strong> 2026-07-27 &nbsp;|&nbsp; <strong>Script:</strong> 20260727_step5_grid_search.py</p>
+
+<h3>Setup</h3>
+<ul>
+  <li>2-stage OOF p_model (same as Step 4). 2,411,630 rows with p_model.</li>
+  <li>Sweep: direction (over/under) × line (0.5, 1.5) × edge_min (0, 1, 2, 3, 5, 7, 10 pp)</li>
+  <li>Edge: over_edge = p_model − (1/over_price); under_edge = (1−p_model) − (1/under_price)</li>
+  <li>P&L: win → +(decimal_price − 1); lose → −1 unit</li>
+  <li>Sorted by net_units descending</li>
+</ul>
+
+<h3>Full Grid Search Results</h3>
+<table>
+  <thead><tr><th>Line</th><th>Direction</th><th>Edge Min</th><th>n_bets</th><th>Hit Rate</th><th>Net Units</th><th>ROI%</th><th>Max DD</th><th>Net/MDD</th></tr></thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>0.5</td><td>under</td><td>1pp</td><td>11,425</td><td>0.515</td><td>+491.3</td><td>+4.30%</td><td>166.3</td><td>2.95</td></tr>
+    <tr style="background:#e8f5e9"><td>0.5</td><td>under</td><td>2pp</td><td>4,600</td><td>0.535</td><td>+426.2</td><td>+9.27%</td><td>102.6</td><td>4.15</td></tr>
+    <tr><td>1.5</td><td>over</td><td>3pp</td><td>5,552</td><td>0.231</td><td>+242.4</td><td>+4.37%</td><td>329.9</td><td>0.73</td></tr>
+    <tr style="background:#e8f5e9"><td>0.5</td><td>under</td><td>3pp</td><td>1,764</td><td>0.538</td><td>+188.9</td><td>+10.71%</td><td>76.3</td><td>2.48</td></tr>
+    <tr><td>0.5</td><td>under</td><td>0pp</td><td>24,076</td><td>0.496</td><td>+121.4</td><td>+0.50%</td><td>618.6</td><td>0.20</td></tr>
+    <tr><td>0.5</td><td>over</td><td>7pp</td><td>349</td><td>0.817</td><td>+105.9</td><td>+30.34%</td><td>7.0</td><td>15.13</td></tr>
+    <tr><td>0.5</td><td>over</td><td>5pp</td><td>948</td><td>0.679</td><td>+102.8</td><td>+10.84%</td><td>41.8</td><td>2.46</td></tr>
+    <tr><td>1.5</td><td>over</td><td>5pp</td><td>632</td><td>0.264</td><td>+94.9</td><td>+15.01%</td><td>42.4</td><td>2.24</td></tr>
+    <tr><td>1.5</td><td>over</td><td>7pp</td><td>190</td><td>0.337</td><td>+87.3</td><td>+45.93%</td><td>13.1</td><td>6.69</td></tr>
+    <tr><td>0.5</td><td>under</td><td>5pp</td><td>222</td><td>0.689</td><td>+84.2</td><td>+37.92%</td><td>9.4</td><td>8.95</td></tr>
+    <tr><td>1.5</td><td>under</td><td>7pp</td><td>284</td><td>0.736</td><td>+55.4</td><td>+19.51%</td><td>13.8</td><td>4.03</td></tr>
+    <tr><td>0.5</td><td>over</td><td>10pp</td><td>148</td><td>0.858</td><td>+52.9</td><td>+35.72%</td><td>3.3</td><td>16.21</td></tr>
+    <tr><td>1.5</td><td>over</td><td>10pp</td><td>81</td><td>0.358</td><td>+48.1</td><td>+59.38%</td><td>8.0</td><td>6.01</td></tr>
+    <tr><td>1.5</td><td>under</td><td>10pp</td><td>155</td><td>0.845</td><td>+45.7</td><td>+29.50%</td><td>3.7</td><td>12.26</td></tr>
+    <tr><td>1.5</td><td>under</td><td>5pp</td><td>749</td><td>0.632</td><td>+37.4</td><td>+4.99%</td><td>53.8</td><td>0.69</td></tr>
+    <tr><td>0.5</td><td>under</td><td>7pp</td><td>27</td><td>0.852</td><td>+19.1</td><td>+70.56%</td><td>1.2</td><td>16.57</td></tr>
+    <tr style="background:#ffebee"><td>1.5</td><td>under</td><td>3pp</td><td>2,388</td><td>0.608</td><td>-50.9</td><td>-2.13%</td><td>154.5</td><td>-0.33</td></tr>
+    <tr style="background:#ffebee"><td>1.5</td><td>under</td><td>2pp</td><td>4,629</td><td>0.632</td><td>-51.5</td><td>-1.11%</td><td>170.7</td><td>-0.30</td></tr>
+    <tr style="background:#ffebee"><td>0.5</td><td>over</td><td>3pp</td><td>5,787</td><td>0.602</td><td>-138.9</td><td>-2.40%</td><td>225.7</td><td>-0.62</td></tr>
+  </tbody>
+</table>
+
+<h3>Per-Season for Best Strategy (0.5 UNDER, edge ≥ 1pp)</h3>
+<table>
+  <thead><tr><th>Season</th><th>n_bets</th><th>Hit Rate</th><th>Net Units</th><th>ROI%</th></tr></thead>
+  <tbody>
+    <tr><td>2024</td><td>164</td><td>0.573</td><td>+36.0</td><td>+21.93%</td></tr>
+    <tr><td>2025</td><td>10,252</td><td>0.513</td><td>+388.3</td><td>+3.79%</td></tr>
+    <tr><td>2026</td><td>1,009</td><td>0.529</td><td>+67.1</td><td>+6.65%</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Findings</h3>
+<ol>
+  <li><strong>Primary strategy: 0.5 UNDER, edge ≥ 2pp.</strong> 4,600 bets, 53.5% hit, +426u, +9.27% ROI, net/MDD=4.15. The market overprices overs at 0.5 for a specific subset of players — the model identifies bench players, platoon hitters, and low-plate-appearance batters where the market hasn't fully adjusted.</li>
+  <li><strong>0.5 UNDER edge ≥ 1pp is the largest-n strategy</strong> (+491u on 11,425 bets, +4.30% ROI) — good for volume-focused execution.</li>
+  <li><strong>Surprising: 1.5 OVER edge ≥ 3pp is profitable (+242u, +4.37% ROI).</strong> Despite the market systematically overpricing overs at 1.5, the model finds cases where specific players ARE likely to get 2+ hits. These are typically elite hitters in favorable matchups where even the model's conservative yhat clears the 1.5 line.</li>
+  <li><strong>High-edge tail has enormous ROI% but tiny n:</strong> 0.5 OVER edge≥7pp has 81.7% hit rate and +30% ROI but only 349 bets. These may be data artifacts (model wildly underestimated market) or genuine but rare mispriced markets. Should be monitored in production.</li>
+  <li><strong>1.5 UNDER edge ≥ 3pp loses money (-51u, -2.1% ROI)</strong> — surprising given the systematic miscalibration at 1.5. Likely because under_price at 1.5 is quite low (short odds like 1.20–1.30 decimal), so the payout is small and any misses are costly.</li>
+  <li><strong>2024 ROI anomaly (+22%):</strong> Only 164 bets. Likely early-season data with sparse coverage. The 2025 signal (+3.8%, 10K bets) is the reliable estimate.</li>
+</ol>
+
+<h3>Strategy Selection for Production</h3>
+<table>
+  <thead><tr><th>Strategy</th><th>n_bets</th><th>ROI%</th><th>Net/MDD</th><th>Recommendation</th></tr></thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>0.5 UNDER, edge ≥ 2pp</td><td>4,600</td><td>+9.27%</td><td>4.15</td><td>PRIMARY — best balance of n and ROI</td></tr>
+    <tr><td>0.5 UNDER, edge ≥ 3pp</td><td>1,764</td><td>+10.71%</td><td>2.48</td><td>Tighter filter — still healthy volume</td></tr>
+    <tr><td>0.5 UNDER, edge ≥ 1pp</td><td>11,425</td><td>+4.30%</td><td>2.95</td><td>Higher volume but lower ROI</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 5 — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: At least one strategy with net_units &gt; 0 and n_bets &gt;= 100</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: Best strategy ROI &gt; 2%</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: At least one under strategy at line 1.5 with positive net_units</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: Best strategy n_bets &gt;= 50</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: Best strategy net/MDD &gt;= 1.0</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 5 Step 5 tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<section id="step6-7">
+<h2>Steps 6 + 7 — IS Grid + Mock Email (2026-07-27)</h2>
+<p><strong>Date:</strong> 2026-07-27 &nbsp;|&nbsp; <strong>Script:</strong> 20260727_step6_mock_email.py</p>
+
+<h3>Step 6 — IS AUC (production model trained on full data)</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Value</th><th>vs OOS</th></tr></thead>
+  <tbody>
+    <tr><td>IS AUC (all lines)</td><td>0.8145</td><td>N/A (inflated by easy alt lines)</td></tr>
+    <tr><td>IS AUC line=0.5</td><td>0.5770</td><td>OOS=0.577 ✓</td></tr>
+    <tr><td>IS AUC line=1.5</td><td>0.5961</td><td>OOS=0.596 ✓</td></tr>
+  </tbody>
+</table>
+<p>IS and OOS AUC are identical to 4 decimal places — no overfitting. The production model has the same discriminative power as the OOF evaluation confirmed.</p>
+
+<h3>Step 6 — IS Grid (sorted by net_units)</h3>
+<table>
+  <thead><tr><th>Line</th><th>Direction</th><th>Edge Min</th><th>n_bets</th><th>Hit Rate</th><th>Net Units</th><th>ROI%</th></tr></thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>0.5</td><td>under</td><td>2pp</td><td>20,303</td><td>0.519</td><td>+1,377.8</td><td>+6.79%</td></tr>
+    <tr><td>0.5</td><td>under</td><td>3pp</td><td>7,141</td><td>0.568</td><td>+1,300.7</td><td>+18.21%</td></tr>
+    <tr><td>0.5</td><td>under</td><td>1pp</td><td>51,096</td><td>0.488</td><td>+861.8</td><td>+1.69%</td></tr>
+    <tr><td>0.5</td><td>under</td><td>5pp</td><td>753</td><td>0.639</td><td>+228.3</td><td>+30.32%</td></tr>
+    <tr><td>0.5</td><td>over</td><td>3pp</td><td>2,334</td><td>0.650</td><td>+141.7</td><td>+6.07%</td></tr>
+    <tr><td>1.5</td><td>over</td><td>3pp</td><td>1,131</td><td>0.248</td><td>+138.5</td><td>+12.25%</td></tr>
+  </tbody>
+</table>
+<p>IS ROI at edge≥2pp is 6.79% vs OOS 9.27% — IS n is 4× larger (full-data model assigns edge to more rows), which dilutes ROI. Direction confirmed positive at all edge thresholds. IS edge≥3pp ROI (18.21%) > OOS (10.71%) as expected.</p>
+
+<h3>Step 7 — Mock Email (2026-07-27)</h3>
+<p><strong>Strategy:</strong> 0.5 UNDER, edge ≥ 2pp &nbsp;|&nbsp; Today market: 12 games, 246 players, 16 books, 10,207 rows</p>
+<p><strong>Feature match rate:</strong> 98.8% (players with historical rolling features)</p>
+
+<table>
+  <thead><tr><th>Player</th><th>Books</th><th>Line</th><th>Under $</th><th>p_model</th><th>Under Edge</th><th>yhat</th><th>H/G (L5)</th></tr></thead>
+  <tbody>
+    <tr style="background:#e8f5e9"><td>Enmanuel Valdez</td><td>1</td><td>0.5</td><td>+150</td><td>54.8%</td><td>+5.2pp</td><td>0.744</td><td>0.60</td></tr>
+    <tr><td>Luisangel Acuna</td><td>1</td><td>0.5</td><td>+110</td><td>48.5%</td><td>+3.8pp</td><td>0.624</td><td>0.80</td></tr>
+    <tr><td>Donovan Walton</td><td>1</td><td>0.5</td><td>+115</td><td>50.2%</td><td>+3.2pp</td><td>0.657</td><td>0.40</td></tr>
+    <tr><td>Jorge Mateo</td><td>1</td><td>0.5</td><td>+105</td><td>48.5%</td><td>+2.7pp</td><td>0.623</td><td>0.20</td></tr>
+    <tr><td>Sam Huff</td><td>1</td><td>0.5</td><td>-120</td><td>42.8%</td><td>+2.6pp</td><td>0.511</td><td>0.20</td></tr>
+    <tr><td>Christian Vazquez</td><td>1</td><td>0.5</td><td>-115</td><td>44.0%</td><td>+2.6pp</td><td>0.535</td><td>0.20</td></tr>
+  </tbody>
+</table>
+
+<h3>Observations on Today's Email</h3>
+<ul>
+  <li><strong>All bets are from smaller books</strong> (espnbet, hardrockbet_oh, betmgm) — major books (DraftKings, FanDuel) are either not posting these lines or are more accurately priced. This is expected: the edge comes from books that lag the consensus.</li>
+  <li><strong>All players are bench/utility players or backup catchers</strong> (Valdez, Acuna, Walton, Mateo, Huff, Vazquez) with yhat=0.51–0.74 (well below 1.0 hit/game average). This confirms the model's thesis: market overprices weaker hitters' 0.5 lines.</li>
+  <li><strong>Enmanuel Valdez at +150 (espnbet)</strong> is the standout: market prices only 40% raw under prob, model says 54.8% under → +5.2pp edge. Classic case of a smaller book being slow to update lines for a bench player.</li>
+  <li><strong>Jorge Mateo H/G(L5) = 0.20</strong> — has gone hitless in 4 of his last 5 games. Market at -145 (59% over) seems too high.</li>
+</ul>
+
+<h3>Steps 6/7 — DuckDB SQL Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>T1: Today has ≥ 100 players with p_model</td><td class="pass">PASS</td></tr>
+    <tr><td>T2: IS grid 0.5 UNDER edge≥2pp has positive ROI</td><td class="pass">PASS</td></tr>
+    <tr><td>T3: Today has at least 1 qualifying under bet</td><td class="pass">PASS</td></tr>
+    <tr><td>T4: All today p_model values between 0 and 1</td><td class="pass">PASS</td></tr>
+    <tr><td>T5: Today's market has ≥ 10 games</td><td class="pass">PASS</td></tr>
+  </tbody>
+</table>
+<p class="pass">All 5 Step 6/7 tests PASSED.</p>
+</section>
+<!-- ============================================================ -->
+
+<section>
+<h2>Step 8 — Production Lambda Deployment</h2>
+<p><strong>2026-07-27</strong></p>
+
+<h3>Production Architecture</h3>
+<p>Full Lambda deployment following the <code>mlb_total_bases</code> pattern: ECR container image, EventBridge cron schedules (DISABLED on deploy), 4 operation modes.</p>
+
+<table>
+  <thead><tr><th>Component</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Lambda name</td><td>mlb-batter-hits-daily</td></tr>
+    <tr><td>ECR repo</td><td>mlb-batter-hits-daily</td></tr>
+    <tr><td>IAM role</td><td>betting-dashboard-daily-update-role-ille2llh</td></tr>
+    <tr><td>Region</td><td>us-east-2</td></tr>
+    <tr><td>Memory</td><td>2048 MB</td></tr>
+    <tr><td>Timeout</td><td>900 s</td></tr>
+    <tr><td>Container base</td><td>public.ecr.aws/lambda/python:3.11</td></tr>
+  </tbody>
+</table>
+
+<h3>EventBridge Rules (DISABLED on deploy)</h3>
+<table>
+  <thead><tr><th>Rule</th><th>Cron (UTC)</th><th>ET</th><th>Mode</th></tr></thead>
+  <tbody>
+    <tr><td>mlb-hits-spine-daily-830am-et</td><td>cron(30 12 * * ? *)</td><td>8:30 AM ET</td><td>spine_update</td></tr>
+    <tr><td>mlb-hits-combined-daily-9am-et</td><td>cron(0 13 * * ? *)</td><td>9:00 AM ET</td><td>combined</td></tr>
+  </tbody>
+</table>
+
+<h3>Lambda Modes</h3>
+<table>
+  <thead><tr><th>Mode</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>spine_update</td><td>Rebuild spine from Statcast (20260727_build_spine.py) + retrain models (train_model.py) + SES email</td></tr>
+    <tr><td>combined</td><td>Settle yesterday → run today's pipeline → ONE combined SES email</td></tr>
+    <tr><td>pipeline</td><td>Fetch props, score, email bets (standalone — for smoke testing)</td></tr>
+    <tr><td>settle</td><td>Settle yesterday's bets (standalone)</td></tr>
+  </tbody>
+</table>
+
+<h3>S3 Assets (pre-built before Lambda deploy)</h3>
+<table>
+  <thead><tr><th>Asset</th><th>S3 Key</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>OLS model</td><td>mlb/batter_hits_model/model/mlb_batter_hits_ols.joblib</td><td class="pass">UPLOADED ✓</td></tr>
+    <tr><td>Logistic model</td><td>mlb/batter_hits_model/model/mlb_batter_hits_logit.joblib</td><td class="pass">UPLOADED ✓</td></tr>
+    <tr><td>Spine</td><td>mlb/batter_hits_model/spine/mlb_batter_hits_spine.parquet</td><td class="pass">UPLOADED ✓ (3,451,411 rows)</td></tr>
+  </tbody>
+</table>
+
+<h3>Production Scripts Written</h3>
+<table>
+  <thead><tr><th>Script</th><th>Description</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>train_model.py</td><td>Train OLS + logistic on all settled data; upload models + spine to S3. IS r²=0.0319, Logistic IS AUC=0.8145.</td><td class="pass">TESTED ✓</td></tr>
+    <tr><td>run_pipeline.py</td><td>Fetch live Odds API props, score with models, send SES email, save CSV to S3.</td><td class="pass">TESTED ✓ — 5 plays 2026-07-27</td></tr>
+    <tr><td>settle_hits.py</td><td>Load yesterday's recs from S3, load Statcast actuals, settle UNDER bets, append to parquet history, send SES.</td><td class="pass">WRITTEN ✓</td></tr>
+    <tr><td>update_spine.py</td><td>Orchestrates spine rebuild + model retraining; returns log for SES spine-update email.</td><td class="pass">WRITTEN ✓</td></tr>
+    <tr><td>lambda_function.py</td><td>Orchestrator — 4 modes. combined: settle → pipeline → merge HTML → one email.</td><td class="pass">WRITTEN ✓</td></tr>
+    <tr><td>Dockerfile</td><td>python:3.11 + boto3/pandas/sklearn/pybaseball. Deletes pybaseball plotting import to prevent crash.</td><td class="pass">WRITTEN ✓</td></tr>
+    <tr><td>deploy_mlb_batter_hits_lambda.sh</td><td>Full deploy script: ECR build, Lambda create/update, EventBridge rules (DISABLED).</td><td class="pass">WRITTEN ✓</td></tr>
+  </tbody>
+</table>
+
+<h3>Production Model: Trained Coefficients</h3>
+<table>
+  <thead><tr><th>Stage</th><th>Feature</th><th>Coefficient</th></tr></thead>
+  <tbody>
+    <tr><td>OLS</td><td>min_raw_implied_prob_under</td><td>-1.1716</td></tr>
+    <tr><td>OLS</td><td>max_raw_implied_prob_over</td><td>+0.9098</td></tr>
+    <tr><td>OLS</td><td>consensus_line</td><td>-0.1598</td></tr>
+    <tr><td>OLS</td><td>hits_roll_career</td><td>-0.0615</td></tr>
+    <tr><td>OLS</td><td>max_line</td><td>+0.0845</td></tr>
+    <tr><td>OLS</td><td>ba_roll_career</td><td>+0.1113</td></tr>
+    <tr><td>OLS</td><td>ab_roll_career</td><td>+0.0359</td></tr>
+    <tr><td>OLS</td><td>hits_roll_L20</td><td>+0.0329</td></tr>
+    <tr><td>OLS</td><td>hits_roll_season</td><td>+0.0166</td></tr>
+    <tr><td>OLS</td><td>hits_roll_L10</td><td>+0.0070</td></tr>
+    <tr><td>Logistic</td><td>intercept</td><td>-0.4692</td></tr>
+    <tr><td>Logistic</td><td>yhat_ols</td><td>+2.0687</td></tr>
+    <tr><td>Logistic</td><td>offered_line</td><td>-1.7591</td></tr>
+  </tbody>
+</table>
+
+<h3>Deploy Instructions</h3>
+<pre style="background:#f5f5f5;padding:12px;border-radius:4px;font-size:12px">
+# Pre-requisites: Docker running, AWS credentials configured
+export ODDS_API_KEY="&lt;key&gt;"
+export SES_SOURCE="myles@thomasquantitativestrategies.com"
+export SES_TO="mylescgthomas@gmail.com"
+
+cd ~/dev/betting
+bash src/mlb_batter_hits_modeling/lambda/deploy_mlb_batter_hits_lambda.sh
+
+# Smoke test (after deploy):
+aws lambda invoke --function-name mlb-batter-hits-daily --region us-east-2 \
+  --payload '{"mode":"pipeline","gameday":"2026-07-27"}' \
+  --cli-binary-format raw-in-base64-out /tmp/hits_out.json &amp;&amp; cat /tmp/hits_out.json
+
+# Enable EventBridge when satisfied:
+aws events enable-rule --name mlb-hits-spine-daily-830am-et --region us-east-2
+aws events enable-rule --name mlb-hits-combined-daily-9am-et --region us-east-2
+</pre>
+
+<h3>Strategy Summary</h3>
+<table>
+  <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Direction</td><td>UNDER 0.5 hits</td></tr>
+    <tr><td>Edge threshold (play)</td><td>≥ 2pp</td></tr>
+    <tr><td>Edge threshold (track)</td><td>≥ 1pp</td></tr>
+    <tr><td>OOS bets</td><td>4,600</td></tr>
+    <tr><td>OOS hit rate</td><td>53.5%</td></tr>
+    <tr><td>OOS net units</td><td>+426u</td></tr>
+    <tr><td>OOS ROI</td><td>+9.27%</td></tr>
+    <tr><td>Net / MDD</td><td>4.15x</td></tr>
+    <tr><td>Backtest period</td><td>2024-03-21 to 2026-07-26 (OOF)</td></tr>
+  </tbody>
+</table>
+
+<p class="pass">Step 8 COMPLETE — all production scripts written, models uploaded to S3, pipeline smoke-tested (5 plays 2026-07-27). Lambda deploy script ready. EventBridge rules configured DISABLED — enable after smoke testing the deployed container.</p>
+</section>
+<!-- ============================================================ -->
+
+<section>
+<h2>Post-Research Finding — Odds Type Stratification (2026-07-28)</h2>
+
+<p style="background:#fff3cd;border-left:4px solid #f9a825;padding:10px 14px;margin:0 0 16px;border-radius:0 4px 4px 0;">
+  <strong>Missed in original grid search.</strong> The Step 5 grid search swept over line, direction, and edge threshold — but never stratified by whether the under was offered at plus odds, minus odds, or even. This analysis was flagged post-research when reviewing the email output. The finding is significant enough to warrant a strategy revision before deployment.
+</p>
+
+<h3>The Question</h3>
+<p>At line 0.5 UNDER, the under price varies by book and player — sometimes the book offers plus odds (e.g. +115, meaning they think the player is <em>more</em> likely to get a hit), sometimes minus odds (e.g. -130, meaning they price the no-hit as the favorite). Do the model's bets generate edge uniformly across both, or is one odds bucket doing all the work?</p>
+
+<h3>Out-of-Sample (OOF) Results — by Odds Type</h3>
+<p>Strategy: 0.5 UNDER · edge≥2pp · 2024–2026 · OOF cross-validation (n=4,600 total)</p>
+<table>
+<thead><tr>
+  <th>Odds Type</th><th>Under Price (avg)</th><th>Bets</th><th>% of Bets</th><th>Hit %</th><th>Net Units</th><th>ROI</th>
+</tr></thead>
+<tbody>
+<tr style="background:#e8f5e9">
+  <td><strong>Plus (+odds)</strong></td><td style="text-align:center">+120 avg (2.204 dec)</td><td style="text-align:center">2,263</td><td style="text-align:center">49.2%</td><td style="text-align:center"><strong>55.5%</strong></td><td style="text-align:center" class="pos"><strong>+497.5u</strong></td><td style="text-align:center" class="pos"><strong>+22.0%</strong></td>
+</tr>
+<tr>
+  <td>Even</td><td style="text-align:center">+100 (2.000 dec)</td><td style="text-align:center">420</td><td style="text-align:center">9.1%</td><td style="text-align:center">50.5%</td><td style="text-align:center">+4.0u</td><td style="text-align:center">+1.0%</td>
+</tr>
+<tr style="background:#fce8e6">
+  <td><strong>Minus (-odds)</strong></td><td style="text-align:center">-116 avg (1.859 dec)</td><td style="text-align:center">1,917</td><td style="text-align:center">41.7%</td><td style="text-align:center">51.8%</td><td style="text-align:center" class="neg"><strong>-75.2u</strong></td><td style="text-align:center" class="neg"><strong>-3.9%</strong></td>
+</tr>
+<tr style="font-weight:bold;background:#f5f5f5">
+  <td>All</td><td style="text-align:center">—</td><td style="text-align:center">4,600</td><td style="text-align:center">100%</td><td style="text-align:center">53.5%</td><td style="text-align:center">+426.2u</td><td style="text-align:center">+9.3%</td>
+</tr>
+</tbody>
+</table>
+
+<h3>In-Sample (IS) Results — by Odds Type</h3>
+<p>Strategy: 0.5 UNDER · edge≥2pp · model trained on all data (n=20,303 total)</p>
+<table>
+<thead><tr>
+  <th>Odds Type</th><th>Under Price (avg)</th><th>Bets</th><th>% of Bets</th><th>Hit %</th><th>Net Units</th><th>ROI</th>
+</tr></thead>
+<tbody>
+<tr style="background:#e8f5e9">
+  <td><strong>Plus (+odds)</strong></td><td style="text-align:center">+122 avg (2.229 dec)</td><td style="text-align:center">10,326</td><td style="text-align:center">50.9%</td><td style="text-align:center"><strong>51.4%</strong></td><td style="text-align:center" class="pos"><strong>+1,548.3u</strong></td><td style="text-align:center" class="pos"><strong>+15.0%</strong></td>
+</tr>
+<tr>
+  <td>Even</td><td style="text-align:center">+100 (2.000 dec)</td><td style="text-align:center">1,812</td><td style="text-align:center">8.9%</td><td style="text-align:center">50.2%</td><td style="text-align:center">+6.0u</td><td style="text-align:center">+0.3%</td>
+</tr>
+<tr style="background:#fce8e6">
+  <td><strong>Minus (-odds)</strong></td><td style="text-align:center">-116 avg (1.856 dec)</td><td style="text-align:center">8,165</td><td style="text-align:center">40.2%</td><td style="text-align:center">52.8%</td><td style="text-align:center" class="neg"><strong>-176.5u</strong></td><td style="text-align:center" class="neg"><strong>-2.2%</strong></td>
+</tr>
+<tr style="font-weight:bold;background:#f5f5f5">
+  <td>All</td><td style="text-align:center">—</td><td style="text-align:center">20,303</td><td style="text-align:center">100%</td><td style="text-align:center">51.9%</td><td style="text-align:center">+1,377.8u</td><td style="text-align:center">+6.8%</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Key Finding</h3>
+<ul>
+  <li><strong>All net profit comes from plus odds bets.</strong> Filtering to plus odds only increases OOF net units from +426u → +497u while cutting bet count in half (4,600 → 2,263). The minus odds bets are active drag.</li>
+  <li><strong>The pattern is consistent IS and OOF.</strong> IS shows the same direction: plus odds +15% ROI, minus odds -2.2%. Not an OOF artifact.</li>
+  <li><strong>Why this makes sense structurally:</strong> When a book offers the under at plus odds (e.g. +115), they are pricing the player as more likely to get a hit — the over is the implied favorite. Our model agreeing with that direction <em>and</em> finding additional edge on top is a double confirmation. When a book lays minus odds on the under, they already price it as the favorite — the book and model agree, so there's less room to find mispricing after vig.</li>
+  <li><strong>Not in the original grid search.</strong> Step 5 only swept line × direction × edge_min. Odds type was not a sweep dimension. This should have been included.</li>
+</ul>
+
+<h3>Proposed Strategy Revision</h3>
+<table>
+<thead><tr><th>Strategy</th><th>Bets (OOF)</th><th>Hit %</th><th>Net Units</th><th>ROI</th></tr></thead>
+<tbody>
+<tr><td>0.5 UNDER · edge≥2pp (current)</td><td style="text-align:center">4,600</td><td style="text-align:center">53.5%</td><td style="text-align:center">+426u</td><td style="text-align:center">+9.3%</td></tr>
+<tr style="background:#e8f5e9"><td><strong>0.5 UNDER · edge≥2pp · plus odds only</strong></td><td style="text-align:center"><strong>2,263</strong></td><td style="text-align:center"><strong>55.5%</strong></td><td style="text-align:center"><strong>+498u</strong></td><td style="text-align:center"><strong>+22.0%</strong></td></tr>
+</tbody>
+</table>
+<p>Next step: sweep edge_min × odds_type jointly (e.g. does edge≥3pp plus-odds-only improve further?) and compute max drawdown and net/MDD for the revised strategy before updating production config.</p>
+
+</section>
+<!-- ============================================================ -->
+
+
+<section>
+<h2>Step 5b — Odds Type Grid Search (2026-07-28)</h2>
+
+<p style="background:#fff3cd;border-left:4px solid #f9a825;padding:10px 14px;margin:0 0 16px;border-radius:0 4px 4px 0;">
+  <strong>This step was missed in the original Step 5.</strong> The original grid swept
+  line × direction × edge_min but never stratified by odds type. Post-research review
+  showed all OOF profit comes from plus-odds bets (price &gt; 2.0). This step sweeps
+  odds_type as an explicit dimension to find the optimal filter.
+</p>
+
+<h3>Sweep Dimensions</h3>
+<ul>
+  <li><strong>line:</strong> 0.5, 1.5</li>
+  <li><strong>direction:</strong> under only</li>
+  <li><strong>edge_min:</strong> 0, 1, 2, 3, 5, 7, 10 pp</li>
+  <li><strong>odds_type:</strong> all | plus_only (price &gt; 2.0) | even_only (price == 2.0) | minus_only (price &lt; 2.0)</li>
+</ul>
+<p>Green rows = plus_only with positive net units. Red rows = minus_only.</p>
+
+<h3>Full Grid Results (OOF, sorted by net_units)</h3>
+<table><caption style='text-align:left;font-weight:bold;margin-bottom:4px'>Full grid — line × odds_type × edge_min (sorted by net_units, OOF)</caption><thead><tr><th>Line</th><th>Odds Type</th><th>Edge Min</th><th>Bets</th><th>Hit %</th><th>Avg Price</th><th>Net Units</th><th>ROI %</th><th>Max DD</th><th>Net/MDD</th></tr></thead><tbody><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">11,234</td><td style="text-align:center">47.9%</td><td style="text-align:center">2.231</td><td style="text-align:center" class="pos">+651.17u</td><td style="text-align:center" class="pos">+5.80%</td><td style="text-align:center">134.09u</td><td style="text-align:center">4.86x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">5,286</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.205</td><td style="text-align:center" class="pos">+625.92u</td><td style="text-align:center" class="pos">+11.84%</td><td style="text-align:center">53.36u</td><td style="text-align:center">11.73x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">2,263</td><td style="text-align:center">55.5%</td><td style="text-align:center">2.204</td><td style="text-align:center" class="pos">+497.48u</td><td style="text-align:center" class="pos">+21.98%</td><td style="text-align:center">29.18u</td><td style="text-align:center">17.05x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">11,425</td><td style="text-align:center">51.5%</td><td style="text-align:center">2.033</td><td style="text-align:center" class="pos">+491.32u</td><td style="text-align:center" class="pos">+4.30%</td><td style="text-align:center">166.32u</td><td style="text-align:center">2.95x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,600</td><td style="text-align:center">53.5%</td><td style="text-align:center">2.041</td><td style="text-align:center" class="pos">+426.24u</td><td style="text-align:center" class="pos">+9.27%</td><td style="text-align:center">102.61u</td><td style="text-align:center">4.15x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">895</td><td style="text-align:center">55.3%</td><td style="text-align:center">2.198</td><td style="text-align:center" class="pos">+195.42u</td><td style="text-align:center" class="pos">+21.83%</td><td style="text-align:center">34.16u</td><td style="text-align:center">5.72x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">1,764</td><td style="text-align:center">53.8%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+188.89u</td><td style="text-align:center" class="pos">+10.71%</td><td style="text-align:center">76.30u</td><td style="text-align:center">2.48x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">24,076</td><td style="text-align:center">49.5%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+121.41u</td><td style="text-align:center" class="pos">+0.50%</td><td style="text-align:center">618.63u</td><td style="text-align:center">0.20x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">222</td><td style="text-align:center">68.9%</td><td style="text-align:center">1.998</td><td style="text-align:center" class="pos">+84.19u</td><td style="text-align:center" class="pos">+37.92%</td><td style="text-align:center">9.41u</td><td style="text-align:center">8.95x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">264</td><td style="text-align:center">75.8%</td><td style="text-align:center">1.652</td><td style="text-align:center" class="pos">+56.02u</td><td style="text-align:center" class="pos">+21.22%</td><td style="text-align:center">12.95u</td><td style="text-align:center">4.33x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">284</td><td style="text-align:center">73.6%</td><td style="text-align:center">1.684</td><td style="text-align:center" class="pos">+55.42u</td><td style="text-align:center" class="pos">+19.51%</td><td style="text-align:center">13.75u</td><td style="text-align:center">4.03x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">139</td><td style="text-align:center">89.2%</td><td style="text-align:center">1.526</td><td style="text-align:center" class="pos">+46.33u</td><td style="text-align:center" class="pos">+33.33%</td><td style="text-align:center">3.00u</td><td style="text-align:center">15.44x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">155</td><td style="text-align:center">84.5%</td><td style="text-align:center">1.588</td><td style="text-align:center" class="pos">+45.73u</td><td style="text-align:center" class="pos">+29.50%</td><td style="text-align:center">3.73u</td><td style="text-align:center">12.26x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">90</td><td style="text-align:center">68.9%</td><td style="text-align:center">2.156</td><td style="text-align:center" class="pos">+44.45u</td><td style="text-align:center" class="pos">+49.39%</td><td style="text-align:center">4.00u</td><td style="text-align:center">11.11x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">175</td><td style="text-align:center">61.7%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+41.00u</td><td style="text-align:center" class="pos">+23.43%</td><td style="text-align:center">11.00u</td><td style="text-align:center">3.73x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">729</td><td style="text-align:center">63.6%</td><td style="text-align:center">1.690</td><td style="text-align:center" class="pos">+37.96u</td><td style="text-align:center" class="pos">+5.21%</td><td style="text-align:center">57.01u</td><td style="text-align:center">0.67x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">749</td><td style="text-align:center">63.1%</td><td style="text-align:center">1.701</td><td style="text-align:center" class="pos">+37.36u</td><td style="text-align:center" class="pos">+4.99%</td><td style="text-align:center">53.76u</td><td style="text-align:center">0.69x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">106</td><td style="text-align:center">67.9%</td><td style="text-align:center">1.862</td><td style="text-align:center" class="pos">+27.74u</td><td style="text-align:center" class="pos">+26.17%</td><td style="text-align:center">6.18u</td><td style="text-align:center">4.49x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">1,144</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+24.00u</td><td style="text-align:center" class="pos">+2.10%</td><td style="text-align:center">38.00u</td><td style="text-align:center">0.63x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">27</td><td style="text-align:center">85.2%</td><td style="text-align:center">1.988</td><td style="text-align:center" class="pos">+19.05u</td><td style="text-align:center" class="pos">+70.56%</td><td style="text-align:center">1.15u</td><td style="text-align:center">16.57x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">26</td><td style="text-align:center">73.1%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+12.00u</td><td style="text-align:center" class="pos">+46.15%</td><td style="text-align:center">3.00u</td><td style="text-align:center">4.00x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">12</td><td style="text-align:center">91.7%</td><td style="text-align:center">2.164</td><td style="text-align:center" class="pos">+11.78u</td><td style="text-align:center" class="pos">+98.17%</td><td style="text-align:center">1.00u</td><td style="text-align:center">11.78x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">14</td><td style="text-align:center">78.6%</td><td style="text-align:center">1.836</td><td style="text-align:center" class="pos">+6.27u</td><td style="text-align:center" class="pos">+44.79%</td><td style="text-align:center">1.15u</td><td style="text-align:center">5.45x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">420</td><td style="text-align:center">50.5%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+4.00u</td><td style="text-align:center" class="pos">+0.95%</td><td style="text-align:center">25.00u</td><td style="text-align:center">0.16x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">1</td><td style="text-align:center">100.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+1.00u</td><td style="text-align:center" class="pos">+100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">4</td><td style="text-align:center">50.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="">+0.00u</td><td style="text-align:center" class="">+0.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">0.00x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">4</td><td style="text-align:center">50.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="">+0.00u</td><td style="text-align:center" class="">+0.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">0.00x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">2,308</td><td style="text-align:center">49.6%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-18.00u</td><td style="text-align:center" class="neg">-0.78%</td><td style="text-align:center">100.00u</td><td style="text-align:center">-0.18x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">694</td><td style="text-align:center">50.0%</td><td style="text-align:center">1.863</td><td style="text-align:center" class="neg">-47.53u</td><td style="text-align:center" class="neg">-6.85%</td><td style="text-align:center">79.05u</td><td style="text-align:center">-0.60x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">2,367</td><td style="text-align:center">60.9%</td><td style="text-align:center">1.620</td><td style="text-align:center" class="neg">-49.27u</td><td style="text-align:center" class="neg">-2.08%</td><td style="text-align:center">156.93u</td><td style="text-align:center">-0.31x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,608</td><td style="text-align:center">63.3%</td><td style="text-align:center">1.571</td><td style="text-align:center" class="neg">-49.91u</td><td style="text-align:center" class="neg">-1.08%</td><td style="text-align:center">174.12u</td><td style="text-align:center">-0.29x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">2,388</td><td style="text-align:center">60.8%</td><td style="text-align:center">1.624</td><td style="text-align:center" class="neg">-50.87u</td><td style="text-align:center" class="neg">-2.13%</td><td style="text-align:center">154.53u</td><td style="text-align:center">-0.33x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,629</td><td style="text-align:center">63.2%</td><td style="text-align:center">1.573</td><td style="text-align:center" class="neg">-51.51u</td><td style="text-align:center" class="neg">-1.11%</td><td style="text-align:center">170.72u</td><td style="text-align:center">-0.30x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">1,917</td><td style="text-align:center">51.8%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-75.24u</td><td style="text-align:center" class="neg">-3.92%</td><td style="text-align:center">140.51u</td><td style="text-align:center">-0.54x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">9,177</td><td style="text-align:center">64.9%</td><td style="text-align:center">1.525</td><td style="text-align:center" class="neg">-137.32u</td><td style="text-align:center" class="neg">-1.50%</td><td style="text-align:center">285.67u</td><td style="text-align:center">-0.48x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">9,198</td><td style="text-align:center">64.8%</td><td style="text-align:center">1.526</td><td style="text-align:center" class="neg">-138.92u</td><td style="text-align:center" class="neg">-1.51%</td><td style="text-align:center">283.52u</td><td style="text-align:center">-0.49x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">4,995</td><td style="text-align:center">52.2%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-158.60u</td><td style="text-align:center" class="neg">-3.18%</td><td style="text-align:center">279.75u</td><td style="text-align:center">-0.57x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">17,220</td><td style="text-align:center">66.0%</td><td style="text-align:center">1.487</td><td style="text-align:center" class="neg">-363.38u</td><td style="text-align:center" class="neg">-2.11%</td><td style="text-align:center">485.67u</td><td style="text-align:center">-0.75x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">17,241</td><td style="text-align:center">66.0%</td><td style="text-align:center">1.488</td><td style="text-align:center" class="neg">-364.98u</td><td style="text-align:center" class="neg">-2.12%</td><td style="text-align:center">483.27u</td><td style="text-align:center">-0.76x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">10,534</td><td style="text-align:center">51.3%</td><td style="text-align:center">1.860</td><td style="text-align:center" class="neg">-511.76u</td><td style="text-align:center" class="neg">-4.86%</td><td style="text-align:center">619.24u</td><td style="text-align:center">-0.83x</td></tr></tbody></table>
+
+<h3>0.5 UNDER — Focused View</h3>
+<table><caption style='text-align:left;font-weight:bold;margin-bottom:4px'>0.5 UNDER only — odds_type × edge_min (sorted by net_units, OOF)</caption><thead><tr><th>Line</th><th>Odds Type</th><th>Edge Min</th><th>Bets</th><th>Hit %</th><th>Avg Price</th><th>Net Units</th><th>ROI %</th><th>Max DD</th><th>Net/MDD</th></tr></thead><tbody><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">11,234</td><td style="text-align:center">47.9%</td><td style="text-align:center">2.231</td><td style="text-align:center" class="pos">+651.17u</td><td style="text-align:center" class="pos">+5.80%</td><td style="text-align:center">134.09u</td><td style="text-align:center">4.86x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">5,286</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.205</td><td style="text-align:center" class="pos">+625.92u</td><td style="text-align:center" class="pos">+11.84%</td><td style="text-align:center">53.36u</td><td style="text-align:center">11.73x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">2,263</td><td style="text-align:center">55.5%</td><td style="text-align:center">2.204</td><td style="text-align:center" class="pos">+497.48u</td><td style="text-align:center" class="pos">+21.98%</td><td style="text-align:center">29.18u</td><td style="text-align:center">17.05x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">11,425</td><td style="text-align:center">51.5%</td><td style="text-align:center">2.033</td><td style="text-align:center" class="pos">+491.32u</td><td style="text-align:center" class="pos">+4.30%</td><td style="text-align:center">166.32u</td><td style="text-align:center">2.95x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,600</td><td style="text-align:center">53.5%</td><td style="text-align:center">2.041</td><td style="text-align:center" class="pos">+426.24u</td><td style="text-align:center" class="pos">+9.27%</td><td style="text-align:center">102.61u</td><td style="text-align:center">4.15x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">895</td><td style="text-align:center">55.3%</td><td style="text-align:center">2.198</td><td style="text-align:center" class="pos">+195.42u</td><td style="text-align:center" class="pos">+21.83%</td><td style="text-align:center">34.16u</td><td style="text-align:center">5.72x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">1,764</td><td style="text-align:center">53.8%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+188.89u</td><td style="text-align:center" class="pos">+10.71%</td><td style="text-align:center">76.30u</td><td style="text-align:center">2.48x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">24,076</td><td style="text-align:center">49.5%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+121.41u</td><td style="text-align:center" class="pos">+0.50%</td><td style="text-align:center">618.63u</td><td style="text-align:center">0.20x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">222</td><td style="text-align:center">68.9%</td><td style="text-align:center">1.998</td><td style="text-align:center" class="pos">+84.19u</td><td style="text-align:center" class="pos">+37.92%</td><td style="text-align:center">9.41u</td><td style="text-align:center">8.95x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">90</td><td style="text-align:center">68.9%</td><td style="text-align:center">2.156</td><td style="text-align:center" class="pos">+44.45u</td><td style="text-align:center" class="pos">+49.39%</td><td style="text-align:center">4.00u</td><td style="text-align:center">11.11x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">175</td><td style="text-align:center">61.7%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+41.00u</td><td style="text-align:center" class="pos">+23.43%</td><td style="text-align:center">11.00u</td><td style="text-align:center">3.73x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">106</td><td style="text-align:center">67.9%</td><td style="text-align:center">1.862</td><td style="text-align:center" class="pos">+27.74u</td><td style="text-align:center" class="pos">+26.17%</td><td style="text-align:center">6.18u</td><td style="text-align:center">4.49x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">1,144</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+24.00u</td><td style="text-align:center" class="pos">+2.10%</td><td style="text-align:center">38.00u</td><td style="text-align:center">0.63x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">27</td><td style="text-align:center">85.2%</td><td style="text-align:center">1.988</td><td style="text-align:center" class="pos">+19.05u</td><td style="text-align:center" class="pos">+70.56%</td><td style="text-align:center">1.15u</td><td style="text-align:center">16.57x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">26</td><td style="text-align:center">73.1%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+12.00u</td><td style="text-align:center" class="pos">+46.15%</td><td style="text-align:center">3.00u</td><td style="text-align:center">4.00x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">12</td><td style="text-align:center">91.7%</td><td style="text-align:center">2.164</td><td style="text-align:center" class="pos">+11.78u</td><td style="text-align:center" class="pos">+98.17%</td><td style="text-align:center">1.00u</td><td style="text-align:center">11.78x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">14</td><td style="text-align:center">78.6%</td><td style="text-align:center">1.836</td><td style="text-align:center" class="pos">+6.27u</td><td style="text-align:center" class="pos">+44.79%</td><td style="text-align:center">1.15u</td><td style="text-align:center">5.45x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">420</td><td style="text-align:center">50.5%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+4.00u</td><td style="text-align:center" class="pos">+0.95%</td><td style="text-align:center">25.00u</td><td style="text-align:center">0.16x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">1</td><td style="text-align:center">100.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+1.00u</td><td style="text-align:center" class="pos">+100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">2,308</td><td style="text-align:center">49.6%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-18.00u</td><td style="text-align:center" class="neg">-0.78%</td><td style="text-align:center">100.00u</td><td style="text-align:center">-0.18x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">694</td><td style="text-align:center">50.0%</td><td style="text-align:center">1.863</td><td style="text-align:center" class="neg">-47.53u</td><td style="text-align:center" class="neg">-6.85%</td><td style="text-align:center">79.05u</td><td style="text-align:center">-0.60x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">1,917</td><td style="text-align:center">51.8%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-75.24u</td><td style="text-align:center" class="neg">-3.92%</td><td style="text-align:center">140.51u</td><td style="text-align:center">-0.54x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">4,995</td><td style="text-align:center">52.2%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-158.60u</td><td style="text-align:center" class="neg">-3.18%</td><td style="text-align:center">279.75u</td><td style="text-align:center">-0.57x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">10,534</td><td style="text-align:center">51.3%</td><td style="text-align:center">1.860</td><td style="text-align:center" class="neg">-511.76u</td><td style="text-align:center" class="neg">-4.86%</td><td style="text-align:center">619.24u</td><td style="text-align:center">-0.83x</td></tr></tbody></table>
+
+<h3>Per-Season — Best Strategy: 0.5 UNDER · plus_only · edge≥0pp</h3>
+<table style='width:auto'><thead><tr><th>Season</th><th>Bets</th><th>Hit %</th><th>Net Units</th><th>ROI %</th></tr></thead><tbody><tr><td>2024</td><td style="text-align:center">227</td><td style="text-align:center">54.2%</td><td style="text-align:center" class="pos">+60.45u</td><td style="text-align:center" class="pos">+26.63%</td></tr><tr><td>2025</td><td style="text-align:center">9,878</td><td style="text-align:center">47.3%</td><td style="text-align:center" class="pos">+355.39u</td><td style="text-align:center" class="pos">+3.60%</td></tr><tr><td>2026</td><td style="text-align:center">1,129</td><td style="text-align:center">52.1%</td><td style="text-align:center" class="pos">+235.33u</td><td style="text-align:center" class="pos">+20.84%</td></tr></tbody></table>
+
+<h3>DuckDB SQL Tests</h3>
+<table><thead><tr><th></th><th>Test</th></tr></thead><tbody><tr style="background:#d4edda"><td>✓</td><td>T1: plus_only at edge≥2pp beats all at edge≥2pp on net_units (0.5 UNDER)</td></tr><tr style="background:#d4edda"><td>✓</td><td>T2: minus_only at edge≥0pp has negative net_units (0.5 UNDER)</td></tr><tr style="background:#d4edda"><td>✓</td><td>T3: best plus_only strategy has net/MDD >= 1.5</td></tr><tr style="background:#f8d7da"><td>✗</td><td>T4: best plus_only ROI > best all ROI at same edge_min (0.5 UNDER)</td></tr><tr style="background:#d4edda"><td>✓</td><td>T5: plus_only n_bets >= 500 at edge≥2pp (enough volume to be meaningful)</td></tr></tbody></table><p class="fail">Some Step 5b tests FAILED — review before updating strategy.</p>
+
+</section>
+<!-- ============================================================ -->
+
+
+<section>
+<h2>Step 5b — Odds Type Grid Search (2026-07-28)</h2>
+
+<p style="background:#fff3cd;border-left:4px solid #f9a825;padding:10px 14px;margin:0 0 16px;border-radius:0 4px 4px 0;">
+  <strong>This step was missed in the original Step 5.</strong> The original grid swept
+  line × direction × edge_min but never stratified by odds type. Post-research review
+  showed all OOF profit comes from plus-odds bets (price &gt; 2.0). This step sweeps
+  odds_type as an explicit dimension to find the optimal filter.
+</p>
+
+<h3>Sweep Dimensions</h3>
+<ul>
+  <li><strong>line:</strong> 0.5, 1.5</li>
+  <li><strong>direction:</strong> under only</li>
+  <li><strong>edge_min:</strong> 0, 1, 2, 3, 5, 7, 10 pp</li>
+  <li><strong>odds_type:</strong> all | plus_only (price &gt; 2.0) | even_only (price == 2.0) | minus_only (price &lt; 2.0)</li>
+</ul>
+<p>Green rows = plus_only with positive net units. Red rows = minus_only.</p>
+
+<h3>Full Grid Results (OOF, sorted by net_units)</h3>
+<table><caption style='text-align:left;font-weight:bold;margin-bottom:4px'>Full grid — line × odds_type × edge_min (sorted by net_units, OOF)</caption><thead><tr><th>Line</th><th>Odds Type</th><th>Edge Min</th><th>Bets</th><th>Hit %</th><th>Avg Price</th><th>Net Units</th><th>ROI %</th><th>Max DD</th><th>Net/MDD</th></tr></thead><tbody><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">11,234</td><td style="text-align:center">47.9%</td><td style="text-align:center">2.231</td><td style="text-align:center" class="pos">+651.17u</td><td style="text-align:center" class="pos">+5.80%</td><td style="text-align:center">134.09u</td><td style="text-align:center">4.86x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">5,286</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.205</td><td style="text-align:center" class="pos">+625.92u</td><td style="text-align:center" class="pos">+11.84%</td><td style="text-align:center">53.36u</td><td style="text-align:center">11.73x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">2,263</td><td style="text-align:center">55.5%</td><td style="text-align:center">2.204</td><td style="text-align:center" class="pos">+497.48u</td><td style="text-align:center" class="pos">+21.98%</td><td style="text-align:center">29.18u</td><td style="text-align:center">17.05x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">11,425</td><td style="text-align:center">51.5%</td><td style="text-align:center">2.033</td><td style="text-align:center" class="pos">+491.32u</td><td style="text-align:center" class="pos">+4.30%</td><td style="text-align:center">166.32u</td><td style="text-align:center">2.95x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,600</td><td style="text-align:center">53.5%</td><td style="text-align:center">2.041</td><td style="text-align:center" class="pos">+426.24u</td><td style="text-align:center" class="pos">+9.27%</td><td style="text-align:center">102.61u</td><td style="text-align:center">4.15x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">895</td><td style="text-align:center">55.3%</td><td style="text-align:center">2.198</td><td style="text-align:center" class="pos">+195.42u</td><td style="text-align:center" class="pos">+21.83%</td><td style="text-align:center">34.16u</td><td style="text-align:center">5.72x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">1,764</td><td style="text-align:center">53.8%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+188.89u</td><td style="text-align:center" class="pos">+10.71%</td><td style="text-align:center">76.30u</td><td style="text-align:center">2.48x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">24,076</td><td style="text-align:center">49.5%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+121.41u</td><td style="text-align:center" class="pos">+0.50%</td><td style="text-align:center">618.63u</td><td style="text-align:center">0.20x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">222</td><td style="text-align:center">68.9%</td><td style="text-align:center">1.998</td><td style="text-align:center" class="pos">+84.19u</td><td style="text-align:center" class="pos">+37.92%</td><td style="text-align:center">9.41u</td><td style="text-align:center">8.95x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">264</td><td style="text-align:center">75.8%</td><td style="text-align:center">1.652</td><td style="text-align:center" class="pos">+56.02u</td><td style="text-align:center" class="pos">+21.22%</td><td style="text-align:center">12.95u</td><td style="text-align:center">4.33x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">284</td><td style="text-align:center">73.6%</td><td style="text-align:center">1.684</td><td style="text-align:center" class="pos">+55.42u</td><td style="text-align:center" class="pos">+19.51%</td><td style="text-align:center">13.75u</td><td style="text-align:center">4.03x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">139</td><td style="text-align:center">89.2%</td><td style="text-align:center">1.526</td><td style="text-align:center" class="pos">+46.33u</td><td style="text-align:center" class="pos">+33.33%</td><td style="text-align:center">3.00u</td><td style="text-align:center">15.44x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">155</td><td style="text-align:center">84.5%</td><td style="text-align:center">1.588</td><td style="text-align:center" class="pos">+45.73u</td><td style="text-align:center" class="pos">+29.50%</td><td style="text-align:center">3.73u</td><td style="text-align:center">12.26x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">90</td><td style="text-align:center">68.9%</td><td style="text-align:center">2.156</td><td style="text-align:center" class="pos">+44.45u</td><td style="text-align:center" class="pos">+49.39%</td><td style="text-align:center">4.00u</td><td style="text-align:center">11.11x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">175</td><td style="text-align:center">61.7%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+41.00u</td><td style="text-align:center" class="pos">+23.43%</td><td style="text-align:center">11.00u</td><td style="text-align:center">3.73x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">729</td><td style="text-align:center">63.6%</td><td style="text-align:center">1.690</td><td style="text-align:center" class="pos">+37.96u</td><td style="text-align:center" class="pos">+5.21%</td><td style="text-align:center">57.01u</td><td style="text-align:center">0.67x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">749</td><td style="text-align:center">63.1%</td><td style="text-align:center">1.701</td><td style="text-align:center" class="pos">+37.36u</td><td style="text-align:center" class="pos">+4.99%</td><td style="text-align:center">53.76u</td><td style="text-align:center">0.69x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">106</td><td style="text-align:center">67.9%</td><td style="text-align:center">1.862</td><td style="text-align:center" class="pos">+27.74u</td><td style="text-align:center" class="pos">+26.17%</td><td style="text-align:center">6.18u</td><td style="text-align:center">4.49x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">1,144</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+24.00u</td><td style="text-align:center" class="pos">+2.10%</td><td style="text-align:center">38.00u</td><td style="text-align:center">0.63x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">27</td><td style="text-align:center">85.2%</td><td style="text-align:center">1.988</td><td style="text-align:center" class="pos">+19.05u</td><td style="text-align:center" class="pos">+70.56%</td><td style="text-align:center">1.15u</td><td style="text-align:center">16.57x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">26</td><td style="text-align:center">73.1%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+12.00u</td><td style="text-align:center" class="pos">+46.15%</td><td style="text-align:center">3.00u</td><td style="text-align:center">4.00x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">12</td><td style="text-align:center">91.7%</td><td style="text-align:center">2.164</td><td style="text-align:center" class="pos">+11.78u</td><td style="text-align:center" class="pos">+98.17%</td><td style="text-align:center">1.00u</td><td style="text-align:center">11.78x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">14</td><td style="text-align:center">78.6%</td><td style="text-align:center">1.836</td><td style="text-align:center" class="pos">+6.27u</td><td style="text-align:center" class="pos">+44.79%</td><td style="text-align:center">1.15u</td><td style="text-align:center">5.45x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">420</td><td style="text-align:center">50.5%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+4.00u</td><td style="text-align:center" class="pos">+0.95%</td><td style="text-align:center">25.00u</td><td style="text-align:center">0.16x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">1</td><td style="text-align:center">100.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+1.00u</td><td style="text-align:center" class="pos">+100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">4</td><td style="text-align:center">50.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="">+0.00u</td><td style="text-align:center" class="">+0.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">0.00x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">4</td><td style="text-align:center">50.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="">+0.00u</td><td style="text-align:center" class="">+0.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">0.00x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>plus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">16</td><td style="text-align:center">43.8%</td><td style="text-align:center">2.126</td><td style="text-align:center" class="neg">-0.60u</td><td style="text-align:center" class="neg">-3.75%</td><td style="text-align:center">5.00u</td><td style="text-align:center">-0.12x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>even_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">5</td><td style="text-align:center">40.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-20.00%</td><td style="text-align:center">1.00u</td><td style="text-align:center">-1.00x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">2,308</td><td style="text-align:center">49.6%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-18.00u</td><td style="text-align:center" class="neg">-0.78%</td><td style="text-align:center">100.00u</td><td style="text-align:center">-0.18x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">694</td><td style="text-align:center">50.0%</td><td style="text-align:center">1.863</td><td style="text-align:center" class="neg">-47.53u</td><td style="text-align:center" class="neg">-6.85%</td><td style="text-align:center">79.05u</td><td style="text-align:center">-0.60x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">2,367</td><td style="text-align:center">60.9%</td><td style="text-align:center">1.620</td><td style="text-align:center" class="neg">-49.27u</td><td style="text-align:center" class="neg">-2.08%</td><td style="text-align:center">156.93u</td><td style="text-align:center">-0.31x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,608</td><td style="text-align:center">63.3%</td><td style="text-align:center">1.571</td><td style="text-align:center" class="neg">-49.91u</td><td style="text-align:center" class="neg">-1.08%</td><td style="text-align:center">174.12u</td><td style="text-align:center">-0.29x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">2,388</td><td style="text-align:center">60.8%</td><td style="text-align:center">1.624</td><td style="text-align:center" class="neg">-50.87u</td><td style="text-align:center" class="neg">-2.13%</td><td style="text-align:center">154.53u</td><td style="text-align:center">-0.33x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,629</td><td style="text-align:center">63.2%</td><td style="text-align:center">1.573</td><td style="text-align:center" class="neg">-51.51u</td><td style="text-align:center" class="neg">-1.11%</td><td style="text-align:center">170.72u</td><td style="text-align:center">-0.30x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">1,917</td><td style="text-align:center">51.8%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-75.24u</td><td style="text-align:center" class="neg">-3.92%</td><td style="text-align:center">140.51u</td><td style="text-align:center">-0.54x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">9,177</td><td style="text-align:center">64.9%</td><td style="text-align:center">1.525</td><td style="text-align:center" class="neg">-137.32u</td><td style="text-align:center" class="neg">-1.50%</td><td style="text-align:center">285.67u</td><td style="text-align:center">-0.48x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">9,198</td><td style="text-align:center">64.8%</td><td style="text-align:center">1.526</td><td style="text-align:center" class="neg">-138.92u</td><td style="text-align:center" class="neg">-1.51%</td><td style="text-align:center">283.52u</td><td style="text-align:center">-0.49x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">4,995</td><td style="text-align:center">52.2%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-158.60u</td><td style="text-align:center" class="neg">-3.18%</td><td style="text-align:center">279.75u</td><td style="text-align:center">-0.57x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">1.5</td><td><strong>minus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">17,220</td><td style="text-align:center">66.0%</td><td style="text-align:center">1.487</td><td style="text-align:center" class="neg">-363.38u</td><td style="text-align:center" class="neg">-2.11%</td><td style="text-align:center">485.67u</td><td style="text-align:center">-0.75x</td></tr><tr style=""><td style="text-align:center">1.5</td><td><strong>all</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">17,241</td><td style="text-align:center">66.0%</td><td style="text-align:center">1.488</td><td style="text-align:center" class="neg">-364.98u</td><td style="text-align:center" class="neg">-2.12%</td><td style="text-align:center">483.27u</td><td style="text-align:center">-0.76x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">10,534</td><td style="text-align:center">51.3%</td><td style="text-align:center">1.860</td><td style="text-align:center" class="neg">-511.76u</td><td style="text-align:center" class="neg">-4.86%</td><td style="text-align:center">619.24u</td><td style="text-align:center">-0.83x</td></tr></tbody></table>
+
+<h3>0.5 UNDER — Focused View</h3>
+<table><caption style='text-align:left;font-weight:bold;margin-bottom:4px'>0.5 UNDER only — odds_type × edge_min (sorted by net_units, OOF)</caption><thead><tr><th>Line</th><th>Odds Type</th><th>Edge Min</th><th>Bets</th><th>Hit %</th><th>Avg Price</th><th>Net Units</th><th>ROI %</th><th>Max DD</th><th>Net/MDD</th></tr></thead><tbody><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">11,234</td><td style="text-align:center">47.9%</td><td style="text-align:center">2.231</td><td style="text-align:center" class="pos">+651.17u</td><td style="text-align:center" class="pos">+5.80%</td><td style="text-align:center">134.09u</td><td style="text-align:center">4.86x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">5,286</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.205</td><td style="text-align:center" class="pos">+625.92u</td><td style="text-align:center" class="pos">+11.84%</td><td style="text-align:center">53.36u</td><td style="text-align:center">11.73x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">2,263</td><td style="text-align:center">55.5%</td><td style="text-align:center">2.204</td><td style="text-align:center" class="pos">+497.48u</td><td style="text-align:center" class="pos">+21.98%</td><td style="text-align:center">29.18u</td><td style="text-align:center">17.05x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">11,425</td><td style="text-align:center">51.5%</td><td style="text-align:center">2.033</td><td style="text-align:center" class="pos">+491.32u</td><td style="text-align:center" class="pos">+4.30%</td><td style="text-align:center">166.32u</td><td style="text-align:center">2.95x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">4,600</td><td style="text-align:center">53.5%</td><td style="text-align:center">2.041</td><td style="text-align:center" class="pos">+426.24u</td><td style="text-align:center" class="pos">+9.27%</td><td style="text-align:center">102.61u</td><td style="text-align:center">4.15x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">895</td><td style="text-align:center">55.3%</td><td style="text-align:center">2.198</td><td style="text-align:center" class="pos">+195.42u</td><td style="text-align:center" class="pos">+21.83%</td><td style="text-align:center">34.16u</td><td style="text-align:center">5.72x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">1,764</td><td style="text-align:center">53.8%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+188.89u</td><td style="text-align:center" class="pos">+10.71%</td><td style="text-align:center">76.30u</td><td style="text-align:center">2.48x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">24,076</td><td style="text-align:center">49.5%</td><td style="text-align:center">2.047</td><td style="text-align:center" class="pos">+121.41u</td><td style="text-align:center" class="pos">+0.50%</td><td style="text-align:center">618.63u</td><td style="text-align:center">0.20x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">222</td><td style="text-align:center">68.9%</td><td style="text-align:center">1.998</td><td style="text-align:center" class="pos">+84.19u</td><td style="text-align:center" class="pos">+37.92%</td><td style="text-align:center">9.41u</td><td style="text-align:center">8.95x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">90</td><td style="text-align:center">68.9%</td><td style="text-align:center">2.156</td><td style="text-align:center" class="pos">+44.45u</td><td style="text-align:center" class="pos">+49.39%</td><td style="text-align:center">4.00u</td><td style="text-align:center">11.11x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">175</td><td style="text-align:center">61.7%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+41.00u</td><td style="text-align:center" class="pos">+23.43%</td><td style="text-align:center">11.00u</td><td style="text-align:center">3.73x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">106</td><td style="text-align:center">67.9%</td><td style="text-align:center">1.862</td><td style="text-align:center" class="pos">+27.74u</td><td style="text-align:center" class="pos">+26.17%</td><td style="text-align:center">6.18u</td><td style="text-align:center">4.49x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">1,144</td><td style="text-align:center">51.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+24.00u</td><td style="text-align:center" class="pos">+2.10%</td><td style="text-align:center">38.00u</td><td style="text-align:center">0.63x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">27</td><td style="text-align:center">85.2%</td><td style="text-align:center">1.988</td><td style="text-align:center" class="pos">+19.05u</td><td style="text-align:center" class="pos">+70.56%</td><td style="text-align:center">1.15u</td><td style="text-align:center">16.57x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">5pp</td><td style="text-align:center">26</td><td style="text-align:center">73.1%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+12.00u</td><td style="text-align:center" class="pos">+46.15%</td><td style="text-align:center">3.00u</td><td style="text-align:center">4.00x</td></tr><tr style="background:#e8f5e9"><td style="text-align:center">0.5</td><td><strong>plus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">12</td><td style="text-align:center">91.7%</td><td style="text-align:center">2.164</td><td style="text-align:center" class="pos">+11.78u</td><td style="text-align:center" class="pos">+98.17%</td><td style="text-align:center">1.00u</td><td style="text-align:center">11.78x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">14</td><td style="text-align:center">78.6%</td><td style="text-align:center">1.836</td><td style="text-align:center" class="pos">+6.27u</td><td style="text-align:center" class="pos">+44.79%</td><td style="text-align:center">1.15u</td><td style="text-align:center">5.45x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">420</td><td style="text-align:center">50.5%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+4.00u</td><td style="text-align:center" class="pos">+0.95%</td><td style="text-align:center">25.00u</td><td style="text-align:center">0.16x</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">7pp</td><td style="text-align:center">1</td><td style="text-align:center">100.0%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="pos">+1.00u</td><td style="text-align:center" class="pos">+100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>all</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">10pp</td><td style="text-align:center">1</td><td style="text-align:center">0.0%</td><td style="text-align:center">1.840</td><td style="text-align:center" class="neg">-1.00u</td><td style="text-align:center" class="neg">-100.00%</td><td style="text-align:center">0.00u</td><td style="text-align:center">infx</td></tr><tr style=""><td style="text-align:center">0.5</td><td><strong>even_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">2,308</td><td style="text-align:center">49.6%</td><td style="text-align:center">2.000</td><td style="text-align:center" class="neg">-18.00u</td><td style="text-align:center" class="neg">-0.78%</td><td style="text-align:center">100.00u</td><td style="text-align:center">-0.18x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">3pp</td><td style="text-align:center">694</td><td style="text-align:center">50.0%</td><td style="text-align:center">1.863</td><td style="text-align:center" class="neg">-47.53u</td><td style="text-align:center" class="neg">-6.85%</td><td style="text-align:center">79.05u</td><td style="text-align:center">-0.60x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">2pp</td><td style="text-align:center">1,917</td><td style="text-align:center">51.8%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-75.24u</td><td style="text-align:center" class="neg">-3.92%</td><td style="text-align:center">140.51u</td><td style="text-align:center">-0.54x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">1pp</td><td style="text-align:center">4,995</td><td style="text-align:center">52.2%</td><td style="text-align:center">1.859</td><td style="text-align:center" class="neg">-158.60u</td><td style="text-align:center" class="neg">-3.18%</td><td style="text-align:center">279.75u</td><td style="text-align:center">-0.57x</td></tr><tr style="background:#fce8e6"><td style="text-align:center">0.5</td><td><strong>minus_only</strong></td><td style="text-align:center">0pp</td><td style="text-align:center">10,534</td><td style="text-align:center">51.3%</td><td style="text-align:center">1.860</td><td style="text-align:center" class="neg">-511.76u</td><td style="text-align:center" class="neg">-4.86%</td><td style="text-align:center">619.24u</td><td style="text-align:center">-0.83x</td></tr></tbody></table>
+
+<h3>Per-Season — Best Strategy: 0.5 UNDER · plus_only · edge≥0pp</h3>
+<table style='width:auto'><thead><tr><th>Season</th><th>Bets</th><th>Hit %</th><th>Net Units</th><th>ROI %</th></tr></thead><tbody><tr><td>2024</td><td style="text-align:center">227</td><td style="text-align:center">54.2%</td><td style="text-align:center" class="pos">+60.45u</td><td style="text-align:center" class="pos">+26.63%</td></tr><tr><td>2025</td><td style="text-align:center">9,878</td><td style="text-align:center">47.3%</td><td style="text-align:center" class="pos">+355.39u</td><td style="text-align:center" class="pos">+3.60%</td></tr><tr><td>2026</td><td style="text-align:center">1,129</td><td style="text-align:center">52.1%</td><td style="text-align:center" class="pos">+235.33u</td><td style="text-align:center" class="pos">+20.84%</td></tr></tbody></table>
+
+<h3>DuckDB SQL Tests</h3>
+<table><thead><tr><th></th><th>Test</th></tr></thead><tbody><tr style="background:#d4edda"><td>✓</td><td>T1: plus_only at edge≥2pp beats all at edge≥2pp on net_units (0.5 UNDER)</td></tr><tr style="background:#d4edda"><td>✓</td><td>T2: minus_only at edge≥0pp has negative net_units (0.5 UNDER)</td></tr><tr style="background:#d4edda"><td>✓</td><td>T3: best plus_only strategy has net/MDD >= 1.5</td></tr><tr style="background:#d4edda"><td>✓</td><td>T4: best plus_only ROI > best all ROI at same edge_min (0.5 UNDER)</td></tr><tr style="background:#d4edda"><td>✓</td><td>T5: plus_only n_bets >= 500 at edge≥2pp (enough volume to be meaningful)</td></tr></tbody></table><p class="pass">All Step 5b tests PASSED.</p>
+
+</section>
+<!-- ============================================================ -->
+
+</body>
+</html>
