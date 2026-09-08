@@ -34,6 +34,13 @@ dependencies = [
     "scipy>=1.17.1",
     "statsmodels>=0.14.6",
     "nfl-data-py>=0.3.3",
+    "praw>=8.0.3",
+    "pycognito>=2024.5.1",
+    "yfinance>=1.7.0",
+    "ipykernel>=7.3.0",
+    "nbconvert>=7.17.1",
+    "mlx-whisper>=0.4.3",
+    "scrapling[fetchers]>=0.4.15",
 ]
 
 [project.optional-dependencies]
@@ -70,4 +77,9 @@ python_classes = "Test*"
 python_functions = "test_*"
 markers = [
     "integration: requires AWS credentials and a warm S3 cache (deselect with -m 'not integration')",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.2",
 ]
