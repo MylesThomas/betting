@@ -27,7 +27,7 @@ ET = ZoneInfo("America/New_York")
 UTC = timezone.utc
 CONSENSUS_COLOR = "black"
 GAME_START_COLOR = "#cc3333"
-DAY_BOUNDARY_COLOR = "#aaaaaa"
+DAY_BOUNDARY_COLOR = "#cc3333"
 
 
 def _to_et(ts: str) -> datetime:
@@ -104,12 +104,6 @@ def plot(game_date: str, player: str, show: bool = False) -> None:
 
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # ── Day-boundary vertical lines ───────────────────────────────────────────
-    for boundary in _midnight_et_boundaries(df):
-        ax.axvline(boundary, color=DAY_BOUNDARY_COLOR, linestyle="--", linewidth=1, zorder=1)
-        ax.text(boundary, ax.get_ylim()[1], f" {boundary.strftime('%b %-d')}",
-                color=DAY_BOUNDARY_COLOR, fontsize=7, va="top", rotation=0)
-
     # ── Per-book lines ────────────────────────────────────────────────────────
     first_seen_odds: dict[str, int] = {}
     closing_odds:    dict[str, int] = {}
@@ -147,9 +141,19 @@ def plot(game_date: str, player: str, show: bool = False) -> None:
             color=CONSENSUS_COLOR, linewidth=2.5, linestyle="--",
             label="consensus (median)", zorder=4)
 
+    # ── Day-boundary vertical lines (drawn after data so ylim is set) ─────────
+    for boundary in _midnight_et_boundaries(df):
+        ax.axvline(boundary, color=DAY_BOUNDARY_COLOR, linestyle=":", linewidth=1.5, zorder=2)
+        ax.text(boundary, 0.99, f" {boundary.strftime('%-m/%-d')}",
+                color=DAY_BOUNDARY_COLOR, fontsize=8, va="top",
+                transform=ax.get_xaxis_transform())
+
     # ── First pitch vertical line ─────────────────────────────────────────────
-    ax.axvline(commence_et, color=GAME_START_COLOR, linestyle="-", linewidth=2,
-               label=f"first pitch ({commence_et.strftime('%H:%M ET')})", zorder=3)
+    ax.axvline(commence_et, color=GAME_START_COLOR, linestyle=":", linewidth=2.5,
+               label=f"first pitch ({commence_et.strftime('%-I:%M %p ET')})", zorder=3)
+    ax.text(commence_et, 0.99, f"  first pitch\n  {commence_et.strftime('%-I:%M %p ET')}",
+            color=GAME_START_COLOR, fontsize=8, va="top",
+            transform=ax.get_xaxis_transform())
 
     # ── CLV annotation box ────────────────────────────────────────────────────
     shared = [b for b in books if b in first_seen_odds and b in closing_odds]
