@@ -188,7 +188,7 @@ sleep 45
 
 echo ""
 echo "Running smoke test..."
-uv run python src/mlb_total_bases_modeling/scripts/smoke_test_snapshots.py
+uv run --system-certs python src/mlb_total_bases_modeling/scripts/smoke_test_snapshots.py
 echo -e "${GREEN}✅ Smoke test passed${NC}"
 
 # ── Done ──────────────────────────────────────────────────────────────────────

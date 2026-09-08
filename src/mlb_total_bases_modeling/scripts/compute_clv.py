@@ -166,7 +166,7 @@ def compute_clv(
         player_name, event_id, bookmaker, market_key = key_tuple
         grp = grp.sort_values("snapshot_ts_utc").reset_index(drop=True)
 
-        commence_time = str(grp["commence_time"].iloc[0])
+        commence_time = str(grp["commence_time_utc"].iloc[0])
         commence_epoch = _ts_to_epoch(commence_time)
 
         # First-seen row

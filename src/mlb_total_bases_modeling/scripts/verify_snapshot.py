@@ -28,12 +28,15 @@ S3_PREFIX = "mlb/total_bases_model/prop_snapshots"
 
 REQUIRED_COLUMNS = [
     "snapshot_ts_utc",
+    "snapshot_ts_et",
     "season",
-    "game_date",
+    "game_date_et",
+    "game_date_utc",
     "event_id",
     "home_team",
     "away_team",
-    "commence_time",
+    "commence_time_utc",
+    "commence_time_et",
     "bookmaker",
     "market_key",
     "player_name",

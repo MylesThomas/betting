@@ -5,8 +5,9 @@ Called by lambda_snapshot.py and runnable as a standalone script:
   uv run python src/mlb_total_bases_modeling/scripts/snapshot_props.py
 
 Output schema (one row per player × bookmaker × market_key × snapshot):
-  snapshot_ts_utc, season, game_date, event_id, home_team, away_team,
-  commence_time, bookmaker, market_key, player_name,
+  snapshot_ts_utc, snapshot_ts_et, season, game_date_et, game_date_utc, event_id,
+  home_team, away_team, commence_time_utc, commence_time_et,
+  bookmaker, market_key, player_name,
   over_line, over_american_odds, under_line, under_american_odds,
   binary_player_game_first_seen, last_odds_player_game,
   credits_before, credits_after
@@ -213,6 +214,8 @@ def main() -> dict:
 
     snapshot_ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     snapshot_ts_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    _et = ZoneInfo("America/New_York")
+    snapshot_ts_et  = datetime.now(timezone.utc).astimezone(_et).strftime("%Y-%m-%d %I:%M %p ET")
 
     # Step 2: fetch odds per event
     all_rows: list[dict] = []
@@ -225,31 +228,39 @@ def main() -> dict:
         commence_time = ev.get("commence_time", "")
         # game_date = ET calendar date of game start (Odds API commence_time is UTC;
         # west coast evening games cross midnight UTC so [:10] would give wrong date)
-        _et = ZoneInfo("America/New_York")
-        game_date = (
-            datetime.fromisoformat(commence_time.rstrip("Z"))
-            .replace(tzinfo=timezone.utc)
-            .astimezone(_et)
-            .strftime("%Y-%m-%d")
-            if commence_time else datetime.now(_et).strftime("%Y-%m-%d")
-        )
-        season       = int(game_date[:4])
+        if commence_time:
+            _ct_et = (
+                datetime.fromisoformat(commence_time.rstrip("Z"))
+                .replace(tzinfo=timezone.utc)
+                .astimezone(_et)
+            )
+            game_date_et     = _ct_et.strftime("%Y-%m-%d")
+            game_date_utc    = commence_time[:10]
+            commence_time_et = _ct_et.strftime("%Y-%m-%d %I:%M %p ET")
+        else:
+            game_date_et     = datetime.now(_et).strftime("%Y-%m-%d")
+            game_date_utc    = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            commence_time_et = ""
+        season = int(game_date_et[:4])
 
         odds_rows, credits_after = _fetch_event_odds(event_id, api_key)
         print(
-            f"  {game_date}  {away_team[:15]:15} @ {home_team[:15]:15}  "
+            f"  {game_date_et}  {away_team[:15]:15} @ {home_team[:15]:15}  "
             f"{len(odds_rows):4} rows  credits={credits_after:,}"
         )
 
         for row in odds_rows:
             all_rows.append({
-                "snapshot_ts_utc":  snapshot_ts_iso,
-                "season":           season,
-                "game_date":        game_date,
-                "event_id":         event_id,
-                "home_team":        home_team,
-                "away_team":        away_team,
-                "commence_time":    commence_time,
+                "snapshot_ts_utc":   snapshot_ts_iso,
+                "snapshot_ts_et":    snapshot_ts_et,
+                "season":            season,
+                "game_date_et":      game_date_et,
+                "game_date_utc":     game_date_utc,
+                "event_id":          event_id,
+                "home_team":         home_team,
+                "away_team":         away_team,
+                "commence_time_utc": commence_time,
+                "commence_time_et":  commence_time_et,
                 **row,
                 # placeholders filled in below
                 "binary_player_game_first_seen": None,
@@ -268,12 +279,12 @@ def main() -> dict:
 
     df = pd.DataFrame(all_rows)
 
-    # Step 3: first-seen detection per game_date
-    for game_date, grp_idx in df.groupby("game_date").groups.items():
+    # Step 3: first-seen detection per game_date_et
+    for game_date_et, grp_idx in df.groupby("game_date_et").groups.items():
         grp    = df.loc[grp_idx]
         season = int(grp["season"].iloc[0])
 
-        existing = _load_existing_snapshots(s3, season, game_date)
+        existing = _load_existing_snapshots(s3, season, game_date_et)
 
         if existing.empty:
             already_seen: set[tuple] = set()
@@ -315,12 +326,12 @@ def main() -> dict:
     df["last_odds_player_game"] = df["last_odds_player_game"].astype(object)  # always VARCHAR, never NULL-typed
     df["credits_after"] = credits_after  # update with final value from last API call
 
-    # Step 5: write one parquet per game_date
+    # Step 5: write one parquet per game_date_et
     total_rows = 0
-    for game_date, grp_idx in df.groupby("game_date").groups.items():
+    for game_date_et, grp_idx in df.groupby("game_date_et").groups.items():
         grp    = df.loc[grp_idx].copy()
         season = int(grp["season"].iloc[0])
-        s3_key = f"{S3_PREFIX}/{season}/{game_date}/snapshot_{snapshot_ts_utc}.parquet"
+        s3_key = f"{S3_PREFIX}/{season}/{game_date_et}/snapshot_{snapshot_ts_utc}.parquet"
 
         buf = BytesIO()
         grp.to_parquet(buf, index=False)

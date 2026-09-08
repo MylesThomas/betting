@@ -30,12 +30,14 @@ GAME_START_COLOR = "#cc3333"
 DAY_BOUNDARY_COLOR = "#cc3333"
 
 
-def _to_et(ts: str) -> datetime:
-    return datetime.fromisoformat(ts.rstrip("Z")).replace(tzinfo=UTC).astimezone(ET)
+def _parse_et(ts_et: str) -> datetime:
+    """Parse '2026-09-07 10:06 PM ET' → tz-aware ET datetime."""
+    return datetime.strptime(ts_et.replace(" ET", ""), "%Y-%m-%d %I:%M %p").replace(tzinfo=ET)
 
 
-def _to_epoch(ts: str) -> float:
-    return datetime.fromisoformat(ts.rstrip("Z")).replace(tzinfo=UTC).timestamp()
+def _utc_str_to_epoch(ts_utc: str) -> float:
+    """UTC ISO string → Unix epoch. Only used for numerical ordering/filtering."""
+    return datetime.fromisoformat(ts_utc.rstrip("Z")).replace(tzinfo=UTC).timestamp()
 
 
 def load_player(game_date: str, player: str) -> pd.DataFrame:
@@ -48,10 +50,8 @@ def load_player(game_date: str, player: str) -> pd.DataFrame:
     frames = []
     for f in sorted(files):
         frame = pd.read_parquet(f)
-        # parse UTC timestamp from filename → ET display
-        ts_part = f.stem.replace("snapshot_", "")  # e.g. 20260907_113147
-        ts_utc  = datetime.strptime(ts_part, "%Y%m%d_%H%M%S").replace(tzinfo=UTC)
-        ts_et   = ts_utc.astimezone(ET).strftime("%-I:%M %p ET")
+        # snapshot_ts_et is stored in parquet — no filename parsing needed
+        ts_et = frame["snapshot_ts_et"].iloc[0] if "snapshot_ts_et" in frame.columns and len(frame) else f.name
         print(f"  {f.name}  ({ts_et})  →  {len(frame):,} rows")
         frames.append(frame)
     print(f"  total files: {len(frames)}, total rows: {sum(len(f) for f in frames):,}")
@@ -66,12 +66,12 @@ def load_player(game_date: str, player: str) -> pd.DataFrame:
     if df.empty:
         raise ValueError(f"No rows found for player='{player}' on {game_date}")
 
-    df["snapshot_et"]    = df["snapshot_ts_utc"].apply(_to_et)
-    df["snapshot_epoch"] = df["snapshot_ts_utc"].apply(_to_epoch)
+    df["snapshot_et"]    = df["snapshot_ts_et"].apply(_parse_et)
+    df["snapshot_epoch"] = df["snapshot_ts_utc"].apply(_utc_str_to_epoch)
     df = df.sort_values("snapshot_epoch")
 
     # Drop post-game-start snapshots — in-play odds are garbage for CLV
-    commence_epoch = _to_epoch(df["commence_time"].iloc[0])
+    commence_epoch = _utc_str_to_epoch(df["commence_time_utc"].iloc[0])
     df = df[df["snapshot_epoch"] <= commence_epoch].copy()
 
     return df
@@ -94,9 +94,8 @@ def _midnight_et_boundaries(df: pd.DataFrame) -> list[datetime]:
 def plot(game_date: str, player: str, show: bool = False) -> None:
     df = load_player(game_date, player)
 
-    commence_time  = df["commence_time"].iloc[0]
-    commence_epoch = _to_epoch(commence_time)
-    commence_et    = _to_et(commence_time)
+    commence_epoch = _utc_str_to_epoch(df["commence_time_utc"].iloc[0])
+    commence_et    = _parse_et(df["commence_time_et"].iloc[0])
 
     books = sorted(df["bookmaker"].unique())
     cmap  = plt.colormaps["tab10"]

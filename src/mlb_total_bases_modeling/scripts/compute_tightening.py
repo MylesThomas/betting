@@ -119,7 +119,7 @@ def _per_game_agg(df: pd.DataFrame) -> pd.DataFrame:
       - avg_under_odds: median under odds across all books
     """
     rows = []
-    for (player, gd), grp in df.groupby(["player_name", "game_date"]):
+    for (player, gd), grp in df.groupby(["player_name", "game_date_et"]):
         rows.append({
             "player_name":    player,
             "game_date":      gd,

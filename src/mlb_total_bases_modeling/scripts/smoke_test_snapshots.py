@@ -36,8 +36,8 @@ MARKETS       = "batter_total_bases,batter_total_bases_alternate"
 REGIONS       = "us,us2"
 
 REQUIRED_COLUMNS = [
-    "snapshot_ts_utc", "season", "game_date", "event_id",
-    "home_team", "away_team", "commence_time",
+    "snapshot_ts_utc", "snapshot_ts_et", "season", "game_date_et", "game_date_utc", "event_id",
+    "home_team", "away_team", "commence_time_utc", "commence_time_et",
     "bookmaker", "market_key", "player_name",
     "over_line", "over_american_odds", "under_line", "under_american_odds",
     "binary_player_game_first_seen", "last_odds_player_game",
@@ -152,7 +152,7 @@ def main():
     # ── Check 2: First-seen sanity ────────────────────────────────────────────
     # Load ALL parquets for today to check first-seen — the latest snapshot
     # alone won't have any (all players already seen in earlier snapshots).
-    game_date_str  = df["game_date"].iloc[0]
+    game_date_str  = df["game_date_et"].iloc[0]
     season_str     = game_date_str[:4]
     prefix_all     = f"{S3_PREFIX}/{season_str}/{game_date_str}/"
     try:
@@ -190,7 +190,7 @@ def main():
 
     # Pick first event_id from the snapshot
     first_event_id = df["event_id"].iloc[0]
-    game_date_str  = df["game_date"].iloc[0]
+    game_date_str  = df["game_date_et"].iloc[0]
 
     live_odds = _fetch_live_odds_for_event(first_event_id, api_key)
     if live_odds is None:
@@ -244,7 +244,7 @@ def main():
 
     # ── Check 4: compute_clv() runs without error, no nulls on computable rows ──
     print("\n  [Check 4] Running compute_clv()...")
-    clv_game_date = df["game_date"].iloc[0] if not df.empty else date.today().isoformat()
+    clv_game_date = df["game_date_et"].iloc[0] if not df.empty else date.today().isoformat()
     clv_season = int(clv_game_date[:4])
     n_snapshots = df["snapshot_ts_utc"].nunique() if not df.empty else 0
     if n_snapshots < 2:
